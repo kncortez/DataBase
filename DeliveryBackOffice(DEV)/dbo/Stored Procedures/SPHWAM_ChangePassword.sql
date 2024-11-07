@@ -49,7 +49,7 @@ BEGIN
                     AccDateUpdated = GETDATE()
             WHERE AccIdAccount = @IdAccount;
             UPDATE RegisterUser
-                SET UsrLastPassword = @Code, 
+                SET UsrCodeVerif = @Code, 
                     UsrTokenUpdated = @Token,
                     UsrDateUpdated = GETDATE()
             WHERE UsrEmail = @Email;
