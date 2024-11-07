@@ -31,7 +31,8 @@ BEGIN
 				@IdHublogistic INT,
 				@Sender_Address NVARCHAR(200),
 				@Sender_Email NVARCHAR(200),
-				@ManifestSerie NVARCHAR(3) = 'FM'
+				@ManifestSerie NVARCHAR(3) = 'FM',
+				@ValidExis INT 
 
 		IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
 			DROP TABLE #listGuides;
@@ -39,14 +40,20 @@ BEGIN
 		IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
 			DROP TABLE #Temp;
 	
-		IF OBJECT_ID('tempdb.dbo.#NowInsert', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb.dbo.#NowInsert', 'U') IS NOT NULL 
 			DROP TABLE #NowInsert;
+
+		IF OBJECT_ID('tempdb.dbo.#Piece', 'U') IS NOT NULL 
+			DROP TABLE #Piece;
+
+		IF OBJECT_ID('tempdb.dbo.#Delivery', 'U') IS NOT NULL 
+			DROP TABLE #Delivery;
 
 		SELECT TOP 1
 			   @TokenAct = RowStatus,
 			   @hourtoken = DATEDIFF(HOUR, DateCreated, GETDATE()) 
 		FROM LogTokenPOD
-		WHERE LogTokenPOD LIKE '%' + @Token + '%'
+		WHERE LogTokenPOD = @Token 
 		ORDER BY DateCreated DESC
 
 
@@ -164,16 +171,9 @@ BEGIN
 
 				CREATE NONCLUSTERED INDEX templistGuides_Piece495
 				ON #listGuides (
-									ItemSerie,
-									ItemNumber
-								);
-
-				CREATE NONCLUSTERED INDEX templistGuides_4444
-				ON #listGuides (
-									ItemSerie,
-									ItemNumber,
-									ItemPiece
-								);
+								  ItemSerie,
+								  ItemNumber
+							   );
 
 				INSERT INTO #listGuides
 						(
@@ -202,16 +202,31 @@ BEGIN
 					[ItemPiece] = 0;
 
 				-- VALIDAMOS SI HAY ALGUNA GUIA QUE NO EXISTA
-				IF 
-				(	SELECT MIN(CASE 
-								 WHEN DO.Guide_Number IS NULL THEN 0  
-								 ELSE 1                               
-							   END) AS ExistsFlag
-					FROM #listGuides LS
+
+				SELECT DISTINCT
+					LS.ItemSerie,
+					LS.ItemNumber,
+					CASE
+						WHEN DO.Guide_Number IS NOT NULL THEN
+							1
+						ELSE
+							0
+					END AS Exist
+				INTO #Delivery
+				FROM #listGuides LS
 					LEFT JOIN DeliveryOrder DO WITH (NOLOCK)
-					  ON DO.Guide_Serie = LS.ItemSerie
-						 AND DO.Guide_Number = LS.ItemNumber
-				) = 1
+						ON DO.Guide_Serie = LS.ItemSerie
+						   AND DO.Guide_Number = LS.ItemNumber
+
+				CREATE NONCLUSTERED INDEX tempDelivery
+					ON #Delivery (
+									ItemNumber,
+									Exist
+								 );
+
+				SET @ValidExis = (SELECT COUNT(*) FROM #Delivery WHERE Exist = 0)
+
+				IF @ValidExis = 0
 				BEGIN
 						SELECT @ValidCountry = MAX(   CASE
 													  WHEN DO.SenderCountryId = @IdCountry THEN
@@ -224,12 +239,39 @@ BEGIN
 						INNER JOIN #listGuides LS
 							ON DO.Guide_Serie = LS.ItemSerie
 							   AND DO.Guide_Number = LS.ItemNumber
-				
-					SELECT @IspickupGuide =  MAX(CAST(ISNULL(DP.IsPickup,0) AS INT))
+					
+					CREATE TABLE #Piece 
+					(
+						IsPickup BIT,
+						GuideSerie NVARCHAR(10),
+						GuideNumber NVARCHAR(15),
+						ItemPiece INT
+					)
+
+					CREATE NONCLUSTERED INDEX tempPiece
+					ON #Piece (
+								GuideSerie,
+								GuideNumber
+								);
+
+					INSERT INTO #Piece
+					(
+						IsPickup,
+						GuideSerie,
+						GuideNumber
+					)
+					SELECT DISTINCT ISNULL(DP.IsPickup,0) AS IsPickup,
+						   DP.GuideSerie,
+						   DP.GuideNumber
 					FROM DeliveryOrderPiece DP WITH(NOLOCK)
 					INNER JOIN #listGuides LS
 						ON DP.GuideSerie = LS.ItemSerie
 						   AND DP.GuideNumber = LS.ItemNumber
+					WHERE ISNULL(DP.IsPickup,0) = 1
+
+					
+					SELECT @IspickupGuide = COUNT(*)
+					FROM #Piece
 
 					IF @ValidCountry = 1
 					BEGIN
@@ -665,8 +707,12 @@ BEGIN
 						END
 						ELSE
 						BEGIN
-							SELECT 0 AS StatusCode, 
+							SELECT 1 AS StatusCode, 
 								'Las piezas ya se encuentran procesadas' AS Message
+
+							SELECT CONCAT(GuideSerie, GuideNumber) AS Guide,
+								   'Las piezas de  esta guía ya fueron escaneadas' AS Message
+							FROM #Piece
 						END
 					END				
 					ELSE
@@ -677,8 +723,13 @@ BEGIN
 				END
 				ELSE
 				BEGIN
-					SELECT 0 AS StatusCode,
-						   'La guia no existe' AS Message
+					SELECT 1 AS StatusCode,
+						   'La guía no existe' AS Message
+
+						   SELECT CONCAT(ItemSerie, ItemNumber) AS Guide, 
+								  'La guía no existe' AS Message
+						   FROM #Delivery
+						   WHERE Exist = 0
 				END
 			END
 			ELSE
