@@ -93,8 +93,8 @@ BEGIN
           ISNULL(LTRIM(RTRIM(@VoucherPhone)),'') AS [VoucherPhone],
           ISNULL(cus.IdCustomerType,0) AS IdCustomerType,
           ISNULL(cust.[Description],'') AS DescriptionCustomerType, 
-          cus.[ConditionOfPaymentID],
-          cOfPay.ConditionOfPayment
+          ISNULL(cus.[ConditionOfPaymentID],0) AS ConditionOfPaymentID,
+          ISNULL(cOfPay.ConditionOfPayment,'') AS ConditionOfPayment
      FROM invoiceHeader invH WITH(NOLOCK)
           INNER JOIN InvoiceBatchDetail invBD WITH(NOLOCK) 
                   ON invH.inv_pk_id = invBD.inv_pk_id 
