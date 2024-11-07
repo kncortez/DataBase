@@ -641,6 +641,7 @@ begin
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
 									 + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ',' 
                                      + '"Route_Code": "' + ISNULL(CAST(DSC.RouteCode AS varchar),'') + '",' 
+                                     + '"RouteCode": "' + ISNULL(CAST(DSC.RouteCode AS varchar),'') + '",' 
 									 + '"DeliveryETA": "' + COALESCE
 																(
 																	FORMAT([dev].[DeliveryETA], 'ddMM')

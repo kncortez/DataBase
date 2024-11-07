@@ -5,7 +5,7 @@
 -- Create date: <2020-08-05>
 -- Description:	<Devuelve la opcion y precio shipping>
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_get_service_source_destiny_by_hub]
+ALTER PROCEDURE [dbo].[spws_get_service_source_destiny_by_hub]
 	-- Add the parameters for the stored procedure here
 		    @CodApp as nvarchar(50) = 'SIFDCECOM300720201459',
 			@HeaderCodeDestiny as nvarchar(6)  = '0501',
@@ -77,22 +77,25 @@ BEGIN
 				iif(@CodeOfReference > 0, ISNULL(UPPER(CASE WHEN  client.Abbreviation <> ' '  THEN client.Abbreviation ELSE client.Name END ), ' '), (select Abbreviation  from dbo.Customer where IdCustomer = @IdCustomer)) AbbrvCustomerName,
 				ISNULL(Cast(vpc.VisitPointId as varchar), '') SourceVPCVisitPointId,
 				'' DepotAddress
-			from DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
+			from 
+				--DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
+				DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) 
 				LEFT JOIN DeliveryBackOffice.dbo.Settlement pob WITH(NOLOCK)
 					ON
-					mun.IdTownship = pob.IdTownship
-					AND
-					mun.IdProvince = pob.IdProvince
+					pob.IdTownship=vpc.IdTownship
 					AND
 					pob.SettlementSatus = 1
+				LEFT JOIN  DeliveryBackOffice.dbo.Township mun WITH(NOLOCK) on pob.IdTownship=mun.IdTownship
 				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK) WHERE RowStatus = 1) DSC3
 					ON
 					pob.IdSettlement = DSC3.IdSettlement
 				INNER JOIN DeliveryBackOffice.dbo.Province dep WITH(NOLOCK) on	mun.IdProvince = dep.IdProvince and dep.ProvinceStatus = 'TRUE'
 				LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK) on RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
-				LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) on vpc.CodeOfReference =  @CodeOfReference --and vpc.IdKindOfVPClient = 6
+				--LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) on vpc.CodeOfReference =  @CodeOfReference --and vpc.IdKindOfVPClient = 6
+				
 				LEFT JOIN DeliveryBackOffice.dbo.Customer client WITH(NOLOCK) on vpc.CustomerID = client.IdCustomer
 			where mun.HeaderCode = @HeaderCodeSource and mun.TownshipStatus = 'TRUE' 
+			AND  vpc.CodeOfReference =  @CodeOfReference --and vpc.IdKindOfVPClient = 6
 		end
 				
 			
