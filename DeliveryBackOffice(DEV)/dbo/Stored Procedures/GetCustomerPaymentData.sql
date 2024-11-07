@@ -48,6 +48,7 @@ BEGIN
 		,CPV.[Type]
 		,@Phone Phone
 		,@Email Email
+		,CPV.Holder
 	FROM
 		[DeliveryBackOffice].[dbo].[CustomerPaymentValue] CPV WITH(NOLOCK)
 	WHERE
