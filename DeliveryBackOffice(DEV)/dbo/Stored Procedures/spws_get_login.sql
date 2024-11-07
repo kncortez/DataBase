@@ -742,8 +742,7 @@ BEGIN
                 (
                     SELECT STUFF(
                                     (
-                                        SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message
-                                            + '"}'
+                                        SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message +'"}'
                                         FROM #errormessage
                                         WHERE Id = 'Confirmation'
                                         FOR XML PATH(''), TYPE
@@ -785,7 +784,6 @@ BEGIN
     BEGIN
 
         -- incrementar en 1 los intentos fallidos de inicio de sesion 
-
         UPDATE [dbo].UserSystemRestriction
         SET UstRetries = (UstRetries + 1)
           , UstStatus = (IIF(UstRetries + 1 >= UstAccessRetries, 'BLOCKED', 'ACTIVE'))
@@ -794,12 +792,25 @@ BEGIN
                 ON res.UstIdUser = usr.UsrIdUser
                    AND res.UstIdSystem = @IdSystem
         WHERE usr.UsrEmail = @Username;
-
+        
+        SELECT  @StatusAccount = ISNULL(ac.AccConfirm, '')
+        FROM RegisterUser   us WITH (NOLOCK)  
+			INNER JOIN [dbo].Person               pe WITH (NOLOCK)  
+				ON pe.PerIdPerson = us.UsrIdPerson  
+			INNER JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)  
+				ON rua.RuaIdUser = us.UsrIdUser  
+			INNER JOIN [dbo].CatRol               ro WITH (NOLOCK)  
+				ON ro.RolIdRol = rua.RuaIdRol  
+			INNER JOIN [dbo].Account              ac WITH (NOLOCK)  
+				ON ac.AccIdAccount = rua.RuaIdAccount  
+			INNER JOIN [dbo].CatTypeAccount       ta WITH (NOLOCK)  
+				ON ta.TacIdTypeAccount = ac.AccIdTypeAccount  
+        WHERE us.UsrEmail = @UserName
         -- retornar mensaje de error
         SET @jsonResult =
         (
             SELECT STUFF((
-                             SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '"}'
+                             SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '",' + '"Status":"' + @StatusAccount + '"}'
                              FROM #errormessage
                              WHERE Id = 'Invalid'
                              FOR XML PATH(''), TYPE
