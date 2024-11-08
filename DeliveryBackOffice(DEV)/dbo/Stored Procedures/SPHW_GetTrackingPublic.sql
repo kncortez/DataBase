@@ -6,7 +6,7 @@
 -- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-11-04>
--- Description:	<Se agrega el DeliveryETA para el trackin>
+-- Description:	<Se agrega el DeliveryETA para el trackin y muestra nuevo estado en timeline >
 -- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetTrackingPublic]
@@ -16,12 +16,23 @@ AS
 BEGIN
 BEGIN TRY
 
+	DECLARE @SenderName AS NVARCHAR(50),
+			@Hub AS NVARCHAR(10)
 	--Encabezados
 	DECLARE @EncabezadoRastreo TABLE (
 		Id INT IDENTITY(1,1) PRIMARY KEY,
 		Nombre NVARCHAR(50),
 		Descripcion NVARCHAR(255)
 	);
+
+	----NOTA EL HUB QUEDA PENDIENTE DE VALIDAR, SEGUN SEAN LOS NUEVOS REQUERIMIENTOS
+	SELECT @SenderName = CONCAT(ISNULL(DO.Sender_FirstName,''), ' ',ISNULL(DO.Sender_LastName,'')),
+		   @Hub = P.ProvinceAbbreviation
+	FROM DeliveryOrder DO WITH(NOLOCK) 
+	LEFT JOIN Province P WITH (NOLOCK)
+		ON DO.Receiver_Department = P.ProvinceName
+	WHERE DO.Guide_Serie = @GuideSerie 
+	AND DO.Guide_Number = @GuideNumber
 
 	INSERT INTO @EncabezadoRastreo (Nombre, Descripcion)
 	SELECT 'Creado por', '' UNION ALL --1
@@ -30,12 +41,20 @@ BEGIN TRY
 	SELECT 'En ruta', 'Tu paquete está por ser entregado.' UNION ALL --4
 	SELECT 'Entregado', 'Tu paquete ha sido entregado.'; --5
 
-	--Iconos
-	SELECT
-		   NameStatusProcess AS 'label'
-		 , Icon AS 'icon'
-	FROM
-	DeliveryBackOffice.dbo.CatStatusProcess WITH(NOLOCK)
+		--Iconos
+	SELECT NameStatusProcess AS 'label',
+		   Icon AS 'icon',
+		   CASE
+			   WHEN NameStatusProcess = 'Creado' THEN
+				   @SenderName
+			   WHEN NameStatusProcess = 'Recibido por Forza' THEN
+				   @SenderName
+			   WHEN NameStatusProcess = 'En instalaciones' THEN
+				   @Hub
+			   ELSE
+				   NULL
+		   END AS Description
+	FROM DeliveryBackOffice.dbo.CatStatusProcess WITH (NOLOCK)
 
 	--Informacion pública
 	SELECT
