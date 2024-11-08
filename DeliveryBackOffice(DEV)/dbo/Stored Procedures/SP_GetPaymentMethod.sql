@@ -10,6 +10,7 @@ AS
 BEGIN  
     SELECT  cpv.IdCustomerPaymentValue AS Id,
             cpv.DisplayText AS DisplayText,
+            cpv.Type AS TypeCard,
             IIF(cpv.IsDefault = 1, 'true','false') AS IsDefault
     FROM CustomerPaymentValue cpv  
     WHERE (cpv.AccountId = @IdAccount  
