@@ -193,6 +193,90 @@ BEGIN TRY
 			ON DO.StatusOrderId = SO.StatusOrderId
 		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 	);	
+
+	-- Variables de tipo bit para verificar si cada campo tiene datos
+	DECLARE @HasImagePath BIT, @HasDry BIT, @HasCold BIT, @HasLatitude BIT, @HasLongitude BIT;
+
+	-- Consultamos los valores y asignamos las variables
+	SET @HasImagePath = IIF(
+		EXISTS (
+			SELECT TOP 1 1
+			FROM DeliveryProof dp WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+				ON dp.Guide_Serie = dod.Guide_Serie
+				AND dp.Guide_Number = dod.Guide_Number
+			WHERE dp.Guide_Serie = @GuideSerie
+			  AND dp.Guide_Number = @GuideNumber
+			  AND dod.StatusOrderId = 5
+			  AND (dp.Path_Dry IS NOT NULL AND dp.Path_Dry <> '' OR dp.Path_Cold IS NOT NULL AND dp.Path_Cold <> '')
+		), 1, 0
+	);
+
+	SET @HasDry = IIF(
+		EXISTS (
+			SELECT TOP 1 1
+			FROM DeliveryBackOffice.dbo.DeliveryProof dp WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+				ON da.Guide_Serie = dp.Guide_Serie
+				AND da.Guide_Number = dp.Guide_Number
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+				ON dp.Guide_Serie = dod.Guide_Serie
+				AND dp.Guide_Number = dod.Guide_Number
+			WHERE dp.Guide_Serie = @GuideSerie
+			  AND dp.Guide_Number = @GuideNumber
+			  AND da.Delivered = 1
+			  AND dod.StatusOrderId = 5
+			  AND dp.Path_Dry IS NOT NULL AND dp.Path_Dry <> ''
+		), 1, 0
+	);
+
+	SET @HasCold = IIF(
+		EXISTS (
+			SELECT TOP 1 1
+			FROM DeliveryBackOffice.dbo.DeliveryProof dp WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+				ON da.Guide_Serie = dp.Guide_Serie
+				AND da.Guide_Number = dp.Guide_Number
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+				ON dp.Guide_Serie = dod.Guide_Serie
+				AND dp.Guide_Number = dod.Guide_Number
+			WHERE dp.Guide_Serie = @GuideSerie
+			  AND dp.Guide_Number = @GuideNumber
+			  AND da.Delivered = 1
+			  AND dod.StatusOrderId = 5
+			  AND dp.Path_Cold IS NOT NULL AND dp.Path_Cold <> ''
+		), 1, 0
+	);
+
+	SET @HasLatitude = IIF(
+		EXISTS (
+			SELECT TOP 1 1
+			FROM DeliveryBackOffice.dbo.DeliveryAttempt DA WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+				ON DA.Guide_Serie = dod.Guide_Serie
+				AND DA.Guide_Number = dod.Guide_Number
+			WHERE DA.Guide_Serie = @GuideSerie
+			  AND DA.Guide_Number = @GuideNumber
+			  AND DA.Delivered = 1
+			  AND dod.StatusOrderId = 5
+			  AND DA.Latitude IS NOT NULL AND DA.Latitude <> ''
+		), 1, 0
+	);
+
+	SET @HasLongitude = IIF(
+		EXISTS (
+			SELECT TOP 1 1
+			FROM DeliveryBackOffice.dbo.DeliveryAttempt DA WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+				ON DA.Guide_Serie = dod.Guide_Serie
+				AND DA.Guide_Number = dod.Guide_Number
+			WHERE DA.Guide_Serie = @GuideSerie
+			  AND DA.Guide_Number = @GuideNumber
+			  AND DA.Delivered = 1
+			  AND dod.StatusOrderId = 5
+			  AND DA.Longitude IS NOT NULL AND DA.Longitude <> ''
+		), 1, 0
+	);
 	
 	--Banderas
 	SELECT 
@@ -200,6 +284,8 @@ BEGIN TRY
 		, ISNULL(@f2,'false') AS 'flagChangeAdress'
 		, ISNULL(@f3,'false') AS 'flagPayDelivery'
 		, ISNULL(@f4,'false') AS 'flagNotifications'
+		, IIF(@HasImagePath = 1,'true',IIF(@HasDry = 1, 'true',IIF(@HasCold = 1, 'true','false'))) AS 'flagShowImage'
+		, IIF(@HasLatitude = 1 AND @HasLongitude = 1, 'true','false') AS 'flagShowMapa'
 
 END TRY
 BEGIN CATCH
