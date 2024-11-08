@@ -65,9 +65,12 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 			CASE WHEN DL.ExpirationDate >= GETDATE() AND DLS.[Name] = 'Enviado' OR DLS.[Name] = 'Aperturado' THEN 'Token vigente'  --- iNDICA QUE EL tOKEN ESTA VIGENTE
 			     WHEN DLS.IdDeliveryLinkStatus = @Canceled   THEN 'Link de entrega anulado'
 			        ELSE 'Token No vigente' END AS [MessageResponse], -- INDICA QUE EL tOKEN VENCIO
-           DataOrigin.AccName,
-		   DataOrigin.UsrNickName AS [CommercialName],
-		   DataOrigin.[Name]
+           CASE WHEN DL.IsUserWithoutLogin = 0 THEN DataOrigin.AccName
+				 ELSE DataOrigin.DescriptionOfClient END AS 'AccName',
+		   CASE WHEN DL.IsUserWithoutLogin = 0 THEN DataOrigin.UsrNickName
+				 ELSE DataOrigin.DescriptionOfClient END AS 'CommercialName',
+		   CASE WHEN DL.IsUserWithoutLogin = 0 THEN DataOrigin.[Name] 
+				 ELSE DataOrigin.DescriptionOfClient END AS 'Name' 
 	FROM [DeliveryBackOffice].[dbo].[DeliveryLink] DL WITH(NOLOCK)
 	        INNER JOIN  
 		  [DeliveryBackOffice].[dbo].[Account] A WITH(NOLOCK)
@@ -89,6 +92,7 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		  ON  DL.DeliveryLinkStatusId = DLS.IdDeliveryLinkStatus
 		  	LEFT JOIN (
 						SELECT  VPC.CodeOfReference,
+								VPC.DescriptionOfClient,
 								A.AccName,
 								Cu.[Name],
 								Cu.CommercialName,
