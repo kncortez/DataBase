@@ -522,12 +522,12 @@ BEGIN
                             SELECT STUFF(
                                             (
                                                  SELECT ',{"FirstName":"' + pe.PerFirstName + '",' + '"LastName":"'
-                                                       + pe.PerLastName + '",' + '"Gender":"' + pe.PerGender + '",'
-                                                       + '"Birthdate":"' + CONVERT(VARCHAR, pe.PerBirthdate) + '",'
-                                                       + '"Identification":"' + pe.PerIdentification + '",'
+                                                       + pe.PerLastName + '",' + '"Gender":"' + ISNULL(pe.PerGender, ' ') + '",'  
+                                                       + '"Birthdate":"' + CONVERT(VARCHAR, ISNULL(pe.PerBirthdate, ' ')) + '",'  
+                                                       + '"Identification":"' + ISNULL(pe.PerIdentification,' ') + '",'  
                                                        + '"Nationality":"' + pe.PerNationality + '",' 
 													   + '"NickName":"' 
-                                                       + CONVERT(VARCHAR, us.UsrNickName)  + '",' 
+                                                       + CONVERT(VARCHAR, ISNULL(us.UsrNickName, ' '))  + '",'   
                                                        -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                                                        + '"PrefixCallingCode":"' + ISNULL(us.PrefixCallingCode, '') + '",'
 													   + '"Phone":"'
