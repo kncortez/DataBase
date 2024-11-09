@@ -735,7 +735,7 @@
     <Build Include="dbo\Stored Procedures\sps_get_linehauls_by_service.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintMultipleGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetManifestWithIncidenceByRoute.sql" />
-    <Build Include="dbo\Stored Procedures\GetBlockedRoutesHavingCourier.sql" />    
+    <Build Include="dbo\Stored Procedures\GetBlockedRoutesHavingCourier.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintGuie_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintGuie.sql" />
     <Build Include="dbo\Stored Procedures\sps_edit_guide.sql" />
@@ -1826,6 +1826,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetCheckoutWithoutLogin.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_UpdateImagesProductPathWithoutLogin.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateProductsWithoutLogin.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetAddressByPhoneList.sql" />
   </ItemGroup>
   <ItemGroup>
       <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac</HintPath>
