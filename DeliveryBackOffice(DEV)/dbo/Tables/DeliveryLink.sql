@@ -7,7 +7,7 @@
     [DestinyCodeOfReference] INT NULL, 
     [ReceiverName] NVARCHAR(200) NOT NULL, 
     [ReceiverPhone] NVARCHAR(50) NOT NULL, 
-    [ReceiverSettlementId] BIGINT NOT NULL, 
+    [ReceiverSettlementId] BIGINT NULL, 
     [ReceiverEmail] NVARCHAR(100) NOT NULL, 
     [ReceiverCatCityPlaceId] INT NULL, 
     [ReceiverZone] NVARCHAR(100) NULL, 
