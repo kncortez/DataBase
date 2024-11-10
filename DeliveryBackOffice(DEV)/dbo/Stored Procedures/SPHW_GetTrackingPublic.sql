@@ -9,7 +9,7 @@
 -- Description:	<Se agrega el DeliveryETA para el trackin y muestra nuevo estado en timeline >
 -- =============================================
 
-CREATE PROCEDURE [dbo].[SPHW_GetTrackingPublic]
+CREATE PROCEDURE [dbo].[SPHW_GetTrackingPublic] 
 @GuideSerie NVARCHAR(4),
 @GuideNumber INT
 AS
@@ -108,12 +108,13 @@ BEGIN TRY
                CAST(GETDATE() AS DATE)
            WHEN ER.Nombre != 'En ruta'
                 AND DO.DeliveryETA > GETDATE() THEN
-               CAST(DO.DeliveryETA AS DATE)
+               IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
            WHEN ER.Nombre = 'En ruta'
                 AND DO.DeliveryETA < GETDATE() THEN
                CAST(DATEADD(DAY, 1, GETDATE()) AS DATE)
            ELSE
-               CAST(DO.DeliveryETA AS DATE)
+			   IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
+               
        END AS DeliveryETA
 	FROM
 	DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
