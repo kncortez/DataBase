@@ -51,6 +51,7 @@ BEGIN
             ON CONF.NirPhone = UA.UadNirPhone
                AND CONF.Phone = UA.UadPhone
                AND CONF.AccountId = UA.UadIdAccount
+               AND CONF.TownshipId = UA.UadIdTownship
     WHERE UA.UadPhone LIKE '%' + @Phone + '%'
           AND RIGHT(UA.UadNirPhone, 3) = @Nirphone
 		  AND ( VPC.IdSettlement IS NOT NULL OR UA.UadIdSettlement IS NOT NULL)
