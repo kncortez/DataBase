@@ -3,6 +3,10 @@
 -- Create date: <2024-10-03>
 -- Description:	<Link de entregas - Obtener la información necesaria para notificación de rastreo de guía.>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<2024-11-05>
+-- Description:	<Se obtiene nombre de usuario de vp si el un link creado sin logueo>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetFinalLink]
 @IdDeliveryLink INT,
@@ -20,7 +24,8 @@ BEGIN
 BEGIN TRY
 
 	SELECT
-		  RU.UsrNickName AS 'SenderName'
+		  CASE WHEN DL.IsUserWithoutLogin = 0 THEN RU.UsrNickName 
+			   ELSE VPC.DescriptionOfClient END AS 'SenderName'
 		, DL.ReceiverName AS 'ReceiverName'
 		, ISNULL(DL.GuideSerie,'') AS 'GuideSerie'
 		, ISNULL(DL.GuideNumber,0) AS 'GuideNumber'
@@ -40,6 +45,8 @@ BEGIN TRY
 		ON DL.AccountId  = RBUBA.RuaIdAccount
 	INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH(NOLOCK)
 		ON RBUBA.RuaIdUser = RU.UsrIdUser
+	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
+        ON DL.OriginCodeOfReference = VPC.CodeOfReference
 	WHERE DL.IdDeliveryLink = @IdDeliveryLink
 
 	IF(@OnlyInfo = 0)
