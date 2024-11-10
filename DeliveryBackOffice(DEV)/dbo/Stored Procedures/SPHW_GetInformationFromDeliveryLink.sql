@@ -3,6 +3,10 @@
 -- Create date: <Create Date,2024-10-23>
 -- Description:	<Description,Procedimiento para obtener información de un link de entrega>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<2024-11-04>
+-- Description:	<Obtiene datos de remitente si el link no tiene poblado de origen>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_GetInformationFromDeliveryLink]
 @Token NVARCHAR(250)
 AS
@@ -33,7 +37,7 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		   DL.ReceiverName,
 			 DL.NirPhone NirPhone,
 		   RIGHT(DL.ReceiverPhone,8) [ReceiverPhone],
-		   DL.ReceiverSettlementId,
+		   ISNULL(DL.ReceiverSettlementId,0 ) AS ReceiverSettlementId,
 		   DL.ReceiverEmail,
 		   ISNULL(DL.ReceiverCatCityPlaceId,0) ReceiverCatCityPlaceId ,
 		   ISNULL(DL.ReceiverZone,'') ReceiverZone,
@@ -55,9 +59,9 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		   ISNULL( DL.GuideSerie,'') GuideSerie,
 		   ISNULL(DL.GuideNumber,0) GuideNumber,
 		   ISNULL(C.CountryID,'GT') CountryID,
-		   S.Settlement,
-		   T.[TownshipName],
-		   P.[ProvinceName],
+		   ISNULL(S.Settlement,'') AS Settlement,
+		   ISNULL(T.[TownshipName],'') AS TownshipName,
+		   ISNULL(P.[ProvinceName],'') AS ProvinceName,
 		   'true' AS [IsDeliveryLink],
 		    CASE WHEN DL.ExpirationDate >= GETDATE() AND DLS.[Name] = 'Enviado' OR DLS.[Name] = 'Aperturado' THEN  1 --- INDICA QUE EL TOKEN ESTA VIGENTE
 			     WHEN DLS.IdDeliveryLinkStatus = @Canceled   THEN 3
@@ -78,13 +82,13 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		     INNER JOIN 
 		  [DeliveryBackOffice].[dbo].[Customer] C WITH(NOLOCK)
 		  ON A.IdCustomer = C.IdCustomer
-		      INNER JOIN 
+		      LEFT JOIN 
 		  [DeliveryBackOffice].[dbo].[Settlement] S WITH(NOLOCK)
 		  ON DL.ReceiverSettlementId = S.IdSettlement
-		      INNER JOIN 
+		      LEFT JOIN 
 		  [DeliveryBackOffice].[dbo].[Township] T WITH(NOLOCK)
 		  ON S.IdTownship = T.IdTownship
-		      INNER JOIN 
+		      LEFT JOIN 
 		  [DeliveryBackOffice].[dbo].[Province] P WITH(NOLOCK)
 		  ON T.IdProvince = P.IdProvince
 		      INNER JOIN 
