@@ -17,7 +17,8 @@ BEGIN
 BEGIN TRY
 
 	DECLARE @SenderName AS NVARCHAR(50),
-			@Hub AS NVARCHAR(10)
+			@Hub AS NVARCHAR(10),
+			@StatusGuide AS NVARCHAR(20)
 	--Encabezados
 	DECLARE @EncabezadoRastreo TABLE (
 		Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -41,15 +42,41 @@ BEGIN TRY
 	SELECT 'En ruta', 'Tu paquete está por ser entregado.' UNION ALL --4
 	SELECT 'Entregado', 'Tu paquete ha sido entregado.'; --5
 
-		--Iconos
+
+	SELECT @StatusGuide = CST.NameStatusProcess 
+	FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
+		ON DO.StatusOrderId = SO.StatusOrderId
+	INNER JOIN CatStatusProcess CST WITH(NOLOCK)
+		ON SO.CatStatusProcessId = CST.IdStatusProcess
+	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
+
+	--Iconos
 	SELECT NameStatusProcess AS 'label',
 		   Icon AS 'icon',
 		   CASE
-			   WHEN NameStatusProcess = 'Creado' THEN
+			   WHEN NameStatusProcess = 'Creado'
+					AND @StatusGuide = 'Recibido por Forza'
+					OR NameStatusProcess = 'Creado'
+					   AND @StatusGuide = 'En Ruta'
+					OR NameStatusProcess = 'Creado'
+					   AND @StatusGuide = 'Entregado' THEN
 				   @SenderName
-			   WHEN NameStatusProcess = 'Recibido por Forza' THEN
+			   WHEN NameStatusProcess = 'Recibido por Forza'
+					AND @StatusGuide = 'Recibido por Forza'
+					OR NameStatusProcess = 'Recibido por Forza'
+					   AND @StatusGuide = 'En Ruta'
+					OR NameStatusProcess = 'Recibido por Forza'
+					   AND @StatusGuide = 'Entregado' THEN
 				   @SenderName
-			   WHEN NameStatusProcess = 'En instalaciones' THEN
+			   WHEN NameStatusProcess = 'En instalaciones'
+					AND @StatusGuide = 'En instalaciones'
+					AND @StatusGuide = 'Recibido por Forza'
+					AND @StatusGuide = 'Recibido por Forza'
+					OR NameStatusProcess = 'En instalaciones'
+					   AND @StatusGuide = 'En Ruta'
+					OR NameStatusProcess = 'En instalaciones'
+					   AND @StatusGuide = 'Entregado' THEN
 				   @Hub
 			   ELSE
 				   NULL
