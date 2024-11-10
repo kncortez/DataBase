@@ -1794,6 +1794,11 @@
     <Build Include="dbo\User Defined Types\TblProductWithoutLogin.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_UpdateImagesProductPathWithoutLogin.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateProductsWithoutLogin.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetTrackingPublic.sql" />
+    <Build Include="dbo\Tables\CatStatusProcess.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetTrackingPrivate.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetNewDeliveryTracking.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetInfoPackages.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
