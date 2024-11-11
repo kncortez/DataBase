@@ -12,12 +12,13 @@ CREATE PROCEDURE  [dbo].[ReportClosureTotalDesktop]
 	@EndDate datetime = NULL,
 	@VisitPointId NVARCHAR(MAX) = NULL,
 	@IdCierre NVARCHAR(MAX) = NULL,
-	@IdAccount NVARCHAR(MAX) = NULL
+	@IdAccount NVARCHAR(MAX) = NULL,
+	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	DECLARE @AccountExp NVARCHAR(30),
 			@AccountCOD NVARCHAR(30);
-	DECLARE @IdCountry NVARCHAR(2) = (SELECT CountryId FROM VisitPointClient WHERE CodeOfReference = @VisitPointId)
+	--DECLARE @IdCountry NVARCHAR(2) = (SELECT CountryId FROM VisitPointClient WHERE CodeOfReference = @VisitPointId)
 
 	SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')' 
 	FROM ClosureAccount 
@@ -86,7 +87,7 @@ BEGIN
 		   ,ISNULL(MAX(ACH.TotalAmountFacturaCardDeclared), 0) TotalAmountFacturaCardDeclared
 		   ,ISNULL(MAX(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard), 0) TotalGeneral
 		   -- FIN MODIFICACIÓN
-		   ,CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'L.' END AS CurrensySymbol
+		   ,CCU.Symbol AS CurrensySymbol 
 		FROM dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		LEFT JOIN dbo.VisitPointClient VPC WITH(NOLOCK)
 			ON VPC.CodeOfReference = ACH.VisitPoint
@@ -95,6 +96,11 @@ BEGIN
 		LEFT JOIN DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
 			ON DOPD.GuideSerie = ACD.GuideSerie
 			AND DOPD.GuideNumber = ACD.GuideNumber
+		LEFT JOIN Cost CST WITH (NOLOCK)
+			ON ACD.GuideSerie = CST.GuideSerie
+			   AND ACD.GuideNumber = CST.GuideNumber
+		LEFT JOIN CatCurrencyCOD CCU WITH (NOLOCK)
+		ON CST.ShippingCurrency = CCU.IdCatCurrencyCOD 
 		WHERE CONVERT(DATE, ACH.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 		AND (VPC.CodeOfReference IN (SELECT
 				CodeOfReference
@@ -108,6 +114,7 @@ BEGIN
 				AccountId
 			FROM @tblIdAccount)
 		OR @IdAccount = '-1')
-		GROUP BY ACH.IdAccountingClosuresHeader, VPC.CountryId) X
+		AND VPC.CountryId = @IdCountry
+		GROUP BY ACH.IdAccountingClosuresHeader, CCU.Symbol) X
 		GROUP BY CurrensySymbol
 END

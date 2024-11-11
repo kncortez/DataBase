@@ -13,7 +13,8 @@ CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @EndDate datetime = null,
 @VisitPointId NVARCHAR(3000) = null,
 @IdCierre NVARCHAR(3000) = null,
-@IdAccount NVARCHAR(3000) = null
+@IdAccount NVARCHAR(3000) = null,
+@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -85,7 +86,7 @@ BEGIN
 	   ,STO.OrderDescription 'Status'
 	   ,DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) 'Guide'
 	   ,ISNULL(costd.Voucher, '') 'Voucher'
-	   ,CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ' ELSE 'HNL' END AS CurrencySymbol
+	   ,CCU.Symbol AS CurrencySymbol 
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE
@@ -153,6 +154,8 @@ BEGIN
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1 WITH(NOLOCK)
 			ON REU1.UsrIdUser = ACHVP.UserId
 	-- FIN MODIFICACIÓN
+	LEFT JOIN CatCurrencyCOD CCU WITH (NOLOCK)
+		ON cost.ShippingCurrency = CCU.IdCatCurrencyCOD
 
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
@@ -162,6 +165,7 @@ BEGIN
 	-- FIN MODIFICACIÓN
 
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
+	AND VPC.CountryId = @IdCountry
 	-- ORDER BY DOPD.DateCreated ASC
 	UNION ALL
 	SELECT DISTINCT DOPD.AccountId,
@@ -245,6 +249,7 @@ BEGIN
 	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
 	AND (CTS.IdTypeService NOT IN (5, 23))
+	AND VPC.CountryId = @IdCountry
 	ORDER BY DOPD.DateCreated ASC
 	option (optimize for unknown)
 END
