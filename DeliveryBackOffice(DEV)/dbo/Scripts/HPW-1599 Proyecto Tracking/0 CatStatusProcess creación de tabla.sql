@@ -82,6 +82,7 @@ BEGIN TRY
 	INSERT INTO CatStatusProcess (NameStatusProcess, DescriptionStatusProcess, RowStatus, UserCreated, DateCreated)
 	VALUES 
 	('Creado', 'Estado que se usa cuando una guía se encuentra generada o solicitada.', 1, 'SYS-WOROZCO', GETDATE()),
+	('Recibido por Forza','Indica que la guÍa se recibio',1,'SYS-WOROZCO',GETDATE()),
 	('En instalaciones', 'Estado que indica que el proceso está en ejecución.', 1, 'SYS-WOROZCO', GETDATE()),
 	('En Ruta', 'El proceso está en transporte hacia su destino.', 1, 'SYS-WOROZCO', GETDATE()),
 	('Entregado', 'El proceso ha llegado a su destino final.', 1, 'SYS-WOROZCO', GETDATE());
@@ -114,10 +115,10 @@ BEGIN TRY
 
 	UPDATE DeliveryBackOffice.dbo.StatusOrder
 	SET CatStatusProcessId = (SELECT IdStatusProcess FROM DeliveryBackOffice.dbo.CatStatusProcess WHERE NameStatusProcess = 'En instalaciones')
-	WHERE OrderDescription IN ('Recolectado', 'Programado para entrega', 'Retornado al origen', 
+	WHERE OrderDescription IN ('Programado para entrega', 'Retornado al origen', 
 		'Paquete Retornado para Reproceso', 'Entrega parcial', 'En Inventario', 'Arribó a las instalaciones', 
 		'Intento de entrega fallida', 'En Revisión', 'Programado para recolección', 'Programado para devolución', 
-		'En Tránsito', 'Traslado a Express Center', 'Recibido En Express Center', 'Paquete Retenido', 
+		'En Tránsito', 'Traslado a Express Center','Paquete Retenido', 
 		'Paquete Extraviado', 'Retenido', 'Reenviado al Hub origen para devolución', 'En Inventario de devolución', 
 		'Declarado para Devolución', 'Paquete retenido por autoridad', 'Paquete Dañado', 'Paquete Inspeccionado', 
 		'Guía arribó con piezas incompletas', 'Guía Fuera De Ruta', 'Reclamo en proceso', 'Tiempo máximo de inventario', 
@@ -133,6 +134,10 @@ BEGIN TRY
 	WHERE OrderDescription IN ('Entregado', 'Anulado', 'Devuelto', 'Entregado En Express Center', 
 		'Devuelto en Express Center', 'COD liquidado', 'COD pagado', 'Paquete destruido', 
 		'Reclamo finalizado', 'Paquete Abandonado', 'Paquete liquidado por garantía');
+
+	UPDATE DeliveryBackOffice.dbo.StatusOrder
+	SET CatStatusProcessId = (SELECT IdStatusProcess FROM CatStatusProcess WHERE NameStatusProcess = 'Recibido por Forza')
+	WHERE OrderDescription IN ('Recolectado','Recibido En Express Center')
 
 	-- Consulta para verificar los cambios
 	SELECT * FROM DeliveryBackOffice.dbo.StatusOrder;
@@ -154,16 +159,20 @@ BEGIN TRY
 	WHERE IdStatusProcess = 1;
 
 	UPDATE DeliveryBackOffice.dbo.CatStatusProcess
-	SET Icon = 'bi bi-house-door'
+	SET Icon = 'bi bi-archive'
 	WHERE IdStatusProcess = 2;
 
 	UPDATE DeliveryBackOffice.dbo.CatStatusProcess
-	SET Icon = 'bi bi-truck'
+	SET Icon = 'bi bi-house-door'
 	WHERE IdStatusProcess = 3;
 
 	UPDATE DeliveryBackOffice.dbo.CatStatusProcess
-	SET Icon = 'bi bi-geo-alt'
+	SET Icon = 'bi bi-truck'
 	WHERE IdStatusProcess = 4;
+
+	UPDATE DeliveryBackOffice.dbo.CatStatusProcess
+	SET Icon = 'bi bi-geo-alt'
+	WHERE IdStatusProcess = 5;
 
 	-- Consulta de los datos insertados
 	SELECT * FROM DeliveryBackOffice.dbo.CatStatusProcess;
