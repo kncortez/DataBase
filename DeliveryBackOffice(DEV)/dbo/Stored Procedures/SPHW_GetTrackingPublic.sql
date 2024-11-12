@@ -18,12 +18,20 @@ BEGIN TRY
 
 	DECLARE @SenderName AS NVARCHAR(50),
 			@Hub AS NVARCHAR(10),
-			@StatusGuide AS NVARCHAR(20)
+			@StatusGuide AS NVARCHAR(20),
+			@StatusDelivered AS INT
 	--Encabezados
 	DECLARE @EncabezadoRastreo TABLE (
 		Id INT IDENTITY(1,1) PRIMARY KEY,
 		Nombre NVARCHAR(50),
 		Descripcion NVARCHAR(255)
+	);
+
+	SET @StatusDelivered = 
+	(
+		SELECT StatusOrderId 
+		FROM StatusOrder 
+		WHERE OrderDescription = 'Entregado'
 	);
 
 	----NOTA EL HUB QUEDA PENDIENTE DE VALIDAR, SEGUN SEAN LOS NUEVOS REQUERIMIENTOS
@@ -112,6 +120,16 @@ BEGIN TRY
            WHEN ER.Nombre = 'En ruta'
                 AND DO.DeliveryETA < GETDATE() THEN
                CAST(DATEADD(DAY, 1, GETDATE()) AS DATE)
+           WHEN ER.Nombre = 'Entregado' THEN
+           (
+               SELECT TOP 1
+                   CAST(DateCreated AS DATE)
+               FROM DeliveryOrderDetail D WITH (NOLOCK)
+               WHERE D.Guide_Serie = DO.Guide_Serie
+                     AND D.Guide_Number = DO.Guide_Number
+                     AND D.StatusOrderId = @StatusDelivered
+               ORDER BY D.DateCreated DESC
+           )
            ELSE
 			   IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
                
