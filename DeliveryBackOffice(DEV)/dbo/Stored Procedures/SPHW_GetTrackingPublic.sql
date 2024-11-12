@@ -18,12 +18,20 @@ BEGIN TRY
 
 	DECLARE @SenderName AS NVARCHAR(50),
 			@Hub AS NVARCHAR(10),
-			@StatusGuide AS NVARCHAR(20)
+			@StatusGuide AS NVARCHAR(20),
+			@StatusDelivered AS INT
 	--Encabezados
 	DECLARE @EncabezadoRastreo TABLE (
 		Id INT IDENTITY(1,1) PRIMARY KEY,
 		Nombre NVARCHAR(50),
 		Descripcion NVARCHAR(255)
+	);
+
+	SET @StatusDelivered = 
+	(
+		SELECT StatusOrderId 
+		FROM StatusOrder 
+		WHERE OrderDescription = 'Entregado'
 	);
 
 	----NOTA EL HUB QUEDA PENDIENTE DE VALIDAR, SEGUN SEAN LOS NUEVOS REQUERIMIENTOS
@@ -83,10 +91,29 @@ BEGIN TRY
 		   END AS Description
 	FROM DeliveryBackOffice.dbo.CatStatusProcess WITH (NOLOCK)
 
+	DECLARE @Piezas NVARCHAR(20) = N'';
+	DECLARE @Description NVARCHAR(200) = N'';
+
+	SELECT 
+		@Piezas = CASE 
+					 WHEN COUNT(DOP.ParcelCode) = 1 THEN '1 pieza'
+					 ELSE CAST(COUNT(DOP.ParcelCode) AS NVARCHAR(5)) + ' piezas'
+				  END,
+		@Description = STRING_AGG(DOP.Detail, ', ')
+	FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
+		ON DO.Guide_Serie = DOP.GuideSerie AND DO.Guide_Number = DOP.GuideNumber
+	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber;
+
 	--Informacion pública
 	SELECT
 		  CONCAT(ISNULL(DO.Sender_FirstName,''), ' ',ISNULL(DO.Sender_LastName,'')) AS 'SenderName'
 		, CONCAT(ISNULL(DO.Receiver_FirstName,''), ' ',ISNULL(DO.Receiver_LastName,'')) AS 'ReceiverName'
+		, ISNULL(S.Settlement,'')    AS 'Poblado'
+		, IIF(T.TownshipName IS NOT NULL,T.TownshipName,ISNULL(T2.TownshipName,'')) AS 'Municipio'
+		, IIF(P.ProvinceName IS NOT NULL,P.ProvinceName,ISNULL(P2.ProvinceName,'')) AS 'Departamento'
+		, ISNULL(@Piezas,'') AS 'Pieces'
+		, ISNULL(@Description,'')  AS 'Description'
 		, ISNULL(DO.ReceiverCountryId,'GT') AS 'Country'
 		, SO.CatStatusProcessId AS 'StatusTracking'
 		, ISNULL(ER.Nombre,'') AS 'StatusTrackingTitle'
@@ -112,14 +139,33 @@ BEGIN TRY
            WHEN ER.Nombre = 'En ruta'
                 AND DO.DeliveryETA < GETDATE() THEN
                CAST(DATEADD(DAY, 1, GETDATE()) AS DATE)
+           WHEN ER.Nombre = 'Entregado' THEN
+           (
+               SELECT TOP 1
+                   CAST(DateCreated AS DATE)
+               FROM DeliveryOrderDetail D WITH (NOLOCK)
+               WHERE D.Guide_Serie = DO.Guide_Serie
+                     AND D.Guide_Number = DO.Guide_Number
+                     AND D.StatusOrderId = @StatusDelivered
+               ORDER BY D.DateCreated DESC
+           )
            ELSE
-			   IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
-               
+               IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
        END AS DeliveryETA
 	FROM
 	DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
 		ON DO.StatusOrderId = SO.StatusOrderId
+	LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
+		ON DO.ReceiverIdSettlement = S.IdSettlement
+	LEFT JOIN DeliveryBackOffice.dbo.Township T WITH(NOLOCK)
+		ON S.IdTownship = T.IdTownship
+	LEFT JOIN DeliveryBackOffice.dbo.Province P WITH(NOLOCK)
+		ON S.IdProvince = P.IdProvince
+	LEFT JOIN DeliveryBackOffice.dbo.Township T2 WITH(NOLOCK)
+		ON DO.ReceiverIdTownship = T2.IdTownship
+	LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH(NOLOCK)
+		ON T2.IdProvince = P2.IdProvince
 	LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH(NOLOCK)
 		ON CP.[Name] = 'AreaCode' AND ISNULL(DO.ReceiverCountryId,'GT') = CP.IdCountry
 	LEFT JOIN @EncabezadoRastreo  ER
