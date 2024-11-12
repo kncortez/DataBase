@@ -143,7 +143,7 @@ BEGIN
                                                                     + '",' + '"IsFavorite":"'+ CONVERT(VARCHAR(20),ISNULL(ua.UadFavorite,0))
                                                                     + '",' + '"Email":"'	 + ISNULL(vp.Email,'')
                                                                     + '",' + '"IdSettlement":"'		+ CONVERT(VARCHAR(20),ISNULL(vp.IdSettlement,0))
-                                                                    + '",' + '"SettlementName":"'	+ ISNULL(st.Settlement,'') + '",'
+                                                                    + '",' + '"SettlementName":"'	+ CONCAT(st.Settlement,', ',twn.TownshipName,', ', prv.ProvinceName) + '",'
                                                                     + '"AdditionalInstructions":"'
                                                                     + REPLACE(
                                                                                  REPLACE(
@@ -190,6 +190,9 @@ BEGIN
                                                              WHERE rua.RuaIdAccount = @IdAccount
                                                                    AND rua.RuaIdUser = @IdUser
                                                                    AND ua.UadRowStatus = 1
+																	AND st.SettlementSatus = 1
+																	AND twn.TownshipStatus = 1
+																	AND prv.ProvinceStatus = 1
                                                              FOR XML PATH(''), TYPE
                                                          ).value('.', 'varchar(max)')
                                                        , 1

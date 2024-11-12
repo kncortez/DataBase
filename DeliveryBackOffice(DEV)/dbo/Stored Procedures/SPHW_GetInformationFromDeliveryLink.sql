@@ -3,6 +3,10 @@
 -- Create date: <Create Date,2024-10-23>
 -- Description:	<Description,Procedimiento para obtener información de un link de entrega>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<2024-11-04>
+-- Description:	<Obtiene datos de remitente si el link no tiene poblado de origen>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_GetInformationFromDeliveryLink]
 @Token NVARCHAR(250)
 AS
@@ -33,7 +37,7 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		   DL.ReceiverName,
 			 DL.NirPhone NirPhone,
 		   RIGHT(DL.ReceiverPhone,8) [ReceiverPhone],
-		   DL.ReceiverSettlementId,
+		   ISNULL(DL.ReceiverSettlementId,0 ) AS ReceiverSettlementId,
 		   DL.ReceiverEmail,
 		   ISNULL(DL.ReceiverCatCityPlaceId,0) ReceiverCatCityPlaceId ,
 		   ISNULL(DL.ReceiverZone,'') ReceiverZone,
@@ -55,9 +59,9 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		   ISNULL( DL.GuideSerie,'') GuideSerie,
 		   ISNULL(DL.GuideNumber,0) GuideNumber,
 		   ISNULL(C.CountryID,'GT') CountryID,
-		   S.Settlement,
-		   T.[TownshipName],
-		   P.[ProvinceName],
+		   ISNULL(S.Settlement,'') AS Settlement,
+		   ISNULL(T.[TownshipName],'') AS TownshipName,
+		   ISNULL(P.[ProvinceName],'') AS ProvinceName,
 		   'true' AS [IsDeliveryLink],
 		    CASE WHEN DL.ExpirationDate >= GETDATE() AND DLS.[Name] = 'Enviado' OR DLS.[Name] = 'Aperturado' THEN  1 --- INDICA QUE EL TOKEN ESTA VIGENTE
 			     WHEN DLS.IdDeliveryLinkStatus = @Canceled   THEN 3
@@ -65,9 +69,12 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 			CASE WHEN DL.ExpirationDate >= GETDATE() AND DLS.[Name] = 'Enviado' OR DLS.[Name] = 'Aperturado' THEN 'Token vigente'  --- iNDICA QUE EL tOKEN ESTA VIGENTE
 			     WHEN DLS.IdDeliveryLinkStatus = @Canceled   THEN 'Link de entrega anulado'
 			        ELSE 'Token No vigente' END AS [MessageResponse], -- INDICA QUE EL tOKEN VENCIO
-           DataOrigin.AccName,
-		   DataOrigin.UsrNickName AS [CommercialName],
-		   DataOrigin.[Name]
+           CASE WHEN DL.IsUserWithoutLogin = 0 THEN DataOrigin.AccName
+				 ELSE DataOrigin.DescriptionOfClient END AS 'AccName',
+		   CASE WHEN DL.IsUserWithoutLogin = 0 THEN DataOrigin.UsrNickName
+				 ELSE DataOrigin.DescriptionOfClient END AS 'CommercialName',
+		   CASE WHEN DL.IsUserWithoutLogin = 0 THEN DataOrigin.[Name] 
+				 ELSE DataOrigin.DescriptionOfClient END AS 'Name' 
 	FROM [DeliveryBackOffice].[dbo].[DeliveryLink] DL WITH(NOLOCK)
 	        INNER JOIN  
 		  [DeliveryBackOffice].[dbo].[Account] A WITH(NOLOCK)
@@ -75,13 +82,13 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		     INNER JOIN 
 		  [DeliveryBackOffice].[dbo].[Customer] C WITH(NOLOCK)
 		  ON A.IdCustomer = C.IdCustomer
-		      INNER JOIN 
+		      LEFT JOIN 
 		  [DeliveryBackOffice].[dbo].[Settlement] S WITH(NOLOCK)
 		  ON DL.ReceiverSettlementId = S.IdSettlement
-		      INNER JOIN 
+		      LEFT JOIN 
 		  [DeliveryBackOffice].[dbo].[Township] T WITH(NOLOCK)
 		  ON S.IdTownship = T.IdTownship
-		      INNER JOIN 
+		      LEFT JOIN 
 		  [DeliveryBackOffice].[dbo].[Province] P WITH(NOLOCK)
 		  ON T.IdProvince = P.IdProvince
 		      INNER JOIN 
@@ -89,6 +96,7 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		  ON  DL.DeliveryLinkStatusId = DLS.IdDeliveryLinkStatus
 		  	LEFT JOIN (
 						SELECT  VPC.CodeOfReference,
+								VPC.DescriptionOfClient,
 								A.AccName,
 								Cu.[Name],
 								Cu.CommercialName,
