@@ -81,6 +81,7 @@ BEGIN
            RES.[StageDescription],
            RES.[CheckpointIcon],
            RES.[ImagePath],
+		   RES.[digitalProofDelivery],
            RES.[Dry],
            RES.[Cold],
            RES.[NameOfReceiver],
@@ -92,7 +93,8 @@ BEGIN
            RES.NextSteps,
 		   RES.UserIncident,
            RES.ValidGeolocationEvidence,
-           RES.ValidPhotographicEvidence
+           RES.ValidPhotographicEvidence,
+		   RES.IsVoucherRequired
     INTO #OrdChkpnt
     FROM
     (
@@ -118,6 +120,7 @@ BEGIN
                '' AS [ImagePath],
                --(Select top 1 Path_Dry from DeliveryProof where Guide_Number = 247619 order by Date_Photo desc) AS Dry,
                --(Select top 1 Path_Cold from DeliveryProof where Guide_Number = 247619 order by Date_Photo desc) AS Cold,
+			   '' [digitalProofDelivery],
                '' AS [Dry],
                '' AS [Cold],
                --ISNULL([Cold], '') AS Cold,
@@ -129,12 +132,15 @@ BEGIN
                '' [Token],
                '' NextSteps,
 			   '' [UserIncident],
-                 ''   AS 'ValidGeolocationEvidence',
-				 '' AS 'ValidPhotographicEvidence'
+               ''   AS 'ValidGeolocationEvidence',
+			   '' AS 'ValidPhotographicEvidence',
+			   cu.IsVoucherRequired
         FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.Customer cu WITH (NOLOCK)
+				ON cu.IdCustomer = do.IdCustomer
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                 ON da.Guide_Serie = do.Guide_Serie
-                   AND da.Guide_Number = do.Guide_Number
+                   AND da.Guide_Number = do.Guide_Number			
         WHERE do.Guide_Serie = @Guide_Serie
               AND do.Guide_Number = @Guide_Number
         UNION
@@ -300,20 +306,28 @@ BEGIN
              END
             ) AS [ImagePath],
             CASE WHEN dod.StatusOrderId = 5 THEN 
-			    ISNULL(
+				ISNULL(
 						(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR)) as VARCHAR(300))),
-						--ISNULL('https://tracking.forzadelivery.com/DocImages/GT.DELIVERYZ12/Copia1/V291/17088433.jpg',
-						(
-							SELECT TOP 1
-							IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
-								FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-									INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-										ON da.Guide_Serie = dp.Guide_Serie
-											AND da.Guide_Number = dp.Guide_Number
-								WHERE da.Guide_Serie = @Guide_Serie 
-										AND da.Guide_Number = @Guide_Number
-										AND da.Delivered = 1 order By dp.Date_Photo desc)
-						)
+						--'http://develop.apicore.forzadelivery.io/Comprobantes/Comprobante_FD9561473.jpg',
+						''
+					  )
+			ELSE '' 
+			END AS [digitalProofDelivery],
+			CASE WHEN dod.StatusOrderId = 5 THEN 
+			 ISNULL(
+					(
+						SELECT TOP 1
+						IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
+							FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+									ON da.Guide_Serie = dp.Guide_Serie
+										AND da.Guide_Number = dp.Guide_Number
+							WHERE da.Guide_Serie = @Guide_Serie 
+									AND da.Guide_Number = @Guide_Number
+									AND da.Delivered = 1 order By dp.Date_Photo desc
+					),
+				''
+				)
 			ELSE '' 
 			END AS [Dry],
             (
@@ -405,8 +419,14 @@ BEGIN
 			                             AS 'ValidGeolocationEvidence',
 			   IIF(COI.ValidPhotographicEvidence IS NULL AND dod.StatusOrderId=50,
 				       IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0), 
-				                   IIF(COI.ValidPhotographicEvidence = 1 AND dod.StatusOrderId=50, 1, 0)) AS 'ValidPhotographicEvidence'
+				                   IIF(COI.ValidPhotographicEvidence = 1 AND dod.StatusOrderId=50, 1, 0)) AS 'ValidPhotographicEvidence',
+			  cu.IsVoucherRequired [IsVoucherRequired]
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+				ON do.Guide_Number = dod.Guide_Number
+				and do.Guide_Serie = dod.Guide_Serie
+			INNER JOIN DeliveryBackOffice.dbo.Customer CU WITH (NOLOCK)
+				ON CU.IdCustomer = do.IdCustomer
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
             INNER JOIN [dbo].[CatCheckpointType] CCT
@@ -415,6 +435,7 @@ BEGIN
 			    ON   da.ID=dod.DeliveryAttemptId
 			LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
 			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+				and COI.RowStatus = 1
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
         --ORDER BY DateCreated
@@ -431,7 +452,8 @@ BEGIN
 				 COI.IsConfirmed,
 				 COI.IsDenied,
 				 COI.ValidPhotographicEvidence,
-				 COI.CommentOnIncident
+				 COI.CommentOnIncident,
+				 cu.IsVoucherRequired
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
@@ -473,20 +495,22 @@ BEGIN
                      ) + ' ]' + --[Where]
                      '', --[Complement] 
                      ''
-                 ) + '' + ISNULL(OrdChkPnt.StageDescription, '') AS [StageDescription],
-           OrdChkPnt.[CheckpointIcon],
-           OrdChkPnt.[ImagePath],
-           OrdChkPnt.[Dry],
-           OrdChkPnt.[Cold],
-           OrdChkPnt.[NameOfReceiver],
-           OrdChkPnt.[Place],
-           OrdChkPnt.[ManifestNumber],
-           OrdChkPnt.[Latitude],
-           OrdChkPnt.[Longitude], --,
-           OrdChkPnt.NextSteps,
-		   OrdChkPnt.UserIncident
+                 ) + '' + ISNULL(OrdChkPnt.StageDescription, '') AS [StageDescription]
+           ,OrdChkPnt.[CheckpointIcon]
+           ,OrdChkPnt.[ImagePath]
+		   ,OrdChkPnt.[digitalProofDelivery]
+           ,OrdChkPnt.[Dry]
+           ,OrdChkPnt.[Cold]
+           ,OrdChkPnt.[NameOfReceiver]
+           ,OrdChkPnt.[Place]
+           ,OrdChkPnt.[ManifestNumber]
+           ,OrdChkPnt.[Latitude]
+           ,OrdChkPnt.[Longitude]
+           ,OrdChkPnt.NextSteps
+		   ,OrdChkPnt.UserIncident
            ,OrdChkPnt.ValidGeolocationEvidence
 		   ,OrdChkPnt.ValidPhotographicEvidence
+		   ,OrdChkPnt.IsVoucherRequired
     FROM #OrdChkpnt OrdChkPnt
         LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token WITH (NOLOCK)
             ON OrdChkPnt.Token = token.SSN_IdToken
@@ -501,6 +525,3 @@ BEGIN
              OrdChkPnt.[EventID];
 
 END;
-
-
-
