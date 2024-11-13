@@ -25,12 +25,16 @@ BEGIN
 			, DDO.Guide_Serie
 			, DDO.Guide_Number
 			, IIF(@url IS NULL OR @url = '','Digital', 'Digitalizado') AS VoucherType
+			,   CASE 
+				   WHEN DDO.StatusOrderId = 5 THEN 'Entregado'
+				   WHEN DDO.StatusOrderId = 14 THEN 'Devuelto'
+				   ELSE 'Otro Estado'
+			   	END AS StatusOrderId
 		FROM [dbo].[DeliveryOrder] DDO WITH (NOLOCK)
 		WHERE DDO.Guide_Number IS NOT NULL
 			AND DDO.Guide_Serie = @GuideSerie 
 			AND DDO.Guide_Number = @GuideNumber 
 			AND DDO.SenderCountryId = @IdCountry
-			AND DDO.StatusOrderId IN (SELECT StatusOrderId FROM statusOrder WITH(NOLOCK) WHERE OrderDescription IN('Entregado','Devuelto')) 
 
     END TRY 
 	BEGIN CATCH
