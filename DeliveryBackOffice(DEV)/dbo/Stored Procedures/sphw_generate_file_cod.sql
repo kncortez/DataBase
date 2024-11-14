@@ -2010,7 +2010,7 @@ BEGIN
 		AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
 		AND ISNULL(do.SenderCountryID, 'GT') = @IdCountrySender
 
-		UNION
+		UNION ALL
 		----------ACUMULADO
 		SELECT
 			MAX(CASE WHEN btd.TypeAccountName = 'AHORRO' THEN 'A'
