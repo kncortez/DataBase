@@ -1796,37 +1796,18 @@
     <Build Include="dbo\Stored Procedures\SPHW_RegisterLinkWhatsAppId.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetTokenProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetFinalLink.sql" />
-    <Build Include="dbo\Tables\InvoiceBatchRelationships.sql" />
-    <Build Include="dbo\Tables\InvoiceBatchHeader.sql" />
-    <Build Include="dbo\Tables\InvoiceBatchDetail.sql" />
-    <Build Include="dbo\Stored Procedures\UpadateDeliverySettlementDetail.sql" />
-    <Build Include="dbo\Stored Procedures\SupportInsertSalesAdvisorCode.sql" />
-    <Build Include="dbo\Stored Procedures\SupportCreateTrackingCorporateUser.sql" />
-    <Build Include="dbo\Stored Procedures\SupportCreateSttlement.sql" />
-    <Build Include="dbo\Stored Procedures\SupportCreateHub.sql" />
-    <Build Include="dbo\Stored Procedures\SupportConfirmAccountexcweb.sql" />
-    <Build Include="dbo\Stored Procedures\SupportChangeIdSation.sql" />
-    <Build Include="dbo\Stored Procedures\spg_status_order_detail_web_antes.sql" />
-    <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAPPaymentRecoveryHN.sql" />
-    <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAPHN.sql" />
-    <Build Include="dbo\Stored Procedures\sp_getEmailParser.sql" />
-    <Build Include="dbo\Stored Procedures\SetInvoiceHelperExecutionBatch.sql" />
-    <Build Include="dbo\Stored Procedures\GetCountryOfPickupService.sql" />
-    <Build Include="dbo\Stored Procedures\GetCodeOfReferenceofInvoice.sql" />
-    <Build Include="dbo\Stored Procedures\corregirmanifiesto.sql" />
-    <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
     <Build Include="dbo\Stored Procedures\GetBatchGuideRemissionByCountry.sql" />
     <Build Include="dbo\Stored Procedures\UpdateSendManifestLinehaul.sql" />
     <Build Include="dbo\Stored Procedures\ValidateBatchGuideRemission.sql" />
     <Build Include="dbo\Stored Procedures\ValidateCertificationGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetRouteDispatchTrack.sql" />
     <Build Include="dbo\Stored Procedures\RouteDispatchTrackByRoute.sql" />
-    <Build Include="dbo\Stored Procedures\GetExistRouteAssigmentDT.sql" />
     <Build Include="dbo\Stored Procedures\GetCourierInRoute.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkWithoutLogin.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkWithoutLogin.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetCheckoutWithoutLogin.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_UpdateImagesProductPathWithoutLogin.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateProductsWithoutLogin.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_GetTrackingPublic.sql" />
     <Build Include="dbo\Tables\CatStatusProcess.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetTrackingPrivate.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetNewDeliveryTracking.sql" />
@@ -1834,7 +1815,6 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetAddressByPhoneList.sql" />
   </ItemGroup>
   <ItemGroup>
-    <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
       <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac</HintPath>
       <SuppressMissingDependenciesErrors>True</SuppressMissingDependenciesErrors>
       <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>

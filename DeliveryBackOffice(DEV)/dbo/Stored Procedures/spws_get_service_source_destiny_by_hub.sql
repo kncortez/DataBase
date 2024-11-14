@@ -1,6 +1,4 @@
-﻿
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Edwin,Ramirez>
 -- Create date: <2020-08-05>
 -- Description:	<Devuelve la opcion y precio shipping>
@@ -11,7 +9,8 @@ CREATE PROCEDURE [dbo].[spws_get_service_source_destiny_by_hub]
 			@HeaderCodeDestiny as nvarchar(6)  = '0501',
 			@HeaderCodeSource as nvarchar(6)  = '0102',
 			@CodeOfReference as int = 0,
-			@IdCustomer as int = null
+			@IdCustomer as int = null,
+			@ReceiverIdSettlement as int = NULL
 
 
 AS
@@ -96,7 +95,8 @@ BEGIN
 		end
 				
 			
-
+		IF @ReceiverIdSettlement IS  NULL OR @ReceiverIdSettlement =0
+		BEGIN 
 			--Devuelve en un cuarto select datos para el destino
 			select  top 1
 					0 IdSettlementDestiny, 
@@ -129,7 +129,48 @@ BEGIN
 			LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) on vpc.CodeOfReference =  vhub.IdVisitPointClient and vpc.IdKindOfVPClient = 6
 			LEFT JOIN DeliveryBackOffice.dbo.Customer client  WITH(NOLOCK) ON vpc.CustomerID = client.IdCustomer
 			where mun.HeaderCode = @HeaderCodeDestiny and mun.TownshipStatus = 'TRUE'
-				
+						
+		END 
+		ELSE
+		BEGIN
+				--Devuelve en un cuarto select datos para el destino
+				select  top 1
+						0 IdSettlementDestiny, 
+						'' SettlementDestiny,
+						Cast(mun.IdTownship as varchar) IdTownShipDestiny, 
+						CONVERT(NVARCHAR(27),mun.TownshipName) TownshipNameDestiny, 
+						Cast(mun.IdProvince as varchar)  IdProvinceDestiny, 
+						dep.ProvinceName IdProvinceNameDestiny, 
+						dep.IdCountry  IdCountryDestiny,
+						dep.ProvinceAbbreviation ProvinceAbrreviationDestiny,
+						DSC3.Hub  HubAbbreviationDestiny,
+						ISNULL(Cast(vpc.CodeOfReference as varchar), '') DestinyCodeOfReferenceID,
+						ISNULL(vpc.ContactName,'')  DestinyVPCName,
+						ISNULL(Cast(vpc.CustomerID as varchar), '')  DestinyVPCustomerID,
+						ISNULL(Cast(vpc.VisitPointId as varchar), '') DestinyVPCVisitPointId
+				from DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
+					INNER JOIN DeliveryBackOffice.dbo.Settlement pob WITH(NOLOCK)
+						--ON
+						--mun.IdTownship = pob.IdTownship
+						--AND
+						--mun.IdProvince = pob.IdProvince
+						--AND
+						ON pob.Idsettlement=@ReceiverIdSettlement
+						AND pob.SettlementSatus = 1
+					--LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK)  WHERE RowStatus = 1) DSC3
+						--ON
+						LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage DSC3 WITH(NOLOCK)
+							ON DSC3.RowStatus=1
+							and pob.IdSettlement = DSC3.IdSettlement
+				INNER JOIN DeliveryBackOffice.dbo.Province dep WITH(NOLOCK)  on	mun.IdProvince = dep.IdProvince and dep.ProvinceStatus = 'TRUE'
+					LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK)  ON RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
+				left join DeliveryBackOffice.dbo.VisitPointClientByHubLogistics vhub WITH(NOLOCK) on vhub.IdHublogistic =  hub.IdHubLogistic 
+				LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) on vpc.CodeOfReference =  vhub.IdVisitPointClient and vpc.IdKindOfVPClient = 6
+				LEFT JOIN DeliveryBackOffice.dbo.Customer client  WITH(NOLOCK) ON vpc.CustomerID = client.IdCustomer
+				where mun.HeaderCode = @HeaderCodeDestiny and mun.TownshipStatus = 'TRUE'
+							
+		END
+
 
 
 			
