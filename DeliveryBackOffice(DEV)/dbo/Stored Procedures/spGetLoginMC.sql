@@ -90,7 +90,9 @@ BEGIN
 		CodeOfReference NVARCHAR(20),
 		RolEXP NVARCHAR(MAX),
 		CurrencyEXP NVARCHAR(5),
-		Nationality NVARCHAR(50)
+		Nationality NVARCHAR(50),
+		IdSettlement NVARCHAR(50),
+		SettlementName NVARCHAR(300)
 	);
 
 	--VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN
@@ -508,7 +510,7 @@ BEGIN
 							BEGIN
 
 							INSERT INTO @ProfileEXPTable (Name,ContactName,Phone,Email,IdTownship,TownshipName,IdProvince,
-															ProvinceName,Address,HeaderCode,CodeOfReference,RolEXP,CurrencyEXP,Nationality)
+															ProvinceName,Address,HeaderCode,CodeOfReference,RolEXP,CurrencyEXP,Nationality,IdSettlement,SettlementName)
 							SELECT 
 								DescriptionOfClient										'Name',
 								ISNULL(ContactName, '')									'ContactName',
@@ -523,7 +525,9 @@ BEGIN
 								ISNULL(CONVERT(NVARCHAR(20), VPC.CodeOfReference), '')	'CodeOfReference',
 								@RolEXP													'RolEXP',
 								ISNULL(CCC.CodeISO, 'GTQ')								'Currency',
-								ISNULL(RH.CountryId,'GT')								'Nationality'
+								ISNULL(RH.CountryId,'GT')								'Nationality',
+								ISNULL(STL.IdSettlement,'')								'IdSettlement',
+								ISNULL(STL.Settlement,'')								'SettlementName'
 							FROM DeliveryBackOffice.dbo.VisitPointClient		VPC WITH(NOLOCK)
 							INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer	RC WITH(NOLOCK)
 								ON VPC.CustomerID = RC.RbcIdCustomer
@@ -551,6 +555,7 @@ BEGIN
 								AND ru.UsrEmail = @Username
 								AND VPU.RowStatus = 1
 								AND ru.UsrRowStatus = 1
+								AND STL.SettlementSatus = 1
 
 							END;
 							IF @VERIFYUSER > 0
