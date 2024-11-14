@@ -1610,6 +1610,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetInformationFromDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_UpdateDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkCompleted.sql" />
+	<Build Include="dbo\Stored Procedures\SphwGuideStatusNotification.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
