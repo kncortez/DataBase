@@ -1802,6 +1802,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetAddressByPhoneList.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetQualifyServiceTracking.sql" />
     <Build Include="dbo\Tables\ScoreServiceGuide.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetQueryQualifyService.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
