@@ -16,12 +16,19 @@ BEGIN
 
 DECLARE @StatusCode INT=0;
 DECLARE @Description NVARCHAR(500);
+DECLARE @IsStatusTerminal INT =(SELECT Top 1 IIF(b.CatCheckpointTypeId=3,1,0)
+                                     From [dbo].[DeliveryOrderDetail] a WITH(NOLOCK)
+									 Inner Join
+									       [dbo].[StatusOrder] b WITH(NOLOCK)
+									ON a.StatusOrderId=b.StatusOrderId
+								WHERE a.Guide_serie = @Guideserie AND  a.Guide_Number = @GuideNumber
+								ORDER BY a.DateCreated DESC);
 
   BEGIN TRANSACTION LogTransactionTypeOne;
         BEGIN TRY
       
 
-IF(NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[GuideStatusNotification] WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber ))
+IF(NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[GuideStatusNotification] WITH(NOLOCK) WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber ))
 BEGIN
 
    INSERT INTO [dbo].[GuideStatusNotification] (NirPhoner,
@@ -42,7 +49,7 @@ BEGIN
 		@GuideNumber,
 		@CountryId,
 		GETDATE(),
-		0,
+		@IsStatusTerminal,
 		1,
 		'NOTIFICATION-STATUS',
 		GETDATE()
