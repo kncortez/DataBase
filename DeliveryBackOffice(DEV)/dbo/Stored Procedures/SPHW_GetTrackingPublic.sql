@@ -114,11 +114,11 @@ BEGIN TRY
 
 
 	INSERT INTO @EncabezadoRastreo (Nombre, Descripcion)
-	SELECT 'Creado por', '' UNION ALL --1
-	SELECT 'Recibido por Forza','Indica que la guía se recibio' UNION ALL --2
-	SELECT 'Arribó a las instalaciones', 'Tu paquete ya está en nuestras instalaciones.' UNION ALL --3
-	SELECT 'En ruta', 'Tu paquete está por ser entregado.' UNION ALL --4
-	SELECT 'Entregado', 'Tu paquete ha sido entregado.'; --5
+	SELECT 'Creado por', 'Fecha estimada de entrega' UNION ALL --1
+	SELECT 'Recibido por Forza','Fecha estimada de entrega' UNION ALL --2
+	SELECT 'Arribó a las instalaciones', 'Fecha estimada de entrega' UNION ALL --3
+	SELECT 'En ruta', 'Fecha estimada de entrega' UNION ALL --4
+	SELECT 'Entregado', 'Entregado el'; --5
 
 
 	SELECT @StatusGuide = CST.NameStatusProcess 
@@ -272,7 +272,7 @@ FROM DeliveryBackOffice.dbo.CatStatusProcess CST WITH (NOLOCK)
                FROM DeliveryOrderDetail D WITH (NOLOCK)
                WHERE D.Guide_Serie = DO.Guide_Serie
                      AND D.Guide_Number = DO.Guide_Number
-                     AND D.StatusOrderId = @StatusDelivered
+                     --AND D.StatusOrderId = @StatusDelivered
                ORDER BY D.DateCreated DESC
            )
            WHEN ER.Nombre = 'En ruta' THEN
