@@ -268,6 +268,20 @@ BEGIN TRY
 		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 	);	
 
+	DECLARE @f5 NVARCHAR(10) = (
+		SELECT
+			CASE
+				WHEN
+					(SELECT CatStatusProcessId FROM DeliveryBackOffice.dbo.StatusOrder WITH(NOLOCK)
+					 WHERE StatusOrderId = DO.StatusOrderId) = 1 --NO ESTAR EN ESTADO CREADO
+					THEN 'false'
+					ELSE 'true'
+			END AS 'flagQualify'
+		FROM
+		DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
+	);	
+
 	-- Variables de tipo bit para verificar si cada campo tiene datos
 	DECLARE @HasImagePath BIT, @HasDry BIT, @HasCold BIT, @HasLatitude BIT, @HasLongitude BIT;
 
@@ -360,6 +374,8 @@ BEGIN TRY
 		, ISNULL(@f4,'false') AS 'flagNotifications'
 		, IIF(@HasImagePath = 1,'true',IIF(@HasDry = 1, 'true',IIF(@HasCold = 1, 'true','false'))) AS 'flagShowImage'
 		, IIF(@HasLatitude = 1 AND @HasLongitude = 1, 'true','false') AS 'flagShowMapa'
+		, 'true' AS 'flagRequestHelp' --Esta bandera siempre va visible para frontend
+		, ISNULL(@f5,'false') AS 'flagQualify'
 
 END TRY
 BEGIN CATCH
