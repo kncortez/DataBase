@@ -2052,4 +2052,172 @@ BEGIN
 				,btd.CatAccountTypeCODId
 				,btd.AccountNumber
 	END;
+    				-- FORMATO BANCO ATLANTIDA HONDURAS
+	IF @IdBank = ( SELECT
+						Id_bank
+					FROM DeliveryBank
+					WHERE Id_bank = 53
+					AND Id_country = 'HN'
+					AND Id_status = 1)
+    BEGIN
+		--------DETALLADO
+
+   SELECT  'RefCredito',	
+           'Nombre Beneficiario',
+		   'ID',
+		  'Monto',
+		  'Cuenta Credito',
+		   'Banco',
+		   'Tipo Cuenta',
+		  'Celular',
+		   'Correo',
+		  'Descripcion'
+
+		  UNION ALL
+		SELECT
+		 CONCAT(btd.GuideSerie,CAST(btd.GuideNumber AS VARCHAR(20)),
+                                 ' Ref ',
+                                 CAST(btd.CODBatch AS VARCHAR(10))
+                             )
+			
+			'RefCredito',
+			btd.AccountName AS 'NOMBRE_CUENTA',
+			P.PerIdentification AS 'ID',
+			CAST(btd.Amount AS nvarchar) AS 'MONTO',
+			RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''), CHAR(2),''), CHAR(3),''), CHAR(9),''), CHAR(10),''), CHAR(13),''))) AS 'CUENTA',
+			  
+			   db.[Name],
+			   btd.TypeAccountName,
+			   ISNULL(cu.CustomerPhone, Ru.Phone) AS 'CELULAR',
+			   ISNULL(cu.ContactEmail,UsrEmail) AS 'CORREO',
+			   CASE
+                   WHEN @CatConceptCODId = 2 THEN
+                       CONCAT(
+                                 'COD ',
+								 btd.GuideSerie,
+                                 CAST(btd.GuideNumber AS VARCHAR(20)),
+                                 ' Ref ',
+                                 CAST(btd.CODBatch AS VARCHAR(10))
+                             )
+                   WHEN @CatConceptCODId = 4 THEN
+                       CONCAT(
+                                 'RECOLECCION ',
+                                 CAST(do.Guide_Number AS VARCHAR(20)),
+                                 ' Ref ',
+                                 CAST(btd.RecolectionId AS VARCHAR(10))
+                             )
+               END 'Referencia'
+		FROM BatchDetailCOD btd WITH (NOLOCK)
+		INNER JOIN BatchCOD bt  WITH (NOLOCK)
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.GuideSerie = do.Guide_Serie AND btd.GuideNumber = do.Guide_Number
+		LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu  WITH (NOLOCK)
+			ON ISNULL(do.IdCustomer, vp.CustomerID) = cu.IdCustomer
+		 LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
+                ON db.Id_bank = btd.BankId
+		LEFT JOIN dbo.Account ac WITH (NOLOCK)
+		    ON ac.IdCustomer = cu.IdCustomer
+	    LEFT JOIN [dbo].[RolByUserByAccount] Rbua WITH (NOLOCK)
+		    ON   Rbua.RuaIdAccount = ac.AccIdAccount
+		LEFT JOIN dbo.RegisterUser ru WITH (NOLOCK)
+		    ON ru.UsrIdUser = Rbua.RuaIdUser
+        LEFT JOIN Person P WITH (NOLOCK)
+		    ON P.PerIdPerson = ru.UsrIdPerson
+		WHERE
+			btd.CatConceptCODId IN (2)
+			AND bt.RowStatus = @EnabledRow
+			AND btd.RowStatus = @EnabledRow
+			AND btd.BatchCODId = @BatchCODId
+			AND btd.Excluded = @Excluded
+			AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+			AND do.SenderCountryID = @IdCountrySender
+
+		UNION ALL
+
+		----------ACUMULADO
+		SELECT
+		 CONCAT(
+                                 
+								 MAX(btd.GuideSerie),
+                                 CAST(MAX(btd.GuideNumber) AS VARCHAR(20)),
+                                 ' Ref '
+                            
+                             )
+			'RefCredito',
+			btd.AccountName AS 'NOMBRE CUENTA',
+			ISNULL(MAX(P.PerIdentification),MAX(cu.TaxIdentificationNumber)) AS 'ID',
+			CAST(SUM(btd.Amount) AS nvarchar) AS 'MONTO',
+			RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''), CHAR(2),''), CHAR(3),''), CHAR(9),''), CHAR(10),''), CHAR(13),''))) AS 'CUENTA',
+			   MAX(btd.TypeAccountName),
+			  MAX(db.[Name]),
+			   ISNULL(MAX(cu.CustomerPhone), MAX(Ru.Phone)) AS 'CELULAR',
+			   ISNULL(MAX(cu.ContactEmail),MAX(UsrEmail)) AS 'CORREO',
+			    CASE
+                   WHEN @CatConceptCODId = 2 THEN
+                       CONCAT(
+                                 'COD ',
+								 MAX(btd.GuideSerie),
+                                 CAST(MAX(btd.GuideNumber) AS VARCHAR(20)),
+                                 ' Ref '
+                                 
+                             )
+                   WHEN @CatConceptCODId = 4 THEN
+                       CONCAT(
+                                 'RECOLECCION ',
+                                 CAST(MAX(btd.GuideNumber) AS VARCHAR(20)),
+                                 ' Ref '
+                               
+                             )
+               END 'Referencia'
+		FROM BatchDetailCOD btd WITH (NOLOCK)
+		INNER JOIN BatchCOD bt  WITH (NOLOCK)
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.GuideSerie = do.Guide_Serie AND btd.GuideNumber = do.Guide_Number
+		LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu  WITH (NOLOCK)
+			ON ISNULL(do.IdCustomer, vp.CustomerID) = cu.IdCustomer
+	    LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
+            ON db.Id_bank = btd.BankId
+		LEFT JOIN dbo.Account ac WITH (NOLOCK)
+		    ON ac.IdCustomer = cu.IdCustomer
+	    LEFT JOIN [dbo].[RolByUserByAccount] Rbua WITH (NOLOCK)
+		    ON   Rbua.RuaIdAccount = ac.AccIdAccount
+		LEFT JOIN dbo.RegisterUser ru WITH (NOLOCK)
+		    ON ru.UsrIdUser = Rbua.RuaIdUser
+        LEFT JOIN Person P WITH (NOLOCK)
+		    ON P.PerIdPerson = ru.UsrIdPerson
+		WHERE
+			btd.CatConceptCODId IN (2)
+			AND bt.RowStatus = @EnabledRow
+			AND btd.RowStatus = @EnabledRow
+			AND btd.BatchCODId = @BatchCODId
+			AND btd.Excluded = @Excluded
+			AND cu.CatBatchTypeCODId = @BatchTypeCOD_AC
+			AND do.SenderCountryID = @IdCountrySender
+		GROUP BY
+			cu.IdCustomer,
+			btd.CatAccountTypeCODId,
+			btd.AccountNumber,
+			btd.AccountName
+	
+	END;
 END;
