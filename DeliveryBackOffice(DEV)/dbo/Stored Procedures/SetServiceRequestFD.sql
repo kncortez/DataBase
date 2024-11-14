@@ -153,7 +153,8 @@ BEGIN
 			[Sender_Lat],
 			[Sender_Lng],
 			[ReceiverLatitude],
-			[ReceiverLongitude]
+			[ReceiverLongitude],
+			[SenderIdSettlement]
 		INTO #GuideTable
 		FROM @TblDeliveryOrdersFD
 		LEFT JOIN @CorrelativeTable C ON C.[Row_Number] = RowNumber
@@ -268,7 +269,8 @@ BEGIN
 			[Receiver_Lng],
 			[SenderCountryId],
 			[ReceiverCountryId],
-			[GuideType]
+			[GuideType],
+			[SenderIdSettlement]
 		)
 		SELECT 
 			GT.[Ticket_Number],
@@ -343,7 +345,8 @@ BEGIN
 			CASE
 				WHEN ISNULL(P.IdCountry,'GT') = ISNULL(P2.IdCountry,'GT') THEN 'DOM'
 				ELSE 'INT'
-			END AS GuideType
+			END AS GuideType,
+			GT.SenderIdSettlement
 		FROM #GuideTable GT
 		INNER JOIN DeliveryBackOffice.dbo.Township T ON GT.SenderIdTownship = T.IdTownship
 		INNER JOIN DeliveryBackOffice.dbo.Province P ON T.IdProvince = P.IdProvince
@@ -409,7 +412,7 @@ BEGIN
 							rbc.RbcId
 						FROM RatebyCustomer rbc WITH (NOLOCK)
 						INNER JOIN VisitPointClient vpc WITH (NOLOCK)
-							ON GT.Sender_ID = vpc.CodeOfReference							
+							ON GT.Sender_ID = vpc.CodeOfReference
 							AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
 							OR rbc.RbcCodeOfReference IS NULL)
 						WHERE ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
@@ -839,11 +842,11 @@ BEGIN
 			D.ReceiverCountryId,
 			IIF(D.InsuranceAmount>800 AND D.IsInsuarance=1,1,0) 'IsInsured',
 			CASE
-									WHEN DOP.PiecePhysicalWeight > 0 THEN 
-								  IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT))
-								ELSE 
+			    WHEN DOP.PiecePhysicalWeight > 0 THEN 
+			  IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT))
+			ELSE 
 									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
-								'WeightLB',
+			'WeightLB',
 								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
 	    	ISNULL(DSC.RouteCode,'') AS 'RouteCode',
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
