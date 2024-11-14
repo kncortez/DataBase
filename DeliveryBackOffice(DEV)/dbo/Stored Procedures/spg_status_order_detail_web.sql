@@ -251,8 +251,7 @@ BEGIN
             ISNULL([CCT].[CheckpointIcon], '') AS [CheckpointIcon],
             (CASE 
                  WHEN  dod.StatusOrderId = 5  THEN
-                     ISNULL(
-                               ISNULL(
+                     ISNULL(                            
                                (
                                    SELECT TOP 1
                                           'data:image/jpeg;base64,'
@@ -285,11 +284,6 @@ BEGIN
                                    ) L1
                                    ORDER BY L1.Date_Photo DESC
                                ),
-                               (CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie
-                                                                                      + CAST(dod.Guide_Number AS VARCHAR)
-                                                                                     ) AS VARCHAR(300))
-                               )
-                                     ),
                                ''
                            )
 				WHEN dod.StatusOrderId =@StatusIncidentValidated THEN 
