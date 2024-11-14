@@ -383,6 +383,28 @@ set arithabort off
 								)
 						);
 
+						SET @CantidadRegistros = (
+								SELECT  COUNT(ord.Guide_Number) FROM dbo.DeliveryOrder ord WITH (NOLOCK) 
+								WHERE(
+										(ord.Sender_ID IN (SELECT tp.CodeOfReference FROM #temp tp))
+									OR 
+										(ord.OriginSenderId IN (SELECT tp.CodeOfReference FROM #temp tp))
+									OR 
+										ord.IdCustomer = @idCustomer
+								)	
+								AND
+								(
+									(@CancelGuides = 0 AND ISNULL(ord.StatusOrderId, 15) != 7)
+									OR 
+									(@CancelGuides = 1 AND ord.StatusOrderId IS NOT NULL)
+								)
+							)
+
+						IF @CantidadRegistros > 10
+						BEGIN
+							SET @CantidadRegistros = 10;
+						END;
+
 						PRINT '@SKIP'
 						PRINT @SKIP
 						PRINT '@CantidadRegistros'
