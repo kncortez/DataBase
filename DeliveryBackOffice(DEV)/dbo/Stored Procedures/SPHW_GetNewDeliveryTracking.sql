@@ -220,9 +220,10 @@ BEGIN TRY
                     WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
                         so.OrderDescription
                     ELSE
-						IIF(dod.Observations IS NULL OR dod.Observations = '',so.OrderDescription,
-						so.OrderDescription + ', ' + 
-						CAST(dod.Observations AS NVARCHAR(50)))
+						--IIF(dod.Observations IS NULL OR dod.Observations = '',so.OrderDescription,
+						--so.OrderDescription + ', ' + 
+						--CAST(dod.Observations AS NVARCHAR(50)))
+						so.OrderDescription
                          
                 END)                                                                        AS [StageTitle]       
              , 'web'                                                                        AS [StageSource]
