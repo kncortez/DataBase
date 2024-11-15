@@ -16,7 +16,8 @@ CREATE PROCEDURE [dbo].[IndividualCustomerCODAmountsData]
 AS
 BEGIN
 	
-	DECLARE @IdCustomer AS INT = (SELECT TOP 1 IdCustomer FROM dbo.Account WHERE AccIdAccount = @IdAccount)
+	DECLARE @IdCustomer AS INT = (SELECT TOP 1 IdCustomer 
+	    FROM dbo.Account WITH(NOLOCK) WHERE AccIdAccount = @IdAccount) --HOTFIX 13/11/2024 no tenía with(nolock)
         SET @EndDate  = Format(GETDATE(),'yyyy-MM-dd');
 	
 	SET NOCOUNT ON;
@@ -56,7 +57,7 @@ BEGIN
 			   ,CONCAT(do.[Guide_Serie], do.[Guide_Number]) GuideNumber
 			   ,(SELECT DISTINCT
 						SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
-					FROM dbo.DeliveryOrderPiece dp
+					FROM dbo.DeliveryOrderPiece dp WITH(NOLOCK) --HOTFIX 13/11/2024 no tenía with(nolock)
 					WHERE dp.GuideSerie = do.Guide_Serie
 					AND dp.GuideNumber = do.Guide_Number)
 				Peso
@@ -104,7 +105,7 @@ BEGIN
 				ON tw.TownshipName = do.Receiver_Town
 			LEFT JOIN dbo.Province prv WITH(NOLOCK)
 				ON prv.IdProvince = twn.IdProvince
-			LEFT JOIN dbo.Province pr
+			LEFT JOIN dbo.Province pr WITH(NOLOCK) --HOTFIX 13/11/2024 no tenía with(nolock)
 				ON pr.IdProvince = tw.IdProvince
 			LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
 				ON vpc.CodeOfReference = do.Sender_ID
@@ -145,7 +146,7 @@ BEGIN
 				,CONCAT(do.[Guide_Serie], do.[Guide_Number]) GuideNumber
 				,(SELECT
 						SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
-					FROM dbo.DeliveryOrderPiece dp
+					FROM dbo.DeliveryOrderPiece dp WITH(NOLOCK) --HOTFIX 13/11/2024 no tenía with(nolock)
 					WHERE dp.GuideSerie = do.Guide_Serie
 					AND dp.GuideNumber = do.Guide_Number)
 				Peso

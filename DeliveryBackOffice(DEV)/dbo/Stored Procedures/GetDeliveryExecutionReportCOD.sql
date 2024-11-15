@@ -20,7 +20,7 @@ BEGIN
                (ord.Pieces_Dry + ord.Pieces_Cold) Piezas,
                (
                    SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
-                   FROM dbo.DeliveryOrderPiece dp
+                   FROM dbo.DeliveryOrderPiece dp WITH(NOLOCK)
                    WHERE dp.GuideSerie = ord.Guide_Serie
                          AND dp.GuideNumber = ord.Guide_Number
                ) Peso,
@@ -30,7 +30,7 @@ BEGIN
                FORMAT((
                    SELECT TOP 1
                           dt.DateCreated
-                   FROM dbo.DeliveryOrderDetail dt
+                   FROM dbo.DeliveryOrderDetail dt WITH(NOLOCK)
                    WHERE dt.Guide_Serie = ord.Guide_Serie
                          AND dt.Guide_Number = ord.Guide_Number
                          AND dt.StatusOrderId IN ( 11, 2 )
@@ -38,7 +38,7 @@ BEGIN
                FORMAT((
                    SELECT TOP 1
                           dt.DateCreated
-                   FROM dbo.DeliveryOrderDetail dt
+                   FROM dbo.DeliveryOrderDetail dt WITH(NOLOCK)
                    WHERE dt.Guide_Serie = ord.Guide_Serie
                          AND dt.Guide_Number = ord.Guide_Number
                          AND dt.StatusOrderId = 5
@@ -50,18 +50,23 @@ BEGIN
                    (IIF(ISNULL(cs.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago'))) TipodePago,
                ISNULL(ord.PriceShippment, 0) ValorEnvio,
                'En Tiempo' Status -- TODO Verificar algoritmo de  calculo
-        FROM dbo.DeliveryOrder ord
-            LEFT JOIN dbo.Township twn
+        FROM dbo.DeliveryOrder ord WITH(NOLOCK)
+            LEFT JOIN dbo.Township twn WITH(NOLOCK)
                 ON twn.IdTownship = ord.ReceiverIdTownship
-            LEFT JOIN dbo.Township tw
-                ON tw.TownshipName = ord.Receiver_Town
-            LEFT JOIN dbo.Province prv
+            --LEFT JOIN dbo.Township tw
+            --    ON tw.TownshipName = ord.Receiver_Town
+			OUTER APPLY
+							( SELECT TOP 1 TW.IdProvince, TW.TownshipName  FROM  dbo.Township tw WITH (NOLOCK)
+							INNER JOIN dbo.Province PR WITH(NOLOCK) ON PR.IdProvince = tw.IdProvince
+							WHERE TW.TownshipName = ord.Receiver_Town AND PR.IdCountry = ord.ReceiverCountryId
+							)tw
+            LEFT JOIN dbo.Province prv WITH(NOLOCK)
                 ON prv.IdProvince = twn.IdProvince
-            LEFT JOIN dbo.Province pr
+            LEFT JOIN dbo.Province pr WITH(NOLOCK)
                 ON pr.IdProvince = tw.IdProvince
-            LEFT JOIN dbo.VisitPointClient vpc
+            LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                 ON vpc.CodeOfReference = ord.Sender_ID
-            LEFT JOIN dbo.Customer cs
+            LEFT JOIN dbo.Customer cs WITH(NOLOCK)
                 ON cs.IdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
          WHERE ord.DateCreated BETWEEN DATEADD(MONTH, -1, DATEADD(day , 1 , EOMONTH(GETDATE()))) AND GETDATE() -- Cambio para poder filtrar por mes, con base al día de ejecución del reporte      
               AND
@@ -70,7 +75,7 @@ BEGIN
                   OR ord.Sender_ID IN
                      (
                          SELECT CodeOfReference
-                         FROM dbo.VisitPointClient
+                         FROM dbo.VisitPointClient WITH(NOLOCK)
                          WHERE CustomerID = @IdCustomer
                      )
               )

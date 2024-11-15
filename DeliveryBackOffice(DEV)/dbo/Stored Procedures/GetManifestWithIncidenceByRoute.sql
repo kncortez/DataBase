@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Tito Garcia>
 -- Update date: <2024-09-24>
 -- Description: <Se obtienen por ruta los manifiestos con incidencias pendientes de validar>
@@ -10,7 +10,7 @@ CREATE PROCEDURE [dbo].[GetManifestWithIncidenceByRoute]
 AS
 BEGIN	
 	SET NOCOUNT ON;
-	DECLARE @Date DATE = '2024-10-02';
+	DECLARE @Date DATE = '2024-10-18';
 	BEGIN TRY
 
 		-- TABLA 0 Ruta con manifiestos sin liquidar

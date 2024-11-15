@@ -1,18 +1,20 @@
-﻿CREATE TABLE [dbo].[ScoreServiceGuide]
-(
-	[IdScoreGuide] INT IDENTITY(1,1) PRIMARY KEY,
-	[Score] DECIMAL(5,2) NOT NULL,
-	[GuideSerie] NVARCHAR(4) NOT NULL,
-	[GuideNumber] BIGINT NOT NULL,
-	[Comment] NVARCHAR(255) NULL,
-	[IdSystem] INT NOT NULL,
-	[RowStatus] BIT NOT NULL,
-	[UserCreated] NVARCHAR(50) NOT NULL,
-	[DateCreated] DATETIME NOT NULL,
-	[UserUpdated] NVARCHAR(50) NULL,
-	[DateUpdated] DATETIME NULL,
-	CONSTRAINT [FK_ScoreServiceGuide_System] FOREIGN KEY ([IdSystem]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
+﻿CREATE TABLE [dbo].[ScoreServiceGuide] (
+    [IdScoreGuide] INT            IDENTITY (1, 1) NOT NULL,
+    [Score]        DECIMAL (5, 2) NOT NULL,
+    [GuideSerie]   NVARCHAR (4)   NOT NULL,
+    [GuideNumber]  BIGINT         NOT NULL,
+    [Comment]      NVARCHAR (255) NULL,
+    [IdSystem]     INT            NOT NULL,
+    [RowStatus]    BIT            NOT NULL,
+    [UserCreated]  NVARCHAR (50)  NOT NULL,
+    [DateCreated]  DATETIME       NOT NULL,
+    [UserUpdated]  NVARCHAR (50)  NULL,
+    [DateUpdated]  DATETIME       NULL,
+    PRIMARY KEY CLUSTERED ([IdScoreGuide] ASC),
+    CONSTRAINT [FK_ScoreServiceGuide_System] FOREIGN KEY ([IdSystem]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 GO
 
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que contiene el puntaje de calificación por el servicio de su guía.'
@@ -86,3 +88,6 @@ EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de modif
 , @level2type = N'COLUMN', @level2name = 'DateUpdated';
 
 GO
+CREATE NONCLUSTERED INDEX [idx_ScoreServiceGuideSerie]
+    ON [dbo].[ScoreServiceGuide]([GuideSerie] ASC, [GuideNumber] ASC);
+

@@ -229,9 +229,11 @@ BEGIN
                 Guide_Serie NVARCHAR(2),
                 Guide_Number INT
             );
-            CREATE NONCLUSTERED INDEX tempSerie ON #listGuides (Guide_Serie);
-            CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Number);
-            CREATE TABLE #RevalueGuides
+            --CREATE NONCLUSTERED INDEX tempSerie ON #listGuides (Guide_Serie);
+            --CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Number);
+            CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Serie,Guide_Number);
+            
+			CREATE TABLE #RevalueGuides
             (
                 fila INT,
                 Guide_Serie NVARCHAR(2),
@@ -939,7 +941,11 @@ BEGIN
                            DiscountPrice,
 						   @IdCountrySender
                     FROM #TableForzaPaymentTemp tfpt
-					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c 
+					  -- WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
+					   WITH (NOLOCK) ON C.GuideSerie = tfpt.GuideSerie
+					   AND C.GuideNumber = tfpt.GuideNumber
+
                     WHERE NOT EXISTS
                     (
                         SELECT 1

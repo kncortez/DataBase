@@ -14,6 +14,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TutorialByAccount', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -48,4 +50,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que relaciona cuentas de usuarios con tutoriales.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TutorialByAccount';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountId_ToDisplay_RowStatus]
+    ON [dbo].[TutorialByAccount]([AccountId] ASC, [ToDisplay] ASC, [RowStatus] ASC);
 

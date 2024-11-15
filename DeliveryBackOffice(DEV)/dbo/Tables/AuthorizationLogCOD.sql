@@ -18,6 +18,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Voucher correspondiente a la guía a la cual se realiza cambio de precio COD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AuthorizationLogCOD', @level2type = N'COLUMN', @level2name = N'Voucher';
 
@@ -68,4 +70,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es la fecha
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre de la persona que autoriza el cambio de cambio de precio COD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AuthorizationLogCOD', @level2type = N'COLUMN', @level2name = N'AuthorizedBy';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideSerie]
+    ON [dbo].[AuthorizationLogCOD]([GuideSerie] ASC, [GuideNumber] ASC);
 

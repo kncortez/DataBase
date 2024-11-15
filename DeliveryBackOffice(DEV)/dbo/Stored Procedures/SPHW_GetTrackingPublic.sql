@@ -54,7 +54,7 @@ BEGIN TRY
 			(
 				SELECT HeaderCode,
 						MAX(Hub) AS Hub
-				FROM DumpServiceCoverage
+				FROM DumpServiceCoverage WITH(NOLOCK)
 				GROUP BY HeaderCode
 			) AS XP
 				ON XP.HeaderCode = TS.HeaderCode

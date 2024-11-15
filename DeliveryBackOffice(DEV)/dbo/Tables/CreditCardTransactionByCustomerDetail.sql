@@ -4,3 +4,10 @@
     [SerieNumber]   VARCHAR (2)  NULL
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_OrderNumber]
+    ON [dbo].[CreditCardTransactionByCustomerDetail]([OrderNumber] ASC);
+
