@@ -1610,7 +1610,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetInformationFromDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_UpdateDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkCompleted.sql" />
-	<Build Include="dbo\Stored Procedures\SphwGuideStatusNotification.sql" />
+    <Build Include="dbo\Stored Procedures\SphwGuideStatusNotification.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1801,6 +1801,8 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetNewDeliveryTracking.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetInfoPackages.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetAddressByPhoneList.sql" />
+    <Build Include="dbo\Stored Procedures\sphwGetStatusNotifications.sql" />
+    <Build Include="dbo\Stored Procedures\sphwUpdateStatusNotifications.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
