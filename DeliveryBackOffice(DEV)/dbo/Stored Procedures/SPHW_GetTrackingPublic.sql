@@ -228,16 +228,22 @@ FROM DeliveryBackOffice.dbo.CatStatusProcess CST WITH (NOLOCK)
 	DECLARE @Piezas NVARCHAR(20) = N'';
 	DECLARE @Description NVARCHAR(200) = N'';
 
-	SELECT 
+	-- Calcula el total de piezas
+	SELECT
 		@Piezas = CASE 
-					 WHEN COUNT(DOP.ParcelCode) = 1 THEN '1 pieza'
-					 ELSE CAST(COUNT(DOP.ParcelCode) AS NVARCHAR(5)) + ' piezas'
+					  WHEN COUNT(DOP.ParcelCode) = 1 THEN '1 pieza'
+					  ELSE CAST(COUNT(DOP.ParcelCode) AS NVARCHAR(5)) + ' piezas'
 				  END,
-		@Description = STRING_AGG(DOP.Detail, ', ')
+		@Description = (
+			SELECT TOP 1 DOP.Detail
+			FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
+			WHERE DOP.GuideSerie = @GuideSerie AND DOP.GuideNumber = @GuideNumber
+		)
 	FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
 		ON DO.Guide_Serie = DOP.GuideSerie AND DO.Guide_Number = DOP.GuideNumber
 	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber;
+
 
 	--Informacion pública
 	SELECT
