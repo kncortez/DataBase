@@ -18,8 +18,7 @@ BEGIN
 
 	BEGIN TRY
 
-		SET @url = (Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR)) as VARCHAR(300)));
-		--SET @url = 'https://tracking.forzadelivery.com/DocImages/GT.DELIVERYZ12/Copia1/V291/17088433.jpg'; -- usar para pruebas
+		SET @url = (Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) as VARCHAR(300)));
 		 		 	
 		SELECT CONCAT(DDO.Guide_Serie,DDO.Guide_Number) AS Guide
 			, DDO.Guide_Serie

@@ -345,8 +345,7 @@ BEGIN
                )                                                                            AS [ImagePath]
              , (CASE
                     WHEN dod.StatusOrderId = 5 THEN
-                    ISNULL((Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR)) as VARCHAR(300))),
-					-- ISNULL('https://tracking.forzadelivery.com/DocImages/GT.DELIVERYZ12/Copia1/V291/17088433.jpg',  -- para pruebas
+                    ISNULL((Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR(50))) as VARCHAR(300))),
                     (
                         SELECT TOP 1
                                IIF([dp].[Path_Dry] = '', dp.Path_Dry, ISNULL([Path_Dry], [Path_Dry]))
