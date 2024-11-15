@@ -46,54 +46,95 @@ BEGIN TRY
 	AND DO.Guide_Number = @GuideNumber
 
 	----CALCULO DEL HUB---------
+	SELECT @Hub = HL.HubName
+		FROM DeliveryOrder DO WITH (NOLOCK)
+			LEFT JOIN TownShip TS
+				ON DO.SenderIdTownship = TS.IdTownship
+			LEFT JOIN
+			(
+				SELECT HeaderCode,
+						MAX(Hub) AS Hub
+				FROM DumpServiceCoverage
+				GROUP BY HeaderCode
+			) AS XP
+				ON XP.HeaderCode = TS.HeaderCode
+			LEFT JOIN HubLogistics HL
+				ON XP.Hub = HL.HubAbbreviation
+		 WHERE DO.Guide_Serie = @GuideSerie
+				AND DO.Guide_Number = @GuideNumber
+
+	----CALCULO DEL HUB---------
 	SET @Hub =
 	(
-		SELECT TOP 1
-			COALESCE(
-			(
-				SELECT TOP 1
-					ISNULL(HSB.HubName, VP.DescriptionOfClient) StationName
-				FROM dbo.RolByUserBySystem rua WITH (NOLOCK)
-					INNER JOIN dbo.CatStation ct WITH (NOLOCK)
-						ON ct.IdStation = rua.StationId
-					LEFT JOIN dbo.HubLogistics HSB WITH (NOLOCK)
-						ON HSB.IdHubLogistic = ct.HubLogisticId
-					LEFT JOIN dbo.VisitPointClient VP WITH (NOLOCK)
-						ON VP.CodeOfReference = ct.CodeOfReference
-				WHERE rua.RusIdUser = rg.UsrIdUser
-			),
-			(
-				SELECT TOP 1
-					ISNULL(HSB.HubName, VP.DescriptionOfClient) StationName
-				FROM dbo.RolByUserBySystem rus WITH (NOLOCK)
-					INNER JOIN dbo.CatStation ct WITH (NOLOCK)
-						ON ct.IdStation = rus.StationId
-					LEFT JOIN dbo.HubLogistics HSB WITH (NOLOCK)
-						ON HSB.IdHubLogistic = ct.HubLogisticId
-					LEFT JOIN dbo.VisitPointClient VP WITH (NOLOCK)
-						ON VP.CodeOfReference = ct.CodeOfReference
-				WHERE rus.RusIdUser = it.RegisterUserID
-			), hb.HubName)
-		FROM dbo.DeliveryOrderDetail dat WITH (NOLOCK)
-			LEFT JOIN dbo.TokenLog tk WITH (NOLOCK)
-				ON tk.TknIdToken = dat.UserCreated
-			LEFT JOIN dbo.RegisterUser rg WITH (NOLOCK)
-				ON rg.UsrIdUser = tk.TknIdUser
-			LEFT JOIN dbo.LogTokenPOD tpd WITH (NOLOCK)
-				ON tpd.LogTokenPOD = dat.UserCreated
-			LEFT JOIN dbo.SenderReceiver sr WITH (NOLOCK)
-				ON sr.ID = tpd.IdCourierman
-			LEFT JOIN dbo.HubLogistics hb WITH (NOLOCK)
-				ON hb.IdHubLogistic = sr.HubLogisticId
-			LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tkd WITH (NOLOCK)
-				ON tkd.SSN_IdToken = dat.UserCreated
-			LEFT JOIN dbo.InternalUser it WITH (NOLOCK)
-				ON it.IdUser = tkd.SSN_IdUser
-				   AND it.Username = tkd.SSN_Username
-		WHERE DAT.Guide_Number = @GuideNumber
+		SELECT TOP 1 TB.Hub
+		FROM(
+			SELECT dat.DateCreated,
+				COALESCE(
+				(
+					SELECT TOP 1
+						ISNULL(HSB.HubName, VP.DescriptionOfClient) StationName
+					FROM dbo.RolByUserBySystem rua WITH (NOLOCK)
+						INNER JOIN dbo.CatStation ct WITH (NOLOCK)
+							ON ct.IdStation = rua.StationId
+						LEFT JOIN dbo.HubLogistics HSB WITH (NOLOCK)
+							ON HSB.IdHubLogistic = ct.HubLogisticId
+						LEFT JOIN dbo.VisitPointClient VP WITH (NOLOCK)
+							ON VP.CodeOfReference = ct.CodeOfReference
+					WHERE rua.RusIdUser = rg.UsrIdUser
+				), hb.HubName) AS Hub
+			FROM dbo.DeliveryOrderDetail dat WITH (NOLOCK)
+				LEFT JOIN dbo.TokenLog tk WITH (NOLOCK)
+					ON tk.TknIdToken = dat.UserCreated
+				LEFT JOIN dbo.RegisterUser rg WITH (NOLOCK)
+					ON rg.UsrIdUser = tk.TknIdUser
+				LEFT JOIN dbo.LogTokenPOD tpd WITH (NOLOCK)
+					ON tpd.LogTokenPOD = dat.UserCreated
+				LEFT JOIN dbo.SenderReceiver sr WITH (NOLOCK)
+					ON sr.ID = tpd.IdCourierman
+				LEFT JOIN dbo.HubLogistics hb WITH (NOLOCK)
+					ON hb.IdHubLogistic = sr.HubLogisticId
+			WHERE DAT.Guide_Number = @GuideNumber
 			  AND DAT.Guide_Serie = @GuideSerie
-		ORDER BY daT.DateCreated DESC
+			--ORDER BY daT.DateCreated DESC
+		) AS TB
+		WHERE TB.Hub IS NOT NULL
+		ORDER BY TB.DateCreated DESC
 	)
+
+	IF (@Hub IS NULL)
+	BEGIN
+		SET @Hub =
+	(
+		SELECT TOP 1 TB2.Hub
+		FROM(
+			SELECT  dat.DateCreated, 
+				COALESCE(
+				(
+					SELECT TOP 1
+						ISNULL(HSB.HubName, VP.DescriptionOfClient) StationName
+					FROM dbo.RolByUserBySystem rus WITH (NOLOCK)
+						INNER JOIN dbo.CatStation ct WITH (NOLOCK)
+							ON ct.IdStation = rus.StationId
+						LEFT JOIN dbo.HubLogistics HSB WITH (NOLOCK)
+							ON HSB.IdHubLogistic = ct.HubLogisticId
+						LEFT JOIN dbo.VisitPointClient VP WITH (NOLOCK)
+							ON VP.CodeOfReference = ct.CodeOfReference
+					WHERE rus.RusIdUser = it.RegisterUserID
+				), '') AS Hub
+			FROM dbo.DeliveryOrderDetail dat WITH (NOLOCK)
+				LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tkd WITH (NOLOCK)
+					ON tkd.SSN_IdToken = dat.UserCreated
+				LEFT JOIN dbo.InternalUser it WITH (NOLOCK)
+					ON it.IdUser = tkd.SSN_IdUser
+					   AND it.Username = tkd.SSN_Username
+			WHERE DAT.Guide_Number = @GuideNumber
+			  AND DAT.Guide_Serie = @GuideSerie
+		) AS TB2
+		WHERE TB2.Hub IS NOT NULL
+		ORDER BY TB2.DateCreated DESC 
+	)
+
+	END
 
 
 	INSERT INTO @EncabezadoRastreo (Nombre, Descripcion)
@@ -223,16 +264,22 @@ BEGIN TRY
 	DECLARE @Piezas NVARCHAR(20) = N'';
 	DECLARE @Description NVARCHAR(200) = N'';
 
-	SELECT 
+	-- Calcula el total de piezas
+	SELECT
 		@Piezas = CASE 
-					 WHEN COUNT(DOP.ParcelCode) = 1 THEN '1 pieza'
-					 ELSE CAST(COUNT(DOP.ParcelCode) AS NVARCHAR(5)) + ' piezas'
+					  WHEN COUNT(DOP.ParcelCode) = 1 THEN '1 pieza'
+					  ELSE CAST(COUNT(DOP.ParcelCode) AS NVARCHAR(5)) + ' piezas'
 				  END,
-		@Description = STRING_AGG(DOP.Detail, ', ')
+		@Description = (
+			SELECT TOP 1 DOP.Detail
+			FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
+			WHERE DOP.GuideSerie = @GuideSerie AND DOP.GuideNumber = @GuideNumber
+		)
 	FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
 		ON DO.Guide_Serie = DOP.GuideSerie AND DO.Guide_Number = DOP.GuideNumber
 	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber;
+
 
 	--Informacion pública
 	SELECT
