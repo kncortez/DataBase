@@ -1,9 +1,4 @@
 ﻿
-
-
-
-
-
 -- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-11-25>
@@ -19,7 +14,12 @@ CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
     @Type VARCHAR(10),
     @Value DECIMAL(10, 2),
     @Description NVARCHAR(500),
-    @GuideQuantityCOD INT
+    @GuideQuantityCOD INT,
+	@CountryId NVARCHAR(5) = 'GT',
+	@RouteId INT = 0,
+	@TotalNumberOfPieces INT = 0,
+	@CatManifestSettlementIncidenceTypeId INT = 0
+
 AS
 BEGIN
     -- control transacción
@@ -66,7 +66,9 @@ BEGIN
               AND Guide_Settlement = 1; -- guía liquidada previamente en bodega
 
         IF COALESCE(@@rowcount, 0) > 0
+		BEGIN
             SET @ValidateOperation = @ValidateOperation + 1;
+		END
 
         -- insertar guía en la tabla de guías procesadas COD
         -- Se insertar guías en tabla temporal
@@ -248,11 +250,15 @@ BEGIN
               AND Quantity > 0;
 
         IF COALESCE(@@rowcount, 0) > 0
+		BEGIN
             SET @ValidateOperation = @ValidateOperation + 1;
+		END
 
         --Si se presenta una contingencia se registra
         IF @IsIncident = 1
         BEGIN
+
+			SELECT @CourierId = ID_Courier FROM DeliveryOrderBySettlement WHERE ID = @IdDeliveryOrderBySettlement
 
             INSERT INTO [dbo].[Contingency]
             (
@@ -266,8 +272,46 @@ BEGIN
             VALUES
             (@IdDeliveryOrderBySettlement, @Type, @Value, @Description, @Token, GETDATE());
 
+			INSERT INTO [dbo].[ManifestSettlementIncidence]
+			   ([CatRouteId]
+			   ,[CourierId]
+			   ,[ManifestNumber]
+			   ,[TotalAmount]
+			   ,[GuidesQuantity]
+			   ,[TotalNumberOfPieces]
+			   ,[IncidenceApproved]
+			   ,[IdValidator]
+			   ,[CatManifestSettlementIncidenceTypeId]
+			   ,[IncidenceComment]
+			   ,[ResolutionComment]
+			   ,[CountryId]
+			   ,[RowStatus]
+			   ,[DateCreated]
+			   ,[TokenCreated]
+			   ,[isCOD])
+		 VALUES
+			   (@RouteId
+			   ,@CourierId
+			   ,@IdDeliveryOrderBySettlement
+			   ,@Value
+			   ,@GuideQuantityCOD
+			   ,@TotalNumberOfPieces
+			   ,0
+			   ,NULL
+			   ,@CatManifestSettlementIncidenceTypeId
+			   ,@Description
+			   ,NULL
+			   ,@CountryId
+			   ,1
+			   ,GETDATE()
+			   ,@Token
+			   ,1)
+
             IF COALESCE(@@rowcount, 0) > 0
+			BEGIN
                 SET @ValidateOperation = @ValidateOperation + 1;
+			END
+
         END;
         ELSE
         BEGIN
@@ -283,8 +327,9 @@ BEGIN
         WHERE ID = @IdDeliveryOrderBySettlement;
 
         IF COALESCE(@@rowcount, 0) > 0
+		BEGIN
             SET @ValidateOperation = @ValidateOperation + 1;
-
+	    END
 
     END TRY
     BEGIN CATCH

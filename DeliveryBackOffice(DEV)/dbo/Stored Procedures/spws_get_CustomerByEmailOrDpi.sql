@@ -135,7 +135,15 @@ BEGIN
                                                                                , '"'
                                                                                , ''
                                                                              ) + '",' + '"NirPhone":"' + ua.UadNirPhone
-                                                                    + '",' + '"Phone":"' + ua.UadPhone + '",'
+                                                                    + '",' + '"Phone":"' + ua.UadPhone
+                                                                    + '",' + '"IdAddress":"' + CONVERT(VARCHAR(20), ua.UadIdAddress)
+                                                                    + '",' + '"Latitude":"'  + ISNULL(vp.Latitude, '')
+                                                                    + '",' + '"Longitude":"' + ISNULL(vp.Longitude, '')
+                                                                    + '",' + '"IsOrigin":"'  + CONVERT(VARCHAR(20),ISNULL(vp.IsOriginVisitPoint, 1))
+                                                                    + '",' + '"IsFavorite":"'+ CONVERT(VARCHAR(20),ISNULL(ua.UadFavorite,0))
+                                                                    + '",' + '"Email":"'	 + ISNULL(vp.Email,'')
+                                                                    + '",' + '"IdSettlement":"'		+ CONVERT(VARCHAR(20),ISNULL(vp.IdSettlement,0))
+                                                                    + '",' + '"SettlementName":"'	+ CONCAT(st.Settlement,', ',twn.TownshipName,', ', prv.ProvinceName) + '",'
                                                                     + '"AdditionalInstructions":"'
                                                                     + REPLACE(
                                                                                  REPLACE(
@@ -175,9 +183,16 @@ BEGIN
                                                                  INNER JOIN dbo.CatCityPlace ctp
                                                                      ON ua.IdCityPlace = ctp.IdCityPlace
                                                                         AND ctp.CityPlaceRowStatus = 'true'
+																	LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+																		ON vp.CodeOfReference = ua.CodeOfReference
+																	LEFT JOIN dbo.Settlement st WITH (NOLOCK)
+																		ON vp.IdSettlement = st.IdSettlement
                                                              WHERE rua.RuaIdAccount = @IdAccount
                                                                    AND rua.RuaIdUser = @IdUser
                                                                    AND ua.UadRowStatus = 1
+																	AND st.SettlementSatus = 1
+																	AND twn.TownshipStatus = 1
+																	AND prv.ProvinceStatus = 1
                                                              FOR XML PATH(''), TYPE
                                                          ).value('.', 'varchar(max)')
                                                        , 1

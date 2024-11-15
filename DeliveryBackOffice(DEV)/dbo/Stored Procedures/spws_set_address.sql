@@ -9,6 +9,11 @@
 -- Create date: <2024-08-26>
 -- Description:	<Se agrega la opción de tener una única dirección favorita para Origen>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-10-24>
+-- Description:	<Se agrega la opcion de editar datos desde un usuario de EXP>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_address]
 	-- Add the parameters for the stored procedure here
@@ -37,7 +42,9 @@ CREATE PROCEDURE [dbo].[spws_set_address]
 	@PickupsProgram bit = NULL,
 	@IsOriginVisitPoint bit = 1,
 	@ContactName NVARCHAR(200) = NULL,
-	@IsFavorite bit = 0
+	@IsFavorite bit = 0,
+	@Email NVARCHAR(200) = NULL,
+	@IsUserExp BIT = 0
 	
 	
 AS
@@ -58,6 +65,8 @@ BEGIN
 	DECLARE @CityName VARCHAR(50)
 	DEClARE @IdDepartment INT;
 	DECLARE @IdAddressFavorite bigINT;
+	DECLARE @ValidUserExp INT
+	DECLARE @SystemEXP INT
 
 	DECLARE @ResponseMessages AS TABLE (
 		IdResult INT,
@@ -107,7 +116,12 @@ BEGIN
 
 	-- obtener el id de usuarion con base al token
 
-	declare @IdUser bigint  = (select top 1 t.TknIdUser from TokenLog t with(nolock) where t.TknIdToken = @Token)
+	declare @IdUser bigint
+	
+	 select top 1 @IdUser = t.TknIdUser,
+				  @ValidUserExp = t.TknIdSystem
+	from TokenLog t with(nolock) 
+	where t.TknIdToken = @Token
 
 	select RuaIdAccount 
 	into #Access
@@ -116,8 +130,24 @@ BEGIN
 
 	BEGIN TRANSACTION
 	BEGIN TRY
+		
+		SET @SystemEXP =
+		(
+			SELECT SysIdSystem
+			FROM CatSystem WITH (NOLOCK)
+			WHERE SysNameSystem = 'Hermes Web'
+		)
 
-		if(select count(RuaIdAccount) from #Access)>0 -- el usuario tiene acceso  a la cuenta indicada
+		IF @IsUserExp = 1 AND @ValidUserExp = @SystemEXP
+		BEGIN
+			SET @IsUserExp = 1
+		END
+		ELSE
+		BEGIN
+			SET @IsUserExp = 0
+		END
+
+		if(select count(RuaIdAccount) from #Access)>0 OR @IsUserExp = 1 -- el usuario tiene acceso  a la cuenta indicada
 		begin
 
 			select uad.UadIdAddress
@@ -257,6 +287,8 @@ BEGIN
 						  ,VP.Longitude=@Longitude
 						  ,VP.IsOriginVisitPoint = ISNULL(@IsOriginVisitPoint, 1)
 						  ,VP.ContactName = @ContactName
+						  ,VP.Email = ISNULL(@Email, VP.Email)
+						  ,VP.IdSettlement = @IdPopulated
 					FROM [dbo].[UserAddress] UADD LEFT JOIN [dbo].[VisitPointClient] VP with(nolock)
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
@@ -369,8 +401,8 @@ BEGIN
 					   ,@ContactName
 					   ,@IdKindOfVPClient
 					   ,@IdKindOfVPBusiness
-					   ,NULL
-					   ,NULL
+					   ,@IdPopulated
+					   ,@Email
 					   ,@IdTownship
 					   ,@Latitude
 					   ,@Longitude

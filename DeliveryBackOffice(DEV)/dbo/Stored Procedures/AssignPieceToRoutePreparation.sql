@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <2022-01-18>
 -- Description:	< Asignación por pieza a RoutePreparation .>
@@ -13,6 +12,10 @@
 -- Author:		<Edelman,Vásquez>
 -- Create date: <2022-09-28>
 -- Description:	<generar los datos del servicio tomando en cuenta si esta esta marcada para una devolución.>
+-- =============================================
+-- Author:		<Tito Garcia>
+-- update date: <2024-10-01>
+-- Description:	<Permitir asociar varios manifiestos a una ruta para que sean liquidados en un mismo proceso>
 -- =============================================
 CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
 	@IdRoute INT,
@@ -86,6 +89,26 @@ SET ARITHABORT ON
 
 	BEGIN TRANSACTION
 		BEGIN TRY
+		-- FDD-1321  Se valida si la ruta ya tiene asignado un manifiesto para esta fecha
+			DECLARE @ForceNewRoutePreparation AS TINYINT = 0;
+			DECLARE @RoutePreparationID AS BIGINT; 
+			DECLARE @DeliveryOrderBySettlementId AS BIGINT; 
+
+			SELECT  TOP 1 @RoutePreparationID = rp.IdRoutePreparation, @DeliveryOrderBySettlementId = rp.DeliveryOrderBySettlementId
+			FROM RoutePreparation rp WITH(NOLOCK)
+			LEFT JOIN DeliveryOrderBySettlement dobs WITH(NOLOCK)
+				ON rp.DeliveryOrderBySettlementId = dobs.ID
+			WHERE rp.CatRouteId = @IdRoute 
+				AND rp.DateRoutePreparation = @Date
+				AND rp.RowStatus = 1
+			ORDER BY rp.IdRoutePreparation DESC
+
+			IF (@RoutePreparationID IS NOT NULL AND @DeliveryOrderBySettlementId IS NOT NULL)
+			BEGIN
+				SET @ForceNewRoutePreparation = 1;
+			END
+		-- FDD-1321 FINALIZA
+
     ------------------------------------------------------------------------------------
 	------FDD-949--proceso de generación de datos de servicio marcados como devolución
 		SELECT TOP 1 @IsReturn =1
@@ -99,7 +122,7 @@ SET ARITHABORT ON
 
 
 			--- Verificar si existe la preparación de ruta y si ya fue despachada
-			SELECT 
+			SELECT TOP 1 
 				@IdRoutePreparation = ISNULL(RP.IdRoutePreparation,0)
 			FROM 
 				[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
@@ -109,9 +132,10 @@ SET ARITHABORT ON
 				RP.DateRoutePreparation = @Date
 				AND
 				RP.RowStatus = 1
+			ORDER BY IdRoutePreparation DESC 
 
 			--- Verificar si existe la preparación de ruta
-			IF(@IdRoutePreparation IS NULL OR @IdRoutePreparation = 0)
+			IF(@IdRoutePreparation IS NULL OR @IdRoutePreparation = 0 OR @ForceNewRoutePreparation = 1)
 			BEGIN
 
 				--- No existe la preparación de ruta y debe ser generado
@@ -176,6 +200,8 @@ SET ARITHABORT ON
 						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 						ON
 						RP.IdRoutePreparation = RPD.RoutePreparationId
+						AND
+						RPD.RowStatus = 1
 					OUTER APPLY
 						(
 							SELECT
@@ -198,7 +224,6 @@ SET ARITHABORT ON
 					RP.CatRouteId = @IdRoute
 					AND
 					RP.DateRoutePreparation = @Date
-                    AND RPD.RowStatus = 1
 					
 				-- Verificar si existe la guía dentro del detalle de la preparación de la ruta
 				IF(@IdRoutePreparationDetail IS NULL OR @IdRoutePreparationDetail = 0)
@@ -387,10 +412,12 @@ SET ARITHABORT ON
 									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
 									ON
 									RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
+									
 								INNER JOIN
 									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
+									
 							WHERE 
 								RPDP.RowStatus = 1
 								AND
@@ -401,8 +428,10 @@ SET ARITHABORT ON
 								RP.IdRoutePreparation <> @IdRoutePreparation
 								AND
 								RP.DateRoutePreparation = @Date
-                                AND RPD.RowStatus = 1
-                                AND RP.RowStatus = 1
+								AND
+									RPD.RowStatus = 1
+									AND
+									RP.RowStatus = 1
 									
 							--- Extraer de los demas detalles la guía ingresada
 							UPDATE RPD
@@ -415,6 +444,7 @@ SET ARITHABORT ON
 									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
+									
 							WHERE 
 								RPD.RowStatus = 1
 								AND
@@ -425,7 +455,8 @@ SET ARITHABORT ON
 								RP.IdRoutePreparation <> @IdRoutePreparation
 								AND
 								RP.DateRoutePreparation = @Date
-                                AND RP.RowStatus = 1
+								AND
+									RP.RowStatus = 1
 
 							--- Actualizar el estado de la guía
 							UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]

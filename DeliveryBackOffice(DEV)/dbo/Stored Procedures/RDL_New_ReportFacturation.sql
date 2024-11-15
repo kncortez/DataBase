@@ -357,7 +357,8 @@ BEGIN
 										ON TONW.IdTownship = DOR.ReceiverIdTownship
 									LEFT JOIN dbo.Township TWN WITH (NOLOCK)
 										ON TWN.TownshipName = DOR.Receiver_Town ----26TEBNHL
-										INNER JOIN dbo.Province prd ON prd.IdProvince = TWN.IdProvince  AND prd.IdCountry  = DOR.ReceiverCountryId --03OctCRAS
+										AND TWN.HeaderCode NOT LIKE 'H%'
+										LEFT JOIN dbo.Province prd ON prd.IdProvince = TWN.IdProvince  AND prd.IdCountry  = DOR.ReceiverCountryId --03OctCRAS
 									LEFT JOIN
 									(
 										SELECT CV.HeaderCode,

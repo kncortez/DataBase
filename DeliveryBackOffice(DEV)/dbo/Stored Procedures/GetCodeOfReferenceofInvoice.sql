@@ -4,7 +4,7 @@
 -- Create date: <2024-08-22>
 -- Description:	<TRAE EL CODIGO DE REFERENCIA REGISTRADO EN LA FACTURA>
 -- =============================================   
-ALTER PROCEDURE GetCodeOfReferenceofInvoice
+CREATE PROCEDURE GetCodeOfReferenceofInvoice
 @NumberFel NVARCHAR(50)
 AS
 BEGIN

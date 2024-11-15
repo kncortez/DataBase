@@ -36,7 +36,7 @@ BEGIN
 	                                            CASE 
 												    WHEN LEFT(UsrCurrency,2)='HN' 
 									                    THEN 'HN' ELSE 'GT' END  
-						                     FROM dbo.RegisterUser WHERE UsrEmail=@Username);
+						                     FROM dbo.RegisterUser WITH(NOLOCK) WHERE UsrEmail=@Username);
 
 
 				
@@ -789,8 +789,8 @@ BEGIN
         UPDATE [dbo].UserSystemRestriction
         SET UstRetries = (UstRetries + 1)
           , UstStatus = (IIF(UstRetries + 1 >= UstAccessRetries, 'BLOCKED', 'ACTIVE'))
-        FROM [dbo].RegisterUser                   usr 
-            LEFT JOIN [dbo].UserSystemRestriction res 
+        FROM [dbo].RegisterUser                usr WITH(NOLOCK)   
+            LEFT JOIN [dbo].UserSystemRestriction res WITH(NOLOCK)   
                 ON res.UstIdUser = usr.UsrIdUser
                    AND res.UstIdSystem = @IdSystem
         WHERE usr.UsrEmail = @Username;

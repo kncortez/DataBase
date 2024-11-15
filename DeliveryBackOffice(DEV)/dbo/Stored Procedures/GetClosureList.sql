@@ -10,13 +10,27 @@ EXEC GetClosureList
 -- Description:	<Se agrega la moneda correspondiente al express center>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[GetClosureList]
+CREATE PROCEDURE [dbo].[GetClosureList] 
     @VisitPointId INT,
     @StartDate DATETIME,
     @EndDate DATETIME
 AS
 BEGIN
+	DECLARE @IdCountry NVARCHAR(2),
+		    @Account NVARCHAR(30),
+			@AccountCOD NVARCHAR(30);
 
+	SELECT @IdCountry = CountryId 
+	FROM VisitPointClient 
+	WHERE CodeOfReference = @VisitPointId
+
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
+	FROM dbo.ClosureAccount 
+	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+	
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
+	FROM dbo.ClosureAccount 
+	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
     SELECT ACH.IdAccountingClosuresHeader 'ClosureId',
            ACH.VisitPoint 'VisitPointId',
            VPC.DescriptionOfClient 'VisitPoinDescription',
@@ -53,7 +67,9 @@ BEGIN
               OR @VisitPointId = -1
           );
 
-    SELECT Value 'URL'
+    SELECT @Account AS AccounExp,
+		   @AccountCOD AS AccountCOD,
+		  Value 'URL'
     FROM ConfigParams
     WHERE Name = 'ClosureExpressCenter';
 
