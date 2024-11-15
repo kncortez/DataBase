@@ -25,5 +25,6 @@ BEGIN
 	AND gsn.LastChangeDate < dod.DateCreated
 	AND so.RowStatus = 1
 	AND gsn.RowStatus = 1
+	AND gsn.FinalStatus = 0
 	--AND gsn.CountryId = @IdCountry
 END;
