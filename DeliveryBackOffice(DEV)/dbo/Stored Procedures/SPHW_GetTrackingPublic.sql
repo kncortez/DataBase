@@ -20,7 +20,8 @@ BEGIN TRY
 			@ReceiverName AS NVARCHAR(50),
 			@Hub AS NVARCHAR(20),
 			@StatusGuide AS NVARCHAR(20),
-			@StatusDelivered AS INT
+			@StatusDelivered AS INT,
+			@HubCourier AS NVARCHAR(25)
 	--Encabezados
 	DECLARE @EncabezadoRastreo TABLE (
 		Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -37,31 +38,16 @@ BEGIN TRY
 
 	----NOTA EL HUB QUEDA PENDIENTE DE VALIDAR, SEGUN SEAN LOS NUEVOS REQUERIMIENTOS
 	SELECT @SenderName = CONCAT(ISNULL(DO.Sender_FirstName,''), ' ',ISNULL(DO.Sender_LastName,'')),
-		   @ReceiverName = DO.NameOfReceiver
-		   --@Hub = P.ProvinceAbbreviation
+		   @ReceiverName = DO.NameOfReceiver,
+		   @StatusGuide = CST.NameStatusProcess 
 	FROM DeliveryOrder DO WITH(NOLOCK) 
-	LEFT JOIN Province P WITH (NOLOCK)
-		ON DO.Receiver_Department = P.ProvinceName
+	INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
+		ON DO.StatusOrderId = SO.StatusOrderId
+	INNER JOIN CatStatusProcess CST WITH(NOLOCK)
+		ON SO.CatStatusProcessId = CST.IdStatusProcess
 	WHERE DO.Guide_Serie = @GuideSerie 
 	AND DO.Guide_Number = @GuideNumber
 
-	----CALCULO DEL HUB---------
-	SELECT @Hub = HL.HubName
-		FROM DeliveryOrder DO WITH (NOLOCK)
-			LEFT JOIN TownShip TS
-				ON DO.SenderIdTownship = TS.IdTownship
-			LEFT JOIN
-			(
-				SELECT HeaderCode,
-						MAX(Hub) AS Hub
-				FROM DumpServiceCoverage
-				GROUP BY HeaderCode
-			) AS XP
-				ON XP.HeaderCode = TS.HeaderCode
-			LEFT JOIN HubLogistics HL
-				ON XP.Hub = HL.HubAbbreviation
-		 WHERE DO.Guide_Serie = @GuideSerie
-				AND DO.Guide_Number = @GuideNumber
 
 	----CALCULO DEL HUB---------
 	SET @Hub =
@@ -145,13 +131,42 @@ BEGIN TRY
 	SELECT 'Entregado', 'Entregado el'; --5
 
 
-	SELECT @StatusGuide = CST.NameStatusProcess 
-	FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
-	INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
-		ON DO.StatusOrderId = SO.StatusOrderId
-	INNER JOIN CatStatusProcess CST WITH(NOLOCK)
-		ON SO.CatStatusProcessId = CST.IdStatusProcess
-	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
+	SET @HubCourier =
+	(
+		SELECT TOP 1
+			ISNULL(
+			(
+				SELECT TOP (1)
+					CS.StationName
+				FROM DeliveryBackOffice.dbo.CatStation CS WITH (NOLOCK)
+					INNER JOIN DeliveryBackOffice.dbo.RolByUserBySystem RBUBS WITH (NOLOCK)
+						ON CS.IdStation = RBUBS.StationId
+						   AND CS.RowStatus = 1
+				WHERE IU.RegisterUserID = RBUBS.RusIdUser
+				ORDER BY CS.IdStation DESC
+			),
+			''
+				  ) AS Hub
+		FROM DeliveryOrderDetail DOD WITH (NOLOCK)
+			LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token WITH (NOLOCK)
+				ON DOD.UserCreated = token.SSN_IdToken
+			LEFT JOIN DenariusUser_Dev.dbo.LGN_User duser WITH (NOLOCK)
+				ON duser.USR_IdUser = token.SSN_IdUser
+				   AND duser.USR_Username = token.SSN_Username
+			LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl WITH (NOLOCK)
+				ON epl.IdEmployee = duser.USR_IdEmployee
+			LEFT JOIN DeliveryBackOffice.dbo.InternalUser IU WITH (NOLOCK)
+				ON epl.CodeEmployee = IU.IdUser
+			INNER JOIN StatusOrder SO WITH (NOLOCK)
+				ON DOD.StatusOrderId = SO.StatusOrderId
+			INNER JOIN CatStatusProcess CT WITH (NOLOCK)
+				ON SO.CatStatusProcessId = CT.IdStatusProcess
+		WHERE DOD.Guide_Serie = @GuideSerie
+			  AND DOD.Guide_Number = @GuideNumber
+			  AND CT.NameStatusProcess = 'En Ruta'
+		ORDER BY DOD.DateCreated DESC
+	)
+
 
 		--Iconos
 	SELECT NameStatusProcess AS 'label',
@@ -175,15 +190,20 @@ BEGIN TRY
 					OR CST.NameStatusProcess = 'Recibido por Forza' 
 						AND @StatusGuide = 'En Ruta'
 					OR CST.NameStatusProcess = 'Recibido por Forza' 
-						AND @StatusGuide = 'Entregado'THEN
+						AND @StatusGuide = 'Entregado'	THEN
 				   @SenderName
 			   WHEN CST.NameStatusProcess = 'En instalaciones'
 					AND @StatusGuide = 'En instalaciones'
 					OR CST.NameStatusProcess = 'En instalaciones' 
 						AND @StatusGuide = 'En Ruta'
 					OR CST.NameStatusProcess = 'En instalaciones' 
-						AND @StatusGuide = 'Entregado'THEN
+						AND @StatusGuide = 'Entregado'	THEN
 				   @Hub
+				WHEN CST.NameStatusProcess = 'En Ruta'
+					AND @StatusGuide = 'En Ruta'
+					OR CST.NameStatusProcess = 'En Ruta' 
+						AND @StatusGuide = 'Entregado'	THEN
+				   @HubCourier
 			   WHEN CST.NameStatusProcess = 'Entregado'
 					AND @StatusGuide = 'Entregado' THEN
 				   @ReceiverName
@@ -194,7 +214,7 @@ BEGIN TRY
 			   WHEN CST.NameStatusProcess = 'Creado' THEN
 			   (
 				   SELECT TOP 1
-					   CAST(DO.DateCreated AS DATE)
+					   DO.DateCreated 
 				   FROM DeliveryOrderDetail DO WITH (NOLOCK)
 					   INNER JOIN StatusOrder SO WITH (NOLOCK)
 						   ON DO.StatusOrderId = SO.StatusOrderId
@@ -203,11 +223,12 @@ BEGIN TRY
 				   WHERE DO.Guide_Number = @GuideNumber
 						 AND DO.Guide_Serie = @GuideSerie
 						 AND CSC.NameStatusProcess = CST.NameStatusProcess
+				   ORDER BY DO.DateCreated  DESC
 			   )
 			   WHEN CST.NameStatusProcess = 'Recibido por Forza' THEN
 			   (
 				   SELECT TOP 1
-					   CAST(DO.DateCreated AS DATE)
+					   DO.DateCreated 
 				   FROM DeliveryOrderDetail DO WITH (NOLOCK)
 					   INNER JOIN StatusOrder SO WITH (NOLOCK)
 						   ON DO.StatusOrderId = SO.StatusOrderId
@@ -216,11 +237,12 @@ BEGIN TRY
 				   WHERE DO.Guide_Number = @GuideNumber
 						 AND DO.Guide_Serie = @GuideSerie
 						 AND CSC.NameStatusProcess = CST.NameStatusProcess
+				   ORDER BY DO.DateCreated  DESC
 			   )
 			   WHEN CST.NameStatusProcess = 'En instalaciones' THEN
 			   (
 				   SELECT TOP 1
-					   CAST(DO.DateCreated AS DATE)
+					   DO.DateCreated 
 				   FROM DeliveryOrderDetail DO WITH (NOLOCK)
 					   INNER JOIN StatusOrder SO WITH (NOLOCK)
 						   ON DO.StatusOrderId = SO.StatusOrderId
@@ -229,11 +251,12 @@ BEGIN TRY
 				   WHERE DO.Guide_Number = @GuideNumber
 						 AND DO.Guide_Serie = @GuideSerie
 						 AND CSC.NameStatusProcess = CST.NameStatusProcess
+				   ORDER BY DO.DateCreated  DESC
 			   )
 			   WHEN CST.NameStatusProcess = 'En Ruta' THEN
 			   (
 				   SELECT TOP 1
-					   CAST(DO.DateCreated AS DATE)
+					   DO.DateCreated 
 				   FROM DeliveryOrderDetail DO WITH (NOLOCK)
 					   INNER JOIN StatusOrder SO WITH (NOLOCK)
 						   ON DO.StatusOrderId = SO.StatusOrderId
@@ -242,11 +265,12 @@ BEGIN TRY
 				   WHERE DO.Guide_Number = @GuideNumber
 						 AND DO.Guide_Serie = @GuideSerie
 						 AND CSC.NameStatusProcess = CST.NameStatusProcess
+				   ORDER BY DO.DateCreated  DESC
 			   )
 			   WHEN CST.NameStatusProcess = 'Entregado' THEN
 			   (
 				   SELECT TOP 1
-					   CAST(DO.DateCreated AS DATE) 
+					   DO.DateCreated 
 				   FROM DeliveryOrderDetail DO WITH (NOLOCK)
 					   INNER JOIN StatusOrder SO WITH (NOLOCK)
 						   ON DO.StatusOrderId = SO.StatusOrderId
@@ -255,6 +279,7 @@ BEGIN TRY
 				   WHERE DO.Guide_Number = @GuideNumber
 						 AND DO.Guide_Serie = @GuideSerie
 						 AND CSC.NameStatusProcess = CST.NameStatusProcess
+				   ORDER BY DO.DateCreated  DESC
 			   )
 			   ELSE
 				   NULL
