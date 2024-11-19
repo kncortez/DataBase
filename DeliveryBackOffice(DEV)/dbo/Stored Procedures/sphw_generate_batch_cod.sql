@@ -1213,7 +1213,7 @@ BEGIN
 
 			UPDATE bdc
 			SET bdc.IsCompleted = 1 
-			FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc
+			FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH (NOLOCK)
 				INNER JOIN #GuidesProcessCOD gpc
 					ON bdc.GuideSerie = gpc.GuideSerie
 					AND bdc.GuideNumber = gpc.GuideNumber
@@ -1359,7 +1359,7 @@ BEGIN
 
 		UPDATE bdc
 		SET bdc.IsCompleted = 1 
-		FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc
+		FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH (NOLOCK)
 			INNER JOIN #GuidesProcessCOD gpc
 				ON bdc.GuideSerie = gpc.GuideSerie
 				AND bdc.GuideNumber = gpc.GuideNumber

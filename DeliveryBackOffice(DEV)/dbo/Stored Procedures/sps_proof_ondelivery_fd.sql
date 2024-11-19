@@ -1152,7 +1152,7 @@ BEGIN
 
 		UPDATE pgc
         SET pgc.IsCompleted = 1 
-        FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc
+        FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH (NOLOCK)
             INNER JOIN #GuidesProcessCOD gpc
                 ON pgc.GuideSerie = gpc.GuideSerie
                 AND pgc.GuideNumber = gpc.GuideNumber
