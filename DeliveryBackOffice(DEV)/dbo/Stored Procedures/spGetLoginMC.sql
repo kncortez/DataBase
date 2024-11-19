@@ -3,6 +3,10 @@
 -- Create date: <2024-06-03>
 -- Description:	<Login - Nuevo método para login Express Center, soporta multipaís.>
 -- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego devolucion de informacion de poblado de origen para login de express center>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spGetLoginMC]
     -- Add the parameters for the stored procedure here

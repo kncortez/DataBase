@@ -13,6 +13,10 @@
 -- Modified:	<30-09-2024>
 -- Description:	<Se agrega la relación de una guía con un DeliveryLink.>
 -- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego registro de informacion de poblado de origen en nuevo campo SenderIdSettlement>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,

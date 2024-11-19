@@ -1,4 +1,9 @@
-﻿CREATE TABLE [dbo].[DeliveryOrder] (
+﻿-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego nuevo campo SenderIdSettlement para almacenar informacion de poblado de origen>
+-- =============================================
+CREATE TABLE [dbo].[DeliveryOrder] (
     [Ticket_Number]                        NVARCHAR (150)  NULL,
     [Order_Number]                         INT             NULL,
     [Preparation_Date]                     DATETIME        NULL,
