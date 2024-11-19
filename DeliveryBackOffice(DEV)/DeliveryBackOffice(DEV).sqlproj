@@ -1614,6 +1614,8 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetInformationFromDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_UpdateDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkCompleted.sql" />
+	<Build Include="dbo\Stored Procedures\SPHWAM_CreateAccountMovilApp.sql" /> 
+	<Build Include="dbo\Stored Procedures\SPHWAM_UpdateCreateAccount.sql" /> 
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1811,6 +1813,10 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetNewDeliveryTracking.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetInfoPackages.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetAddressByPhoneList.sql" />
+    <Build Include="dbo\Stored Procedures\spma_GetCarouselMovilapp.sql" />
+    <Build Include="dbo\Tables\MovilAppCarouselImage.sql" />
+    <Build Include="dbo\Stored Procedures\SPMA_SaveAccountImage.sql" />
+    <Build Include="dbo\Stored Procedures\SPMA_GetStoreInformation.sql" />
   </ItemGroup>
   <ItemGroup>
       <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac</HintPath>
