@@ -1,3 +1,8 @@
+-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se creo tabla para manejo de informacion sobre carrousel de imagenes para proyecto Navenik>
+-- =============================================
 CREATE TABLE [dbo].[MovilAppCarouselImage] (
     [IdCarouselImage] INT            IDENTITY (1, 1) NOT NULL,
     [SDImageURL]      NVARCHAR (200) NOT NULL,
