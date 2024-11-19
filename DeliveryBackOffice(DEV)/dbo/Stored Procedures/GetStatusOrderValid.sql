@@ -20,12 +20,12 @@ BEGIN
                       AND do.Guide_Number = @GuideNumber
             );
         --Obtener el estado de la DeliveryOrder
-    DECLARE @GuideStatusReprint NVARCHAR(3) =
+    DECLARE @GuideStatusReprint BIT =
             (
-                SELECT do.Changed_Tracking
-                FROM DeliveryOrder do WITH (NOLOCK)
-                WHERE do.Guide_Serie = @GuideSerie
-                      AND do.Guide_Number = @GuideNumber
+                SELECT rot.IsPendingReprint
+                FROM ReprintOrderTracking rot WITH (NOLOCK)
+                WHERE rot.GuideSerie = @GuideSerie
+                      AND rot.GuideNumber = @GuideNumber
             );
 
 	DECLARE @StatusDelivery TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Entregado')
@@ -77,9 +77,6 @@ BEGIN
     ELSE IF @GuideStatusOrderId = @StatusReturn
         SELECT 0 StatusCode,
                'La guía se encuentra en estado Devuelto.' Description;
-    ELSE IF @GuideStatusReprint = 'D'
-        SELECT 2 StatusCode,
-               'La guía necesita reimpresión.' Description;
     ELSE --De momento no se valida nada más
         SELECT 1 StatusCode,
                'Estado válido.' Description;

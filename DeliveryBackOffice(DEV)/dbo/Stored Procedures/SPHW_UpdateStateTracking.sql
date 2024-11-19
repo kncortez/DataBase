@@ -4,20 +4,41 @@
 -- Description:	<Delivery Tracking - Método para actualizar el estado de la orden para reimpresión>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[SPHW_UpdateStateTracking]
+CREATE PROCEDURE [dbo].[SPHW_UpdateStateTracking1]
 @GuideSerie NVARCHAR(4),
 @GuideNumber INT,
-@Status NVARCHAR(3)
+@System NVARCHAR(80) = NULL,
+@User NVARCHAR(80) = NULL,
+@Status BIT,
+@Token NVARCHAR(80)
 AS
 BEGIN
 BEGIN TRY
     BEGIN TRANSACTION  
-    -- D - Cambio dirección
-	UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
-		SET Changed_Tracking = @Status, 
-            TokenUpdated = 'SYS-ADMIN-MOVIL-APP',
-		    DateUpdated = GETDATE()
-	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber;
+    IF EXISTS(SELECT TOP 1 1 FROM ReprintOrderTracking WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber)
+	BEGIN 
+		UPDATE [DeliveryBackOffice].[dbo].[ReprintOrderTracking]
+			SET IsPendingReprint = @Status, 
+				SystemReprint = @System,
+				UserReprint = @User,
+				TokenUpdated = @Token,
+				DateUpdated = GETDATE()
+		WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber;
+	END
+	ELSE 
+	BEGIN 
+		INSERT INTO [DeliveryBackOffice].[dbo].[ReprintOrderTracking]
+		(
+		  [GuideSerie]
+		, [GuideNumber]
+		, [SystemReprint]
+		, [UserReprint]
+		, [IsPendingReprint]
+		, [TokenCreated]
+		, [DateCreated]
+		) VALUES (@GuideSerie, @GuideNumber, @System, @User, @Status, @Token, GETDATE())
+	END
+	
 	IF @@TRANCOUNT > 0 
 	BEGIN  
 	COMMIT TRANSACTION;  
