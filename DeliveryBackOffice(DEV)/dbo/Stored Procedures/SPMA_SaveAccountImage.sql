@@ -1,3 +1,8 @@
+-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego sp para manejo de imagenes de perfil para usuario en aplicacion Navenik>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPMA_SaveAccountImage]
   @Token NVARCHAR(200),
   @PerfilImage NVARCHAR(500) = NULL

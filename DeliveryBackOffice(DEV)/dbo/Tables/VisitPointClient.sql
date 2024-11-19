@@ -1,3 +1,8 @@
+-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego nuevo campo [AttentionSchedule] para el manejo de los horarios de atencion para los express center proyecto Navenik>
+-- =============================================
 CREATE TABLE [dbo].[VisitPointClient] (
     [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT NULL,
     [CodeOfReference]         INT            NOT NULL,
