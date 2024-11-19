@@ -51,7 +51,16 @@ BEGIN
             DROP TABLE listNotGuides;
         IF OBJECT_ID('tempdb.dbo.#UpdOrd', 'U') IS NOT NULL
             DROP TABLE #UpdOrd;
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
 
+        CREATE TABLE #TempData 
+        (
+         IdProcessedGuideCOD INT,
+         GuideSerie          NVARCHAR(4),
+         GuideNumber         INT
+        );
+        CREATE NONCLUSTERED INDEX INDX_sps_settlement_PickUp_Temp ON #TempData (GuideSerie, GuideNumber);
 
         CREATE TABLE #listGuides
         (
@@ -385,7 +394,9 @@ BEGIN
 									AND GuideSerie = ItemSerie
 						 );
 
-		INSERT INTO [dbo].[ProcessedGuideCOD]
+
+
+               INSERT INTO [dbo].[ProcessedGuideCOD]
                 (
                     [GuideSerie],
                     [GuideNumber],
@@ -398,6 +409,10 @@ BEGIN
                     [Token],
                     CustomerId
                 )
+                OUTPUT inserted.IdProcessedGuideCOD,
+                       inserted.GuideSerie,
+                       inserted.GuideNumber
+                  INTO #TempData
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
                        cou.CourierId,
@@ -455,6 +470,13 @@ BEGIN
                    0 AS 'NumTransferID';
 
         COMMIT TRANSACTION;
+        UPDATE pgd 
+           SET pgd.IsCompleted = 1
+          FROM ProcessedGuideCOD pgd 
+               INNER JOIN #TempData tmp
+                  ON pgd.GuideSerie   = tmp.GuideSerie
+                 AND pgd.GuideNumber = tmp.GuideNumber
+         WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
     END;
     ELSE
         SELECT 0 AS 'StatusCode',

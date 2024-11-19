@@ -20,6 +20,7 @@
     [CollectBatch]           BIT          NULL,
     [RecolectionBatch]       BIT          NULL,
     [CODBatch]               BIT          NULL,
+    [IsCompleted]            TINYINT      DEFAULT(0) NULL,
     CONSTRAINT [PK_ProcessedGuideCOD_IdProcessedGuideCOD] PRIMARY KEY CLUSTERED ([IdProcessedGuideCOD] ASC),
     CONSTRAINT [FK_ProcessedGuideCOD_BatchCOD] FOREIGN KEY ([BatchCODId]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
     CONSTRAINT [FK_ProcessedGuideCOD_BatchCOD_BatchCODIdCommission] FOREIGN KEY ([BatchCODIdCommission]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),

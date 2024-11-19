@@ -38,6 +38,17 @@ BEGIN
 	---Pertenece al pais?-----
 	DECLARE @BelongConuntry BIT;
 
+    IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+        DROP TABLE #TempData;
+
+    CREATE TABLE #TempData
+    (
+     IdProcessedGuideCOD INT,
+     GuideSerie          NVARCHAR(4),
+     GuideNumber         INT,
+    );
+    CREATE NONCLUSTERED INDEX INDX_sps_set_status_order_by_guide_Temp ON #TempData (GuideSerie, GuideNumber);
+
     BEGIN TRANSACTION;
 
     BEGIN TRY
@@ -353,6 +364,10 @@ BEGIN
                         [Token],
                         CustomerId
                     )
+                    OUTPUT inserted.IdProcessedGuideCOD,
+                           inserted.GuideSerie,
+                           inserted.GuideNumber
+                      INTO #TempData
                     SELECT do.[Guide_Serie],
                            do.[Guide_Number],
                            @CourierId,
@@ -644,5 +659,13 @@ BEGIN
                    @ValidateOperation AS 'NumTransferID';
         END;
         COMMIT TRANSACTION;
+
+        UPDATE pgd 
+           SET pgd.IsCompleted = 1
+          FROM ProcessedGuideCOD pgd 
+               INNER JOIN #TempData tmp
+                  ON pgd.GuideSerie   = tmp.GuideSerie
+                 AND pgd.GuideNumber = tmp.GuideNumber
+         WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
     END;
 END;
