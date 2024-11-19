@@ -472,11 +472,14 @@ BEGIN
         COMMIT TRANSACTION;
         UPDATE pgd 
            SET pgd.IsCompleted = 1
-          FROM ProcessedGuideCOD pgd 
+          FROM ProcessedGuideCOD pgd WITH(NOLOCK)
                INNER JOIN #TempData tmp
                   ON pgd.GuideSerie   = tmp.GuideSerie
                  AND pgd.GuideNumber = tmp.GuideNumber
          WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
     END;
     ELSE
         SELECT 0 AS 'StatusCode',
