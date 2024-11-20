@@ -4,7 +4,7 @@
 -- Description:	<Delivery Tracking - Método para actualizar el estado de la orden para reimpresión>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[SPHW_UpdateStateTracking1]
+CREATE PROCEDURE [dbo].[SPHW_UpdateStateTracking]
 @GuideSerie NVARCHAR(4),
 @GuideNumber INT,
 @System NVARCHAR(80) = NULL,
