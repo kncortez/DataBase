@@ -11,3 +11,4 @@ WHERE Id_bank = 53
 --OCCIDENTE
 UPDATE [DeliveryBackOffice].[dbo].DeliveryBank
 SET PayingBank = 5
+WHERE Id_bank = 52
