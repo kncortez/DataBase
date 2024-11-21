@@ -12,11 +12,11 @@ INSERT INTO [dbo].[StatusOrder]
            ,[NextSteps]
            ,[CatStatusProcessId])
      VALUES
-           ('Depositado en buzón'
+           ('Recepcionado en Express Center'
            ,2 -- Checkpoint de proceso
            ,2 -- externo
-           ,'Estimado cliente, el paquete ha sido depositado en un buzón para su preparación'
-           ,'Guía depositada en un buzón de manera exitosa'
+           ,'Estimado cliente, el paquete ha sido recepcionado para su deposito en buzón'
+           ,'Guía recepcionada en express centrer de manera exitosa'
            ,1
            ,'SYSTEM'
            ,GETDATE()
