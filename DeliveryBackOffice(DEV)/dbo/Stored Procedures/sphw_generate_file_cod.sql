@@ -2390,4 +2390,139 @@ BEGIN
 			btd.AccountNumber,
 			btd.AccountName
 	END;
+    -- FORMATO BANCO PROMERICA HONDURAS
+	IF @IdBank = ( SELECT
+						Id_bank
+					FROM DeliveryBank
+					WHERE Id_bank = 118
+					AND Id_country = 'HN'
+					AND Id_status = 1)
+    BEGIN
+		--------DETALLADO
+
+   SELECT  'Cuenta destino',
+           'Banco destino',
+           'Moneda destino',
+		   'Motivo',
+		  'Nombre de la cuenta destino',
+		  'Identidad beneficiario',
+		  'Dirección del beneficiario',
+		  'Tipo cuenta destino',
+		  'Monto',
+		  'Comentario'
+
+		  UNION ALL
+		SELECT
+		RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''), CHAR(2),''), CHAR(3),''), CHAR(9),''), CHAR(10),''), CHAR(13),''))) AS 'CUENTA',
+		CAST(25 AS NVARCHAR(2)) AS 'Banco destino',
+		'LPS' AS 'Moneda',
+		'Pago a clientes',
+		btd.AccountName AS 'NOMBRE_CUENTA',
+		P.PerIdentification AS 'ID',
+		LEFT(do.Receiver_Address,100),
+		btd.TypeAccountName,
+		CAST(btd.Amount AS nvarchar) AS 'MONTO',
+		CONCAT(btd.GuideSerie,CAST(btd.GuideNumber AS VARCHAR(20)),
+                                 ' Ref ',
+                                 CAST(btd.CODBatch AS VARCHAR(10))
+                             )
+			
+			'RefCredito'
+		FROM BatchDetailCOD btd WITH (NOLOCK)
+		INNER JOIN BatchCOD bt  WITH (NOLOCK)
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.GuideSerie = do.Guide_Serie AND btd.GuideNumber = do.Guide_Number
+		LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu  WITH (NOLOCK)
+			ON ISNULL(do.IdCustomer, vp.CustomerID) = cu.IdCustomer
+		 LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
+                ON db.Id_bank = btd.BankId
+		LEFT JOIN dbo.Account ac WITH (NOLOCK)
+		    ON ac.IdCustomer = cu.IdCustomer
+	    LEFT JOIN [dbo].[RolByUserByAccount] Rbua WITH (NOLOCK)
+		    ON   Rbua.RuaIdAccount = ac.AccIdAccount
+		LEFT JOIN dbo.RegisterUser ru WITH (NOLOCK)
+		    ON ru.UsrIdUser = Rbua.RuaIdUser
+        LEFT JOIN Person P WITH (NOLOCK)
+		    ON P.PerIdPerson = ru.UsrIdPerson
+		WHERE
+			btd.CatConceptCODId IN (2)
+			AND bt.RowStatus = @EnabledRow
+			AND btd.RowStatus = @EnabledRow
+			AND btd.BatchCODId = @BatchCODId
+			AND btd.Excluded = @Excluded
+			AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+			AND do.SenderCountryID = @IdCountrySender
+
+		UNION ALL
+
+		----------ACUMULADO
+		SELECT
+		 RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''), CHAR(2),''), CHAR(3),''), CHAR(9),''), CHAR(10),''), CHAR(13),''))) AS 'CUENTA',
+			CAST(25 AS NVARCHAR(2)) AS 'Banco destino',
+			'LPS' AS 'Moneda',
+			'Pago a clientes',
+			btd.AccountName AS 'NOMBRE CUENTA',
+			MAX(P.PerIdentification) AS 'ID',
+			MAX(LEFT(do.Receiver_Address,100)),
+			   MAX(btd.TypeAccountName),
+			   CAST(SUM(btd.Amount) AS nvarchar) AS 'MONTO',
+			   CONCAT(
+                                 
+								 MAX(btd.GuideSerie),
+                                 CAST(MAX(btd.GuideNumber) AS VARCHAR(20)),
+                                 ' Ref '
+                             
+                             )
+			'RefCredito'
+		FROM BatchDetailCOD btd WITH (NOLOCK)
+		INNER JOIN BatchCOD bt  WITH (NOLOCK)
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.GuideSerie = do.Guide_Serie AND btd.GuideNumber = do.Guide_Number
+		LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu  WITH (NOLOCK)
+			ON ISNULL(do.IdCustomer, vp.CustomerID) = cu.IdCustomer
+	    LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
+            ON db.Id_bank = btd.BankId
+		LEFT JOIN dbo.Account ac WITH (NOLOCK)
+		    ON ac.IdCustomer = cu.IdCustomer
+	    LEFT JOIN [dbo].[RolByUserByAccount] Rbua WITH (NOLOCK)
+		    ON   Rbua.RuaIdAccount = ac.AccIdAccount
+		LEFT JOIN dbo.RegisterUser ru WITH (NOLOCK)
+		    ON ru.UsrIdUser = Rbua.RuaIdUser
+        LEFT JOIN Person P WITH (NOLOCK)
+		    ON P.PerIdPerson = ru.UsrIdPerson
+		WHERE
+			btd.CatConceptCODId IN (2)
+			AND bt.RowStatus = @EnabledRow
+			AND btd.RowStatus = @EnabledRow
+			AND btd.BatchCODId = @BatchCODId
+			AND btd.Excluded = @Excluded
+			AND cu.CatBatchTypeCODId = @BatchTypeCOD_AC
+			AND do.SenderCountryID = @IdCountrySender
+		GROUP BY
+			cu.IdCustomer,
+			btd.CatAccountTypeCODId,
+			btd.AccountNumber,
+			btd.AccountName
+	
+	END;
 END;
