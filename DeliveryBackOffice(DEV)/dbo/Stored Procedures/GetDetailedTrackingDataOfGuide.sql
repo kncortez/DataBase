@@ -362,7 +362,8 @@ BEGIN
                 END
                )                                                                            AS [ImagePath]
              , (CASE
-                    WHEN dod.StatusOrderId = 5 THEN					
+                    WHEN dod.StatusOrderId = 5 THEN
+                    ISNULL((Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR(50))) as VARCHAR(300))),
                     (
                         SELECT TOP 1
                                IIF([dp].[Path_Dry] = '', dp.Path_Dry, ISNULL([Path_Dry], [Path_Dry]))
