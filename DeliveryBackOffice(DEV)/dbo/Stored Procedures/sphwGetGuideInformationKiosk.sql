@@ -13,13 +13,20 @@ BEGIN
     SET NOCOUNT ON;
 
 
-    DECLARE @StatusOrder AS INT;
+    DECLARE @StatusOrderSolicitado AS INT,
+			@StatusOrderGenerado AS INT;
 
-    SET @StatusOrder =
+    SET @StatusOrderSolicitado =
     (
         SELECT StatusOrderId
         FROM StatusOrder WITH (NOLOCK)
         WHERE OrderDescription = 'Solicitado'
+    )
+    SET @StatusOrderGenerado =
+    (
+        SELECT StatusOrderId
+        FROM StatusOrder WITH (NOLOCK)
+        WHERE OrderDescription = 'Generado'
     )
 
     IF NOT EXISTS
@@ -28,7 +35,8 @@ BEGIN
         FROM DeliveryOrder WITH (NOLOCK)
         WHERE Guide_Serie = @GuideSerie
               AND Guide_Number = @GuideNumber
-              AND StatusOrderId = @StatusOrder
+              AND ISNULL(SenderCountryId,'GT') = @IdCountry
+              AND StatusOrderId IN( @StatusOrderSolicitado,@StatusOrderGenerado)
     )
     BEGIN
         SELECT 400 AS 'StatusCode',
