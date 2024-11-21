@@ -23,7 +23,8 @@ BEGIN
     SELECT
 		do.Ticket_Number
 		,(do.pieces_Dry + do.Pieces_Cold) AS Pieces
-		,ISNULL(do.Receiver_FirstName,'') + ' ' + ISNULL(do.Receiver_LastName,'') AS receiver_name
+		,ISNULL(do.NameOfReceiver,'')  AS receiver_name
+		,ISNULL(do.Receiver_FirstName,'') + ' ' + ISNULL(do.Receiver_LastName,'') AS receiver_namepod
 		,do.Receiver_Address AS Receiver_Address
 		,do.Receiver_Phone
 		,do.Sender_FirstName + ' ' + do.Sender_LastName AS sender_name
