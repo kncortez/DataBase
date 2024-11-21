@@ -39,6 +39,7 @@ BEGIN
 		WHERE vpc.CountryId = @CountryId
 			AND ID_DeliveryOrderBySettlement = @ManifestId
 			AND cu.IsVoucherRequired = 1
+			AND cu.Abbreviation NOT IN ('IGSS','RENAP')
 
     END TRY 
 	BEGIN CATCH
