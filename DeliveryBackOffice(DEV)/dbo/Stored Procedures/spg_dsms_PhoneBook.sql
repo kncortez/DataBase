@@ -102,7 +102,7 @@ BEGIN
 	)
 	insert into @PhoneBook
 	--SELECT TOP 1 --TMP BNHL
-	SELECT
+	SELECT DISTINCT
 		IIF(do.Receiver_FirstName = '',do.Receiver_Alternant_FullName,do.Receiver_FirstName), 
 		do.Receiver_LastName,
 		do.Receiver_Phone,
@@ -118,7 +118,7 @@ BEGIN
 		  + convert(varchar,do.Guide_Number)
 		, IIF(SDFG.GuideToken IS NOT NULL, CONCAT( ' https://forzadelivery.io/' , SDFG.GuideToken ),'')
 		,ISNULL(do.SenderCountryId,'GT')
-		,do.StatusOrderId
+		,DOD.StatusOrderId
 		,CASE
 		  WHEN SO.OrderDescription = 'Entregado' THEN
            (
@@ -147,6 +147,7 @@ BEGIN
 	   CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',DO.InsuranceAmount,'* al recibir tu paquete o en la opción de pagar envío.') AS InsuranceAmount
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
+	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
 	left join DeliveryBackOffice.dbo.VisitPointClient VPC with(nolock) ON VPC.CodeOfReference = do.Sender_ID
 	left join DeliveryBackOffice.dbo.ServiceDataForGuide SDFG with(nolock) ON do.Guide_Serie = SDFG.GuideSerie and do.Guide_Number = SDFG.GuideNumber and SDFG.IsDelivery = 1 AND  SDFG.IsInRoute = 0
 	INNER JOIN StatusOrder SO WITH (NOLOCK) 
@@ -170,7 +171,9 @@ BEGIN
 		ON CCU.IdCatCurrencyCOD = DC.IdCurrencyCOD
 	where not tu._Number is null
 	and not tu._Series is null
+	AND DOD.StatusOrderId IN (4,11)
 	AND DC.DefaultPerCountry = 1
+	ORDER BY DOD.StatusOrderId DESC
 	--WHERE CONVERT(VARCHAR, do.Delivery_Max_Date, 23) = CONVERT(VARCHAR, @MaxDeliveryDate, 23)
 
 	declare @TopBatchId bigint=0
