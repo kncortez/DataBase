@@ -19,7 +19,7 @@ CREATE PROCEDURE [dbo].[SPHWAM_UpdateCreateAccount]
 	@DeviceType VARCHAR(200),
 	@Currency VARCHAR(10),
 	@IdSystem INT = 1,
-	@TypeAccount  AS CHAR(3),
+	@TypeAccount AS CHAR(3) = 'IND',
 	@NIT AS VARCHAR(18),
 	@PhoneNumber AS VARCHAR(30),
 	@CountryId AS NVARCHAR(2) ='GT'
@@ -66,7 +66,7 @@ BEGIN
 				END
 				ELSE IF @TypeAccount = 'EMP'
 				BEGIN
-				SET @IdentificationValue = @NIT;
+				SET @IdentificationValue = '';
 				END
 				BEGIN TRANSACTION
 				BEGIN TRY
@@ -74,6 +74,8 @@ BEGIN
 				-- insertar registro en la tabla persona
 					UPDATE  DeliveryBackOffice.dbo.Person  
 					SET 
+					 PerFirstName = @FirstName,
+                	 PerLastName = @LastName,					
 					 PerGender = @Gender,
 					 PerBirthdate = @Birthdate,
 					 PerIdentification = @IdentificationValue,
