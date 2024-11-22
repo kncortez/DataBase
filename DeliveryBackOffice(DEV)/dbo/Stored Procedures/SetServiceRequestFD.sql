@@ -71,7 +71,8 @@ BEGIN
 	/*********************************************************************************************/
 	DECLARE @CorrelativeTable AS TABLE(
 		[Row_Number][int] IDENTITY(1,1), -- no de fila
-		[Guide_Number] [int] NULL -- correlativo autogenerado
+		[Guide_Number] [int] NULL, -- correlativo autogenerado
+		[Guide_Serie] nvarchar(2) NULL
 	)
 	BEGIN TRANSACTION
 	BEGIN TRY
@@ -88,10 +89,11 @@ BEGIN
 		)
 		INSERT INTO @CorrelativeTable 
 		(
-			Guide_Number
+			Guide_Number,
+			Guide_Serie
 		)
 		SELECT 
-			NEXT VALUE FOR [dbo].[NewGuideNumberSequence]
+			NEXT VALUE FOR [dbo].[NewGuideNumberSequence],@GuideSerie
 		FROM gen
 		option (maxrecursion 10000)
 		/*****************************************************************************************************************************/
@@ -136,7 +138,7 @@ BEGIN
 			[Receiver_Alternant_SocialSecurity_ID],
 			[Delivery_Max_Date],
 			[printedStatus],
-			@GuideSerie AS 'Guide_Serie',
+			C.Guide_Serie AS 'Guide_Serie',
 			C.Guide_Number AS 'Guide_Number',
 			@ManifestSerie AS Manifest_Serie, 
 			@ManifestNumber AS Manifest_Number,
@@ -849,7 +851,7 @@ BEGIN
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
-										AND D.Guide_Serie = @GuideSerie
+										AND D.Guide_Serie = C.Guide_Serie
 		LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 			ON ctm.IdCustomer = D.IdCustomer
 		LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
