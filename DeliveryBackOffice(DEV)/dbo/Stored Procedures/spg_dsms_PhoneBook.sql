@@ -67,7 +67,7 @@ BEGIN
 		  AND DO.Guide_Number = DOD.Guide_Number
 	WHERE DOD.DateCreatedInSystem >= @LastUpdate
 		  and CAST(dod.DateCreatedInSystem as date) >= CAST('2022-03-07' as date)
-		  AND DO.StatusOrderId = 4
+		  AND DOD.StatusOrderId = 4
 	  AND NOT EXISTS 
 	  (
 		SELECT TOP 1 1 
