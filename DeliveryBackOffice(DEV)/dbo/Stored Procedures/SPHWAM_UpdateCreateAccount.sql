@@ -7,6 +7,8 @@
 
 CREATE PROCEDURE [dbo].[SPHWAM_UpdateCreateAccount]
 	-- Add the parameters for the stored procedure here
+	@FirstName  VARCHAR(200),  
+	@LastName  VARCHAR(200),  	
 	@Gender  VARCHAR(200),
 	@Birthdate  DATE,
 	@Identification  VARCHAR(200),
