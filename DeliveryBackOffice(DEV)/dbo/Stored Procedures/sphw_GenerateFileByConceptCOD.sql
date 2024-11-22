@@ -128,34 +128,36 @@ BEGIN
            cat.Description 'TIPO DE CUENTA OTRO BANCO',
            cco.Concept 'CONCEPTO',
            Password 'CONTRASEÑA'
-    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd with (nolock)
-        LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda
+    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd					WITH(NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda		WITH(NOLOCK)
             ON cda.IdCatDebitAccountCOD = bd.CatDebitAccountCODId
                AND cda.BankId = @IdBank
                AND cda.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.CatTransactionTypeCOD ctt
+        LEFT JOIN DeliveryBackOffice.dbo.CatTransactionTypeCOD ctt	WITH(NOLOCK)
             ON ctt.IdCatTransactionTypeCOD = bd.CatTransactionTypeCODId
                AND ctt.BankId = @IdBank
                AND ctt.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD cc
+        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD cc			WITH(NOLOCK)
             ON cc.IdCatCurrencyCOD = bd.CatCurrencyCODId
                AND cc.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db			WITH(NOLOCK)
             ON db.Id_bank = bd.BankId
                AND db.Id_status = @EnabledRow
                AND db.Id_country = @IdCountry
-        LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat
+        LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat		WITH(NOLOCK)
             ON cat.IdCatAccountTypeCOD = bd.CatAccountTypeCODId
                AND cat.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco
+        LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco			WITH(NOLOCK)
             ON cco.IdCatConceptCOD = bd.CatConceptCODId
                AND cco.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD PGD with (nolock)
+        LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD PGD		WITH(NOLOCK)
             ON PGD.GuideSerie = bd.GuideSerie
                AND PGD.GuideNumber = bd.GuideNumber
                AND PGD.RowStatus = 1
     WHERE PGD.RowStatus = 1
+		  AND PGD.IsCompleted = 1
           AND bd.Excluded = @Excluded
+		  AND bd.IsCompleted = 1
           AND bd.CatConceptCODId = @ConceptId
           AND
           (
@@ -328,36 +330,36 @@ BEGIN
            ISNULL(invh.inv_serieFEL, '') 'SERIE FEL',
            ISNULL(invh.inv_numberFEL, '') 'NÚMERO FEL',
            ISNULL(invh.inv_certificationFEL, '') 'CERTIFIACDO FEL'
-    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd with (nolock)
-        LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD PGD
+    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd					WITH(NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD PGD		WITH(NOLOCK)
             ON PGD.GuideSerie = bd.GuideSerie
                AND PGD.GuideNumber = bd.GuideNumber
                AND PGD.RowStatus = 1
-        LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda
+        LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda		WITH(NOLOCK)
             ON cda.IdCatDebitAccountCOD = bd.CatDebitAccountCODId
                AND cda.BankId = @IdBank
                AND cda.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.CatTransactionTypeCOD ctt
+        LEFT JOIN DeliveryBackOffice.dbo.CatTransactionTypeCOD ctt	WITH(NOLOCK)
             ON ctt.IdCatTransactionTypeCOD = bd.CatTransactionTypeCODId
                AND ctt.BankId = @IdBank
                AND ctt.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD cc
+        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD cc			WITH(NOLOCK)
             ON cc.IdCatCurrencyCOD = bd.CatCurrencyCODId
                AND cc.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db			WITH(NOLOCK)
             ON db.Id_bank = bd.BankId
                AND db.Id_status = @EnabledRow
                AND db.Id_country = @IdCountry
-        LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat
+        LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat		WITH(NOLOCK)
             ON cat.IdCatAccountTypeCOD = bd.CatAccountTypeCODId
                AND cat.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco
+        LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco			WITH(NOLOCK)
             ON cco.IdCatConceptCOD = bd.CatConceptCODId
                AND cco.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do			WITH(NOLOCK)
             ON bd.GuideSerie = do.Guide_Serie
                AND bd.GuideNumber = do.Guide_Number
-        LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD bdc with (nolock)
+        LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD bdc			WITH(NOLOCK)
             ON bdc.GuideSerie = bd.GuideSerie
                AND bdc.GuideNumber = bd.GuideNumber
                AND bdc.BankId <> 31
@@ -369,8 +371,8 @@ BEGIN
                    MIN(fac.inv_certificationFEL) inv_certificationFEL,
                    invd.dti_fk_orderSerie dti_fk_orderSerie,
                    invd.dti_fk_orderNumber dti_fk_orderNumber
-            FROM DeliveryBackOffice.dbo.invoiceDetail invd with (nolock)
-               inner JOIN DeliveryBackOffice.dbo.invoiceHeader fac with (nolock)
+            FROM DeliveryBackOffice.dbo.invoiceDetail invd			WITH(NOLOCK)
+               inner JOIN DeliveryBackOffice.dbo.invoiceHeader fac	WITH(NOLOCK)
                     ON fac.inv_pk_id = invd.dti_fk_header
                        AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                        AND fac.inv_invoiceOfCreditNote IS NOT NULL
@@ -381,10 +383,9 @@ BEGIN
             ON invh.dti_fk_orderSerie = bd.GuideSerie
                AND invh.dti_fk_orderNumber = bd.GuideNumber
     WHERE PGD.RowStatus = 1
-          AND
-        --bd.BatchCODId = @BatchCODId
-        --AND 
-        bd.Excluded = @Excluded
+          AND PGD.IsCompleted = 1
+		  AND bd.Excluded = @Excluded
+		  AND bd.IsCompleted = 1
           AND bd.CatConceptCODId = @ConceptId
           AND
           (
@@ -392,11 +393,10 @@ BEGIN
               OR bd.CollectId = @Id
               OR bd.RecolectionId = @Id
           )
+		  AND bdc.IsCompleted = 1
     ORDER BY bd.CreditDate DESC;
 
 
 
     SET NOCOUNT OFF;
 END;
-
-

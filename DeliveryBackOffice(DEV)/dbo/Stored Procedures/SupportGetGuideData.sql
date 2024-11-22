@@ -5,8 +5,7 @@ CREATE PROCEDURE [dbo].[SupportGetGuideData]
 	
 AS
 BEGIN
-	
-	
+		
 --  Información General ---
 select 'Información General'   as Descripcion
      , ord.DateCreated         'Fecha Creación'
@@ -103,9 +102,9 @@ from dbo.DeliverySettlementDetail            sdt with (nolock)
         on sdo.ID = sdt.ID_DeliveryOrderBySettlement
     inner join dbo.SenderReceiver            SR with (nolock)
         on SR.ID = sdo.ID_Courier
-    inner join dbo.CatRoute                  CR  with (nolock)
+    inner join dbo.CatRoute                  CR	with (nolock)
         on CR.IdRoute = sdo.CatRouteId
-    inner join dbo.CatVehicle                CV  with (nolock)
+    inner join dbo.CatVehicle                CV	with (nolock)
         on CV.IdVehicle = sdo.CatVehicleId
 where sdt.Guide_Serie = @GuideSerie
       and sdt.Guide_Number = @GuideNumber
@@ -117,10 +116,10 @@ SELECT 'Cuenta Bancaria'
      , dcb.DCBA_Nom_account
      , dcb.DCBA_BankAccountType
      , bk.Name
-FROM dbo.DeliveryOrder                         ord
-    INNER JOIN dbo.DeliveryCustomerBankAccount dcb  with (nolock)
+FROM dbo.DeliveryOrder                         ord	with (nolock)
+    INNER JOIN dbo.DeliveryCustomerBankAccount dcb	with (nolock)
         ON dcb.DCBA_Id = ord.DCBA_ID
-    INNER JOIN dbo.DeliveryBank                bk  with (nolock)
+    INNER JOIN dbo.DeliveryBank                bk	with (nolock)
         ON bk.Id_bank = dcb.DCBA_Bank_Id
 WHERE ord.Guide_Serie = @GuideSerie
       AND ord.Guide_Number = @GuideNumber;
@@ -132,8 +131,7 @@ select 'Información de COD'    as Descripcion
      , btd.Amount              'Monto'
      , btd.AuthorizationNumber 'Autorizacion'
      , bcd.BatchNumber         'Lote'
-     , bcd.BatchTimeRange      'Horario'
-	 
+     , bcd.BatchTimeRange      'Horario'	 
 from dbo.ProcessedGuideCOD        pr
     inner join dbo.BatchDetailCOD btd with (nolock)
         on btd.GuideSerie = pr.GuideSerie
@@ -144,7 +142,9 @@ from dbo.ProcessedGuideCOD        pr
         on bcd.IdBatchCOD = btd.BatchCODId
            and bcd.RowStatus = 1
 where pr.GuideSerie = @GuideSerie
-      and pr.GuideNumber = @GuideNumber;
+      and pr.GuideNumber = @GuideNumber
+	  and pr.IsCompleted = 1
+	  and btd.IsCompleted = 1;
 
 
 select 'Cambios en Monto COD' as Descripcion
@@ -156,7 +156,7 @@ select 'Cambios en Monto COD' as Descripcion
      , tk.SSN_Username        'Usuario'
      , tk.SSN_DateLogin       'Fecha y Hora'
 from dbo.AuthorizationLogCOD                       cod with (nolock)
-    inner join DenariusUser_Dev.dbo.LGN_LogByToken tk with (nolock)
+    inner join DenariusUser_Dev.dbo.LGN_LogByToken tk  with (nolock)
         on tk.SSN_IdToken = cod.TokenCreated
 where cod.GuideSerie = @GuideSerie
       and cod.GuideNumber = @GuideNumber
@@ -164,27 +164,26 @@ order by cod.DateCreated desc;
 
 
 
-select 'Tracking'                                                                             as Descripcion
+select 'Tracking'								as Descripcion
      , dtd.Guide_Serie 'Serie'
      , dtd.Guide_Number 'Guia'
      , dtd.StatusOrderId 'Id Estado'
      , st.OrderDescription 'Estado'
      , isnull(tk.SSN_Username, isnull(rg.UsrEmail, concat(sr.First_Name, ' ', sr.Last_Name))) 'Usuario'
      , dtd.DateCreated 'Fecha y Hora'
-	 , dtd.DateCreatedInSystem
 	 , stp.CheckpointTypeDescription 'Tipo de estado'
-from dbo.DeliveryOrderDetail                      dtd with (nolock)
-    inner join dbo.StatusOrder                    st with (nolock)
+from dbo.DeliveryOrderDetail                      dtd	with (nolock)
+    inner join dbo.StatusOrder                    st	with (nolock)
         on st.StatusOrderId = dtd.StatusOrderId
-    left join DenariusUser_Dev.dbo.LGN_LogByToken tk with (nolock)
+    left join DenariusUser_Dev.dbo.LGN_LogByToken tk	with (nolock)
         on tk.SSN_IdToken = dtd.UserCreated
-    left join dbo.TokenLog                        TKL  with (nolock)
+    left join dbo.TokenLog                        TKL	with (nolock)
         on TKL.TknIdToken = dtd.UserCreated
-    left join dbo.RegisterUser                    rg  with (nolock)
+    left join dbo.RegisterUser                    rg	with (nolock)
         on rg.UsrIdUser = TKL.TknIdUser
-    left join dbo.LogTokenPOD                     TKP  with (nolock)
+    left join dbo.LogTokenPOD                     TKP	with (nolock)
         on TKP.LogTokenPOD = dtd.UserCreated
-    left join dbo.SenderReceiver                  sr  with (nolock)
+    left join dbo.SenderReceiver                  sr	with (nolock)
         on sr.ID = TKP.IdCourierman
 	inner join dbo.CatCheckpointType stp on stp.IdCatCheckpointType = st.CatCheckpointTypeId
 where dtd.Guide_Serie = @GuideSerie

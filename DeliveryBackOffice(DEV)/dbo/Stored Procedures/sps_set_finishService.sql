@@ -88,7 +88,7 @@ BEGIN
          , [CPP].[Saturday]
          , [CPP].[Sunday]
          , [CPP].[PointPromoFactor]
-    FROM [dbo].[CatPointPromo] CPP
+    FROM [dbo].[CatPointPromo] CPP WITH(NOLOCK)
     WHERE [CPP].[RowStatus] = 1
           AND [CPP].[InPointGeneration] = 1
           AND SYSDATETIME()
@@ -143,8 +143,7 @@ BEGIN
                                  Guide_Serie
                                , Guide_Number
                              );
-        --CREATE NONCLUSTERED INDEX IX_TLGT_NUMBER
-        --ON #TblListGuidesTwo (Guide_Number);
+
         CREATE NONCLUSTERED INDEX IX_TLGT_EXCLUDE
         ON #TblListGuidesTwo (ExcludeCOD);
 
@@ -168,8 +167,6 @@ BEGIN
                                    Guide_Serie
                                  , Guide_Number
                                );
-        --CREATE NONCLUSTERED INDEX IX_LGNE_NUMBER
-        --ON #listGuidesNotExist (Guide_Number);
 
         --SELECT COUNT(1) FROM #listGuidesNotExist;
         IF ((SELECT COUNT(1)FROM #listGuidesNotExist) <= 0)
@@ -349,78 +346,6 @@ BEGIN
                                                                      , @IdModule = @IdModuleP
                                                                      , @Token = @TokenP;
 
-            --SELECT ROW_NUMBER() OVER (ORDER BY ppt.GuideNumber ASC) AS Id,
-            --       ppt.GuideSerie,
-            --       ppt.GuideNumber,
-            --       ppt.IsCollect,
-            --       ppt.Price,
-            --       ppt.COD,
-            --       ppt.AmountPaid,
-            --       ppt.CODPaid,
-            --       ppt.CODIsPaid,
-            --       ppt.PaymentTime,
-            --       ppt.TimeSequence,
-            --       ppt.FelNumber,
-            --       ppt.IsPaid,
-            --       ppt.IsCustomer,
-            --       ppt.ConditionPayment,
-            --       ppt.HaveCredit,
-            --       ppt.CollectCOD,
-            --       ppt.ReturnRate,
-            --       ppt.AmountToPay,
-            --       ppt.CODAmount,
-            --       ppt.ReturnRates,
-            --       CONCAT(
-            --                 do.Sender_Department,
-            --                 ', ',
-            --                 do.Sender_Town,
-            --                 ', ',
-            --                 'Zona ',
-            --                 do.Sender_Zone,
-            --                 ', ',
-            --                 do.Sender_Address
-            --             ) SenderAddress,
-            --       CONCAT(
-            --                 do.Receiver_Department,
-            --                 ', ',
-            --                 do.Receiver_Town,
-            --                 ', ',
-            --                 'Zona ',
-            --                 do.Receiver_Zone,
-            --                 ', ',
-            --                 do.Receiver_Address
-            --             ) ReceiverAddress,
-            --       IIF(LTRIM(RTRIM(ISNULL(do.Sender_FirstName, ''))) = '',
-            --           LTRIM(RTRIM(ISNULL(do.Sender_LastName, ''))),
-            --           IIF(LTRIM(RTRIM(ISNULL(do.Sender_LastName, ''))) = '',
-            --               LTRIM(RTRIM(do.Sender_FirstName)),
-            --               CONCAT(LTRIM(RTRIM(do.Sender_FirstName)), ' ', LTRIM(RTRIM(do.Sender_LastName))))) SenderName,
-            --       CONCAT(
-            --                 IIF(LTRIM(RTRIM(ISNULL(do.Receiver_FirstName, ''))) = '',
-            --                     LTRIM(RTRIM(ISNULL(do.Receiver_LastName, ''))),
-            --                     IIF(LTRIM(RTRIM(ISNULL(do.Receiver_LastName, ''))) = '',
-            --                         LTRIM(RTRIM(do.Receiver_FirstName)),
-            --                         CONCAT(
-            --                                   LTRIM(RTRIM(do.Receiver_FirstName)),
-            --                                   ' ',
-            --                                   LTRIM(RTRIM(do.Receiver_LastName))
-            --                               ))),
-            --                 IIF(LTRIM(RTRIM(ISNULL(do.Receiver_Alternant_FullName, ''))) = '',
-            --                     '',
-            --                     CONCAT(' / ', LTRIM(RTRIM(do.Sender_FirstName))))
-            --             ) ReceiverName,
-            --       IIF(UPPER(@ServiceType) = 'DELIVERY',
-            --           LTRIM(RTRIM(ISNULL(do.IndicationsToSendDestination, ''))),
-            --           LTRIM(RTRIM(ISNULL(do.IndicationsToSendOrigin, '')))) Indications,
-            --       (ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) Pieces,
-            --       IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType
-            --INTO #PendingPaymentTempId
-            --FROM #PendingPaymentTemp ppt
-            --    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-            --        ON ppt.GuideSerie = do.Guide_Serie
-            --           AND ppt.GuideNumber = do.Guide_Number;
-
-
             DECLARE @TotalAmountBD DECIMAL(18, 2);
             DECLARE @TotalAmountPortal DECIMAL(18, 2);
             SET @TotalAmountBD =
@@ -466,11 +391,6 @@ BEGIN
                        )
                )
             BEGIN
-                --select @TotalAmountBD
-                --select @TotalAmountPortal
-
-                --select @TotalCODAmountBD
-                --select @TotalCODAmountPortal
 
                 IF (@TotalAmountBD = @TotalAmountPortal) --VALIDAR SUMAS ServiceAmount
                 BEGIN
@@ -520,14 +440,11 @@ BEGIN
                                        AND pd.GuideSerie = ti.Guide_Serie
                         );
 
-
-                        --select * from #PendingPaymentTemp;
                         IF (@TotalGuidesInclude IS NULL)
                         BEGIN
                             SET @TotalGuidesInclude = 0;
                         END;
-                        --select @TotalGuidesInclude as cod;
-                        --select @TotalCODAmountPortal;
+
                         ---------------------------------------------------------
                         IF (@TotalGuidesInclude = @TotalCODAmountPortal)
                         BEGIN
@@ -574,24 +491,18 @@ BEGIN
                                        WHEN 'RETURN' THEN
                                            'Devueldo a ' + @Name
                                    END          Observations
-                            --@CUI+'-'+@Name
                             FROM #listGuidesEnabled lge;
 
 
                             UPDATE dot
                             SET dot.Observations = 'Entregado a ' + @Name + ', Entrega sin cobro COD '
                                                    + @VoucherExclude + ' ' + @ResponsibleExclude
-                            FROM DeliveryOrderDetail          dot WITH (NOLOCK)
+                            FROM DeliveryOrderDetail          dot WITH(NOLOCK)
                                 INNER JOIN #listGuidesEnabled lge
                                     ON lge.Guide_Number = dot.Guide_Number
                                        AND lge.Guide_Serie = dot.Guide_Serie
                             WHERE lge.ExcludeCOD = 1
                                   AND dot.StatusOrderId = 22;
-
-
-
-
-
 
                             ----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA ENTREGA Y SEA COD---------
                             IF (UPPER(@ServiceType) = 'DELIVERY')
@@ -621,7 +532,7 @@ BEGIN
                                 OUTPUT inserted.IdProcessedGuideCOD,
                                        inserted.GuideSerie,
                                        inserted.GuideNumber
-                                  INTO #TempData
+                                INTO #TempData
                                 SELECT lge.Guide_Serie
                                      , lge.Guide_Number
                                      , 25
@@ -640,6 +551,8 @@ BEGIN
                                            AND pcd.GuideNumber = dlo.Guide_Number
                                 WHERE dlo.Collect_OnDelivery > 0
                                       AND pcd.IdProcessedGuideCOD IS NULL
+									  AND pcd.IdProcessedGuideCOD = 1
+									  AND pcd.IsCompleted = 1
                                 UNION
                                 SELECT lge.Guide_Serie
                                      , lge.Guide_Number
@@ -662,6 +575,7 @@ BEGIN
                                           AND dlo.IsCollect = 'true'
                                       )
                                       AND pcd.IdProcessedGuideCOD IS NULL
+									  AND pcd.IsCompleted = 1
                                 UNION
                                 SELECT lge.Guide_Serie
                                      , lge.Guide_Number
@@ -686,7 +600,8 @@ BEGIN
                                           dlo.IsCollect = 'false'
                                           AND DOP.TimePlaId = 2
                                       )
-                                      AND pcd.IdProcessedGuideCOD IS NULL;
+                                      AND pcd.IdProcessedGuideCOD IS NULL
+									  AND pcd.IsCompleted = 1;
                             END;
 
                             UPDATE do
@@ -743,10 +658,10 @@ BEGIN
 
                             UPDATE DOPD
                             SET DOPD.ShipmentCompleted = 1
-                            FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
+                            FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH(NOLOCK)
                                 INNER JOIN @CartGuides                                   CG
                                     ON DOPD.GuideSerie = CG.GuideSerie
-                                       AND DOPD.GuideNumber = CG.GuideNumber;
+                                    AND DOPD.GuideNumber = CG.GuideNumber;
 
                             -----------------WEBHOOK.INI-----------------------		
                             DECLARE @WebhookCustomerTable AS TABLE
@@ -1170,11 +1085,11 @@ BEGIN
                                      , ISNULL([M].[IdMembership], 0)
                                      , ISNULL([M].[MembershipMaxServiceFixedValue], 0)
                                 FROM #listGuidesEnabled                         LEG
-                                    LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
+                                    LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL	WITH(NOLOCK)
                                         ON [LEG].[Guide_Number] = [MSL].[LogGuideNumber]
                                            AND [LEG].[Guide_Serie] = [MSL].[LogGuideSerie]
                                            AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
-                                    LEFT JOIN [dbo].[Membership]                M
+                                    LEFT JOIN [dbo].[Membership]                M	WITH(NOLOCK)
                                         ON [LEG].[IdCustomer] = [M].[CustomerId]
                                            AND [M].[ExpirationDate] >= SYSDATETIME()
                                            AND [M].[RowStatus] = 1
@@ -1193,10 +1108,6 @@ BEGIN
                                          , @AuxPriceShipment     = [TGP].[PriceShipment]
                                          , @AuxLogServiceNumber  = [TGP].[LogServiceNumber]
                                     FROM @TblGuidesForPoints TGP;
-
-                                    --SET @AccountId = (	SELECT [A].[AccIdAccount]
-                                    --					FROM	[dbo].[Account] A
-                                    --					WHERE	[A].[IdCustomer] = @CustomerId );
 
                                     SET @AuxPointsGenerated
                                         = CASE
@@ -1302,7 +1213,7 @@ BEGIN
                                                                                    ELSE
                                                                                        0
                                                                                END
-                                                FROM [dbo].[PointsByServiceLog] PSL
+                                                FROM [dbo].[PointsByServiceLog] PSL WITH(NOLOCK)
                                                 WHERE [PSL].[GuideSerie] = @AuxGuideSerie
                                                       AND [PSL].[GuideNumber] = @AuxGuideNumber;
                                             END;
@@ -1312,7 +1223,7 @@ BEGIN
                                         SET @PointsGenerated
                                             = ISNULL((
                                                          SELECT SUM([PSL].[PointsReceived])
-                                                         FROM [dbo].[PointsByServiceLog] PSL
+                                                         FROM [dbo].[PointsByServiceLog] PSL WITH(NOLOCK)
                                                          WHERE [PSL].[GuideSerie] = @AuxGuideSerie
                                                                AND [PSL].[GuideNumber] = @AuxGuideNumber
                                                      )
@@ -1451,7 +1362,7 @@ BEGIN
 
                         SET @Output
                             = SUBSTRING(@Output, 1, (LEN(@Output) - 7))
-                              + SUBSTRING(@Output, (LEN(@Output) - 5), LEN(@Output));
+                            + SUBSTRING(@Output, (LEN(@Output) - 5), LEN(@Output));
 
                         SELECT @Output FormatJson;
                     END;
@@ -1689,7 +1600,7 @@ BEGIN
 			SET Active = 0
 			   ,UserUpdated = @TokenP
 			   ,DateUpdated = GETDATE()
-			FROM Warehouse wh
+			FROM Warehouse wh	WITH(NOLOCK)
 			INNER JOIN @TblListGuides tlg
 				ON wh.Guide_Serie = tlg.Guide_Serie
 				AND wh.Guide_Number = tlg.Guide_Number
@@ -1708,7 +1619,7 @@ BEGIN
                     OUTPUT inserted.IdProcessedGuideCOD,
                            inserted.GuideSerie,
                            inserted.GuideNumber
-                      INTO #TempData
+                    INTO #TempData
                     SELECT lge.Guide_Serie,
                             lge.Guide_Number,
                             25,
@@ -1725,7 +1636,10 @@ BEGIN
                         LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
                             ON pcd.GuideSerie = dlo.Guide_Serie
                                 AND pcd.GuideNumber = dlo.Guide_Number
-                    WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.IsLastMileReturn = 1 AND dlo.[IsCollect] = 1
+                    WHERE pcd.IdProcessedGuideCOD IS NULL 
+						AND pcd.IsCompleted = 1
+						AND dlo.IsLastMileReturn = 1 
+						AND dlo.[IsCollect] = 1
 
         END TRY
         BEGIN CATCH
@@ -1769,11 +1683,12 @@ BEGIN
 
             UPDATE pgd 
                SET pgd.IsCompleted = 1
-              FROM ProcessedGuideCOD pgd WITH(NOLOCK)
+              FROM ProcessedGuideCOD pgd	WITH(NOLOCK)
                    INNER JOIN #TempData tmp
                       ON pgd.GuideSerie   = tmp.GuideSerie
                      AND pgd.GuideNumber = tmp.GuideNumber
-             WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+             WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD
+				AND pgd.IsCompleted = 1;
 
             IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
                 DROP TABLE #TempData;
@@ -1808,4 +1723,3 @@ BEGIN
 
     END;
 END;
-

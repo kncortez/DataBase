@@ -1410,27 +1410,27 @@ BEGIN
                    cco.Concept,
                    CONCAT(cco.Concept, ' ', btd.GuideSerie, btd.GuideNumber, ' Ref ', CAST(btd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO'
     FROM [dbo].[BatchDetailCOD] btd
-	 LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco
+		LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco	WITH(NOLOCK)
                 ON cco.IdCatConceptCOD = bTd.CatConceptCODId
                    AND cco.RowStatus = 1
-        LEFT JOIN [dbo].[BatchCOD] bt
+        LEFT JOIN [dbo].[BatchCOD] bt						WITH(NOLOCK)
             ON btd.[BatchCODId] = bt.[IdBatchCOD]
-        LEFT JOIN [dbo].[DeliveryBank] db
+        LEFT JOIN [dbo].[DeliveryBank] db					WITH(NOLOCK)
             ON db.Id_bank = bt.BankId
-        LEFT JOIN [dbo].[DeliveryOrder] do
+        LEFT JOIN [dbo].[DeliveryOrder] do					WITH(NOLOCK)
             ON btd.[GuideSerie] = do.[Guide_Serie]
                AND btd.[GuideNumber] = do.[Guide_Number]
-        LEFT JOIN [dbo].VisitPointClient vp
+        LEFT JOIN [dbo].VisitPointClient vp					WITH(NOLOCK)
             ON vp.CodeOfReference = do.Sender_ID
-        LEFT JOIN [dbo].[Customer] cu
+        LEFT JOIN [dbo].[Customer] cu						WITH(NOLOCK)
             ON ISNULL(do.[IdCustomer], vp.CustomerID) = cu.[IdCustomer]
-        LEFT JOIN [dbo].[Township] twn
+        LEFT JOIN [dbo].[Township] twn						WITH(NOLOCK)
             ON CASE
                    WHEN do.[ReceiverIdTownship] IS NULL THEN
                    (
                        SELECT TOP 1
                               [IdTownship]
-                       FROM [dbo].[Township]
+                       FROM [dbo].[Township]				WITH(NOLOCK)
                        WHERE UPPER(do.[Receiver_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
                    )
                    ELSE
@@ -1442,33 +1442,32 @@ BEGIN
                    (
                        SELECT TOP 1
                               [IdTownship]
-                       FROM [dbo].[Township]
+                       FROM [dbo].[Township]				WITH(NOLOCK)
                        WHERE UPPER(do.[Sender_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
                    )
                    ELSE
                        do.[SenderIdTownship]
                END = twnSender.[IdTownship]
-        LEFT JOIN [dbo].[ProcessedGuideCOD] pg
+        LEFT JOIN [dbo].[ProcessedGuideCOD] pg				WITH(NOLOCK)
             ON btd.[GuideSerie] = pg.[GuideSerie]
-               AND btd.[GuideNumber] = pg.[GuideNumber]
-        LEFT JOIN [dbo].[SenderReceiver] sr
+             AND btd.[GuideNumber] = pg.[GuideNumber]
+        LEFT JOIN [dbo].[SenderReceiver] sr					WITH(NOLOCK)
             ON pg.CourierManId = sr.ID
-        LEFT JOIN [dbo].[BatchDetailCOD] btc
+        LEFT JOIN [dbo].[BatchDetailCOD] btc				WITH(NOLOCK)
             ON btc.GuideSerie = btd.GuideSerie
-               AND btc.GuideNumber = btd.GuideNumber
-               AND btc.CatConceptCODId = @EnabledRow
-			     LEFT JOIN DeliveryBackOffice.dbo.Customer cust
-                ON pg.CustomerId = cust.IdCustomer
-                   AND cust.RowSatus = @EnabledRow
-    WHERE
-        --AND db.[Id_bank] IN ( 5, 33,31,2 ) --Banrural y BI
-        --CONVERT(DATE, bt.[Date]) = @Date
-		--AND 
-		btd.CatConceptCODId IN (2)
+            AND btc.GuideNumber = btd.GuideNumber
+            AND btc.CatConceptCODId = @EnabledRow
+		LEFT JOIN DeliveryBackOffice.dbo.Customer cust		WITH(NOLOCK)
+            ON pg.CustomerId = cust.IdCustomer
+            AND cust.RowSatus = @EnabledRow
+    WHERE btd.CatConceptCODId IN (2)
+		AND btd.IsCompleted = 1
 		AND bt.RowStatus = @EnabledRow
 		AND pg.RowStatus = @EnabledRow
+		AND pg.IsCompleted = 1
 		AND BTD.RowStatus = @EnabledRow
 		AND btc.RowStatus = @EnabledRow
+		AND btc.IsCompleted = 1
 	    AND btd.BatchCODId = @BatchCODId
         AND btd.Excluded = @Excluded
         AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
@@ -1546,73 +1545,72 @@ BEGIN
                                  CAST(btd.BatchCODId AS VARCHAR(300))
                              ))
                   ) 'CONCEPTO'
-           FROM [dbo].[BatchDetailCOD] btd
-	 LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco
-                ON cco.IdCatConceptCOD = bTd.CatConceptCODId
-                   AND cco.RowStatus = 1
-        LEFT JOIN [dbo].[BatchCOD] bt
-            ON btd.[BatchCODId] = bt.[IdBatchCOD]
-        LEFT JOIN [dbo].[DeliveryBank] db
-            ON db.Id_bank = bt.BankId
-        LEFT JOIN [dbo].[DeliveryOrder] do
-            ON btd.[GuideSerie] = do.[Guide_Serie]
-               AND btd.[GuideNumber] = do.[Guide_Number]
-        LEFT JOIN [dbo].VisitPointClient vp
-            ON vp.CodeOfReference = do.Sender_ID
-        LEFT JOIN [dbo].[Customer] cu
-            ON ISNULL(do.[IdCustomer], vp.CustomerID) = cu.[IdCustomer]
-        LEFT JOIN [dbo].[Township] twn
-            ON CASE
-                   WHEN do.[ReceiverIdTownship] IS NULL THEN
-                   (
+			FROM [dbo].[BatchDetailCOD] btd							WITH(NOLOCK)
+				LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco	WITH(NOLOCK)
+					ON cco.IdCatConceptCOD = bTd.CatConceptCODId
+					AND cco.RowStatus = 1
+				LEFT JOIN [dbo].[BatchCOD] bt						WITH(NOLOCK)
+					ON btd.[BatchCODId] = bt.[IdBatchCOD]
+				LEFT JOIN [dbo].[DeliveryBank] db					WITH(NOLOCK)
+					ON db.Id_bank = bt.BankId
+				LEFT JOIN [dbo].[DeliveryOrder] do					WITH(NOLOCK)
+					ON btd.[GuideSerie] = do.[Guide_Serie]
+					   AND btd.[GuideNumber] = do.[Guide_Number]
+				LEFT JOIN [dbo].VisitPointClient vp					WITH(NOLOCK)
+					ON vp.CodeOfReference = do.Sender_ID
+				LEFT JOIN [dbo].[Customer] cu						WITH(NOLOCK)
+					ON ISNULL(do.[IdCustomer], vp.CustomerID) = cu.[IdCustomer]
+				LEFT JOIN [dbo].[Township] twn						WITH(NOLOCK)
+					ON CASE
+					WHEN do.[ReceiverIdTownship] IS NULL THEN
+					(
                        SELECT TOP 1
                               [IdTownship]
-                       FROM [dbo].[Township]
+                       FROM [dbo].[Township]						WITH(NOLOCK)
                        WHERE UPPER(do.[Receiver_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
-                   )
-                   ELSE
+					)
+					ELSE
                        do.[ReceiverIdTownship]
-               END = twn.[IdTownship]
-			   	  LEFT JOIN [dbo].[Township] twnSender
-            ON CASE
+					END = twn.[IdTownship]
+			   		LEFT JOIN [dbo].[Township] twnSender
+					ON CASE
                    WHEN do.[SenderIdTownship] IS NULL THEN
                    (
                        SELECT TOP 1
                               [IdTownship]
-                       FROM [dbo].[Township]
+                       FROM [dbo].[Township]						WITH(NOLOCK)
                        WHERE UPPER(do.[Sender_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
                    )
                    ELSE
                        do.[SenderIdTownship]
-               END = twnSender.[IdTownship]
-        LEFT JOIN [dbo].[ProcessedGuideCOD] pg
-            ON btd.[GuideSerie] = pg.[GuideSerie]
-               AND btd.[GuideNumber] = pg.[GuideNumber]
-        LEFT JOIN [dbo].[SenderReceiver] sr
-            ON pg.CourierManId = sr.ID
-        LEFT JOIN [dbo].[BatchDetailCOD] btc
-            ON btc.GuideSerie = btd.GuideSerie
-               AND btc.GuideNumber = btd.GuideNumber
-               AND btc.CatConceptCODId = 2
-			     LEFT JOIN DeliveryBackOffice.dbo.Customer cust
-                ON pg.CustomerId = cust.IdCustomer
-                   AND cust.RowSatus = @EnabledRow
-    WHERE
-        
-		btd.CatConceptCODId IN (2)
-		AND bt.RowStatus = @EnabledRow
-		AND pg.RowStatus = @EnabledRow
-		AND BTD.RowStatus = @EnabledRow
-		AND btc.RowStatus = @EnabledRow
-		AND 
-		BTD.BatchCODId = @BatchCODId
-        AND btd.Excluded = @Excluded
-        AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
-        
-        GROUP BY pg.CustomerId,
-                 btd.CatAccountTypeCODId,
-                 btd.AccountNumber,
-                 btd.AccountName;
+					END = twnSender.[IdTownship]
+				LEFT JOIN [dbo].[ProcessedGuideCOD] pg						WITH(NOLOCK)
+					ON btd.[GuideSerie] = pg.[GuideSerie]
+					AND btd.[GuideNumber] = pg.[GuideNumber]
+				LEFT JOIN [dbo].[SenderReceiver] sr							WITH(NOLOCK)
+					ON pg.CourierManId = sr.ID
+				LEFT JOIN [dbo].[BatchDetailCOD] btc						WITH(NOLOCK)
+					ON btc.GuideSerie = btd.GuideSerie
+					AND btc.GuideNumber = btd.GuideNumber
+					AND btc.CatConceptCODId = 2
+				LEFT JOIN DeliveryBackOffice.dbo.Customer cust				WITH(NOLOCK)
+					ON pg.CustomerId = cust.IdCustomer
+					AND cust.RowSatus = @EnabledRow
+			WHERE btd.CatConceptCODId IN (2)
+				AND btd.IsCompleted = 1
+				AND bt.RowStatus = @EnabledRow
+				AND pg.RowStatus = @EnabledRow
+				AND pg.IsCompleted = 1
+				AND BTD.RowStatus = @EnabledRow
+				AND btc.RowStatus = @EnabledRow
+				AND btc.IsCompleted = 1
+				AND BTD.BatchCODId = @BatchCODId
+				AND btd.Excluded = @Excluded
+				AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC        
+			GROUP BY pg.CustomerId,
+					btd.CatAccountTypeCODId,
+					btd.AccountNumber,
+					btd.AccountName;
 
     END;
 
