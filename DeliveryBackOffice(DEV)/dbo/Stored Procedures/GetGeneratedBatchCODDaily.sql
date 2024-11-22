@@ -11,7 +11,7 @@ BEGIN
     BEGIN TRANSACTION Started_CoD_Execution_Process;
     BEGIN TRY
 
-        UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
+        UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution] WITH(NOLOCK)
         SET ProcessStarted = 1,
             TokenUpdated = 'SYS-HERMESWIRETRANSFER',
             DateUpdated = GETDATE()
@@ -28,7 +28,8 @@ BEGIN
 
     DECLARE @TranCounter INT;
     SET @TranCounter = @@TRANCOUNT;
-    PRINT @TranCounter;
+    PRINT @TranCount
+	er;
     PRINT XACT_STATE();
 
     IF @TranCounter > 0
@@ -72,30 +73,32 @@ BEGIN
         DECLARE @BankBAC INT =
                 (
                     SELECT db.Id_bank
-                    FROM DeliveryBackOffice.dbo.DeliveryBank db
+                    FROM DeliveryBackOffice.dbo.DeliveryBank db WITH(NOLOCK)
                     WHERE db.Name = @BankName
                           AND db.Id_status = 1
                           AND ISNULL(db.Id_country ,'GT')= @IdCountrySender
                 );
         DECLARE @CreditAccountId INT;
         DECLARE @CreditAccountName NVARCHAR(2000);
+
         SELECT @CreditAccountId = DCBA_Id,
                @CreditAccountName = DCBA_Nom_account
-        FROM DeliveryBackOffice.dbo.DeliveryCustomerBankAccount
+        FROM DeliveryBackOffice.dbo.DeliveryCustomerBankAccount WITH(NOLOCK)
         WHERE DCBA_Bank_Id = @BankBAC
               AND DCBA_Num_account = @CreditAccount
               AND DCBA_Id_estado = 1;
+
         DECLARE @FrecuencyCOD INT =
                 (
                     SELECT CatBatchFrequencyCODId
-                    FROM CatBatchFrequencyCOD
+                    FROM CatBatchFrequencyCOD WITH(NOLOCK)
                     WHERE Name = 'Diaria'
                 );
 
         IF (@IdBankParam IN
             (
                 SELECT PayingBank
-                FROM DeliveryBackOffice.dbo.DeliveryBank
+                FROM DeliveryBackOffice.dbo.DeliveryBank WITH(NOLOCK)
                 WHERE ISNULL(Id_country,'GT') = @IdCountrySender
                       AND Id_status = 1
                       AND PayingBank <> @BankBAC
@@ -109,32 +112,33 @@ BEGIN
                 SELECT STUFF(
                        (
                            SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
-                           FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                           FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg						 WITH(NOLOCK)
+                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do				 WITH(NOLOCK)
                                    ON do.Guide_Serie = pg.GuideSerie
                                       AND do.Guide_Number = pg.GuideNumber
-                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
+                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH(NOLOCK)
                                    ON dcba.DCBA_Id = do.DCBA_ID
                                       AND dcba.DCBA_Id_estado = 1
-                               LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
+                               LEFT JOIN dbo.VisitPointClient vpc								 WITH(NOLOCK)
                                    ON vpc.CodeOfReference = do.Sender_ID
-                               LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                               LEFT JOIN dbo.Customer cus										 WITH(NOLOCK)
                                    ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                               LEFT JOIN dbo.VisitPointConfiguration VPO
+                               LEFT JOIN dbo.VisitPointConfiguration VPO						 WITH(NOLOCK)
                                    ON VPO.VisitPointID = vpc.CodeOfReference
                            WHERE pg.BatchCODId IS NULL
                                  AND pg.BatchCODIdCommission IS NULL
                                  AND pg.RowStatus = 1
+								 AND pg.IsCompleted = 1
+								 AND pg.Date > '2024-09-30 00:00:00.000'
                                  AND COALESCE(VPO.CODAccountBankID, cus.CODAccountBankID, dcba.DCBA_Bank_Id) = @IdBankParam
-                                 --AND ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 2548, 370, 826, 57, 5688,7937 )
-                                 --AND cus.IdCustomer IN (7937)
-                                 AND pg.Date > '2024-09-30 00:00:00.000'
+								 --AND cus.IdCustomer IN (7937) 
+                                 --AND ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 2548, 370, 826, 57, 5688,7937 )                                                                 
                                  AND cus.CatBatchFrequencyCODId = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
-								 AND ISNULL(do.IsLastMileReturn,0) =0
-								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+								 AND ISNULL(do.IsLastMileReturn,0) =0								 
 								 AND do.SenderCountryId = @IdCountrySender
+								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
                            FOR XML PATH('')
                        ),
                        1,
@@ -151,28 +155,29 @@ BEGIN
                 SELECT STUFF(
                        (
                            SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
-                           FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                           FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg						 WITH (NOLOCK)
+                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do				 WITH (NOLOCK)
                                    ON do.Guide_Serie = pg.GuideSerie
                                       AND do.Guide_Number = pg.GuideNumber
-                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba 
+                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH (NOLOCK)
                                    ON dcba.DCBA_Id = do.DCBA_ID
                                       AND dcba.DCBA_Id_estado = 1
-                               LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
+                               LEFT JOIN dbo.VisitPointClient vpc								 WITH (NOLOCK)
                                    ON vpc.CodeOfReference = do.Sender_ID
-                               LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                               LEFT JOIN dbo.Customer cus										 WITH (NOLOCK)
                                    ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                               LEFT JOIN dbo.VisitPointConfiguration VPO
+                               LEFT JOIN dbo.VisitPointConfiguration VPO						 WITH (NOLOCK)
                                    ON VPO.VisitPointID = vpc.CodeOfReference
                            WHERE pg.BatchCODId IS NULL
                                  AND pg.BatchCODIdCommission IS NULL
                                  AND pg.RowStatus = 1
+								 AND pg.IsCompleted = 1
                                  AND
                                  (
                                      (COALESCE(VPO.CODAccountBankID, cus.CODAccountBankID, dcba.DCBA_Bank_Id)) NOT IN
             (
                 SELECT PayingBank
-                FROM DeliveryBackOffice.dbo.DeliveryBank
+                FROM DeliveryBackOffice.dbo.DeliveryBank	WITH (NOLOCK)
                 WHERE ISNULL(Id_country,'GT') = @IdCountrySender
                       AND Id_status = 1
                       AND PayingBank <> @BankBAC
@@ -244,8 +249,6 @@ BEGIN
 
             CREATE NONCLUSTERED INDEX tempFila ON #RevalueGuidesDaily (fila);
 
-
-
             INSERT INTO #listGuidesDaily
             (
                 Guide_Serie,
@@ -259,7 +262,7 @@ BEGIN
                     (
                         SELECT
                                rh.RheId
-                        FROM DeliveryBackOffice.dbo.RateHeader rh
+                        FROM DeliveryBackOffice.dbo.RateHeader rh WITH (NOLOCK)
                         WHERE rh.RheRowStatus = 1
                               AND rh.RheDefault = 1
 							  AND rh.RateTypeId = 1
@@ -269,7 +272,7 @@ BEGIN
             DECLARE @CODRateDefault DECIMAL(12, 2) =
                     (
                         SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
-                        FROM DeliveryBackOffice.dbo.ConfigParams cf
+                        FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODRateDef'
                               AND Status = 1
 							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
@@ -277,7 +280,7 @@ BEGIN
             DECLARE @CODExemptDefault DECIMAL(12, 2) =
                     (
                         SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
-                        FROM DeliveryBackOffice.dbo.ConfigParams cf
+                        FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODExemptDef'
                               AND Status = 1
 							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
@@ -294,7 +297,7 @@ BEGIN
                    ord.Guide_Serie,
                    ord.Guide_Number
             FROM #listGuidesDaily lst
-                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord	  WITH (NOLOCK)
                     ON ord.Guide_Number = lst.Guide_Number
                        AND ord.Guide_Serie = lst.Guide_Serie
                 LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
@@ -442,62 +445,62 @@ BEGIN
                    ) Price
             INTO #TableAmountCODDaily
             FROM #listGuidesDaily lst
-                INNER JOIN dbo.DeliveryOrder ord WITH(NOLOCK)
+                INNER JOIN dbo.DeliveryOrder ord				WITH(NOLOCK)
                     ON ord.Guide_Serie = lst.Guide_Serie
                        AND ord.Guide_Number = lst.Guide_Number
-                LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
+                LEFT JOIN dbo.VisitPointClient vpc				WITH(NOLOCK)
                     ON vpc.CodeOfReference = ord.Sender_ID
-                LEFT JOIN dbo.RatebyCustomer rc WITH(NOLOCK)
+                LEFT JOIN dbo.RatebyCustomer rc					WITH(NOLOCK)
                     ON rc.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
                        AND rc.RbcRowStatus = 'true'
                        AND rc.RbcCodeOfReference is NULL
-                LEFT JOIN dbo.RatebyCustomer rcv WITH(NOLOCK)
+                LEFT JOIN dbo.RatebyCustomer rcv				WITH(NOLOCK)
                     ON rcv.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
                        AND rcv.RbcRowStatus = 1
                        AND rcv.RbcCodeOfReference = ord.Sender_ID
-                LEFT JOIN dbo.Township twn WITH(NOLOCK)
+                LEFT JOIN dbo.Township twn						WITH(NOLOCK)
                     ON twn.IdTownship = ord.ReceiverIdTownship
-                LEFT JOIN dbo.Township twnm WITH(NOLOCK)
+                LEFT JOIN dbo.Township twnm						WITH(NOLOCK)
                     ON twnm.TownshipName = ord.Receiver_Town
                 LEFT JOIN
                 (
                     SELECT HeaderCode,
                            MAX(Hub) Hub
-                    FROM dbo.DumpServiceCoverage WITH(NOLOCK)
+                    FROM dbo.DumpServiceCoverage				WITH(NOLOCK)
                     WHERE RowStatus = 'true'
                     GROUP BY HeaderCode
                 ) hub
                     ON hub.HeaderCode = ISNULL(twn.HeaderCode, twnm.HeaderCode)
-                LEFT JOIN dbo.HubLogistics hbl WITH(NOLOCK)
+                LEFT JOIN dbo.HubLogistics hbl					WITH(NOLOCK)
                     ON hbl.HubAbbreviation = hub.Hub
-                LEFT JOIN dbo.VisitPointConfiguration VPO WITH(NOLOCK)
+                LEFT JOIN dbo.VisitPointConfiguration VPO		WITH(NOLOCK)
                     ON VPO.VisitPointID = vpc.CodeOfReference
-                LEFT JOIN dbo.CatTypeService csv WITH(NOLOCK)
+                LEFT JOIN dbo.CatTypeService csv				WITH(NOLOCK)
                     ON csv.CtsShortName = IIF(ord.TypeService = 'EXP', 'NDD', ISNULL(ord.TypeService, 'NDD'))
                        AND csv.CtsRowStatus = 'true'
-                LEFT JOIN dbo.VisitPointCoverage cv WITH(NOLOCK)
+                LEFT JOIN dbo.VisitPointCoverage cv				WITH(NOLOCK)
                     ON cv.VisitPointId = ord.Sender_ID
                        AND cv.HubLogisticId = hbl.IdHubLogistic
                        AND cv.RowStatus = 'true'
-                LEFT JOIN dbo.RateCOD rco WITH(NOLOCK)
+                LEFT JOIN dbo.RateCOD rco						WITH(NOLOCK)
                     ON rco.RateId = ISNULL(rcv.RbcIdRate, rc.RbcIdRate)
                        AND rco.TypeServiceId = csv.CtsId
                        AND rco.TypeSegmentId = ISNULL(cv.SegmentId, @IdSegmentDefault)
                        AND rco.RowStatus = 1
-                LEFT JOIN dbo.Customer cus WITH(NOLOCK)
+                LEFT JOIN dbo.Customer cus						WITH(NOLOCK)
                     ON cus.IdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
-                LEFT JOIN dbo.DeliveryOrderPaid op WITH(NOLOCK)
+                LEFT JOIN dbo.DeliveryOrderPaid op				WITH(NOLOCK)
                     ON op.Guide_Serie = ord.Guide_Serie
                        AND op.Guide_Number = ord.Guide_Number
                        AND op.IdStatus = 'true'
-                LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
+                LEFT JOIN dbo.DeliveryCustomerBankAccount dc	WITH(NOLOCK)
                     ON dc.DCBA_Id = ord.DCBA_ID
                        AND dc.DCBA_Id_estado = 1
-                LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
+                LEFT JOIN dbo.DeliveryBank bk					WITH(NOLOCK)
                     ON bk.Id_bank = ISNULL(ISNULL(VPO.CODAccountBankID, cus.CODAccountBankID), dc.DCBA_Bank_Id)
-                LEFT JOIN dbo.CatBankAccountType btp WITH(NOLOCK)
+                LEFT JOIN dbo.CatBankAccountType btp			WITH(NOLOCK)
                     ON btp.IdBankAccountType = ISNULL(VPO.CODAccountBankTypeID, cus.CODAccountTypeID)
-                LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH(NOLOCK)
+                LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt	WITH(NOLOCK)
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ord.Collect_OnDelivery > 0
@@ -575,20 +578,20 @@ BEGIN
             -- PARA CONOCER QUE GUIAS NO SE TIENEN QUE REPROCESAR
             UPDATE pgc
             SET pgc.RowStatus = 0
-            FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc
+            FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH (NOLOCK)
                 INNER JOIN #TableAmountCODDailyTemp tact
                     ON pgc.GuideSerie = tact.Guide_Serie
                        AND pgc.GuideNumber = tact.Guide_Number
                        --AND tact.CODtoPay <= 0
             WHERE pgc.BatchCODId IS NULL
                   AND pgc.BatchCODIdCommission IS NULL
+				  AND pgc.IsCompleted = 1
                   AND pgc.RowStatus = 1
-				  AND tact.CODtoPay <= 0 --BNHL 14/11/2024 
-				  ;
+				  AND tact.CODtoPay <= 0; --BNHL 14/11/2024 				 
 
             -- OBTENCION DEL NUMERO DE REFERENCIA (CORRELATIVO) PARA BAC
             SELECT @Reference = Last
-            FROM DeliveryBackOffice.dbo.CatCorrelativeCOD
+            FROM DeliveryBackOffice.dbo.CatCorrelativeCOD WITH (NOLOCK)
             WHERE BankId = @BankBAC
                   AND RowStatus = 1;
 
@@ -597,7 +600,7 @@ BEGIN
                    tact.Guide_Number GuideNumber,
                    (
                        SELECT IdCatDebitAccountCOD
-                       FROM DeliveryBackOffice.dbo.CatDebitAccountCOD
+                       FROM DeliveryBackOffice.dbo.CatDebitAccountCOD WITH (NOLOCK)
                        WHERE BankId = @BankBAC
                              AND RowStatus = 1
                    ) CatDebitAccountCODId,
@@ -606,7 +609,7 @@ BEGIN
                    tact.Commision [Commision],
                    (
                        SELECT IdCatTransactionTypeCOD
-                       FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD
+                       FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH (NOLOCK)
                        WHERE BankId = @BankBAC
                              AND RowStatus = 1
                              AND Description = @InAccount
@@ -614,13 +617,13 @@ BEGIN
                    @BankBAC BankId,
                    (
                        SELECT IdCatAccountTypeCOD
-                       FROM DeliveryBackOffice.dbo.CatAccountTypeCOD
+                       FROM DeliveryBackOffice.dbo.CatAccountTypeCOD WITH (NOLOCK)
                        WHERE RowStatus = 1
                              AND AccountType = UPPER(@AccountType)
                    ) CatAccountTypeCODId,
                    (
                        SELECT IdCatConceptCOD
-                       FROM DeliveryBackOffice.dbo.CatConceptCOD
+                       FROM DeliveryBackOffice.dbo.CatConceptCOD WITH (NOLOCK)
                        WHERE RowStatus = 1
                              AND Concept LIKE (@ConceptForza + '%')
                    ) CatConceptCODId,
@@ -668,7 +671,7 @@ BEGIN
                    tact.Guide_Number GuideNumber,
                    (
                        SELECT IdCatDebitAccountCOD
-                       FROM DeliveryBackOffice.dbo.CatDebitAccountCOD
+                       FROM DeliveryBackOffice.dbo.CatDebitAccountCOD WITH (NOLOCK)
                        WHERE BankId = IIF(@BankBAC <> @IdBankParam, tact.Id_bank, @BankBAC)
                              AND RowStatus = 1
                    ) CatDebitAccountCODId,
@@ -679,7 +682,7 @@ BEGIN
                        tact.Id_bank NOT IN
                        (
                            SELECT PayingBank
-                           FROM DeliveryBackOffice.dbo.DeliveryBank
+                           FROM DeliveryBackOffice.dbo.DeliveryBank WITH (NOLOCK)
                            WHERE ISNULL(Id_country,'GT') = @IdCountrySender
                                  AND Id_status = 1
                                  AND PayingBank <> @BankBAC
@@ -688,14 +691,14 @@ BEGIN
                        IIF(tact.Id_bank = @BankBAC,
                        (
                            SELECT IdCatTransactionTypeCOD
-                           FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD
+                           FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH (NOLOCK)
                            WHERE BankId = tact.Id_bank
                                  AND RowStatus = 1
                                  AND Description = @InAccount
                        ),
                        (
                            SELECT IdCatTransactionTypeCOD
-                           FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD
+                           FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH (NOLOCK)
                            WHERE BankId = @BankBAC
                                  AND RowStatus = 1
                                  AND Description = @OutAccount
@@ -704,13 +707,13 @@ BEGIN
                    tact.Id_bank BankId,
                    (
                        SELECT IdCatAccountTypeCOD
-                       FROM DeliveryBackOffice.dbo.CatAccountTypeCOD
+                       FROM DeliveryBackOffice.dbo.CatAccountTypeCOD WITH (NOLOCK)
                        WHERE RowStatus = 1
                              AND AccountType = UPPER(tact.DCBA_BankAccountType)
                    ) CatAccountTypeCODId,
                    (
                        SELECT IdCatConceptCOD
-                       FROM DeliveryBackOffice.dbo.CatConceptCOD
+                       FROM DeliveryBackOffice.dbo.CatConceptCOD WITH (NOLOCK)
                        WHERE RowStatus = 1
                              AND Concept LIKE (@ConceptCustomer + '%')
                    ) CatConceptCODId,
@@ -857,11 +860,12 @@ BEGIN
                     WHERE NOT EXISTS
                     (
                         SELECT 1
-                        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdcod
+                        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdcod WITH (NOLOCK)
                         WHERE bdcod.GuideSerie = tcpt.GuideSerie
                               AND bdcod.GuideNumber = tcpt.GuideNumber
                               AND bdcod.CreditAccountId = tcpt.CreditAccountId
                               AND bdcod.BankId = tcpt.BankId
+							  AND bdcod.IsCompleted = 1
                     );
                 END;
             END;
@@ -967,11 +971,12 @@ BEGIN
                     WHERE NOT EXISTS
                     (
                         SELECT 1
-                        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdcod
+                        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdcod WITH(NOLOCK)
                         WHERE bdcod.GuideSerie = tfpt.GuideSerie
                               AND bdcod.GuideNumber = tfpt.GuideNumber
                               AND bdcod.CreditAccountId = tfpt.CreditAccountId
                               AND bdcod.BankId = tfpt.BankId
+							  AND bdcod.IsCompleted = 1
                     );
                 END;
             END;
@@ -990,15 +995,16 @@ BEGIN
                 UPDATE pgc
                 SET pgc.BatchCODId = @NewIdBatchCODCustomer,
                     pgc.BatchCODIdCommission = @NewIdBatchCODForza
-                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc
-                    INNER JOIN #TableCustomerPaymentTempDaily tcpt
+                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc   WITH (NOLOCK)
+                    INNER JOIN #TableCustomerPaymentTempDaily tcpt  WITH (NOLOCK)
                         ON pgc.GuideSerie = tcpt.GuideSerie
                            AND pgc.GuideNumber = tcpt.GuideNumber
-                    INNER JOIN #TableForzaPaymentTempDaily tfpt
+                    INNER JOIN #TableForzaPaymentTempDaily tfpt		WITH (NOLOCK)
                         ON pgc.GuideSerie = tfpt.GuideSerie
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
+					  AND pgc.IsCompleted = 1
                       AND pgc.RowStatus = 1;
             END;
 
@@ -1010,11 +1016,12 @@ BEGIN
                 -- ESTAS GUIAS CREAN SOLO EL REGISTRO DE PAGO A CLIENTE
                 UPDATE pgc
                 SET pgc.BatchCODId = @NewIdBatchCODCustomer
-                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc
+                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH (NOLOCK)
                     INNER JOIN #TableCustomerPaymentTempDaily tcpt
                         ON pgc.GuideSerie = tcpt.GuideSerie
                            AND pgc.GuideNumber = tcpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
+					  AND pgc.IsCompleted = 1
                       AND pgc.RowStatus = 1;
             END;
 
@@ -1026,11 +1033,12 @@ BEGIN
                 -- ESTAS GUIAS CREAN SOLO EL REGISTRO DE COMISION Y ENVIO
                 UPDATE pgc
                 SET pgc.BatchCODIdCommission = @NewIdBatchCODForza
-                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc
+                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc	WITH (NOLOCK)
                     INNER JOIN #TableForzaPaymentTempDaily tfpt
                         ON pgc.GuideSerie = tfpt.GuideSerie
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
+					  AND pgc.IsCompleted = 1
                       AND pgc.RowStatus = 1;
             END;
         END;

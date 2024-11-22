@@ -9,17 +9,20 @@ BEGIN
 
 	IF (@ACTIVE = 'TRUE')
 	BEGIN
-		SELECT bcod.BankId AS PayingBank, bcod.IdBatchCOD,bcod.BatchNumber AS BATCHNUMBER, 'TRUE' AS blnResult, bcod.BatchTimeRange 
-									FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-									INNER JOIN  DeliveryBackOffice.dbo.BatchCOD bcod ON pg.BatchCODId = bcod.IdBatchCOD
-									WHERE 
-									pg.BatchNotified IS NULL
-									AND pg.BatchCODId IS NOT NULL
-									AND pg.BatchCODIdCommission IS NOT NULL
-									AND pg.RowStatus = 1
-									AND bcod.BankId IN (5, 33)
-									--AND pg.Date BETWEEN '2021-08-25 00:00:00.000' AND '2021-08-25 23:59:59.999'
-									GROUP BY bcod.BankId , bcod.IdBatchCOD,bcod.BatchNumber, bcod.BatchTimeRange 
+		SELECT  bcod.BankId AS PayingBank, 
+				bcod.IdBatchCOD,bcod.BatchNumber AS BATCHNUMBER, 
+		       'TRUE' AS blnResult, bcod.BatchTimeRange 
+		FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg WITH(NOLOCK)
+		INNER JOIN  DeliveryBackOffice.dbo.BatchCOD bcod WITH(NOLOCK)
+				ON pg.BatchCODId = bcod.IdBatchCOD
+		WHERE  pg.BatchNotified IS NULL
+		   AND pg.BatchCODId IS NOT NULL		   
+		   AND pg.BatchCODIdCommission IS NOT NULL		   
+		   AND pg.RowStatus = 1
+		   AND pg.IsCompleted = 1
+		   AND bcod.BankId IN (5, 33)
+		--AND pg.Date BETWEEN '2021-08-25 00:00:00.000' AND '2021-08-25 23:59:59.999'
+		GROUP BY bcod.BankId , bcod.IdBatchCOD,bcod.BatchNumber, bcod.BatchTimeRange 
 	END	
 	END TRY
 	BEGIN CATCH
