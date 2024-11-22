@@ -20,7 +20,6 @@ CREATE PROCEDURE [dbo].[SPHWAM_UpdateCreateAccount]
 	@Currency VARCHAR(10),
 	@IdSystem INT = 1,
 	@TypeAccount AS CHAR(3) = 'IND',
-	@NIT AS VARCHAR(18),
 	@PhoneNumber AS VARCHAR(30),
 	@CountryId AS NVARCHAR(2) ='GT'
 	
