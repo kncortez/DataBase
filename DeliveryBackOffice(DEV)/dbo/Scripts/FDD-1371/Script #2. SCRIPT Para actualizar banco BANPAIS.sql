@@ -3,10 +3,7 @@ BEGIN TRY
     BEGIN TRANSACTION;
 		--Actualizar Banco BANPAIS para pagos masivos COD Honduras
 		UPDATE DeliveryBackOffice.dbo.DeliveryBank
-		SET PayingBank = 113,
-		Name = 'Banco Del Pais',
-		Acronym = 'BANPAIS',
-		Description = 'Banco Del Pais'
+		SET PayingBank = 113
 		WHERE Id_Bank = 113
 	COMMIT TRANSACTION 
 END TRY
