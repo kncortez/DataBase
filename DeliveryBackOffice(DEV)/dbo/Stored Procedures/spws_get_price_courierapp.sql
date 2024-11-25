@@ -4,7 +4,7 @@
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[spws_get_price_courierapp]
+ALTER PROCEDURE [dbo].[spws_get_price_courierapp]
     -- Add the parameters for the stored procedure here
     -- Add the parameters for the stored procedure here
     @Token VARCHAR(200),
@@ -26,114 +26,51 @@ BEGIN
     DECLARE @jsonResult2 NVARCHAR(MAX);
     DECLARE @jsonError NVARCHAR(MAX);
     DECLARE @jsonToken NVARCHAR(MAX);
+	DECLARE @CountryId NVARCHAR(2) =(Select top 1 ISNULL(C.CountryId,'GT') From 
+										dbo.SchedulePickup A WITH(NOLOCK)
+										INNER JOIN
+										dbo.Account B WITH(NOLOCK)
+										ON A.AccountId= B.AccIdAccount
+										INNER JOIN 
+							 			dbo.customer C WITH(NOLOCK)
+										ON B.IdCustomer = C.IdCustomer
+										Where A.SchedulePickupid=@IdPickup	
+	);
 
-    DECLARE @PickupRate DECIMAL(12, 2) =
-            (
-                SELECT TOP 1
-                       ISNULL(ct.Value, 15)
-                FROM dbo.CatToCharge ct
-                WHERE ct.Name = 'PickupRate'
-            ); -- tarifa de recoleccion 
+	DECLARE @CurrencyPriceCodeISO NVARCHAR(4)=(select CodeISO from [DeliveryBackOffice].[dbo].[CatCurrencyCOD]
+                                               Where CodeISO like '%'+ @CountryId+'%');
+	DECLARE @CurrencyPriceSymbol NVARCHAR(2)=(select Symbol from [DeliveryBackOffice].[dbo].[CatCurrencyCOD]
+                                               Where CodeISO like '%'+ @CountryId+'%')
 
-    IF OBJECT_ID('tempdb.dbo.#BrainProcessedGuides', 'U') IS NOT NULL
-        DROP TABLE #BrainProcessedGuides;
-    IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
-        DROP TABLE #Temp;
+ 
 
-    DECLARE @TokenAct INT =
-            (
-                SELECT TOP 1
-                       RowStatus
-                FROM LogTokenPOD WITH (NOLOCK)
-                WHERE LogTokenPOD LIKE '%' + @Token + '%'
-                ORDER BY DateCreated DESC
-            );
-    DECLARE @hourtoken INT =
-            (
-                SELECT TOP 1
-                       DATEDIFF(HOUR, DateCreated, GETDATE()) AS horas
-                FROM LogTokenPOD WITH (NOLOCK)
-                WHERE LogTokenPOD LIKE '%' + @Token + '%'
-                ORDER BY DateCreated DESC
-            );
+    DECLARE @TokenAct INT =1;
+           
+    DECLARE @hourtoken INT = 8;
+          
 
 
     IF ((@TokenAct = 1 AND @hourtoken <= 8) OR 1 = 1)
     BEGIN
-        CREATE TABLE #Temp
-        (
-            Guide VARCHAR(255),
-            Message VARCHAR(255),
-        );
-
-        CREATE NONCLUSTERED INDEX TempGuides ON #Temp (Guide);
-
-        INSERT INTO #Temp
-        (
-            Guide,
-            Message
-        )
-        EXEC [dbo].[spws_get_validate_guides_pickup] @InGuides = @InGuides,
-                                                     @IdPickup = @IdPickup,
-                                                     @Token = @Token;
-
-        DECLARE @test INT =
-                (
-                    SELECT COUNT(*)FROM #Temp
-                );
+        
+        DECLARE @test INT = 0
+                
 
         IF (@test = 0)
         BEGIN
 
-            CREATE TABLE #BrainProcessedGuides
-            (
-                GuideSerie NVARCHAR(2),
-                GuideNumber INT,
-                IsCollect BIT,
-                Price DECIMAL(18, 2),
-                COD DECIMAL(18, 2),
-                AmountPaid DECIMAL(18, 2),
-                CODPaid DECIMAL(18, 2),
-                CODIsPaid BIT,
-                PaymentTime INT,
-                TimeSequence INT,
-                FelNumber NVARCHAR(50),
-                IsPaid BIT,
-                IsCustomer INT,
-                ConditionPayment NVARCHAR(200),
-                HaveCredit BIT,
-                CollectCOD BIT,
-                ReturnRate DECIMAL(5, 2),
-                CurrencyPrice_CODCodeISO NVARCHAR(8),
-		        CurrencyPrice_CODSymbol  NVARCHAR(8),
-		        CurrencyPriceCodeISO     NVARCHAR(8),
-		        CurrencyPriceSymbol      NVARCHAR(8),
-                AmountToPay DECIMAL(18, 2),
-                CODAmount DECIMAL(18, 2),
-                ReturnRates DECIMAL(5, 2)
-            );
-
-            INSERT INTO #BrainProcessedGuides
-            EXEC [dbo].[spws_get_guide_pending_payment] @InGuides, -- Guías recibidas
-                                                        2,         -- Tiempo de pago 2 - En recolección
-                                                        0,         -- No es retorno
-                                                        '',        -- Codeapp
-                                                        1,         -- Identificador de modulo donde proviene
-                                                        @Token;    -- Token de courier
 
             SET @jsonDetail =
             (
                 SELECT STUFF(
                                 (
                                     SELECT DISTINCT
-                                           ',{"GuideSerie":"' + ISNULL(tbl.GuideSerie, 'N/A') + '",' + '"GuideNumber":"'
-                                           + ISNULL(CONVERT(VARCHAR, tbl.GuideNumber), 'N/A') + '",' + '"Amount":"'
-                                           + ISNULL(CONVERT(VARCHAR, tbl.AmountToPay), '0.00') + '",' + '"PickupRate":"'
+                                           ',{"GuideSerie":"FD",'
+										   + '"GuideNumber":"0",'
+                                           + '"Amount":"0",'
+										   + '"PickupRate":"'
                                            + CONVERT(VARCHAR, '0.00') + +'"}'
-                                    FROM #BrainProcessedGuides tbl
-                                    GROUP BY tbl.GuideSerie,
-                                             tbl.GuideNumber,
-                                             tbl.AmountToPay
+                                  
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -148,18 +85,13 @@ BEGIN
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR, ISNULL(SUM(tbl.AmountToPay), 0)) + '",'
-                                           + '"PickupRate":"' + CONVERT(VARCHAR, ISNULL(@PickupRate, 0)) + '",'
-										   + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODCodeISO, 0)) + '",'
-                                           + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODSymbol, 0)) + '",'
-                                           + '"CurrencyPriceCodeISO":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceCodeISO , 0)) + '",'
-                                           + '"CurrencyPriceSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceSymbol , 0)) + '",'
+                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR,  0) + '",'
+                                           + '"PickupRate":"' + CONVERT(VARCHAR,  0) + '",'
+										   + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR,  0) + '",'
+                                           + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR,  0) + '",'
+                                           + '"CurrencyPriceCodeISO":"' +  CONVERT(VARCHAR, ISNULL(@CurrencyPriceCodeISO , 0)) + '",'
+                                           + '"CurrencyPriceSymbol":"' +  CONVERT(VARCHAR, ISNULL(@CurrencyPriceSymbol , 0)) + '",'
                                            + '"Collect":"' + 'false' + +'"}'
-                                    FROM #BrainProcessedGuides tbl
-									GROUP BY tbl.CurrencyPrice_CODCodeISO,
-										tbl.CurrencyPrice_CODSymbol,
-										tbl.CurrencyPriceCodeISO,
-										tbl.CurrencyPriceSymbol 
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -219,12 +151,8 @@ BEGIN
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"Error":"' + ISNULL(CONVERT(VARCHAR, Guide), 'N/A') + +'"}'
-                                    FROM #Temp
-                                    WHERE Guide IN
-                                          (
-                                              SELECT Guide FROM #Temp
-                                          )
+                                    SELECT ',{"Error":"' + ISNULL(CONVERT(VARCHAR, 0), 'N/A') + +'"}'
+                                   
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -239,12 +167,9 @@ BEGIN
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"Message":"' + ISNULL(CONVERT(NVARCHAR(MAX), Message), 'N/A') + +'"}'
-                                    FROM #Temp
-                                    WHERE Guide IN
-                                          (
-                                              SELECT Guide FROM #Temp
-                                          )
+                                    SELECT ',{"Message":"' + ISNULL(CONVERT(NVARCHAR(MAX), 'error'), 'N/A') + +'"}'
+                                   
+                                  
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -297,6 +222,3 @@ BEGIN
     END;
 
 END;
---select * from dbo.RouteAssigment
-GO
-
