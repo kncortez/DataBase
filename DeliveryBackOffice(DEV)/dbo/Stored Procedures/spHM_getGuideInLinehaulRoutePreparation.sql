@@ -1,9 +1,16 @@
-﻿-- =============================================
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[spHM_getGuideInLinehaulRoutePreparation]    Script Date: 26/11/2024 19:06:02 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
 -- Author:		<Ochoa, Jerson>
 -- Create date: <21-07-2022>
 -- Description:	<Get an existing guide in LinehaulRoutePreparation with rowStatus = 1>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHM_getGuideInLinehaulRoutePreparation]
+ALTER PROCEDURE [dbo].[spHM_getGuideInLinehaulRoutePreparation]
 	@GuideSerie AS NVARCHAR(25),
 	@GuideNumber AS NVARCHAR(50)
 AS
@@ -61,8 +68,6 @@ BEGIN
 		ON		[LRP].[CatLinehaulStatusId] = [CLS].[IdCatLinehaulStatus]
 	INNER JOIN	[dbo].[Container] C WITH (NOLOCK)
 		ON		[LRPC].[ContainerId] = [C].[IdContainer]
-		AND		[LRPC].[CatLinehaulStatusId] != @LIQUIDATED_STATUS_ID
-		AND		[LRPC].[CatLinehaulStatusId] != @STOPOVER_STATUS_ID
 	INNER JOIN	[dbo].[CatTypeContainer] CTP WITH (NOLOCK)
 		ON		[C].[CatTypeContainerId] = [CTP].[IdCatTypeContainer]
 	INNER JOIN	[dbo].[HubLogistics] HL WITH (NOLOCK)
@@ -70,5 +75,7 @@ BEGIN
 	WHERE		[LRPCD].[GuideSerie] = @GuideSerie
 		AND		[LRPCD].[GuideNumber] = @GuideNumber
 		AND		[LRPCD].[IsOpenProcess] = 0
-		AND		[LRPCD].[RowStatus] = 1;
+		AND		[LRPCD].[RowStatus] = 1
+		AND		[LRPC].[CatLinehaulStatusId] != @LIQUIDATED_STATUS_ID
+		AND		[LRPC].[CatLinehaulStatusId] != @STOPOVER_STATUS_ID
 END

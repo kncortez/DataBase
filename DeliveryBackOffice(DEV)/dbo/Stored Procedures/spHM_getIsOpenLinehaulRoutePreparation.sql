@@ -1,9 +1,16 @@
-﻿-- =============================================
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[spHM_getIsOpenLinehaulRoutePreparation]    Script Date: 26/11/2024 18:58:09 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
 -- Author:		<Ochoa, Jerson>
 -- Create date: <26-07-2022>
 -- Description:	<Check if LinehaulRoutePreparation is open for add more guides>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHM_getIsOpenLinehaulRoutePreparation]
+ALTER PROCEDURE [dbo].[spHM_getIsOpenLinehaulRoutePreparation]
 	@IdLinehaulRoutePreparation AS INT
 AS
 BEGIN
@@ -30,7 +37,7 @@ BEGIN
 			[LRP].[GuideQuantity],
 			[LRP].[DryPieceQuantity],
 			[LRP].[ColdPieceQuantity]
-	FROM	[dbo].[LinehaulRoutePreparation] LRP
+	FROM	[dbo].[LinehaulRoutePreparation] LRP WITH(NOLOCK)
 	WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
 		AND [LRP].[CatLinehaulStatusId] = (	SELECT	[CLS].[IdCatLinehaulStatus]
 											FROM	[dbo].[CatLinehaulStatus] CLS

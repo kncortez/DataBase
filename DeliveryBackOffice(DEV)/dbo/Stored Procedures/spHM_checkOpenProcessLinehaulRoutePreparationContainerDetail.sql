@@ -1,9 +1,16 @@
-﻿-- =============================================
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[spHM_checkOpenProcessLinehaulRoutePreparationContainerDetail]    Script Date: 26/11/2024 19:20:19 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
 -- Author:		<Ochoa, Jerson>
 -- Create date: <20-07-2022>
 -- Description:	<Check for open processes with mutiple pieces Guides>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHM_checkOpenProcessLinehaulRoutePreparationContainerDetail]
+ALTER PROCEDURE [dbo].[spHM_checkOpenProcessLinehaulRoutePreparationContainerDetail]
 	@GuideSerie AS NVARCHAR(25),
 	@GuideNumber AS NVARCHAR(50),
 	@TknUser AS NVARCHAR(50)
@@ -30,12 +37,12 @@ BEGIN
 				COALESCE([TLB].[TknIdUser], 0) [TknIdUserUpdated] ,
 				COALESCE([IUB].[IdUser], 0) [IdUserUpdated],
 				COALESCE([IUB].[Username], '') [UsernameUpdated]
-	FROM		[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-	INNER JOIN	[dbo].[TokenLog] TL
+	FROM		[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH(NOLOCK)
+	INNER JOIN	[dbo].[TokenLog] TL WITH(NOLOCK)
 		ON		[LRPCD].[TokenCreated] = [TL].[TknIdToken]
 	INNER JOIN	[dbo].[InternalUser] IU
 		ON		[TL].[TknIdUser] = [IU].[RegisterUserID]
-	LEFT JOIN	[dbo].[TokenLog] TLB
+	LEFT JOIN	[dbo].[TokenLog] TLB WITH(NOLOCK)
 		ON		[LRPCD].[TokenUpdated] = [TLB].[TknIdToken]
 	LEFT JOIN	[dbo].[InternalUser] IUB
 		ON		[TLB].[TknIdToken] = [IUB].[RegisterUserID]
