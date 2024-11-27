@@ -198,13 +198,14 @@ BEGIN
 						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
 							ON conf.NirPhone = ua.UadNirPhone
 							AND conf.Phone = ua.UadPhone
+							AND conf.TownshipId = vp.IdTownship
+							AND conf.[Address] = vp.[Address]
 						WHERE rua.RuaIdAccount = @IdAccount
 							  AND rua.RuaIdUser = @IdUser
 							  AND ua.UadRowStatus = 1
 							  AND ua.UadFavorite = 1 --Debe ser favorita
 							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
-							  AND conf.TownshipId = vp.IdTownship
-							  AND conf.[Address] = vp.[Address]
+							  
 
 						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
 						BEGIN
@@ -298,13 +299,14 @@ BEGIN
 						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
 							ON conf.NirPhone = ua.UadNirPhone
 							AND conf.Phone = ua.UadPhone
+							AND conf.TownshipId = vp.IdTownship
+							AND conf.[Address] = vp.[Address]
 						WHERE rua.RuaIdAccount = @IdAccount
 							  AND rua.RuaIdUser = @IdUser
 							  AND ua.UadRowStatus = 1
 							  AND ua.UadFavorite = 1 --Debe ser favorita
 							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
-							  AND conf.TownshipId = vp.IdTownship
-							  AND conf.[Address] = vp.[Address]
+							  
 
 						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
 						BEGIN

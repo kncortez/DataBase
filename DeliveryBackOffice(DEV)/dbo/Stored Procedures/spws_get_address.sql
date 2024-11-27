@@ -36,8 +36,8 @@ BEGIN
 
     SELECT CONVERT(VARCHAR(20), ua.UadIdAccount) AS IdAccount
 		 , CONVERT(VARCHAR(20), ua.UadIdAddress) AS IdAddress
-		 , ua.UadFullName AS FullName
-		 , ISNULL(ua.UadFullName, '') AS ContactName
+		 , ISNULL(ua.UadFullName, '') AS FullName
+		 , ISNULL(VP.ContactName, '') AS ContactName
 		 , ua.UadAddress1 AS Address1
 		 , ua.UadAddress2 AS Address2
 		 , ua.UadNirPhone AS NirPhone
