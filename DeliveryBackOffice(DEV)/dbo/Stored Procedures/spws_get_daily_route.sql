@@ -4,7 +4,11 @@
 -- Create date: <2024-04-25>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
 -- =============================================
-
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-11-26>
+-- Description:	<Tracking - Se realiza validación de pago de envio en guías tipo collect.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_daily_route]
     @Token VARCHAR(200) = '',
     @IdCourier BIGINT,
@@ -529,24 +533,26 @@ BEGIN
 									)
 							  )
 				END [Price_COD],
-				CASE
-					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
-					THEN 0
-					ELSE
-						IIF(
-								kvp.KindOfVPName = 'Express Center', 
-								'0', 
-								IIF(
-										DOR.IsLastMileReturn = 1, 
-										TRPreturns.AmountToPay , 
-										IIF(
-												ISNULL(DOR.IsCollect, 0) = 1, 
-												ISNULL( DOR.PriceShippment, 0), 
-												0
-											)
-								   )
-							 )
-				END [Price],
+				CASE 
+					WHEN DOR.IdDeliveryOption = @IdDeliveryOption THEN 0
+					ELSE 
+						CASE 
+							WHEN kvp.KindOfVPName = 'Express Center' THEN 0
+							ELSE 
+								CASE 
+									WHEN DOR.IsLastMileReturn = 1 THEN TRPreturns.AmountToPay
+									ELSE 
+										CASE 
+											WHEN ISNULL(DOR.IsCollect, 0) = 1 THEN 
+												CASE 
+													WHEN C.TotalAmount = C.TotalAmountPaid THEN 0
+													ELSE ISNULL(DOR.PriceShippment, 0)
+												END
+											ELSE 0
+										END
+								END
+						END
+				END AS [Price],
 				CASE
 					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
 					THEN 0
@@ -663,6 +669,8 @@ BEGIN
 			AND DOR.Guide_Number = TRPreturns.GuideNumber
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]			VPC WITH (NOLOCK)
 			ON VPC.CodeOfReference = DOR.Sender_ID
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]						C	WITH(NOLOCK)
+			ON DOR.Guide_Serie = C.GuideSerie AND DOR.Guide_Number = C.GuideNumber
         LEFT JOIN
         (
             SELECT EPSA.GuideSerie
