@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Tito Garcia>
 -- Update date: <2024-09-13>
 -- Description: <Se obtienen los manifiestos relacionados a una ruta con su respectivo estado>
@@ -9,7 +9,7 @@ CREATE PROCEDURE [dbo].[GetManifestWithStatusByRoute]
 AS
 BEGIN	
 	SET NOCOUNT ON;
-	DECLARE @Date DATE = '2024-10-02'; -- Fecha de deploy a producción
+	DECLARE @Date DATE = '2024-10-18'; -- Fecha de deploy a producción
 	
 	BEGIN TRY
 	

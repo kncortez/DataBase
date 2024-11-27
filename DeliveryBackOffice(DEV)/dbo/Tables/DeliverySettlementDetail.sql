@@ -31,6 +31,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_PBI_SETTLEMENT]
     ON [dbo].[DeliverySettlementDetail]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -155,4 +157,21 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_ID_DeliveryOrderBySettlement_RowStatus_DateCreated]
     ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [RowStatus] ASC, [DateCreated] ASC)
     INCLUDE([Guide_Serie], [Guide_Number]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_DateCreated_iNCLUDED2]
+    ON [dbo].[DeliverySettlementDetail]([RowStatus] ASC, [DateCreated] ASC)
+    INCLUDE([ID_DeliveryOrderBySettlement], [Guide_Serie], [Guide_Number]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_DateCreated_Included]
+    ON [dbo].[DeliverySettlementDetail]([RowStatus] ASC, [DateCreated] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number], [Guide_Settlement]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ID_DeliveryOrderBySettlement_Guide_Settlement_Guide_Returned_Guide_Delivered_RowStatus]
+    ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [Guide_Settlement] ASC, [Guide_Returned] ASC, [Guide_Delivered] ASC, [RowStatus] ASC);
 

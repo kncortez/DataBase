@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatRoute] (
+CREATE TABLE [dbo].[CatRoute] (
     [IdRoute]      INT           IDENTITY (1, 1) NOT NULL,
     [CodeRoute]    VARCHAR (100) NOT NULL,
     [Description]  VARCHAR (200) NOT NULL,
@@ -56,4 +56,9 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Catalogo de rutas que puede tomar un corier' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatRoute'
 GO
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CodeRoute]
+    ON [dbo].[CatRoute]([CodeRoute] ASC);
 

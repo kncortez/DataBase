@@ -150,6 +150,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -1001,4 +1003,28 @@ CREATE NONCLUSTERED INDEX [IDX_SenderCountryId]
 GO
 CREATE NONCLUSTERED INDEX [IDX_generate_batch_SenderCountryId_IsLastMileReturn_SenderCountryId]
     ON [dbo].[DeliveryOrder]([SenderCountryId] ASC, [IsLastMileReturn] ASC, [StatusOrderId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_SenderCountryId]
+    ON [dbo].[DeliveryOrder]([SenderCountryId] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_INCLUDE]
+    ON [dbo].[DeliveryOrder]([StatusOrderId] ASC)
+    INCLUDE([Sender_ID], [DCBA_ID], [IdCustomer], [IsLastMileReturn], [SenderCountryId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdCustomer_DateCreated_Included]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC)
+    INCLUDE([StatusOrderId], [Collect_OnDelivery]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DateCreated_Included]
+    ON [dbo].[DeliveryOrder]([DateCreated] ASC)
+    INCLUDE([Sender_ID], [Sender_FirstName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Town], [Collect_OnDelivery], [IsCollect], [PriceShippment], [ReceiverIdTownship], [IdCustomer], [TypeService]);
 

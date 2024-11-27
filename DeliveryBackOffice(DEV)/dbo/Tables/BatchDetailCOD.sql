@@ -38,7 +38,7 @@
     [RowStatus]               BIT             CONSTRAINT [DF_BatchDetailCOD_RowStatus] DEFAULT ((1)) NULL,
     [CODCommission]           DECIMAL (18, 2) NULL,
     [CODDiscount]             DECIMAL (18, 2) NULL,
-    [IdCountry]               VARCHAR(2)      NULL,
+    [IdCountry]               VARCHAR (2)     NULL,
     [IdCurrency]              INT             NULL,
     CONSTRAINT [PK_BatchDetailCOD_IdBatchDetailCOD] PRIMARY KEY CLUSTERED ([IdBatchDetailCOD] ASC),
     CONSTRAINT [FK_BatchDetailCOD_BatchCOD] FOREIGN KEY ([BatchCODId]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
@@ -49,9 +49,11 @@
     CONSTRAINT [FK_BatchDetailCOD_CatTransactionTypeCOD] FOREIGN KEY ([CatTransactionTypeCODId]) REFERENCES [dbo].[CatTransactionTypeCOD] ([IdCatTransactionTypeCOD]),
     CONSTRAINT [FK_BatchDetailCOD_DeliveryBank] FOREIGN KEY ([BankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_BatchDetailCOD_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-    CONSTRAINT [FK_IdCountryBDCOD_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry),
-    CONSTRAINT [FK_IdCurrencyBDCOD_CatCurrencyCOD] FOREIGN KEY (IdCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD)
+    CONSTRAINT [FK_IdCountryBDCOD_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
+    CONSTRAINT [FK_IdCurrencyBDCOD_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
+
+
 
 
 
@@ -261,4 +263,22 @@ GO
 CREATE NONCLUSTERED INDEX [idx_CatConceptCODId_include]
     ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC)
     INCLUDE([GuideSerie], [GuideNumber], [Amount], [Commission], [AuthorizationNumber], [AuthorizationDate], [BankName], [AccountNumber], [CODCommissionPercentage]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatConceptCODId_Excluded_RecolectionId_Include]
+    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC, [Excluded] ASC, [RecolectionId] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [CreditDate], [CommissionNotified]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatConceptCODId_Excluded_CommissionId_INCLUDE]
+    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC, [Excluded] ASC, [CommissionId] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [CreditDate], [CommissionNotified]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatConceptCODId_Excluded_CollectId_INCLUDE]
+    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC, [Excluded] ASC, [CollectId] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [CreditDate], [CommissionNotified]);
 

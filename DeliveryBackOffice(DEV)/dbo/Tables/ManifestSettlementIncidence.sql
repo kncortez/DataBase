@@ -41,8 +41,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estadp de la incidencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ManifestSettlementIncidence', @level2type = N'COLUMN', @level2name = N'IncidenceApproved';
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario que valida la incidencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ManifestSettlementIncidence', @level2type = N'COLUMN', @level2name = N'TokenValidator';
-GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de incidencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ManifestSettlementIncidence', @level2type = N'COLUMN', @level2name = N'CatManifestSettlementIncidenceTypeId';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Comentario en la incidencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ManifestSettlementIncidence', @level2type = N'COLUMN', @level2name = N'IncidenceComment';

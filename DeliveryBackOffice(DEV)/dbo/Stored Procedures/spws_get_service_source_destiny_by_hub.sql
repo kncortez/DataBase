@@ -15,14 +15,22 @@ CREATE PROCEDURE [dbo].[spws_get_service_source_destiny_by_hub]
 
 AS
 BEGIN
+
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
+	
 
 	
 	BEGIN TRY  
-			
+			IF (@ReceiverIdSettlement IS NOT NULL and @ReceiverIdSettlement = 0)
+	BEGIN
+	
+	   SET @ReceiverIdSettlement = NULL
+	  
+	END
+
 		if @CodeOfReference <= 0 -- no enviaron visit point, intentea deducirlo
 		begin
 			select top 1
