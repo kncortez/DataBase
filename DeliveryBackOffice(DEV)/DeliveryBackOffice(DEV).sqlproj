@@ -1024,6 +1024,7 @@
     <Build Include="dbo\Stored Procedures\spg_dsms_CheckForUpdates.sql" />
     <Build Include="dbo\Stored Procedures\spg_drop_logic_CatVehicle.sql" />
     <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes_guides.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_GetIdKindOfVPClient_Corp.sql" />
     <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes.sql" />
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_retuns.sql" />
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
