@@ -3,7 +3,7 @@
 -- Create date: <2024-11-19>
 -- Description: <Obtenemos la informacion de un parametro basado en el nombre y pais>
 -- =============================================
-ALTER PROCEDURE GetCustomParameterConfig
+CREATE PROCEDURE [GetCustomParameterConfig]
 (
  @ParameterName AS NVARCHAR(3000),
  @IdCountry     AS VARCHAR(2) = 'GT'
