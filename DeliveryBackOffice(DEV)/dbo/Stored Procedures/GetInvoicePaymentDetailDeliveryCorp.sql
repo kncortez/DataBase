@@ -15,6 +15,15 @@ BEGIN
         --Variables locales
         DECLARE @XmlVisitPointClient XML; 
 
+        DECLARE @IdCatInvoiceType INT =
+                (
+                 SELECT TOP 1
+                        IdCatInvoiceType
+                   FROM CatInvoiceType  WITH(NOLOCK)
+                  WHERE [Name] = 'Envío'
+                    AND RowStatus = 1
+                );
+
         -- Verificar si la tabla existe y eliminarla si es necesario
         IF OBJECT_ID('tempdb..#InvoiceByVisitPointDetails') IS NOT NULL
             DROP TABLE #InvoiceByVisitPointDetails;
@@ -50,8 +59,12 @@ BEGIN
           FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
                INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vst WITH(NOLOCK)
                        ON do.Sender_ID = vst.CodeOfReference
-               LEFT JOIN dbo.invoiceDetail id WITH(NOLOCK) on id.dti_fk_orderSerie = do.Guide_Serie and id.dti_fk_orderNumber = do.Guide_Number
-               LEFT JOIN dbo.invoiceHeader ih WITH(NOLOCK) ON ih.inv_pk_id = id.dti_fk_header
+               LEFT JOIN dbo.invoiceDetail id WITH(NOLOCK) 
+                      ON id.dti_fk_orderSerie = do.Guide_Serie 
+                     AND id.dti_fk_orderNumber = do.Guide_Number
+               LEFT JOIN dbo.invoiceHeader ih WITH(NOLOCK) 
+                      ON ih.inv_pk_id = id.dti_fk_header
+                     AND ih.CatInvoiceTypeId = @IdCatInvoiceType
          WHERE id.dti_fk_header IS NULL 
            AND ih.inv_certificationFEL IS NULL
            AND ih.inv_creditNote IS NULL 
@@ -61,7 +74,7 @@ BEGIN
                                            SELECT v.value('.', 'NVARCHAR(MAX)') AS Valor
                                              FROM @XmlVisitPointClient.nodes('/LstVisitPointClient/PointClient') AS x(v)
                                           )
-           AND do.Preparation_Date <= @CutOffDate
+           AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)
            AND do.IsCollect = 0
            AND EXISTS
                      (
