@@ -488,10 +488,10 @@ BEGIN
 							(
 								SELECT TOP 1
 									   cr.RolName
-								FROM RegisterUser                 ru
-									INNER JOIN RolByUserByAccount rb
+								FROM RegisterUser                 ru WITH(NOLOCK)
+									INNER JOIN RolByUserByAccount rb WITH(NOLOCK)
 										ON ru.UsrIdUser = rb.RuaIdUser
-									INNER JOIN CatRol             cr
+									INNER JOIN CatRol             cr WITH(NOLOCK)
 										ON rb.RuaIdRol = cr.RolIdRol
 								WHERE ru.UsrEmail = @Username
 							);

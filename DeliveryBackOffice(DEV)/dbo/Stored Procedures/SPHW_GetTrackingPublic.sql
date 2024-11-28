@@ -17,8 +17,10 @@ BEGIN
 BEGIN TRY
 
 	DECLARE @SenderName AS NVARCHAR(50),
-			@Hub AS NVARCHAR(10),
-			@StatusGuide AS NVARCHAR(20)
+			@ReceiverName AS NVARCHAR(50),
+			@Hub AS NVARCHAR(20),
+			@StatusGuide AS NVARCHAR(20),
+			@StatusDelivered AS INT
 	--Encabezados
 	DECLARE @EncabezadoRastreo TABLE (
 		Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -26,14 +28,90 @@ BEGIN TRY
 		Descripcion NVARCHAR(255)
 	);
 
+	SET @StatusDelivered = 
+	(
+		SELECT StatusOrderId 
+		FROM StatusOrder 
+		WHERE OrderDescription = 'Entregado'
+	);
+
 	----NOTA EL HUB QUEDA PENDIENTE DE VALIDAR, SEGUN SEAN LOS NUEVOS REQUERIMIENTOS
 	SELECT @SenderName = CONCAT(ISNULL(DO.Sender_FirstName,''), ' ',ISNULL(DO.Sender_LastName,'')),
-		   @Hub = P.ProvinceAbbreviation
+		   @ReceiverName = DO.NameOfReceiver
+		   --@Hub = P.ProvinceAbbreviation
 	FROM DeliveryOrder DO WITH(NOLOCK) 
 	LEFT JOIN Province P WITH (NOLOCK)
 		ON DO.Receiver_Department = P.ProvinceName
 	WHERE DO.Guide_Serie = @GuideSerie 
 	AND DO.Guide_Number = @GuideNumber
+
+	----CALCULO DEL HUB---------
+	SELECT @Hub = HL.HubName
+		FROM DeliveryOrder DO WITH (NOLOCK)
+			LEFT JOIN TownShip TS
+				ON DO.SenderIdTownship = TS.IdTownship
+			LEFT JOIN
+			(
+				SELECT HeaderCode,
+						MAX(Hub) AS Hub
+				FROM DumpServiceCoverage WITH(NOLOCK)
+				GROUP BY HeaderCode
+			) AS XP
+				ON XP.HeaderCode = TS.HeaderCode
+			LEFT JOIN HubLogistics HL
+				ON XP.Hub = HL.HubAbbreviation
+		 WHERE DO.Guide_Serie = @GuideSerie
+				AND DO.Guide_Number = @GuideNumber
+
+	/*SELECT TOP 1  @Hub = COALESCE(tt.StationName, hb.HubName, tt2.StationName) -- , HB.*
+	FROM dbo.DeliveryOrderDetail   dat WITH (NOLOCK)
+		LEFT JOIN dbo.TokenLog     tk  WITH (NOLOCK)
+			ON tk.TknIdToken = dat.UserCreated
+		LEFT JOIN dbo.RegisterUser rg  WITH (NOLOCK)
+			ON rg.UsrIdUser = tk.TknIdUser
+		OUTER APPLY
+		(
+			SELECT TOP 1
+				   ISNULL(HSB.HubName, VP.DescriptionOfClient) StationName
+			FROM dbo.RolByUserBySystem         rua WITH (NOLOCK)
+				INNER JOIN dbo.CatStation      ct  WITH (NOLOCK)
+					ON ct.IdStation = rua.StationId
+				LEFT JOIN dbo.HubLogistics     HSB WITH (NOLOCK)
+					ON HSB.IdHubLogistic = ct.HubLogisticId
+				LEFT JOIN dbo.VisitPointClient VP  WITH (NOLOCK)
+					ON VP.CodeOfReference = ct.CodeOfReference
+			WHERE rua.RusIdUser = rg.UsrIdUser
+		)                              tt
+		LEFT JOIN dbo.LogTokenPOD                     tpd WITH (NOLOCK)
+			ON tpd.LogTokenPOD = dat.UserCreated
+		LEFT JOIN dbo.SenderReceiver                  sr  WITH (NOLOCK)
+			ON sr.ID = tpd.IdCourierman
+		LEFT JOIN dbo.HubLogistics                    hb  WITH (NOLOCK)
+			ON hb.IdHubLogistic = sr.HubLogisticId
+		LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tkd WITH (NOLOCK)
+			ON tkd.SSN_IdToken = dat.UserCreated
+		LEFT JOIN dbo.InternalUser                    it  WITH (NOLOCK)
+			ON it.IdUser = tkd.SSN_IdUser
+			   AND it.Username = tkd.SSN_Username
+		OUTER APPLY
+		(
+			SELECT TOP 1
+				   ISNULL(HSB.HubName, VP.DescriptionOfClient) StationName
+			FROM dbo.RolByUserBySystem         rus WITH (NOLOCK)
+				INNER JOIN dbo.CatStation      ct  WITH (NOLOCK)
+					ON ct.IdStation = rus.StationId
+				LEFT JOIN dbo.HubLogistics     HSB WITH (NOLOCK)
+					ON HSB.IdHubLogistic = ct.HubLogisticId
+				LEFT JOIN dbo.VisitPointClient VP  WITH (NOLOCK)
+					ON VP.CodeOfReference = ct.CodeOfReference
+			WHERE rus.RusIdUser = it.RegisterUserID
+		)                                                 tt2
+		INNER JOIN dbo.StatusOrder ST	WITH (NOLOCK)
+			ON ST.StatusOrderId = dat.StatusOrderId
+	WHERE dat.Guide_Serie = @GuideSerie
+		  AND dat.Guide_Number = @GuideNumber
+	ORDER BY dat.DateCreated DESC*/
+
 
 	INSERT INTO @EncabezadoRastreo (Nombre, Descripcion)
 	SELECT 'Creado por', '' UNION ALL --1
@@ -52,41 +130,124 @@ BEGIN TRY
 	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 
 	--Iconos
-	SELECT NameStatusProcess AS 'label',
-		   Icon AS 'icon',
-		   CASE
-			   WHEN NameStatusProcess = 'Creado'
-					AND @StatusGuide = 'Recibido por Forza'
-					OR NameStatusProcess = 'Creado'
-					   AND @StatusGuide = 'En Ruta'
-					OR NameStatusProcess = 'Creado'
-					   AND @StatusGuide = 'Entregado' THEN
-				   @SenderName
-			   WHEN NameStatusProcess = 'Recibido por Forza'
-					AND @StatusGuide = 'Recibido por Forza'
-					OR NameStatusProcess = 'Recibido por Forza'
-					   AND @StatusGuide = 'En Ruta'
-					OR NameStatusProcess = 'Recibido por Forza'
-					   AND @StatusGuide = 'Entregado' THEN
-				   @SenderName
-			   WHEN NameStatusProcess = 'En instalaciones'
-					AND @StatusGuide = 'En instalaciones'
-					AND @StatusGuide = 'Recibido por Forza'
-					AND @StatusGuide = 'Recibido por Forza'
-					OR NameStatusProcess = 'En instalaciones'
-					   AND @StatusGuide = 'En Ruta'
-					OR NameStatusProcess = 'En instalaciones'
-					   AND @StatusGuide = 'Entregado' THEN
-				   @Hub
-			   ELSE
-				   NULL
-		   END AS Description
-	FROM DeliveryBackOffice.dbo.CatStatusProcess WITH (NOLOCK)
+SELECT NameStatusProcess AS 'label',
+       Icon AS 'icon',
+       CASE
+           WHEN CST.NameStatusProcess = 'Creado'
+                AND @StatusGuide = 'Creado'
+                OR CST.NameStatusProcess = 'Creado'
+                   AND @StatusGuide = 'Recibido por Forza'
+                OR CST.NameStatusProcess = 'Creado'
+                   AND @StatusGuide = 'En instalaciones' THEN
+               @SenderName
+           WHEN CST.NameStatusProcess = 'Recibido por Forza'
+                AND @StatusGuide = 'Recibido por Forza'
+                OR CST.NameStatusProcess = 'Recibido por Forza'
+                   AND @StatusGuide = 'Recibido por Forza' THEN
+               @SenderName
+           WHEN CST.NameStatusProcess = 'En instalaciones'
+                AND @StatusGuide = 'En instalaciones' THEN
+               @Hub
+           WHEN CST.NameStatusProcess = 'Entregado'
+                AND @StatusGuide = 'Entregado' THEN
+               @ReceiverName
+           ELSE
+               NULL
+       END AS Description,
+       CASE
+           WHEN CST.NameStatusProcess = 'Creado' THEN
+           (
+               SELECT TOP 1
+                   DO.DateCreated
+               FROM DeliveryOrderDetail DO WITH (NOLOCK)
+                   INNER JOIN StatusOrder SO WITH (NOLOCK)
+                       ON DO.StatusOrderId = SO.StatusOrderId
+                   INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
+                       ON SO.CatStatusProcessId = CSC.IdStatusProcess
+               WHERE DO.Guide_Number = @GuideNumber
+                     AND DO.Guide_Serie = @GuideSerie
+                     AND CSC.NameStatusProcess = CST.NameStatusProcess
+           )
+           WHEN CST.NameStatusProcess = 'Recibido por Forza' THEN
+           (
+               SELECT TOP 1
+                   DO.DateCreated
+               FROM DeliveryOrderDetail DO WITH (NOLOCK)
+                   INNER JOIN StatusOrder SO WITH (NOLOCK)
+                       ON DO.StatusOrderId = SO.StatusOrderId
+                   INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
+                       ON SO.CatStatusProcessId = CSC.IdStatusProcess
+               WHERE DO.Guide_Number = @GuideNumber
+                     AND DO.Guide_Serie = @GuideSerie
+                     AND CSC.NameStatusProcess = CST.NameStatusProcess
+           )
+           WHEN CST.NameStatusProcess = 'En instalaciones' THEN
+           (
+               SELECT TOP 1
+                   DO.DateCreated
+               FROM DeliveryOrderDetail DO WITH (NOLOCK)
+                   INNER JOIN StatusOrder SO WITH (NOLOCK)
+                       ON DO.StatusOrderId = SO.StatusOrderId
+                   INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
+                       ON SO.CatStatusProcessId = CSC.IdStatusProcess
+               WHERE DO.Guide_Number = @GuideNumber
+                     AND DO.Guide_Serie = @GuideSerie
+                     AND CSC.NameStatusProcess = CST.NameStatusProcess
+           )
+           WHEN CST.NameStatusProcess = 'En Ruta' THEN
+           (
+               SELECT TOP 1
+                   DO.DateCreated
+               FROM DeliveryOrderDetail DO WITH (NOLOCK)
+                   INNER JOIN StatusOrder SO WITH (NOLOCK)
+                       ON DO.StatusOrderId = SO.StatusOrderId
+                   INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
+                       ON SO.CatStatusProcessId = CSC.IdStatusProcess
+               WHERE DO.Guide_Number = @GuideNumber
+                     AND DO.Guide_Serie = @GuideSerie
+                     AND CSC.NameStatusProcess = CST.NameStatusProcess
+           )
+           WHEN CST.NameStatusProcess = 'Entregado' THEN
+           (
+               SELECT TOP 1
+                   DO.DateCreated
+               FROM DeliveryOrderDetail DO WITH (NOLOCK)
+                   INNER JOIN StatusOrder SO WITH (NOLOCK)
+                       ON DO.StatusOrderId = SO.StatusOrderId
+                   INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
+                       ON SO.CatStatusProcessId = CSC.IdStatusProcess
+               WHERE DO.Guide_Number = @GuideNumber
+                     AND DO.Guide_Serie = @GuideSerie
+                     AND CSC.NameStatusProcess = CST.NameStatusProcess
+           )
+           ELSE
+               NULL
+       END AS DateCreated
+FROM DeliveryBackOffice.dbo.CatStatusProcess CST WITH (NOLOCK)
+
+	DECLARE @Piezas NVARCHAR(20) = N'';
+	DECLARE @Description NVARCHAR(200) = N'';
+
+	SELECT 
+		@Piezas = CASE 
+					 WHEN COUNT(DOP.ParcelCode) = 1 THEN '1 pieza'
+					 ELSE CAST(COUNT(DOP.ParcelCode) AS NVARCHAR(5)) + ' piezas'
+				  END,
+		@Description = STRING_AGG(DOP.Detail, ', ')
+	FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
+		ON DO.Guide_Serie = DOP.GuideSerie AND DO.Guide_Number = DOP.GuideNumber
+	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber;
 
 	--Informacion pública
 	SELECT
 		  CONCAT(ISNULL(DO.Sender_FirstName,''), ' ',ISNULL(DO.Sender_LastName,'')) AS 'SenderName'
 		, CONCAT(ISNULL(DO.Receiver_FirstName,''), ' ',ISNULL(DO.Receiver_LastName,'')) AS 'ReceiverName'
+		, ISNULL(S.Settlement,'')    AS 'Poblado'
+		, IIF(T.TownshipName IS NOT NULL,T.TownshipName,ISNULL(T2.TownshipName,'')) AS 'Municipio'
+		, IIF(P.ProvinceName IS NOT NULL,P.ProvinceName,ISNULL(P2.ProvinceName,'')) AS 'Departamento'
+		, ISNULL(@Piezas,'') AS 'Pieces'
+		, ISNULL(@Description,'')  AS 'Description'
 		, ISNULL(DO.ReceiverCountryId,'GT') AS 'Country'
 		, SO.CatStatusProcessId AS 'StatusTracking'
 		, ISNULL(ER.Nombre,'') AS 'StatusTrackingTitle'
@@ -104,22 +265,41 @@ BEGIN TRY
 			ELSE ISNULL(CP.[Value],'502')
 		END AS 'AreaCode',
 		CASE
+		  WHEN ER.Nombre = 'Entregado' THEN
+           (
+               SELECT TOP 1
+                   CAST(DateCreated AS DATE)
+               FROM DeliveryOrderDetail D WITH (NOLOCK)
+               WHERE D.Guide_Serie = DO.Guide_Serie
+                     AND D.Guide_Number = DO.Guide_Number
+                     AND D.StatusOrderId = @StatusDelivered
+               ORDER BY D.DateCreated DESC
+           )
            WHEN ER.Nombre = 'En ruta' THEN
                CAST(GETDATE() AS DATE)
-           WHEN ER.Nombre != 'En ruta'
-                AND DO.DeliveryETA > GETDATE() THEN
-               IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
            WHEN ER.Nombre = 'En ruta'
                 AND DO.DeliveryETA < GETDATE() THEN
                CAST(DATEADD(DAY, 1, GETDATE()) AS DATE)
+		   WHEN ER.Nombre != 'En ruta'
+                AND DO.DeliveryETA > GETDATE() THEN
+               IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
            ELSE
-			   IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
-               
+               IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
        END AS DeliveryETA
 	FROM
 	DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
 		ON DO.StatusOrderId = SO.StatusOrderId
+	LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
+		ON DO.ReceiverIdSettlement = S.IdSettlement
+	LEFT JOIN DeliveryBackOffice.dbo.Township T WITH(NOLOCK)
+		ON S.IdTownship = T.IdTownship
+	LEFT JOIN DeliveryBackOffice.dbo.Province P WITH(NOLOCK)
+		ON S.IdProvince = P.IdProvince
+	LEFT JOIN DeliveryBackOffice.dbo.Township T2 WITH(NOLOCK)
+		ON DO.ReceiverIdTownship = T2.IdTownship
+	LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH(NOLOCK)
+		ON T2.IdProvince = P2.IdProvince
 	LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH(NOLOCK)
 		ON CP.[Name] = 'AreaCode' AND ISNULL(DO.ReceiverCountryId,'GT') = CP.IdCountry
 	LEFT JOIN @EncabezadoRastreo  ER
@@ -220,6 +400,20 @@ BEGIN TRY
 		INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
 			ON DO.StatusOrderId = SO.StatusOrderId
 		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
+	);
+	
+	DECLARE @f5 NVARCHAR(10) = (
+	SELECT
+		CASE
+			WHEN
+				(SELECT CatStatusProcessId FROM DeliveryBackOffice.dbo.StatusOrder WITH(NOLOCK)
+					WHERE StatusOrderId = DO.StatusOrderId) = 1 --NO ESTAR EN ESTADO CREADO
+				THEN 'false'
+				ELSE 'true'
+		END AS 'flagQualify'
+	FROM
+	DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 	);	
 
 	-- Variables de tipo bit para verificar si cada campo tiene datos
@@ -314,6 +508,8 @@ BEGIN TRY
 		, ISNULL(@f4,'false') AS 'flagNotifications'
 		, IIF(@HasImagePath = 1,'true',IIF(@HasDry = 1, 'true',IIF(@HasCold = 1, 'true','false'))) AS 'flagShowImage'
 		, IIF(@HasLatitude = 1 AND @HasLongitude = 1, 'true','false') AS 'flagShowMapa'
+		, 'true' AS 'flagRequestHelp' --Esta bandera siempre va visible para frontend
+		, ISNULL(@f5,'false') AS 'flagQualify'
 
 END TRY
 BEGIN CATCH

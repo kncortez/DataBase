@@ -32,8 +32,8 @@ BEGIN
               -- 3 CUANDO YA ESTÁ ENVIADA A SAP
               -- -1 ES ANULADA
               AND ihd.inv_type IN ( 1, 2 )			 
-              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2024-10-01' AS DATE)
-			 --AND CAST(ihd.inv_dateRegister AS DATE)  <= CAST('2024-09-30' AS DATE)
+              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2024-11-01' AS DATE)
+			-- AND CAST(ihd.inv_dateRegister AS DATE)  <= CAST('2024-10-31' AS DATE)
 
 			  --AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2023-09-27' AS DATE)
              -- AND cast(ihd.inv_dateRegister as date) <= CAST('2023-10-31' as date)

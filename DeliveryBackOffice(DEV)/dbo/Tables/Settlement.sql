@@ -13,10 +13,13 @@
     [DateCreated]        DATETIME       NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
     [DateUpdated]        DATETIME       NULL,
+    [oldSettlement]      NVARCHAR (100) NULL,
     CONSTRAINT [PK_Settlement] PRIMARY KEY CLUSTERED ([IdSettlement] ASC),
     CONSTRAINT [FK_Settlement_Province] FOREIGN KEY ([IdProvince]) REFERENCES [dbo].[Province] ([IdProvince]),
     CONSTRAINT [FK_Settlement_Township] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship])
 );
+
+
 
 
 
@@ -166,4 +169,10 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2type = NULL,
     @level2name = NULL
 
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_SettlementSatus_INCLUDE]
+    ON [dbo].[Settlement]([SettlementSatus] ASC)
+    INCLUDE([Settlement], [IdTownship], [IdProvince], [IdCountry]);
 
