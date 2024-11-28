@@ -56,6 +56,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica los lotes que son de pagos de COD ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'CODBatch';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valida que el regsitro ha sido procesado y finalizado 0 = En proceso 1 = Finalizada ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'IsCompleted';
+
 
 GO
 CREATE NONCLUSTERED INDEX [idx_Notificated_BatchCODId]
