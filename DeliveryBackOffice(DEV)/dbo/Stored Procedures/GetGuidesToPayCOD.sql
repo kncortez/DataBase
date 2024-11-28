@@ -65,12 +65,13 @@ SELECT
      , BTD.CommissionDate
      , BTd.RowStatus
      , BTD.CatConceptCODId
-FROM dbo.BatchCOD                 BT
-    INNER JOIN dbo.BatchDetailCOD BTD
+FROM dbo.BatchCOD                 BT WITH(NOLOCK)
+    INNER JOIN dbo.BatchDetailCOD BTD WITH(NOLOCK)
         ON BTD.BatchCODId = BT.IdBatchCOD
 WHERE CONVERT(DATE, BT.Date) = @Date
       AND BTD.CatConceptCODId = 1
-      AND BTd.RowStatus = 1;
+      AND BTd.RowStatus = 1
+      AND BTD.isCompleted = 1;
 
 
 
