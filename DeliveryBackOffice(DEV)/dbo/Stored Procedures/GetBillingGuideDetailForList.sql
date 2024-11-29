@@ -767,7 +767,7 @@ BEGIN
      SELECT tgd.IdVisitPointClient,
             tgd.Guide_Serie,
             tgd.Guide_Number,
-            tgd.CountryByGuide,
+            cCt.CountryNameES,
             gd.SAPCode,
             [Name],
             CASE
@@ -781,5 +781,7 @@ BEGIN
             INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK) 
                     ON tgd.Guide_Serie = gd.Guide_Serie
                    AND tgd.Guide_Number = gd.Guide_Number
+            INNER JOIN CatCountry cCt WITH(NOLOCK)
+                    ON cCt.IdCountry = tgd.CountryByGuide
    SET NOCOUNT OFF;
 END

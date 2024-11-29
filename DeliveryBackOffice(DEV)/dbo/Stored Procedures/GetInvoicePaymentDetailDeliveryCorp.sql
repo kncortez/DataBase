@@ -34,7 +34,7 @@ BEGIN
             IdVisitPointClient INT NOT NULL,
             Guide_Serie        NVARCHAR(2)  NOT NULL,
             Guide_Number       INT NOT NULL,
-            CountryByGuide     NVARCHAR(2) NULL,
+            CountryByGuide     NVARCHAR(55) NULL,
             SAPCode            NVARCHAR(50) NULL,
             [Name]             NVARCHAR(100) NULL,
             [Description]      NVARCHAR(200) NULL,
