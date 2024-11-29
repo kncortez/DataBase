@@ -4,6 +4,10 @@
 -- Create date: <2024-11-19>
 -- Description: <Devuelve los puntos de visita relacionados a un cliente corporativo>
 -- =============================================
+-- Author:      <Tito García>
+-- Update date: <2024-11-28>
+-- Description: <Se agrega consulta para obtener los datos de facturación del cliente>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetVisitPointOfClient]
 (
  @IdCustomer   INT,
@@ -58,6 +62,21 @@ BEGIN
                     SELECT *
                       FROM #VisitPoints
                      ORDER BY DescriptionOfClient ASC;
+
+					SELECT 
+						cs.Name AS CompanyName,
+						cs.InvoiceName,
+						cs.TaxIdentificationNumber,
+						cs.FiscalAddress,
+						cs.InvoiceEmail
+					FROM DeliveryBackOffice.dbo.Customer cs WITH(NOLOCK) 
+						INNER JOIN DeliveryBackOffice.dbo.CustomerType cust WITH(NOLOCK)
+							ON cs.IdCustomerType = cust.IdCustomerType
+					WHERE (cs.IdCustomer = @IdCustomer
+						OR cs.SAPCardCode = @SAPCardCode)
+						AND cust.IdCustomerType = 1
+						AND ISNULL(cs.CountryID,'GT') = @IdCountry
+
                 END
                 ELSE
                 BEGIN

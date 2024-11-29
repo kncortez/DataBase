@@ -66,7 +66,7 @@ BEGIN
             IdVisitPointClient INT
           , GuideSerie         NVARCHAR(2)
           , GuideNumber        INT
-          , IdCountry          NVARCHAR(2)
+          , IdCountry          NVARCHAR(55)
           , Amount             DECIMAL(18, 2)
         );  
         CREATE CLUSTERED INDEX ix_InvoicePaymentCommissionCOD ON #InvoicePaymentCommissionCOD ([IdVisitPointClient]);  
@@ -122,7 +122,6 @@ BEGIN
          WHERE invoice.inv_pk_id IS NULL
            AND ISNULL(vpc.ExcludeCommissionCOD, cus.ExcludeCommissionCOD) = 0
            AND bdCOD.CatConceptCODId = @IdCatConceptCOD
-           AND bdCOD.IsCompleted = 1
            AND bdCOD.RowStatus = 1
            AND bdCOD.Commission > 0
            AND CAST(bdCOD.CreditDate AS DATE) <= CAST(@CutOffDate AS DATE)
@@ -143,13 +142,15 @@ BEGIN
             SELECT gc.IdVisitPointClient                                    IdVisitPointClient
                  , gc.GuideSerie                                            GuideSerie
                  , gc.GuideNumber                                           GuideNumber
-                 , gc.IdCountry                                             IdCountry
+                 , cCt.CountryNameES                                        IdCountry
                  , gc.Amount                                                Amount
             FROM #GuidesCommission                gc  
                  LEFT JOIN VisitPointConfiguration vpcon WITH (NOLOCK)  
                      ON vpcon.VisitPointID = gc.CodeOfReference  
                  INNER JOIN Customer               cu WITH (NOLOCK)  
-                     ON gc.CustomerID = cu.IdCustomer  
+                     ON gc.CustomerID = cu.IdCustomer
+                 INNER JOIN CatCountry cCt WITH(NOLOCK)
+                     ON cCt.IdCountry = gc.IdCountry
                  LEFT JOIN CatBillingVolume        cbv WITH (NOLOCK)  
                      ON ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = cbv.IdCatBillingVolume
            WHERE gc.CreditDate <= @CutOffDate
