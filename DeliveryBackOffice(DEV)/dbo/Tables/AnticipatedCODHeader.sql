@@ -13,6 +13,8 @@ ReturnPercent				INT					NOT NULL,
 MinGuidesPerMonth			INT					NOT NULL,
 DailyAmount					DECIMAL(18,2)		NOT NULL,
 IsCODAnticipatedValid		INT					NOT NULL,
+Balance						DECIMAL(18,2)		NOT NULL,
+AgaintsBalance				DECIMAL(18,2)		NOT NULL,
 RowStatus					INT					NOT NULL,
 TokenCreated				NVARCHAR(100)		NOT NULL,
 DateCreated					DATETIME			NOT NULL,
@@ -41,6 +43,10 @@ GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Promedio diario de monto COD Disponible calculado para el cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'DailyAmount';
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para conocer si el cliente aplica o no a COD anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'IsCODAnticipatedValid';
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Saldo de cuenta o balance', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'Balance';
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Saldo en contra de la cuenta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'AgaintsBalance';
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Valor booleano que valida el estado activo o inactivo del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'RowStatus';
 GO

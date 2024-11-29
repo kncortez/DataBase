@@ -15,6 +15,7 @@ DailyAmount					DECIMAL(18,2)		NOT NULL,
 IsCODAnticipatedValid		INT					NOT NULL,
 CollectOnDelivery			DECIMAL(18,2)		NOT NULL,
 AnticipatedCODComissionId	INT					NOT NULL,
+BalanceStatus				NVARCHAR(50)		NOT NULL,
 RowStatus					INT					NOT NULL,
 TokenCreated				NVARCHAR(100)		NOT NULL,
 DateCreated					DATETIME			NOT NULL,
@@ -48,6 +49,8 @@ GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Monto COD Declarado sobre la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'CollectOnDelivery';
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Llave foranea que relaciona la comision aplicable de COD Anticipado al monto de la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'AnticipatedCODComissionId';
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del saldo sobre la guia COD Anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'BalanceStatus';
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Valor booleano que valida el estado activo o inactivo del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'RowStatus';
 GO
