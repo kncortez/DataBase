@@ -122,7 +122,6 @@ BEGIN
          WHERE invoice.inv_pk_id IS NULL
            AND ISNULL(vpc.ExcludeCommissionCOD, cus.ExcludeCommissionCOD) = 0
            AND bdCOD.CatConceptCODId = @IdCatConceptCOD
-           AND bdCOD.IsCompleted = 1
            AND bdCOD.RowStatus = 1
            AND bdCOD.Commission > 0
            AND CAST(bdCOD.CreditDate AS DATE) <= CAST(@CutOffDate AS DATE)
