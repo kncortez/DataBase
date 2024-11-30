@@ -76,6 +76,26 @@ BEGIN TRY
 		ON RBC.RbcIdRate = RH.RheId
 	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 
+	IF(@FlagCreation = 1)
+	BEGIN
+		SELECT
+			  DO.Collect_OnDelivery								AS 'AmountCOD'
+			, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
+			, 0.00												AS 'ComisionCOD'
+			, ISNULL(ACC.AnticipatedCODComission,CP.Value)			AS 'ComisionCODAnticipated'
+			, RH.GuideAmountCOD									AS 'MaxAmountCODAnticipated'
+		FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+		LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
+			ON DO.IdCustomer = RBC.RbcIdCustomer
+		LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
+			ON RBC.RbcIdRate = RH.RheId
+		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODComission ACC WITH(NOLOCK)
+			ON RH.RheId = ACC.RateHeaderId
+		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH(NOLOCK)
+			ON CP.Name = 'ValueCODComisison3Param' AND CP.IdCountry = DO.ReceiverCountryId
+		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
+	END;
+
 END TRY
 BEGIN CATCH
     DECLARE @ErrorMessage NVARCHAR(4000);
