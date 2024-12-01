@@ -177,7 +177,7 @@ BEGIN
                         WHERE BOP.IdCost = IdCost.valueCost
                           AND BOP.PromoCouponId IS NOT NULL
                      ) AS promoCupon
-
+ 
     INSERT INTO @BreakdownOfPayment
     SELECT tgd.IdVisitPointClient,
            tgd.Guide_Serie,

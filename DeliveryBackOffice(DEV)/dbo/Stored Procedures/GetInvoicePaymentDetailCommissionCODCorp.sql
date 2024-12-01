@@ -6,7 +6,8 @@
 CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailCommissionCODCorp]
 (
  @LstVisitPointClient NVARCHAR(MAX),
- @CutOffDate    DATETIME
+ @CutOffDate          DATETIME,
+ @IdCountry           NVARCHAR(2) = 'GT'
 )
 AS
 BEGIN
@@ -71,14 +72,15 @@ BEGIN
         );  
         CREATE CLUSTERED INDEX ix_InvoicePaymentCommissionCOD ON #InvoicePaymentCommissionCOD ([IdVisitPointClient]);  
   
-        SELECT @SAPCode     = SAPCode
-             , @CardPercent = CardPercent
-             , @CardAmount  = CardAmount
-             , @Category    = Category
-             , @Name        = [Name]
+        SELECT @SAPCode     = cas.SAPCode
+             , @CardPercent = cas.CardPercent
+             , @CardAmount  = cas.CardAmount
+             , @Category    = cas.Category
+             , @Name        = cas.[Name]
              , @Description = CONCAT([Description], '. ')
-          FROM CatArticleSAP WITH(NOLOCK)
-         WHERE [Name] = @NameArticle;
+          FROM CatArticleSAP cas WITH(NOLOCK)
+         WHERE cas.[Name] = @NameArticle
+           AND cas.IdCountry = @IdCountry;
 
         INSERT INTO #GuidesCommission
         (
@@ -124,6 +126,7 @@ BEGIN
            AND bdCOD.CatConceptCODId = @IdCatConceptCOD
            AND bdCOD.RowStatus = 1
            AND bdCOD.Commission > 0
+           AND bdCOD.idCountry = @IdCountry
            AND CAST(bdCOD.CreditDate AS DATE) <= CAST(@CutOffDate AS DATE)
            AND vpc.IdVisitPointClient IN (SELECT Item FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@LstVisitPointClient, ','))
          GROUP BY bdCOD.GuideSerie,
@@ -139,44 +142,42 @@ BEGIN
               , IdCountry
               , Amount
             )  
-            SELECT gc.IdVisitPointClient                                    IdVisitPointClient
-                 , gc.GuideSerie                                            GuideSerie
-                 , gc.GuideNumber                                           GuideNumber
-                 , cCt.CountryNameES                                        IdCountry
-                 , gc.Amount                                                Amount
-            FROM #GuidesCommission                gc  
-                 LEFT JOIN VisitPointConfiguration vpcon WITH (NOLOCK)  
-                     ON vpcon.VisitPointID = gc.CodeOfReference  
-                 INNER JOIN Customer               cu WITH (NOLOCK)  
+            SELECT gc.IdVisitPointClient          IdVisitPointClient
+                 , gc.GuideSerie                  GuideSerie
+                 , gc.GuideNumber                 GuideNumber
+                 , cCt.CountryNameES              IdCountry
+                 , gc.Amount                      Amount
+            FROM #GuidesCommission                gc
+                 LEFT JOIN VisitPointConfiguration vpcon WITH (NOLOCK)
+                     ON vpcon.VisitPointID = gc.CodeOfReference
+                 INNER JOIN Customer               cu WITH (NOLOCK)
                      ON gc.CustomerID = cu.IdCustomer
                  INNER JOIN CatCountry cCt WITH(NOLOCK)
                      ON cCt.IdCountry = gc.IdCountry
-                 LEFT JOIN CatBillingVolume        cbv WITH (NOLOCK)  
+                 LEFT JOIN CatBillingVolume        cbv WITH (NOLOCK)
                      ON ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = cbv.IdCatBillingVolume
            WHERE gc.CreditDate <= @CutOffDate
              AND ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = 2 --Billing Volume -> Completo;
 
-
-                         -- Validar si hay registros en la tabla temporal
-            IF EXISTS (SELECT TOP 1 1 
+            -- Validar si hay registros en la tabla temporal
+            IF EXISTS (SELECT TOP 1 1
                          FROM #InvoicePaymentCommissionCOD)
             BEGIN
                 SELECT 1 AS StatusCode, 
                        'Detalle obtenido con éxito' AS StatusMessage;
 
-
-            SELECT ipcCOD.IdVisitPointClient AS IdVisitPointClient
-                 , ipcCOD.GuideSerie         AS Guide_Serie
-                 , ipcCOD.GuideNumber        AS Guide_Number
-                 , ipcCOD.IdCountry          AS CountryByGuide
-                 , @SAPCode                  AS SAPCode
-                 , @Name                     AS [Name]
-                 , CONCAT(@Description, ipcCOD.GuideSerie,ipcCOD.GuideNumber) AS [Description]
-                 , ipcCOD.Amount             AS Price
-                 , @Category                 AS Category
-                 , 1                         AS SendToInvoice
-              FROM #InvoicePaymentCommissionCOD ipcCOD
-             ORDER BY ipcCOD.IdVisitPointClient DESC, ipcCOD.GuideSerie DESC, ipcCOD.GuideNumber DESC;
+                SELECT ipcCOD.IdVisitPointClient AS IdVisitPointClient
+                     , ipcCOD.GuideSerie         AS Guide_Serie
+                     , ipcCOD.GuideNumber        AS Guide_Number
+                     , ipcCOD.IdCountry          AS CountryByGuide
+                     , @SAPCode                  AS SAPCode
+                     , @Name                     AS [Name]
+                     , CONCAT(@Description, ipcCOD.GuideSerie,ipcCOD.GuideNumber) AS [Description]
+                     , ipcCOD.Amount             AS Price
+                     , @Category                 AS Category
+                     , 1                         AS SendToInvoice
+                  FROM #InvoicePaymentCommissionCOD ipcCOD
+                 ORDER BY ipcCOD.IdVisitPointClient DESC, ipcCOD.GuideSerie DESC, ipcCOD.GuideNumber DESC;
             END
             ELSE
             BEGIN

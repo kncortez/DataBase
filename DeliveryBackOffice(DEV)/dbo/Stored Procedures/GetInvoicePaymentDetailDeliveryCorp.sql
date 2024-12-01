@@ -6,7 +6,8 @@
 CREATE PROCEDURE GetInvoicePaymentDetailDeliveryCorp
 (
   @LstVisitPointClient NVARCHAR(MAX) = '',
-  @CutOffDate DATETIME
+  @CutOffDate          DATETIME,
+  @IdCountry           NVARCHAR(2) = 'GT'
 )
 AS
 BEGIN
@@ -76,6 +77,7 @@ BEGIN
                                           )
            AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)
            AND do.IsCollect = 0
+           AND do.SenderCountryId = @IdCountry
            AND EXISTS
                      (
                       SELECT TOP 1 1
@@ -122,13 +124,6 @@ BEGIN
 
             SELECT 0 AS StatusCode, 
                    'Ha ocurrido un error en el proceso' AS StatusMessage
-
-        ---- Opcional: Log de errores
-        --INSERT INTO LogErrores (ErrorMensaje, ErrorSeveridad, ErrorEstado, FechaError)
-        --VALUES (@ErrorMessage, @ErrorSeverity, @ErrorState, GETDATE());
-
-        -- Lanza el error para que sea visible para el cliente que llamó al SP
-        --RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
     END CATCH
 
     -- Validar y eliminar la tabla temporal si ya existe
