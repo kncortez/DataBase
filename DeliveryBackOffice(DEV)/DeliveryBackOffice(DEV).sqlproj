@@ -1792,6 +1792,7 @@
     <Build Include="dbo\Functions\GetPhone.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetInfoAnticipatedCOD.sql" />
     <Build Include="dbo\Tables\AnticipatedCODHeader.sql" />
     <Build Include="dbo\Tables\AnticipatedCODComission.sql" />
     <Build Include="dbo\Tables\AnticipatedCODDetail.sql" />
