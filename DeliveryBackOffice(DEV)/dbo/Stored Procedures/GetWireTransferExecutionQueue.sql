@@ -114,7 +114,7 @@ BEGIN
 			WHERE
 				CCDS.RowStatus = 1
 				AND	db.Id_Country = @IdCountrySender
-				and CCDS.IsCodAnticipated = 0
+				AND (CCDS.IsCodAnticipated = 0 OR CCDS.IsCodAnticipated IS NULL)
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @DailyExecutionQueue) )
 			BEGIN
