@@ -1,20 +1,9 @@
-ï»¿
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-06-07>
--- Description:	< Obtener cola de ejecuciÃ³n de procesos de servicio HermesWireTransfer >
--- =============================================
--- =============================================
--- Author:		<Oscar,Rodriguez>
--- Modification date: <2024-06-26>
--- Description:	< Filtrar cola de ejcucion de procesos por pais para el servicio HermesWireTransfer >
--- =============================================
 -- =============================================
 -- Author:		<Oscar,Rodriguez>
 -- Modification date: <2024-12-02>
--- Description:	< Filtrar cola de ejcucion de procesos por tipo de servicio, COD Inmediato >
+-- Description:	< Filtrar cola de ejcucion de procesos por tipo de servicio, COD Anticipado >
 -- =============================================
-CREATE PROCEDURE [dbo].[GetWireTransferExecutionQueue]
+CREATE PROCEDURE [dbo].[GetAnticipatedCODExecutionQueue]
 	@IdCountrySender NVARCHAR(2)= 'GT'
 AS
 BEGIN
@@ -48,7 +37,7 @@ BEGIN
 		IdCountry NVARCHAR(2)
 	);
 
-	-- Obtener valores de ejecuciÃ³n de la fecha actual
+	-- Obtener valores de ejecución de la fecha actual
 	SET @DailyExecutionExists = ISNULL((
 		SELECT 
 			TOP 1 
@@ -68,7 +57,7 @@ BEGIN
 		IF( @DailyExecutionExists = 1 )
 		BEGIN
 
-			-- Ya existen registros para el dÃ­a de hoy para ejecuciÃ³n de CoD
+			-- Ya existen registros para el día de hoy para ejecución de CoD
 			INSERT INTO
 				@ResponseExecutionQueue
 				(ResponseOrder, CoDProcessName, DeliveryBankId, ExecutionDate, ExecutionTime, ExecutionPriority, ExecutionIsPending, ExecutionHasStarted, ExecutionHasCompleted, IdCountry)
@@ -90,13 +79,13 @@ BEGIN
 			SELECT
 				@IsSuccessful = 1,
 				@EstimatedLine = 0,
-				@ResponseMessage = CONCAT('Se obtuvo exitosamente cola de ejecuciÃ³n de procesos', CONVERT(nvarchar,GETDATE(), 103))
+				@ResponseMessage = CONCAT('Se obtuvo exitosamente cola de ejecución de procesos', CONVERT(nvarchar,GETDATE(), 103))
 
 		END
 		ELSE
 		BEGIN
 
-			-- No existen registros para el dÃ­a de hoy para ejecuciÃ³n de CoD
+			-- No existen registros para el día de hoy para ejecución de CoD
 			INSERT INTO 
 				@DailyExecutionQueue
 				(CodDailyScheduleId, ExecutionDate, CoDProcessName, DeliveryBankId, ExecutionTime, ProcessPriority, IdCountry)
@@ -114,7 +103,7 @@ BEGIN
 			WHERE
 				CCDS.RowStatus = 1
 				AND	db.Id_Country = @IdCountrySender
-				and CCDS.IsCodAnticipated = 0
+				and CCDS.IsCodAnticipated = 1
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @DailyExecutionQueue) )
 			BEGIN
@@ -138,21 +127,21 @@ BEGIN
 				IF( EXISTS(SELECT TOP 1 1 FROM @ResponseExecutionQueue) )
 				BEGIN
 
-					-- Inserto exitosamente la ejecuciÃ³n para el dÃ­a de hoy
+					-- Inserto exitosamente la ejecución para el día de hoy
 					SELECT
 						@IsSuccessful = 1,
 						@EstimatedLine = 0,
-						@ResponseMessage = CONCAT('Se obtuvo exitosamente cola de ejecuciÃ³n de procesos', CONVERT(nvarchar,GETDATE(), 103))
+						@ResponseMessage = CONCAT('Se obtuvo exitosamente cola de ejecución de procesos', CONVERT(nvarchar,GETDATE(), 103))
 
 				END
 				ELSE
 				BEGIN
 
-					-- No inserto datos para la ejecuciÃ³n del dÃ­a actual
+					-- No inserto datos para la ejecución del día actual
 					SELECT
 						@IsSuccessful = 0,
 						@EstimatedLine = 112,
-						@ResponseMessage = CONCAT('No se pudo insertar correctamente los datos de ejecuciÃ³n para la fecha actual ', CONVERT(nvarchar,GETDATE(), 103))
+						@ResponseMessage = CONCAT('No se pudo insertar correctamente los datos de ejecución para la fecha actual ', CONVERT(nvarchar,GETDATE(), 103))
 
 				END
 
@@ -164,7 +153,7 @@ BEGIN
 				SELECT
 					@IsSuccessful = 0,
 					@EstimatedLine = 90,
-					@ResponseMessage = CONCAT('No se pudo generar correctamente los datos de ejecuciÃ³n para la fecha actual ', CONVERT(nvarchar,GETDATE(), 103))
+					@ResponseMessage = CONCAT('No se pudo generar correctamente los datos de ejecución para la fecha actual ', CONVERT(nvarchar,GETDATE(), 103))
 			
 			END
 

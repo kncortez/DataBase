@@ -1796,6 +1796,7 @@
     <Build Include="dbo\Tables\AnticipatedCODHeader.sql" />
     <Build Include="dbo\Tables\AnticipatedCODComission.sql" />
     <Build Include="dbo\Tables\AnticipatedCODDetail.sql" />
+    <Build Include="dbo\Stored Procedures\GetAnticipatedCODExecutionQueue.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
