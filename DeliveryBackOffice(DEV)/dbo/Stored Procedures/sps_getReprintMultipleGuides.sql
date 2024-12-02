@@ -82,6 +82,36 @@ BEGIN
 		WHERE
 			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
 	)
+	 DECLARE @Onestopshot  INT = 
+	(  
+	SELECT   
+	TOP 1  
+		[CS].[SysIdSystem]  
+	FROM  
+	[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)   
+	WHERE  
+	[CS].[SysNameSystem] = 'One stop shot'  COLLATE Latin1_General_CI_AI   
+	)
+	DECLARE @OnestopLink  INT =  
+	(  
+	SELECT   
+	TOP 1  
+		[CS].[SysIdSystem]  
+	FROM  
+	[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)   
+	WHERE  
+	[CS].[SysNameSystem] = 'One stop Link'  COLLATE Latin1_General_CI_AI   
+	) 
+	DECLARE @Portalwebconlink  INT =  
+	(  
+	SELECT   
+	TOP 1  
+		[CS].[SysIdSystem]  
+	FROM  
+	[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)   
+	WHERE  
+	[CS].[SysNameSystem] = 'Portal web con Link'  COLLATE Latin1_General_CI_AI   
+	) 
     DECLARE @TMPPICES TABLE
     (        
         GuideSerie nvarchar(2),
@@ -376,6 +406,9 @@ BEGIN
 											WHEN [dev].[CatSystemId] = @ExpressWebSys THEN 'EXC'
 											WHEN [dev].[CatSystemId] = @CorporateWebSys THEN 'COR'
 											WHEN [dev].[CatSystemId] = @ParserSys THEN 'PAR'
+											WHEN [dev].[CatSystemId] = @Onestopshot THEN 'OSS'
+										    WHEN [dev].[CatSystemId] = @OnestopLink THEN 'OSL'
+										    WHEN [dev].[CatSystemId] = @Portalwebconlink THEN 'INL'
 											WHEN [dev].[CatSystemId] IS NULL THEN 'API'
 											ELSE 'API'
 										END
