@@ -87,7 +87,7 @@ BEGIN
         WHERE Co.ProductNumber = @ProductNumber
         ORDER BY IdCost DESC
     );
-	
+
 	IF @TypeService IS NULL
 		SET @TypeService = 'STD'
 	DECLARE @IsLastMileReturn INT = (SELECT ISNULL(IsLastMileReturn,0)  FROM [dbo].[DeliveryOrder] DO WITH(NOLOCK)
@@ -460,7 +460,7 @@ BEGIN
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticle
               AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
-			
+
         IF @AmountCollect IS NOT NULL
            AND @AmountCollect > 0
             INSERT INTO @GuideDetail
