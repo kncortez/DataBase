@@ -83,14 +83,14 @@ BEGIN
                                                         1,         -- Identificador de modulo donde proviene
                                                         @Token;    -- Token de co
 
-            	   SET @jsonDetail =
+               SET @jsonDetail =
             (
                 SELECT STUFF(
                                 (
                                     SELECT DISTINCT
                                            ',{"GuideSerie":"' + ISNULL(tbl.GuideSerie, 'N/A') + '",' + '"GuideNumber":"'
                                            + ISNULL(CONVERT(VARCHAR, tbl.GuideNumber), 'N/A') + '",' + '"Amount":"'
-                                           + ISNULL(CONVERT(VARCHAR, tbl.AmountToPay), '0.00') + '",' + '"PickupRate":"'
+                                           + '0.00' + '",' + '"PickupRate":"'
                                            + CONVERT(VARCHAR, '0.00') + +'"}'
                                     FROM #BrainProcessedGuides tbl
                                     GROUP BY tbl.GuideSerie,
@@ -106,11 +106,11 @@ BEGIN
 
             -- no agrupar para resumen
 
-             SET @jsonSummary =
+             		 SET @jsonSummary =
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR, ISNULL(SUM(tbl.AmountToPay), 0)) + '",'
+                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR, 0) + '",'
                                            + '"PickupRate":"' + CONVERT(VARCHAR, 0) + '",'
 										   + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODCodeISO, 0)) + '",'
                                            + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODSymbol, 0)) + '",'
