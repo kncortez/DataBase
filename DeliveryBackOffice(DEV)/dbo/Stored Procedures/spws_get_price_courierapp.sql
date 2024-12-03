@@ -26,21 +26,8 @@ BEGIN
     DECLARE @jsonResult2 NVARCHAR(MAX);
     DECLARE @jsonError NVARCHAR(MAX);
     DECLARE @jsonToken NVARCHAR(MAX);
-	DECLARE @CountryId NVARCHAR(2) =(Select top 1 ISNULL(C.CountryId,'GT') From 
-										dbo.SchedulePickup A WITH(NOLOCK)
-										INNER JOIN
-										dbo.Account B WITH(NOLOCK)
-										ON A.AccountId= B.AccIdAccount
-										INNER JOIN 
-							 			dbo.customer C WITH(NOLOCK)
-										ON B.IdCustomer = C.IdCustomer
-										Where A.SchedulePickupid=@IdPickup	
-	);
 
-	DECLARE @CurrencyPriceCodeISO NVARCHAR(4)=(select CodeISO from [DeliveryBackOffice].[dbo].[CatCurrencyCOD]
-                                               Where CodeISO like '%'+ @CountryId+'%');
-	DECLARE @CurrencyPriceSymbol NVARCHAR(2)=(select Symbol from [DeliveryBackOffice].[dbo].[CatCurrencyCOD]
-                                               Where CodeISO like '%'+ @CountryId+'%')
+
 
  
 
@@ -119,17 +106,22 @@ BEGIN
 
             -- no agrupar para resumen
 
-            SET @jsonSummary =
+             SET @jsonSummary =
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR,  0) + '",'
-                                           + '"PickupRate":"' + CONVERT(VARCHAR,  0) + '",'
-										   + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR,  0) + '",'
-                                           + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR,  0) + '",'
-                                           + '"CurrencyPriceCodeISO":"' +  CONVERT(VARCHAR, ISNULL(@CurrencyPriceCodeISO , 0)) + '",'
-                                           + '"CurrencyPriceSymbol":"' +  CONVERT(VARCHAR, ISNULL(@CurrencyPriceSymbol , 0)) + '",'
+                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR, ISNULL(SUM(tbl.AmountToPay), 0)) + '",'
+                                           + '"PickupRate":"' + CONVERT(VARCHAR, 0) + '",'
+										   + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODCodeISO, 0)) + '",'
+                                           + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODSymbol, 0)) + '",'
+                                           + '"CurrencyPriceCodeISO":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceCodeISO , 0)) + '",'
+                                           + '"CurrencyPriceSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceSymbol , 0)) + '",'
                                            + '"Collect":"' + 'false' + +'"}'
+                                    FROM #BrainProcessedGuides tbl
+									GROUP BY tbl.CurrencyPrice_CODCodeISO,
+										tbl.CurrencyPrice_CODSymbol,
+										tbl.CurrencyPriceCodeISO,
+										tbl.CurrencyPriceSymbol 
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -137,7 +129,6 @@ BEGIN
                                 ''
                             )
             );
-
             ------ unir encabezado y detalle para resultado
 
 			PRINT '@jsonDetail'
