@@ -26,21 +26,8 @@ BEGIN
     DECLARE @jsonResult2 NVARCHAR(MAX);
     DECLARE @jsonError NVARCHAR(MAX);
     DECLARE @jsonToken NVARCHAR(MAX);
-	DECLARE @CountryId NVARCHAR(2) =(Select top 1 ISNULL(C.CountryId,'GT') From 
-										dbo.SchedulePickup A WITH(NOLOCK)
-										INNER JOIN
-										dbo.Account B WITH(NOLOCK)
-										ON A.AccountId= B.AccIdAccount
-										INNER JOIN 
-							 			dbo.customer C WITH(NOLOCK)
-										ON B.IdCustomer = C.IdCustomer
-										Where A.SchedulePickupid=@IdPickup	
-	);
 
-	DECLARE @CurrencyPriceCodeISO NVARCHAR(4)=(select CodeISO from [DeliveryBackOffice].[dbo].[CatCurrencyCOD]
-                                               Where CodeISO like '%'+ @CountryId+'%');
-	DECLARE @CurrencyPriceSymbol NVARCHAR(2)=(select Symbol from [DeliveryBackOffice].[dbo].[CatCurrencyCOD]
-                                               Where CodeISO like '%'+ @CountryId+'%')
+
 
  
 
@@ -58,19 +45,57 @@ BEGIN
 
         IF (@test = 0)
         BEGIN
+             
+              
+            CREATE TABLE #BrainProcessedGuides
+            (
+                GuideSerie NVARCHAR(2),
+                GuideNumber INT,
+                IsCollect BIT,
+                Price DECIMAL(18, 2),
+                COD DECIMAL(18, 2),
+                AmountPaid DECIMAL(18, 2),
+                CODPaid DECIMAL(18, 2),
+                CODIsPaid BIT,
+                PaymentTime INT,
+                TimeSequence INT,
+                FelNumber NVARCHAR(50),
+                IsPaid BIT,
+                IsCustomer INT,
+                ConditionPayment NVARCHAR(200),
+                HaveCredit BIT,
+                CollectCOD BIT,
+                ReturnRate DECIMAL(5, 2),
+                CurrencyPrice_CODCodeISO NVARCHAR(8),
+		        CurrencyPrice_CODSymbol  NVARCHAR(8),
+		        CurrencyPriceCodeISO     NVARCHAR(8),
+		        CurrencyPriceSymbol      NVARCHAR(8),
+                AmountToPay DECIMAL(18, 2),
+                CODAmount DECIMAL(18, 2),
+                ReturnRates DECIMAL(5, 2)
+            );
 
+            INSERT INTO #BrainProcessedGuides
+            EXEC [dbo].[spws_get_guide_pending_payment] @InGuides, -- Guías recibidas
+                                                        2,         -- Tiempo de pago 2 - En recolección
+                                                        0,         -- No es retorno
+                                                        '',        -- Codeapp
+                                                        1,         -- Identificador de modulo donde proviene
+                                                        @Token;    -- Token de co
 
-            SET @jsonDetail =
+            	   SET @jsonDetail =
             (
                 SELECT STUFF(
                                 (
                                     SELECT DISTINCT
-                                           ',{"GuideSerie":"FD",'
-										   + '"GuideNumber":"0",'
-                                           + '"Amount":"0",'
-										   + '"PickupRate":"'
+                                           ',{"GuideSerie":"' + ISNULL(tbl.GuideSerie, 'N/A') + '",' + '"GuideNumber":"'
+                                           + ISNULL(CONVERT(VARCHAR, tbl.GuideNumber), 'N/A') + '",' + '"Amount":"'
+                                           + ISNULL(CONVERT(VARCHAR, tbl.AmountToPay), '0.00') + '",' + '"PickupRate":"'
                                            + CONVERT(VARCHAR, '0.00') + +'"}'
-                                  
+                                    FROM #BrainProcessedGuides tbl
+                                    GROUP BY tbl.GuideSerie,
+                                             tbl.GuideNumber,
+                                             tbl.AmountToPay
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -81,17 +106,22 @@ BEGIN
 
             -- no agrupar para resumen
 
-            SET @jsonSummary =
+             SET @jsonSummary =
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR,  0) + '",'
-                                           + '"PickupRate":"' + CONVERT(VARCHAR,  0) + '",'
-										   + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR,  0) + '",'
-                                           + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR,  0) + '",'
-                                           + '"CurrencyPriceCodeISO":"' +  CONVERT(VARCHAR, ISNULL(@CurrencyPriceCodeISO , 0)) + '",'
-                                           + '"CurrencyPriceSymbol":"' +  CONVERT(VARCHAR, ISNULL(@CurrencyPriceSymbol , 0)) + '",'
+                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR, ISNULL(SUM(tbl.AmountToPay), 0)) + '",'
+                                           + '"PickupRate":"' + CONVERT(VARCHAR, 0) + '",'
+										   + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODCodeISO, 0)) + '",'
+                                           + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODSymbol, 0)) + '",'
+                                           + '"CurrencyPriceCodeISO":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceCodeISO , 0)) + '",'
+                                           + '"CurrencyPriceSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceSymbol , 0)) + '",'
                                            + '"Collect":"' + 'false' + +'"}'
+                                    FROM #BrainProcessedGuides tbl
+									GROUP BY tbl.CurrencyPrice_CODCodeISO,
+										tbl.CurrencyPrice_CODSymbol,
+										tbl.CurrencyPriceCodeISO,
+										tbl.CurrencyPriceSymbol 
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -99,7 +129,6 @@ BEGIN
                                 ''
                             )
             );
-
             ------ unir encabezado y detalle para resultado
 
 			PRINT '@jsonDetail'
