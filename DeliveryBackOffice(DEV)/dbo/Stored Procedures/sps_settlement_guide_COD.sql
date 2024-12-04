@@ -120,7 +120,8 @@ BEGIN
                     [DataOriginId],
                     [Notificated],
                     [Token],
-                    CustomerId
+                    CustomerId,
+					IsAnticipatedCOD
                 )
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
@@ -131,7 +132,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
@@ -151,7 +153,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
@@ -171,7 +174,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
