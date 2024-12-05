@@ -617,6 +617,7 @@ BEGIN
                                   , DataOriginId
                                   , Token
                                   , CustomerId
+								  , IsAnticipatedCOD
                                 )
                                 OUTPUT inserted.IdProcessedGuideCOD,
                                        inserted.GuideSerie,
@@ -627,6 +628,7 @@ BEGIN
                                      , 25
                                      , @TokenP UserCreated
                                      , cus.IdCustomer
+									 , 0 AS 'IsAnticipatedCOD'
                                 FROM #listGuidesEnabled            lge
                                     INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
                                         ON lge.Guide_Serie = dlo.Guide_Serie
@@ -646,6 +648,7 @@ BEGIN
                                      , 25
                                      , @TokenP UserCreated
                                      , cus.IdCustomer
+									 , 0 AS 'IsAnticipatedCOD'
                                 FROM #listGuidesEnabled            lge
                                     INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
                                         ON lge.Guide_Serie = dlo.Guide_Serie
@@ -668,6 +671,7 @@ BEGIN
                                      , 25
                                      , @TokenP UserCreated
                                      , cus.IdCustomer
+									 , 0 AS 'IsAnticipatedCOD'
                                 FROM #listGuidesEnabled                       lge
                                     INNER JOIN DeliveryOrder                  dlo WITH (NOLOCK)
                                         ON lge.Guide_Number = dlo.Guide_Number
@@ -1703,7 +1707,8 @@ BEGIN
                         GuideNumber,
                         DataOriginId,
                         Token,
-                        CustomerId
+                        CustomerId,
+						IsAnticipatedCOD
                     )
                     OUTPUT inserted.IdProcessedGuideCOD,
                            inserted.GuideSerie,
@@ -1713,7 +1718,8 @@ BEGIN
                             lge.Guide_Number,
                             25,
                             @TokenP UserCreated,
-                            cus.IdCustomer
+                            cus.IdCustomer, 
+							0 AS 'IsAnticipatedCOD'
                     FROM #listGuidesEnabled lge
                         INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
                             ON lge.Guide_Number = dlo.Guide_Number
