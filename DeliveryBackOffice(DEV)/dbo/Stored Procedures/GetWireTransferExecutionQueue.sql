@@ -55,10 +55,13 @@ BEGIN
 				1 
 		FROM 
 			[DeliveryBackOffice].[dbo].[CoDDailyExecution] CDE WITH(NOLOCK) 
+			INNER JOIN DeliveryBackOffice.dbo.CatCoDDailySchedule CCDS ON CCDS.IdCatCODDailySchedule = CDE.CODDailyScheduleId
 		WHERE 
 			CDE.ExecutionDate = CAST(GETDATE() AS DATE) 
 			AND 
 			CDE.RowStatus = 1
+			AND
+			CCDS.IsCODAnticipated = 0
 			AND
 			CDE.IdCountry = @IdCountrySender
 	),0)

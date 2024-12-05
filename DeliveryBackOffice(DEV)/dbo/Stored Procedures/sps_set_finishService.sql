@@ -106,6 +106,16 @@ BEGIN
             DROP TABLE #listGuidesEnabled;
         IF OBJECT_ID('tempdb.dbo.#listGuidesDisabled', 'U') IS NOT NULL
             DROP TABLE #listGuidesDisabled;
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
+
+        CREATE TABLE #TempData
+        (
+         IdProcessedGuideCOD INT,
+         GuideSerie  NVARCHAR(4),
+         GuideNumber INT
+        );
+        CREATE NONCLUSTERED INDEX INDX_sps_set_finishService_Temp ON #TempData (GuideSerie, GuideNumber);
 
         SELECT *
         INTO #TblListGuidesTwo
@@ -608,6 +618,10 @@ BEGIN
                                   , Token
                                   , CustomerId
                                 )
+                                OUTPUT inserted.IdProcessedGuideCOD,
+                                       inserted.GuideSerie,
+                                       inserted.GuideNumber
+                                  INTO #TempData
                                 SELECT lge.Guide_Serie
                                      , lge.Guide_Number
                                      , 25
@@ -1691,6 +1705,10 @@ BEGIN
                         Token,
                         CustomerId
                     )
+                    OUTPUT inserted.IdProcessedGuideCOD,
+                           inserted.GuideSerie,
+                           inserted.GuideNumber
+                      INTO #TempData
                     SELECT lge.Guide_Serie,
                             lge.Guide_Number,
                             25,
@@ -1749,6 +1767,16 @@ BEGIN
 
             COMMIT TRANSACTION;
 
+            UPDATE pgd 
+               SET pgd.IsCompleted = 1
+              FROM ProcessedGuideCOD pgd WITH(NOLOCK)
+                   INNER JOIN #TempData tmp
+                      ON pgd.GuideSerie   = tmp.GuideSerie
+                     AND pgd.GuideNumber = tmp.GuideNumber
+             WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+
+            IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+                DROP TABLE #TempData;
         END;
         ELSE
         BEGIN
