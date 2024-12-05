@@ -129,6 +129,7 @@ BEGIN
                                 ''
                             )
             );
+            
             ------ unir encabezado y detalle para resultado
 
 			PRINT '@jsonDetail'
