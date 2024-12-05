@@ -65,6 +65,16 @@ BEGIN
 	FROM DeliveryOrder 
 	WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number																			
 
+    IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+        DROP TABLE #TempData;
+
+    CREATE TABLE #TempData
+    (
+     IdProcessedGuideCOD INT,
+     GuideSerie          NVARCHAR(4),
+     GuideNumber         INT,
+    );
+    CREATE NONCLUSTERED INDEX INDX_sps_set_Confirmation_of_delivery_Temp ON #TempData (GuideSerie, GuideNumber);
 
     BEGIN TRANSACTION;
     BEGIN TRY
@@ -439,6 +449,10 @@ IF(@IsStatusTerminal = 0)
                             Token,
                             CustomerId
                         )
+                        OUTPUT inserted.IdProcessedGuideCOD,
+                               inserted.GuideSerie,
+                               inserted.GuideNumber
+                          INTO #TempData
                         VALUES
                         (@Guide_Serie, @Guide_Number, @CourierId, GETDATE(), NULL, NULL, @CatModuleId, 0, @TokenId,
                          @IdCustomer);
@@ -537,5 +551,16 @@ IF(@IsStatusTerminal = 0)
             PRINT 'REGISTER NOT EXISTS ' + CAST(COALESCE(@ValidateOperation, 0) AS VARCHAR);
         END;
         COMMIT TRANSACTION;
+
+        UPDATE pgd
+           SET pgd.IsCompleted = 1
+          FROM ProcessedGuideCOD pgd WITH(NOLOCK)
+               INNER JOIN #TempData tmp
+                  ON pgd.GuideSerie   = tmp.GuideSerie
+                 AND pgd.GuideNumber = tmp.GuideNumber
+         WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
     END;
 END;
