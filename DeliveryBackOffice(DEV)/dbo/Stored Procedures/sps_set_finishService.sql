@@ -28,6 +28,7 @@ BEGIN
     DECLARE @ServiceAmmount DECIMAL = 0;
     DECLARE @CatSalesPackageStatusId INT = 0;
     DECLARE @MaxServiceMembership INT = 0;
+	DECLARE @StatusOrderWithAnticipatedCOD INT = 0;
     DECLARE @CatPointPromoTbl TABLE
     (
         IdPointPromo INT
@@ -75,6 +76,14 @@ BEGIN
         WHERE [CSPS].[SalesPackageStatusName] = 'Activa'
               AND [CSPS].[RowStatus] = 1
     );
+
+	SET @StatusOrderWithAnticipatedCOD =
+	(		
+		SELECT StatusOrderId 
+		FROM [dbo].[StatusOrder] WITH (NOLOCK) 
+		WHERE OrderDescription = 'Recepcionado en Express Center COD Anticipado'
+			AND RowStatus = 1
+	);
 
     INSERT INTO @CatPointPromoTbl
     SELECT TOP 1
@@ -557,7 +566,7 @@ BEGIN
                             SELECT lge.Guide_Serie
                                  , lge.Guide_Number
                                  , CASE 
-										WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN 52
+										WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN @StatusOrderWithAnticipatedCOD
 										WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
 										WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
 										WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
@@ -733,7 +742,7 @@ BEGIN
                             UPDATE do
                             SET do.StatusOrderId = 
 												CASE 
-													WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN 52
+													WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN @StatusOrderWithAnticipatedCOD
 													WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
 													WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
 													WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
@@ -746,7 +755,7 @@ BEGIN
                             UPDATE dop
                             SET StatusOrderId =
 											CASE 
-												WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN 52
+												WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN @StatusOrderWithAnticipatedCOD
 												WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
 												WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
 												WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
