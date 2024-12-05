@@ -12,6 +12,11 @@
 -- Create date: <2024-07-02>
 -- Description: <Se agrega filtro para el remitente por pais>
 -- =============================================
+-- =============================================
+-- Author:      <Walter Orozco>
+-- Create date: <2024-12-02>
+-- Description: <Se agrega parametros para enviar información de COD anticipado.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
@@ -43,6 +48,15 @@ BEGIN
     --DECLARE @TokenP VARCHAR(100) = '3E9C2157FD6D5863CFBA2366C0838F8B';
     DECLARE @InTimeP INT;
     DECLARE @IsReturnP BIT;
+
+	DECLARE  @CODAnticipatedTable TABLE(
+		GuideSerie NVARCHAR(2),
+        GuideNumber INT,
+		IdCustomer INT,
+		IdPortafolio INT,
+		ComisionCOD DECIMAL(6,2),
+		ComisionCODAnticipated DECIMAL(6,2)
+	) 
 
     ---- Convertir cadena de guias en tabla de guias ---------------------------------------------
     CREATE TABLE #listGuides
@@ -507,6 +521,24 @@ BEGIN
 
     CREATE NONCLUSTERED INDEX IX_PPTID_ID ON #PendingPaymentTempId ([Id]);
 
+	INSERT INTO @CODAnticipatedTable (GuideSerie, GuideNumber,IdCustomer,IdPortafolio,ComisionCOD,ComisionCODAnticipated)
+	SELECT
+		ppt.GuideSerie,
+        ppt.GuideNumber,
+		ISNULL(ach.CustomerId,0),
+		ISNULL(ach.PortfolioId,0),
+		0.00,
+		ISNULL(acd.AnticipatedCODComissionId,0.00)
+	FROM #PendingPaymentTemp ppt
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+            ON ppt.GuideSerie = do.Guide_Serie
+               AND ppt.GuideNumber = do.Guide_Number
+		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+			ON do.Guide_Serie = acd.GuideSerie AND do.Guide_Number = acd.GuideNumber
+		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK)
+			ON do.IdCustomer = ach.CustomerId 
+   WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+
     DECLARE @Output VARCHAR(MAX);
     DECLARE @RowsNumber INT =
             (
@@ -545,8 +577,14 @@ BEGIN
                          + ', ' + '"CODAmount": ' + CAST(CAST(ISNULL(pg.CODAmount, 0) AS DECIMAL(18, 2)) AS VARCHAR)
                          + ', ' + '"IsCollect": ' + CAST(ISNULL(pg.IsCollect, 0) AS VARCHAR) + ', ' + '"Pieces": '
                          + CAST(ISNULL(pg.Pieces, 0) AS VARCHAR) + ', ' + '"ServiceType": "' + pg.ServiceType + '", '
+						 + '"IdCustomer": ' + CAST(c.IdCustomer AS VARCHAR) + ', '
+						 + '"IdPortafolio": ' + CAST(c.IdPortafolio AS VARCHAR) + ', '
+						 + '"ComisionCOD": ' + CAST(c.ComisionCOD AS VARCHAR) + ', '
+						 + '"ComisionCODAnticipated": ' + CAST(c.ComisionCODAnticipated AS VARCHAR) + ', '
                          + '"GuideDetail": [ '
                   FROM #PendingPaymentTempId pg
+				  INNER JOIN @CODAnticipatedTable c
+					ON pg.GuideSerie = c.GuideSerie AND pg.GuideNumber = c.GuideNumber
                   WHERE Id = @Index
               );
 
