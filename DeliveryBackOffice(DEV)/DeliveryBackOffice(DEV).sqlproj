@@ -103,6 +103,7 @@
     <Build Include="dbo\User Defined Types\TblLocationReview.sql" />
     <Build Include="dbo\User Defined Types\TblListGuidesTransfer.sql" />
     <Build Include="dbo\User Defined Types\TblListGuides.sql" />
+    <Build Include="dbo\User Defined Types\TblListGuidesWithAnticipatedCOD.sql" />    
     <Build Include="dbo\User Defined Types\TblListGuidePiece.sql" />
     <Build Include="dbo\User Defined Types\TblListGuideActa.sql" />
     <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />

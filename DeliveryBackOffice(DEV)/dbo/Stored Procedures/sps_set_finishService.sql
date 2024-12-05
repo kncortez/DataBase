@@ -1,7 +1,7 @@
 ﻿
 CREATE PROCEDURE [dbo].[sps_set_finishService]
     @InGuidesP VARCHAR(MAX)
-  , @TblListGuides AS TblListGuides READONLY
+  , @TblListGuides AS TblListGuidesWithAnticipatedCOD READONLY
   , @TblDetail AS TblPaymentList READONLY
   , @IdModuleP INT
   , @TokenP VARCHAR(100)
@@ -191,6 +191,7 @@ BEGIN
                  , lg.ExcludeCOD
                  , do.IdCustomer
                  , do.PriceShippment
+		 , lg.IsAnticipatedCOD
             INTO #listGuidesEnabled
             FROM #TblListGuidesTwo                              lg
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
@@ -555,14 +556,12 @@ BEGIN
                             )
                             SELECT lge.Guide_Serie
                                  , lge.Guide_Number
-                                 , CASE UPPER(@ServiceType)
-                                       WHEN 'PICKUP' THEN
-                                           21
-                                       WHEN 'DELIVERY' THEN
-                                           22
-                                       WHEN 'RETURN' THEN
-                                           23
-                                   END          StatusOrderId
+                                 , CASE 
+										WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN 52
+										WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
+										WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
+										WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
+									END StatusOrderId
                                  , @TokenP      UserCreated
                                  , @DateCreated DateCreated
                                  , @DateCreated DateCreatedInSystem
@@ -693,31 +692,65 @@ BEGIN
                                       AND pcd.IdProcessedGuideCOD IS NULL;
                             END;
 
+							----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA Recepción de guías Y SEA COD Anticipado ---------
+                            IF (UPPER(@ServiceType) = 'PICKUP')
+                            BEGIN
+								INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+								(
+									GuideSerie
+									, GuideNumber
+									, DataOriginId
+									, Token
+									, CustomerId
+									, IsAnticipatedCOD
+								)
+								OUTPUT inserted.IdProcessedGuideCOD,
+										inserted.GuideSerie,
+										inserted.GuideNumber
+								INTO #TempData
+								SELECT lge.Guide_Serie
+										, lge.Guide_Number
+										, 34
+										, @TokenP UserCreated
+										, cus.IdCustomer
+										, 1 AS 'IsAnticipatedCOD'
+								FROM #listGuidesEnabled            lge
+									INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
+										ON lge.Guide_Serie = dlo.Guide_Serie
+											AND lge.Guide_Number = dlo.Guide_Number
+									LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+										ON vp.CodeOfReference = dlo.Sender_ID
+									LEFT JOIN dbo.Customer         cus WITH (NOLOCK)
+										ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+									LEFT JOIN ProcessedGuideCOD    pcd WITH (NOLOCK)
+										ON pcd.GuideSerie = dlo.Guide_Serie
+											AND pcd.GuideNumber = dlo.Guide_Number
+								WHERE dlo.Collect_OnDelivery > 0
+									AND lge.IsAnticipatedCOD = 1
+									AND pcd.IdProcessedGuideCOD IS NULL
+							END;
+
                             UPDATE do
-                            SET do.StatusOrderId = (CASE UPPER(@ServiceType)
-                                                        WHEN 'PICKUP' THEN
-                                                            21
-                                                        WHEN 'DELIVERY' THEN
-                                                            22
-                                                        WHEN 'RETURN' THEN
-                                                            23
-                                                    END
-                                                   )
+                            SET do.StatusOrderId = 
+												CASE 
+													WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN 52
+													WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
+													WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
+													WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
+												END
                             FROM DeliveryOrder                do WITH (NOLOCK)
                                 INNER JOIN #listGuidesEnabled lge
                                     ON lge.Guide_Number = do.Guide_Number
                                        AND lge.Guide_Serie = do.Guide_Serie;
 
                             UPDATE dop
-                            SET StatusOrderId = (CASE UPPER(@ServiceType)
-                                                     WHEN 'PICKUP' THEN
-                                                         21
-                                                     WHEN 'DELIVERY' THEN
-                                                         22
-                                                     WHEN 'RETURN' THEN
-                                                         23
-                                                 END
-                                                )
+                            SET StatusOrderId =
+											CASE 
+												WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN 52
+												WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
+												WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
+												WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
+											END
                             FROM DeliveryOrderPiece           dop WITH (NOLOCK)
                                 INNER JOIN #listGuidesEnabled lge WITH (NOLOCK)
                                     ON lge.Guide_Number = dop.GuideNumber
