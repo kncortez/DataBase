@@ -88,7 +88,7 @@ BEGIN TRY
 				WHEN ACH.IsCODAnticipatedValid = 1 THEN 'TRUE'
 				ELSE 'FALSE'
 			 END													AS 'FlagApplicable'
-			,ACH.SaldoContra										AS 'NegativeBalance'
+			,ACH.AgaintsBalance										AS 'NegativeBalance'
 		FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
 			ON DO.IdCustomer = ACH.CustomerId
@@ -108,7 +108,7 @@ BEGIN TRY
 				  DO.Collect_OnDelivery								AS 'AmountCOD'
 				, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
 				, 0.00												AS 'ComisionCOD'
-				, ISNULL(ACC.AnticipatedCODComission,CP.Value)			AS 'ComisionCODAnticipated'
+				, ISNULL(ACC.AnticipatedCODComission,CP.Value)		AS 'ComisionCODAnticipated'
 				, RH.GuideAmountCOD									AS 'MaxAmountCODAnticipated'
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
