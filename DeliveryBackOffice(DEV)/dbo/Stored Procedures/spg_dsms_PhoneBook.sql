@@ -129,14 +129,14 @@ BEGIN
                CAST(DATEADD(DAY, 1, GETDATE()) AS DATE)
 		   WHEN SO.OrderDescription != 'En ruta'
                 AND DO.DeliveryETA > GETDATE() THEN
-               IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
+               IIF(DO.DeliveryETA IS NULL, CAST (GETDATE() AS DATE), CAST(DO.DeliveryETA AS DATE))
            ELSE
-               IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
+               IIF(DO.DeliveryETA IS NULL, CAST (GETDATE() AS DATE), CAST(DO.DeliveryETA AS DATE))
        END AS DeliveryETA,
 	   CS.Name AS CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
-	   CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',DO.InsuranceAmount,'* al recibir tu paquete o en la opción de pagar envío.') AS InsuranceAmount
+	   CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',DO.PriceShippment,'* al recibir tu paquete o en la opción de pagar envío.') AS InsuranceAmount
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
@@ -218,7 +218,7 @@ BEGIN
 	   CS.Name AS CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
-	   CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',DO.InsuranceAmount,'* al recibir tu paquete o en la opción de pagar envío.') AS InsuranceAmount
+	   CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',DO.PriceShippment,'* al recibir tu paquete o en la opción de pagar envío.') AS InsuranceAmount
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
