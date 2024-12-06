@@ -103,6 +103,7 @@
     <Build Include="dbo\User Defined Types\TblLocationReview.sql" />
     <Build Include="dbo\User Defined Types\TblListGuidesTransfer.sql" />
     <Build Include="dbo\User Defined Types\TblListGuides.sql" />
+    <Build Include="dbo\User Defined Types\TblListGuidesWithAnticipatedCOD.sql" />    
     <Build Include="dbo\User Defined Types\TblListGuidePiece.sql" />
     <Build Include="dbo\User Defined Types\TblListGuideActa.sql" />
     <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />
@@ -1741,6 +1742,7 @@
     <Build Include="dbo\Stored Procedures\AddSAPCode.sql" />
     <Build Include="dbo\Stored Procedures\AddMarketplaceProductstoCart.sql" />
     <Build Include="dbo\Stored Procedures\ActiveProductMarketplace.sql" />
+	<Build Include="dbo\Stored Procedures\GetUpdateRegisterCODearly.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />

@@ -17,7 +17,10 @@
 -- Create date: <2023-03-02>
 -- Description:	<En proceso de entregas desde CourierApp, cuando sea flujo de guías marcadas para devolución, ingresar las guías marcadas para devolución al proceso de COD para lotes Collect>
 -- =============================================
-
+-- Author:		<Brandon Pedroza>
+-- Update date: <2024-11-29>
+-- Description:	<Se agrega validacion para no insertar registro en ProcessedGuideCOD si la guia fue creada con cod anticipado>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
@@ -92,6 +95,10 @@ BEGIN
     -- Variables para verificar ubicación en geocerca
     DECLARE @FixedLatitude NVARCHAR(20) = @Latitude;
     DECLARE @FixedLongitude NVARCHAR(20) = @Longitude;
+
+	--Variable para validar si la guia ha sido procesada en un lote al momento de entrega
+	DECLARE @IsGuideProcessed BIT;
+	SET @IsGuideProcessed = IIF(EXISTS (SELECT 1 FROM ProcessedGuideCOD WITH(NOLOCK)WHERE GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie), 1, 0);
 
     BEGIN TRY
 
@@ -835,14 +842,18 @@ BEGIN
 				END CATCH
 				-------------------FORZA POINTS.FIN------------------------------
                 -- ********************************** PROCESO DE COD ********************************************************************************
-                INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+                --VALIDAR SI LA GUIA ES NO ES COD ANTICIPADO
+				IF(@IsGuideProcessed = 0)
+				BEGIN
+				INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
                 (
                     GuideSerie,
                     GuideNumber,
                     CourierManId,
                     DataOriginId,
                     Token,
-                    CustomerId
+                    CustomerId,
+					IsAnticipatedCOD
                 )
                 SELECT ord.Guide_Serie AS 'GuideSerie',
                        ord.Guide_Number AS 'GuideNumber',
@@ -853,7 +864,8 @@ BEGIN
                        ) AS 'CourierManId',
                        @DataOriginId AS 'DataOriginId',
                        @Token AS 'Token',
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = ord.Sender_ID
@@ -873,7 +885,8 @@ BEGIN
                        ) AS 'CourierManId',
                        @DataOriginId AS 'DataOriginId',
                        @Token AS 'Token',
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = ord.Sender_ID
@@ -894,7 +907,8 @@ BEGIN
                        ) AS 'CourierManId',
                        @DataOriginId AS 'DataOriginId',
                        @Token AS 'Token',
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
                     INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                         ON ord.Guide_Serie = DOP.GuideSerie
@@ -908,6 +922,85 @@ BEGIN
                       AND IsCollect = 'false'
                       AND DOP.TimePlaId = 2
                       AND StatusOrderId = 5;
+				END;
+				ELSE --VALIDACION DE GUIA ES COD ANTICIPADO
+				BEGIN
+					;WITH DataToUpdate AS
+					(
+						SELECT ord.Guide_Serie AS GuideSerie,
+							   ord.Guide_Number AS GuideNumber,
+							   (
+								   SELECT TOP 1 IdCourierman
+								   FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
+								   WHERE LogTokenPOD = @Token
+							   ) AS CourierManId,
+							   @DataOriginId AS DataOriginId,
+							   @Token AS Token,
+							   cus.IdCustomer
+						FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+							LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+								ON vp.CodeOfReference = ord.Sender_ID
+							LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+								ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
+						WHERE Guide_Serie = @GuideSerie
+							  AND Guide_Number = @GuideNumber
+							  AND Collect_OnDelivery > 0
+							  AND StatusOrderId = 5
+						UNION
+						SELECT ord.Guide_Serie AS GuideSerie,
+							   ord.Guide_Number AS GuideNumber,
+							   (
+								   SELECT TOP 1 IdCourierman
+								   FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
+								   WHERE LogTokenPOD = @Token
+							   ) AS CourierManId,
+							   @DataOriginId AS DataOriginId,
+							   @Token AS Token,
+							   cus.IdCustomer
+						FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+							LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+								ON vp.CodeOfReference = ord.Sender_ID
+							LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+								ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
+						WHERE Guide_Serie = @GuideSerie
+							  AND Guide_Number = @GuideNumber
+							  AND Collect_OnDelivery = 0
+							  AND IsCollect = 'true'
+							  AND StatusOrderId = 5
+						UNION
+						SELECT ord.Guide_Serie AS GuideSerie,
+							   ord.Guide_Number AS GuideNumber,
+							   (
+								   SELECT TOP 1 IdCourierman
+								   FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
+								   WHERE LogTokenPOD = @Token
+							   ) AS CourierManId,
+							   @DataOriginId AS DataOriginId,
+							   @Token AS Token,
+							   cus.IdCustomer
+						FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+							INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
+								ON ord.Guide_Serie = DOP.GuideSerie
+								   AND ord.Guide_Number = DOP.GuideNumber
+							LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+								ON vp.CodeOfReference = ord.Sender_ID
+							LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+								ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
+						WHERE Guide_Serie = @GuideSerie
+							  AND Guide_Number = @GuideNumber
+							  AND IsCollect = 'false'
+							  AND DOP.TimePlaId = 2
+							  AND StatusOrderId = 5
+					)
+					UPDATE p
+					SET p.CourierManId = d.CourierManId,
+						p.DataOriginId = d.DataOriginId,
+						p.Token = d.Token,
+						p.CustomerId = d.IdCustomer					
+					FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p
+					INNER JOIN DataToUpdate d
+						ON p.GuideSerie = d.GuideSerie AND p.GuideNumber = d.GuideNumber;
+				END; --FIN VALIDACION COD ANTICIPADO
             -- ********************************** FIN PROCESO DE COD ********************************************************************************
             END;
         END;
@@ -930,7 +1023,9 @@ BEGIN
 
 		 IF(EXISTS(SELECT  Top 1 1 FROM [dbo].[DeliveryOrder] dlo WITH (NOLOCK) WHERE dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1)) -- guía marcada para devolución
             BEGIN
-		
+			--VALIDAR SI NO ES GUIA COD ANTICIPADO
+			  IF(@IsGuideProcessed = 0)
+			  BEGIN
 			-- agregar guía marcada para devolución en tabla de proceso de COD
 			  INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
                                 (
@@ -938,13 +1033,15 @@ BEGIN
                                     GuideNumber,
                                     DataOriginId,
                                     Token,
-                                    CustomerId
+                                    CustomerId,
+									IsAnticipatedCOD
                                 )
                                 SELECT @GuideSerie,
                                        @GuideNumber,
                                        @DataOriginId,
                                        @Token,
-                                       cus.IdCustomer
+                                       cus.IdCustomer,
+									   0 AS 'IsAnticipatedCOD'
                                 FROM DeliveryOrder dlo WITH (NOLOCK)
                                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                                         ON vp.CodeOfReference = Case when  dlo.IsLastMileReturn = 1 AND  dlo.Sender_ID != 0  Then dlo.Sender_ID Else dlo.Receiver_ID End
@@ -954,6 +1051,42 @@ BEGIN
                                         ON pcd.GuideSerie = dlo.Guide_Serie
                                            AND pcd.GuideNumber = dlo.Guide_Number
                                 WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1 AND dlo.[IsCollect] = 1
+					END;
+					ELSE --SENTENCIA SI ES GUIA COD ANTICIPADO
+					BEGIN
+						;WITH DataToUpdate AS
+						(
+							SELECT 
+								@GuideSerie AS GuideSerie,
+								@GuideNumber AS GuideNumber,
+								@DataOriginId AS DataOriginId,
+								@Token AS Token,
+								cus.IdCustomer AS CustomerId
+							FROM DeliveryOrder dlo WITH (NOLOCK)
+								LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+									ON vp.CodeOfReference = CASE 
+															   WHEN dlo.IsLastMileReturn = 1 AND dlo.Sender_ID != 0 THEN dlo.Sender_ID 
+															   ELSE dlo.Receiver_ID 
+														   END
+								LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+									ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+								LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+									ON pcd.GuideSerie = dlo.Guide_Serie AND pcd.GuideNumber = dlo.Guide_Number
+							WHERE pcd.IdProcessedGuideCOD IS NULL 
+								  AND dlo.Guide_Serie = @GuideSerie
+								  AND dlo.Guide_Number = @GuideNumber
+								  AND dlo.IsLastMileReturn = 1
+								  AND dlo.IsCollect = 1
+						)
+						UPDATE p
+						SET p.DataOriginId = d.DataOriginId,
+							p.Token = d.Token,
+							p.CustomerId = d.CustomerId
+						FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p
+						INNER JOIN DataToUpdate d
+							ON p.GuideSerie = d.GuideSerie AND p.GuideNumber = d.GuideNumber;
+					END;
+					--FIN VALIDACION DE GUIA ES COD ANTICIPADO
                  END
 
 		-- Actualizar ubicación de punto de visita correspondiente
