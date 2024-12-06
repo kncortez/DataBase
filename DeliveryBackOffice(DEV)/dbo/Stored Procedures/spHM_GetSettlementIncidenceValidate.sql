@@ -62,6 +62,7 @@ BEGIN
 			FROM CatManagementLevel 
 			WHERE MinAmount <= msi.TotalAmount 
 			  AND msi.TotalAmount  <= isnull(MaxAmount,100000)
+			  AND CountryId = @CountryId
 		)v2
 		outer apply(
 			SELECT ISNULL(cml.MaxAmount,0)      [MaxAmount]
@@ -81,6 +82,7 @@ BEGIN
 		AND ( @CourierId = 0 or sr.ID = @CourierId )
 		AND ( @IncidenceId = 0 or cti.IdIncidenceType = @IncidenceId )
 		AND ( @HubId = 0 or cr.IdRoute = @HubId )
+		AND  msi.CountryId = @CountryId
 	ORDER BY msi.DateCreated desc;
 
 END
