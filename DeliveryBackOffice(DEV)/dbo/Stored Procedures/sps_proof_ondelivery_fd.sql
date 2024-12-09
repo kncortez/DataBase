@@ -1015,7 +1015,12 @@ BEGIN
 					SET p.CourierManId = d.CourierManId,
 						p.DataOriginId = d.DataOriginId,
 						p.Token = d.Token,
-						p.CustomerId = d.IdCustomer					
+						p.CustomerId = d.IdCustomer	
+					OUTPUT
+						INSERTED.GuideSerie,
+						INSERTED.GuideNumber,
+						INSERTED.IdProcessedGuideCOD
+					INTO #GuidesProcessCOD
 					FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p
 					INNER JOIN DataToUpdate d
 						ON p.GuideSerie = d.GuideSerie AND p.GuideNumber = d.GuideNumber;
@@ -1107,6 +1112,11 @@ BEGIN
 						SET p.DataOriginId = d.DataOriginId,
 							p.Token = d.Token,
 							p.CustomerId = d.CustomerId
+						OUTPUT
+							INSERTED.GuideSerie,
+							INSERTED.GuideNumber,
+							INSERTED.IdProcessedGuideCOD
+						INTO #GuidesProcessCOD
 						FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p
 						INNER JOIN DataToUpdate d
 							ON p.GuideSerie = d.GuideSerie AND p.GuideNumber = d.GuideNumber;
