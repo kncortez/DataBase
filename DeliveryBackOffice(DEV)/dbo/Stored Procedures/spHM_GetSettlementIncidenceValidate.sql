@@ -58,11 +58,11 @@ BEGIN
 			WHERE  iu.IdUser = msi.IdValidator
 		) V
 		outer apply(
-			SELECT ManagementLevelName 
+			SELECT ManagementLevelName MLN
 			FROM CatManagementLevel 
-			WHERE MinAmount <= msi.TotalAmount 
+			WHERE MLN.MinAmount <= msi.TotalAmount 
 			  AND msi.TotalAmount  <= isnull(MaxAmount,100000)
-			  AND CountryId = @CountryId
+			  AND MLN.CountryId = @CountryId
 		)v2
 		outer apply(
 			SELECT ISNULL(cml.MaxAmount,0)      [MaxAmount]
