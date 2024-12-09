@@ -272,6 +272,24 @@ BEGIN TRY
 					ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
 				WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 			END;
+
+			--Consulta para obtener el valor de saldo disponible
+			SELECT 
+			COALESCE((
+				SELECT 
+					ACH.DailyAmount - SUM(ACD.CollectOnDelivery)
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail ACD WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
+					ON ACD.AnticipatedCODHeaderId = ACH.IdAnticipatedCODHeader
+				WHERE ACH.PortfolioId = @CustomerPortfolio AND ACD.RowStatus = 1 
+				  AND ACD.DateCreated >= CAST(GETDATE() AS DATE) 
+				  AND ACD.DateCreated < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
+				GROUP BY ACH.DailyAmount),
+				(SELECT TOP 1 ACH.DailyAmount
+				 FROM DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
+				 WHERE ACH.PortfolioId = @CustomerPortfolio)
+				) AS 'AvailableBalance';
+
 		END;
 		ELSE --CLIENTE TIPO CORPORATIVO/INDIVIDUAL
 		BEGIN
@@ -426,6 +444,25 @@ BEGIN TRY
 					ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
 				WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 			END;
+
+			--Consulta para obtener el valor de saldo disponible
+			SELECT 
+			COALESCE((
+				SELECT 
+					ACH.DailyAmount - SUM(ACD.CollectOnDelivery)
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail ACD WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
+					ON ACD.AnticipatedCODHeaderId = ACH.IdAnticipatedCODHeader
+				WHERE ACH.CustomerId = @IdCustomer AND ACD.RowStatus = 1 
+				  AND ACD.DateCreated >= CAST(GETDATE() AS DATE) 
+				  AND ACD.DateCreated < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
+				GROUP BY ACH.DailyAmount
+			),
+			(SELECT TOP 1 ACH.DailyAmount
+				 FROM DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
+				 WHERE ACH.CustomerId = @IdCustomer)
+			) AS 'AvailableBalance';
+
 		END;
 	END;
 	ELSE
