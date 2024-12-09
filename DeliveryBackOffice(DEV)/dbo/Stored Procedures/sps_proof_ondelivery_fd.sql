@@ -17,6 +17,11 @@
 -- Create date: <2023-03-02>
 -- Description:	<En proceso de entregas desde CourierApp, cuando sea flujo de guías marcadas para devolución, ingresar las guías marcadas para devolución al proceso de COD para lotes Collect>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Azurdia>
+-- Update date: <2024-11-18>
+-- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
@@ -36,9 +41,21 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @ImageCold VARCHAR(300),
     @CODPayment DECIMAL(12, 2) = 0,
     @ExcludeCODPyament BIT = 'false',
+    @Receiver_CUI NVARCHAR(25) = '',
 	@IdCountry NVARCHAR(8) = 'GT'
 AS
 BEGIN
+	
+	DROP TABLE IF EXISTS #GuidesProcessCOD
+	--TABLA PARA PODER CONFIRMAR QUE LA TRANSACCCION COD HA SIDO REALIZADA CORRECTAMENTE
+	CREATE TABLE #GuidesProcessCOD
+    (
+		GuideSerie NVARCHAR(8),
+		GuideNumber INT,
+		BatchCodId INT,
+		CONSTRAINT PK_GuidesProcessCOD PRIMARY KEY (GuideSerie, GuideNumber)
+    );
+
     -- control de inserciones para transacción
     DECLARE @RInserted INT;
     DECLARE @IsReturn BIT = 0;
@@ -123,10 +140,10 @@ BEGIN
                                                    ON G.IdGeofence = GP.IdGeofence
                                                INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
-                                           WHERE G.CountryId = @IdCountry -- Geocerca de GT
-												 AND G.RowStatus = 1
+                                           WHERE G.RowStatus = 1
 												 AND GP.RowStatus = 1
 												 AND P.RowStatus = 1
+                                                 AND G.IdGeofence = 1 -- Geocerca de GT
                                            ORDER BY GP.GeofencePointOrder ASC
                                            FOR XML PATH(''), TYPE
                                        ).value('.', 'varchar(max)'),
@@ -160,12 +177,10 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-
         PRINT 'ERROR IN GEOLOCATION';
 
         SET @FixedLatitude = NULL;
         SET @FixedLongitude = NULL;
-
     END CATCH;
 
     BEGIN TRANSACTION;
@@ -320,6 +335,7 @@ BEGIN
                 -- actualizar tabla de registro de guías electrónicas
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET NameOfReceiver = @ReceiverName,
+					Receiver_CUI = @Receiver_CUI,
                     StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
                                         @StatusEXC,
                                         IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
@@ -341,13 +357,12 @@ BEGIN
 				  
 					;WITH LatestID AS (
 									SELECT TOP 1
-										A.Guide_Serie,
 										A.Guide_Number,
 										MAX(ID) AS LastID
 									FROM 
 										[dbo].[DeliverySettlementDetail] A WITH (NOLOCK)
 									WHERE Guide_Serie = @GuideSerie AND  Guide_Number = @GuideNumber
-								GROUP BY Guide_Number, Guide_Serie
+								GROUP BY Guide_Number
 								)
 								UPDATE ds
 								SET 
@@ -359,7 +374,6 @@ BEGIN
 								INNER JOIN 
 									[LatestID] li 
 								ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
-									AND ds.Guide_Serie = li.Guide_Serie
 					
 				---------------------------------------------------------------------------------------------
 
@@ -519,7 +533,6 @@ BEGIN
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
-										AND do.Guide_Serie = @GuideSerie
 										AND WHE.TypeConnectionId = 2
 									GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -554,7 +567,6 @@ BEGIN
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
-									AND do.Guide_Serie = @GuideSerie
 									AND dop.ExternalPieceId IS NOT NULL
 									AND WHE.TypeConnectionId = 2
 									GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -844,6 +856,11 @@ BEGIN
                     Token,
                     CustomerId
                 )
+				OUTPUT						
+						INSERTED.GuideSerie,
+						INSERTED.GuideNumber,
+						INSERTED.IdProcessedGuideCOD
+				INTO #GuidesProcessCOD
                 SELECT ord.Guide_Serie AS 'GuideSerie',
                        ord.Guide_Number AS 'GuideNumber',
                        (
@@ -940,6 +957,12 @@ BEGIN
                                     Token,
                                     CustomerId
                                 )
+								OUTPUT						
+									INSERTED.GuideSerie,
+									INSERTED.GuideNumber,
+									INSERTED.IdProcessedGuideCOD
+								INTO #GuidesProcessCOD
+
                                 SELECT @GuideSerie,
                                        @GuideNumber,
                                        @DataOriginId,
@@ -1004,7 +1027,7 @@ BEGIN
 					IF 
 						(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
 					BEGIN
-					
+						
 						-- Si existe una ubicación para registrar
 						-- Distancia (en metros) entre recolección y el punto de visita
 						-- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicación correcta
@@ -1012,7 +1035,6 @@ BEGIN
 						BEGIN
 							-- Si la distancia es menor a 10 metros
 							-- Guardar última ubicación
-							
 							UPDATE
 								[DeliveryBackOffice].[dbo].[VisitPointClient]
 							SET
@@ -1038,7 +1060,6 @@ BEGIN
 						END
 						ELSE
 						BEGIN
-							   
 								-- Guardar nueva ubicación de recolección en "bitácora" para revisión
 								UPDATE
 									[DeliveryBackOffice].[dbo].[VisitPointClient]
@@ -1128,6 +1149,14 @@ BEGIN
                    @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide';
 
         COMMIT TRANSACTION;
+
+		UPDATE pgc
+        SET pgc.IsCompleted = 1 
+        FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH (NOLOCK)
+            INNER JOIN #GuidesProcessCOD gpc
+                ON pgc.GuideSerie = gpc.GuideSerie
+                AND pgc.GuideNumber = gpc.GuideNumber
+				AND pgc.IdProcessedGuideCOD = gpc.BatchCodId;
     END;
     ELSE
         SELECT 0 AS 'StatusCode',
