@@ -140,10 +140,10 @@ BEGIN
                                                    ON G.IdGeofence = GP.IdGeofence
                                                INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
-                                           WHERE G.RowStatus = 1
+                                           WHERE G.CountryId = @IdCountry -- Geocerca de GT
+												 AND G.RowStatus = 1
 												 AND GP.RowStatus = 1
 												 AND P.RowStatus = 1
-                                                 AND G.IdGeofence = 1 -- Geocerca de GT
                                            ORDER BY GP.GeofencePointOrder ASC
                                            FOR XML PATH(''), TYPE
                                        ).value('.', 'varchar(max)'),
@@ -335,7 +335,6 @@ BEGIN
                 -- actualizar tabla de registro de guías electrónicas
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET NameOfReceiver = @ReceiverName,
-					Receiver_CUI = @Receiver_CUI,
                     StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
                                         @StatusEXC,
                                         IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
@@ -357,12 +356,13 @@ BEGIN
 				  
 					;WITH LatestID AS (
 									SELECT TOP 1
+										A.Guide_Serie,
 										A.Guide_Number,
 										MAX(ID) AS LastID
 									FROM 
 										[dbo].[DeliverySettlementDetail] A WITH (NOLOCK)
 									WHERE Guide_Serie = @GuideSerie AND  Guide_Number = @GuideNumber
-								GROUP BY Guide_Number
+								GROUP BY Guide_Number, Guide_Serie
 								)
 								UPDATE ds
 								SET 
@@ -374,6 +374,7 @@ BEGIN
 								INNER JOIN 
 									[LatestID] li 
 								ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
+									AND ds.Guide_Serie = li.Guide_Serie
 					
 				---------------------------------------------------------------------------------------------
 
@@ -533,6 +534,7 @@ BEGIN
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
+										AND do.Guide_Serie = @GuideSerie
 										AND WHE.TypeConnectionId = 2
 									GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -567,6 +569,7 @@ BEGIN
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
+									AND do.Guide_Serie = @GuideSerie
 									AND dop.ExternalPieceId IS NOT NULL
 									AND WHE.TypeConnectionId = 2
 									GROUP BY dop.GuideSerie,dop.GuideNumber

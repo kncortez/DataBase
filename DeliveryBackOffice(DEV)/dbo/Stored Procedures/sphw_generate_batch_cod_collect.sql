@@ -95,7 +95,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
                     WHERE db.Name = @BankName
                           AND db.Id_status = 1
-                          AND db.Id_country = @IdCountrySender
+                          AND ISNULL(db.Id_country,'GT') = @IdCountrySender
                 );
         DECLARE @CreditAccountId INT;
         DECLARE @CreditAccountName NVARCHAR(2000);
@@ -178,7 +178,6 @@ BEGIN
                            LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                                ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerId)
                        WHERE pg.BatchCODId IS NULL
-							 AND pg.IsCompleted = 1
                              AND do.Collect_OnDelivery = 0
                              AND do.IsCollect = 'true'
                              AND pg.BatchCODIdCommission IS NULL
@@ -199,9 +198,10 @@ BEGIN
                              --AND ( cus.IdCustomerType IN(2,3)
                              --OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))						
 
-                             AND pg.Date > '2022-03-14 22:00:00.000'
+                             AND pg.Date > '2024-09-30 00:00:00.000'
                              -- AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                              AND do.StatusOrderId != 7
+                             --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
 							 AND do.SenderCountryId = @IdCountrySender
                        FOR XML PATH('')
                    ),
@@ -251,9 +251,11 @@ BEGIN
                 Guide_Serie NVARCHAR(2),
                 Guide_Number INT
             );
-            CREATE NONCLUSTERED INDEX tempSerie ON #listGuides (Guide_Serie);
-            CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Number);
-            CREATE TABLE #RevalueGuides
+            --CREATE NONCLUSTERED INDEX tempSerie ON #listGuides (Guide_Serie);
+            --CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Number);
+            CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Serie,Guide_Number);
+            
+			CREATE TABLE #RevalueGuides
             (
                 fila INT,
                 Guide_Serie NVARCHAR(2),
@@ -281,7 +283,7 @@ BEGIN
                         WHERE rh.RheRowStatus = 1
                               AND rh.RheDefault = 1
 							  AND rh.RateTypeId = 1
-							  AND rh.CountryId = @IdCountrySender
+							  AND ISNULL(rh.CountryId,'GT') = @IdCountrySender
                     );
             DECLARE @IdRate INT;
             DECLARE @CODRateDefault DECIMAL(12, 2) =
@@ -290,7 +292,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODRateDef'
                               AND Status = 1
-							  AND cf.IdCountry = @IdCountrySender
+							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
                     );
             DECLARE @CODExemptDefault DECIMAL(12, 2) =
                     (
@@ -298,7 +300,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODExemptDef'
                               AND Status = 1
-							  AND cf.IdCountry = @IdCountrySender
+							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
                     );
 
             ---- Revalorizar guias que no tengan un precio asociado ---------------------------------------------
@@ -963,7 +965,11 @@ BEGIN
                            DiscountPrice,
 						   @IdCountrySender
                     FROM #TableForzaPaymentTemp tfpt
-					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c 
+					  -- WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
+					   WITH (NOLOCK) ON C.GuideSerie = tfpt.GuideSerie
+					   AND C.GuideNumber = tfpt.GuideNumber
+
                     WHERE NOT EXISTS
                     (
                         SELECT 1
@@ -990,7 +996,6 @@ BEGIN
                         ON pgc.GuideSerie = tfpt.GuideSerie
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
-					  AND pgc.IsCompleted = 1
                       AND pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1;
             END;
@@ -1024,7 +1029,6 @@ BEGIN
                         ON pgc.GuideSerie = tfpt.GuideSerie
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
-					  AND pgc.IsCompleted = 1
                       AND pgc.RowStatus = 1;
             END;
         END;
