@@ -704,39 +704,84 @@ BEGIN
 							----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA Recepción de guías Y SEA COD Anticipado ---------
                             IF (UPPER(@ServiceType) = 'PICKUP')
                             BEGIN
-								INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
-								(
-									GuideSerie
-									, GuideNumber
-									, DataOriginId
-									, Token
-									, CustomerId
-									, IsAnticipatedCOD
-								)
-								OUTPUT inserted.IdProcessedGuideCOD,
-										inserted.GuideSerie,
-										inserted.GuideNumber
-								INTO #TempData
-								SELECT lge.Guide_Serie
-										, lge.Guide_Number
-										, 34
-										, @TokenP UserCreated
-										, cus.IdCustomer
-										, 1 AS 'IsAnticipatedCOD'
+								DECLARE @GuideSerieT NVARCHAR(2);
+								DECLARE @GuideNumberT NVARCHAR(50);
+								DECLARE @Code INT;
+								DECLARE @Message NVARCHAR(250);
+							
+								CREATE TABLE #GuidesToProcessTEMP (
+									GuideSerieTEMP NVARCHAR(2),
+									GuideNumberTEMP NVARCHAR(50)
+								);
+
+								INSERT INTO #GuidesToProcessTEMP (GuideSerieTEMP, GuideNumberTEMP)
+								SELECT dlo.Guide_Serie, dlo.Guide_Number
 								FROM #listGuidesEnabled            lge
 									INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
 										ON lge.Guide_Serie = dlo.Guide_Serie
 											AND lge.Guide_Number = dlo.Guide_Number
-									LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-										ON vp.CodeOfReference = dlo.Sender_ID
-									LEFT JOIN dbo.Customer         cus WITH (NOLOCK)
-										ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-									LEFT JOIN ProcessedGuideCOD    pcd WITH (NOLOCK)
-										ON pcd.GuideSerie = dlo.Guide_Serie
-											AND pcd.GuideNumber = dlo.Guide_Number
 								WHERE dlo.Collect_OnDelivery > 0
 									AND lge.IsAnticipatedCOD = 1
-									AND pcd.IdProcessedGuideCOD IS NULL
+
+								WHILE EXISTS (SELECT 1 FROM #GuidesToProcessTEMP)
+								BEGIN
+									SELECT TOP 1 
+										@GuideSerieT = GuideSerieTEMP, 
+										@GuideNumberT = GuideNumberTEMP
+									FROM #GuidesToProcessTEMP;
+
+									EXEC [dbo].[SetServiceRecolectCODAnticipated] 
+										@GuideSerieT,  
+										@GuideNumberT,
+										@TokenP,
+										@Code OUTPUT,
+										@Message OUTPUT;
+
+									IF (@Code = 200)
+									BEGIN
+										INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+										(
+											GuideSerie
+											, GuideNumber
+											, DataOriginId
+											, Token
+											, CustomerId
+											, IsAnticipatedCOD
+										)
+										OUTPUT inserted.IdProcessedGuideCOD,
+												inserted.GuideSerie,
+												inserted.GuideNumber
+										INTO #TempData
+										SELECT lge.Guide_Serie
+												, lge.Guide_Number
+												, 34
+												, @TokenP UserCreated
+												, cus.IdCustomer
+												, 1 AS 'IsAnticipatedCOD'
+										FROM #listGuidesEnabled            lge
+											INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
+												ON lge.Guide_Serie = dlo.Guide_Serie
+													AND lge.Guide_Number = dlo.Guide_Number
+											LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+												ON vp.CodeOfReference = dlo.Sender_ID
+											LEFT JOIN dbo.Customer         cus WITH (NOLOCK)
+												ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+											LEFT JOIN ProcessedGuideCOD    pcd WITH (NOLOCK)
+												ON pcd.GuideSerie = dlo.Guide_Serie
+													AND pcd.GuideNumber = dlo.Guide_Number
+										WHERE dlo.Collect_OnDelivery > 0
+											AND lge.IsAnticipatedCOD = 1
+											AND pcd.IdProcessedGuideCOD IS NULL
+											AND lge.Guide_Serie = @GuideSerieT
+											AND lge.Guide_Number = @GuideNumberT
+									END;
+
+									DELETE FROM #GuidesToProcessTEMP
+									WHERE GuideSerieTEMP = @GuideSerieT AND GuideNumberTEMP = @GuideNumberT;
+								END;
+
+								DROP TABLE #GuidesToProcessTEMP;							
+						
 							END;
 
                             UPDATE do
