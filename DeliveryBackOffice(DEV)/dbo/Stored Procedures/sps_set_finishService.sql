@@ -1,5 +1,5 @@
 ﻿
-CREATE PROCEDURE [dbo].[sps_set_finishService]
+ALTER PROCEDURE [dbo].[sps_set_finishService]
     @InGuidesP VARCHAR(MAX)
   , @TblListGuides AS TblListGuidesWithAnticipatedCOD READONLY
   , @TblDetail AS TblPaymentList READONLY
@@ -34,10 +34,10 @@ BEGIN
         IdPointPromo INT
       , PointPromoDescription NVARCHAR(400)
       , Monday BIT
-      , Tuesday BIT
+      , Tuesday BIT 
       , Wednesday BIT
       , Thursday BIT
-      , Friday BIT
+      , Friday BIT  
       , Saturday BIT
       , Sunday BIT
       , PointPromoFactor DECIMAL
@@ -585,7 +585,6 @@ BEGIN
                             --@CUI+'-'+@Name
                             FROM #listGuidesEnabled lge;
 
-
                             UPDATE dot
                             SET dot.Observations = 'Entregado a ' + @Name + ', Entrega sin cobro COD '
                                                    + @VoucherExclude + ' ' + @ResponsibleExclude
@@ -596,10 +595,44 @@ BEGIN
                             WHERE lge.ExcludeCOD = 1
                                   AND dot.StatusOrderId = 22;
 
+                             UPDATE acodh
+                                SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
+                               FROM #listGuidesEnabled lge
+                                    INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
+                                            ON lge.Guide_Serie = acodd.GuideSerie
+                                           AND lge.Guide_Number = acodd.GuideNumber
+                                           AND acodd.RowStatus = 1
+                                    INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
+                                            ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
+                                    INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
+                                            ON bdcod.GuideSerie = lge.Guide_Serie
+                                           AND bdcod.GuideNumber = lge.Guide_Number
+                                    INNER JOIN DeliveryOrderDetail dot WITH (NOLOCK)
+                                            ON lge.Guide_Number = dot.Guide_Number
+                                           AND lge.Guide_Serie = dot.Guide_Serie
+                              WHERE dot.StatusOrderId = 23
+                                AND lge.excludeCOd = 0
+                                AND bdcod.Excluded = 0
+                                AND bdcod.CatTransactionTypeCODId = 2;
 
-
-
-
+                           UPDATE acodh
+                              SET acodh.BalanceStatus = 'DEVOLUCION'
+                             FROM AnticipatedCODDetail acodh
+                                  INNER JOIN #listGuidesEnabled tug
+                                          ON tug.Guide_Serie = acodh.GuideSerie
+                                         AND tug.Guide_Number = acodh.GuideNumber
+                                  INNER JOIN AnticipatedCODHeader acod WITH(NOLOCK)
+                                          ON acod.IdAnticipatedCODHeader = acodh.AnticipatedCODHeaderId
+                                  INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
+                                          ON bdcod.GuideSerie = tug.Guide_Serie
+                                         AND bdcod.GuideNumber = tug.Guide_Number
+                                  INNER JOIN DeliveryOrderDetail dot WITH (NOLOCK)
+                                          ON tug.Guide_Number = dot.Guide_Number
+                                         AND tug.Guide_Serie = dot.Guide_Serie
+                            WHERE bdcod.Excluded = 0        
+                              AND bdcod.CatTransactionTypeCODId = 2
+                              AND dot.StatusOrderId = 23
+                              AND tug.excludeCOd = 0;
 
                             ----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA ENTREGA Y SEA COD---------
                             IF (UPPER(@ServiceType) = 'DELIVERY')
