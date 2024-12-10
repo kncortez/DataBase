@@ -230,8 +230,8 @@ FROM DeliveryBackOffice.dbo.CatStatusProcess CST WITH (NOLOCK)
 
 	SELECT 
 		@Piezas = CASE 
-					 WHEN COUNT(DOP.ParcelCode) = 1 THEN '1 pieza'
-					 ELSE CAST(COUNT(DOP.ParcelCode) AS NVARCHAR(5)) + ' piezas'
+					 WHEN COUNT(DOP.NoPiece) = 1 THEN '1 pieza'
+					 ELSE CAST(COUNT(DOP.NoPiece) AS NVARCHAR(5)) + ' piezas'
 				  END,
 		@Description = STRING_AGG(DOP.Detail, ', ')
 	FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
