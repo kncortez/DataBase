@@ -222,6 +222,13 @@ BEGIN TRY
 							END
 					END													AS 'ComisionCODAnticipated'
 					, RH.GuideAmountCOD									AS 'MaxAmountCODAnticipated'
+					, CASE
+						WHEN VPC.ExcludePriceShippingCOD = 1 OR C.ExcludePriceShippingCOD = 1
+						THEN
+							0
+						ELSE
+							DO.PriceShippment
+					  END												AS 'Shipping'
 				FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 				LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 					ON VPC.CodeOfReference = DO.Sender_ID
@@ -394,6 +401,13 @@ BEGIN TRY
 							END
 					END													AS 'ComisionCODAnticipated'
 					, RH.GuideAmountCOD									AS 'MaxAmountCODAnticipated'
+					, CASE
+						WHEN VPC.ExcludePriceShippingCOD = 1 OR C.ExcludePriceShippingCOD = 1
+						THEN
+							0
+						ELSE
+							DO.PriceShippment
+					  END												AS 'Shipping'
 				FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 				LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 					ON VPC.CodeOfReference = DO.Sender_ID
