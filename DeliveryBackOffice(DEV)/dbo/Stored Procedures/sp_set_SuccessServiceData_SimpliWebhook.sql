@@ -4,7 +4,10 @@
 -- Create date: <2021-09-30>
 -- Description:	< Realiza updates en las tablas de ExtPlatformService e ingresa datos como el SP SetProofOnDelivery >
 -- =============================================
-
+-- Author:		<Tito Garcia>
+-- Updated date:<18-11-2024>
+-- Description:	<Se agrega nueva validación IsCompleted>
+-- =============================================
 CREATE PROCEDURE [dbo].[sp_set_SuccessServiceData_SimpliWebhook]
 	-- DATA PLAN
 	@PlanID NVARCHAR(50),
@@ -70,6 +73,16 @@ BEGIN
 	DECLARE @IdDeliveryOption AS INT  = (SELECT IdDeliveryOption FROM DeliveryBackOffice.dbo.CatDeliveryOptions WHERE Name = 'Express Center') --FDAPI-337
 	--Se obtiene el IdDeliveryOption que tiene la guía
 	DECLARE @IdDeliveryOptionGuide AS INT  = (SELECT IdDeliveryOption FROM DeliveryBackOffice.dbo.DeliveryOrder WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber ) --FDAPI-337
+
+	IF OBJECT_ID('tempdb.dbo.#InsertedRecordT', 'U') IS NOT NULL
+		DROP TABLE #InsertedRecordT;
+
+	CREATE TABLE #InsertedRecordT (
+		GuideNumber INT,
+		GuideSerie  NVARCHAR(2),
+		IdProcessedGuideCOD INT
+	);
+	CREATE NONCLUSTERED INDEX INDX_ProcessedGuideCOD_Te ON #InsertedRecordT (GuideSerie, GuideNumber);
 
 	BEGIN TRANSACTION
 	BEGIN TRY
@@ -219,8 +232,14 @@ BEGIN
 					GuideNumber,
 					CourierManId,
 					DataOriginId,
-					Token
+					Token,
+					Date
 				)
+				OUTPUT
+					inserted.GuideSerie,
+					inserted.GuideNumber,
+					inserted.IdProcessedGuideCOD
+				INTO #InsertedRecordT
 				SELECT Guide_Serie AS 'GuideSerie',
 						Guide_Number AS 'GuideNumber',
 						(
@@ -231,7 +250,8 @@ BEGIN
 						(
 							SELECT Token
 							FROM @DatosCourier
-						) AS 'Token'
+						) AS 'Token',
+						GETDATE()
 				FROM DeliveryBackOffice.dbo.DeliveryOrder
 				WHERE Guide_Serie = @GuideSerie
 						AND Guide_Number = @GuideNumber
@@ -282,7 +302,18 @@ BEGIN
                    CONVERT(BIGINT, 0) AS 'NumTransferID',
                    @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide';
 
-        COMMIT TRANSACTION;
+        COMMIT TRANSACTION;				
+		
+		UPDATE PG
+		SET IsCompleted = 1
+		FROM DeliveryBackOffice.dbo.ProcessedGuideCOD PG  WITH(NOLOCK)
+		INNER JOIN #InsertedRecordT IR
+			ON PG.GuideSerie = IR.GuideSerie
+				AND PG.GuideNumber = IR.GuideNumber
+		WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
+
+		IF OBJECT_ID('tempdb.dbo.#InsertedRecordT', 'U') IS NOT NULL
+			DROP TABLE #InsertedRecordT;
     END;
     ELSE
         SELECT 0 AS 'StatusCode',

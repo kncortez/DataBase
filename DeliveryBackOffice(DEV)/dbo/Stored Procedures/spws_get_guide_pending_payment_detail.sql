@@ -12,6 +12,11 @@
 -- Create date: <2024-07-02>
 -- Description: <Se agrega filtro para el remitente por pais>
 -- =============================================
+-- =============================================
+-- Author:      <Walter Orozco>
+-- Create date: <2024-12-02>
+-- Description: <Se agrega parametros para enviar información de COD anticipado.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
@@ -43,6 +48,16 @@ BEGIN
     --DECLARE @TokenP VARCHAR(100) = '3E9C2157FD6D5863CFBA2366C0838F8B';
     DECLARE @InTimeP INT;
     DECLARE @IsReturnP BIT;
+
+	DECLARE  @CODAnticipatedTable TABLE(
+		GuideSerie NVARCHAR(2),
+        GuideNumber INT,
+		IdCustomer INT,
+		IdPortafolio INT,
+		COD DECIMAL(10,2),
+		ComisionCOD DECIMAL(6,2),
+		ComisionCODAnticipated DECIMAL(6,2)
+	) 
 
     ---- Convertir cadena de guias en tabla de guias ---------------------------------------------
     CREATE TABLE #listGuides
@@ -507,6 +522,151 @@ BEGIN
 
     CREATE NONCLUSTERED INDEX IX_PPTID_ID ON #PendingPaymentTempId ([Id]);
 
+	DECLARE @IdCountrySender NVARCHAR(2) = 
+	(
+		SELECT top 1 do.SenderCountryId FROM #PendingPaymentTemp ppt
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+            ON ppt.GuideSerie = do.Guide_Serie
+               AND ppt.GuideNumber = do.Guide_Number
+		WHERE Guide_Serie = ppt.GuideSerie AND Guide_Number = ppt.GuideNumber
+	)
+
+	DECLARE @CODRateDefault DECIMAL(12, 2) =
+						(
+							SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+							FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
+							WHERE cf.Name = 'CODRateDef'
+									AND Status = 1
+									AND cf.IdCountry = @IdCountrySender
+						);
+	DECLARE @CODExemptDefault DECIMAL(12, 2) =
+						(
+							SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+							FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
+							WHERE cf.Name = 'CODExemptDef'
+									AND Status = 1
+									AND cf.IdCountry = @IdCountrySender
+						);
+	DECLARE @IdSegmentDefault INT =
+					(
+						SELECT TOP 1
+								CrsId
+						FROM dbo.CatRateSegment WITH(NOLOCK)
+						WHERE CrsShortName = 'FOR'
+								AND CrsRowStatus = 'true'
+					);
+
+	INSERT INTO @CODAnticipatedTable (GuideSerie, GuideNumber,IdCustomer,IdPortafolio,COD,ComisionCOD,ComisionCODAnticipated)
+	SELECT
+		ppt.GuideSerie,
+        ppt.GuideNumber,
+		ISNULL(ach.CustomerId,0),
+		ISNULL(ach.PortfolioId,0),
+		DO.Collect_OnDelivery,
+		IIF((DO.Collect_OnDelivery - ISNULL(RCO.CODExempt, @CODExemptDefault)) > 0
+		, IIF(OP.Deposit_Number IS NULL
+			, IIF(ISNULL(VPC.ExcludeCommissionCOD, ISNULL(C.ExcludeCommissionCOD, 0)) = 1
+				, 0
+				, (CONVERT(
+							DECIMAL(12, 2)
+							, ((DO.Collect_OnDelivery
+								- (IIF(
+									ISNULL(
+												VPC.ExcludePriceShippingCOD
+											, ISNULL(C.ExcludePriceShippingCOD, 0)
+											) = 1
+									, 0
+									, IIF(ISNULL(DO.IsCollect, 0) = 1
+										, 0
+										, IIF(PYT.TimePlaId = 2
+												, 0
+												, IIF(PYT.TimePlaId = 1, 0, DO.PriceShippment))))
+								)
+							)
+							* ISNULL(RCO.CODRate, @CODRateDefault) / 100
+							)
+						)
+				))
+			, 0)
+		, 0)											AS 'ComisionCOD'
+	,
+	CASE
+		WHEN 
+			(ACC.AnticipatedCODComission IS NOT NULL AND ACC.AnticipatedCODComission > 0.00)
+			AND (ACC.InitialRange <= DO.Collect_OnDelivery AND DO.Collect_OnDelivery <= ACC.FinalRange)
+		THEN
+			ACC.AnticipatedCODComission
+		ELSE
+			CASE
+				WHEN
+					CPmin1.Value >= DO.Collect_OnDelivery AND DO.Collect_OnDelivery <= CPmax1.Value
+				THEN
+					CAST(CPv1.value AS DECIMAL)
+				WHEN
+					CPmin2.Value >= DO.Collect_OnDelivery AND DO.Collect_OnDelivery <= CPmax2.Value
+				THEN
+					CAST(CPv2.value AS DECIMAL)
+				ELSE
+					CAST(CPv3.value AS DECIMAL)
+			END
+	END													AS 'ComisionCODAnticipated'
+	FROM #PendingPaymentTemp ppt
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+            ON ppt.GuideSerie = do.Guide_Serie
+               AND ppt.GuideNumber = do.Guide_Number
+		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+			ON do.Guide_Serie = acd.GuideSerie AND do.Guide_Number = acd.GuideNumber
+		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK)
+			ON do.IdCustomer = ach.CustomerId 
+		LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
+			ON VPC.CodeOfReference = DO.Sender_ID
+		LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
+			ON RBC.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
+				AND RBC.RbcRowStatus = 1 AND RBC.RbcCodeOfReference IS NULL
+		LEFT JOIN dbo.RatebyCustomer RBC2 WITH (NOLOCK)
+			ON RBC2.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
+				AND RBC2.RbcRowStatus = 1 AND RBC2.RbcCodeOfReference = DO.Sender_ID
+		LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
+			ON RBC.RbcIdRate = RH.RheId
+		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODComission ACC WITH(NOLOCK)
+			ON RH.RheId = ACC.RateHeaderId
+		--COD inmediato
+		LEFT JOIN dbo.Customer C WITH (NOLOCK)
+			ON C.IdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
+		LEFT JOIN dbo.CatTypeService CSV WITH (NOLOCK)
+			ON CSV.CtsShortName = IIF(DO.TypeService = 'EXP', 'NDD', ISNULL(DO.TypeService, 'NDD'))
+				AND CSV.CtsRowStatus = 'true'
+		LEFT JOIN dbo.CatRateSegment CSG WITH (NOLOCK)
+			ON CSG.CrsShortName = dbo.fn_get_segment(DO.Guide_Serie, DO.Guide_Number)
+				AND CSG.CrsRowStatus = 'true'
+		LEFT JOIN dbo.RateCOD RCO WITH (NOLOCK)
+			ON RCO.RateId = ISNULL(RBC2.RbcIdRate, RBC.RbcIdRate)
+				AND RCO.TypeServiceId = CSV.CtsId
+				AND RCO.TypeSegmentId = ISNULL(CSG.CrsId, @IdSegmentDefault)
+				AND RCO.RowStatus = 1
+		LEFT JOIN dbo.DeliveryOrderPaid OP WITH (NOLOCK)
+			ON OP.Guide_Serie = DO.Guide_Serie
+				AND OP.Guide_Number = DO.Guide_Number
+				AND OP.IdStatus = 'true'
+		LEFT JOIN dbo.DeliveryOrderPaymentDetail PYT WITH (NOLOCK)
+			ON PYT.GuideSerie = DO.Guide_Serie AND PYT.GuideNumber = DO.Guide_Number
+		--Son rangos por default que tenemos si en dado caso el tarifario no cumple su rango
+		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin1 WITH(NOLOCK)
+			ON CPmin1.IdCountry = DO.ReceiverCountryId AND CPmin1.Name = 'MinRangeCODComisison1Param'
+		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin2 WITH(NOLOCK)
+			ON CPmin2.IdCountry = DO.ReceiverCountryId AND CPmin2.Name = 'MinRangeCODComisison2Param'
+		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmax1 WITH(NOLOCK)
+			ON CPmax1.IdCountry = DO.ReceiverCountryId AND CPmax1.Name = 'MaxRangeCODComisison1Param'
+		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmax2 WITH(NOLOCK)
+			ON CPmax2.IdCountry = DO.ReceiverCountryId AND CPmax2.Name = 'MaxRangeCODComisison2Param'
+		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv1 WITH(NOLOCK)
+			ON CPv1.IdCountry = DO.ReceiverCountryId AND CPv1.Name = 'ValueCODComisison1Param'
+		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv2 WITH(NOLOCK)
+			ON CPv2.IdCountry = DO.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'
+		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)
+			ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
+   WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+
     DECLARE @Output VARCHAR(MAX);
     DECLARE @RowsNumber INT =
             (
@@ -545,8 +705,15 @@ BEGIN
                          + ', ' + '"CODAmount": ' + CAST(CAST(ISNULL(pg.CODAmount, 0) AS DECIMAL(18, 2)) AS VARCHAR)
                          + ', ' + '"IsCollect": ' + CAST(ISNULL(pg.IsCollect, 0) AS VARCHAR) + ', ' + '"Pieces": '
                          + CAST(ISNULL(pg.Pieces, 0) AS VARCHAR) + ', ' + '"ServiceType": "' + pg.ServiceType + '", '
+						 + '"IdCustomer": ' + CAST(c.IdCustomer AS VARCHAR) + ', '
+						 + '"IdPortafolio": ' + CAST(c.IdPortafolio AS VARCHAR) + ', '
+						 + '"COD": ' + CAST(c.COD AS VARCHAR) + ', '
+						 + '"ComisionCOD": ' + CAST(c.ComisionCOD AS VARCHAR) + ', '
+						 + '"ComisionCODAnticipated": ' + CAST(c.ComisionCODAnticipated AS VARCHAR) + ', '
                          + '"GuideDetail": [ '
                   FROM #PendingPaymentTempId pg
+				  INNER JOIN @CODAnticipatedTable c
+					ON pg.GuideSerie = c.GuideSerie AND pg.GuideNumber = c.GuideNumber
                   WHERE Id = @Index
               );
 

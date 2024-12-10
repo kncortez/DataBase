@@ -1,4 +1,11 @@
 ﻿--EXEC  [dbo].[sphw_generate_batch_cod] 33,'8'
+
+-- =============================================
+-- Author:		<Cristian Azurdia>
+-- Update date: <2024-11-18>
+-- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod]
     @IdBankParam INT
   , @BatchTimeRange VARCHAR(300) = ''
@@ -7,12 +14,23 @@ CREATE PROCEDURE [dbo].[sphw_generate_batch_cod]
 AS
 BEGIN
 
+	IF OBJECT_ID('tempdb.dbo.#GuidesProcessCOD', 'U') IS NOT NULL
+	DROP TABLE #GuidesProcessCOD
+	--TABLA PARA PODER CONFIRMAR QUE LA TRANSACCCION COD HA SIDO REALIZADA CORRECTAMENTE
+	CREATE TABLE #GuidesProcessCOD
+	(
+		GuideSerie NVARCHAR(8),
+		GuideNumber INT,
+		IdBatchDetailCOD INT
+		--CONSTRAINT PK_sphw_generate_batch_cod_tmp PRIMARY KEY (GuideSerie, GuideNumber)
+	);
+
+	CREATE NONCLUSTERED INDEX INDX_sphw_generate_batch_cod_tmp ON #GuidesProcessCOD (GuideSerie, GuideNumber)
+
     -- Micro transacción para indicar inicio de proceso de CoD ejecutado
     BEGIN TRANSACTION Started_CoD_Execution_Process;
     BEGIN TRY
 		
-
-
         UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
         SET ProcessStarted = 1
           , TokenUpdated = 'SYS-HERMESWIRETRANSFER'
@@ -137,7 +155,7 @@ BEGIN
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
-								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender BNHL
+                                 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
                            FOR XML PATH('')
                        )
                      , 1
@@ -191,7 +209,7 @@ BEGIN
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
-								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender BNHL
+                                 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
                            FOR XML PATH('')
                        )
                      , 1
@@ -220,6 +238,7 @@ BEGIN
             DROP TABLE #TableCustomerPaymentTemp;
         IF OBJECT_ID('tempdb.dbo.#TableForzaPaymentTemp', 'U') IS NOT NULL
             DROP TABLE #TableForzaPaymentTemp;
+
 
         IF @ProductNumber IS NOT NULL
         BEGIN
@@ -324,7 +343,7 @@ BEGIN
             WHERE ISNULL(ord.PriceShippment, 0) = 0
                   AND PC.IdPromoCoupon IS NULL
                   AND MBS.LogGuideNumber IS NULL
-				  --AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender;
+                  AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -573,7 +592,7 @@ BEGIN
                         ON pyt.GuideSerie = ord.Guide_Serie
                            AND pyt.GuideNumber = ord.Guide_Number
                 WHERE ord.Collect_OnDelivery > 0
-				--AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender BNHL
+                  AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender --BNHL
             ) a1
             ORDER BY a1.IDCUSTOMER
                    , a1.Guide_Serie
@@ -718,7 +737,7 @@ BEGIN
                   )
                   AND tact.CODtoPay > 0
             --AND tact.Id_bank IS NOT NULL
-				--  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender BNHL
+                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
             ;
 
             CREATE NONCLUSTERED INDEX IX_TFPT_GSGNCABI
@@ -811,7 +830,7 @@ BEGIN
                 LEFT JOIN dbo.Customer         CS WITH (NOLOCK)
                     ON CS.IdCustomer = ISNULL(ORD.IdCustomer, VPC.CustomerID)
             WHERE tact.CODtoPay > 0
-			--	AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender BNHL
+              AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender --BNHL
             --AND tact.Id_bank IS NOT NULL
             ;
 
@@ -916,6 +935,11 @@ BEGIN
                       , CODDiscount
 					  , IdCountry
                     )
+					OUTPUT						
+						INSERTED.GuideSerie,
+						INSERTED.GuideNumber,
+						INSERTED.IdBatchDetailCOD
+					INTO #GuidesProcessCOD
                     SELECT @NewIdBatchCODCustomer
                          , tcpt.GuideSerie
                          , tcpt.GuideNumber
@@ -1028,6 +1052,11 @@ BEGIN
                       , DiscountPrice
 					  , IdCountry
                     )
+					OUTPUT						
+						INSERTED.GuideSerie,
+						INSERTED.GuideNumber,
+						INSERTED.IdBatchDetailCOD
+					INTO #GuidesProcessCOD
                     SELECT @NewIdBatchCODForza
                          , tfpt.GuideSerie
                          , tfpt.GuideNumber
@@ -1175,6 +1204,14 @@ BEGIN
             --The procedure must commit the transaction  
             --it started.  
             COMMIT TRANSACTION;
+
+			UPDATE bdc
+			SET bdc.IsCompleted = 1 
+			FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH (NOLOCK)
+				INNER JOIN #GuidesProcessCOD gpc
+					ON bdc.GuideSerie = gpc.GuideSerie
+					AND bdc.GuideNumber = gpc.GuideNumber
+					AND bdc.IdBatchDetailCOD = gpc.IdBatchDetailCOD;
         --END;
         END;
     END TRY
@@ -1313,6 +1350,18 @@ BEGIN
         --The procedure must commit the transaction  
         --it started.
         COMMIT TRANSACTION;
+
+		UPDATE bdc
+		SET bdc.IsCompleted = 1 
+		FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH (NOLOCK)
+			INNER JOIN #GuidesProcessCOD gpc
+				ON bdc.GuideSerie = gpc.GuideSerie
+				AND bdc.GuideNumber = gpc.GuideNumber
+				AND bdc.IdBatchDetailCOD = gpc.IdBatchDetailCOD;
+
+		IF OBJECT_ID('tempdb.dbo.#GuidesProcessCOD', 'U') IS NOT NULL
+		DROP TABLE #GuidesProcessCOD;
+
     --END;
     END;
 END;

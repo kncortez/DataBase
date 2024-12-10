@@ -48,6 +48,17 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#GuidesTemp', 'U') IS NOT NULL
             DROP TABLE #GuidesTemp;
 
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
+
+        CREATE TABLE #TempData
+        (
+         IdProcessedGuideCOD INT,
+         GuideSerie          NVARCHAR(4),
+         GuideNumber         INT
+        );
+        CREATE NONCLUSTERED INDEX INDX_sps_settlement_guide_COD_Temp ON #TempData (GuideSerie, GuideNumber);
+
         -- Convertir la lista de guías separadas por coma en una tabla
         INSERT @GuidesTable
         SELECT CAST(Item AS INT)
@@ -120,8 +131,13 @@ BEGIN
                     [DataOriginId],
                     [Notificated],
                     [Token],
-                    CustomerId
+                    CustomerId,
+					IsAnticipatedCOD
                 )
+                OUTPUT inserted.IdProcessedGuideCOD,
+                       inserted.GuideSerie,
+                       inserted.GuideNumber
+                  INTO #TempData
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
                        @CourierId,
@@ -131,7 +147,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
@@ -151,7 +168,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
@@ -171,7 +189,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
@@ -347,6 +366,17 @@ BEGIN
                    'Registro guardado correctamente' AS 'Description',
                    @@trancount AS 'NumTransferID';
             COMMIT TRANSACTION;
+
+        UPDATE pgd 
+           SET pgd.IsCompleted = 1
+          FROM ProcessedGuideCOD pgd WITH(NOLOCK)
+               INNER JOIN #TempData tmp
+                  ON pgd.GuideSerie   = tmp.GuideSerie
+                 AND pgd.GuideNumber = tmp.GuideNumber
+         WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
         END;
         ELSE
         BEGIN
