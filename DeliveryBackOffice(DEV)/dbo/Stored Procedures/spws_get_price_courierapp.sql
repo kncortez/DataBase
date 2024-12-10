@@ -12,7 +12,7 @@ CREATE PROCEDURE [dbo].[spws_get_price_courierapp]
     @InGuides NVARCHAR(MAX)
 AS
 BEGIN
- -- SET NOCOUNT ON added to prevent extra result sets from
+    -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
@@ -27,42 +27,40 @@ BEGIN
     DECLARE @jsonError NVARCHAR(MAX);
     DECLARE @jsonToken NVARCHAR(MAX);
 
+    DECLARE @PickupRate DECIMAL(12, 2) =
+            (
+                SELECT TOP 1
+                       ISNULL(ct.Value, 15)
+                FROM dbo.CatToCharge ct
+                WHERE ct.Name = 'PickupRate'
+            ); -- tarifa de recoleccion 
+
+    IF OBJECT_ID('tempdb.dbo.#BrainProcessedGuides', 'U') IS NOT NULL
+        DROP TABLE #BrainProcessedGuides;
+    IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
+        DROP TABLE #Temp;
+
+    DECLARE @TokenAct INT =
+            (
+                SELECT TOP 1
+                       RowStatus
+                FROM LogTokenPOD WITH (NOLOCK)
+                WHERE LogTokenPOD LIKE '%' + @Token + '%'
+                ORDER BY DateCreated DESC
+            );
+    DECLARE @hourtoken INT =
+            (
+                SELECT TOP 1
+                       DATEDIFF(HOUR, DateCreated, GETDATE()) AS horas
+                FROM LogTokenPOD WITH (NOLOCK)
+                WHERE LogTokenPOD LIKE '%' + @Token + '%'
+                ORDER BY DateCreated DESC
+            );
 
 
- 
-
-    DECLARE @TokenAct INT =1;
-           
-    DECLARE @hourtoken INT = 8;
-          
-		-- Crear una tabla temporal para guardar los resultados
-CREATE TABLE #SplitResults (
-    ItemSerie NVARCHAR(10),
-    ItemNumber NVARCHAR(50)
-);
-
--- Insertar resultados directamente
-INSERT INTO #SplitResults (ItemSerie, ItemNumber)
-SELECT DISTINCT
-    SUBSTRING(Item, 1, 2) AS ItemSerie,
-    SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, LEN(Item), CHARINDEX('-', Item) - 3)) AS ItemNumber
-FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',') sr
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM DeliveryOrder do
-    WHERE do.Guide_Number = SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, LEN(Item), CHARINDEX('-', Item) - 3))
-);
-
-     DECLARE @InvalidGuides INT =
-                (
-                    SELECT COUNT(*)FROM #SplitResults
-                );
-IF(@InvalidGuides=0)
-BEGIN
     IF ((@TokenAct = 1 AND @hourtoken <= 8) OR 1 = 1)
     BEGIN
-        
-              CREATE TABLE #Temp
+        CREATE TABLE #Temp
         (
             Guide VARCHAR(255),
             Message VARCHAR(255),
@@ -83,12 +81,10 @@ BEGIN
                 (
                     SELECT COUNT(*)FROM #Temp
                 );
-                
 
         IF (@test = 0)
         BEGIN
-             
-              
+
             CREATE TABLE #BrainProcessedGuides
             (
                 GuideSerie NVARCHAR(2),
@@ -123,16 +119,16 @@ BEGIN
                                                         0,         -- No es retorno
                                                         '',        -- Codeapp
                                                         1,         -- Identificador de modulo donde proviene
-                                                        @Token;    -- Token de co
+                                                        @Token;    -- Token de courier
 
-               SET @jsonDetail =
+            SET @jsonDetail =
             (
                 SELECT STUFF(
                                 (
                                     SELECT DISTINCT
                                            ',{"GuideSerie":"' + ISNULL(tbl.GuideSerie, 'N/A') + '",' + '"GuideNumber":"'
                                            + ISNULL(CONVERT(VARCHAR, tbl.GuideNumber), 'N/A') + '",' + '"Amount":"'
-                                           + '0.00' + '",' + '"PickupRate":"'
+                                           + ISNULL(CONVERT(VARCHAR, tbl.AmountToPay), '0.00') + '",' + '"PickupRate":"'
                                            + CONVERT(VARCHAR, '0.00') + +'"}'
                                     FROM #BrainProcessedGuides tbl
                                     GROUP BY tbl.GuideSerie,
@@ -148,12 +144,12 @@ BEGIN
 
             -- no agrupar para resumen
 
-             		 SET @jsonSummary =
+            SET @jsonSummary =
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR, 0) + '",'
-                                           + '"PickupRate":"' + CONVERT(VARCHAR, 0) + '",'
+                                    SELECT ',{"Amount":"' + CONVERT(VARCHAR, ISNULL(SUM(tbl.AmountToPay), 0)) + '",'
+                                           + '"PickupRate":"' + CONVERT(VARCHAR, ISNULL(@PickupRate, 0)) + '",'
 										   + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODCodeISO, 0)) + '",'
                                            + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODSymbol, 0)) + '",'
                                            + '"CurrencyPriceCodeISO":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceCodeISO , 0)) + '",'
@@ -171,7 +167,7 @@ BEGIN
                                 ''
                             )
             );
-            
+
             ------ unir encabezado y detalle para resultado
 
 			PRINT '@jsonDetail'
@@ -223,8 +219,12 @@ BEGIN
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"Error":"' + ISNULL(CONVERT(VARCHAR, 0), 'N/A') + +'"}'
-                                   
+                                    SELECT ',{"Error":"' + ISNULL(CONVERT(VARCHAR, Guide), 'N/A') + +'"}'
+                                    FROM #Temp
+                                    WHERE Guide IN
+                                          (
+                                              SELECT Guide FROM #Temp
+                                          )
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -239,9 +239,12 @@ BEGIN
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"Message":"' + ISNULL(CONVERT(NVARCHAR(MAX), 'error'), 'N/A') + +'"}'
-                                   
-                                  
+                                    SELECT ',{"Message":"' + ISNULL(CONVERT(NVARCHAR(MAX), Message), 'N/A') + +'"}'
+                                    FROM #Temp
+                                    WHERE Guide IN
+                                          (
+                                              SELECT Guide FROM #Temp
+                                          )
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -292,58 +295,8 @@ BEGIN
 
         RETURN;
     END;
-   END
-      ELSE
-	  BEGIN
 
-	      		 SET @jsonSummary =
-									(
-										SELECT STUFF(
-														(
-															SELECT ',{'
-																   + '"Message":"Las siguientes guías no existen en nuestro sistema:"'
-																   +'}'
-															FOR XML PATH(''), TYPE
-														).value('.', 'varchar(max)'),
-														1,
-														1,
-														''
-													)
-									);
-	   
-	     SET @jsonDetail =
-							(
-								SELECT STUFF(
-												(
-													SELECT DISTINCT
-														   ',{"GuideSerie":"' + ISNULL(tbl.ItemSerie, 'N/A') + '",' + '"GuideNumber":"'
-														   + ISNULL(CONVERT(VARCHAR, tbl.ItemNumber), 'N/A')
-														   +'"}'
-													FROM #SplitResults tbl
-													GROUP BY tbl.ItemSerie,
-															 tbl.ItemNumber
-													FOR XML PATH(''), TYPE
-												).value('.', 'varchar(max)'),
-												1,
-												1,
-												''
-											)
-							);
-	    
-				SET @jsonResult =
-						(
-							SELECT STUFF(
-											(
-												SELECT '{"IdResult":404,' + '"Summary":[' + @jsonSummary + '],' + '"Detail":['
-													   + @jsonDetail + ']' + ''
-												FOR XML PATH(''), TYPE
-											).value('.', 'varchar(max)'),
-											1,
-											1,
-											''
-										)
-						);
-
-							 SELECT ('{' + @jsonResult + '}') jsonResult;
-	  END;
 END;
+--select * from dbo.RouteAssigment
+GO
+
