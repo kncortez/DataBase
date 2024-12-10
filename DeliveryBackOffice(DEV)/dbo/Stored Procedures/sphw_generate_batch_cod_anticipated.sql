@@ -151,7 +151,7 @@ BEGIN
                                  --AND ( cus.IdCustomerType IN(2,3)
                                  --	  OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))
                                  AND do.StatusOrderId != 7
-                                 AND do.StatusOrderId IN ( 5, 22, 24 )
+                                 AND do.StatusOrderId IN ( 5, 22, 24, (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recepcionado en Express Center COD Anticipado') )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
 								 AND pg.IsAnticipatedCOD = 1
@@ -206,7 +206,7 @@ BEGIN
                                  AND pg.Date > '2024-09-30 00:00:00.000'
                                  AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
-                                 AND do.StatusOrderId IN ( 5, 22, 24 )
+                                 AND do.StatusOrderId IN ( 5, 22, 24, (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recepcionado en Express Center COD Anticipado')  )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
 								 AND pg.IsAnticipatedCOD = 1
@@ -566,6 +566,10 @@ BEGIN
                         ON rcv.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
                            AND rcv.RbcRowStatus = 1
                            AND rcv.RbcCodeOfReference = ord.Sender_ID
+					LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
+						ON rc.RbcIdRate = RH.RheId
+					LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODComission ACC WITH(NOLOCK)
+						ON RH.RheId = ACC.RateHeaderId
                     LEFT JOIN dbo.Township                    twn WITH (NOLOCK)
                         ON twn.IdTownship = ord.ReceiverIdTownship
                     LEFT JOIN dbo.Township                    twnm WITH (NOLOCK)
@@ -614,6 +618,21 @@ BEGIN
                     LEFT JOIN dbo.DeliveryOrderPaymentDetail  pyt WITH (NOLOCK)
                         ON pyt.GuideSerie = ord.Guide_Serie
                            AND pyt.GuideNumber = ord.Guide_Number
+					--Son rangos por default que tenemos si en dado caso el tarifario no cumple su rango
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin1 WITH(NOLOCK)
+						ON CPmin1.IdCountry = ord.ReceiverCountryId AND CPmin1.Name = 'MinRangeCODComisison1Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin2 WITH(NOLOCK)
+						ON CPmin2.IdCountry = ord.ReceiverCountryId AND CPmin2.Name = 'MinRangeCODComisison2Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmax1 WITH(NOLOCK)
+						ON CPmax1.IdCountry = ord.ReceiverCountryId AND CPmax1.Name = 'MaxRangeCODComisison1Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmax2 WITH(NOLOCK)
+						ON CPmax2.IdCountry = ord.ReceiverCountryId AND CPmax2.Name = 'MaxRangeCODComisison2Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv1 WITH(NOLOCK)
+						ON CPv1.IdCountry = ord.ReceiverCountryId AND CPv1.Name = 'ValueCODComisison1Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv2 WITH(NOLOCK)
+						ON CPv2.IdCountry = ord.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)
+						ON CPv3.IdCountry = ord.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
                 WHERE ord.Collect_OnDelivery > 0
                   AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender --BNHL
             ) a1
