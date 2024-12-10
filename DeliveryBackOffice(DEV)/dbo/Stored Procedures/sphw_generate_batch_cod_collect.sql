@@ -5,6 +5,10 @@
 -- Update date: <2024-11-18>
 -- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
 -- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Update date: <2024-12-09>
+-- Description:	<Separacion de flujos para generacion de lotes cod inmediato y cod anticipado>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_collect]
     @IdBankParam INT,
@@ -203,6 +207,7 @@ BEGIN
                              AND do.StatusOrderId != 7
                              --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
 							 AND do.SenderCountryId = @IdCountrySender
+							 AND pg.IsAnticipatedCOD <> 1
                        FOR XML PATH('')
                    ),
                    1,
@@ -997,7 +1002,8 @@ BEGIN
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
 
             --IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -1029,7 +1035,8 @@ BEGIN
                         ON pgc.GuideSerie = tfpt.GuideSerie
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
         END;
         ELSE

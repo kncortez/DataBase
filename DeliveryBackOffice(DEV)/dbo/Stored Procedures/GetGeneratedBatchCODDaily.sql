@@ -5,6 +5,10 @@
 -- Update date: <2024-11-18>
 -- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
 -- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Update date: <2024-12-09>
+-- Description:	<Separacion de flujos para generacion de lotes cod inmediato y cod anticipado>
+-- =============================================
 
 CREATE  PROCEDURE [dbo].[GetGeneratedBatchCODDaily]
     @IdBankParam INT,
@@ -155,6 +159,7 @@ BEGIN
 								 AND ISNULL(do.IsLastMileReturn,0) =0
 								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
 								 AND do.SenderCountryId = @IdCountrySender
+								 AND pg.IsAnticipatedCOD <> 1
                            FOR XML PATH('')
                        ),
                        1,
@@ -208,6 +213,7 @@ BEGIN
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
 								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
 								 AND do.SenderCountryId = @IdCountrySender
+								 AND pg.IsAnticipatedCOD <> 1
                            FOR XML PATH('')
                        ),
                        1,
@@ -604,6 +610,7 @@ BEGIN
                   AND pgc.BatchCODIdCommission IS NULL
                   AND pgc.RowStatus = 1
 				  AND tact.CODtoPay <= 0 --BNHL 14/11/2024 
+				  AND pgc.IsAnticipatedCOD <> 1
 				  ;
 
             -- OBTENCION DEL NUMERO DE REFERENCIA (CORRELATIVO) PARA BAC
@@ -1029,7 +1036,8 @@ BEGIN
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
 
             IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -1045,7 +1053,8 @@ BEGIN
                         ON pgc.GuideSerie = tcpt.GuideSerie
                            AND pgc.GuideNumber = tcpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
 
             IF ((@NewIdBatchCODForza IS NOT NULL) AND (@NewIdBatchCODForza > 0))
@@ -1061,7 +1070,8 @@ BEGIN
                         ON pgc.GuideSerie = tfpt.GuideSerie
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
         END;
         ELSE

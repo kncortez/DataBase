@@ -1,16 +1,10 @@
-ï»¿--EXEC  [dbo].[sphw_generate_batch_cod] 33,'8'
-
--- =============================================
--- Author:		<Cristian Azurdia>
--- Update date: <2024-11-18>
--- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, asÃ­ como actualizacion de campos en Commmit padre>
 -- =============================================
 -- Author:		<Oscar Rodriguez>
 -- Update date: <2024-12-09>
 -- Description:	<Separacion de flujos para generacion de lotes cod inmediato y cod anticipado>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[sphw_generate_batch_cod]
+CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_anticipated]
     @IdBankParam INT
   , @BatchTimeRange VARCHAR(300) = ''
   , @CoDProcessID INT
@@ -31,7 +25,7 @@ BEGIN
 
 	CREATE NONCLUSTERED INDEX INDX_sphw_generate_batch_cod_tmp ON #GuidesProcessCOD (GuideSerie, GuideNumber)
 
-    -- Micro transacciÃ³n para indicar inicio de proceso de CoD ejecutado
+    -- Micro transacción para indicar inicio de proceso de CoD ejecutado
     BEGIN TRANSACTION Started_CoD_Execution_Process;
     BEGIN TRY
 		
@@ -160,7 +154,7 @@ BEGIN
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
-								 AND pg.IsAnticipatedCOD <> 1
+								 AND pg.IsAnticipatedCOD = 1
                            FOR XML PATH('')
                        )
                      , 1
@@ -215,7 +209,7 @@ BEGIN
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
-								 AND pg.IsAnticipatedCOD <> 1
+								 AND pg.IsAnticipatedCOD = 1
                            FOR XML PATH('')
                        )
                      , 1
@@ -403,7 +397,7 @@ BEGIN
                  , a1.IDCUSTOMER
                  , a1.CODRate
                  , a1.CODExempt
-                 , a1.Commision
+                 , (a1.Commision + a1.ComisionCODAnticipated)  Commision
                  , a1.DeliveryPrice
                  , a1.CODPaid
                  , a1.ReturnRates
@@ -431,6 +425,8 @@ BEGIN
                                   , 0
                                   , IIF(a1.TimePlaId = 2, 0, IIF(a1.TimePlaId = 1, 0, a1.PriceShippment))))
                          )
+						--Comision COD Anticipado
+						- a1.ComisionCODAnticipated
                      , 0) CODtoPay
                  , a1.Price
             INTO #TableAmountCOD
@@ -474,6 +470,27 @@ BEGIN
                                    ))
                              , 0)
                          , 0)                                                                    Commision
+						 ,
+						CASE
+							WHEN 
+								(ACC.AnticipatedCODComission IS NOT NULL AND ACC.AnticipatedCODComission > 0.00)
+								AND (ACC.InitialRange <= ord.Collect_OnDelivery AND ord.Collect_OnDelivery <= ACC.FinalRange)
+							THEN
+								ACC.AnticipatedCODComission
+							ELSE
+								CASE
+									WHEN
+										CPmin1.Value >= ord.Collect_OnDelivery AND ord.Collect_OnDelivery <= CPmax1.Value
+									THEN
+										CAST(CPv1.value AS DECIMAL)
+									WHEN
+										CPmin2.Value >= ord.Collect_OnDelivery AND ord.Collect_OnDelivery <= CPmax2.Value
+									THEN
+										CAST(CPv2.value AS DECIMAL)
+									ELSE
+										CAST(CPv3.value AS DECIMAL)
+								END
+						END																		 ComisionCODAnticipated
                      , ord.PriceShippment                                                        DeliveryPrice
                      , .0                                                                        CODPaid
                      , 0                                                                         ReturnRates
@@ -672,7 +689,7 @@ BEGIN
                   AND pgc.BatchCODIdCommission IS NULL
                   AND pgc.RowStatus = 1
                   AND tact.CODtoPay <= 0
-				  AND pgc.IsAnticipatedCOD <> 1;
+				  AND pgc.IsAnticipatedCOD = 1;
 
             -- OBTENCION DEL NUMERO DE REFERENCIA (CORRELATIVO) PARA BAC
             SELECT @Reference = Last
@@ -1139,7 +1156,7 @@ BEGIN
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND pgc.IsAnticipatedCOD <> 1;
+					  AND pgc.IsAnticipatedCOD = 1;
             END;
 
             IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -1157,7 +1174,7 @@ BEGIN
                            AND pgc.GuideNumber = tcpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.RowStatus = 1
-					  AND pgc.IsAnticipatedCOD <> 1;
+					  AND pgc.IsAnticipatedCOD = 1;
             END;
 
             IF ((@NewIdBatchCODForza IS NOT NULL) AND (@NewIdBatchCODForza > 0))
@@ -1175,13 +1192,13 @@ BEGIN
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND pgc.IsAnticipatedCOD <> 1;
+					  AND pgc.IsAnticipatedCOD = 1;
             END;
         END;
         ELSE
         BEGIN
 
-            -- Micro transacciÃ³n para indicar inicio de proceso de CoD ejecutado
+            -- Micro transacción para indicar inicio de proceso de CoD ejecutado
             BEGIN TRANSACTION Completed_CoD_Execution_Process;
             BEGIN TRY
 
@@ -1227,7 +1244,7 @@ BEGIN
     END TRY
     BEGIN CATCH
 
-        -- Micro transacciÃ³n para indicar inicio de proceso de CoD ejecutado
+        -- Micro transacción para indicar inicio de proceso de CoD ejecutado
         BEGIN TRANSACTION Retry_CoD_Execution_Process;
         BEGIN TRY
 
@@ -1294,7 +1311,7 @@ BEGIN
         --SELECT * FROM #TableCustomerPaymentTemp;
         --SELECT * FROM #TableForzaPaymentTemp;
 
-        -- Micro transacciÃ³n para indicar inicio de proceso de CoD ejecutado
+        -- Micro transacción para indicar inicio de proceso de CoD ejecutado
         BEGIN TRANSACTION Completed_CoD_Execution_Process;
         BEGIN TRY
 
