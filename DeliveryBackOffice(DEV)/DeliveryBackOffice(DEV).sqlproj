@@ -896,6 +896,7 @@
     <Build Include="dbo\Stored Procedures\sphdGetCoverage.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetCountry.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetCatalog.sql" />
+    <Build Include="dbo\Stored Procedures\GetCustomerByCustType.sql" />
     <Build Include="dbo\Stored Procedures\spgs_ActivateUserPortal.sql" />
     <Build Include="dbo\Stored Procedures\spget_guide_to_modify.sql" />
     <Build Include="dbo\Stored Procedures\spget_all_express_center.sql" />
