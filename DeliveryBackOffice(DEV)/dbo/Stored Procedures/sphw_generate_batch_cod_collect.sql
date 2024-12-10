@@ -882,10 +882,11 @@ BEGIN
                 (
                     BankId,
                     BatchNumber,
-                    BatchTimeRange
+                    BatchTimeRange,
+                    IsAnticipatedCOD
                 )
                 VALUES
-                (@BankBAC, @MaxBatchNumber, @BatchTimeRange);
+                (@BankBAC, @MaxBatchNumber, @BatchTimeRange,0);
 
                 -- OBTENCION DEL ID QUE CORRESPONDE AL LOTE CREADO
                 SELECT @NewIdBatchCODForza = SCOPE_IDENTITY();
@@ -927,7 +928,8 @@ BEGIN
                         AccountName,
                         CODCommissionPercentage,
                         DiscountPrice,
-						IdCountry
+						IdCountry,
+						IsAnticipatedCOD
                     )
 					OUTPUT						
 						INSERTED.GuideSerie,
@@ -968,7 +970,8 @@ BEGIN
                            tfpt.AccountName,
                            CODRate,
                            DiscountPrice,
-						   @IdCountrySender
+						   @IdCountrySender,
+						   0
                     FROM #TableForzaPaymentTemp tfpt
 					LEFT JOIN DeliveryBackOffice.dbo.Cost c 
 					  -- WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)

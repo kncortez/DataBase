@@ -41,6 +41,7 @@
     [IdCountry]               VARCHAR (2)     NULL,
     [IdCurrency]              INT             NULL,
     [IsCompleted]             TINYINT         DEFAULT(0) NULL,
+    [IsAnticipatedCOD]        INT             NULL,
     CONSTRAINT [PK_BatchDetailCOD_IdBatchDetailCOD] PRIMARY KEY CLUSTERED ([IdBatchDetailCOD] ASC),
     CONSTRAINT [FK_BatchDetailCOD_BatchCOD] FOREIGN KEY ([BatchCODId]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
     CONSTRAINT [FK_BatchDetailCOD_CatAccountTypeCOD] FOREIGN KEY ([CatAccountTypeCODId]) REFERENCES [dbo].[CatAccountTypeCOD] ([IdCatAccountTypeCOD]),
@@ -147,6 +148,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica la moneda de la transaccion ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'IdCurrency';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera que identifica las guias COD Anticipado ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'IsAnticipatedCOD';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valida que el registro ha sido procesado y finalizado 0 = En proceso 1 = Finalizada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'IsCompleted';
