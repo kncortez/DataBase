@@ -110,21 +110,11 @@ BEGIN
 
 
      -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
-     UPDATE do
-        SET IsLastMileReturn = 1
-          , StatusOrderId = @STATUSDECLAREDRETURNED_DO
-          , guide_number = do.guide_number
-          , guide_serie = do.guide_serie
-          , TypeService = do.TypeService
-            OUTPUT 
-            INSERTED.IsLastMileReturn,
-            INSERTED.StatusOrderId,
-            INSERTED.guide_number,
-            INSERTED.guide_serie,
-            INSERTED.TypeService
-            INTO @TblUpdatesGuides
-       FROM DeliveryOrder   do
-            INNER JOIN @TblGuides  tg
+        UPDATE do
+        SET do.IsLastMileReturn = 1
+          , do.StatusOrderId = @STATUSDECLAREDRETURNED_DO
+        FROM DeliveryOrder                         do
+            INNER JOIN @TblGuides                  tg
                 ON do.Guide_Serie = tg.GuideSerie
                    AND do.Guide_Number = tg.GuideNumber
             LEFT JOIN dbo.DeliveryOrderAttemptData DOA
@@ -136,60 +126,8 @@ BEGIN
                    AND do.Guide_Number = DA.Guide_Number
             INNER JOIN dbo.ConfirmationOfIncidence COI
                 ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-      WHERE (tg.FlowGuide = 2
-             OR COI.ClientConfirmsReturn = 1);
-
-     UPDATE acodh
-        SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
-       FROM @TblGuides tg
-            INNER JOIN @TblUpdatesGuides tug
-                    ON tug.GuideSerie = tg.GuideSerie
-                   AND tug.GuideNumber = tg.GuideNumber
-            INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
-                    ON tg.GuideSerie = acodd.GuideSerie
-                   AND tg.GuideNumber = acodd.GuideNumber
-                   AND acodd.RowStatus = 1
-            INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
-                    ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
-            INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
-                    ON bdcod.GuideSerie = tug.GuideSerie
-                   AND bdcod.GuideNumber = tug.GuideNumber
-            OUTER APPLY (
-                         SELECT TOP 1 dod.StatusOrderId
-                           FROM DeliveryOrderDetail dod
-                                INNER JOIN StatusOrder so ON dod.statusorderid = so.StatusOrderId
-                          WHERE dod.guide_serie = tg.GuideSerie
-                            AND dod.guide_number = tg.GuideNumber
-                            AND dod.RowStatus = 1
-                            AND so.RowStatus = 1
-                            AND so.OrderDescription = 'Recepcionado en Express Center COD Anticipado'--Recepcionado en Express Center COD Anticipado
-                        ) StatusRegister
-            OUTER APPLY (
-                         SELECT TOP 1 StatusOrderId
-                           FROM StatusOrder so
-                           WHERE so.RowStatus = 1
-                            AND so.OrderDescription = 'Recepcionado en Express Center COD Anticipado'--Recepcionado en Express Center COD Anticipado
-                        ) StatusValue
         WHERE tg.FlowGuide = 2
-          AND tug.IsLastMileReturn = 1
-          AND tug.TypeService = 'COD'
-          AND bdcod.Excluded = 0
-          AND bdcod.CatTransactionTypeCODId = 2
-          AND ISNULL(StatusRegister.StatusOrderId,tug.StatusOrderId) = StatusValue.StatusOrderId
-
-       UPDATE acodh
-          SET acodh.BalanceStatus = 'DEVOLUCION'
-         FROM AnticipatedCODDetail acodh
-            INNER JOIN @TblUpdatesGuides tug
-                    ON tug.GuideSerie = acodh.GuideSerie
-                   AND tug.GuideNumber = acodh.GuideNumber
-            INNER JOIN AnticipatedCODHeader acod WITH(NOLOCK)
-                    ON acod.IdAnticipatedCODHeader = acodh.AnticipatedCODHeaderId
-            INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
-                    ON bdcod.GuideSerie = tug.GuideSerie
-                   AND bdcod.GuideNumber = tug.GuideNumber
-        where bdcod.Excluded = 0
-          AND bdcod.CatTransactionTypeCODId = 2
+              OR COI.ClientConfirmsReturn = 1;
 
         INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
         (
