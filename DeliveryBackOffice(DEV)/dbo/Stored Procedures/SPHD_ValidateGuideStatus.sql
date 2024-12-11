@@ -17,6 +17,10 @@
 -- Create date: <2024-06-24>
 -- Description:	<Se agrega validacion para saber si la guia es domestica o internacional>
 -- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <2024-12-11>
+-- Description:	<Se agrega campo de nombre de cliente asociado a la guía>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHD_ValidateGuideStatus] @Guide AS NVARCHAR(20),
 	@IdCountry AS NVARCHAR(2)='GT'
 AS
@@ -31,6 +35,7 @@ BEGIN
     DECLARE @GuideSerie VARCHAR(50);
 	DECLARE @GuideNumber VARCHAR(50);
     DECLARE @ExistRegisterInAnotherCountry AS BIT = 0;
+    DECLARE @CustomerName AS NVARCHAR(500) = '';
 
 	-- Extraer letras
 		SET @GuideSerie = '';
@@ -152,10 +157,13 @@ BEGIN
                @Receiver_Department = [Receiver_Department],
                @Sender_Town = [SenderIdTownship],
                @Receiver_Town = [ReceiverIdTownship],
-               @StatusName = [SO].[OrderDescription]
+               @StatusName = [SO].[OrderDescription],
+			   @CustomerName = [CU].[Name]
         FROM [dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
             INNER JOIN [dbo].[StatusOrder] [SO] WITH (NOLOCK)
                 ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
+			INNER JOIN [dbo].[Customer] [CU] WITH(NOLOCK)
+				ON [DO].[IdCustomer] = [CU].[IdCustomer]
         WHERE [DO].[Guide_Serie] = @GuideSerie AND [DO].[Guide_Number] = @GuideNumber 
 			--AND ([DO].[SenderCountryId] = @IdCountry OR ([DO].[SenderCountryId] IS NULL AND @IdCountry ='GT'))
         DECLARE @isreturnt BIT =
@@ -173,6 +181,7 @@ BEGIN
 
                 SELECT [Result] = 1,
                        @StatusName 'Status',
+					   @CustomerName 'CustomerName',
                        CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus'; /* Estados no validos*/
             END;
             ELSE IF (@isreturnt = 1)
@@ -180,6 +189,7 @@ BEGIN
 
                 SELECT [Result] = 6,
                        @StatusName 'Status',
+					   @CustomerName 'CustomerName',
                        CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus'; /* Estados Devuelto*/
 
             END;
@@ -190,6 +200,7 @@ BEGIN
 				         ELSE
 				         0 END [Result],
                        @StatusName 'Status',
+					   @CustomerName 'CustomerName',
                        CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus';
             END;
 
@@ -213,12 +224,14 @@ BEGIN
 			BEGIN
 				SELECT [Result] = 8,
                    @StatusName 'Status',
+                   @CustomerName 'CustomerName',
                    CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus'; /* La guia pertenece a otro pais*/
 			END
             ELSE
             BEGIN
             SELECT [Result] = 3,
                    @StatusName 'Status',
+                   @CustomerName 'CustomerName',
                    CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus'; /* Guía no existe*/
             END
         END;

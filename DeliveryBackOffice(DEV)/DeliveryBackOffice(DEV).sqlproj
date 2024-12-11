@@ -1794,6 +1794,7 @@
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
+	<Build Include="dbo\Stored Procedures\sphd_getGuidesFromReferenceNumber.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
