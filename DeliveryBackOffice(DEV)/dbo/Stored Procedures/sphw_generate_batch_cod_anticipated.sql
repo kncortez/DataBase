@@ -151,7 +151,7 @@ BEGIN
                                  --AND ( cus.IdCustomerType IN(2,3)
                                  --	  OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))
                                  AND do.StatusOrderId != 7
-                                 AND do.StatusOrderId IN ( 5, 22, 24, (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recepcionado en Express Center COD Anticipado') )
+                                 AND do.StatusOrderId IN ( 5, 22, 24, 1, (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recepcionado en Express Center COD Anticipado') )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
 								 AND pg.IsAnticipatedCOD = 1
@@ -206,7 +206,7 @@ BEGIN
                                  AND pg.Date > '2024-09-30 00:00:00.000'
                                  AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
-                                 AND do.StatusOrderId IN ( 5, 22, 24, (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recepcionado en Express Center COD Anticipado')  )
+                                 AND do.StatusOrderId IN ( 5, 22, 24, 1, (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recepcionado en Express Center COD Anticipado')  )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
 								 AND pg.IsAnticipatedCOD = 1
