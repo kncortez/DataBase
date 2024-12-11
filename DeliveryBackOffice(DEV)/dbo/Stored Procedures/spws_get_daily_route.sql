@@ -545,7 +545,14 @@ BEGIN
 										CASE 
 											WHEN ISNULL(DOR.IsCollect, 0) = 1 THEN 
 												CASE 
-													WHEN C.TotalAmount = C.TotalAmountPaid THEN 0
+													WHEN 
+													(SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)
+													INNER JOIN [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH(NOLOCK)
+															ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number)
+																AND CCTBC.ReasonCode = '00'
+													where	DOR.Guide_Serie = DAT.Guide_Serie
+															AND	DOR.Guide_Number = DAT.Guide_Number) = 1
+													THEN 0
 													ELSE ISNULL(DOR.PriceShippment, 0)
 												END
 											ELSE 0
