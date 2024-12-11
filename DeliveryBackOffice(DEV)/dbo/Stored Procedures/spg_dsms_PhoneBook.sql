@@ -136,7 +136,7 @@ BEGIN
 	   CS.Name AS CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
-	   CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',DO.PriceShippment,'* al recibir tu paquete o en la opción de pagar envío.') AS InsuranceAmount
+	   CASE WHEN DO.IsCollect = 0 AND DO.TypeService = 'STD' AND (DO.PriceShippment - CO.TotalAmountPaid) > 0 THEN CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',(DO.PriceShippment - CO.TotalAmountPaid),'* al recibir tu paquete o en la opción de pagar envío.') ELSE ' ' END AS InsuranceAmount
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
@@ -164,6 +164,9 @@ BEGIN
 	LEFT JOIN SMS_Sent SMS WITH(NOLOCK)
 		ON SMS.Sent_Guide_Number = DO.Guide_Number 
 		AND Sent_Guide_Series = DO.Guide_Serie
+	LEFT JOIN Cost CO WITH(NOLOCK)
+		ON DO.Guide_Serie = CO.GuideSerie
+			AND DO.Guide_Number = CO.GuideNumber
 	where not tu._Number is null
 	and not tu._Series is null
 	AND DOD.StatusOrderId = 11
@@ -218,7 +221,7 @@ BEGIN
 	   CS.Name AS CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
-	   CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',DO.PriceShippment,'* al recibir tu paquete o en la opción de pagar envío.') AS InsuranceAmount
+	    CASE WHEN DO.IsCollect = 0 AND DO.TypeService = 'STD' AND (DO.PriceShippment - CO.TotalAmountPaid) > 0 THEN CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',(DO.PriceShippment - CO.TotalAmountPaid),'* al recibir tu paquete o en la opción de pagar envío.') ELSE ' ' END AS InsuranceAmount
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
@@ -245,6 +248,9 @@ BEGIN
 		ON CCU.IdCatCurrencyCOD = DC.IdCurrencyCOD
 	LEFT JOIN SMS_Sent SMS WITH(NOLOCK)
 		ON SMS.Sent_Guide_Number = DO.Guide_Number AND Sent_Guide_Series = DO.Guide_Serie
+	LEFT JOIN Cost CO WITH(NOLOCK)
+		ON DO.Guide_Serie = CO.GuideSerie
+			AND DO.Guide_Number = CO.GuideNumber
 	where not tu._Number is null
 	and not tu._Series is null
 	AND DOD.StatusOrderId = 4
