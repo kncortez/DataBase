@@ -84,19 +84,19 @@ BEGIN
         BEGIN TRANSACTION
 
         -- FECHA MINIMA
-        SELECT  C.IdCustomer,
-               NULL AS PortfolioID,
-               CLIENT.FirstDate
-          INTO #TempDate
-          FROM DeliveryBackOffice.dbo.Customer C WITH (NOLOCK)
-               OUTER APPLY (
-                           SELECT ISNULL(MIN(CAST(do.DateCreated AS DATE) ),NULL) AS FirstDate
-                             FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                            WHERE C.IdCustomer = do.IdCustomer
-                            GROUP BY do.IdCustomer
-               ) AS Client
-         WHERE C.IdCustomerType IN (1, 3)
-           AND ISNULL(C.CountryID, 'GT') = @IdCountry
+       SELECT C.IdCustomer,
+              NULL AS PortfolioID,
+              CLIENT.FirstDate
+         INTO #TempDate
+         FROM DeliveryBackOffice.dbo.Customer C WITH (NOLOCK)
+              OUTER APPLY (
+                          SELECT ISNULL(MIN(CAST(do.DateCreated AS DATE) ),NULL) AS FirstDate
+                            FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                           WHERE C.IdCustomer = do.IdCustomer
+                           GROUP BY do.IdCustomer
+              ) AS Client
+        WHERE C.IdCustomerType IN ( 1, 3 )
+          AND ISNULL(C.CountryID, 'GT') = @IdCountry
 
         CREATE NONCLUSTERED INDEX IX_TempDate_IdCustomer
         ON #TempDate (IdCustomer);
@@ -231,7 +231,7 @@ BEGIN
                ISNULL(DATEDIFF(DAY, FirstDate, GETDATE()), 0) AS IsOldest,
                ISNULL((IsReturn * 100.0) / NULLIF(CountReturn, 0), 0) AS ReturnPercent,
                NumbersGuide AS MinGuidesPerMonth,
-               CAST(AmountCOD / 30 AS DECIMAL(8, 2)) AS DailyAmount,
+               CAST(AmountCOD / 30 AS DECIMAL(12, 2)) AS DailyAmount,
                CASE
                    WHEN NumbersGuide > @GuideValueMount
                         AND CAST((ISNULL((IsReturn * 100.0) / NULLIF(CountReturn, 0), 0)) AS DECIMAL(8, 2)) < @ReturnPercentMax
@@ -448,7 +448,7 @@ BEGIN
             )
             SELECT IdCustomer,
                    PortfolioId
-            FROM #CodAnticipated
+              FROM #CodAnticipated
 
             EXEC spUpdateBalanceByIdClient @TempData
 
@@ -456,8 +456,7 @@ BEGIN
 
         PRINT 'TranCount: ' + CAST(@@TRANCOUNT AS NVARCHAR);
 
-        IF @@TRANCOUNT > 0
-            COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
     END TRY
     BEGIN CATCH

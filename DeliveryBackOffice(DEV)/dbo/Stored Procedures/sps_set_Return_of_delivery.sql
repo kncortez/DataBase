@@ -180,6 +180,42 @@ BEGIN
                                   AND Guide_Number = @Guide_Number
                         );
 
+                        UPDATE acodh 
+                           SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
+                          FROM DeliveryOrderDetail dod
+                               INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
+                                       ON dod.Guide_Serie = acodd.GuideSerie
+                                      AND dod.Guide_Number = acodd.GuideNumber
+                                      AND acodd.RowStatus = 1
+                               INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
+                                       ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
+                               INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
+                                       ON bdcod.GuideSerie = dod.Guide_Serie
+                                      AND bdcod.GuideNumber = dod.Guide_Number
+                         WHERE dod.Guide_Serie = @Guide_Serie
+                           AND dod.Guide_Number = @Guide_Number
+                           AND dod.StatusOrderId = 14
+                           AND bdcod.Excluded = 0
+                           AND bdcod.CatTransactionTypeCODId = 2;
+
+                        UPDATE acodd
+                           SET acodd.BalanceStatus = 'DEVOLUCION'
+                          FROM DeliveryOrderDetail dod
+                               INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
+                                       ON dod.Guide_Serie = acodd.GuideSerie
+                                      AND dod.Guide_Number = acodd.GuideNumber
+                                      AND acodd.RowStatus = 1
+                               INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
+                                       ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
+                               INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
+                                       ON bdcod.GuideSerie = dod.Guide_Serie
+                                      AND bdcod.GuideNumber = dod.Guide_Number
+                         WHERE dod.Guide_Serie = @Guide_Serie
+                           AND dod.Guide_Number = @Guide_Number
+                           AND dod.StatusOrderId = 14
+                           AND bdcod.Excluded = 0
+                           AND bdcod.CatTransactionTypeCODId = 2;
+
                         SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
 
 
