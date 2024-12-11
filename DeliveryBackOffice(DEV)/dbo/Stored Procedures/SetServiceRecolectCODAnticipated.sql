@@ -4,14 +4,14 @@
 -- Description:	< Ingresión de datos de guía en AnticipatedCODDetail al momento determinar que una guía es COD Anticipado >
 -- =============================================
 
-CREATE [dbo].[SetServiceRecolectCODAnticipated]
+CREATE PROCEDURE [dbo].[SetServiceRecolectCODAnticipated]
 	-- Add the parameters for the stored procedure here
 	@GuideSerie		NVARCHAR(3) = 'FT',
 	@GuideNumber	INT = 955582,
 	@Token          NVARCHAR(50) = 'API-FORZA',
 	@IsProcessedGuideCOD INT = 0,
 	@Code           SMALLINT OUTPUT,
-	@Message        NVARCHAR(250) OUTPUT
+	@Message        NVARCHAR(3000) OUTPUT
 AS
 BEGIN
 
@@ -120,7 +120,7 @@ BEGIN
 					END												-- 'ComisionCODAnticipated'
 				 , @FinalRate = RH.GuideAmountCOD					-- 'MaxAmountCODAnticipated'
 				 , @RateHeaderId = RH.RheId							-- 'RheId
-				 , @RateHeaderId = DO.CatModuleId
+				 , @CatModuleId = DO.CatModuleId
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 				ON VPC.CodeOfReference = DO.Sender_ID
@@ -182,12 +182,16 @@ BEGIN
 						BEGIN TRY							
 							--SELECT @IdAnticipatedCODHeader IdAnticipatedCODHeader, @GuideSerie GuideSerie, @GuideNumber GuideNumber, @IsOldest IsOldest, @MinGuidesPerMonth MinGuidesPerMonth, @DailyAmount DailyAmount, @ReturnPercent ReturnPercent, @IsCODAnticipatedValid IsCODAnticipatedValid, @CollectOnDelivery CollectOnDelivery, @AnticipatedCODComissionId AnticipatedCODComissionId, @BalanceStatus BalanceStatus, 1 RowStatus, @Token TokenCreated, GETDATE() DateCreated
 							--INSERTAR VALORES PARA QUE SEAN PROCESADOS POR EL SERVICIO DE GENERACIÓN DE LOTES COD
-							IF NOT EXISTS(SELECT * FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH(NOLOCK) WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber)
+
+							IF(@IsCODAnticipatedValid = 1)
 							BEGIN
-								INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD(GuideSerie,GuideNumber,DataOriginId,Token,CustomerId,IsAnticipatedCOD)
-								VALUES(@GuideSerie,@GuideNumber,@CODRateDefault,@Token,@CustomerId,1);
+								IF NOT EXISTS(SELECT * FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH(NOLOCK) WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber)
+								BEGIN
+									INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD(GuideSerie,GuideNumber,DataOriginId,Token,CustomerId,IsAnticipatedCOD)
+									VALUES(@GuideSerie,@GuideNumber,@CatModuleId,@Token,@CustomerId,1);
+								END
 							END
-						
+
 							--INSERTAR VALORES EN EL DETALLLE
 							INSERT INTO AnticipatedCODDetail(AnticipatedCODHeaderId,GuideSerie,GuideNumber,IsOldest,MinGuidesPerMonth,DailyAmount,ReturnPercent,IsCODAnticipatedValid,CollectOnDelivery,AnticipatedCODComissionId,BalanceStatus,RowStatus,TokenCreated,DateCreated)
 							VALUES(@IdAnticipatedCODHeader,@GuideSerie,@GuideNumber,@IsOldest,@MinGuidesPerMonth,@DailyAmount,@ReturnPercent,@IsCODAnticipatedValid,@CollectOnDelivery,@AnticipatedCODComissionId,@BalanceStatus,1,@Token,GETDATE())
