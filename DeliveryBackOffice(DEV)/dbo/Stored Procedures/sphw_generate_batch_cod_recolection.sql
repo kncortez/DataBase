@@ -1,5 +1,16 @@
 ﻿
 --EXEC  [dbo].[sphw_generate_batch_cod_recolection] 31,'8_00'
+
+-- =============================================
+-- Author:		<Cristian Azurdia>
+-- Update date: <2024-11-18>
+-- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
+-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Update date: <2024-12-09>
+-- Description:	<Separacion de flujos para generacion de lotes cod inmediato y cod anticipado>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_recolection]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
@@ -7,6 +18,19 @@ CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_recolection]
 	@IdCountrySender NVARCHAR(50) = N'GT'
 AS
 BEGIN
+	
+	IF OBJECT_ID('tempdb.dbo.#GuidesProcessCOD', 'U') IS NOT NULL
+	DROP TABLE #GuidesProcessCOD
+	--TABLA PARA PODER CONFIRMAR QUE LA TRANSACCCION COD HA SIDO REALIZADA CORRECTAMENTE
+	CREATE TABLE #GuidesProcessCOD
+	(
+		GuideSerie NVARCHAR(8),
+		GuideNumber INT,
+		IdBatchDetailCOD INT
+		--CONSTRAINT PK_sphw_generate_batch_cod_recolection_tmp PRIMARY KEY (GuideSerie, GuideNumber)
+	);
+
+	CREATE NONCLUSTERED INDEX INDX_sphw_generate_batch_cod_recolection_tmp ON #GuidesProcessCOD (GuideSerie, GuideNumber)
 
     -- Micro transacción para indicar inicio de proceso de CoD ejecutado
     BEGIN TRANSACTION Started_CoD_Execution_Process;
@@ -186,6 +210,7 @@ BEGIN
                              --AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                              AND do.StatusOrderId != 7
 							 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+							 AND pg.IsAnticipatedCOD <> 1
                        FOR XML PATH('')
                    ),
                    1,
@@ -214,8 +239,9 @@ BEGIN
             DROP TABLE #TableCustomerPaymentTemp;
         IF OBJECT_ID('tempdb.dbo.#TableForzaPaymentTemp', 'U') IS NOT NULL
             DROP TABLE #TableForzaPaymentTemp;
-        PRINT '@ProductNumber';
-        PRINT @ProductNumber;
+
+        PRINT '@ProductNumber: ' + @ProductNumber;
+
         IF @ProductNumber IS NOT NULL
         BEGIN
             -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -719,6 +745,11 @@ BEGIN
                         DiscountPrice,
 						IdCountry
                     )
+					OUTPUT						
+						INSERTED.GuideSerie,
+						INSERTED.GuideNumber,
+						INSERTED.IdBatchDetailCOD
+					INTO #GuidesProcessCOD
                     SELECT @NewIdBatchCODForza,
                            tfpt.GuideSerie,
                            tfpt.GuideNumber,
@@ -785,7 +816,8 @@ BEGIN
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
 
             --IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -817,7 +849,8 @@ BEGIN
                         ON pgc.GuideSerie = tfpt.GuideSerie
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
         END;
         ELSE
@@ -855,6 +888,15 @@ BEGIN
             -- The procedure must commit the transaction  
             -- it started.  
             COMMIT TRANSACTION;
+
+			UPDATE bdc
+            SET bdc.IsCompleted = 1 
+            FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc
+                INNER JOIN #GuidesProcessCOD gpc
+                    ON bdc.GuideSerie = gpc.GuideSerie
+                    AND bdc.GuideNumber = gpc.GuideNumber
+					AND bdc.IdBatchDetailCOD = gpc.IdBatchDetailCOD;
+
         --END
         END;
     END TRY
@@ -985,6 +1027,18 @@ BEGIN
         -- The procedure must commit the transaction  
         -- it started.
         COMMIT TRANSACTION;
+
+		UPDATE bdc
+        SET bdc.IsCompleted = 1 
+        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc
+            INNER JOIN #GuidesProcessCOD gpc
+                ON bdc.GuideSerie = gpc.GuideSerie
+                AND bdc.GuideNumber = gpc.GuideNumber
+				AND bdc.IdBatchDetailCOD = gpc.IdBatchDetailCOD;
+
+		IF OBJECT_ID('tempdb.dbo.#GuidesProcessCOD', 'U') IS NOT NULL
+		DROP TABLE #GuidesProcessCOD;
+
     --END
     END;
 END;

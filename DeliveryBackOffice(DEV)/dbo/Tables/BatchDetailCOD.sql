@@ -149,6 +149,9 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica la moneda de la transaccion ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'IdCurrency';
 
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valida que el registro ha sido procesado y finalizado 0 = En proceso 1 = Finalizada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'IsCompleted';
+
+GO
 CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideSerie_GuideNumber_CreditAccountId_BankId]
     ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC, [CreditAccountId] ASC, [BankId] ASC);
 

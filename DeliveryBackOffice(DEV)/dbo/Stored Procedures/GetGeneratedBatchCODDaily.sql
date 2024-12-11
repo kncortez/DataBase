@@ -1,11 +1,35 @@
 ﻿--EXEC  [dbo].[GetGeneratedBatchCODDaily] 33,'8'
-CREATE PROCEDURE [dbo].[GetGeneratedBatchCODDaily]
+
+-- =============================================
+-- Author:		<Cristian Azurdia>
+-- Update date: <2024-11-18>
+-- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
+-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Update date: <2024-12-09>
+-- Description:	<Separacion de flujos para generacion de lotes cod inmediato y cod anticipado>
+-- =============================================
+
+CREATE  PROCEDURE [dbo].[GetGeneratedBatchCODDaily]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
     @CoDProcessID INT,
 	@IdCountrySender NVARCHAR(50) = N'GT'
 AS
 BEGIN
+
+	IF OBJECT_ID ('tempdb.dbo.#GuidesProcessCOD') IS NOT NULL
+	DROP TABLE #GuidesProcessCOD;
+	--TABLA PARA PODER CONFIRMAR QUE LA TRANSACCCION COD HA SIDO REALIZADA CORRECTAMENTE
+	CREATE TABLE #GuidesProcessCOD
+	(
+		GuideSerie NVARCHAR(8),
+		GuideNumber INT,
+		IdBatchDetailCOD INT
+		--CONSTRAINT PK_sphw_generate_batch_cod_recolection_tmp PRIMARY KEY (GuideSerie, GuideNumber)
+	);
+
+	CREATE NONCLUSTERED INDEX INDX_GetGeneratedBatchCODDaily_tmp ON #GuidesProcessCOD (GuideSerie, GuideNumber)
 
     -- Micro transacción para indicar inicio de proceso de CoD ejecutado
     BEGIN TRANSACTION Started_CoD_Execution_Process;
@@ -135,6 +159,7 @@ BEGIN
 								 AND ISNULL(do.IsLastMileReturn,0) =0
 								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
 								 AND do.SenderCountryId = @IdCountrySender
+								 AND pg.IsAnticipatedCOD <> 1
                            FOR XML PATH('')
                        ),
                        1,
@@ -188,6 +213,7 @@ BEGIN
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
 								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
 								 AND do.SenderCountryId = @IdCountrySender
+								 AND pg.IsAnticipatedCOD <> 1
                            FOR XML PATH('')
                        ),
                        1,
@@ -584,6 +610,7 @@ BEGIN
                   AND pgc.BatchCODIdCommission IS NULL
                   AND pgc.RowStatus = 1
 				  AND tact.CODtoPay <= 0 --BNHL 14/11/2024 
+				  AND pgc.IsAnticipatedCOD <> 1
 				  ;
 
             -- OBTENCION DEL NUMERO DE REFERENCIA (CORRELATIVO) PARA BAC
@@ -814,6 +841,11 @@ BEGIN
                         DiscountPrice,
 						IdCountry
                     )
+					OUTPUT						
+						INSERTED.GuideSerie,
+						INSERTED.GuideNumber,
+						INSERTED.IdBatchDetailCOD
+					INTO #GuidesProcessCOD
                     SELECT @NewIdBatchCODCustomer,
                            tcpt.GuideSerie,
                            tcpt.GuideNumber,
@@ -924,6 +956,11 @@ BEGIN
                         DiscountPrice,
 						IdCountry
                     )
+					OUTPUT						
+						INSERTED.GuideSerie,
+						INSERTED.GuideNumber,
+						INSERTED.IdBatchDetailCOD
+					INTO #GuidesProcessCOD
                     SELECT @NewIdBatchCODForza,
                            tfpt.GuideSerie,
                            tfpt.GuideNumber,
@@ -999,7 +1036,8 @@ BEGIN
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
 
             IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -1015,7 +1053,8 @@ BEGIN
                         ON pgc.GuideSerie = tcpt.GuideSerie
                            AND pgc.GuideNumber = tcpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
 
             IF ((@NewIdBatchCODForza IS NOT NULL) AND (@NewIdBatchCODForza > 0))
@@ -1031,7 +1070,8 @@ BEGIN
                         ON pgc.GuideSerie = tfpt.GuideSerie
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
-                      AND pgc.RowStatus = 1;
+                      AND pgc.RowStatus = 1
+					  AND pgc.IsAnticipatedCOD <> 1;
             END;
         END;
         ELSE
@@ -1069,6 +1109,14 @@ BEGIN
             -- The procedure must commit the transaction  
             -- it started.  
             COMMIT TRANSACTION;
+
+			UPDATE bdc
+            SET bdc.IsCompleted = 1 
+            FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH (NOLOCK)
+                INNER JOIN #GuidesProcessCOD gpc
+                    ON bdc.GuideSerie = gpc.GuideSerie
+                    AND bdc.GuideNumber = gpc.GuideNumber
+					AND bdc.IdBatchDetailCOD = gpc.IdBatchDetailCOD;
         --END
         END;
     END TRY
@@ -1198,12 +1246,24 @@ BEGIN
         END;
 
         --IF @TranCounter = 0  
-        --BEGIN
+        -- BEGIN
         -- @TranCounter = 0 means no transaction was  
         -- started before the procedure was called.  
         -- The procedure must commit the transaction  
         -- it started.
+		-- END
         COMMIT TRANSACTION;
-    --END
+
+		UPDATE bdc
+        SET bdc.IsCompleted = 1 
+        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH (NOLOCK)
+            INNER JOIN #GuidesProcessCOD gpc
+                ON bdc.GuideSerie = gpc.GuideSerie
+                AND bdc.GuideNumber = gpc.GuideNumber
+				AND bdc.IdBatchDetailCOD = gpc.IdBatchDetailCOD;
+
+		IF OBJECT_ID('tempdb.dbo.#GuidesProcessCOD', 'U') IS NOT NULL
+		DROP TABLE #GuidesProcessCOD;
+  
     END;
 END;

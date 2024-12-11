@@ -21,6 +21,7 @@
     [RecolectionBatch]       BIT          NULL,
     [CODBatch]               BIT          NULL,
     [IsCompleted]            TINYINT      DEFAULT(0) NULL,
+    [IsAnticipatedCOD]       INT          NULL,
     CONSTRAINT [PK_ProcessedGuideCOD_IdProcessedGuideCOD] PRIMARY KEY CLUSTERED ([IdProcessedGuideCOD] ASC),
     CONSTRAINT [FK_ProcessedGuideCOD_BatchCOD] FOREIGN KEY ([BatchCODId]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
     CONSTRAINT [FK_ProcessedGuideCOD_BatchCOD_BatchCODIdCommission] FOREIGN KEY ([BatchCODIdCommission]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
@@ -56,6 +57,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica los lotes que son de pagos de COD ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'CODBatch';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valida que el regsitro ha sido procesado y finalizado 0 = En proceso 1 = Finalizada ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'IsCompleted';
+
 
 GO
 CREATE NONCLUSTERED INDEX [idx_Notificated_BatchCODId]
@@ -69,6 +73,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'En esta col
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Flag para poder saber cuando el correo con el reporte de depósito fue enviado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'DeliveryReportNotified';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para identificar guias creadas para servicio cod anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'IsAnticipatedCOD';
 
 
 GO
