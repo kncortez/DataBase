@@ -4,22 +4,22 @@
 -- Description: < Se creo tabla para manejo de validaciones por cliente de COD Anticipado >
 -- =============================================
 CREATE TABLE dbo.AnticipatedCODHeader(
-IdAnticipatedCODHeader		INT IDENTITY (1, 1) NOT NULL,
-CustomerId					INT					NOT NULL,
-PortfolioId					BIGINT				NULL,
-DailyDate					DATE				NOT NULL,
-IsOldest					INT					NOT NULL,
-ReturnPercent				INT					NOT NULL,
-MinGuidesPerMonth			INT					NOT NULL,
-DailyAmount					DECIMAL(18,2)		NOT NULL,
-IsCODAnticipatedValid		INT					NOT NULL,
-Balance						DECIMAL(18,2)		NOT NULL,
-AgaintsBalance				DECIMAL(18,2)		NOT NULL,
-RowStatus					INT					NOT NULL,
-TokenCreated				NVARCHAR(100)		NOT NULL,
-DateCreated					DATETIME			NOT NULL,
-TokenUpdated				NVARCHAR(100)		NULL,
-DateUpdated					DATETIME			NULL,
+IdAnticipatedCODHeader      INT IDENTITY (1, 1) NOT NULL,
+CustomerId                  INT                 NOT NULL,
+PortfolioId                 BIGINT              NULL,
+DailyDate                   DATE                NOT NULL,
+IsOldest                    INT                 NOT NULL,
+ReturnPercent               INT                 NOT NULL,
+MinGuidesPerMonth           INT                 NOT NULL,
+DailyAmount                 DECIMAL(18,2)       NOT NULL,
+IsCODAnticipatedValid       INT                 NOT NULL,
+Balance                     DECIMAL(18,2)       NOT NULL,
+AgaintsBalance              DECIMAL(18,2)       NOT NULL,
+RowStatus                   INT                 NOT NULL,
+TokenCreated                NVARCHAR(100)       NOT NULL,
+DateCreated                 DATETIME            NOT NULL,
+TokenUpdated                NVARCHAR(100)       NULL,
+DateUpdated                 DATETIME            NULL,
 PRIMARY KEY CLUSTERED (IdAnticipatedCODHeader ASC),
 CONSTRAINT [FKCustomerId_AnticipatedCODHeader] FOREIGN KEY (CustomerId) REFERENCES dbo.Customer (IdCustomer),
 CONSTRAINT [FKPortfolioId_AnticipatedCODHeader] FOREIGN KEY (PortfolioId) REFERENCES dbo.VisitPointByClientPortfolio (IdVisitPointByClientPortfolio)
@@ -32,7 +32,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Llave foranea 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Llave foranea que relaciona las validaciones con el cliente de cartera', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'PortfolioId';
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización de validaciones para servicio COD Anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'DailyDate';
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Ãšltima fecha de actualizaciÃ³n de validaciones para servicio COD Anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'DailyDate';
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Variable que maneja la antiguedad en dias en creacion de guias calculado para el cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'IsOldest';
 GO

@@ -25,7 +25,7 @@ BEGIN
 
 	CREATE NONCLUSTERED INDEX INDX_sphw_generate_batch_cod_tmp ON #GuidesProcessCOD (GuideSerie, GuideNumber)
 
-    -- Micro transacci髇 para indicar inicio de proceso de CoD ejecutado
+    -- Micro transacci贸n para indicar inicio de proceso de CoD ejecutado
     BEGIN TRANSACTION Started_CoD_Execution_Process;
     BEGIN TRY
 		
@@ -1217,7 +1217,7 @@ BEGIN
         ELSE
         BEGIN
 
-            -- Micro transacci髇 para indicar inicio de proceso de CoD ejecutado
+            -- Micro transacci贸n para indicar inicio de proceso de CoD ejecutado
             BEGIN TRANSACTION Completed_CoD_Execution_Process;
             BEGIN TRY
 
@@ -1263,7 +1263,7 @@ BEGIN
     END TRY
     BEGIN CATCH
 
-        -- Micro transacci髇 para indicar inicio de proceso de CoD ejecutado
+        -- Micro transacci贸n para indicar inicio de proceso de CoD ejecutado
         BEGIN TRANSACTION Retry_CoD_Execution_Process;
         BEGIN TRY
 
@@ -1330,7 +1330,7 @@ BEGIN
         --SELECT * FROM #TableCustomerPaymentTemp;
         --SELECT * FROM #TableForzaPaymentTemp;
 
-        -- Micro transacci髇 para indicar inicio de proceso de CoD ejecutado
+        -- Micro transacci贸n para indicar inicio de proceso de CoD ejecutado
         BEGIN TRANSACTION Completed_CoD_Execution_Process;
         BEGIN TRY
 
