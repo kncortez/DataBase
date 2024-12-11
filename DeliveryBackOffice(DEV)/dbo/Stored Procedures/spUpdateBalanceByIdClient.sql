@@ -3,7 +3,7 @@
 -- Create date: <2024-09-12>
 -- Description: < Procedimiento para actualizar balance por cliente para COD anticipado>
 -- =============================================
-ALTER PROCEDURE spUpdateBalanceByIdClient
+CREATE PROCEDURE spUpdateBalanceByIdClient
 (
  @AnticipatedCODDetail AS TblAnticipatedCODCustomerBalance READONLY
 )

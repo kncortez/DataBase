@@ -4,8 +4,8 @@
 -- Create date: <2024-12-03>
 -- Description:	<Calcula las reglas de negocio que necesita COD anticipado>
 -- =============================================
---EXEC GetUpdateRegisterCODearly
-ALTER PROCEDURE [dbo].[GetUpdateRegisterCODearly] @IdCountry NVARCHAR(2) = 'GT'
+--EXEC GetUpdateRegisterCODearly 'GT'
+CREATE PROCEDURE [dbo].[GetUpdateRegisterCODearly] @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
     BEGIN TRY
@@ -84,18 +84,19 @@ BEGIN
         BEGIN TRANSACTION
 
         -- FECHA MINIMA
-        SELECT C.IdCustomer,
-               NULL AS PortfolioID,
-               (
-                   SELECT TOP 1
-                       MIN(CAST(do.DateCreated AS DATE)) AS FirstDate
-                   FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE c.IdCustomer = do.IdCustomer
-               ) AS FirstDate
-        INTO #TempDate
-        FROM DeliveryBackOffice.dbo.Customer C WITH (NOLOCK)
+       SELECT C.IdCustomer,
+              NULL AS PortfolioID,
+              CLIENT.FirstDate
+         INTO #TempDate
+         FROM DeliveryBackOffice.dbo.Customer C WITH (NOLOCK)
+              OUTER APPLY (
+                          SELECT ISNULL(MIN(CAST(do.DateCreated AS DATE) ),NULL) AS FirstDate
+                            FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                           WHERE C.IdCustomer = do.IdCustomer
+                           GROUP BY do.IdCustomer
+              ) AS Client
         WHERE C.IdCustomerType IN ( 1, 3 )
-              AND ISNULL(C.CountryID, 'GT') = @IdCountry
+          AND ISNULL(C.CountryID, 'GT') = @IdCountry
 
         CREATE NONCLUSTERED INDEX IX_TempDate_IdCustomer
         ON #TempDate (IdCustomer);
@@ -184,16 +185,14 @@ BEGIN
                (
                    SELECT COUNT(Guide_Number)
                    FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.IdCustomer = CU.IdCustomer
-                         AND do.DateCreated
+                   WHERE do.DateCreated
                          BETWEEN @DayMount AND GETDATE()
                          AND DO.VisitpointClientPortfolioId = CU.PortfolioID
                ) AS NumbersGuides,
                (
                    SELECT SUM(Collect_OnDelivery)
                    FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.IdCustomer = CU.IdCustomer
-                         AND do.DateCreated
+                   WHERE do.DateCreated
                          BETWEEN @DayMount AND GETDATE()
                          AND DO.VisitpointClientPortfolioId = CU.PortfolioID
                ) AS AmountCOD
@@ -208,8 +207,7 @@ BEGIN
                (
                    SELECT COUNT(IsReturn)
                    FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.IdCustomer = CU.IdCustomer
-                         AND do.DateCreated
+                   WHERE do.DateCreated
                          BETWEEN @DayThreeMount AND GETDATE()
                          AND DO.VisitpointClientPortfolioId = CU.PortfolioID
                          AND do.IsReturn = 1
@@ -217,8 +215,7 @@ BEGIN
                (
                    SELECT COUNT(IsReturn)
                    FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.IdCustomer = CU.IdCustomer
-                         AND do.DateCreated
+                   WHERE do.DateCreated
                          BETWEEN @DayThreeMount AND GETDATE()
                          AND DO.VisitpointClientPortfolioId = CU.PortfolioID
                ) CountReturn
@@ -234,7 +231,7 @@ BEGIN
                ISNULL(DATEDIFF(DAY, FirstDate, GETDATE()), 0) AS IsOldest,
                ISNULL((IsReturn * 100.0) / NULLIF(CountReturn, 0), 0) AS ReturnPercent,
                NumbersGuide AS MinGuidesPerMonth,
-               CAST(AmountCOD / 30 AS DECIMAL(8, 2)) AS DailyAmount,
+               CAST(AmountCOD / 30 AS DECIMAL(12, 2)) AS DailyAmount,
                CASE
                    WHEN NumbersGuide > @GuideValueMount
                         AND CAST((ISNULL((IsReturn * 100.0) / NULLIF(CountReturn, 0), 0)) AS DECIMAL(8, 2)) < @ReturnPercentMax
@@ -451,7 +448,7 @@ BEGIN
             )
             SELECT IdCustomer,
                    PortfolioId
-            FROM #CodAnticipated
+              FROM #CodAnticipated
 
             EXEC spUpdateBalanceByIdClient @TempData
 
@@ -459,8 +456,7 @@ BEGIN
 
         PRINT 'TranCount: ' + CAST(@@TRANCOUNT AS NVARCHAR);
 
-        IF @@TRANCOUNT > 0
-            COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
     END TRY
     BEGIN CATCH

@@ -37,7 +37,7 @@ BEGIN
 		IdCountry NVARCHAR(2)
 	);
 
-	-- Obtener valores de ejecuci髇 de la fecha actual
+	-- Obtener valores de ejecuci贸n de la fecha actual
 	SET @DailyExecutionExists = ISNULL((
 		SELECT 
 			TOP 1 
@@ -60,7 +60,7 @@ BEGIN
 		IF( @DailyExecutionExists = 1 )
 		BEGIN
 
-			-- Ya existen registros para el d韆 de hoy para ejecuci髇 de CoD
+			-- Ya existen registros para el d铆a de hoy para ejecuci贸n de CoD
 			INSERT INTO
 				@ResponseExecutionQueue
 				(ResponseOrder, CoDProcessName, DeliveryBankId, ExecutionDate, ExecutionTime, ExecutionPriority, ExecutionIsPending, ExecutionHasStarted, ExecutionHasCompleted, IdCountry)
@@ -82,13 +82,13 @@ BEGIN
 			SELECT
 				@IsSuccessful = 1,
 				@EstimatedLine = 0,
-				@ResponseMessage = CONCAT('Se obtuvo exitosamente cola de ejecuci髇 de procesos', CONVERT(nvarchar,GETDATE(), 103))
+				@ResponseMessage = CONCAT('Se obtuvo exitosamente cola de ejecuci贸n de procesos', CONVERT(nvarchar,GETDATE(), 103))
 
 		END
 		ELSE
 		BEGIN
 
-			-- No existen registros para el d韆 de hoy para ejecuci髇 de CoD
+			-- No existen registros para el d铆a de hoy para ejecuci贸n de CoD
 			INSERT INTO 
 				@DailyExecutionQueue
 				(CodDailyScheduleId, ExecutionDate, CoDProcessName, DeliveryBankId, ExecutionTime, ProcessPriority, IdCountry)
@@ -130,21 +130,21 @@ BEGIN
 				IF( EXISTS(SELECT TOP 1 1 FROM @ResponseExecutionQueue) )
 				BEGIN
 
-					-- Inserto exitosamente la ejecuci髇 para el d韆 de hoy
+					-- Inserto exitosamente la ejecuci贸n para el d铆a de hoy
 					SELECT
 						@IsSuccessful = 1,
 						@EstimatedLine = 0,
-						@ResponseMessage = CONCAT('Se obtuvo exitosamente cola de ejecuci髇 de procesos', CONVERT(nvarchar,GETDATE(), 103))
+						@ResponseMessage = CONCAT('Se obtuvo exitosamente cola de ejecuci贸n de procesos', CONVERT(nvarchar,GETDATE(), 103))
 
 				END
 				ELSE
 				BEGIN
 
-					-- No inserto datos para la ejecuci髇 del d韆 actual
+					-- No inserto datos para la ejecuci贸n del d铆a actual
 					SELECT
 						@IsSuccessful = 0,
 						@EstimatedLine = 112,
-						@ResponseMessage = CONCAT('No se pudo insertar correctamente los datos de ejecuci髇 para la fecha actual ', CONVERT(nvarchar,GETDATE(), 103))
+						@ResponseMessage = CONCAT('No se pudo insertar correctamente los datos de ejecuci贸n para la fecha actual ', CONVERT(nvarchar,GETDATE(), 103))
 
 				END
 
@@ -156,7 +156,7 @@ BEGIN
 				SELECT
 					@IsSuccessful = 0,
 					@EstimatedLine = 90,
-					@ResponseMessage = CONCAT('No se pudo generar correctamente los datos de ejecuci髇 para la fecha actual ', CONVERT(nvarchar,GETDATE(), 103))
+					@ResponseMessage = CONCAT('No se pudo generar correctamente los datos de ejecuci贸n para la fecha actual ', CONVERT(nvarchar,GETDATE(), 103))
 			
 			END
 

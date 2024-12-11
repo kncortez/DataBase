@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<Walter Orozco>
 -- Create date: <2024-11-28>
 -- Description:	<COD Anticipado - Método para obtener información de COD anticipado en portal EXC generación/recepeción de guías.>
