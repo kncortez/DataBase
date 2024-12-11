@@ -72,16 +72,16 @@ BEGIN
 			@DailyAmount = DailyAmount,  
 			@ReturnPercent = ReturnPercent,  
 			@IsCODAnticipatedValid = IsCODAnticipatedValid  
-	   FROM AnticipatedCODHeader WITH(NOLOCK)  
-	   WHERE CustomerId = @CustomerId  
+		FROM AnticipatedCODHeader WITH(NOLOCK)  
+		WHERE CustomerId = @CustomerId  
 		  AND RowStatus = 1     
              
 		SELECT   
 			@CODRateDefault = CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0'))  
 		FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)  
-				WHERE cf.Name = 'CODExemptDef'  
-						AND Status = 1  
-		 AND cf.IdCountry = @IdCountrySender;  
+		WHERE cf.Name = 'CODExemptDef'
+			AND Status = 1  
+			AND cf.IdCountry = @IdCountrySender;  
   
 		SELECT   
 			@CODExemptDefault = CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0'))  
@@ -172,102 +172,108 @@ BEGIN
 			ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'  
 		   WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber  
 
-	IF(@DailyAmount >=  @CollectOnDelivery)  
-	 BEGIN  
+		IF(@DailyAmount >=  @CollectOnDelivery)  
+		BEGIN  
   
-		PRINT 'Return Percent: ' + CONVERT(NVARCHAR(16),@ReturnPercent)  
+			PRINT 'Return Percent: ' + CONVERT(NVARCHAR(16),@ReturnPercent)  
   
-		IF(@ReturnPercent IS NOT NULL AND @ReturnPercent > 0)  
-		BEGIN        
-		  BEGIN TRANSACTION InsertCODAnticipated  
-		  BEGIN TRY         
-				 IF(@IsProcessedGuideCOD = 1)  
-				 BEGIN  
-					IF NOT EXISTS(SELECT TOP 1 1 FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH(NOLOCK) WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber)  
-					BEGIN  
-						 INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD(GuideSerie,GuideNumber,DataOriginId,Token,CustomerId,IsAnticipatedCOD)  
-						 VALUES(@GuideSerie,@GuideNumber,@CatModuleId,@Token,@CustomerId,1);  
-					END  
-				 END  
+			IF(@ReturnPercent IS NOT NULL AND @ReturnPercent > 0)  
+			BEGIN        
+			  BEGIN TRANSACTION InsertCODAnticipated  
+			  BEGIN TRY         
+					 IF(@IsProcessedGuideCOD = 1)  
+					 BEGIN  
+						IF NOT EXISTS(SELECT TOP 1 1 FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH(NOLOCK) WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber)  
+						BEGIN  
+							 INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD(GuideSerie,GuideNumber,DataOriginId,Token,CustomerId,IsAnticipatedCOD)  
+							 VALUES(@GuideSerie,@GuideNumber,@CatModuleId,@Token,@CustomerId,1);  
+						END  
+					 END  
 
-				 --INSERTAR VALORES EN EL DETALLLE  
-				 INSERT INTO AnticipatedCODDetail(AnticipatedCODHeaderId,GuideSerie,GuideNumber,IsOldest,MinGuidesPerMonth,DailyAmount,ReturnPercent,IsCODAnticipatedValid,CollectOnDelivery,AnticipatedCODComissionId,BalanceStatus,RowStatus,TokenCreated,DateCreated) 
-				 VALUES(@IdAnticipatedCODHeader,@GuideSerie,@GuideNumber,@IsOldest,@MinGuidesPerMonth,@DailyAmount,@ReturnPercent,@IsCODAnticipatedValid,@CollectOnDelivery,@AnticipatedCODComissionId,@BalanceStatus,1,@Token,GETDATE())  
+					 --INSERTAR VALORES EN EL DETALLLE  
+					 INSERT INTO AnticipatedCODDetail(AnticipatedCODHeaderId,GuideSerie,GuideNumber,IsOldest,MinGuidesPerMonth,DailyAmount,ReturnPercent,IsCODAnticipatedValid,CollectOnDelivery,AnticipatedCODComissionId,BalanceStatus,RowStatus,TokenCreated,DateCreated) 
+					 VALUES(@IdAnticipatedCODHeader,@GuideSerie,@GuideNumber,@IsOldest,@MinGuidesPerMonth,@DailyAmount,@ReturnPercent,@IsCODAnticipatedValid,@CollectOnDelivery,@AnticipatedCODComissionId,@BalanceStatus,1,@Token,GETDATE())  
 
-				 SELECT  @Code = 200,  
-				   @Message = 'Proceso finalizado'  
+					 SELECT  @Code = 200,  
+					   @Message = 'Proceso finalizado'  
              
-				 SELECT  @Code AS code,  
-				   @Message AS [Message];  
+					 SELECT  @Code AS code,  
+					   @Message AS [Message];  
 
-				 COMMIT TRANSACTION InsertCODAnticipated  
-		  END TRY  
-		  BEGIN CATCH  
+					 COMMIT TRANSACTION InsertCODAnticipated  
+
+					 UPDATE DeliveryBackOffice.dbo.ProcessedGuideCOD
+					 SET IsCompleted = 1
+					 WHERE  GuideSerie = @GuideSerie 
+						AND GuideNumber = @GuideNumber
+
+			  END TRY  
+			  BEGIN CATCH  
   
-				ROLLBACK TRANSACTION InsertCODAnticipated;  
-				SELECT  @Code = 0,  
-				  @Message = 'Existe errores al momento de registrar la Guia'  
+					ROLLBACK TRANSACTION InsertCODAnticipated;  
+					SELECT  @Code = 0,  
+					  @Message = 'Existe errores al momento de registrar la Guia'  
             
-				SELECT  @Code AS code,  
-				  @Message AS [Message];  
-		  END CATCH
-    END  
-    ELSE  
-    BEGIN  
-        PRINT 'Return Percent: ' + CONVERT(NVARCHAR(16),@ReturnPercent)  
-        SELECT  @Code = 0,  
-         @Message = 'El monto no se encuentra dentro de los paramettros definidos'  
+					SELECT  @Code AS code,  
+					  @Message AS [Message];  
+			  END CATCH
+		END  
+		ELSE  
+		BEGIN  
+			PRINT 'Return Percent: ' + CONVERT(NVARCHAR(16),@ReturnPercent)  
+			SELECT  @Code = 0,  
+			 @Message = 'El monto no se encuentra dentro de los paramettros definidos'  
         
-        SELECT  @Code AS code,  
-          @Message AS [Message];  
-    END  
-    RETURN;
-	END  
-   ELSE  
-   BEGIN  
-		PRINT  'LIMITE DIARIO: ' + CONVERT(NVARCHAR(12),@DailyAmount) + ' MONTO COD: ' + CONVERT(NVARCHAR(12),@collectOnDeliveryDaily);  
-		SELECT  @Code = 0,  
-		@Message = 'Limite Diario COD Anticipado superado'  
+			SELECT  @Code AS code,  
+			  @Message AS [Message];  
+		END  
+		RETURN;
+		END  
+		ELSE  
+		BEGIN  
+			PRINT  'LIMITE DIARIO: ' + CONVERT(NVARCHAR(12),@DailyAmount) + ' MONTO COD: ' + CONVERT(NVARCHAR(12),@collectOnDeliveryDaily);  
+			SELECT  @Code = 0,  
+			@Message = 'Limite Diario COD Anticipado superado'  
       
-		SELECT  @Code AS code,  
-		@Message AS [Message];  
-		RETURN;  
+			SELECT  @Code AS code,  
+			@Message AS [Message];  
+			RETURN;  
+		END  
+  
 	END  
+	ELSE  
+	BEGIN  
+
+		BEGIN TRANSACTION  UpdateCOD  
   
- END  
- ELSE  
- BEGIN  
+		BEGIN TRY  
   
-  BEGIN TRANSACTION  UpdateCOD  
-  
-   BEGIN TRY  
-  
-    UPDATE AnticipatedCODDetail  
-     SET RowStatus =   
-         CASE   
-         WHEN RowStatus = 1 THEN 0  
-         ELSE 1  
-         END,  
-      TokenUpdated = @Token,  
-      DateUpdated  = GETDATE()  
-    WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber;  
+			UPDATE AnticipatedCODDetail  
+				SET RowStatus =   
+				CASE   
+				 WHEN RowStatus = 1 THEN 0  
+				 ELSE 1  
+				 END,  
+				TokenUpdated = @Token,  
+				DateUpdated  = GETDATE()  
+			WHERE GuideSerie = @GuideSerie 
+			 AND GuideNumber = @GuideNumber;  
      
-   COMMIT TRANSACTION UpdateCOD  
+		    COMMIT TRANSACTION UpdateCOD  
      
-   END TRY  
-   BEGIN CATCH  
+		END TRY  
+		BEGIN CATCH  
     
-    ROLLBACK TRANSACTION UpdateCOD;  
+			ROLLBACK TRANSACTION UpdateCOD;  
   
-    SELECT  @Code = 0,  
-      @Message = 'No es posible Actualizar la guía'  
+			SELECT  @Code = 0,  
+			  @Message = 'No es posible Actualizar la guía'  
   
-    SELECT  @Code AS code,  
-      @Message AS [Message];  
-    RETURN;  
+			SELECT  @Code AS code,  
+			  @Message AS [Message];  
+			RETURN;  
   
-   END CATCH  
-  
- END   
+		END CATCH  
+	 END
   
 END
