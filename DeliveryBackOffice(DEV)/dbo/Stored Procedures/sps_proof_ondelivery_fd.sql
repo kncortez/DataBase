@@ -403,6 +403,42 @@ BEGIN
                      IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))), @Token, GETDATE(), GETDATE(),
                  NULL, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
 
+                 UPDATE acodh 
+                    SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
+                   FROM DeliveryOrderDetail dod
+                        INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
+                                ON dod.Guide_Serie = acodd.GuideSerie
+                               AND dod.Guide_Number = acodd.GuideNumber
+                               AND acodd.RowStatus = 1
+                        INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
+                                ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
+                        INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
+                                ON bdcod.GuideSerie = dod.Guide_Serie
+                               AND bdcod.GuideNumber = dod.Guide_Number
+                  WHERE dod.Guide_Serie = @GuideSerie
+                    AND dod.Guide_Number = @GuideNumber
+                    AND dod.StatusOrderId = 14
+                    AND bdcod.Excluded = 0
+                    AND bdcod.CatTransactionTypeCODId = 2;
+
+                 UPDATE acodd 
+                    SET acodd.BalanceStatus = 'DEVOLUCION'
+                   FROM DeliveryOrderDetail dod
+                        INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
+                                ON dod.Guide_Serie = acodd.GuideSerie
+                               AND dod.Guide_Number = acodd.GuideNumber
+                               AND acodd.RowStatus = 1
+                        INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
+                                ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
+                        INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
+                                ON bdcod.GuideSerie = dod.Guide_Serie
+                               AND bdcod.GuideNumber = dod.Guide_Number
+                  WHERE dod.Guide_Serie = @GuideSerie
+                    AND dod.Guide_Number = @GuideNumber
+                    AND dod.StatusOrderId = 14
+                    AND bdcod.Excluded = 0
+                    AND bdcod.CatTransactionTypeCODId = 2;
+
                 SET @RInserted = @@ROWCOUNT;
 
                 SELECT @DataOriginId = cm.ModIdModule
