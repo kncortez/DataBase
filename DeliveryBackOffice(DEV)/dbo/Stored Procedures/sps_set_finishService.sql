@@ -1,4 +1,7 @@
-﻿
+﻿-- =============================================
+-- Author:      <Tito, Garcia>
+-- Create date: <2024-11-27>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_finishService]
     @InGuidesP VARCHAR(MAX)
   , @TblListGuides AS TblListGuidesWithAnticipatedCOD READONLY
@@ -613,7 +616,7 @@ BEGIN
                               WHERE dot.StatusOrderId = 23
                                 AND lge.excludeCOd = 0
                                 AND bdcod.Excluded = 0
-                                AND bdcod.CatTransactionTypeCODId = 2;
+                                AND bdcod.CatConceptCODId = 2;
 
                            UPDATE acodh
                               SET acodh.BalanceStatus = 'DEVOLUCION'
@@ -630,7 +633,7 @@ BEGIN
                                           ON tug.Guide_Number = dot.Guide_Number
                                          AND tug.Guide_Serie = dot.Guide_Serie
                             WHERE bdcod.Excluded = 0        
-                              AND bdcod.CatTransactionTypeCODId = 2
+                              AND bdcod.CatConceptCODId = 2
                               AND dot.StatusOrderId = 23
                               AND tug.excludeCOd = 0;
 
@@ -764,11 +767,11 @@ BEGIN
 									FROM #GuidesToProcessTEMP;
 
 									EXEC [dbo].[SetServiceRecolectCODAnticipated] 
-										@GuideSerieT,  
-										@GuideNumberT,
-										@TokenP,
-										@Code OUTPUT,
-										@Message OUTPUT;
+										@GuideSerie = @GuideSerieT,  
+										@GuideNumber = @GuideNumberT,
+										@Token = @TokenP,
+										@Code = @Code OUTPUT,
+										@Message = @Message OUTPUT;
 
 									IF (@Code = 200)
 									BEGIN
@@ -1864,7 +1867,7 @@ BEGIN
                  , CAST(ERROR_STATE() AS VARCHAR)        AS ErrorState
                  , CAST(ERROR_PROCEDURE() AS VARCHAR)    AS ErrorProcedure
                  , CAST(ERROR_LINE() AS VARCHAR)         AS ErrorLine
-                 , CAST(ERROR_MESSAGE() AS VARCHAR(100)) AS ResultMessage;
+                 , CAST(ERROR_MESSAGE() AS VARCHAR(3000)) AS ResultMessage;
 
             ROLLBACK TRANSACTION;
 			INSERT INTO [dbo].[RoutePreparationLogError]
@@ -1879,14 +1882,13 @@ BEGIN
 				 VALUES
 					   (CAST(ERROR_MESSAGE() AS VARCHAR(300))
 					   ,ERROR_NUMBER()
-					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(3000))
 					   ,ERROR_LINE()
 					   ,NULL
 					   ,NULL
 					   ,@TokenP
 					   ,GETDATE())			
         END CATCH;
-
 
         IF @@TRANCOUNT > 0
         BEGIN
