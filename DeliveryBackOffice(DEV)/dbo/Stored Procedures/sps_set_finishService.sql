@@ -759,6 +759,11 @@ BEGIN
 								WHERE dlo.Collect_OnDelivery > 0
 									AND lge.IsAnticipatedCOD = 1
 
+								CREATE TABLE #TempTable (
+									code INT,
+									Message NVARCHAR(200)
+								);
+
 								WHILE EXISTS (SELECT 1 FROM #GuidesToProcessTEMP)
 								BEGIN
 									SELECT TOP 1 
@@ -766,6 +771,7 @@ BEGIN
 										@GuideNumberT = GuideNumberTEMP
 									FROM #GuidesToProcessTEMP;
 
+									INSERT INTO #TempTable
 									EXEC [dbo].[SetServiceRecolectCODAnticipated] 
 										@GuideSerie = @GuideSerieT,  
 										@GuideNumber = @GuideNumberT,
@@ -816,7 +822,8 @@ BEGIN
 									WHERE GuideSerieTEMP = @GuideSerieT AND GuideNumberTEMP = @GuideNumberT;
 								END;
 
-								DROP TABLE #GuidesToProcessTEMP;							
+								DROP TABLE #GuidesToProcessTEMP;						
+								DROP TABLE #TempTable;							
 						
 							END;
 
