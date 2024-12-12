@@ -210,7 +210,7 @@ BEGIN
                              --AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                              AND do.StatusOrderId != 7
 							 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
-							 AND pg.IsAnticipatedCOD <> 1
+							 AND ISNULL(pg.IsAnticipatedCOD,0) <> 1
                        FOR XML PATH('')
                    ),
                    1,
@@ -817,7 +817,7 @@ BEGIN
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND pgc.IsAnticipatedCOD <> 1;
+					  AND ISNULL(pgc.IsAnticipatedCOD,0) <> 1;
             END;
 
             --IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -850,7 +850,7 @@ BEGIN
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND pgc.IsAnticipatedCOD <> 1;
+					  AND ISNULL(pgc.IsAnticipatedCOD,0) <> 1;
             END;
         END;
         ELSE
