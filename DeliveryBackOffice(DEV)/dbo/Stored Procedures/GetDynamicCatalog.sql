@@ -654,7 +654,21 @@ BEGIN
 								     AND RowStatus = 1
                                      AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)
                                      AND SubscriptionMaxServiceFixedValue >	ActualServiceCount 
-                                     ))
+                                     )
+                                     
+                                +
+									 
+								(SELECT TOP 1 COUNT(IdSubscription)
+                                FROM [DeliveryBackOffice].[dbo].[Subscription] S WITH (NOLOCK)  
+								   INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription] SC WITH (NOLOCK)
+								   ON S.CatSubscriptionId = SC.IdCatSubscription
+                                WHERE AccountId = @IdAccount
+								     AND S.RowStatus = 1
+                                     AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)
+                                     AND SC.SubscriptionDescription ='Plan de descuentos'
+                                     )
+                                     
+                                     )
         SET @jsonResult =
         (
           SELECT STUFF(
