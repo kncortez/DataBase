@@ -10,6 +10,11 @@
 -- Create date: <26/08/2024>
 -- Description:	<Se agrega el CountryID en la respuesta del SP>
 -- =============================================
+-- =============================================
+-- Author:		<Aylinne Recinos>
+-- Create date: <12/12/2024>
+-- Description:	<Se agrega el ActiveUser en la respuesta del SP>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sp_get_customerParser]
 @Email AS VARCHAR(50)='jordy.lemus@forzadelivery.com'
@@ -25,7 +30,7 @@ SET @Cantidad = (SELECT count(IdCustomer) FROM Customer WHERE RegexEmail Like '%
 
 	IF (@Cantidad > 0)
 		BEGIN
-			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename, ISNULL(CountryID,'GT') AS CountryID FROM Customer
+			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename, ISNULL(CountryID,'GT') AS CountryID, ISNULL(RowSatus,1) AS ActiveUser FROM Customer
 				 WHERE RegexEmail Like '%' + @Email + '%'
 		END
 
