@@ -236,57 +236,58 @@ BEGIN
 
 				BEGIN
 
-                --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
-                UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-                SET StatusOrderId = 24
-                WHERE Guide_Number = @GuideNumber;
+					--Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
+					UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+					SET StatusOrderId = 24
+					WHERE Guide_Number = @GuideNumber;
 
-                --Actualiza es stado a "COD liquidado" en tabla DeliveryOrderDetail si la guia tuviera COD
+					--Actualiza es stado a "COD liquidado" en tabla DeliveryOrderDetail si la guia tuviera COD
 
-                INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-                (
-                    Guide_Serie,
-                    Guide_Number,
-                    StatusOrderId,
-                    UserCreated,
-                    DateCreated
-                )
-                VALUES
-                (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
-
-				-- Actualizamos guia liquidada cod anticipado a estado de balance PAGADO
-				IF EXISTS
-				(
-					SELECT 1
-					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
-					WHERE	acd.GuideNumber = @GuideNumber
-						AND acd.RowStatus = 1
-				)
-				BEGIN
-					UPDATE acd
-					SET acd.BalanceStatus = 'PAGADO'
-					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
-					WHERE	acd.GuideNumber = @GuideNumber
-						AND acd.RowStatus = 1
-
-					DECLARE @TempData TblAnticipatedCODCustomerBalance
-					INSERT INTO @TempData
+					INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
 					(
-						CustomerId,
-						PortfolioId
+						Guide_Serie,
+						Guide_Number,
+						StatusOrderId,
+						UserCreated,
+						DateCreated
 					)
-					SELECT ach.CustomerId, ach.PortfolioId
-					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
-					INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
-						ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
-					WHERE	acd.GuideNumber = @GuideNumber
-						AND acd.RowStatus = 1
+					VALUES
+					(@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
 
-					EXEC spUpdateBalanceByIdClient @TempData
-				END
-			END;
+				END;
 
             END;
+
+			-- Actualizamos guia liquidada cod anticipado a estado de balance PAGADO
+			IF EXISTS
+			(
+				SELECT 1
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+				WHERE	acd.GuideNumber = @GuideNumber
+					AND acd.RowStatus = 1
+			)
+			BEGIN
+				UPDATE acd
+				SET acd.BalanceStatus = 'PAGADO'
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+				WHERE	acd.GuideNumber = @GuideNumber
+					AND acd.RowStatus = 1
+
+				DECLARE @TempData TblAnticipatedCODCustomerBalance
+				INSERT INTO @TempData
+				(
+					CustomerId,
+					PortfolioId
+				)
+				SELECT ach.CustomerId, ach.PortfolioId
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
+					ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
+				WHERE	acd.GuideNumber = @GuideNumber
+					AND acd.RowStatus = 1
+
+				EXEC spUpdateBalanceByIdClient @TempData
+			END
 
             -- se elimina la guía de la tabla temporal
             DELETE #GuidesTemp
