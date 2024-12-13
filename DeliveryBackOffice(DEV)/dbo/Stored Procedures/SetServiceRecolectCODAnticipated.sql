@@ -16,7 +16,8 @@ AS
 BEGIN  
   
  --INFORMACIÓN AH OBTENER DEL HEADER  
-	DECLARE @IdAnticipatedCODHeader INT;  
+	DECLARE @IdAnticipatedCODHeader INT;
+	DECLARE @PortfolioId	INT
 	DECLARE @IsOldest   INT;  
 	DECLARE @MinGuidesPerMonth INT;  
 	DECLARE @DailyAmount  DECIMAL(9,2);  
@@ -45,37 +46,70 @@ BEGIN
   
 	--1. OBTENER EL CLIENTE QUE GENERA LA GUIA  
 	SELECT   
-		@CustomerId = IdCustomer,  
+		@CustomerId = IdCustomer,
+		@PortfolioId = VisitPointClientPortfolioId,
 		@IdCountrySender = SenderCountryId  
 	FROM DeliveryOrder WITH(NOLOCK)  
 	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber  
 	PRINT @CustomerId  
 	
 	--2. SE VERIFICA SI EL CLIENTE ESTA REGISTRADO, DE NO ESTARLO SE TERMINA EL PROCESO  
-	IF NOT EXISTS(SELECT 1 FROM AnticipatedCODHeader WITH(NOLOCK) WHERE CustomerId = @CustomerId)  
-	BEGIN  
-		SELECT @Code = 0,  
-			  @Message = 'No existe el cliente registrado para COD Anticipado '  
+	--   SI EL CLIENTE ES DE CARTERA NO TIENE CODIGO DE CLIENTE, SOLAMENTE PORTAFOLIO
+	IF(@PortfolioId IS NULL)
+	BEGIN
+		IF NOT EXISTS(SELECT 1 FROM AnticipatedCODHeader WITH(NOLOCK) WHERE CustomerId = @CustomerId)  
+		BEGIN  
+			SELECT @Code = 0,  
+					@Message = 'No existe el cliente registrado para COD Anticipado '  
   
-		SELECT @Code AS code,  
-			   @Message AS [Message];  
-		RETURN;  
-	END  
+			SELECT @Code AS code,  
+					@Message AS [Message];  
+			RETURN;
+		END
+	END
+	ELSE
+	BEGIN
+		IF NOT EXISTS(SELECT 1 FROM AnticipatedCODHeader WITH(NOLOCK) WHERE PortfolioId = @PortfolioId)
+		BEGIN
+			SELECT @Code = 0,  
+					@Message = 'No existe el cliente registrado para COD Anticipado '  
+  
+			SELECT @Code AS code,  
+					@Message AS [Message];  
+			RETURN;
+		END
+	END
     
 	--3. SE VERIFICA SI LA GUIA ESTA REGISTRADA, DE ESTARLO SOLO SE ACTUALIZA SU ESTADO  
 	IF NOT EXISTS(SELECT 1 FROM AnticipatedCODDetail WITH(NOLOCK) WHERE GuideSerie = @GuideSerie and GuideNumber = @GuideNumber)  
 	BEGIN  
      
-		SELECT @IdAnticipatedCODHeader = IdAnticipatedCODHeader,  
-			@IsOldest = IsOldest,  
-			@MinGuidesPerMonth = MinGuidesPerMonth,  
-			@DailyAmount = DailyAmount,  
-			@ReturnPercent = ReturnPercent,  
-			@IsCODAnticipatedValid = IsCODAnticipatedValid  
-		FROM AnticipatedCODHeader WITH(NOLOCK)  
-		WHERE CustomerId = @CustomerId  
-		  AND RowStatus = 1     
-             
+		--3.1 Se Obtienen datos de la tabla de encabezado
+		IF(@PortfolioId IS NULL)
+		BEGIN
+			SELECT @IdAnticipatedCODHeader = IdAnticipatedCODHeader,
+				@IsOldest = IsOldest,
+				@MinGuidesPerMonth = MinGuidesPerMonth,
+				@DailyAmount = DailyAmount,
+				@ReturnPercent = ReturnPercent,
+				@IsCODAnticipatedValid = IsCODAnticipatedValid  
+			FROM AnticipatedCODHeader WITH(NOLOCK)
+			WHERE CustomerId = @CustomerId
+			  AND RowStatus = 1
+		END
+		ELSE
+		BEGIN
+			SELECT @IdAnticipatedCODHeader = IdAnticipatedCODHeader,
+				@IsOldest = IsOldest,
+				@MinGuidesPerMonth = MinGuidesPerMonth,
+				@DailyAmount = DailyAmount,
+				@ReturnPercent = ReturnPercent,
+				@IsCODAnticipatedValid = IsCODAnticipatedValid  
+			FROM AnticipatedCODHeader WITH(NOLOCK)
+			WHERE PortfolioId = @PortfolioId
+			  AND RowStatus = 1
+		END
+		--3.2 Se Obtienen datos para poder realizar consulta de tarifario
 		SELECT   
 			@CODRateDefault = CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0'))  
 		FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)  
@@ -95,7 +129,7 @@ BEGIN
 		FROM dbo.CatRateSegment WITH(NOLOCK)  
 		WHERE CrsShortName = 'FOR'  
 		AND CrsRowStatus = 'true';  
-  
+		--3.3 Se Obtienen de tarifario del cliente
 		SELECT  
 			@CollectOnDelivery = DO.Collect_OnDelivery  --'AmountCOD'  
 		  , @AnticipatedCODComissionId =  ACC.IdAnticipatedCodComission  
@@ -172,15 +206,17 @@ BEGIN
 			ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'  
 		   WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber  
 
+		--3.4 VAlidar que no se exceda del monto diario
 		IF(@DailyAmount >=  @CollectOnDelivery)  
 		BEGIN  
   
 			PRINT 'Return Percent: ' + CONVERT(NVARCHAR(16),@ReturnPercent)  
-  
+			--3.4.1 VAlidar que el porcentaje de retorno sea mayor a 0
 			IF(@ReturnPercent IS NOT NULL AND @ReturnPercent > 0)  
 			BEGIN        
 			  BEGIN TRANSACTION InsertCODAnticipated  
 			  BEGIN TRY         
+					--INSERTAR VALORES EN LA TABLA DE PROCESAMIENTO DE GUIAS COD (NO APLICA SI ENVIA PARAMETRO) 
 					 IF(@IsProcessedGuideCOD = 1)  
 					 BEGIN  
 						IF NOT EXISTS(SELECT TOP 1 1 FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH(NOLOCK) WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber)  
@@ -190,7 +226,7 @@ BEGIN
 						END  
 					 END  
 
-					 --INSERTAR VALORES EN EL DETALLLE  
+					 --INSERTAR VALORES EN EL DETALLLE DE COD ANTICIPADO  
 					 INSERT INTO AnticipatedCODDetail(AnticipatedCODHeaderId,GuideSerie,GuideNumber,IsOldest,MinGuidesPerMonth,DailyAmount,ReturnPercent,IsCODAnticipatedValid,CollectOnDelivery,AnticipatedCODComissionId,BalanceStatus,RowStatus,TokenCreated,DateCreated) 
 					 VALUES(@IdAnticipatedCODHeader,@GuideSerie,@GuideNumber,@IsOldest,@MinGuidesPerMonth,@DailyAmount,@ReturnPercent,@IsCODAnticipatedValid,@CollectOnDelivery,@AnticipatedCODComissionId,@BalanceStatus,1,@Token,GETDATE())  
 
