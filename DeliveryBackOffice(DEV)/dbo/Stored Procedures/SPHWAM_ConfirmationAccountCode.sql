@@ -42,12 +42,12 @@ BEGIN TRY
       IF @@TRANCOUNT > 0 
       BEGIN  
         COMMIT TRANSACTION;  
-        SELECT 1 AS [StatusCode], 'Verificacion exitosa' AS[MessageResponse] 
+        SELECT 1 AS [StatusCode], 'Verificación exitosa' AS[MessageResponse] 
       END  
     END  
     ELSE -- el codigo de verificacion no coincide
     BEGIN  
-      SELECT 0 AS [StatusCode], 'El codigo de verificacion no coincide' AS[MessageResponse]
+      SELECT 0 AS [StatusCode], 'El código de verificación no coincide' AS[MessageResponse]
     END  
   END
   ELSE
