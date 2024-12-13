@@ -218,7 +218,7 @@ BEGIN
                   OR
                   (
                       UPPER(@ServiceType) = 'DELIVERY'
-                      AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )
+                      AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21, 45, 50 )
                   )
                   OR
                   (
@@ -255,7 +255,7 @@ BEGIN
                   OR
                   (
                       UPPER(@ServiceType) = 'DELIVERY'
-                      AND so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+                      AND so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21, 45, 50 )
                   )
                   OR
                   (
@@ -770,7 +770,7 @@ BEGIN
 										@GuideSerieT = GuideSerieTEMP, 
 										@GuideNumberT = GuideNumberTEMP
 									FROM #GuidesToProcessTEMP;
-
+									
 									INSERT INTO #TempTable
 									EXEC [dbo].[SetServiceRecolectCODAnticipated] 
 										@GuideSerie = @GuideSerieT,  
@@ -822,7 +822,7 @@ BEGIN
 									WHERE GuideSerieTEMP = @GuideSerieT AND GuideNumberTEMP = @GuideNumberT;
 								END;
 
-								DROP TABLE #GuidesToProcessTEMP;						
+								DROP TABLE #GuidesToProcessTEMP;							
 								DROP TABLE #TempTable;							
 						
 							END;

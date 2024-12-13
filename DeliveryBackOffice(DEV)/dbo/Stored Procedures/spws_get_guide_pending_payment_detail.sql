@@ -115,7 +115,7 @@ BEGIN
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )			  
+              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21, 45, 50 )			  
 			  AND COALESCE(DO.IsLastMileReturn,0) = 0
           )
           OR
@@ -165,7 +165,7 @@ BEGIN
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND (so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+              AND (so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21, 45, 50 )
 			  )
           )
           OR
