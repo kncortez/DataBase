@@ -122,6 +122,7 @@ BEGIN
           (
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21,32 )
+			  AND COALESCE(DO.IsLastMileReturn,0) = 1
           )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
 
@@ -142,7 +143,13 @@ BEGIN
     SELECT lg.Guide_Serie,
            lg.Guide_Number,
            so.StatusOrderId,
-           so.OrderDescription 'Description'
+           CASE 
+           WHEN UPPER(@ServiceType) = 'RETURN' AND 
+                (so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 ) 
+                AND COALESCE(do.IsLastMileReturn, 0) = 0)
+           THEN so.OrderDescription + ' y no puede procesarse para devoluciones. Verifica el estado y prueba con una guía válida.'
+           ELSE so.OrderDescription + ' , no permite realizar el proceso.'
+           END AS 'Description'
     INTO #listGuidesExcluded
     FROM #listGuides lg
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
@@ -165,6 +172,7 @@ BEGIN
           (
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+			  AND COALESCE(DO.IsLastMileReturn,0) = 0
 			
           )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
@@ -175,7 +183,7 @@ BEGIN
     SELECT lg.Guide_Serie,
            lg.Guide_Number,
            so.StatusOrderId,
-           so.OrderDescription 'Description'
+           so.OrderDescription + ' , no permite realizar el proceso.' 'Description'
     FROM #listGuides lg
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
@@ -211,7 +219,7 @@ BEGIN
 				SELECT lg.Guide_Serie,
            lg.Guide_Number,
            so.StatusOrderId,
-           so.OrderDescription 'Description'
+           so.OrderDescription + ' , no permite realizar el proceso.' 'Description'
     FROM #listGuides lg
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
             ON lg.Guide_Serie = do.Guide_Serie
@@ -767,7 +775,7 @@ BEGIN
                                  --'"GuideSerie": "' + lge.Guide_Serie + '", ' + 
                                  --'"GuideNumber": "' + CAST(lge.Guide_Number AS VARCHAR) + '", ' + 
                                  '"StatusOrderId": ' + CAST(ISNULL(lge.StatusOrderId, 0) AS VARCHAR) + ', '
-                                    + '"Description": "' +'Guía en estado : ' + lge.Description +' , no permite realizar el proceso.' + '" }, '
+                                    + '"Description": "' +'La guía ingresada está en estado: ' + lge.Description + '" }, '
                              FROM #listGuidesExcluded lge
                              FOR XML PATH('')
                          ),
