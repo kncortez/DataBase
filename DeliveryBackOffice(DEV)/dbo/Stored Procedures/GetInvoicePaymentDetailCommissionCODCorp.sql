@@ -7,7 +7,8 @@ CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailCommissionCODCorp]
 (
  @LstVisitPointClient NVARCHAR(MAX),
  @CutOffDate          DATETIME,
- @IdCountry           NVARCHAR(2) = 'GT'
+ @IdCountry           NVARCHAR(2) = 'GT',
+ @Option              TINYINT = 0
 )
 AS
 BEGIN
