@@ -160,7 +160,7 @@ BEGIN
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
-								 AND pg.IsAnticipatedCOD <> 1
+								 AND ISNULL(pg.IsAnticipatedCOD,0) <> 1
                            FOR XML PATH('')
                        )
                      , 1
@@ -215,7 +215,7 @@ BEGIN
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
-								 AND pg.IsAnticipatedCOD <> 1
+								 AND ISNULL(pg.IsAnticipatedCOD,0) <> 1
                            FOR XML PATH('')
                        )
                      , 1
@@ -672,7 +672,7 @@ BEGIN
                   AND pgc.BatchCODIdCommission IS NULL
                   AND pgc.RowStatus = 1
                   AND tact.CODtoPay <= 0
-				  AND pgc.IsAnticipatedCOD <> 1;
+				  AND ISNULL(pgc.IsAnticipatedCOD,0) <> 1;
 
             -- OBTENCION DEL NUMERO DE REFERENCIA (CORRELATIVO) PARA BAC
             SELECT @Reference = Last
@@ -1139,7 +1139,7 @@ BEGIN
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND pgc.IsAnticipatedCOD <> 1;
+					  AND ISNULL(pgc.IsAnticipatedCOD,0) <> 1;
             END;
 
             IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -1157,7 +1157,7 @@ BEGIN
                            AND pgc.GuideNumber = tcpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.RowStatus = 1
-					  AND pgc.IsAnticipatedCOD <> 1;
+					  AND ISNULL(pgc.IsAnticipatedCOD,0) <> 1;
             END;
 
             IF ((@NewIdBatchCODForza IS NOT NULL) AND (@NewIdBatchCODForza > 0))
@@ -1175,7 +1175,7 @@ BEGIN
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND pgc.IsAnticipatedCOD <> 1;
+					  AND ISNULL(pgc.IsAnticipatedCOD,0) <> 1;
             END;
         END;
         ELSE

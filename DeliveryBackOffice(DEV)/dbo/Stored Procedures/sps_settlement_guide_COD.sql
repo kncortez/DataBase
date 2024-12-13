@@ -4,6 +4,10 @@
 -- Create date: <2020-11-25>
 -- Description:	<Registrar transacción de liquidación (cobro) de guías en área de COD>
 -- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2020-12-12>
+-- Description:	<Se agrego actualizacion de estado PAGADO para guias COD Anticipado>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
     @GuideSerie NVARCHAR(2),
     @GuideNumbers NVARCHAR(MAX),
@@ -250,9 +254,40 @@ BEGIN
                 VALUES
                 (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
 
-				END;
+			END;
 
             END;
+
+			-- Actualizamos guia liquidada cod anticipado a estado de balance PAGADO
+				IF EXISTS
+				(
+					SELECT 1
+					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+					WHERE	acd.GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie
+				)
+				BEGIN
+					UPDATE DeliveryBackOffice.dbo.AnticipatedCODDetail
+					SET BalanceStatus = 'PAGADO'
+					WHERE	GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie;
+						
+                    DECLARE @TempData TblAnticipatedCODCustomerBalance;
+
+					INSERT INTO @TempData
+					(
+						CustomerId,
+						PortfolioId
+					)
+					SELECT ach.CustomerId, ach.PortfolioId
+					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+					INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
+						ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
+					WHERE	acd.GuideNumber = @GuideNumber AND ACD.GuideSerie = @GuideSerie
+
+					EXEC spUpdateBalanceByIdClient @TempData
+
+                    DELETE 
+                      FROM @TempData
+				END
 
             -- se elimina la guía de la tabla temporal
             DELETE #GuidesTemp

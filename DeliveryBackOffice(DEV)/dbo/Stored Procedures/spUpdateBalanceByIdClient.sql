@@ -17,12 +17,25 @@ BEGIN
     -- Iniciar bloque TRY
     BEGIN TRY
         -- Iniciar una transacción
-        BEGIN TRANSACTION;
+       BEGIN TRANSACTION;
+
+       -- Valida la existencia de las tablas temporales
+       IF OBJECT_ID('tempdb..#CustomerAnticipatedCOD', 'U') IS NOT NULL 
+       BEGIN
+           ALTER TABLE #CustomerAnticipatedCOD
+           DROP CONSTRAINT PK_spUpdateBalanceByIdClient_CACOD
+       END
 
        -- Valida la existencia de las tablas temporales
        IF OBJECT_ID('tempdb..#CustomerAnticipatedCOD', 'U') IS NOT NULL 
        BEGIN
            DROP TABLE #CustomerAnticipatedCOD
+       END
+
+       IF OBJECT_ID('tempdb..#AnticipatedCODSummary', 'U') IS NOT NULL 
+       BEGIN
+           ALTER TABLE #AnticipatedCODSummary
+           DROP CONSTRAINT UQ_AnticipatedCODSummary
        END
 
        IF OBJECT_ID('tempdb..#AnticipatedCODSummary', 'U') IS NOT NULL 
@@ -33,7 +46,7 @@ BEGIN
        -- Crear la tabla temporal
        CREATE TABLE #CustomerAnticipatedCOD (
            CustomerId                 INT            NOT NULL,  -- ID del cliente
-           PortfolioId                BIGINT         NOT NULL DEFAULT(0), -- ID del portafolio
+           PortfolioId                INT            NOT NULL, -- ID del portafolio
            IdAnticipatedCODHeader     INT            NOT NULL,  -- ID del encabezado de COD anticipado
            IdAnticipatedCODDetail     INT            NOT NULL,      -- ID del detalle de COD anticipado
            CollectOnDelivery          DECIMAL(18, 2) NULL,      -- Monto diario
@@ -48,7 +61,7 @@ BEGIN
         CREATE TABLE #AnticipatedCODSummary (
             IdAnticipatedCODHeader INT NOT NULL,         -- ID del encabezado de COD anticipado
             CustomerId             INT NOT NULL,         -- ID del cliente
-            PortfolioId            INT NOT NULL DEFAULT(0),         -- ID del portafolio
+            PortfolioId            INT NOT NULL,         -- ID del portafolio
             Amount                 DECIMAL(18, 2) NULL,  -- Monto total
             AmountByPayed          DECIMAL(18, 2) NULL,  -- Monto pagado
             Result AS (Amount - AmountByPayed)           -- Resultado calculado (columna computada)
@@ -125,26 +138,83 @@ BEGIN
             PRINT 'No hay filas modificadas';
         END;
 
-        -- Cometer la transacción si todo está bien
+       -- Valida la existencia de las tablas temporales
+       IF OBJECT_ID('tempdb..#CustomerAnticipatedCOD', 'U') IS NOT NULL 
+       BEGIN
+           ALTER TABLE #CustomerAnticipatedCOD
+           DROP CONSTRAINT PK_spUpdateBalanceByIdClient_CACOD
+       END
+
+       -- Valida la existencia de las tablas temporales
+       IF OBJECT_ID('tempdb..#CustomerAnticipatedCOD', 'U') IS NOT NULL 
+       BEGIN
+           DROP TABLE #CustomerAnticipatedCOD
+       END
+
+       IF OBJECT_ID('tempdb..#AnticipatedCODSummary', 'U') IS NOT NULL 
+       BEGIN
+           ALTER TABLE #AnticipatedCODSummary
+           DROP CONSTRAINT UQ_AnticipatedCODSummary
+       END
+
+       IF OBJECT_ID('tempdb..#AnticipatedCODSummary', 'U') IS NOT NULL 
+       BEGIN
+           DROP TABLE #AnticipatedCODSummary
+       END
+
         COMMIT TRANSACTION;
+
     END TRY
     BEGIN CATCH
+
+        SELECT 0 AS 'StatusCode',
+               ERROR_MESSAGE() AS 'Description',
+               ERROR_LINE() AS 'ERROR_LINE',
+               ERROR_PROCEDURE() AS 'ERROR_PROCEDURE',
+               CONVERT(BIGINT, 0) AS 'NumTransferID';
+
         -- Obtener detalles del error
         IF XACT_STATE() = -1
         BEGIN
             -- Si la transacción está en un estado no válido
             PRINT 'Ocurrio un error, la transacción fue revertida.';
-            ROLLBACK TRANSACTION;
         END
         ELSE IF XACT_STATE() = 1
         BEGIN
             -- Si la transacción sigue activa, pero se puede cometer
             PRINT 'Error durante la transacción';
-            ROLLBACK TRANSACTION;
         END;
 
-        -- Registrar el error
-        PRINT ERROR_MESSAGE();
+        print ERROR_MESSAGE()
+        PRINT ERROR_MESSAGE()   ;
+        PRINT ERROR_LINE()      ;
+        PRINT ERROR_PROCEDURE() ;
+
+        -- Valida la existencia de las tablas temporales
+        IF OBJECT_ID('tempdb..#CustomerAnticipatedCOD', 'U') IS NOT NULL 
+        BEGIN
+            ALTER TABLE #CustomerAnticipatedCOD
+            DROP CONSTRAINT PK_spUpdateBalanceByIdClient_CACOD
+        END
+
+        -- Valida la existencia de las tablas temporales
+        IF OBJECT_ID('tempdb..#CustomerAnticipatedCOD', 'U') IS NOT NULL 
+        BEGIN
+            DROP TABLE #CustomerAnticipatedCOD
+        END
+
+        IF OBJECT_ID('tempdb..#AnticipatedCODSummary', 'U') IS NOT NULL 
+        BEGIN
+            ALTER TABLE #AnticipatedCODSummary
+            DROP CONSTRAINT UQ_AnticipatedCODSummary
+        END
+
+        IF OBJECT_ID('tempdb..#AnticipatedCODSummary', 'U') IS NOT NULL 
+        BEGIN
+            DROP TABLE #AnticipatedCODSummary
+        END
+
+        ROLLBACK TRANSACTION;
     END CATCH
 END;
 GO
