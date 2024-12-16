@@ -891,9 +891,10 @@ BEGIN
                     BankId
                   , BatchNumber
                   , BatchTimeRange
+				  , IsAnticipatedCOD
                 )
                 VALUES
-                (@IdBankParam, @MaxBatchNumber, @BatchTimeRange);
+                (@IdBankParam, @MaxBatchNumber, @BatchTimeRange, 0);
 
                 -- OBTENCION DEL ID QUE CORRESPONDE AL LOTE CREADO
                 SELECT @NewIdBatchCODCustomer = SCOPE_IDENTITY();
@@ -941,6 +942,7 @@ BEGIN
                       , CODCommission
                       , CODDiscount
 					  , IdCountry
+					  , IsAnticipatedCOD
                     )
 					OUTPUT						
 						INSERTED.GuideSerie,
@@ -984,6 +986,7 @@ BEGIN
                          , 0
                          , 0
 						 , @IdCountrySender
+						 , 0
                     FROM #TableCustomerPaymentTemp tcpt
 					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.GuideSerie  = tcpt.GuideSerie
                                                                          AND c.GuideNumber = tcpt.GuideNumber
@@ -1012,9 +1015,10 @@ BEGIN
                     BankId
                   , BatchNumber
                   , BatchTimeRange
+				  , IsAnticipatedCOD
                 )
                 VALUES
-                (@BankBAC, @MaxBatchNumber, @BatchTimeRange);
+                (@BankBAC, @MaxBatchNumber, @BatchTimeRange, 0);
 
                 -- OBTENCION DEL ID QUE CORRESPONDE AL LOTE CREADO
                 SELECT @NewIdBatchCODForza = SCOPE_IDENTITY();
@@ -1058,6 +1062,7 @@ BEGIN
                       , CODCommissionPercentage
                       , DiscountPrice
 					  , IdCountry
+					  , IsAnticipatedCOD
                     )
 					OUTPUT						
 						INSERTED.GuideSerie,
@@ -1099,6 +1104,7 @@ BEGIN
                          , CODRate
                          , DiscountPrice
 						 , @IdCountrySender
+						 , 0
                     FROM #TableForzaPaymentTemp tfpt
 					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
                     WHERE NOT EXISTS
