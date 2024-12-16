@@ -185,6 +185,7 @@ BEGIN
                            LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                                ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerId)
                        WHERE pg.BatchCODId IS NULL
+                             AND pg.IsCompleted = 1
                              AND do.Collect_OnDelivery = 0
                              AND do.IsCollect = 'false'
                              AND DOPD.TimePlaId = 2
@@ -681,7 +682,8 @@ BEGIN
             ---- SECCION PARA LA CREACION DEL LOTE PARA EL PAGO A CLIENTES
             DECLARE @MaxBatchNumber INT = 1 +
                                           (
-                                              SELECT ISNULL(MAX(IdBatchCOD), 0)FROM DeliveryBackOffice.dbo.BatchCOD WITH (NOLOCK)
+                                              SELECT ISNULL(MAX(IdBatchCOD), 0)
+                                                FROM DeliveryBackOffice.dbo.BatchCOD 
                                           );
 
             -- SECCION PARA LA CREACION DEL LOTE PARA EL PAGO A FORZA DE LAS COMISIONES Y ENVIOS

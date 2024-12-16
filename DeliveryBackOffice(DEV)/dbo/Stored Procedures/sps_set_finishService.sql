@@ -600,7 +600,7 @@ BEGIN
 
                              UPDATE acodh
                                 SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
-                               FROM #listGuidesEnabled lge
+                               FROM #listGuidesEnabled lge WITH(NOLOCK)
                                     INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                             ON lge.Guide_Serie = acodd.GuideSerie
                                            AND lge.Guide_Number = acodd.GuideNumber
@@ -620,8 +620,8 @@ BEGIN
 
                            UPDATE acodh
                               SET acodh.BalanceStatus = 'DEVOLUCION'
-                             FROM AnticipatedCODDetail acodh
-                                  INNER JOIN #listGuidesEnabled tug
+                             FROM AnticipatedCODDetail acodh WITH(NOLOCK)
+                                  INNER JOIN #listGuidesEnabled tug WITH(NOLOCK)
                                           ON tug.Guide_Serie = acodh.GuideSerie
                                          AND tug.Guide_Number = acodh.GuideNumber
                                   INNER JOIN AnticipatedCODHeader acod WITH(NOLOCK)

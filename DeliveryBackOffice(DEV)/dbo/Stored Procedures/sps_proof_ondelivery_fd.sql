@@ -405,7 +405,7 @@ BEGIN
 
                  UPDATE acodh 
                     SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
-                   FROM DeliveryOrderDetail dod
+                   FROM DeliveryOrderDetail dod WITH(NOLOCK)
                         INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                 ON dod.Guide_Serie = acodd.GuideSerie
                                AND dod.Guide_Number = acodd.GuideNumber
@@ -1153,7 +1153,7 @@ BEGIN
 							INSERTED.GuideNumber,
 							INSERTED.IdProcessedGuideCOD
 						INTO #GuidesProcessCOD
-						FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p
+						FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p WITH(NOLOCK)
 						INNER JOIN DataToUpdate d
 							ON p.GuideSerie = d.GuideSerie AND p.GuideNumber = d.GuideNumber;
 					END;
