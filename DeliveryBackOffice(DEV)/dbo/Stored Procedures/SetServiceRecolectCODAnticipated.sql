@@ -109,21 +109,8 @@ BEGIN
 			WHERE PortfolioId = @PortfolioId
 			  AND RowStatus = 1
 		END
-		--3.2 Se Obtienen datos para poder realizar consulta de tarifario
-		SELECT   
-			@CODRateDefault = CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0'))  
-		FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)  
-		WHERE cf.Name = 'CODExemptDef'
-			AND Status = 1  
-			AND cf.IdCountry = @IdCountrySender;  
-  
-		SELECT   
-			@CODExemptDefault = CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0'))  
-		FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)  
-		WHERE	cf.Name = 'CODExemptDef'  
-			AND Status = 1  
-			AND cf.IdCountry = @IdCountrySender;  
-  
+
+		--3.2 Se Obtienen datos para poder realizar consulta de tarifario  
 	   SELECT TOP 1  
 				@IdSegmentDefault = CrsId
 		FROM dbo.CatRateSegment WITH(NOLOCK)  
