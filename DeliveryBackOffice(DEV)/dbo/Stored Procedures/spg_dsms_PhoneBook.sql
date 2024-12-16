@@ -412,6 +412,7 @@ BEGIN
 	INSERT INTO [dbo].[SMS_Sent]
 			   ([Sent_Guide_Series]
 			   ,[Sent_Guide_Number]
+			   ,[Sent]
 			   ,[SentTypeStatus]
 			   ,[Sent_Batch_Id]
 			   ,[TokenCreated]
@@ -422,6 +423,7 @@ BEGIN
 				select 
 					 pb._Series
 					,pb._Number
+					,1
 					,0
 					,@TopBatchId
 					,'SYS-SMSService'
