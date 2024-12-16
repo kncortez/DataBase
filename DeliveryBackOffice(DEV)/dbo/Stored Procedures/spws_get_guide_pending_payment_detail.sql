@@ -556,6 +556,15 @@ BEGIN
 								AND CrsRowStatus = 'true'
 					);
 
+    DECLARE @MinCODCommissionAmount DECIMAL(12, 2) =
+					(
+						SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+						FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
+						WHERE cf.Name = 'MinCODCommissionAmount'
+								AND Status = 1
+								AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
+					);
+
 	INSERT INTO @CODAnticipatedTable (GuideSerie, GuideNumber,IdCustomer,IdPortafolio,COD,ComisionCOD,ComisionCODAnticipated)
 	SELECT
 		ppt.GuideSerie,
@@ -708,7 +717,13 @@ BEGIN
 						 + '"IdCustomer": ' + CAST(c.IdCustomer AS VARCHAR) + ', '
 						 + '"IdPortafolio": ' + CAST(c.IdPortafolio AS VARCHAR) + ', '
 						 + '"COD": ' + CAST(c.COD AS VARCHAR) + ', '
-						 + '"ComisionCOD": ' + CAST(c.ComisionCOD AS VARCHAR) + ', '
+						 + '"ComisionCOD": ' + 
+						 CASE
+							WHEN ISNULL(c.ComisionCOD, 0)	< ISNULL(@MinCODCommissionAmount, 0)	
+							THEN ISNULL(CAST(@MinCODCommissionAmount AS VARCHAR) , '0')
+							ELSE ISNULL(CAST(c.ComisionCOD AS VARCHAR) , '0')
+						END
+						 + ', '
 						 + '"ComisionCODAnticipated": ' + CAST(c.ComisionCODAnticipated AS VARCHAR) + ', '
                          + '"GuideDetail": [ '
                   FROM #PendingPaymentTempId pg
