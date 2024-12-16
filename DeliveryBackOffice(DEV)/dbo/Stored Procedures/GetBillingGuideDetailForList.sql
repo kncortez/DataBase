@@ -76,6 +76,9 @@ BEGIN
     IF OBJECT_ID('tempdb..#TempServiceDetails') IS NOT NULL
         DROP TABLE #TempServiceDetails;
 
+    IF OBJECT_ID('tempdb..#TempGuidesDetails') IS NOT NULL
+        DROP TABLE #TempGuidesDetails;
+
     -- Crear la tabla temporal
     CREATE TABLE #TempGuidesDetails (
         IdVisitPointClient INT,
@@ -456,6 +459,7 @@ BEGIN
                              WHERE [Description] LIKE '%PAGO%DESTINO%'
                               AND bo.Guide_Serie = bdop.Guide_Serie
                               AND bo.Guide_Number = bdop.Guide_Number
+                              AND bo.[Description] = bdop.[Description]
                            ) AS valAmount
 
         -- Pago collect
@@ -519,6 +523,7 @@ BEGIN
                              WHERE [Description] LIKE '%PESO%'
                                AND bo.Guide_Serie = bdop.Guide_Serie
                                AND bo.Guide_Number = bdop.Guide_Number
+                               AND bo.[Description] = bdop.[Description]
                            ) AS valAmount
 
         UPDATE bdop
@@ -581,6 +586,7 @@ BEGIN
                              WHERE [Description] LIKE '%SEGURO%'
                                AND bo.Guide_Serie = bdop.Guide_Serie
                                AND bo.Guide_Number = bdop.Guide_Number
+                               AND bo.[Description] = bdop.[Description]
                            ) AS valAmount
 
         UPDATE bdop
@@ -662,7 +668,7 @@ BEGIN
                                  WHEN ts.ValueType = 'Porcentaje'
                                      THEN (CASE
                                                WHEN ts.DiscountType = 'TOT'
-                                                   THEN bdop.Amount - ROUND(((bdop.Amount  * ts.PromoValue) / 100), 1)
+                                                   THEN bdop.Amount - ROUND(((bdop.Amount * ts.PromoValue) / 100), 1)
                                                ELSE bdop.Amount
                                            END)
                                  ELSE bdop.Amount
@@ -713,7 +719,7 @@ BEGIN
                   1
              FROM CatArticleSAP ca
                   INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
-                          ON ca.[Name] = tgd.NameArticle
+                          ON ca.[Name] = tgd.NameArticleCollect
                          AND ISNULL(ca.IdCountry,'GT') = tgd.CountryByGuide
                   INNER JOIN @BreakdownOfPayment bdop
                          ON tgd.Guide_Serie = bdop.Guide_Serie
@@ -734,7 +740,7 @@ BEGIN
                   1
              FROM CatArticleSAP ca
                   INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
-                          ON ca.[Name] = tgd.NameArticle
+                          ON ca.[Name] = tgd.NameArticleWeight
                          AND ISNULL(ca.IdCountry,'GT') = tgd.CountryByGuide
                   INNER JOIN @BreakdownOfPayment bdop
                          ON tgd.Guide_Serie = bdop.Guide_Serie
@@ -755,7 +761,7 @@ BEGIN
                   1
              FROM CatArticleSAP ca
                   INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
-                          ON ca.[Name] = tgd.NameArticle
+                          ON ca.[Name] = tgd.NameArticleSecure
                          AND ISNULL(ca.IdCountry,'GT') = tgd.CountryByGuide
                   INNER JOIN @BreakdownOfPayment bdop
                          ON tgd.Guide_Serie = bdop.Guide_Serie
@@ -771,7 +777,8 @@ BEGIN
             gd.SAPCode,
             [Name],
             CASE
-               WHEN tgd.IsLastMileReturn = 1 THEN REPLACE(REPLACE ( tgd.DescriptionReturn, '##' , gd.Price ),'+++',+ char(10))
+               WHEN tgd.IsLastMileReturn = 1 
+                   THEN REPLACE(REPLACE ( tgd.DescriptionReturn, '##' , gd.Price ),'+++',+ CHAR(10))
                ELSE gd.[Description] 
             END [Description] ,
             gd.Price,

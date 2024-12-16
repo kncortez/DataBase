@@ -102,7 +102,7 @@ BEGIN
              , MAX(vpc.CodeOfReference)
              , MAX(vpc.CustomerID)
           FROM BatchDetailCOD bdCOD WITH (NOLOCK)
-               INNER JOIN DeliveryOrder  do WITH (NOLOCK)
+               INNER JOIN DeliveryOrder do WITH (NOLOCK)
                   ON bdCOD.GuideSerie = do.Guide_Serie
                      AND bdCOD.GuideNumber = do.Guide_Number
                INNER JOIN VisitPointClient  vpc WITH (NOLOCK)
@@ -125,6 +125,8 @@ BEGIN
            AND ISNULL(vpc.ExcludeCommissionCOD, cus.ExcludeCommissionCOD) = 0
            AND bdCOD.CatConceptCODId = @IdCatConceptCOD
            AND bdCOD.RowStatus = 1
+           AND bdCOD.Excluded = 0
+           AND bdCOD.AuthorizationNumber IS NOT NULL
            AND bdCOD.Commission > 0
            AND bdCOD.idCountry = @IdCountry
            AND CAST(bdCOD.CreditDate AS DATE) <= CAST(@CutOffDate AS DATE)
@@ -156,8 +158,7 @@ BEGIN
                      ON cCt.IdCountry = gc.IdCountry
                  LEFT JOIN CatBillingVolume        cbv WITH (NOLOCK)
                      ON ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = cbv.IdCatBillingVolume
-           WHERE gc.CreditDate <= @CutOffDate
-             AND ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = 2 --Billing Volume -> Completo;
+           WHERE gc.CreditDate <= @CutOffDate;
 
             -- Validar si hay registros en la tabla temporal
             IF EXISTS (SELECT TOP 1 1
