@@ -2,11 +2,11 @@
 BEGIN TRY
     BEGIN TRANSACTION;
 		
-		--ALTER TABLE DeliveryBackOffice.dbo.[CatCoDDailySchedule]
-		--ADD IsCodAnticipated INT;
+		ALTER TABLE DeliveryBackOffice.dbo.[CatCoDDailySchedule]
+		ADD IsCodAnticipated INT;
 
-		UPDATE DeliveryBackOffice.dbo.CatCodDailySchedule
-		SET IsCodAnticipated = 0
+		--UPDATE DeliveryBackOffice.dbo.CatCodDailySchedule
+		--SET IsCodAnticipated = 0
 	
 	COMMIT TRANSACTION 
 END TRY
