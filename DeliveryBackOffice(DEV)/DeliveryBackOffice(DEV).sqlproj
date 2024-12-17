@@ -898,6 +898,8 @@
     <Build Include="dbo\Stored Procedures\sphdGetCatalog.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerByCustType.sql" />
     <Build Include="dbo\Stored Procedures\GetVisitPointsByCustomer.sql" />
+    <Build Include="dbo\Stored Procedures\GetSystemAccessByUser.sql" />
+    <Build Include="dbo\Stored Procedures\GetUsersByVisitPoint.sql" />
     <Build Include="dbo\Stored Procedures\SetCorporateUser.sql" />
     <Build Include="dbo\Stored Procedures\spgs_ActivateUserPortal.sql" />
     <Build Include="dbo\Stored Procedures\spget_guide_to_modify.sql" />
