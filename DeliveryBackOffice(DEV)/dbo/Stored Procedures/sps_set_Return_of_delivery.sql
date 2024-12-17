@@ -182,7 +182,7 @@ BEGIN
 
                         UPDATE acodh 
                            SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
-                          FROM DeliveryOrderDetail dod
+                          FROM DeliveryOrderDetail dod WITH(NOLOCK)
                                INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                        ON dod.Guide_Serie = acodd.GuideSerie
                                       AND dod.Guide_Number = acodd.GuideNumber
@@ -200,7 +200,7 @@ BEGIN
 
                         UPDATE acodd
                            SET acodd.BalanceStatus = 'DEVOLUCION'
-                          FROM DeliveryOrderDetail dod
+                          FROM DeliveryOrderDetail dod WITH(NOLOCK)
                                INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                        ON dod.Guide_Serie = acodd.GuideSerie
                                       AND dod.Guide_Number = acodd.GuideNumber

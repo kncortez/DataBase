@@ -42,6 +42,7 @@
     [IdCurrency]              INT             NULL,
     [IsCompleted]             TINYINT         DEFAULT(0) NULL,
     [IsAnticipatedCOD]        INT             NULL,
+    [ComisionCODAnticipated]  DECIMAL (18, 2) NOT NULL,
     CONSTRAINT [PK_BatchDetailCOD_IdBatchDetailCOD] PRIMARY KEY CLUSTERED ([IdBatchDetailCOD] ASC),
     CONSTRAINT [FK_BatchDetailCOD_BatchCOD] FOREIGN KEY ([BatchCODId]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
     CONSTRAINT [FK_BatchDetailCOD_CatAccountTypeCOD] FOREIGN KEY ([CatAccountTypeCODId]) REFERENCES [dbo].[CatAccountTypeCOD] ([IdCatAccountTypeCOD]),
@@ -154,6 +155,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valida que 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera que indica si una guia es de un lote cod anticipado o inmediato', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'IsAnticipatedCOD';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valor de comision COD Anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'ComisionCODAnticipated';
 
 GO
 CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideSerie_GuideNumber_CreditAccountId_BankId]

@@ -556,6 +556,15 @@ BEGIN
 								AND CrsRowStatus = 'true'
 					);
 
+    DECLARE @MinCODCommissionAmount DECIMAL(12, 2) =
+					(
+						SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+						FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
+						WHERE cf.Name = 'MinCODCommissionAmount'
+								AND Status = 1
+								AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
+					);
+
 	INSERT INTO @CODAnticipatedTable (GuideSerie, GuideNumber,IdCustomer,IdPortafolio,COD,ComisionCOD,ComisionCODAnticipated)
 	SELECT
 		ppt.GuideSerie,
@@ -569,22 +578,7 @@ BEGIN
 				, 0
 				, (CONVERT(
 							DECIMAL(12, 2)
-							, ((DO.Collect_OnDelivery
-								- (IIF(
-									ISNULL(
-												VPC.ExcludePriceShippingCOD
-											, ISNULL(C.ExcludePriceShippingCOD, 0)
-											) = 1
-									, 0
-									, IIF(ISNULL(DO.IsCollect, 0) = 1
-										, 0
-										, IIF(PYT.TimePlaId = 2
-												, 0
-												, IIF(PYT.TimePlaId = 1, 0, DO.PriceShippment))))
-								)
-							)
-							* ISNULL(RCO.CODRate, @CODRateDefault) / 100
-							)
+							, ((DO.Collect_OnDelivery)* ISNULL(RCO.CODRate, @CODRateDefault) / 100)
 						)
 				))
 			, 0)
@@ -708,7 +702,13 @@ BEGIN
 						 + '"IdCustomer": ' + CAST(c.IdCustomer AS VARCHAR) + ', '
 						 + '"IdPortafolio": ' + CAST(c.IdPortafolio AS VARCHAR) + ', '
 						 + '"COD": ' + CAST(c.COD AS VARCHAR) + ', '
-						 + '"ComisionCOD": ' + CAST(c.ComisionCOD AS VARCHAR) + ', '
+						 + '"ComisionCOD": ' + 
+						 CASE
+							WHEN ISNULL(c.ComisionCOD, 0)	< ISNULL(@MinCODCommissionAmount, 0)	
+							THEN ISNULL(CAST(@MinCODCommissionAmount AS VARCHAR) , '0')
+							ELSE ISNULL(CAST(c.ComisionCOD AS VARCHAR) , '0')
+						END
+						 + ', '
 						 + '"ComisionCODAnticipated": ' + CAST(c.ComisionCODAnticipated AS VARCHAR) + ', '
                          + '"GuideDetail": [ '
                   FROM #PendingPaymentTempId pg

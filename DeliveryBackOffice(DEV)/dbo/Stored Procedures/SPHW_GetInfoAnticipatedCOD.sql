@@ -12,6 +12,7 @@ BEGIN
 BEGIN TRY
 
 	DECLARE @CustomerPortfolio INT = NULL;
+	DECLARE @ComisionCODCalculate  DECIMAL(12, 2) = NULL;
 	--Guarda el Identificador del cliente de la guía
 	DECLARE @IdCustomer INT = (
 		SELECT IdCustomer FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
@@ -119,6 +120,77 @@ BEGIN TRY
 									AND CrsRowStatus = 'true'
 						);
 
+		DECLARE @MinCODCommissionAmount DECIMAL(12, 2) =
+						(
+							SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+							FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
+							WHERE cf.Name = 'MinCODCommissionAmount'
+									AND Status = 1
+									AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
+						);
+
+		--CALCULO DE COMISION COD INMEDIATO
+		IF(@FlagCreation = 1)
+		BEGIN
+
+			SET @ComisionCODCalculate =
+			(
+				SELECT
+				CASE
+					WHEN (DO.Collect_OnDelivery - ISNULL(RCO.CODExempt, @CODExemptDefault)) > 0
+					THEN
+						CASE
+							WHEN OP.Deposit_Number IS NULL
+							THEN
+								CASE
+									WHEN ISNULL(VPC.ExcludeCommissionCOD, ISNULL(C.ExcludeCommissionCOD, 0)) = 1
+									THEN 0
+									ELSE
+									 (CONVERT
+										(DECIMAL(12, 2), 
+											(
+												(DO.Collect_OnDelivery) * ISNULL(RCO.CODRate, @CODRateDefault) / 100
+											)
+										)
+									)
+								END
+							ELSE 0
+						END
+					ELSE 0
+				END
+				FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+				LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
+					ON VPC.CodeOfReference = DO.Sender_ID
+				LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
+					ON RBC.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
+						AND RBC.RbcRowStatus = 1 AND RBC.RbcCodeOfReference IS NULL
+				LEFT JOIN dbo.RatebyCustomer RBC2 WITH (NOLOCK)
+					ON RBC2.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
+						AND RBC2.RbcRowStatus = 1 AND RBC2.RbcCodeOfReference = DO.Sender_ID
+				--COD inmediato
+				LEFT JOIN dbo.Customer C WITH (NOLOCK)
+					ON C.IdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
+				LEFT JOIN dbo.CatTypeService CSV WITH (NOLOCK)
+					ON CSV.CtsShortName = IIF(DO.TypeService = 'EXP', 'NDD', ISNULL(DO.TypeService, 'NDD'))
+						AND CSV.CtsRowStatus = 'true'
+				LEFT JOIN dbo.CatRateSegment CSG WITH (NOLOCK)
+					ON CSG.CrsShortName = dbo.fn_get_segment(DO.Guide_Serie, DO.Guide_Number)
+						AND CSG.CrsRowStatus = 'true'
+				LEFT JOIN dbo.RateCOD RCO WITH (NOLOCK)
+					ON RCO.RateId = ISNULL(RBC2.RbcIdRate, RBC.RbcIdRate)
+						AND RCO.TypeServiceId = CSV.CtsId
+						AND RCO.TypeSegmentId = ISNULL(CSG.CrsId, @IdSegmentDefault)
+						AND RCO.RowStatus = 1
+				LEFT JOIN dbo.DeliveryOrderPaid OP WITH (NOLOCK)
+					ON OP.Guide_Serie = DO.Guide_Serie
+						AND OP.Guide_Number = DO.Guide_Number
+						AND OP.IdStatus = 'true'
+				LEFT JOIN dbo.DeliveryOrderPaymentDetail PYT WITH (NOLOCK)
+					ON PYT.GuideSerie = DO.Guide_Serie AND PYT.GuideNumber = DO.Guide_Number
+				WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
+			)
+		END;
+
 		IF(@CustomerPortfolio > 0) --CLIENTE TIPO CARTERA
 		BEGIN
 			SELECT TOP 1
@@ -134,26 +206,29 @@ BEGIN TRY
 					END
 				END														AS 'Time'
 				, CASE
-					WHEN ACH.IsOldest < RH.IsOldest THEN 'FALSE'
+					WHEN ACH.IsOldest < ISNULL(RH.IsOldest,CP3.Value)
+					THEN 'FALSE'
 					ELSE 'TRUE'
 				 END													AS 'FlagTime'
 				, ACH.MinGuidesPerMonth									AS 'Delivery'
 				, CASE
-					WHEN ACH.MinGuidesPerMonth < RH.MinGuidesPerMonth THEN 'FALSE'
+					WHEN ACH.MinGuidesPerMonth < ISNULL(RH.MinGuidesPerMonth,CP.Value)
+					THEN 'FALSE'
 					ELSE 'TRUE'
 				 END													AS 'FlagDelivery'
 				, ACH.DailyAmount										AS 'Amount'
 				, CCC.Symbol											AS 'Currency'
 				, ACH.ReturnPercent										AS 'Devolution'
 				, CASE
-					WHEN ACH.ReturnPercent > RH.ReturnPercent THEN 'FALSE'
+					WHEN ACH.ReturnPercent > ISNULL(RH.ReturnPercent,CP2.Value) 
+					THEN 'FALSE'
 					ELSE 'TRUE'
 				 END													AS 'FlagDevolution'
 				,CASE
 					WHEN ACH.IsCODAnticipatedValid = 1 THEN 'TRUE'
 					ELSE 'FALSE'
 				 END													AS 'FlagApplicable'
-				,ACH.AgaintsBalance										AS 'NegativeBalance'
+				,ISNULL(ACH.AgaintsBalance,0.0)							AS 'NegativeBalance'
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
 				ON DO.VisitpointClientPortfolioId = ACH.PortfolioId
@@ -165,6 +240,15 @@ BEGIN TRY
 				ON DO.IdCustomer = RBC.RbcIdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
 				ON RBC.RbcIdRate = RH.RheId
+			LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH(NOLOCK)
+				ON CP.Name = 'MinGuidesPerMonthParam' AND CP.Status = 1 
+					AND ISNULL(CP.IdCountry,'GT') = @IdCountrySender
+			LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP2 WITH(NOLOCK)
+				ON CP2.Name = 'ReturnPercentParam' AND CP2.Status = 1 
+					AND ISNULL(CP2.IdCountry,'GT') = @IdCountrySender
+			LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP3 WITH(NOLOCK)
+				ON CP3.Name = 'IsOldestParam' AND CP3.Status = 1 
+					AND ISNULL(CP3.IdCountry,'GT') = @IdCountrySender
 			WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 			AND RH.RheRowStatus = 1
 
@@ -174,32 +258,12 @@ BEGIN TRY
 				SELECT
 					  DO.Collect_OnDelivery								AS 'AmountCOD'
 					, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
-					, IIF((DO.Collect_OnDelivery - ISNULL(RCO.CODExempt, @CODExemptDefault)) > 0
-						, IIF(OP.Deposit_Number IS NULL
-							, IIF(ISNULL(VPC.ExcludeCommissionCOD, ISNULL(C.ExcludeCommissionCOD, 0)) = 1
-								, 0
-								, (CONVERT(
-											DECIMAL(12, 2)
-											, ((DO.Collect_OnDelivery
-												- (IIF(
-													ISNULL(
-																VPC.ExcludePriceShippingCOD
-															, ISNULL(C.ExcludePriceShippingCOD, 0)
-															) = 1
-													, 0
-													, IIF(ISNULL(DO.IsCollect, 0) = 1
-														, 0
-														, IIF(PYT.TimePlaId = 2
-																, 0
-																, IIF(PYT.TimePlaId = 1, 0, DO.PriceShippment))))
-												)
-											)
-											* ISNULL(RCO.CODRate, @CODRateDefault) / 100
-											)
-										)
-								))
-							, 0)
-						, 0)											AS 'ComisionCOD'
+					, 
+					CASE
+						WHEN ISNULL(@ComisionCODCalculate, 0)	< ISNULL(@MinCODCommissionAmount, 0)	
+						THEN ISNULL(@MinCODCommissionAmount, 0)
+						ELSE ISNULL(@ComisionCODCalculate, 0)
+					END AS 'ComisionCOD'
 					,
 					CASE
 						WHEN 
@@ -221,7 +285,7 @@ BEGIN TRY
 									CAST(CPv3.value AS DECIMAL)
 							END
 					END													AS 'ComisionCODAnticipated'
-					, RH.GuideAmountCOD									AS 'MaxAmountCODAnticipated'
+					, ISNULL(RH.GuideAmountCOD,0)						AS 'MaxAmountCODAnticipated'
 					, CASE
 						WHEN VPC.ExcludePriceShippingCOD = 1 OR C.ExcludePriceShippingCOD = 1
 						THEN
@@ -235,33 +299,12 @@ BEGIN TRY
 				LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
 					ON RBC.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
 						AND RBC.RbcRowStatus = 1 AND RBC.RbcCodeOfReference IS NULL
-				LEFT JOIN dbo.RatebyCustomer RBC2 WITH (NOLOCK)
-					ON RBC2.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
-						AND RBC2.RbcRowStatus = 1 AND RBC2.RbcCodeOfReference = DO.Sender_ID
 				LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
 					ON RBC.RbcIdRate = RH.RheId
 				LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODComission ACC WITH(NOLOCK)
 					ON RH.RheId = ACC.RateHeaderId
-				--COD inmediato
 				LEFT JOIN dbo.Customer C WITH (NOLOCK)
 					ON C.IdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
-				LEFT JOIN dbo.CatTypeService CSV WITH (NOLOCK)
-					ON CSV.CtsShortName = IIF(DO.TypeService = 'EXP', 'NDD', ISNULL(DO.TypeService, 'NDD'))
-						AND CSV.CtsRowStatus = 'true'
-				LEFT JOIN dbo.CatRateSegment CSG WITH (NOLOCK)
-					ON CSG.CrsShortName = dbo.fn_get_segment(DO.Guide_Serie, DO.Guide_Number)
-						AND CSG.CrsRowStatus = 'true'
-				LEFT JOIN dbo.RateCOD RCO WITH (NOLOCK)
-					ON RCO.RateId = ISNULL(RBC2.RbcIdRate, RBC.RbcIdRate)
-						AND RCO.TypeServiceId = CSV.CtsId
-						AND RCO.TypeSegmentId = ISNULL(CSG.CrsId, @IdSegmentDefault)
-						AND RCO.RowStatus = 1
-				LEFT JOIN dbo.DeliveryOrderPaid OP WITH (NOLOCK)
-					ON OP.Guide_Serie = DO.Guide_Serie
-						AND OP.Guide_Number = DO.Guide_Number
-						AND OP.IdStatus = 'true'
-				LEFT JOIN dbo.DeliveryOrderPaymentDetail PYT WITH (NOLOCK)
-					ON PYT.GuideSerie = DO.Guide_Serie AND PYT.GuideNumber = DO.Guide_Number
 				--Son rangos por default que tenemos si en dado caso el tarifario no cumple su rango
 				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin1 WITH(NOLOCK)
 					ON CPmin1.IdCountry = DO.ReceiverCountryId AND CPmin1.Name = 'MinRangeCODComisison1Param'
@@ -294,7 +337,7 @@ BEGIN TRY
 				GROUP BY ACH.DailyAmount),
 				(SELECT TOP 1 ACH.DailyAmount
 				 FROM DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
-				 WHERE ACH.PortfolioId = @CustomerPortfolio)
+				 WHERE ACH.PortfolioId = @CustomerPortfolio),0
 				) AS 'AvailableBalance';
 
 		END;
@@ -313,26 +356,29 @@ BEGIN TRY
 					END
 				END														AS 'Time'
 				, CASE
-					WHEN ACH.IsOldest < RH.IsOldest THEN 'FALSE'
+					WHEN ACH.IsOldest < ISNULL(RH.IsOldest,CP3.Value)
+					THEN 'FALSE'
 					ELSE 'TRUE'
 				 END													AS 'FlagTime'
 				, ACH.MinGuidesPerMonth									AS 'Delivery'
 				, CASE
-					WHEN ACH.MinGuidesPerMonth < RH.MinGuidesPerMonth THEN 'FALSE'
+					WHEN ACH.MinGuidesPerMonth < ISNULL(RH.MinGuidesPerMonth,CP.Value)
+					THEN 'FALSE'
 					ELSE 'TRUE'
 				 END													AS 'FlagDelivery'
 				, ACH.DailyAmount										AS 'Amount'
 				, CCC.Symbol											AS 'Currency'
 				, ACH.ReturnPercent										AS 'Devolution'
 				, CASE
-					WHEN ACH.ReturnPercent > RH.ReturnPercent THEN 'FALSE'
+					WHEN ACH.ReturnPercent > ISNULL(RH.ReturnPercent,CP2.Value) 
+					THEN 'FALSE'
 					ELSE 'TRUE'
 				 END													AS 'FlagDevolution'
 				,CASE
 					WHEN ACH.IsCODAnticipatedValid = 1 THEN 'TRUE'
 					ELSE 'FALSE'
 				 END													AS 'FlagApplicable'
-				,ACH.AgaintsBalance										AS 'NegativeBalance'
+				,ISNULL(ACH.AgaintsBalance,0.0)							AS 'NegativeBalance'
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
 				ON DO.IdCustomer = ACH.CustomerId
@@ -344,41 +390,29 @@ BEGIN TRY
 				ON DO.IdCustomer = RBC.RbcIdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
 				ON RBC.RbcIdRate = RH.RheId
+			LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH(NOLOCK)
+				ON CP.Name = 'MinGuidesPerMonthParam' AND CP.Status = 1 
+					AND ISNULL(CP.IdCountry,'GT') = @IdCountrySender
+			LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP2 WITH(NOLOCK)
+				ON CP2.Name = 'ReturnPercentParam' AND CP2.Status = 1 
+					AND ISNULL(CP2.IdCountry,'GT') = @IdCountrySender
+			LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP3 WITH(NOLOCK)
+				ON CP3.Name = 'IsOldestParam' AND CP3.Status = 1 
+					AND ISNULL(CP3.IdCountry,'GT') = @IdCountrySender
 			WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 			AND RH.RheRowStatus = 1
 
 			IF(@FlagCreation = 1)
 			BEGIN
-				
 				SELECT
 					  DO.Collect_OnDelivery								AS 'AmountCOD'
 					, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
-					, IIF((DO.Collect_OnDelivery - ISNULL(RCO.CODExempt, @CODExemptDefault)) > 0
-						, IIF(OP.Deposit_Number IS NULL
-							, IIF(ISNULL(VPC.ExcludeCommissionCOD, ISNULL(C.ExcludeCommissionCOD, 0)) = 1
-								, 0
-								, (CONVERT(
-											DECIMAL(12, 2)
-											, ((DO.Collect_OnDelivery
-												- (IIF(
-													ISNULL(
-																VPC.ExcludePriceShippingCOD
-															, ISNULL(C.ExcludePriceShippingCOD, 0)
-															) = 1
-													, 0
-													, IIF(ISNULL(DO.IsCollect, 0) = 1
-														, 0
-														, IIF(PYT.TimePlaId = 2
-																, 0
-																, IIF(PYT.TimePlaId = 1, 0, DO.PriceShippment))))
-												)
-											)
-											* ISNULL(RCO.CODRate, @CODRateDefault) / 100
-											)
-										)
-								))
-							, 0)
-						, 0)											AS 'ComisionCOD'
+					, 
+					CASE
+						WHEN ISNULL(@ComisionCODCalculate, 0)	< ISNULL(@MinCODCommissionAmount, 0)	
+						THEN ISNULL(@MinCODCommissionAmount, 0)
+						ELSE ISNULL(@ComisionCODCalculate, 0)
+					END AS 'ComisionCOD'
 					,
 					CASE
 						WHEN 
@@ -400,7 +434,7 @@ BEGIN TRY
 									CAST(CPv3.value AS DECIMAL)
 							END
 					END													AS 'ComisionCODAnticipated'
-					, RH.GuideAmountCOD									AS 'MaxAmountCODAnticipated'
+					, ISNULL(RH.GuideAmountCOD,0)						AS 'MaxAmountCODAnticipated'
 					, CASE
 						WHEN VPC.ExcludePriceShippingCOD = 1 OR C.ExcludePriceShippingCOD = 1
 						THEN
@@ -414,33 +448,12 @@ BEGIN TRY
 				LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
 					ON RBC.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
 						AND RBC.RbcRowStatus = 1 AND RBC.RbcCodeOfReference IS NULL
-				LEFT JOIN dbo.RatebyCustomer RBC2 WITH (NOLOCK)
-					ON RBC2.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
-						AND RBC2.RbcRowStatus = 1 AND RBC2.RbcCodeOfReference = DO.Sender_ID
 				LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
 					ON RBC.RbcIdRate = RH.RheId
 				LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODComission ACC WITH(NOLOCK)
 					ON RH.RheId = ACC.RateHeaderId
-				--COD inmediato
 				LEFT JOIN dbo.Customer C WITH (NOLOCK)
 					ON C.IdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
-				LEFT JOIN dbo.CatTypeService CSV WITH (NOLOCK)
-					ON CSV.CtsShortName = IIF(DO.TypeService = 'EXP', 'NDD', ISNULL(DO.TypeService, 'NDD'))
-						AND CSV.CtsRowStatus = 'true'
-				LEFT JOIN dbo.CatRateSegment CSG WITH (NOLOCK)
-					ON CSG.CrsShortName = dbo.fn_get_segment(DO.Guide_Serie, DO.Guide_Number)
-						AND CSG.CrsRowStatus = 'true'
-				LEFT JOIN dbo.RateCOD RCO WITH (NOLOCK)
-					ON RCO.RateId = ISNULL(RBC2.RbcIdRate, RBC.RbcIdRate)
-						AND RCO.TypeServiceId = CSV.CtsId
-						AND RCO.TypeSegmentId = ISNULL(CSG.CrsId, @IdSegmentDefault)
-						AND RCO.RowStatus = 1
-				LEFT JOIN dbo.DeliveryOrderPaid OP WITH (NOLOCK)
-					ON OP.Guide_Serie = DO.Guide_Serie
-						AND OP.Guide_Number = DO.Guide_Number
-						AND OP.IdStatus = 'true'
-				LEFT JOIN dbo.DeliveryOrderPaymentDetail PYT WITH (NOLOCK)
-					ON PYT.GuideSerie = DO.Guide_Serie AND PYT.GuideNumber = DO.Guide_Number
 				--Son rangos por default que tenemos si en dado caso el tarifario no cumple su rango
 				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin1 WITH(NOLOCK)
 					ON CPmin1.IdCountry = DO.ReceiverCountryId AND CPmin1.Name = 'MinRangeCODComisison1Param'
@@ -474,7 +487,7 @@ BEGIN TRY
 			),
 			(SELECT TOP 1 ACH.DailyAmount
 				 FROM DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
-				 WHERE ACH.CustomerId = @IdCustomer)
+				 WHERE ACH.CustomerId = @IdCustomer),0
 			) AS 'AvailableBalance';
 
 		END;

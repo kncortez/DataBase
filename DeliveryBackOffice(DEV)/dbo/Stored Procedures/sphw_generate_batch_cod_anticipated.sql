@@ -397,7 +397,7 @@ BEGIN
                  , a1.IDCUSTOMER
                  , a1.CODRate
                  , a1.CODExempt
-                 , (a1.Commision + a1.ComisionCODAnticipated)  Commision
+                 , a1.Commision
                  , a1.DeliveryPrice
                  , a1.CODPaid
                  , a1.ReturnRates
@@ -429,6 +429,7 @@ BEGIN
 						- a1.ComisionCODAnticipated
                      , 0) CODtoPay
                  , a1.Price
+				 , a1.ComisionCODAnticipated
             INTO #TableAmountCOD
             FROM
             (
@@ -655,6 +656,7 @@ BEGIN
                  , CODRate
                  , CODExempt
                  , Commision
+				 , ComisionCODAnticipated
                  , SUM(DeliveryPrice)      DeliveryPrice
                  , SUM(ISNULL(CODPaid, 0)) CODPaid
                  , ReturnRates
@@ -675,6 +677,7 @@ BEGIN
                    , CODRate
                    , CODExempt
                    , Commision
+				   , ComisionCODAnticipated
                    , ReturnRates
                    , Id_bank
                    , [Name]
@@ -690,6 +693,7 @@ BEGIN
                                      , [Guide_Number]
                                      , [CODtoPay]
                                      , Commision
+				                     , ComisionCODAnticipated
                                      , [Price]
                                    );
 
@@ -730,7 +734,7 @@ BEGIN
                       , IIF(tact.Commision < ISNULL(@MinCODCommissionAmount, 0)
                             , ISNULL(@MinCODCommissionAmount, 0)
                             , tact.Commision)
-                      , tact.Commision) + IIF(do.IsCollect = 'true', ISNULL(do.PriceShippment, 0), tact.Price)
+                      , tact.Commision) + IIF(do.IsCollect = 'true', ISNULL(do.PriceShippment, 0), tact.Price) + ISNULL(tact.ComisionCODAnticipated,0)
                    )                                                                          Amount      --CRASFIX
                                                                                                           --, tact.Commision                                                                          [Commision]
                  , IIF(CS.IdCustomerType != 1
@@ -738,6 +742,7 @@ BEGIN
                            , ISNULL(@MinCODCommissionAmount, 0)
                            , tact.Commision)
                      , tact.Commision)                                                        [Commision] --CRASFIX
+			     , tact.ComisionCODAnticipated                                                ComisionCODAnticipated
                  , (
                        SELECT IdCatTransactionTypeCOD
                        FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH (NOLOCK)
@@ -775,7 +780,7 @@ BEGIN
                 LEFT JOIN dbo.Customer                          CS WITH (NOLOCK)
                     ON CS.IdCustomer = ISNULL(do.IdCustomer, VPC.CustomerID)
             WHERE (
-                      (tact.Commision + tact.Price) > 0
+                      (tact.Commision + tact.Price + tact.ComisionCODAnticipated) > 0
                       OR do.IsCollect = 'true'
                   )
                   AND tact.CODtoPay > 0
@@ -815,6 +820,7 @@ BEGIN
                            , ISNULL(@MinCODCommissionAmount, 0)
                            , tact.Commision)
                      , tact.Commision)              [Commision] --CRASFIX
+				 , tact.ComisionCODAnticipated      ComisionCODAnticipated
                  , IIF(
                        tact.Id_bank NOT IN
                        (
@@ -979,6 +985,7 @@ BEGIN
                       , CODDiscount
 					  , IdCountry
 					  , IsAnticipatedCOD
+					  , ComisionCODAnticipated
                     )
 					OUTPUT						
 						INSERTED.GuideSerie,
@@ -1023,6 +1030,7 @@ BEGIN
                          , 0
 						 , @IdCountrySender
 						 , 1
+						 , tcpt.ComisionCODAnticipated
                     FROM #TableCustomerPaymentTemp tcpt
 					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.GuideSerie  = tcpt.GuideSerie
                                                                          AND c.GuideNumber = tcpt.GuideNumber
@@ -1099,6 +1107,7 @@ BEGIN
                       , DiscountPrice
 					  , IdCountry
 					  , IsAnticipatedCOD
+					  , ComisionCODAnticipated
                     )
 					OUTPUT						
 						INSERTED.GuideSerie,
@@ -1141,6 +1150,7 @@ BEGIN
                          , DiscountPrice
 						 , @IdCountrySender
 						 , 1
+						 , tfpt.ComisionCODAnticipated
                     FROM #TableForzaPaymentTemp tfpt
 					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
                     WHERE NOT EXISTS

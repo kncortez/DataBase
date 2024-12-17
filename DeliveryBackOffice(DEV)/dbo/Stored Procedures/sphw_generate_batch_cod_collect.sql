@@ -207,7 +207,7 @@ BEGIN
                              AND do.StatusOrderId != 7
                              --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
 							 AND do.SenderCountryId = @IdCountrySender
-							 AND ISNULL(pg.IsAnticipatedCOD,0) <> 1
+							 AND ISNULL(pg.IsAnticipatedCOD,0) = 0
                        FOR XML PATH('')
                    ),
                    1,
@@ -1006,7 +1006,7 @@ BEGIN
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND ISNULL(pgc.IsAnticipatedCOD,0) <> 1;
+					  AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
             END;
 
             --IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -1039,7 +1039,7 @@ BEGIN
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND ISNULL(pgc.IsAnticipatedCOD,0) <> 1;
+					  AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
             END;
         END;
         ELSE
