@@ -243,7 +243,7 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 		AND BTD.RowStatus = 1 
 		--AND btc.RowStatus = 1 
 		--AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
-		--AND do.SenderCountryId = @IdCountry --QUITADO NUEVAMENTE :(
+		AND do.SenderCountryId = @IdCountry
 ​
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,
