@@ -57,14 +57,6 @@ BEGIN
 		/*or 
 		(do.StatusOrderId=2 and @ElementId = 1002 and ISNULL(ss.SentTypeStatus,0) = 0 and ISNULL(ss.Sent,0) = 0) */
 	  )
-	  and not exists 
-		  (
-		  select 1 from DeliveryBackOffice.dbo.DeliveryOrderDetail DOR2 with(nolock)
-		  where do.Guide_Serie = DOR2.Guide_Serie 
-		  and do.Guide_Number = DOR2.Guide_Number
-		  and StatusOrderId in (5,7,22,30,14,24,25/*,4,IIF(@ElementId = 1002,11,0)*/)
-		  AND do.RowStatus = 1 --solo estado activos
-	  )
 	  and not exists
 	  (
 		SELECT 1 FROM DeliveryBackOffice.dbo.SMS_Sent SS2 with(nolock)
