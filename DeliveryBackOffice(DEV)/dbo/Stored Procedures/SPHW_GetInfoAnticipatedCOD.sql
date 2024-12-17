@@ -61,15 +61,8 @@ BEGIN TRY
 	print('@CustomerPortfolio')
 	print(@CustomerPortfolio)
 
-	--Validar por el momento que la guía sea de GT ya que no funciona COD anticipado para HN
-	IF (@IdCountrySender != 'GT')
-	BEGIN
-		SELECT
-			  202															AS 'IdResult'
-			, 'COD anticipado solo aplica para Guatemala.'					AS 'Message'
-	END;
 	--Validar que solo se pueda con cliente tipo corporativo/individual o cartera
-	ELSE IF ((@TypeCustomer != @RedistributionCustomer) OR (@CustomerPortfolio > 0))
+	IF ((@TypeCustomer != @RedistributionCustomer) OR (@CustomerPortfolio > 0))
 	BEGIN 
 		
 		SELECT
