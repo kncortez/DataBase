@@ -1,3 +1,10 @@
+USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[GetInvoicePaymentDetailCommissionCODCorp]    Script Date: 12/17/2024 10:06:03 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 -- =============================================  
 -- Author:      <Daniel Ramirez>  
 -- Create date: <2024-11-23>  
@@ -7,7 +14,8 @@ CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailCommissionCODCorp]
 (
  @LstVisitPointClient NVARCHAR(MAX),
  @CutOffDate          DATETIME,
- @IdCountry           NVARCHAR(2) = 'GT'
+ @IdCountry           NVARCHAR(2) = 'GT',
+ @Option TINYINT = 0
 )
 AS
 BEGIN
@@ -36,11 +44,11 @@ BEGIN
 
         DECLARE @IdCatInvoiceType INT =
                 (
-                 SELECT TOP 1
-                        IdCatInvoiceType
-                   FROM CatInvoiceType  WITH(NOLOCK)
-                  WHERE [Name] = 'Comisión COD'
-                    AND RowStatus = 1
+               SELECT TOP 1
+       IdCatInvoiceType
+FROM CatInvoiceType WITH (NOLOCK)
+WHERE [Name] = 'Comisión COD'
+      AND RowStatus = 1
                 );
   
         IF OBJECT_ID('tempdb.dbo.#GuidesCommission', 'U') IS NOT NULL
@@ -82,6 +90,8 @@ BEGIN
          WHERE cas.[Name] = @NameArticle
            AND cas.IdCountry = @IdCountry;
 
+		 
+
         INSERT INTO #GuidesCommission
         (
           GuideSerie,
@@ -102,7 +112,7 @@ BEGIN
              , MAX(vpc.CodeOfReference)
              , MAX(vpc.CustomerID)
           FROM BatchDetailCOD bdCOD WITH (NOLOCK)
-               INNER JOIN DeliveryOrder do WITH (NOLOCK)
+               INNER JOIN DeliveryOrder  do WITH (NOLOCK)
                   ON bdCOD.GuideSerie = do.Guide_Serie
                      AND bdCOD.GuideNumber = do.Guide_Number
                INNER JOIN VisitPointClient  vpc WITH (NOLOCK)
@@ -158,7 +168,8 @@ BEGIN
                      ON cCt.IdCountry = gc.IdCountry
                  LEFT JOIN CatBillingVolume        cbv WITH (NOLOCK)
                      ON ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = cbv.IdCatBillingVolume
-           WHERE gc.CreditDate <= @CutOffDate;
+           WHERE gc.CreditDate <= @CutOffDate
+            -- AND ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = 2 --Billing Volume -> Completo;
 
             -- Validar si hay registros en la tabla temporal
             IF EXISTS (SELECT TOP 1 1
