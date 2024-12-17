@@ -196,7 +196,12 @@ BEGIN TRY
 			SELECT TOP 1
 				CASE 
 					WHEN ACH.IsOldest < 365 THEN 
-						CAST(ACH.IsOldest / 30 AS VARCHAR) + ' meses'
+						 CASE 
+							WHEN ACH.IsOldest / 30 = 1 THEN 
+								CAST(ACH.IsOldest / 30 AS VARCHAR) + ' mes' -- Singular para 1 mes
+							ELSE 
+								CAST(ACH.IsOldest / 30 AS VARCHAR) + ' meses' -- Plural para más de 1 mes o 0 meses
+						END
 					ELSE 
 						CASE 
 							WHEN ACH.IsOldest % 365 = 0 THEN 
@@ -346,7 +351,12 @@ BEGIN TRY
 			SELECT TOP 1
 				CASE 
 					WHEN ACH.IsOldest < 365 THEN 
-						CAST(ACH.IsOldest / 30 AS VARCHAR) + ' meses'
+						CASE 
+							WHEN ACH.IsOldest / 30 = 1 THEN 
+								CAST(ACH.IsOldest / 30 AS VARCHAR) + ' mes' -- Singular para 1 mes
+							ELSE 
+								CAST(ACH.IsOldest / 30 AS VARCHAR) + ' meses' -- Plural para más de 1 mes o 0 meses
+						END
 					ELSE 
 						CASE 
 							WHEN ACH.IsOldest % 365 = 0 THEN 
