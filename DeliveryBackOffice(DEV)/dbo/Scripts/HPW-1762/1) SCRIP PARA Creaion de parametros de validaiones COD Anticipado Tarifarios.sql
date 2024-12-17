@@ -4,7 +4,7 @@ BEGIN TRY
 		ALTER TABLE DeliveryBackOffice.dbo.RateHeader
 		ADD GuideAmountCOD DECIMAL(18,2) DEFAULT 800,
 		ReturnPercent INT DEFAULT 4,
-		IsOldest INT DEFAULT 30,
+		IsOldest INT DEFAULT 90,
 		MinGuidesPerMonth INT DEFAULT 25;
 
 		--UPDATE DeliveryBackOffice.dbo.RateHeader
