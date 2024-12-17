@@ -149,22 +149,7 @@ BEGIN TRY
 									 (CONVERT
 										(DECIMAL(12, 2), 
 											(
-												(DO.Collect_OnDelivery - 
-													(
-														CASE
-															WHEN ISNULL(VPC.ExcludePriceShippingCOD,ISNULL(C.ExcludePriceShippingCOD, 0)) = 1
-															THEN 0
-															ELSE
-																CASE
-																	WHEN ISNULL(DO.IsCollect, 0) = 1 THEN 0
-																	WHEN PYT.TimePlaId = 2 THEN 0
-																	WHEN PYT.TimePlaId = 1 THEN 0
-																	ELSE DO.PriceShippment
-																END
-														END
-													)
-												)
-												* ISNULL(RCO.CODRate, @CODRateDefault) / 100
+												(DO.Collect_OnDelivery) * ISNULL(RCO.CODRate, @CODRateDefault) / 100
 											)
 										)
 									)

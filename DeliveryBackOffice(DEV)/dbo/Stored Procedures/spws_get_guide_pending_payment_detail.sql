@@ -578,22 +578,7 @@ BEGIN
 				, 0
 				, (CONVERT(
 							DECIMAL(12, 2)
-							, ((DO.Collect_OnDelivery
-								- (IIF(
-									ISNULL(
-												VPC.ExcludePriceShippingCOD
-											, ISNULL(C.ExcludePriceShippingCOD, 0)
-											) = 1
-									, 0
-									, IIF(ISNULL(DO.IsCollect, 0) = 1
-										, 0
-										, IIF(PYT.TimePlaId = 2
-												, 0
-												, IIF(PYT.TimePlaId = 1, 0, DO.PriceShippment))))
-								)
-							)
-							* ISNULL(RCO.CODRate, @CODRateDefault) / 100
-							)
+							, ((DO.Collect_OnDelivery)* ISNULL(RCO.CODRate, @CODRateDefault) / 100)
 						)
 				))
 			, 0)
