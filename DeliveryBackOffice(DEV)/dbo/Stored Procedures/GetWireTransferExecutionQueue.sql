@@ -55,7 +55,7 @@ BEGIN
 				1 
 		FROM 
 			[DeliveryBackOffice].[dbo].[CoDDailyExecution] CDE WITH(NOLOCK) 
-			INNER JOIN DeliveryBackOffice.dbo.CatCoDDailySchedule CCDS ON CCDS.IdCatCODDailySchedule = CDE.CODDailyScheduleId
+			INNER JOIN DeliveryBackOffice.dbo.CatCoDDailySchedule CCDS WITH(NOLOCK) ON CCDS.IdCatCODDailySchedule = CDE.CODDailyScheduleId
 		WHERE 
 			CDE.ExecutionDate = CAST(GETDATE() AS DATE) 
 			AND 
