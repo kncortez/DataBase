@@ -704,6 +704,8 @@ BEGIN
 						 + '"COD": ' + CAST(c.COD AS VARCHAR) + ', '
 						 + '"ComisionCOD": ' + 
 						 CASE
+                            WHEN pg.ServiceType != 'COD' --Si la guía no es de tipo COD no deberia cobrar comision
+							THEN '0'
 							WHEN ISNULL(c.ComisionCOD, 0)	< ISNULL(@MinCODCommissionAmount, 0)	
 							THEN ISNULL(CAST(@MinCODCommissionAmount AS VARCHAR) , '0')
 							ELSE ISNULL(CAST(c.ComisionCOD AS VARCHAR) , '0')

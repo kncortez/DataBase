@@ -258,6 +258,8 @@ BEGIN TRY
 					, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
 					, 
 					CASE
+						WHEN DO.TypeService != 'COD'
+						THEN 0
 						WHEN ISNULL(@ComisionCODCalculate, 0)	< ISNULL(@MinCODCommissionAmount, 0)	
 						THEN ISNULL(@MinCODCommissionAmount, 0)
 						ELSE ISNULL(@ComisionCODCalculate, 0)
@@ -412,6 +414,8 @@ BEGIN TRY
 					, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
 					, 
 					CASE
+						WHEN DO.TypeService != 'COD'
+						THEN 0
 						WHEN ISNULL(@ComisionCODCalculate, 0)	< ISNULL(@MinCODCommissionAmount, 0)	
 						THEN ISNULL(@MinCODCommissionAmount, 0)
 						ELSE ISNULL(@ComisionCODCalculate, 0)
