@@ -17,6 +17,11 @@
 -- Create date: <2024-12-02>
 -- Description: <Se agrega parametros para enviar información de COD anticipado.>
 -- =============================================
+-- =============================================
+-- Author:      <Tito García>
+-- Create date: <2024-12-18>
+-- Description: <Se realizan optimizaciones recomendadas por DBA>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
@@ -25,7 +30,6 @@ CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
-
     -- Insert statements for procedure here
     IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
         DROP TABLE #listGuides;
@@ -54,10 +58,10 @@ BEGIN
         GuideNumber INT,
 		IdCustomer INT,
 		IdPortafolio INT,
-		COD DECIMAL(10,2),
-		ComisionCOD DECIMAL(6,2),
-		ComisionCODAnticipated DECIMAL(6,2)
-	) 
+		COD DECIMAL(18,2),
+		ComisionCOD DECIMAL(18,2),
+		ComisionCODAnticipated DECIMAL(18,2)
+	)
 
     ---- Convertir cadena de guias en tabla de guias ---------------------------------------------
     CREATE TABLE #listGuides
@@ -65,7 +69,6 @@ BEGIN
         Guide_Serie NVARCHAR(2),
         Guide_Number INT
     );
-
     CREATE NONCLUSTERED INDEX tempGuides ON #listGuides (Guide_Serie, Guide_Number);
 
     INSERT INTO #listGuides
@@ -76,7 +79,6 @@ BEGIN
     SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
            SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
     FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
-    ----------------------------------------------------------------------------------------------------
 
     ---- Obtener guias que no existen ------------------------------------
     SELECT lg.Guide_Serie,
@@ -88,7 +90,7 @@ BEGIN
     WHERE NOT EXISTS
     (
         SELECT 1
-        FROM DeliveryBackOffice.dbo.DeliveryOrder do
+        FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
         WHERE lg.Guide_Serie = do.Guide_Serie
               AND lg.Guide_Number = do.Guide_Number
           AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
@@ -137,7 +139,6 @@ BEGIN
     CREATE NONCLUSTERED INDEX IX_LGI_GUIDES ON #listGuidesIncluded (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
-
     ---- Obtener guias que no se pueden procesar con el modulo indicado ------------------------------------
     SELECT lg.Guide_Serie,
            lg.Guide_Number,
@@ -168,10 +169,8 @@ BEGIN
 			
           )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
-		  
 
-  INSERT INTO #listGuidesExcluded
-     
+    INSERT INTO #listGuidesExcluded
     SELECT lg.Guide_Serie,
            lg.Guide_Number,
            so.StatusOrderId,
@@ -182,51 +181,42 @@ BEGIN
                AND lg.Guide_Number = do.Guide_Number
         INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
             ON do.StatusOrderId = so.StatusOrderId
-    WHERE (
-             
-               (so.StatusOrderId  IN ( SELECT
-													SO.[StatusOrderId]
-												FROM
-													[dbo].[StatusOrder] SO  WITH(NOLOCK)
-												WHERE
-													[CatCheckpointTypeId] = 3 And RowStatus = 1 ))
+    WHERE (             
+            (so.StatusOrderId  IN ( SELECT SO.[StatusOrderId]
+                                    FROM [dbo].[StatusOrder] SO  WITH(NOLOCK)
+                                    WHERE [CatCheckpointTypeId] = 3 
+                                        AND RowStatus = 1 ))
 		)
-      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
+        AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
 
 ------------------------------------  Validación de estados terminales --------------------------------------------------
- 
-
-
-
-
 
 --------------------------------------------------------------------------------------------------------------------------
-
 
 		  IF ((SELECT COUNT(1)FROM #listGuidesExcluded) = 0)
 			BEGIN
 			
-			
-			INSERT INTO #listGuidesExcluded(Guide_Serie,Guide_Number,StatusOrderId,Description)			
-				SELECT lg.Guide_Serie,
-           lg.Guide_Number,
-           so.StatusOrderId,
-           so.OrderDescription 'Description'
-    FROM #listGuides lg
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
-            ON lg.Guide_Serie = do.Guide_Serie
-               AND lg.Guide_Number = do.Guide_Number
-		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD
-		ON DOD.Guide_Serie = do.Guide_Serie AND DOD.Guide_Number = do.Guide_Number
-        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so
-            ON DOD.StatusOrderId = so.StatusOrderId
-    WHERE           
-          (
-              UPPER(@ServiceType) = 'DELIVERY'
-              AND DO.IsLastMileReturn = 1
-			  AND DOD.StatusOrderId IN ( 32 )						
-          )
-      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
+                INSERT INTO #listGuidesExcluded(Guide_Serie,Guide_Number,StatusOrderId,Description)			
+                    SELECT lg.Guide_Serie,
+                            lg.Guide_Number,
+                            so.StatusOrderId,
+                            so.OrderDescription 'Description'
+                FROM #listGuides lg
+                    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                        ON lg.Guide_Serie = do.Guide_Serie
+                            AND lg.Guide_Number = do.Guide_Number
+                    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
+                        ON DOD.Guide_Serie = do.Guide_Serie 
+                            AND DOD.Guide_Number = do.Guide_Number
+                    INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
+                        ON DOD.StatusOrderId = so.StatusOrderId
+                WHERE           
+                    (
+                        UPPER(@ServiceType) = 'DELIVERY'
+                        AND DO.IsLastMileReturn = 1
+                        AND DOD.StatusOrderId IN ( 32 )						
+                    )
+                AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
          
 			END
 
@@ -260,14 +250,13 @@ BEGIN
         JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
             ON ord.Guide_Number = lst.Guide_Number
                AND ord.Guide_Serie = lst.Guide_Serie
-		LEFT JOIN
-			[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
+		LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 			ON lst.Guide_Serie = PC.GuideSerieDestination
 				AND lst.Guide_Number = PC.GuideNumberDestination
-				AND PC.FinalActiveDate >= GETDATE()
-				AND PC.RowStatus = 1
     WHERE ISNULL(ord.PriceShippment, 0) = 0
 		AND PC.IdPromoCoupon IS NULL
+        AND PC.FinalActiveDate >= GETDATE()
+        AND PC.RowStatus = 1
         AND ISNULL(ord.SenderCountryId,'GT') = @IdCountry ;
 
     CREATE NONCLUSTERED INDEX tempFila ON #RevalueGuides (fila);
@@ -297,10 +286,11 @@ BEGIN
 
 		----Obtener bandera de tipo de suscripcion para enviar a sp revalorizador----
 		DECLARE @TypeSubsId INT;
-		SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
-		INNER JOIN Subscription sb WITH (NOLOCK)
-		ON sbl.SubscriptionId = sb.IdSubscription
-		WHERE LogGuideNumber = @RevalueGuide)
+		SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId 
+                            FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
+                                INNER JOIN Subscription sb WITH (NOLOCK)
+                                    ON sbl.SubscriptionId = sb.IdSubscription
+                            WHERE LogGuideNumber = @RevalueGuide)
 
 		IF(@TypeSubsId IS NULL)
 			BEGIN
@@ -342,10 +332,10 @@ BEGIN
         GuideSerie NVARCHAR(25) NULL,
         GuideNumber INT,
         IsCollect BIT,
-        Price DECIMAL(14, 2) NULL,
-        COD DECIMAL(14, 2) NULL,
-        AmountPaid DECIMAL(14, 2) NULL,
-        CODPaid DECIMAL(14, 2) NULL,
+        Price DECIMAL(18, 2) NULL,
+        COD DECIMAL(18, 2) NULL,
+        AmountPaid DECIMAL(18, 2) NULL,
+        CODPaid DECIMAL(18, 2) NULL,
         CODIsPaid BIT,
         PaymentTime INT NULL,
         TimeSequence INT NULL,
@@ -355,14 +345,14 @@ BEGIN
         ConditionPayment VARCHAR(200),
         HaveCredit BIT,
         CollectCOD BIT,
-        ReturnRate DECIMAL(14, 2) NULL,
+        ReturnRate DECIMAL(18, 2) NULL,
         CurrencyPrice_CODCodeISO NVARCHAR(8),
 		CurrencyPrice_CODSymbol  NVARCHAR(8),
 		CurrencyPriceCodeISO     NVARCHAR(8),
 		CurrencyPriceSymbol      NVARCHAR(8),
-        AmountToPay DECIMAL(14, 2) NULL,
-        CODAmount DECIMAL(14, 2) NULL,
-        ReturnRates DECIMAL(14, 2) NULL
+        AmountToPay DECIMAL(18, 2) NULL,
+        CODAmount DECIMAL(18, 2) NULL,
+        ReturnRates DECIMAL(18, 2) NULL
     );
 
     CREATE NONCLUSTERED INDEX IX_PPT_GNS ON #PendingPaymentTemp (GuideSerie,GuideNumber);
@@ -531,17 +521,17 @@ BEGIN
 		WHERE Guide_Serie = ppt.GuideSerie AND Guide_Number = ppt.GuideNumber
 	)
 
-	DECLARE @CODRateDefault DECIMAL(12, 2) =
+	DECLARE @CODRateDefault DECIMAL(18, 2) =
 						(
-							SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+							SELECT CONVERT(DECIMAL(18, 2), ISNULL(cf.Value, '0')) val
 							FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
 							WHERE cf.Name = 'CODRateDef'
 									AND Status = 1
 									AND cf.IdCountry = @IdCountrySender
 						);
-	DECLARE @CODExemptDefault DECIMAL(12, 2) =
+	DECLARE @CODExemptDefault DECIMAL(18, 2) =
 						(
-							SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+							SELECT CONVERT(DECIMAL(18, 2), ISNULL(cf.Value, '0')) val
 							FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
 							WHERE cf.Name = 'CODExemptDef'
 									AND Status = 1
@@ -556,9 +546,9 @@ BEGIN
 								AND CrsRowStatus = 'true'
 					);
 
-    DECLARE @MinCODCommissionAmount DECIMAL(12, 2) =
+    DECLARE @MinCODCommissionAmount DECIMAL(18, 2) =
 					(
-						SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+						SELECT CONVERT(DECIMAL(18, 2), ISNULL(cf.Value, '0')) val
 						FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
 						WHERE cf.Name = 'MinCODCommissionAmount'
 								AND Status = 1
@@ -577,7 +567,7 @@ BEGIN
 			, IIF(ISNULL(VPC.ExcludeCommissionCOD, ISNULL(C.ExcludeCommissionCOD, 0)) = 1
 				, 0
 				, (CONVERT(
-							DECIMAL(12, 2)
+							DECIMAL(18, 2)
 							, ((DO.Collect_OnDelivery)* ISNULL(RCO.CODRate, @CODRateDefault) / 100)
 						)
 				))
@@ -609,17 +599,17 @@ BEGIN
             ON ppt.GuideSerie = do.Guide_Serie
                AND ppt.GuideNumber = do.Guide_Number
 		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
-			ON do.Guide_Serie = acd.GuideSerie AND do.Guide_Number = acd.GuideNumber
+			ON do.Guide_Serie = acd.GuideSerie 
+                AND do.Guide_Number = acd.GuideNumber
 		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK)
 			ON do.IdCustomer = ach.CustomerId 
 		LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 			ON VPC.CodeOfReference = DO.Sender_ID
 		LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
 			ON RBC.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
-				AND RBC.RbcRowStatus = 1 AND RBC.RbcCodeOfReference IS NULL
 		LEFT JOIN dbo.RatebyCustomer RBC2 WITH (NOLOCK)
 			ON RBC2.RbcIdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
-				AND RBC2.RbcRowStatus = 1 AND RBC2.RbcCodeOfReference = DO.Sender_ID
+                AND RBC2.RbcCodeOfReference = DO.Sender_ID
 		LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
 			ON RBC.RbcIdRate = RH.RheId
 		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODComission ACC WITH(NOLOCK)
@@ -629,21 +619,18 @@ BEGIN
 			ON C.IdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)
 		LEFT JOIN dbo.CatTypeService CSV WITH (NOLOCK)
 			ON CSV.CtsShortName = IIF(DO.TypeService = 'EXP', 'NDD', ISNULL(DO.TypeService, 'NDD'))
-				AND CSV.CtsRowStatus = 'true'
 		LEFT JOIN dbo.CatRateSegment CSG WITH (NOLOCK)
 			ON CSG.CrsShortName = dbo.fn_get_segment(DO.Guide_Serie, DO.Guide_Number)
-				AND CSG.CrsRowStatus = 'true'
 		LEFT JOIN dbo.RateCOD RCO WITH (NOLOCK)
 			ON RCO.RateId = ISNULL(RBC2.RbcIdRate, RBC.RbcIdRate)
 				AND RCO.TypeServiceId = CSV.CtsId
 				AND RCO.TypeSegmentId = ISNULL(CSG.CrsId, @IdSegmentDefault)
-				AND RCO.RowStatus = 1
 		LEFT JOIN dbo.DeliveryOrderPaid OP WITH (NOLOCK)
 			ON OP.Guide_Serie = DO.Guide_Serie
 				AND OP.Guide_Number = DO.Guide_Number
-				AND OP.IdStatus = 'true'
 		LEFT JOIN dbo.DeliveryOrderPaymentDetail PYT WITH (NOLOCK)
-			ON PYT.GuideSerie = DO.Guide_Serie AND PYT.GuideNumber = DO.Guide_Number
+			ON PYT.GuideSerie = DO.Guide_Serie 
+                AND PYT.GuideNumber = DO.Guide_Number
 		--Son rangos por default que tenemos si en dado caso el tarifario no cumple su rango
 		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin1 WITH(NOLOCK)
 			ON CPmin1.IdCountry = DO.ReceiverCountryId AND CPmin1.Name = 'MinRangeCODComisison1Param'
@@ -659,7 +646,14 @@ BEGIN
 			ON CPv2.IdCountry = DO.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'
 		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)
 			ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
-   WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+   WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry
+        AND RBC.RbcRowStatus = 1 
+        AND RBC.RbcCodeOfReference IS NULL
+        AND RBC2.RbcRowStatus = 1
+        AND CSV.CtsRowStatus = 'true'
+        AND CSG.CrsRowStatus = 'true'
+        AND OP.IdStatus = 'true'
+        AND RCO.RowStatus = 1;
 
     DECLARE @Output VARCHAR(MAX);
     DECLARE @RowsNumber INT =
@@ -726,8 +720,8 @@ BEGIN
                    (
                        SELECT ' { "Description": "' + ISNULL(br.Description, '') + '", ' + '"Amount": '
                               + CAST(CAST(ISNULL(br.Amount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + ' }, '
-                       FROM Cost c
-                           INNER JOIN BreakdownOfPayment br WITH(NOLOCK)
+                       FROM Cost c WITH (NOLOCK)
+                           INNER JOIN BreakdownOfPayment br WITH (NOLOCK)
                                ON c.IdCost = br.IdCost
                        WHERE c.ProductNumber = @ActualGuide
                              AND ABS(br.Amount) > 0
