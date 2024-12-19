@@ -8,6 +8,10 @@
 -- Updated date:<18-11-2024>
 -- Description:	<Se agrega nueva validación IsCompleted>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date:<18-12-2024>
+-- Description:	<Se realizan optimizaciones recomendadas por DBA>
+-- =============================================
 CREATE PROCEDURE [dbo].[sp_set_SuccessServiceData_SimpliWebhook]
 	-- DATA PLAN
 	@PlanID NVARCHAR(50),
@@ -68,11 +72,11 @@ BEGIN
     -- variable para setear el nombre del módulo del cuál se desea obtener su id
     DECLARE @ModName NVARCHAR(50);
 	--Estado para Reenviado a Express Center
-	DECLARE @StatusEXC AS INT = ( SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Reenviado a Express Center') --FDAPI-337
+	DECLARE @StatusEXC AS INT = ( SELECT StatusOrderId FROM StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Reenviado a Express Center') --FDAPI-337
 	--Se obtiene el IdDeliveryOption configurado
-	DECLARE @IdDeliveryOption AS INT  = (SELECT IdDeliveryOption FROM DeliveryBackOffice.dbo.CatDeliveryOptions WHERE Name = 'Express Center') --FDAPI-337
+	DECLARE @IdDeliveryOption AS INT  = (SELECT IdDeliveryOption FROM DeliveryBackOffice.dbo.CatDeliveryOptions WITH (NOLOCK) WHERE Name = 'Express Center') --FDAPI-337
 	--Se obtiene el IdDeliveryOption que tiene la guía
-	DECLARE @IdDeliveryOptionGuide AS INT  = (SELECT IdDeliveryOption FROM DeliveryBackOffice.dbo.DeliveryOrder WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber ) --FDAPI-337
+	DECLARE @IdDeliveryOptionGuide AS INT  = (SELECT IdDeliveryOption FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber ) --FDAPI-337
 
 	IF OBJECT_ID('tempdb.dbo.#InsertedRecordT', 'U') IS NOT NULL
 		DROP TABLE #InsertedRecordT;
@@ -102,17 +106,12 @@ BEGIN
 		)
 
 		INSERT INTO @DatosCourier
-		SELECT TOP 1
-			sr.ID,
-			ltpod.LogTokenPOD
-		FROM
-			dbo.SenderReceiver sr
-			JOIN dbo.LogTokenPOD ltpod
-			ON sr.ID = ltpod.IdCourierman
-		WHERE
-			sr.CUI = @RouteDriverName
-			AND
-			ltpod.RowStatus = 1
+		SELECT TOP 1 sr.ID,	ltpod.LogTokenPOD
+		FROM dbo.SenderReceiver sr WITH (NOLOCK)
+			INNER JOIN dbo.LogTokenPOD ltpod WITH (NOLOCK)
+				ON sr.ID = ltpod.IdCourierman
+		WHERE sr.CUI = @RouteDriverName
+			AND	ltpod.RowStatus = 1
 		ORDER BY ltpod.DateCreated DESC;
 
 		-- ACTUALIZAR VISITAS DE PLATAFORMA EXTERNA
@@ -134,8 +133,8 @@ BEGIN
 		-- BUSCAR REGISTROS DE TABLA DE ENTREGAS
 		INSERT INTO @Table
         SELECT da.ID
-        FROM DeliveryBackOffice.dbo.DeliveryAttempt da
-            JOIN DeliveryBackOffice.dbo.SenderReceiver sr
+        FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                 ON sr.ID = da.ID_Courier
         WHERE sr.CUI LIKE '%' + @RouteDriverName + '%'
               AND da.Guide_Serie = @GuideSerie
@@ -175,7 +174,7 @@ BEGIN
 					(
 						SELECT TOP 1
 								ISNULL(StatusOrderId, 1)
-						FROM dbo.DeliveryOrder
+						FROM dbo.DeliveryOrder WITH (NOLOCK)
 						WHERE Guide_Serie = @GuideSerie
 								AND Guide_Number = @GuideNumber
 					);
@@ -252,11 +251,11 @@ BEGIN
 							FROM @DatosCourier
 						) AS 'Token',
 						GETDATE()
-				FROM DeliveryBackOffice.dbo.DeliveryOrder
+				FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
 				WHERE Guide_Serie = @GuideSerie
-						AND Guide_Number = @GuideNumber
-						AND Collect_OnDelivery > 0
-						AND StatusOrderId = 5;
+					AND Guide_Number = @GuideNumber
+					AND Collect_OnDelivery > 0
+					AND StatusOrderId = 5;
 			END
 		END
 		-- SI SE INTENTA REGISTAR COBRO

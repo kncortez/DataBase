@@ -9,14 +9,14 @@
 -- Description:	<Validacion cambiar de cambio de estado por pais>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide]
-    @Guide_Serie AS VARCHAR(2),         -- same guide for all numbers provided
-    @Guide_Number AS VARCHAR(MAX),      -- a list of guides separated by comma
+    @Guide_Serie AS NVARCHAR(2),         -- same guide for all numbers provided
+    @Guide_Number AS NVARCHAR(MAX),      -- a list of guides separated by comma
     @StatusId AS INT,                   -- status from StatusOrder
-    @TokenId AS VARCHAR(50),
+    @TokenId AS NVARCHAR(50),
     @DateOfStatus DATETIME,             -- datetime of event
-    @Observations AS VARCHAR(200) = '', --Observations by checkpoint
+    @Observations AS NVARCHAR(200) = '', --Observations by checkpoint
     @Temperature_Celsius AS DECIMAL(5, 2),
-    @courierName AS VARCHAR(200) = '',
+    @courierName AS NVARCHAR(200) = '',
     @iduser AS INT = NULL,
     @username NVARCHAR(50) = NULL,
 	@IdCountry NVARCHAR(2) = 'GT'
@@ -44,7 +44,7 @@ BEGIN
     CREATE TABLE #TempData
     (
      IdProcessedGuideCOD INT,
-     GuideSerie          NVARCHAR(4),
+     GuideSerie          NVARCHAR(2),
      GuideNumber         INT,
     );
     CREATE NONCLUSTERED INDEX INDX_sps_set_status_order_by_guide_Temp ON #TempData (GuideSerie, GuideNumber);
@@ -438,7 +438,7 @@ BEGIN
                                         SELECT TOP 1
                                                WT.IdWebhookType
                                         FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                        WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                        WHERE WT.WebhookName = 'GuideStatusChange'
                                               AND WT.RowStatus = 1
                                     );
 
@@ -544,11 +544,12 @@ BEGIN
 											FROM DeliveryOrder do WITH(NOLOCK)
 											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 												ON do.Guide_Number = dop.GuideNumber
-												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-											    ON do.IdCustomer = WHE.CustomerId
-												WHERE do.Guide_Number = @Guide_Number
-													AND WHE.TypeConnectionId = 2
-												GROUP BY dop.GuideSerie,dop.GuideNumber
+                                                AND do.Guide_Serie = dop.GuideSerie
+                                            INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+                                                ON do.IdCustomer = WHE.CustomerId
+                                            WHERE do.Guide_Number = @Guide_Number
+                                                AND WHE.TypeConnectionId = 2
+                                            GROUP BY dop.GuideSerie,dop.GuideNumber
 
 									   DECLARE @PiecesGuideRelatedTable AS TABLE
 									(
@@ -577,12 +578,13 @@ BEGIN
 											FROM DeliveryOrder do WITH(NOLOCK)
 											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 												ON do.Guide_Number = dop.GuideNumber
-												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-											    ON do.IdCustomer = WHE.CustomerId
-												WHERE do.Guide_Number = @Guide_Number
-												AND dop.ExternalPieceId IS NOT NULL
-												AND WHE.TypeConnectionId = 2
-												GROUP BY dop.GuideSerie,dop.GuideNumber
+                                                AND do.Guide_Serie = dop.GuideSerie
+                                            INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+                                                ON do.IdCustomer = WHE.CustomerId
+                                            WHERE do.Guide_Number = @Guide_Number
+                                                AND dop.ExternalPieceId IS NOT NULL
+                                                AND WHE.TypeConnectionId = 2
+                                            GROUP BY dop.GuideSerie,dop.GuideNumber
 					  
 					  					INSERT INTO WebhookTrackingQueueDetailForSFTP 
 											(CustomerId,
@@ -601,14 +603,16 @@ BEGIN
 										FROM DeliveryOrderPiece dop WITH(NOLOCK)
 										INNER JOIN DeliveryOrder do WITH(NOLOCK)
 											ON dop.GuideNumber = do.Guide_Number
+                                            AND dop.GuideSerie = do.Guide_Serie
 										INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 										    ON do.IdCustomer = WHE.CustomerId
 										INNER JOIN @GuidePiecesTable gpt
 										    ON dop.GuideNumber = gpt.GuideNumber
+                                            AND dop.GuideSerie = gpt.GuideSerie
 										INNER JOIN @PiecesGuideRelatedTable pgt
 										    ON gpt.GuideNumber = pgt.GuideNumber
-											WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-												AND WHE.TypeConnectionId = 2
+											AND gpt.NumberPieces = pgt.NumberRelatedPieces
+										WHERE WHE.TypeConnectionId = 2
 
 								END
 
@@ -620,9 +624,7 @@ BEGIN
                         END CATCH;
 
                     -------------------WEBHOOK.INI FIN----------------------------------------------------------------------------------------	
-
 	END;
-
 
     END TRY
     BEGIN CATCH
@@ -664,9 +666,9 @@ BEGIN
            SET pgd.IsCompleted = 1
           FROM ProcessedGuideCOD pgd WITH(NOLOCK)
                INNER JOIN #TempData tmp
-                  ON pgd.GuideSerie   = tmp.GuideSerie
-                 AND pgd.GuideNumber = tmp.GuideNumber
-         WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+                    ON pgd.GuideSerie   = tmp.GuideSerie
+                    AND pgd.GuideNumber = tmp.GuideNumber
+                    AND pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
 
         IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
             DROP TABLE #TempData;
