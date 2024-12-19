@@ -27,12 +27,16 @@
 -- Create date: <2024-06-06>
 -- Description:	<Valida que el pais destino es el mismo que el pais logueado>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date:<18-12-2024>
+-- Description:	<Se realizan optimizaciones recomendadas por DBA>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_Confirmation_of_delivery]
-    @Guide_Serie AS VARCHAR(2),   --guide serie
+    @Guide_Serie AS NVARCHAR(2),   --guide serie
     @Guide_Number AS INT,         --guide number
-    @DateOfDelivery VARCHAR(50),  --Date of delivery
-    @NameOfReceiver VARCHAR(200), --Name of receiver
-    @TokenId AS VARCHAR(50),       --token user
+    @DateOfDelivery NVARCHAR(50),  --Date of delivery
+    @NameOfReceiver NVARCHAR(200), --Name of receiver
+    @TokenId AS NVARCHAR(50),       --token user
 	@IdCountry AS NVARCHAR(2) = 'GT' --Country
 AS
 BEGIN
@@ -62,17 +66,18 @@ BEGIN
 														),0)
 																					
 	SELECT @BelongCountry = CASE WHEN IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry THEN 1 ELSE 0 END	
-	FROM DeliveryOrder 
-	WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number																			
+	FROM DeliveryOrder WITH (NOLOCK)
+	WHERE Guide_Serie = @Guide_Serie 
+        AND Guide_Number = @Guide_Number																			
 
     IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
         DROP TABLE #TempData;
 
     CREATE TABLE #TempData
     (
-     IdProcessedGuideCOD INT,
-     GuideSerie          NVARCHAR(4),
-     GuideNumber         INT,
+        IdProcessedGuideCOD INT,
+        GuideSerie          NVARCHAR(4),
+        GuideNumber         INT,
     );
     CREATE NONCLUSTERED INDEX INDX_sps_set_Confirmation_of_delivery_Temp ON #TempData (GuideSerie, GuideNumber);
 
@@ -95,16 +100,13 @@ BEGIN
                   )
 				  AND [RowStatus] = 1
         );
-
 			
 IF(@IsStatusTerminal = 0)
 	BEGIN
 
-
         IF (NOT EXISTS
         (
-            SELECT TOP 1
-                   1
+            SELECT TOP 1 1
             FROM dbo.DeliveryOrder WITH (NOLOCK)
             WHERE IdDeliveryOption = 3
                   AND Guide_Serie = @Guide_Serie
@@ -128,27 +130,27 @@ IF(@IsStatusTerminal = 0)
                 IF (@DateOfDelivery > @Datetime)
                 BEGIN
 
-
-				  --al cambiar estado de guia  debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
-				  UPDATE  dbo.warehouse SET Active =0,
-				          UserUpdated = @TokenId,
-						  DateUpdated = GETDATE()
-				  where Guide_Serie = @Guide_Serie AND 
-                        Guide_Number = @Guide_Number AND
-						Active = 1
+                    --al cambiar estado de guia  debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
+                    UPDATE  dbo.warehouse 
+                    SET Active =0
+                        , UserUpdated = @TokenId
+                        , DateUpdated = GETDATE()
+                    WHERE Guide_Serie = @Guide_Serie 
+                        AND Guide_Number = @Guide_Number 
+                        AND	Active = 1
 
 					-- Actualizar registro de guía a último estado 
 					UPDATE DeliveryBackOffice.dbo.DeliveryOrder
 					SET StatusOrderId = @StatusId, --Status of delivery 			
 					    NameOfReceiver = @NameOfReceiver
 					WHERE Guide_Serie = @Guide_Serie 
-					      AND Guide_Number = @Guide_Number;	
+					    AND Guide_Number = @Guide_Number;	
 
                     UPDATE DeliveryBackOffice.dbo.DeliveryAttempt
                     SET Delivered = 1 --Status of delivery 	
                     WHERE Guide_Serie = @Guide_Serie
-                          AND Guide_Number = @Guide_Number
-                          AND CAST(Date_Created AS DATE) = CAST(GETDATE() AS DATE);
+                        AND Guide_Number = @Guide_Number
+                        AND CAST(Date_Created AS DATE) = CAST(GETDATE() AS DATE);
 
                     -- Insertar nuevo estado de guía en tabla histórica
                     INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
@@ -183,7 +185,7 @@ IF(@IsStatusTerminal = 0)
 					DECLARE @GuideCurrentStatus INT = -1;
 
 					BEGIN TRY
-						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
 						SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @Guide_Number AND DO.Guide_Serie = @Guide_Serie),-1);
 						SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
@@ -202,33 +204,25 @@ IF(@IsStatusTerminal = 0)
 							IF( 
 								NOT EXISTS (
 									SELECT 
-										TOP 1 
-											1 
+										TOP 1 1 
 									FROM 
 										[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK) 
-									WHERE 
-										WTQ.GuideSerie = @Guide_Serie 
-										AND 
-										WTQ.GuideNumber = @Guide_Number 
-										AND
-										WTQ.RowStatus = 1
-										AND 
-										WTQ.StatusOrderId IN (
+									WHERE WTQ.GuideSerie = @Guide_Serie 
+										AND WTQ.GuideNumber = @Guide_Number 
+										AND WTQ.RowStatus = 1
+										AND WTQ.StatusOrderId IN (
 											SELECT
 												WRBU.StatusOrderId 
-											FROM 
-												[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) 
-											WHERE 
-												WRBU.CustomerId = @WebhookCustomerId 
-												AND 
-												WRBU.WebhookTypeId = @GuideStatusChangeWebhook
+											FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) 
+											WHERE WRBU.CustomerId = @WebhookCustomerId 
+												AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook
 								) ) )
 							BEGIN
 								DECLARE @TypeConnect INT = 0;
 
 							SET @TypeConnect = (SELECT top 1 TypeConnectionId 
-									FROM WebhookEndpoint wh
-									INNER JOIN WebhookCatTypeConnection wc
+									FROM WebhookEndpoint wh WITH(NOLOCK)
+									INNER JOIN WebhookCatTypeConnection wc WITH(NOLOCK)
 										ON wh.TypeConnectionId = wc.IdCatTypeConnection
 									WHERE wh.CustomerId = @WebhookCustomerId)
 
@@ -291,12 +285,12 @@ IF(@IsStatusTerminal = 0)
 													INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 														ON do.Guide_Number = dop.GuideNumber
                                                         AND do.Guide_Serie = dop.GuideSerie
-														INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+													INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 													    ON do.IdCustomer = WHE.CustomerId
-														WHERE do.Guide_Number = @Guide_Number
-                                                          AND do.Guide_Serie = @Guide_Serie
-														  AND WHE.TypeConnectionId = 2
-														GROUP BY dop.GuideSerie,dop.GuideNumber
+													WHERE do.Guide_Number = @Guide_Number
+                                                        AND do.Guide_Serie = @Guide_Serie
+                                                        AND WHE.TypeConnectionId = 2
+                                                    GROUP BY dop.GuideSerie,dop.GuideNumber
 
 											   DECLARE @PiecesGuideRelatedTable AS TABLE
 											(
@@ -326,13 +320,13 @@ IF(@IsStatusTerminal = 0)
 													INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 														ON do.Guide_Number = dop.GuideNumber
                                                         AND do.Guide_Serie = dop.GuideSerie
-														INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+													INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 													    ON do.IdCustomer = WHE.CustomerId
-														WHERE do.Guide_Number = @Guide_Number
+                                                    WHERE do.Guide_Number = @Guide_Number
                                                         AND do.Guide_Serie = @Guide_Serie
-														AND dop.ExternalPieceId IS NOT NULL
-														AND WHE.TypeConnectionId = 2
-														GROUP BY dop.GuideSerie,dop.GuideNumber
+                                                        AND dop.ExternalPieceId IS NOT NULL
+                                                        AND WHE.TypeConnectionId = 2
+                                                    GROUP BY dop.GuideSerie,dop.GuideNumber
 					  
 					  							INSERT INTO WebhookTrackingQueueDetailForSFTP 
 													(CustomerId,
@@ -360,8 +354,8 @@ IF(@IsStatusTerminal = 0)
 												INNER JOIN @PiecesGuideRelatedTable pgt
 												    ON gpt.GuideNumber = pgt.GuideNumber
                                                     AND gpt.GuideSerie = pgt.GuideSerie
-													WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-														AND WHE.TypeConnectionId = 2
+                                                    AND gpt.NumberPieces = pgt.NumberRelatedPieces
+                                                WHERE WHE.TypeConnectionId = 2
 
 										END
 							END
@@ -379,18 +373,18 @@ IF(@IsStatusTerminal = 0)
                     SELECT @COD = ord.Collect_OnDelivery,
                            @IdCustomer = cus.IdCustomer
                     FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-                        LEFT JOIN dbo.VisitPointClient vp
+                        LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                             ON vp.CodeOfReference = ord.Sender_ID
-                        LEFT JOIN dbo.Customer cus
+                        LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                             ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
                     WHERE ord.Guide_Serie = @Guide_Serie
                           AND ord.Guide_Number = @Guide_Number;
 
                     SELECT @COLLECT = 1
                     FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-                        LEFT JOIN dbo.VisitPointClient vp
+                        LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                             ON vp.CodeOfReference = ord.Sender_ID
-                        LEFT JOIN dbo.Customer cus
+                        LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                             ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
                     WHERE ord.Guide_Serie = @Guide_Serie
                           AND ord.Guide_Number = @Guide_Number
@@ -423,7 +417,7 @@ IF(@IsStatusTerminal = 0)
                         SET @CatModuleId = ISNULL(
                                            (
                                                SELECT ModIdModule
-                                               FROM DeliveryBackOffice.dbo.CatModule
+                                               FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
                                                WHERE ModName = 'Confirmación de Entrega'
                                            ),
                                            0
@@ -554,11 +548,11 @@ IF(@IsStatusTerminal = 0)
 
         UPDATE pgd
            SET pgd.IsCompleted = 1
-          FROM ProcessedGuideCOD pgd WITH(NOLOCK)
-               INNER JOIN #TempData tmp
-                  ON pgd.GuideSerie   = tmp.GuideSerie
-                 AND pgd.GuideNumber = tmp.GuideNumber
-         WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+        FROM ProcessedGuideCOD pgd WITH(NOLOCK)
+            INNER JOIN #TempData tmp
+                ON pgd.GuideSerie   = tmp.GuideSerie
+                AND pgd.GuideNumber = tmp.GuideNumber
+                AND pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
 
         IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
             DROP TABLE #TempData;

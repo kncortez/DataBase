@@ -23,11 +23,15 @@
 -- Create date: <2024-05-28>
 -- Description:	<Se agrega parametro para filtrar por pais de origen>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date:<18-12-2024>
+-- Description:	<Se realizan optimizaciones recomendadas por DBA>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_Return_of_delivery]
-    @Guide_Serie AS VARCHAR(2),  --guide serie
+    @Guide_Serie AS NVARCHAR(2),  --guide serie
     @Guide_Number AS INT,        --guide number
-    @DateOfDelivery VARCHAR(50), --Date of delivery
-    @TokenId AS VARCHAR(50),      --token user
+    @DateOfDelivery NVARCHAR(50), --Date of delivery
+    @TokenId AS NVARCHAR(50),      --token user
 	@IdCountry AS NVARCHAR(2) = 'GT'	 --id country
 AS
 BEGIN
@@ -96,7 +100,7 @@ BEGIN
         SET @TimeByCountry =
                 (
                     SELECT COUNT(Guide_Number)
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder
+                    FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
                     WHERE Guide_Serie = @Guide_Serie
                           AND Guide_Number = @Guide_Number
                           AND ISNULL(SenderCountryId, 'GT') = @IdCountry
@@ -114,7 +118,7 @@ BEGIN
                 SET @Times =
                 (
                     SELECT COUNT(Guide_Number)
-                    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail
+                    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK)
                     WHERE Guide_Serie = @Guide_Serie
                           AND Guide_Number = @Guide_Number
                           AND
@@ -131,7 +135,7 @@ BEGIN
                     (
                         SELECT TOP 1
                                DateCreated
-                        FROM DeliveryBackOffice.dbo.DeliveryOrderDetail
+                        FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK)
                         WHERE Guide_Serie = @Guide_Serie
                               AND Guide_Number = @Guide_Number
                         ORDER BY DateCreated DESC
@@ -186,7 +190,6 @@ BEGIN
                                INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                        ON dod.Guide_Serie = acodd.GuideSerie
                                       AND dod.Guide_Number = acodd.GuideNumber
-                                      AND acodd.RowStatus = 1
                                INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
                                        ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
                                INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
@@ -196,7 +199,8 @@ BEGIN
                            AND dod.Guide_Number = @Guide_Number
                            AND dod.StatusOrderId = 14
                            AND bdcod.Excluded = 0
-                           AND bdcod.CatTransactionTypeCODId = 2;
+                           AND bdcod.CatTransactionTypeCODId = 2
+                           AND acodd.RowStatus = 1;
 
                         UPDATE acodd
                            SET acodd.BalanceStatus = 'DEVOLUCION'
@@ -204,7 +208,6 @@ BEGIN
                                INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                        ON dod.Guide_Serie = acodd.GuideSerie
                                       AND dod.Guide_Number = acodd.GuideNumber
-                                      AND acodd.RowStatus = 1
                                INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
                                        ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
                                INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
@@ -214,7 +217,8 @@ BEGIN
                            AND dod.Guide_Number = @Guide_Number
                            AND dod.StatusOrderId = 14
                            AND bdcod.Excluded = 0
-                           AND bdcod.CatTransactionTypeCODId = 2;
+                           AND bdcod.CatTransactionTypeCODId = 2
+                           AND acodd.RowStatus = 1;
 
                         SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
 
@@ -231,8 +235,7 @@ BEGIN
                                         SELECT TOP 1
                                                WT.IdWebhookType
                                         FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                        WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
-                                              AND WT.RowStatus = 1
+                                        WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1
                                     );
 
                             SET @WebhookCustomerId
@@ -351,12 +354,12 @@ BEGIN
 											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 												ON do.Guide_Serie = dop.GuideSerie
 												AND do.Guide_Number = dop.GuideNumber
-												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-											    ON do.IdCustomer = WHE.CustomerId
-												WHERE do.Guide_Serie = @Guide_Serie
-												    AND do.Guide_Number = @Guide_Number
-													AND WHE.TypeConnectionId = 2
-												GROUP BY dop.GuideSerie,dop.GuideNumber
+                                            INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+                                                ON do.IdCustomer = WHE.CustomerId
+                                            WHERE do.Guide_Serie = @Guide_Serie
+                                                AND do.Guide_Number = @Guide_Number
+                                                AND WHE.TypeConnectionId = 2
+                                            GROUP BY dop.GuideSerie,dop.GuideNumber
 
 									   DECLARE @PiecesGuideRelatedTable AS TABLE
 									(
@@ -386,13 +389,13 @@ BEGIN
 											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 												ON do.Guide_Serie = dop.GuideSerie
 												AND do.Guide_Number = dop.GuideNumber
-												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-											    ON do.IdCustomer = WHE.CustomerId
-												WHERE do.Guide_Serie = @Guide_Serie
-												AND do.Guide_Number = @Guide_Number
-												AND dop.ExternalPieceId IS NOT NULL
-												AND WHE.TypeConnectionId = 2
-												GROUP BY dop.GuideSerie,dop.GuideNumber
+                                            INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+                                                ON do.IdCustomer = WHE.CustomerId
+                                            WHERE do.Guide_Serie = @Guide_Serie
+                                                AND do.Guide_Number = @Guide_Number
+                                                AND dop.ExternalPieceId IS NOT NULL
+                                                AND WHE.TypeConnectionId = 2
+                                            GROUP BY dop.GuideSerie,dop.GuideNumber
 					  
 					  					INSERT INTO WebhookTrackingQueueDetailForSFTP 
 											(CustomerId,
@@ -420,8 +423,8 @@ BEGIN
 										INNER JOIN @PiecesGuideRelatedTable pgt
 										    ON gpt.GuideSerie = pgt.GuideSerie
 											AND gpt.GuideNumber = pgt.GuideNumber
-											WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-												AND WHE.TypeConnectionId = 2
+                                            AND gpt.NumberPieces = pgt.NumberRelatedPieces
+                                        WHERE WHE.TypeConnectionId = 2
 
 								END
 
@@ -472,7 +475,7 @@ BEGIN
                    Ticket_Number Ticket,
                    Courier_Route Route,
                    CONVERT(VARCHAR, Dispatched_Date, 103) RouteDate
-            FROM DeliveryBackOffice.dbo.DeliveryOrder
+            FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
             WHERE Guide_Serie = @Guide_Serie
                   AND Guide_Number = @Guide_Number;
 
