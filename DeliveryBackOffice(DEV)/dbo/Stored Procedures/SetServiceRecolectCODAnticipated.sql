@@ -24,10 +24,13 @@ BEGIN
 	DECLARE @IsCODAnticipatedValid INT;  
    
 	--INFORMACIÓN QUE ES CONSTANTE  
-	DECLARE @BalanceStatus NVARCHAR(16) = 'PENDIENTE';  
+	DECLARE @BalanceStatus NVARCHAR(16) = 'PENDIENTE';
+	DECLARE @GuideStatus   NVARCHAR(16) = 'COD Anticipado';
+	DECLARE @CustomerStatus NVARCHAR(16) = 'CORPORATIVO'
    
 	-- INFORMACIÓN QUE SE CALCULARA EN EL CAMINO  
-	DECLARE @CustomerId INT;  
+	DECLARE @CustomerId INT;
+	DECLARE @CustomerTypeId INT;
 	DECLARE @IdCountrySender NVARCHAR(4)  
   
 	DECLARE @IdSegmentDefault INT  
@@ -35,6 +38,7 @@ BEGIN
 	DECLARE @CollectOnDeliveryDaily DECIMAL(9,2);  
 	DECLARE @CODExemptDefault DECIMAL(12, 2)  
    
+    DECLARE @StatusOrderId INT;
 	DECLARE @CatModuleId   INT;  
 	DECLARE @RateHeaderId  INT;  
 	DECLARE @ReturnPercent INT;  
@@ -51,8 +55,10 @@ BEGIN
 		@IdCountrySender = SenderCountryId  
 	FROM DeliveryOrder WITH(NOLOCK)  
 	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber  
-	PRINT @CustomerId  
 	
+	SELECT  @CustomerTypeId = IdCustomerType FROM CustomerType WHERE Description = @CustomerStatus
+
+	--PRINT 'Cliente: ' + CONVERT(NVARCHAR(8),@CustomerId) + ' Tipo Cliente: ' + CONVERT(NVARCHAR(8),@CustomerTypeId) + ' PortFolio: ' + CONVERT(NVARCHAR(8),@PortfolioId)
 	--2. SE VERIFICA SI EL CLIENTE ESTA REGISTRADO, DE NO ESTARLO SE TERMINA EL PROCESO  
 	--   SI EL CLIENTE ES DE CARTERA NO TIENE CODIGO DE CLIENTE, SOLAMENTE PORTAFOLIO
 	IF(@PortfolioId IS NULL)
@@ -69,14 +75,33 @@ BEGIN
 	END
 	ELSE
 	BEGIN
-		IF NOT EXISTS(SELECT 1 FROM AnticipatedCODHeader WITH(NOLOCK) WHERE PortfolioId = @PortfolioId)
+		IF (@CustomerId IS NULL)
 		BEGIN
-			SELECT @Code = 0,  
-					@Message = 'No existe el cliente registrado para COD Anticipado '  
+			IF NOT EXISTS(SELECT 1 FROM AnticipatedCODHeader WITH(NOLOCK) WHERE PortfolioId = @PortfolioId)
+			BEGIN
+				SELECT @Code = 0,  
+						@Message = 'No existe el cliente registrado para COD Anticipado '  
   
-			SELECT @Code AS code,  
-					@Message AS [Message];  
-			RETURN;
+				SELECT @Code AS code,  
+						@Message AS [Message];  
+				RETURN;
+			END
+		END
+		ELSE
+		BEGIN
+			--DECLARE @CustomerTypeIdAux INT;
+			--SELECT @CustomerTypeIdAux = IdCustomerType FROM Customer WHERE IdCustomer = @CustomerId 
+			---PRINT 'Cliente: ' + CONVERT(NVARCHAR(8),@CustomerId) + ' Tipo Cliente: ' + CONVERT(NVARCHAR(8),@CustomerTypeIdAux)
+			--PRINT 'Tipo Cliente: ' + CONVERT(NVARCHAR(8),@CustomerTypeId)
+			IF NOT EXISTS(SELECT 1 FROM AnticipatedCODHeader WITH(NOLOCK) WHERE CustomerId = @CustomerId AND EXISTS(SELECT 1 FROM Customer WITH(NOLOCK) WHERE IdCustomer = @CustomerId and IdCustomerType = @CustomerTypeId))
+			BEGIN
+				SELECT @Code = 0,  
+						@Message = 'No existe el cliente registrado para COD Anticipado '  
+  
+				SELECT @Code AS code,  
+						@Message AS [Message];  
+				RETURN;
+			END
 		END
 	END
     
@@ -99,17 +124,32 @@ BEGIN
 		END
 		ELSE
 		BEGIN
-			SELECT @IdAnticipatedCODHeader = IdAnticipatedCODHeader,
-				@IsOldest = IsOldest,
-				@MinGuidesPerMonth = MinGuidesPerMonth,
-				@DailyAmount = DailyAmount,
-				@ReturnPercent = ReturnPercent,
-				@IsCODAnticipatedValid = IsCODAnticipatedValid  
-			FROM AnticipatedCODHeader WITH(NOLOCK)
-			WHERE PortfolioId = @PortfolioId
-			  AND RowStatus = 1
+			IF(@CustomerId IS NULL)
+			BEGIN
+				SELECT @IdAnticipatedCODHeader = IdAnticipatedCODHeader,
+					@IsOldest = IsOldest,
+					@MinGuidesPerMonth = MinGuidesPerMonth,
+					@DailyAmount = DailyAmount,
+					@ReturnPercent = ReturnPercent,
+					@IsCODAnticipatedValid = IsCODAnticipatedValid  
+				FROM AnticipatedCODHeader WITH(NOLOCK)
+				WHERE PortfolioId = @PortfolioId
+				  AND RowStatus = 1
+			END
+			ELSE 
+			BEGIN
+				SELECT @IdAnticipatedCODHeader = IdAnticipatedCODHeader,
+					@IsOldest = IsOldest,
+					@MinGuidesPerMonth = MinGuidesPerMonth,
+					@DailyAmount = DailyAmount,
+					@ReturnPercent = ReturnPercent,
+					@IsCODAnticipatedValid = IsCODAnticipatedValid  
+				FROM AnticipatedCODHeader WITH(NOLOCK)
+				WHERE CustomerId = @CustomerId
+				  AND RowStatus = 1
+			END
 		END
-
+		--PRINT 'AnticipatedCODHeader: ' + CONVERT(NVARCHAR(16),@IdAnticipatedCODHeader) + ' IsOldest: ' + CONVERT(NVARCHAR(16),@IsOldest) + ' MinGuidesPerMonth: ' + CONVERT(NVARCHAR(16),@MinGuidesPerMonth) + ' ReturnPercent: ' + CONVERT(NVARCHAR(16),@ReturnPercent)  + ' IsCODAnticipatedValid: ' + CONVERT(NVARCHAR(16), @IsCODAnticipatedValid)
 		--3.2 Se Obtienen datos para poder realizar consulta de tarifario  
 	   SELECT TOP 1  
 				@IdSegmentDefault = CrsId
@@ -216,6 +256,18 @@ BEGIN
 					 --INSERTAR VALORES EN EL DETALLLE DE COD ANTICIPADO  
 					 INSERT INTO AnticipatedCODDetail(AnticipatedCODHeaderId,GuideSerie,GuideNumber,IsOldest,MinGuidesPerMonth,DailyAmount,ReturnPercent,IsCODAnticipatedValid,CollectOnDelivery,AnticipatedCODComissionId,BalanceStatus,RowStatus,TokenCreated,DateCreated) 
 					 VALUES(@IdAnticipatedCODHeader,@GuideSerie,@GuideNumber,@IsOldest,@MinGuidesPerMonth,@DailyAmount,@ReturnPercent,@IsCODAnticipatedValid,@CollectOnDelivery,@AnticipatedCODComissionId,@BalanceStatus,1,@Token,GETDATE())  
+
+					 SELECT @StatusOrderId = StatusOrderId FROM StatusOrder WHERE  OrderDescription = @GuideStatus
+
+					 INSERT INTO DeliveryOrderDetail(Guide_Serie,Guide_Number,StatusOrderId,UserCreated,DateCreated,DateCreatedInSystem,RowStatus)
+					 VALUES(@GuideSerie,@GuideNumber,@StatusOrderId,@Token,GETDATE(),GETDATE(),1);
+
+                     DECLARE @AnticipatedCODDetail AS TblAnticipatedCODCustomerBalance
+
+                     INSERT INTO @AnticipatedCODDetail
+                     VALUES (@CustomerId, @PortfolioId)
+
+                     EXEC spUpdateBalanceByIdClient @AnticipatedCODDetail
 
 					 SELECT  @Code = 200,  
 					   @Message = 'Proceso finalizado'  
