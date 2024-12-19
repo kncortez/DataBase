@@ -3,6 +3,10 @@
 -- Create date: <2021-06-23>
 -- Description:	<Set datos lote COD>
 -- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Create date: <2024-12-19>
+-- Description:	<Se agregaron validaciones para COD Pagado en COD Anticipado>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetGuidesToPayBatchCOD]
 -- Add the parameters for the stored procedure here
 	@BatchCODId INT,
@@ -57,11 +61,11 @@ BEGIN
 															WHERE [BatchCODId] = @BatchCODId AND [Excluded] = 0);
 
 			-- Cambia el estado de la guia en tabla DeliveryOrder a 25 "COD Pagado".
-			UPDATE [dbo].[DeliveryOrder]
-			SET StatusOrderId = 25
-			WHERE [Guide_Number] IN 
-			(SELECT GuideNumber FROM [dbo].[BatchDetailCOD] 
-			WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2)
+			--UPDATE [dbo].[DeliveryOrder]
+			--SET StatusOrderId = 25
+			--WHERE [Guide_Number] IN 
+			--(SELECT GuideNumber FROM [dbo].[BatchDetailCOD] 
+			--WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2) --OR, Se comento por proyecto COD Anticipado
 
 			-- Inserta el estado 25 "COD Pagado" en tabla DeliveryOrderDetail.
 			INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
