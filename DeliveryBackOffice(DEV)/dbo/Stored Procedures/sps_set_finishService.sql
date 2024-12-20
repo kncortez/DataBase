@@ -533,7 +533,6 @@ BEGIN
                                 SELECT lge.Guide_Serie
                                     , lge.Guide_Number
                                     , CASE 
-                                            WHEN UPPER(@ServiceType) = 'PICKUP' AND lge.IsAnticipatedCOD = 1 THEN @StatusOrderWithAnticipatedCOD
                                             WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
                                             WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
                                             WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
@@ -550,7 +549,8 @@ BEGIN
                                             'Devueldo a ' + @Name
                                     END          Observations
                                 --@CUI+'-'+@Name
-                                FROM #listGuidesEnabled lge;
+                                FROM #listGuidesEnabled lge
+								WHERE lge.IsAnticipatedCOD <> 1;
 
                                 UPDATE dot
                                 SET dot.Observations = 'Entregado a ' + @Name + ', Entrega sin cobro COD '
