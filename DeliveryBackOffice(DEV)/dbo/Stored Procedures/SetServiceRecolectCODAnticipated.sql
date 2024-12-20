@@ -195,27 +195,7 @@ BEGIN
 		   LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)  
 			ON RBC.RbcIdRate = RH.RheId  
 		   LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODComission ACC WITH(NOLOCK)  
-			ON RH.RheId = ACC.RateHeaderId  
-		   --COD inmediato  
-		   LEFT JOIN dbo.Customer C WITH (NOLOCK)  
-			ON C.IdCustomer = ISNULL(DO.IdCustomer, VPC.CustomerID)  
-		   LEFT JOIN dbo.CatTypeService CSV WITH (NOLOCK)  
-			ON CSV.CtsShortName = IIF(DO.TypeService = 'EXP', 'NDD', ISNULL(DO.TypeService, 'NDD'))  
-			 AND CSV.CtsRowStatus = 'true'  
-		   LEFT JOIN dbo.CatRateSegment CSG WITH (NOLOCK)  
-			ON CSG.CrsShortName = dbo.fn_get_segment(DO.Guide_Serie, DO.Guide_Number)  
-			 AND CSG.CrsRowStatus = 'true'  
-		   LEFT JOIN dbo.RateCOD RCO WITH (NOLOCK)  
-			ON RCO.RateId = ISNULL(RBC2.RbcIdRate, RBC.RbcIdRate)  
-			 AND RCO.TypeServiceId = CSV.CtsId  
-			 AND RCO.TypeSegmentId = ISNULL(CSG.CrsId, @IdSegmentDefault)  
-			 AND RCO.RowStatus = 1  
-		   LEFT JOIN dbo.DeliveryOrderPaid OP WITH (NOLOCK)  
-			ON OP.Guide_Serie = DO.Guide_Serie  
-			 AND OP.Guide_Number = DO.Guide_Number  
-			 AND OP.IdStatus = 'true'  
-		   LEFT JOIN dbo.DeliveryOrderPaymentDetail PYT WITH (NOLOCK)  
-			ON PYT.GuideSerie = DO.Guide_Serie AND PYT.GuideNumber = DO.Guide_Number  
+			ON RH.RheId = ACC.RateHeaderId   
 		   --Son rangos por default que tenemos si en dado caso el tarifario no cumple su rango  
 		   LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin1 WITH(NOLOCK)  
 			ON CPmin1.IdCountry = DO.ReceiverCountryId AND CPmin1.Name = 'MinRangeCODComisison1Param'  
