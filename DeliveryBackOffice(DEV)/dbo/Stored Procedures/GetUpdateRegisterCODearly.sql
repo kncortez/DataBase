@@ -4,51 +4,59 @@
 -- Create date: <2024-12-03>
 -- Description:	<Calcula las reglas de negocio que necesita COD anticipado>
 -- =============================================
+-- Author:      <Juan Ramirez>
+-- Create date: <2024-12-19>
+-- Description: <Refactorización de procedimiento>
+-- =============================================
 --EXEC GetUpdateRegisterCODearly 'GT'
-CREATE PROCEDURE [dbo].[GetUpdateRegisterCODearly] @IdCountry NVARCHAR(2) = 'GT'
+CREATE PROCEDURE [dbo].[GetUpdateRegisterCODearly] @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
     BEGIN TRY
         DECLARE @GuideValueMount INT,
                 @ReturnPercentMax INT,
                 @DayMaxCOD DECIMAL(18, 2),
-                @DayMount DATE,
-                @DayThreeMount DATE,
+                @DayMount DATETIME,
+                @DayThreeMount DATETIME,
                 @CurrentRow INT = 1,
                 @IdKindOfVPBusiness INT
 
         DECLARE @TempData TblAnticipatedCODCustomerBalance
 
-        SET @GuideValueMount =
-        (
-            SELECT Value
-            FROM ConfigParams
-            WHERE Name = 'MinGuidesPerMonthParam'
-                  AND IdCountry = @IdCountry
-        )
-
-        SET @ReturnPercentMax =
-        (
-            SELECT Value
-            FROM ConfigParams
-            WHERE Name = 'ReturnPercentParam'
-                  AND IdCountry = @IdCountry
-        )
-
-        SET @DayMaxCOD =
-        (
-            SELECT Value
-            FROM ConfigParams
-            WHERE Name = 'IsOldestParam'
-                  AND IdCountry = @IdCountry
-        )
+        SELECT @GuideValueMount = MAX(MinGuidesPerMonthParam),
+               @ReturnPercentMax = MAX(ReturnPercentParam),
+               @DayMaxCOD = MAX(IsOldestParam)
+          FROM (
+                     SELECT CASE 
+                                WHEN cf.[name]  = 'MinGuidesPerMonthParam' 
+                                   THEN cf.[value]
+                                ELSE 0
+                            END AS MinGuidesPerMonthParam,
+                            CASE 
+                                WHEN cf.[name] = 'ReturnPercentParam'
+                                   THEN cf.[value]
+                                ELSE 0
+                            END AS ReturnPercentParam,
+                            CASE 
+                               WHEN cf.[name] = 'IsOldestParam'
+                                  THEN cf.[value]
+                               ELSE 0
+                            END AS IsOldestParam
+                       FROM ConfigParams cf WITH(NOLOCK)
+                      WHERE cf.[Name] IN (
+                                          'MinGuidesPerMonthParam',
+                                          'ReturnPercentParam',
+                                          'IsOldestParam'
+                                         )
+                        AND IdCountry = 'HN'
+               ) AS T
 
         SET @IdKindOfVPBusiness =
         (
             SELECT IdKindOfVPBusiness
-            FROM KindOfVPBusiness
-            WHERE KindOfVPNameBussiness = 'EXPRESS CENTER'
-                  AND ISNULL(IdCountry, 'GT') = @IdCountry
+              FROM KindOfVPBusiness WITH(NOLOCK)
+             WHERE KindOfVPNameBussiness = 'EXPRESS CENTER'
+               AND ISNULL(IdCountry, 'GT') = @IdCountry
         )
 
         SET @DayMount = (DATEADD(DAY, -30, GETDATE()))
@@ -63,227 +71,161 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#Temp90Days', 'U') IS NOT NULL
             DROP TABLE #Temp90Days;
 
-        IF OBJECT_ID('tempdb.dbo.#TempFlagDatee', 'U') IS NOT NULL
-            DROP TABLE #TempFlagDatee;
-
         IF OBJECT_ID('tempdb.dbo.#TempMinDate', 'U') IS NOT NULL
             DROP TABLE #TempMinDate;
-
-        IF OBJECT_ID('tempdb.dbo.#TempGuideSummary', 'U') IS NOT NULL
-            DROP TABLE #TempGuideSummary;
-
-        IF OBJECT_ID('tempdb.dbo.#TempReturnSummary', 'U') IS NOT NULL
-            DROP TABLE #TempReturnSummary;
 
         IF OBJECT_ID('tempdb.dbo.#CodAnticipated', 'U') IS NOT NULL
             DROP TABLE #CodAnticipated;
 
-        IF OBJECT_ID('tempdb.dbo.#TempMinDates', 'U') IS NOT NULL
-            DROP TABLE #TempMinDates;
+        CREATE TABLE  #TempDate(
+            IdCustomer INT NOT NULL,
+            PortfolioId INT NOT NULL,
+            FirstDate DATETIME,
+            CONSTRAINT PK_TempDate PRIMARY KEY (IdCustomer, PortfolioId)
+        );
+
+        CREATE NONCLUSTERED INDEX IDX_TempDate_CustomerPortfolio 
+        ON #TempDate (IdCustomer, PortfolioId);
+
+        CREATE TABLE  #Temp30Days(
+            IdCustomer INT NOT NULL,
+            PortfolioId INT NOT NULL,
+            NumberGuides INT,
+            AmountDelivery DECIMAL(12,6),
+            CONSTRAINT PK_Temp30Days PRIMARY KEY (IdCustomer, PortfolioId)
+        );
+
+        CREATE NONCLUSTERED INDEX IDX_Temp30Days_CustomerPortfolio 
+        ON #Temp30Days (IdCustomer, PortfolioId);
+
+        CREATE TABLE #Temp90Days(
+            IdCustomer INT NOT NULL,
+            PortfolioId INT NOT NULL,
+            IsReturn INT,
+            CountReturn INT,
+            CONSTRAINT PK_Temp90Days PRIMARY KEY (IdCustomer, PortfolioId)
+        );
+
+        CREATE NONCLUSTERED INDEX IDX_Temp90Days_CustomerPortfolio 
+        ON #Temp90Days (IdCustomer, PortfolioId);
 
         BEGIN TRANSACTION
 
-        -- FECHA MINIMA
-       SELECT C.IdCustomer,
-              NULL AS PortfolioID,
-              CLIENT.FirstDate
-         INTO #TempDate
-         FROM DeliveryBackOffice.dbo.Customer C WITH (NOLOCK)
-              OUTER APPLY (
-                          SELECT ISNULL(MIN(CAST(do.DateCreated AS DATE) ),NULL) AS FirstDate
-                            FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                           WHERE C.IdCustomer = do.IdCustomer
-                           GROUP BY do.IdCustomer
-              ) AS Client
-        WHERE C.IdCustomerType IN ( 1, 3 )
-          AND ISNULL(C.CountryID, 'GT') = @IdCountry
+       -- FECHA MINIMA
+              INSERT INTO #TempDate
+              SELECT C.IdCustomer,
+                     0 AS PortfolioID,
+                     NULL AS FirstDate
+                FROM DeliveryBackOffice.dbo.Customer C WITH (NOLOCK)
+               WHERE C.IdCustomerType IN (1, 3)
+                 AND C.RowSatus = 1
+                 AND ISNULL(C.CountryID, 'GT') = @IdCountry
+               GROUP BY C.IdCustomer
 
-        CREATE NONCLUSTERED INDEX IX_TempDate_IdCustomer
-        ON #TempDate (IdCustomer);
+              INSERT INTO #TempDate
+              SELECT CT.IdCustomer,
+                     ISNULL(VPP.IdVisitPointByClientPortfolio,0) AS PortfolioID,
+                     NULL AS FirstDate
+                FROM DeliveryBackOffice.dbo.Customer CT WITH (NOLOCK)
+                     INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VP WITH (NOLOCK)
+                         ON VP.CustomerID = CT.IdCustomer
+                        AND VP.StatusClient = 1
+                     INNER JOIN DeliveryBackOffice.dbo.VisitPointByClientPortfolio VPP WITH (NOLOCK)
+                         ON ISNULL(VPP.VisitPointId,0) = ISNULL(VP.IdVisitPointClient,0)
+                        AND VPP.RowStatus = 1
+               WHERE CT.IdCustomerType = 2
+                 AND ISNULL(CT.CountryID,0) = @IdCountry
+               GROUP BY CT.IdCustomer,VPP.IdVisitPointByClientPortfolio;
 
-        -- DATOS DE 30 DÍAS
-        SELECT C.IdCustomer,
-               NULL AS PortfolioID,
-               (
-                   SELECT COUNT(Guide_Number)
-                   FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.IdCustomer = c.IdCustomer
-                         AND do.DateCreated
-                         BETWEEN @DayMount AND GETDATE()
-               ) AS NumbersGuides,
-               (
-                   SELECT SUM(Collect_OnDelivery)
-                   FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.IdCustomer = c.IdCustomer
-                         AND do.DateCreated
-                         BETWEEN @DayMount AND GETDATE()
-               ) AS AmountCOD
-        INTO #Temp30Days
-        FROM #TempDate C
+              SELECT tt.IdCustomer,
+                     ISNULL(tt.PortfolioID,0) AS PortfolioID,
+                     MIN(do.DateCreated) AS FirstDate
+                INTO #TempMinDate
+                FROM #TempDate tt 
+                     LEFT JOIN DeliveryOrder do WITH(NOLOCK)
+                       ON tt.IdCustomer = do.idCustomer
+                      AND ISNULL(tt.PortfolioId,0) = ISNULL(do.VisitPointClientPortfolioId,0)
+                      AND do.DateCreated IS NOT NULL
+                      AND do.idCustomer IS NOT NULL
+               GROUP BY tt.IdCustomer, tt.PortfolioID
 
+                CREATE NONCLUSTERED INDEX IX_TempDate_IdCustomer
+                ON #TempMinDate (IdCustomer, PortfolioID);
 
-        -- DATOS DE 90 DÍAS
-        SELECT c.IdCustomer,
-               NULL AS PortfolioID,
-               (
-                   SELECT COUNT(IsReturn)
-                   FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.IdCustomer = c.IdCustomer
-                         AND do.DateCreated
-                         BETWEEN @DayThreeMount AND GETDATE()
-                         AND do.IsReturn = 1
-               ) AS IsReturn,
-               (
-                   SELECT COUNT(IsReturn)
-                   FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.IdCustomer = c.IdCustomer
-                         AND do.DateCreated
-                         BETWEEN @DayThreeMount AND GETDATE()
-               ) CountReturn
-        INTO #Temp90Days
-        FROM #TempDate c
+                INSERT INTO #Temp30Days
+                SELECT CU.IdCustomer
+                      ,CU.PortfolioID
+                      ,COUNT(do.Guide_Number) AS NumbersGuides
+                      ,SUM(ISNULL(do.Collect_OnDelivery,0)) AS AmountCOD
+                  FROM #TempDate CU WITH (NOLOCK)
+                       LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+                         ON do.IdCustomer = CU.IdCustomer
+                        AND ISNULL(DO.VisitpointClientPortfolioId,0) = CU.PortfolioID
+                        AND do.DateCreated BETWEEN @DayMount AND GETDATE()
+                        AND do.DateCreated IS NOT NULL
+                        AND do.idCustomer IS NOT NULL
+                 GROUP BY CU.IdCustomer, CU.PortfolioID
+                 ORDER BY CU.IdCustomer DESC, CU.PortfolioID DESC
 
-        PRINT 'FIN A CLIENTES TIPO 1 Y 3'
-        --CLIENTES TIPO 2
-
-        /**************TRAEMOS TODOS LOS CLIENTES DE CARTERA DE LOS EXPRES CENTER************************/
-        SELECT do.IdCustomer,
-               do.VisitPointClientPortfolioId AS PortfolioID,
-               MIN(CAST(do.DateCreated AS DATE)) AS FirstDate
-        INTO #TempMinDates
-        FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-        GROUP BY do.IdCustomer,
-                 DO.VisitPointClientPortfolioId
-
-        SELECT CT.IdCustomer,
-               VPP.IdVisitPointByClientPortfolio AS PortfolioID,
-               TM.FirstDate
-        INTO #TempMinDate
-        FROM DeliveryBackOffice.dbo.VisitPointClient VP WITH (NOLOCK)
-            INNER JOIN DeliveryBackOffice.dbo.VisitPointByClientPortfolio VPP WITH (NOLOCK)
-                ON VP.IdVisitPointClient = VPP.VisitPointId
-            INNER JOIN DeliveryBackOffice.dbo.Customer CT WITH (NOLOCK)
-                ON VP.CustomerID = CT.IdCustomer
-            LEFT JOIN #TempMinDates TM
-                ON TM.IdCustomer = CT.IdCustomer
-                   AND TM.PortfolioID = VPP.IdVisitPointByClientPortfolio
-        WHERE CT.IdCustomerType = 2
-              AND ISNULL(VP.CountryID, 'GT') = @IdCountry
-              AND IdKindOfVPBusiness = @IdKindOfVPBusiness
-
-        PRINT 'FIN PRIMERA FECHA'
-
-        CREATE NONCLUSTERED INDEX IX_TempMinDate_IdCustomer
-        ON #TempMinDate
-        (
-            IdCustomer,
-            PortfolioID
-        );
-
-        SELECT CU.IdCustomer,
-               CU.PortfolioID AS PortfolioID,
-               (
-                   SELECT COUNT(Guide_Number)
-                   FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.DateCreated
-                         BETWEEN @DayMount AND GETDATE()
-                         AND DO.VisitpointClientPortfolioId = CU.PortfolioID
-               ) AS NumbersGuides,
-               (
-                   SELECT SUM(Collect_OnDelivery)
-                   FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.DateCreated
-                         BETWEEN @DayMount AND GETDATE()
-                         AND DO.VisitpointClientPortfolioId = CU.PortfolioID
-               ) AS AmountCOD
-        INTO #TempGuideSummary
-        FROM #TempMinDate CU
-
-        PRINT 'FIN 30 DÍAS'
-
-
-        SELECT CU.IdCustomer,
-               CU.PortfolioID AS PortfolioID,
-               (
-                   SELECT COUNT(IsReturn)
-                   FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.DateCreated
-                         BETWEEN @DayThreeMount AND GETDATE()
-                         AND DO.VisitpointClientPortfolioId = CU.PortfolioID
-                         AND do.IsReturn = 1
-               ) AS IsReturn,
-               (
-                   SELECT COUNT(IsReturn)
-                   FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                   WHERE do.DateCreated
-                         BETWEEN @DayThreeMount AND GETDATE()
-                         AND DO.VisitpointClientPortfolioId = CU.PortfolioID
-               ) CountReturn
-        INTO #TempReturnSummary
-        FROM #TempMinDate CU
-
-        PRINT 'SE EMPIEZAN HACER LOS CALCULOS'
+                INSERT INTO #Temp90Days
+                SELECT CU.IdCustomer,
+                       CU.PortfolioID AS PortfolioID,
+                       COUNT(CASE WHEN do.IsReturn IS NOT NULL AND do.IsReturn = 1 THEN 1 ELSE NULL END) AS IsReturn,
+                       COUNT(do.IdCustomer) AS CountReturn
+                  FROM #TempMinDate CU
+                       LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                         ON do.IdCustomer = CU.IdCustomer
+                        AND ISNULL(DO.VisitpointClientPortfolioId,0) = ISNULL(CU.PortfolioID,0)
+                        AND do.DateCreated BETWEEN @DayThreeMount AND CAST(GETDATE() AS DATETIME)
+                        AND do.DateCreated IS NOT NULL
+                        AND do.idCustomer IS NOT NULL
+                 GROUP BY CU.IdCustomer, CU.PortfolioID;
 
         --INSERT A TABLA CABECERA DE CLIENTES PARA COD ANTICIPADO
         SELECT IdCustomer,
                PortfolioId,
-               CAST(GETDATE() AS DATE) AS DailyDate,
                ISNULL(DATEDIFF(DAY, FirstDate, GETDATE()), 0) AS IsOldest,
-               ISNULL((IsReturn * 100.0) / NULLIF(CountReturn, 0), 0) AS ReturnPercent,
+               CASE 
+                   WHEN CountReturn IS NOT NULL
+                        AND CountReturn <> 0
+                       THEN ISNULL((IsReturn * 100.0) / CountReturn, 0)
+                   ELSE 0
+               END AS ReturnPercent,
                NumbersGuide AS MinGuidesPerMonth,
-               CAST(AmountCOD / 30 AS DECIMAL(12, 2)) AS DailyAmount,
+               AmountCOD / 30.00 AS DailyAmount,
                CASE
-                   WHEN NumbersGuide > @GuideValueMount
-                        AND CAST((ISNULL((IsReturn * 100.0) / NULLIF(CountReturn, 0), 0)) AS DECIMAL(8, 2)) < @ReturnPercentMax
-                        AND ISNULL(DATEDIFF(DAY, FirstDate, GETDATE()), 0) > @DayMaxCOD THEN
-                       1
-                   ELSE
-                       0
-               END AS IsCODAnticipatedValid,
-               1 AS RowStatus,
-               'SYS-GetUpdateRegisterCODearly' AS TokenCreated,
-               CAST(GETDATE() AS DATE) AS DateCreated
+                   WHEN NumbersGuide >= @GuideValueMount
+                        AND CountReturn IS NOT NULL
+                        AND ((IsReturn * 100.0) / CountReturn) < @ReturnPercentMax
+                        AND ISNULL(DATEDIFF(DAY, FirstDate, GETDATE()), 0) >= @DayMaxCOD 
+                        THEN 1
+                   ELSE 0
+               END AS IsCODAnticipatedValid
         INTO #CodAnticipated
         FROM
         (
-            SELECT DISTINCT
-                TMD.IdCustomer,
-                TMD.FirstDate,
-                NULL AS PortfolioId,
-                ISNULL(TM30.NumbersGuides, 0) AS NumbersGuide,
-                ISNULL(TM30.AmountCOD, 0) AS AmountCOD,
-                ISNULL(TM90.IsReturn, 0) AS IsReturn,
-                ISNULL(TM90.CountReturn, 0) AS CountReturn
-            FROM #TempDate TMD
-                LEFT JOIN #Temp30Days TM30
-                    ON TMD.IdCustomer = TM30.IdCustomer
-                LEFT JOIN #Temp90Days TM90
-                    ON TMD.IdCustomer = TM90.IdCustomer
-            UNION ALL
-            SELECT DISTINCT
-                TMD.IdCustomer,
-                TMD.FirstDate,
-                TMD.PortfolioID,
-                ISNULL(TM30.NumbersGuides, 0) AS NumbersGuide,
-                ISNULL(TM30.AmountCOD, 0) AS AmountCOD,
-                ISNULL(TM90.IsReturn, 0) AS IsReturn,
-                ISNULL(TM90.CountReturn, 0) AS CountReturn
-            FROM #TempMinDate TMD
-                LEFT JOIN #TempGuideSummary TM30
-                    ON TMD.IdCustomer = TM30.IdCustomer
-                       AND TMD.PortfolioID = TM30.PortfolioID
-                LEFT JOIN #TempReturnSummary TM90
-                    ON TMD.IdCustomer = TM90.IdCustomer
-                       AND TMD.PortfolioID = TM90.PortfolioID
+           SELECT TMD.IdCustomer,
+                  TMD.PortfolioID,
+                  TMD.FirstDate,
+                  TM30.NumberGuides AS NumbersGuide,
+                  TM30.AmountDelivery AS AmountCOD,
+                  TM90.IsReturn AS IsReturn,
+                  TM90.CountReturn AS CountReturn
+              FROM #TempMinDate TMD
+                  INNER JOIN #Temp30Days TM30
+                      ON TMD.IdCustomer = TM30.IdCustomer
+                         AND TMD.PortfolioID = TM30.PortfolioID
+                  INNER JOIN #Temp90Days TM90
+                      ON TMD.IdCustomer = TM90.IdCustomer
+                         AND TMD.PortfolioID = TM90.PortfolioID
         ) CodData
 
-
-        IF
+        IF NOT EXISTS
         (
-            SELECT COUNT(*) FROM AnticipatedCODHeader WITH (NOLOCK)
-        ) = 0
+            SELECT TOP 1 1
+              FROM AnticipatedCODHeader WITH (NOLOCK)
+        )
         BEGIN
-
             INSERT INTO DeliveryBackOffice.dbo.AnticipatedCODHeader
             (
                 CustomerId,
@@ -301,8 +243,8 @@ BEGIN
                 DateCreated
             )
             SELECT IdCustomer,
-                   PortfolioId,
-                   DailyDate,
+                   NULLIF(PortfolioId,0),
+                   GETDATE(),
                    IsOldest,
                    ReturnPercent,
                    MinGuidesPerMonth,
@@ -310,9 +252,9 @@ BEGIN
                    IsCODAnticipatedValid,
                    0,
                    0,
-                   RowStatus,
-                   TokenCreated,
-                   DateCreated
+                   1,
+                   'SYS-GetUpdateRegisterCODearly',
+                   GETDATE()
             FROM #CodAnticipated
 
             INSERT INTO @TempData
@@ -322,17 +264,16 @@ BEGIN
             )
             SELECT IdCustomer,
                    PortfolioId
-            FROM #CodAnticipated
+              FROM #CodAnticipated
 
-            EXEC spUpdateBalanceByIdClient @TempData
+             EXEC spUpdateBalanceByIdClient @TempData
 
         END
         ELSE
         BEGIN
-
-            --ACTUALIZACION DE CLIENTES EXISTENTES EN TABLA CABECERA DE CLIENTES TIPO 1 Y 3
+            --ACTUALIZACION DE CLIENTES EXISTENTES EN TABLA CABECERA DE CLIENTES 
             UPDATE DeliveryBackOffice.dbo.AnticipatedCODHeader
-            SET DailyDate = ca.DailyDate,
+            SET DailyDate = GETDATE(),
                 IsOldest = ca.IsOldest,
                 ReturnPercent = ca.ReturnPercent,
                 MinGuidesPerMonth = ca.MinGuidesPerMonth,
@@ -343,63 +284,7 @@ BEGIN
             FROM #CodAnticipated ca
                 INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH (NOLOCK)
                     ON ach.CustomerId = ca.IdCustomer
-                       AND CA.PortfolioId IS NULL
-                       AND ACH.PortfolioId IS NULL
-
-
-            --ACTUALIZACION DE CLIENTES EXISTENTES EN TABLA CABECERA DE CLIENTES TIPO 2
-            UPDATE DeliveryBackOffice.dbo.AnticipatedCODHeader
-            SET DailyDate = ca.DailyDate,
-                IsOldest = ca.IsOldest,
-                ReturnPercent = ca.ReturnPercent,
-                MinGuidesPerMonth = ca.MinGuidesPerMonth,
-                DailyAmount = ca.DailyAmount,
-                IsCODAnticipatedValid = ca.IsCODAnticipatedValid,
-                DateUpdated = GETDATE(),
-                TokenUpdated = 'SYS-GetUpdateRegisterCODearly'
-            FROM #CodAnticipated ca
-                INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH (NOLOCK)
-                    ON ach.CustomerId = ca.IdCustomer
-                       AND CA.PortfolioId = ach.PortfolioId
-
-
-            --INSERCION DE NUEVOS CLIENTES QUE NO ESTABAN ANTES EN LA TABLA DE CABECERA CLIENTES TIPO 1 Y 3
-            INSERT INTO DeliveryBackOffice.dbo.AnticipatedCODHeader
-            (
-                CustomerId,
-                PortfolioId,
-                DailyDate,
-                IsOldest,
-                ReturnPercent,
-                MinGuidesPerMonth,
-                DailyAmount,
-                IsCODAnticipatedValid,
-                Balance,
-                AgaintsBalance,
-                RowStatus,
-                TokenCreated,
-                DateCreated
-            )
-            SELECT AN.IdCustomer,
-                   AN.PortfolioId,
-                   AN.DailyDate,
-                   AN.IsOldest,
-                   AN.ReturnPercent,
-                   AN.MinGuidesPerMonth,
-                   AN.DailyAmount,
-                   AN.IsCODAnticipatedValid,
-                   0,
-                   0,
-                   AN.RowStatus,
-                   AN.TokenCreated,
-                   AN.DateCreated
-            FROM #CodAnticipated AN
-            WHERE NOT EXISTS
-            (
-                SELECT 1
-                FROM DeliveryBackOffice.dbo.AnticipatedCODHeader B WITH (NOLOCK)
-                WHERE B.CustomerId = AN.IdCustomer
-            )
+                    AND NULLIF(ach.PortfolioId,0) = NULLIF(ca.PortfolioID,0) 
 
             --INSERCION DE NUEVOS CLIENTES QUE NO ESTABAN ANTES EN LA TABLA DE CABECERA CLIENTES TIPO 2
             INSERT INTO DeliveryBackOffice.dbo.AnticipatedCODHeader
@@ -419,8 +304,8 @@ BEGIN
                 DateCreated
             )
             SELECT AN.IdCustomer,
-                   AN.PortfolioId,
-                   AN.DailyDate,
+                   NULLIF(AN.PortfolioId,0),
+                   GETDATE(),
                    AN.IsOldest,
                    AN.ReturnPercent,
                    AN.MinGuidesPerMonth,
@@ -428,18 +313,17 @@ BEGIN
                    AN.IsCODAnticipatedValid,
                    0,
                    0,
-                   AN.RowStatus,
-                   AN.TokenCreated,
-                   AN.DateCreated
+                   1,
+                   'SYS-GetUpdateRegisterCODearly',
+                   GETDATE()
             FROM #CodAnticipated AN
-            WHERE AN.PortfolioId IS NOT NULL
-                  AND NOT EXISTS
-            (
-                SELECT 1
-                FROM DeliveryBackOffice.dbo.AnticipatedCODHeader B WITH (NOLOCK)
-                WHERE B.CustomerId = AN.IdCustomer
-                      AND B.PortfolioId = AN.PortfolioId
-            )
+            WHERE NOT EXISTS
+                  (
+                      SELECT TOP 1 1
+                        FROM DeliveryBackOffice.dbo.AnticipatedCODHeader B WITH (NOLOCK)
+                       WHERE B.CustomerId = AN.IdCustomer
+                         AND NULLIF(B.PortfolioId,0) = NULLIF(AN.PortfolioId,0)
+                  )
 
             INSERT INTO @TempData
             (
@@ -451,12 +335,26 @@ BEGIN
               FROM #CodAnticipated
 
             EXEC spUpdateBalanceByIdClient @TempData
-
         END
 
         PRINT 'TranCount: ' + CAST(@@TRANCOUNT AS NVARCHAR);
 
         COMMIT TRANSACTION;
+
+        IF OBJECT_ID('tempdb.dbo.#TempDate', 'U') IS NOT NULL
+            DROP TABLE #TempDate;
+
+        IF OBJECT_ID('tempdb.dbo.#Temp30Days', 'U') IS NOT NULL
+            DROP TABLE #Temp30Days;
+
+        IF OBJECT_ID('tempdb.dbo.#Temp90Days', 'U') IS NOT NULL
+            DROP TABLE #Temp90Days;
+
+        IF OBJECT_ID('tempdb.dbo.#TempMinDate', 'U') IS NOT NULL
+            DROP TABLE #TempMinDate;
+
+        IF OBJECT_ID('tempdb.dbo.#CodAnticipated', 'U') IS NOT NULL
+            DROP TABLE #CodAnticipated;
 
     END TRY
     BEGIN CATCH
