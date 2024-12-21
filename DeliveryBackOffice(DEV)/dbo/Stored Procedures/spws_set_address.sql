@@ -10,18 +10,14 @@
 -- Description:	<Se agrega la opción de tener una única dirección favorita para Origen>
 -- =============================================
 -- =============================================
-<<<<<<< HEAD
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-10-24>
 -- Description:	<Se agrega la opcion de editar datos desde un usuario de EXP>
 -- =============================================
-
-=======
 -- Author:		<Aylinne Recinos>
 -- Create date: <2024-11-27>
 -- Description:	<Edición de join para almacenamiento de dirección y modificación en valor de contact name>
 -- =============================================
->>>>>>> feature/FDAPI-3005-backend-aplicación-de-cliente
 CREATE PROCEDURE [dbo].[spws_set_address]
 	-- Add the parameters for the stored procedure here
 

@@ -30,10 +30,6 @@ CREATE NONCLUSTERED INDEX [IX_Settlement_SettlementStatusList]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_IdTownship_Include]
-    ON [dbo].[Settlement]([IdTownship] ASC)
-    INCLUDE([Settlement]);
-
 EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'identificación de asentamiento',
     @level0type = N'SCHEMA',

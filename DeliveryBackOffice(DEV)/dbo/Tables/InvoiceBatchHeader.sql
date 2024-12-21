@@ -37,8 +37,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Porcentaje 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Días faltantes para llegar al límite y notificar', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchHeader', @level2type = N'COLUMN', @level2name = N'DaysLeftNotifycation';
 
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de documentos asignados', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchHeader', @level2type = N'COLUMN', @level2name = N'AmountGranted';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última factura procesada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchHeader', @level2type = N'COLUMN', @level2name = N'Last_Process';
@@ -69,3 +67,4 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Equivalente
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de documentos solicitados a SAR', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchHeader', @level2type = N'COLUMN', @level2name = N'AmountGranted';
+GO
