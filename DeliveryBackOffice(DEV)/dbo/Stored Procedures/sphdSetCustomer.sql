@@ -8,6 +8,11 @@
 -- Create date: <2024-04-23>
 -- Description:	<Se agrego modificacion para campo isCOD>
 -- =============================================
+-- =============================================
+-- Author:		<Aylinne,Recinos>
+-- Create date: <2024-12-20>
+-- Description:	<Agrega validación de usuario individual>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer INT
@@ -154,119 +159,135 @@ BEGIN
 
         IF (@Option = 1)
         BEGIN
+            DECLARE @IndUser INT = ISNULL((SELECT cli.IdCustomerType FROM Customer cli WITH (NOLOCK)
+                WHERE (cli.RegexEmail = @RegexEmail AND cli.RowSatus = 1 AND cli.IdCustomerType != 1)),0)
             PRINT 'insert record';
-            IF NOT EXISTS
-            (
-                SELECT cli.IdCustomer
-                FROM Customer cli WITH (NOLOCK)
-                WHERE cli.Name = @NameCustomer AND cli.RowSatus = 1
-            )
-            BEGIN
-
-                INSERT INTO [DeliveryBackOffice].[dbo].[Customer]
+            IF (@IndUser = 0)
+            BEGIN 
+                IF NOT EXISTS
                 (
-                    [Name]
-                  , [Description]
-                  , [Domain]
-                  , [RegexSubject]
-                  , [RegexEmail]
-                  , [RegexFilename]
-                  , [Abbreviation]
-                  , [IdCustomerType]
-                  , [CountryID]
-                  , [CommercialName]
-                  , [CustomerPhone]
-                  , [WebsiteURI]
-                  , [ContactName]
-                  , [ContactEmail]
-                  , [NotificationAddress]
-                  , [SaleAdvisorID]
-                  , [DateUpService]
-                  , [DateDownService]
-                  , [TypeOfBusinessID]
-                  , [BusinessSegmentID]
-                  , [BusinessActivityID]
-                  , [CommercialSegmentID]
-                  , [OperationContactName]
-                  , [OperationContactPhone]
-                  , [OperationContactEmail]
-                  , [LegalSponsorName]
-                  , [LegalSponsorLastName]
-                  , [LegalSponsorDPI]
-                  , [HasAgreement]
-                  , [AgreementNumber]
-                  , [AgreementDateStart]
-                  , [AgreementDateEnd]
-                  , [InvoiceName]
-                  , [TaxIdentificationNumber]
-                  , [FiscalAddress]
-                  , [InvoiceEmail]
-                  , [ConditionOfPaymentID]
-                  , [InvoiceContactName]
-                  , [InvoiceContactPhone]
-                  , [InvoiceContactEmail]
-                  , [CODAccountBankID]
-                  , [CODAccountNumber]
-                  , [CODAccountName]
-                  , [CODAccountTypeID]
-                  , [CODCurrencyID]
-                  , [CODContactName]
-                  , [CODContactPhone]
-                  , [CODContactEmail]
-                  , [RowSatus]
-                  , [TokenCreated]
-                  , [DateCreated]
-                  , [TokenUpdated]
-                  , [DateUpdated]
-                  , [SAPCardCode]
-                  , [ExcludePriceShippingCOD]
-                  , [ExcludeCommissionCOD]
-                  , [CatBatchTypeCODId]
-                  , [CatBatchFrequencyCODId]
-                  , [CatBillingTimeId]
-                  , [CatBillingVolumeId]
-                  , [BillingCut_offDate]
-                  , [NumImgEvidence]
-				  , [IsCOD]
+                    SELECT cli.IdCustomer
+                    FROM Customer cli WITH (NOLOCK)
+                    WHERE cli.Name = @NameCustomer AND cli.RowSatus = 1
                 )
-                VALUES
-                (   @NameCustomer, @Description, @Domain, @RegexSubject, @RegexEmail, @RegexFilename, @Abbreviation
-                  , @IdCustomerType, @CountryID, @CommercialName, @CustomerPhone, @WebsiteURI, @ContactName
-                  , @ContactEmail, @NotificationAddress, @SaleAdvisorID, @DateUpService, @DateDownService
-                  , @TypeOfBusinessID, @BusinessSegmentID, @BusinessActivityID, @CommercialSegmentID
-                  , @OperationContactName, @OperationContactPhone, @OperationContactEmail, @LegalSponsorName
-                  , @LegalSponsorLastName, @LegalSponsorDPI, @HasAgreement, @AgreementNumber, @AgreementDateStart
-                  , @AgreementDateEnd, @InvoiceName, @TaxIdentificationNumber, @FiscalAddress, @InvoiceEmail
-                  , @ConditionOfPaymentID, @InvoiceContactName, @InvoiceContactPhone, @InvoiceContactEmail
-                  , @CODAccountBankID, @CODAccountNumber, @CODAccountName, @CODAccountTypeID, @CODCurrencyID
-                  , @CODContactName, @CODContactPhone, @CODContactEmail, @RowSatus --'TRUE'
-                  , @Token, GETDATE(), NULL, NULL
-                                                                                   -------------------------
-                                                                                   --,NULL				   
-                  , @CardCode
-                                                                                   -------------------------
-                  , @ExcludePriceShippingCOD, @ExcludeCommissionCOD, @CatBatchTypeCODId, @CatBatchFrequencyCODId
-                  , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg, @isCOD);
+                BEGIN
 
-                SELECT 'TRUE'                            [blnResult]
-                     , CAST(SCOPE_IDENTITY() AS VARCHAR) [IdResult]
-                     , ''                                AS [ErrorNumber]
-                     , ''                                AS [ErrorSeverity]
-                     , ''                                AS [ErrorState]
-                     , ''                                AS [ErrorProcedure]
-                     , ''                                AS [ErrorLine]
-                     , 'Success'                         AS [Message];
-            END;
+                    INSERT INTO [DeliveryBackOffice].[dbo].[Customer]
+                    (
+                        [Name]
+                    , [Description]
+                    , [Domain]
+                    , [RegexSubject]
+                    , [RegexEmail]
+                    , [RegexFilename]
+                    , [Abbreviation]
+                    , [IdCustomerType]
+                    , [CountryID]
+                    , [CommercialName]
+                    , [CustomerPhone]
+                    , [WebsiteURI]
+                    , [ContactName]
+                    , [ContactEmail]
+                    , [NotificationAddress]
+                    , [SaleAdvisorID]
+                    , [DateUpService]
+                    , [DateDownService]
+                    , [TypeOfBusinessID]
+                    , [BusinessSegmentID]
+                    , [BusinessActivityID]
+                    , [CommercialSegmentID]
+                    , [OperationContactName]
+                    , [OperationContactPhone]
+                    , [OperationContactEmail]
+                    , [LegalSponsorName]
+                    , [LegalSponsorLastName]
+                    , [LegalSponsorDPI]
+                    , [HasAgreement]
+                    , [AgreementNumber]
+                    , [AgreementDateStart]
+                    , [AgreementDateEnd]
+                    , [InvoiceName]
+                    , [TaxIdentificationNumber]
+                    , [FiscalAddress]
+                    , [InvoiceEmail]
+                    , [ConditionOfPaymentID]
+                    , [InvoiceContactName]
+                    , [InvoiceContactPhone]
+                    , [InvoiceContactEmail]
+                    , [CODAccountBankID]
+                    , [CODAccountNumber]
+                    , [CODAccountName]
+                    , [CODAccountTypeID]
+                    , [CODCurrencyID]
+                    , [CODContactName]
+                    , [CODContactPhone]
+                    , [CODContactEmail]
+                    , [RowSatus]
+                    , [TokenCreated]
+                    , [DateCreated]
+                    , [TokenUpdated]
+                    , [DateUpdated]
+                    , [SAPCardCode]
+                    , [ExcludePriceShippingCOD]
+                    , [ExcludeCommissionCOD]
+                    , [CatBatchTypeCODId]
+                    , [CatBatchFrequencyCODId]
+                    , [CatBillingTimeId]
+                    , [CatBillingVolumeId]
+                    , [BillingCut_offDate]
+                    , [NumImgEvidence]
+                    , [IsCOD]
+                    )
+                    VALUES
+                    (   @NameCustomer, @Description, @Domain, @RegexSubject, @RegexEmail, @RegexFilename, @Abbreviation
+                    , @IdCustomerType, @CountryID, @CommercialName, @CustomerPhone, @WebsiteURI, @ContactName
+                    , @ContactEmail, @NotificationAddress, @SaleAdvisorID, @DateUpService, @DateDownService
+                    , @TypeOfBusinessID, @BusinessSegmentID, @BusinessActivityID, @CommercialSegmentID
+                    , @OperationContactName, @OperationContactPhone, @OperationContactEmail, @LegalSponsorName
+                    , @LegalSponsorLastName, @LegalSponsorDPI, @HasAgreement, @AgreementNumber, @AgreementDateStart
+                    , @AgreementDateEnd, @InvoiceName, @TaxIdentificationNumber, @FiscalAddress, @InvoiceEmail
+                    , @ConditionOfPaymentID, @InvoiceContactName, @InvoiceContactPhone, @InvoiceContactEmail
+                    , @CODAccountBankID, @CODAccountNumber, @CODAccountName, @CODAccountTypeID, @CODCurrencyID
+                    , @CODContactName, @CODContactPhone, @CODContactEmail, @RowSatus --'TRUE'
+                    , @Token, GETDATE(), NULL, NULL
+                                                                                    -------------------------
+                                                                                    --,NULL				   
+                    , @CardCode
+                                                                                    -------------------------
+                    , @ExcludePriceShippingCOD, @ExcludeCommissionCOD, @CatBatchTypeCODId, @CatBatchFrequencyCODId
+                    , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg, @isCOD);
+
+                    SELECT 'TRUE'                            [blnResult]
+                        , CAST(SCOPE_IDENTITY() AS VARCHAR) [IdResult]
+                        , ''                                AS [ErrorNumber]
+                        , ''                                AS [ErrorSeverity]
+                        , ''                                AS [ErrorState]
+                        , ''                                AS [ErrorProcedure]
+                        , ''                                AS [ErrorLine]
+                        , 'Success'                         AS [Message];
+                END;
+                ELSE
+                BEGIN
+                    SELECT 'FALSE'                                                [blnResult]
+                        , '-1'                                                   [IdResult]
+                        , ''                                                     AS [ErrorNumber]
+                        , ''                                                     AS [ErrorSeverity]
+                        , ''                                                     AS [ErrorState]
+                        , ''                                                     AS [ErrorProcedure]
+                        , ''                                                     AS [ErrorLine]
+                        , 'El cliente que intenta crear ya existe en base datos' AS [Message];
+                END;
+            END
             ELSE
             BEGIN
                 SELECT 'FALSE'                                                [blnResult]
-                     , '-1'                                                   [IdResult]
-                     , ''                                                     AS [ErrorNumber]
-                     , ''                                                     AS [ErrorSeverity]
-                     , ''                                                     AS [ErrorState]
-                     , ''                                                     AS [ErrorProcedure]
-                     , ''                                                     AS [ErrorLine]
-                     , 'El cliente que intenta crear ya existe en base datos' AS [Message];
+                    , '-1'                                                   [IdResult]
+                    , ''                                                     AS [ErrorNumber]
+                    , ''                                                     AS [ErrorSeverity]
+                    , ''                                                     AS [ErrorState]
+                    , ''                                                     AS [ErrorProcedure]
+                    , ''                                                     AS [ErrorLine]
+                    , 'El cliente que intenta crear ya cuenta con un usuario individual' AS [Message];
             END;
 
         END;
