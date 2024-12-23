@@ -48,7 +48,7 @@ BEGIN
                                           'ReturnPercentParam',
                                           'IsOldestParam'
                                          )
-                        AND IdCountry = 'HN'
+                        AND IdCountry = @IdCountry
                ) AS T
 
         SET @IdKindOfVPBusiness =
@@ -171,7 +171,7 @@ BEGIN
                 SELECT CU.IdCustomer,
                        CU.PortfolioID AS PortfolioID,
                        COUNT(CASE WHEN do.IsReturn IS NOT NULL AND do.IsReturn = 1 THEN 1 ELSE NULL END) AS IsReturn,
-                       COUNT(do.IdCustomer) AS CountReturn
+                       COUNT(ISNULL(do.IdCustomer,0)) AS CountReturn
                   FROM #TempMinDate CU
                        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                          ON do.IdCustomer = CU.IdCustomer
@@ -267,26 +267,41 @@ BEGIN
               FROM #CodAnticipated
 
              EXEC spUpdateBalanceByIdClient @TempData
-
         END
         ELSE
         BEGIN
-            --ACTUALIZACION DE CLIENTES EXISTENTES EN TABLA CABECERA DE CLIENTES 
             UPDATE DeliveryBackOffice.dbo.AnticipatedCODHeader
-            SET DailyDate = GETDATE(),
-                IsOldest = ca.IsOldest,
-                ReturnPercent = ca.ReturnPercent,
-                MinGuidesPerMonth = ca.MinGuidesPerMonth,
-                DailyAmount = ca.DailyAmount,
-                IsCODAnticipatedValid = ca.IsCODAnticipatedValid,
-                DateUpdated = GETDATE(),
-                TokenUpdated = 'SYS-GetUpdateRegisterCODearly'
-            FROM #CodAnticipated ca
-                INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH (NOLOCK)
-                    ON ach.CustomerId = ca.IdCustomer
-                    AND NULLIF(ach.PortfolioId,0) = NULLIF(ca.PortfolioID,0) 
+               SET DailyDate = GETDATE(),
+                   IsOldest = ca.IsOldest,
+                   ReturnPercent = ca.ReturnPercent,
+                   MinGuidesPerMonth = ca.MinGuidesPerMonth,
+                   DailyAmount = ca.DailyAmount,
+                   IsCODAnticipatedValid = ca.IsCODAnticipatedValid,
+                   DateUpdated = GETDATE(),
+                   TokenUpdated = 'SYS-GetUpdateRegisterCODearly'
+              FROM #CodAnticipated ca
+                   LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH (NOLOCK)
+                       ON ach.CustomerId = ca.IdCustomer
+                      AND ach.PortfolioId IS NULL
+             WHERE ca.PortfolioId = 0
+               AND ach.CustomerId IS NOT NULL;
 
-            --INSERCION DE NUEVOS CLIENTES QUE NO ESTABAN ANTES EN LA TABLA DE CABECERA CLIENTES TIPO 2
+            UPDATE DeliveryBackOffice.dbo.AnticipatedCODHeader
+               SET DailyDate = GETDATE(),
+                   IsOldest = ca.IsOldest,
+                   ReturnPercent = ca.ReturnPercent,
+                   MinGuidesPerMonth = ca.MinGuidesPerMonth,
+                   DailyAmount = ca.DailyAmount,
+                   IsCODAnticipatedValid = ca.IsCODAnticipatedValid,
+                   DateUpdated = GETDATE(),
+                   TokenUpdated = 'SYS-GetUpdateRegisterCODearly'
+              FROM #CodAnticipated ca
+                   LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH (NOLOCK)
+                     ON ach.CustomerId = ca.IdCustomer
+                    AND ach.PortfolioId = ca.PortfolioID
+             WHERE ca.PortfolioId != 0
+               AND ach.CustomerId IS NOT NULL
+
             INSERT INTO DeliveryBackOffice.dbo.AnticipatedCODHeader
             (
                 CustomerId,
@@ -303,27 +318,63 @@ BEGIN
                 TokenCreated,
                 DateCreated
             )
-            SELECT AN.IdCustomer,
-                   NULLIF(AN.PortfolioId,0),
+            SELECT ca.IdCustomer,
+                   NULLIF(ca.PortfolioId,0) AS PortfolioId,
                    GETDATE(),
-                   AN.IsOldest,
-                   AN.ReturnPercent,
-                   AN.MinGuidesPerMonth,
-                   AN.DailyAmount,
-                   AN.IsCODAnticipatedValid,
+                   ca.IsOldest,
+                   ca.ReturnPercent,
+                   ca.MinGuidesPerMonth,
+                   ca.DailyAmount,
+                   ca.IsCODAnticipatedValid,
+                   0,
+                   0,
+                   1,
+                   'SYS-GetUpdateRegisterCODearly' AS TokenCreated,
+                   GETDATE() AS DateCreated
+              FROM #CodAnticipated ca
+                   LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH (NOLOCK)
+                     ON ach.CustomerId = ca.IdCustomer
+                    AND ach.PortfolioId IS NULL
+              WHERE ca.PortfolioId = 0
+                AND ach.CustomerId IS NULL 
+
+            INSERT INTO DeliveryBackOffice.dbo.AnticipatedCODHeader
+            (
+                CustomerId,
+                PortfolioId,
+                DailyDate,
+                IsOldest,
+                ReturnPercent,
+                MinGuidesPerMonth,
+                DailyAmount,
+                IsCODAnticipatedValid,
+                Balance,
+                AgaintsBalance,
+                RowStatus,
+                TokenCreated,
+                DateCreated
+            )
+            SELECT ca.IdCustomer,
+                   ca.PortfolioId AS PortfolioId,
+                   GETDATE(),
+                   ca.IsOldest,
+                   ca.ReturnPercent,
+                   ca.MinGuidesPerMonth,
+                   ca.DailyAmount,
+                   ca.IsCODAnticipatedValid,
                    0,
                    0,
                    1,
                    'SYS-GetUpdateRegisterCODearly',
                    GETDATE()
-            FROM #CodAnticipated AN
-            WHERE NOT EXISTS
-                  (
-                      SELECT TOP 1 1
-                        FROM DeliveryBackOffice.dbo.AnticipatedCODHeader B WITH (NOLOCK)
-                       WHERE B.CustomerId = AN.IdCustomer
-                         AND NULLIF(B.PortfolioId,0) = NULLIF(AN.PortfolioId,0)
-                  )
+              FROM #CodAnticipated ca
+                   LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH (NOLOCK)
+                     ON ach.CustomerId = ca.IdCustomer
+                    AND ach.PortfolioId = ca.PortfolioID
+                    AND ach.PortfolioId IS NOT NULL
+              WHERE ca.PortfolioId != 0
+                AND ach.CustomerId IS NULL
+                AND ach.PortfolioId IS NULL
 
             INSERT INTO @TempData
             (
