@@ -77,14 +77,34 @@ BEGIN
                acd.IdAnticipatedCODDetail,
                acd.CollectOnDelivery, 
                acd.BalanceStatus
-          FROM AnticipatedCODHeader ach WITH(NOLOCK)
-               INNER JOIN @AnticipatedCODDetail td 
+          FROM @AnticipatedCODDetail td 
+               LEFT JOIN AnticipatedCODHeader ach
                   ON ach.CustomerId = td.CustomerId
-                 AND ISNULL(ach.PortfolioId,0) = ISNULL(td.PortfolioId,0)
+                 AND ach.PortfolioId IS NULL
+                 AND ach.RowStatus = 1
                INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
                   ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
                  AND acd.RowStatus = 1
-         WHERE ach.RowStatus = 1
+         WHERE td.PortfolioId = 0
+           AND ach.CustomerId IS NOT NULL
+
+        INSERT INTO #CustomerAnticipatedCOD
+        SELECT ach.CustomerId, 
+               ISNULL(ach.PortfolioId,0), 
+               ach.IdAnticipatedCODHeader,
+               acd.IdAnticipatedCODDetail,
+               acd.CollectOnDelivery, 
+               acd.BalanceStatus
+          FROM @AnticipatedCODDetail td 
+               LEFT JOIN AnticipatedCODHeader ach
+                  ON ach.CustomerId = td.CustomerId
+                 AND ach.PortfolioId = td.PortfolioId
+                 AND ach.RowStatus = 1
+               INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
+                  ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
+                 AND acd.RowStatus = 1
+         WHERE td.PortfolioId != 0
+           AND ach.CustomerId IS NOT NULL
 
         INSERT INTO #AnticipatedCODSummary
         SELECT achs.IdAnticipatedCODHeader,
@@ -97,9 +117,9 @@ BEGIN
                       SELECT ISNULL(SUM(CollectOnDelivery),0) AS Amount, 
                              dts.CustomerId,
                              dts.PortfolioId
-                        FROM #CustomerAnticipatedCOD dts WITH(NOLOCK)
+                        FROM #CustomerAnticipatedCOD dts 
                        WHERE dts.CustomerId = achs.CustomerId
-                         AND ISNULL(dts.PortfolioId,0) = ISNULL(achs.PortfolioId,0)
+                         AND dts.PortfolioId = 0
                          AND dts.BalanceStatus IN ('DEVOLUCION',
                                                    'PENDIENTE',
                                                    'PAGADO')
@@ -109,33 +129,96 @@ BEGIN
                       SELECT ISNULL(SUM(CollectOnDelivery),0) AS Amount,
                              dts.CustomerId,
                              dts.PortfolioId
-                        FROM #CustomerAnticipatedCOD dts WITH(NOLOCK)
+                        FROM #CustomerAnticipatedCOD dts 
                        WHERE dts.CustomerId = achs.CustomerId
-                         AND ISNULL(dts.PortfolioId,0) = ISNULL(achs.PortfolioId,0)
+                         AND dts.PortfolioId = 0
                          AND dts.BalanceStatus IN ('PAGADO')
                        GROUP BY dts.CustomerId, dts.PortfolioId
                ) AS AmountByPayed
-               INNER JOIN #CustomerAnticipatedCOD cacod WITH(NOLOCK)
+               RIGHT JOIN #CustomerAnticipatedCOD cacod 
                      ON cacod.CustomerId = achs.CustomerId
-                       AND ISNULL(cacod.PortfolioId,0) = ISNULL(achs.PortfolioId,0)
-            GROUP BY achs.IdAnticipatedCODHeader,
-                     achs.CustomerId,
-                     achs.PortfolioId,
-                     AllDetail.Amount,
-                     AmountByPayed.Amount
+                    AND cacod.PortfolioId = 0
+                    AND achs.CustomerId IS NOT NULL
+        WHERE achs.PortfolioId IS NULL
+        GROUP BY achs.IdAnticipatedCODHeader,
+                 achs.CustomerId,
+                 achs.PortfolioId,
+                 AllDetail.Amount,
+                 AmountByPayed.Amount
+
+        INSERT INTO #AnticipatedCODSummary
+        SELECT achs.IdAnticipatedCODHeader,
+               achs.CustomerId,
+               ISNULL(achs.PortfolioId,0) AS PortfolioId,
+               ISNULL(AllDetail.Amount,0) AS Total, 
+               ISNULL(AmountByPayed.Amount,0) AS Pagada
+          FROM AnticipatedCODHeader achs WITH(NOLOCK)
+               OUTER APPLY (
+                      SELECT ISNULL(SUM(CollectOnDelivery),0) AS Amount, 
+                             dts.CustomerId,
+                             dts.PortfolioId
+                        FROM #CustomerAnticipatedCOD dts
+                       WHERE dts.CustomerId = achs.CustomerId
+                         AND dts.PortfolioId = achs.PortfolioId
+                         AND dts.PortfolioId != 0
+                         AND dts.BalanceStatus IN ('DEVOLUCION',
+                                                   'PENDIENTE',
+                                                   'PAGADO')
+                       GROUP BY dts.CustomerId, dts.PortfolioId
+               ) AS AllDetail
+               OUTER APPLY (
+                      SELECT ISNULL(SUM(CollectOnDelivery),0) AS Amount,
+                             dts.CustomerId,
+                             dts.PortfolioId
+                        FROM #CustomerAnticipatedCOD dts
+                       WHERE dts.CustomerId = achs.CustomerId
+                         AND dts.PortfolioId = achs.PortfolioId
+                         AND dts.PortfolioId != 0
+                         AND dts.BalanceStatus IN ('PAGADO')
+                       GROUP BY dts.CustomerId, dts.PortfolioId
+               ) AS AmountByPayed
+               RIGHT JOIN #CustomerAnticipatedCOD cacod 
+                       ON cacod.CustomerId = achs.CustomerId
+                      AND cacod.PortfolioId = achs.PortfolioId
+                      AND cacod.PortfolioId != 0
+                      AND achs.CustomerId IS NOT NULL
+         WHERE achs.PortfolioId IS NOT NULL
+         GROUP BY achs.IdAnticipatedCODHeader,
+                  achs.CustomerId,
+                  achs.PortfolioId,
+                  AllDetail.Amount,
+                  AmountByPayed.Amount
 
         UPDATE ach
            SET ach.Balance = da.Result
-          FROM AnticipatedCODHeader ach WITH(NOLOCK)
-               INNER JOIN #AnticipatedCODSummary da WITH(NOLOCK)
-                  ON ach.customerId = da.customerId
-                 AND ISNULL(ach.PortfolioId,0) = ISNULL(da.PortfolioId,0)
-                 AND ach.IdAnticipatedCODHeader = da.IdAnticipatedCODHeader;
+          FROM #AnticipatedCODSummary da 
+               LEFT JOIN AnticipatedCODHeader ach WITH(NOLOCK)
+                 ON ach.customerId = da.customerId
+                AND ach.PortfolioId IS NULL
+                AND ach.IdAnticipatedCODHeader = da.IdAnticipatedCODHeader
+          WHERE da.PortfolioId = 0
+            AND ach.CustomerId IS NOT NULL;
 
         IF @@ROWCOUNT = 0
         BEGIN
             -- Si no hubo modificaciones, puedes registrar un mensaje o manejarlo
-            PRINT 'No hay filas modificadas';
+            PRINT 'No hay filas modificadas con PortFolioId Nulo';
+        END;
+
+        UPDATE ach
+           SET ach.Balance = da.Result
+          FROM #AnticipatedCODSummary da 
+               LEFT JOIN AnticipatedCODHeader ach WITH(NOLOCK)
+                 ON ach.customerId = da.customerId
+                AND ach.PortfolioId = da.PortfolioId
+                AND ach.IdAnticipatedCODHeader = da.IdAnticipatedCODHeader
+          WHERE da.PortfolioId != 0
+            AND ach.CustomerId IS NOT NULL;
+
+        IF @@ROWCOUNT = 0
+        BEGIN
+            -- Si no hubo modificaciones, puedes registrar un mensaje o manejarlo
+            PRINT 'No hay filas modificadas con PortFolioId ';
         END;
 
        -- Valida la existencia de las tablas temporales
