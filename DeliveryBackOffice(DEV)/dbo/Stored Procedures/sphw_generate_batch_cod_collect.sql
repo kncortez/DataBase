@@ -89,7 +89,7 @@ BEGIN
         --DECLARE @IdCountry NVARCHAR(50) = N'GT';
         DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
         DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
-        DECLARE @AccountType NVARCHAR(50) = N'MONETARIA';
+        DECLARE @AccountType NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'MONETARIA', N'CHEQUES');
         DECLARE @ConceptCustomer NVARCHAR(50) = N'PAGO';
         DECLARE @CreditAccount NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'903666261', N'730512881');
         DECLARE @ConceptForza NVARCHAR(50) = N'COLLECT';
