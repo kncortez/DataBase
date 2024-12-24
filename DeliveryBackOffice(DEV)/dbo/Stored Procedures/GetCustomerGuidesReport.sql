@@ -7,6 +7,7 @@
 -- Author:      <Daniel, Ramirez>
 -- Create date: <2024-07-22>
 -- Description: <Se agregan los valores de moneda de pago y moneda de COD para el reporte en corporativo>
+-- EXEC [dbo].[GetCustomerGuidesReport]  23718, '2024-12-01 00:00:00', '2024-12-31 23:59:59'
 -- =============================================
 CREATE PROCEDURE [dbo].[GetCustomerGuidesReport]
     @AccountId INT
@@ -117,6 +118,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                     , NULL
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
+			 , VPP.InternalCode AS 'Codigo interno'
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]						  C WITH (NOLOCK)
 				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
@@ -129,6 +131,8 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
             LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]           VPC WITH (NOLOCK)
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
+			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointByClientPortfolio] VPP WITH (NOLOCK)
+				ON VPP.IdVisitPointByClientPortfolio = DO.VisitpointClientPortfolioId
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                 ON DOPD.GuideSerie = DO.Guide_Serie
                    AND DOPD.GuideNumber = DO.Guide_Number
@@ -200,6 +204,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                     , NULL
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
+			 , VPP.InternalCode AS 'Codigo interno'
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
@@ -212,6 +217,8 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]           VPC WITH (NOLOCK)
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
+			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointByClientPortfolio] VPP WITH (NOLOCK)
+				ON VPP.IdVisitPointByClientPortfolio = DO.VisitpointClientPortfolioId
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                 ON DOPD.GuideSerie = DO.Guide_Serie
                    AND DOPD.GuideNumber = DO.Guide_Number
@@ -299,6 +306,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                     , NULL
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
+			 , VPP.InternalCode AS 'Codigo interno'
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
@@ -306,11 +314,16 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
                    AND VPC.StatusClient = 1
-            LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]                       C WITH (NOLOCK)
-                   ON DO.Guide_Serie = C.GuideSerie 
-                  AND DO.Guide_Number = C.GuideNumber
+			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointByClientPortfolio] VPP WITH (NOLOCK)
+				ON VPP.IdVisitPointByClientPortfolio = DO.VisitpointClientPortfolioId
+            LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
+                ON vpc.CustomerID = RC.RbcIdCustomer
+                AND rc.RbcRowStatus = 1
+            LEFT JOIN DeliveryBackOffice.dbo.RateHeader        RH WITH(NOLOCK)
+                ON RC.RbcIdRate = RH.RheId 
             LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD    CCC WITH(NOLOCK)
-                ON CCC.IdCatCurrencyCOD = C.ShippingCurrency 
+                ON CCC.IdCatCurrencyCOD = RH.IdCurrency 
+                OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) --1 DEFAULT GT
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                 ON DOPD.GuideSerie = DO.Guide_Serie
                    AND DOPD.GuideNumber = DO.Guide_Number
