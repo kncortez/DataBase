@@ -172,7 +172,7 @@ BEGIN
                        CU.PortfolioID AS PortfolioID,
                        COUNT(CASE WHEN do.IsReturn IS NOT NULL AND do.IsReturn = 1 THEN 1 ELSE NULL END) AS IsReturn,
                        COUNT(ISNULL(do.IdCustomer,0)) AS CountReturn
-                  FROM #TempMinDate CU
+                  FROM #TempDate CU
                        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                          ON do.IdCustomer = CU.IdCustomer
                         AND ISNULL(DO.VisitpointClientPortfolioId,0) = ISNULL(CU.PortfolioID,0)
@@ -270,6 +270,7 @@ BEGIN
         END
         ELSE
         BEGIN
+
             UPDATE DeliveryBackOffice.dbo.AnticipatedCODHeader
                SET DailyDate = GETDATE(),
                    IsOldest = ca.IsOldest,
@@ -388,24 +389,41 @@ BEGIN
             EXEC spUpdateBalanceByIdClient @TempData
         END
 
-        PRINT 'TranCount: ' + CAST(@@TRANCOUNT AS NVARCHAR);
-
         COMMIT TRANSACTION;
 
-        IF OBJECT_ID('tempdb.dbo.#TempDate', 'U') IS NOT NULL
-            DROP TABLE #TempDate;
+        IF OBJECT_ID('tempdb..#TempDate', 'U') IS NOT NULL 
+        BEGIN
+            ALTER TABLE #TempDate
+            DROP CONSTRAINT PK_TempDate
+        END
 
-        IF OBJECT_ID('tempdb.dbo.#Temp30Days', 'U') IS NOT NULL
-            DROP TABLE #Temp30Days;
+        IF OBJECT_ID('tempdb..#TempDate', 'U') IS NOT NULL 
+        BEGIN
+            DROP TABLE #TempDate
+        END
 
-        IF OBJECT_ID('tempdb.dbo.#Temp90Days', 'U') IS NOT NULL
-            DROP TABLE #Temp90Days;
+        IF OBJECT_ID('tempdb..#Temp30Days', 'U') IS NOT NULL 
+        BEGIN
+            ALTER TABLE #Temp30Days
+            DROP CONSTRAINT PK_Temp30Days
+        END
 
-        IF OBJECT_ID('tempdb.dbo.#TempMinDate', 'U') IS NOT NULL
-            DROP TABLE #TempMinDate;
+        IF OBJECT_ID('tempdb..#Temp30Days', 'U') IS NOT NULL 
+        BEGIN
+            DROP TABLE #Temp30Days
+        END
 
-        IF OBJECT_ID('tempdb.dbo.#CodAnticipated', 'U') IS NOT NULL
-            DROP TABLE #CodAnticipated;
+        IF OBJECT_ID('tempdb..#Temp90Days', 'U') IS NOT NULL 
+        BEGIN
+            ALTER TABLE #Temp90Days
+            DROP CONSTRAINT PK_Temp90Days
+        END
+
+        IF OBJECT_ID('tempdb..#Temp90Days', 'U') IS NOT NULL 
+        BEGIN
+            DROP TABLE #Temp90Days
+        END
+
 
     END TRY
     BEGIN CATCH

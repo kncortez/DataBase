@@ -199,10 +199,10 @@ BEGIN
           WHERE da.PortfolioId = 0
             AND ach.CustomerId IS NOT NULL;
 
-        IF @@ROWCOUNT = 0
+        IF @@ROWCOUNT <> 0
         BEGIN
             -- Si no hubo modificaciones, puedes registrar un mensaje o manejarlo
-            PRINT 'No hay filas modificadas con PortFolioId Nulo';
+            PRINT 'Se actualizaron registros con PortFolioId nulo';
         END;
 
         UPDATE ach
@@ -215,10 +215,10 @@ BEGIN
           WHERE da.PortfolioId != 0
             AND ach.CustomerId IS NOT NULL;
 
-        IF @@ROWCOUNT = 0
+        IF @@ROWCOUNT <> 0
         BEGIN
             -- Si no hubo modificaciones, puedes registrar un mensaje o manejarlo
-            PRINT 'No hay filas modificadas con PortFolioId ';
+            PRINT 'Se actualizaron registros con PortFolioId';
         END;
 
        -- Valida la existencia de las tablas temporales
