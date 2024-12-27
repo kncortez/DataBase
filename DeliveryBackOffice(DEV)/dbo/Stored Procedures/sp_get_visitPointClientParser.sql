@@ -8,7 +8,8 @@
 -- Description: Muestra el pais del punto de visita
 -- =============================================
 CREATE PROCEDURE [dbo].[sp_get_visitPointClientParser]
-@IdVisitClient AS int
+@IdVisitClient AS int,
+@IdCustomer AS int  
 AS
 BEGIN
 
@@ -22,6 +23,6 @@ BEGIN
 		   DescriptionOfClient, 
 		   ISNULL(CountryId, 'GT') AS CountryId
 	FROM VisitPointClient WITH(NOLOCK)
-	WHERE CodeOfReference = @IdVisitClient
+	WHERE CodeOfReference = @IdVisitClient and CustomerId = @IdCustomer
 
 END
