@@ -237,7 +237,7 @@ BEGIN
         INSERT INTO #Temp90Days
         SELECT CU.IdCustomer,
                CU.PortfolioID AS PortfolioID,
-               COUNT(CASE WHEN do.IsReturn IS NOT NULL AND do.IsReturn = 1 THEN 1 ELSE NULL END) AS IsReturn,
+               COUNT(CASE WHEN do.IsLastMileReturn IS NOT NULL AND do.IsLastMileReturn = 1 THEN 1 ELSE NULL END) AS IsReturn,
                COUNT(ISNULL(do.IdCustomer,0)) AS CountReturn
           FROM #TempDate CU
                LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
@@ -253,7 +253,7 @@ BEGIN
         INSERT INTO #Temp90Days
         SELECT CU.IdCustomer,
                CU.PortfolioID AS PortfolioID,
-               COUNT(CASE WHEN do.IsReturn IS NOT NULL AND do.IsReturn = 1 THEN 1 ELSE NULL END) AS IsReturn,
+               COUNT(CASE WHEN do.IsLastMileReturn IS NOT NULL AND do.IsLastMileReturn = 1 THEN 1 ELSE NULL END) AS IsReturn,
                COUNT(ISNULL(do.IdCustomer,0)) AS CountReturn
           FROM #TempDate CU
                LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)

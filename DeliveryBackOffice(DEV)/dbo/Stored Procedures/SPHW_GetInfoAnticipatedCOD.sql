@@ -248,7 +248,7 @@ BEGIN TRY
 				ON CP3.Name = 'IsOldestParam' AND CP3.Status = 1 
 					AND ISNULL(CP3.IdCountry,'GT') = @IdCountrySender
 			WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
-			AND RH.RheRowStatus = 1
+			AND RH.RheRowStatus = 1 AND ACH.RowStatus = 1
 
 			IF(@FlagCreation = 1)
 			BEGIN
@@ -332,12 +332,13 @@ BEGIN TRY
 				INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
 					ON ACD.AnticipatedCODHeaderId = ACH.IdAnticipatedCODHeader
 				WHERE ACH.PortfolioId = @CustomerPortfolio AND ACD.RowStatus = 1 
+				  AND ACH.RowStatus = 1
 				  AND ACD.DateCreated >= CAST(GETDATE() AS DATE) 
 				  AND ACD.DateCreated < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
 				GROUP BY ACH.DailyAmount),
 				(SELECT TOP 1 ACH.DailyAmount
 				 FROM DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
-				 WHERE ACH.PortfolioId = @CustomerPortfolio),0
+				 WHERE ACH.PortfolioId = @CustomerPortfolio AND ACH.RowStatus = 1),0
 				) AS 'AvailableBalance';
 
 		END;
@@ -405,7 +406,7 @@ BEGIN TRY
 				ON CP3.Name = 'IsOldestParam' AND CP3.Status = 1 
 					AND ISNULL(CP3.IdCountry,'GT') = @IdCountrySender
 			WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
-			AND RH.RheRowStatus = 1
+			AND RH.RheRowStatus = 1 AND ACH.RowStatus = 1
 
 			IF(@FlagCreation = 1)
 			BEGIN
@@ -488,13 +489,14 @@ BEGIN TRY
 				INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
 					ON ACD.AnticipatedCODHeaderId = ACH.IdAnticipatedCODHeader
 				WHERE ACH.CustomerId = @IdCustomer AND ACD.RowStatus = 1 
+				  AND ACH.RowStatus = 1
 				  AND ACD.DateCreated >= CAST(GETDATE() AS DATE) 
 				  AND ACD.DateCreated < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
 				GROUP BY ACH.DailyAmount
 			),
 			(SELECT TOP 1 ACH.DailyAmount
 				 FROM DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
-				 WHERE ACH.CustomerId = @IdCustomer),0
+				 WHERE ACH.CustomerId = @IdCustomer AND ACH.RowStatus = 1),0
 			) AS 'AvailableBalance';
 
 		END;
