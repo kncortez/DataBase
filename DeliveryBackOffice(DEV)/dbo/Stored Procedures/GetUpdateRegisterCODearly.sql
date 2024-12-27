@@ -152,7 +152,6 @@ BEGIN
                NULL AS FirstDate
           FROM DeliveryBackOffice.dbo.Customer C WITH (NOLOCK)
          WHERE C.IdCustomerType IN (1, 3)
-           AND C.RowSatus = 1
            AND ISNULL(C.CountryID, 'GT') = @IdCountry
          GROUP BY C.IdCustomerType, C.IdCustomer
 
