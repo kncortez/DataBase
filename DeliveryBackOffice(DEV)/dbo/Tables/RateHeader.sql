@@ -31,7 +31,7 @@ CREATE TABLE [dbo].[RateHeader] (
     [PackagesRangeId]      INT             NULL,
     [IdCurrency]           INT             NULL,
     [GuideAmountCOD]       DECIMAL(18,2)   NULL,
-    [ReturnPercent]        INT             NULL,
+    [ReturnPercent]        DECIMAL(18,2)   NULL,
     [IsOldest]             INT             NULL,
     [MinGuidesPerMonth]    INT             NULL,
     PRIMARY KEY CLUSTERED ([RheId] ASC),
