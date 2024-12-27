@@ -97,10 +97,10 @@ BEGIN
             DROP TABLE #Temp90Days
         END
 
-        IF OBJECT_ID('tempdb.dbo.#TempMinDate', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TempMinDate', 'U') IS NOT NULL
             DROP TABLE #TempMinDate;
 
-        IF OBJECT_ID('tempdb.dbo.#CodAnticipated', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CodAnticipated', 'U') IS NOT NULL
             DROP TABLE #CodAnticipated;
 
         CREATE TABLE  #TempDate(

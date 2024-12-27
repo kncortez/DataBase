@@ -16,7 +16,6 @@ CREATE PROCEDURE [dbo].[sps_set_finishService]
   , @TblExclusions AS TblExclusions READONLY
 AS
 BEGIN
-
     DECLARE @DateCreated DATETIME = GETDATE();
     DECLARE @Output VARCHAR(MAX);
 
@@ -121,6 +120,22 @@ BEGIN
             DROP TABLE #listGuidesDisabled;
         IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
             DROP TABLE #TempData;
+        IF OBJECT_ID('tempdb..#TblListGuidesTwo') IS NOT NULL
+            DROP TABLE #TblListGuidesTwo;
+        IF OBJECT_ID('tempdb..#TblExclusions2') IS NOT NULL
+            DROP TABLE #TblExclusions2;
+
+        IF OBJECT_ID('tempdb..#TempDataClient', 'U') IS NOT NULL
+        BEGIN
+            DROP TABLE #TempDataClient;
+        END
+
+        CREATE TABLE  #TempDataClient
+        (
+           IdCustomer INT NOT NULL,
+           PortfolioId INT NOT NULL,
+           CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
+        );
 
         CREATE TABLE #TempData
         (
@@ -562,8 +577,13 @@ BEGIN
                                 WHERE lge.ExcludeCOD = 1
                                     AND dot.StatusOrderId = 22;
 
-                                UPDATE acodh
-                                    SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
+                              UPDATE acodh
+                                 SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0),
+                                     acodh.CustomerId = acodh.CustomerId,
+                                     acodh.PortfolioId = acodh.PortfolioId
+                              OUTPUT inserted.CustomerId,
+                                     ISNULL(inserted.PortfolioId,0) AS PortfolioId
+                                INTO #TempDataClient
                                 FROM #listGuidesEnabled lge
                                     INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                         ON lge.Guide_Serie = acodd.GuideSerie
@@ -599,7 +619,16 @@ BEGIN
                                 WHERE bdcod.Excluded = 0        
                                     AND bdcod.CatConceptCODId = 2
                                     AND dot.StatusOrderId = 23
-                                    AND tug.excludeCOd = 0;
+                                    AND tug.excludeCOd = 0
+                                    AND acodh.RowStatus = 1;
+
+                                DECLARE @AnticipatedCODDetail AS TblAnticipatedCODCustomerBalance
+
+                                INSERT INTO @AnticipatedCODDetail
+                                SELECT DISTINCT IdCustomer, PortfolioId
+                                  FROM #TempDataClient
+
+                                EXEC spUpdateBalanceByIdClient @AnticipatedCODDetail
 
                                 ----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA ENTREGA Y SEA COD---------
                                 IF (UPPER(@ServiceType) = 'DELIVERY')
