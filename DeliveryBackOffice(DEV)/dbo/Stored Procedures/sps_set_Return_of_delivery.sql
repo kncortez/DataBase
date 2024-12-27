@@ -46,6 +46,18 @@ BEGIN
     DECLARE @Times INT; -- cantidad de veces que se encuentra el registro con estado de entregado
     DECLARE @Datetime DATETIME; -- Fecha y hora del último checkpoint
 
+    IF OBJECT_ID('tempdb..#TempDataClient', 'U') IS NOT NULL
+    BEGIN
+        DROP TABLE #TempDataClient;
+    END
+
+    CREATE TABLE  #TempDataClient
+    (
+       IdCustomer INT NOT NULL,
+       PortfolioId INT NOT NULL,
+       CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
+    );
+
     DECLARE @IsLastMileReturn BIT = ISNULL(
                                     (
                                         SELECT TOP 1
@@ -185,7 +197,12 @@ BEGIN
                         );
 
                         UPDATE acodh 
-                           SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
+                           SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0),
+                               acodh.CustomerId = acodh.CustomerId,
+                               acodh.PortfolioId = acodh.PortfolioId
+                        OUTPUT inserted.CustomerId,
+                               ISNULL(inserted.PortfolioId,0) AS PortfolioId
+                          INTO #TempDataClient
                           FROM DeliveryOrderDetail dod WITH(NOLOCK)
                                INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                        ON dod.Guide_Serie = acodd.GuideSerie
@@ -199,7 +216,7 @@ BEGIN
                            AND dod.Guide_Number = @Guide_Number
                            AND dod.StatusOrderId = 14
                            AND bdcod.Excluded = 0
-                           AND bdcod.CatTransactionTypeCODId = 2
+                           AND bdcod.CatConceptCODId = 2
                            AND acodd.RowStatus = 1;
 
                         UPDATE acodd
@@ -217,11 +234,18 @@ BEGIN
                            AND dod.Guide_Number = @Guide_Number
                            AND dod.StatusOrderId = 14
                            AND bdcod.Excluded = 0
-                           AND bdcod.CatTransactionTypeCODId = 2
+                           AND bdcod.CatConceptCODId = 2
                            AND acodd.RowStatus = 1;
 
-                        SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
+                        DECLARE @AnticipatedCODDetail AS TblAnticipatedCODCustomerBalance
 
+                        INSERT INTO @AnticipatedCODDetail
+                        SELECT DISTINCT IdCustomer, PortfolioId
+                          FROM #TempDataClient
+
+                        EXEC spUpdateBalanceByIdClient @AnticipatedCODDetail
+
+                        SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
 
                         -------------------WEBHOOK.INI--------------------------------------------------------------------------------------------
                         DECLARE @WebhookCustomerId INT = -1;
