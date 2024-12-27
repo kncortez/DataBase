@@ -76,6 +76,18 @@ BEGIN
     -- variable para setear el nombre del módulo del cuál se desea obtener su id
     DECLARE @ModName NVARCHAR(50);
 
+    IF OBJECT_ID('tempdb..#TempDataClient', 'U') IS NOT NULL
+    BEGIN
+        DROP TABLE #TempDataClient;
+    END
+
+    CREATE TABLE  #TempDataClient
+    (
+       IdCustomer INT NOT NULL,
+       PortfolioId INT NOT NULL,
+       CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
+    );
+
     --Estado para Reenviado a Express Center
     DECLARE @StatusEXC AS INT =
             (
@@ -404,7 +416,12 @@ BEGIN
                  NULL, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
 
                  UPDATE acodh 
-                    SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0)
+                    SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0),
+                        acodh.CustomerId = acodh.CustomerId,
+                        acodh.PortfolioId = acodh.PortfolioId
+                 OUTPUT inserted.CustomerId,
+                        ISNULL(inserted.PortfolioId,0) AS PortfolioId
+                   INTO #TempDataClient
                    FROM DeliveryOrderDetail dod WITH(NOLOCK)
                         INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                 ON dod.Guide_Serie = acodd.GuideSerie
@@ -419,7 +436,8 @@ BEGIN
                     AND dod.Guide_Number = @GuideNumber
                     AND dod.StatusOrderId = 14
                     AND bdcod.Excluded = 0
-                    AND bdcod.CatTransactionTypeCODId = 2;
+                    AND bdcod.CatConceptCODId = 2
+                    AND acodd.RowStatus = 1;
 
                  UPDATE acodd 
                     SET acodd.BalanceStatus = 'DEVOLUCION'
@@ -437,7 +455,16 @@ BEGIN
                     AND dod.Guide_Number = @GuideNumber
                     AND dod.StatusOrderId = 14
                     AND bdcod.Excluded = 0
-                    AND bdcod.CatTransactionTypeCODId = 2;
+                    AND bdcod.CatConceptCODId = 2
+                    AND acodd.RowStatus = 1;
+
+                DECLARE @AnticipatedCODDetail AS TblAnticipatedCODCustomerBalance
+
+                INSERT INTO @AnticipatedCODDetail
+                SELECT DISTINCT IdCustomer, PortfolioId
+                  FROM #TempDataClient
+
+                EXEC spUpdateBalanceByIdClient @AnticipatedCODDetail
 
                 SET @RInserted = @@ROWCOUNT;
 

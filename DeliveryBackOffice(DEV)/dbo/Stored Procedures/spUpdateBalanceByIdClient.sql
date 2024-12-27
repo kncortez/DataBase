@@ -140,6 +140,7 @@ BEGIN
                     AND cacod.PortfolioId = 0
                     AND achs.CustomerId IS NOT NULL
         WHERE achs.PortfolioId IS NULL
+          AND achs.IdAnticipatedCODHeader IS NOT NULL
         GROUP BY achs.IdAnticipatedCODHeader,
                  achs.CustomerId,
                  achs.PortfolioId,
@@ -183,6 +184,7 @@ BEGIN
                       AND cacod.PortfolioId != 0
                       AND achs.CustomerId IS NOT NULL
          WHERE achs.PortfolioId IS NOT NULL
+           AND achs.IdAnticipatedCODHeader IS NOT NULL
          GROUP BY achs.IdAnticipatedCODHeader,
                   achs.CustomerId,
                   achs.PortfolioId,
