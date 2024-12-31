@@ -1,12 +1,12 @@
-﻿
-
-
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Gomez, Hugo>
 -- Create date: <2021-01-27>
 -- Description:	<Registrar favoritos >
+-- =============================================
+-- =============================================
+-- Author:		<Recinos, Aylinne>
+-- Create date: <2024-12-31>
+-- Description:	<Modificar valores de salida>
 -- =============================================
 CREATE PROCEDURE [dbo].[spsSetAccountFavCOD]
 	
@@ -40,8 +40,8 @@ IF(@Id is null or @Id = 0)
 BEGIN
 	INSERT INTO DeliveryBackOffice.dbo.DeliveryFavCOD (AliasFavCOD, NameAccountFavCOD, TypeAccountFavCOD, DocumentIdFavCOD, StatusFavCOD, IdAccountFavCOD,TokenCreated, DateCreated, TokenUpdate, DateUpdate ,IdBank, NumberAccFavCOD)
 	VALUES (@Alias, @NameAccount, @TypeAccount, @DocID, 1,@IdAcount, @Token,GETDATE(), NULL, NULL, @IdBank, @NumberAcc)
-	
-	SELECT  'Se ha guardado correctamente sus registros' as Response 
+	DECLARE @IdAccCreated as bigint =  SCOPE_IDENTITY();
+	SELECT  'Se ha guardado correctamente sus registros' as Response, @IdAccCreated as IdAccCreated, @IdAccount as IdAccountFavCOD
 END
 
 IF( @Id is not null )
