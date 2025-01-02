@@ -220,7 +220,9 @@ BEGIN
                            AND acodd.RowStatus = 1;
 
                         UPDATE acodd
-                           SET acodd.BalanceStatus = 'DEVOLUCION'
+                           SET acodd.BalanceStatus = 'DEVOLUCION',
+						       acodd.DateUpdated = GETDATE(),
+							   acodd.TokenUpdated = @TokenId
                           FROM DeliveryOrderDetail dod WITH(NOLOCK)
                                INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                        ON dod.Guide_Serie = acodd.GuideSerie

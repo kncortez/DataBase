@@ -6,7 +6,7 @@
 -- =============================================
 -- Author:		<Oscar, Rodriguez>
 -- Create date: <2020-12-12>
--- Description:	<Se agrego actualizacion de estado PAGADO para guias COD Anticipado>
+-- Description:	<Se agrego actualizacion de estado COBRADO para guias COD Anticipado>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
     @GuideSerie NVARCHAR(2),
@@ -258,7 +258,7 @@ BEGIN
 
             END;
 
-			-- Actualizamos guia liquidada cod anticipado a estado de balance PAGADO
+			-- Actualizamos guia liquidada cod anticipado a estado de balance COBRADO
 				IF EXISTS
 				(
 					SELECT 1
@@ -267,7 +267,9 @@ BEGIN
 				)
 				BEGIN
 					UPDATE DeliveryBackOffice.dbo.AnticipatedCODDetail
-					SET BalanceStatus = 'PAGADO'
+					SET BalanceStatus = 'COBRADO',
+					DateUpdated = GETDATE(),
+					TokenUpdated = @Token
 					WHERE	GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie;
 						
                     DECLARE @TempData TblAnticipatedCODCustomerBalance;

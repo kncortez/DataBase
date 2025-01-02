@@ -603,7 +603,9 @@ BEGIN
                                     AND acodd.RowStatus = 1;
 
                                 UPDATE acodh
-                                    SET acodh.BalanceStatus = 'DEVOLUCION'
+                                    SET acodh.BalanceStatus = 'DEVOLUCION',
+									    acodh.DateUpdated = GETDATE(),
+										acodh.TokenUpdated = @TokenP
                                 FROM AnticipatedCODDetail acodh WITH(NOLOCK)
                                     INNER JOIN #listGuidesEnabled tug
                                         ON tug.Guide_Serie = acodh.GuideSerie
@@ -727,6 +729,15 @@ BEGIN
                                             AND DOP.TimePlaId = 2
                                         )
                                         AND pcd.IdProcessedGuideCOD IS NULL;
+									
+									-- ACTUALIZACION DE ESTADO DE BALANCE PARA ANTICIPATEDCODDETAIL
+									UPDATE ACD
+									SET ACD.BalanceStatus = 'COBRADO',
+										ACD.DateUpdated = GETDATE(),
+										ACD.TokenUpdated = @TokenP
+									FROM DeliveryBackOffice.dbo.AnticipatedCODDetail ACD WITH(NOLOCK)
+									INNER JOIN #listGuidesEnabled LGD 
+										ON LGD.Guide_Serie = ACD.GuideSerie AND LGD.Guide_Number = ACD.GuideNumber
                                 END;
 
                                 ----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA Recepción de guías Y SEA COD Anticipado ---------

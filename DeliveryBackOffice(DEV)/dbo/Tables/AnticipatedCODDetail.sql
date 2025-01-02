@@ -14,6 +14,9 @@ MinGuidesPerMonth			INT					NOT NULL,
 DailyAmount					DECIMAL(18,2)		NOT NULL,
 IsCODAnticipatedValid		INT					NOT NULL,
 CollectOnDelivery			DECIMAL(18,2)		NOT NULL,
+IsAgaintsBalancePaid		INT					NULL,
+AgaintsBalanceAmount		DECIMAL(18,2)		NULL,
+AgaintsBalancePaid			DECIMAL(18,2)		NULL,
 AnticipatedCODComissionId	INT					NULL,
 BalanceStatus				NVARCHAR(50)		NOT NULL,
 RowStatus					BIT					NOT NULL,
@@ -61,5 +64,11 @@ GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Token de actualizacion del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualizacion del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Valor booleano que indica si una guia cuenta con saldo en contra pendiente por pagar', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'IsAgaintsBalancePaid';
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Valor depositado a cliente por lote de pago a proveedores', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'AgaintsBalanceAmount';
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Valor de saldo en contra de guia pendiente por recuperar', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'AgaintsBalancePaid';
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que Maneja informacion de clientes spbre historico de COD Anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = NULL, @level2name = NULL;
