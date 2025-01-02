@@ -5,7 +5,7 @@
 -- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetGuideInfo]
-@OrderNumber INT,
+@OrderNumber NVARCHAR(150),
 @CustomerId INT
 AS
 BEGIN
@@ -14,7 +14,7 @@ BEGIN
 
     SELECT TOP 1 @GuideSerie = [Guide_Serie],
                     @GuideNumber = [Guide_Number]
-    FROM DeliveryOrder WITH(NOLOCK) WHERE Order_Number = @OrderNumber AND IdCustomer = @CustomerId ORDER BY Preparation_Date DESC
+    FROM DeliveryOrder WITH(NOLOCK) WHERE Ticket_Number = @OrderNumber AND IdCustomer = @CustomerId ORDER BY Preparation_Date DESC
 
     IF(@GuideSerie IS NOT NULL AND @GuideNumber IS NOT NULL)
     BEGIN
