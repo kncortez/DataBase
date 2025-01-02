@@ -87,6 +87,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail ACD
 				INNER JOIN [dbo].[BatchDetailCOD] BDC
 				    ON BDC.GuideSerie = ACD.GuideSerie AND BDC.GuideNumber = ACD.GuideNumber
+				WHERE BDC.[BatchCODId] = @BatchCODId
 						
                 DECLARE @TempData TblAnticipatedCODCustomerBalance;
 
@@ -95,12 +96,13 @@ BEGIN
 					CustomerId,
 					PortfolioId
 				)
-				SELECT ach.CustomerId, ach.PortfolioId
+				SELECT DISTINCT ach.CustomerId, ach.PortfolioId
 				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
 				INNER JOIN [dbo].[BatchDetailCOD] BDC WITH(NOLOCK) 
 				    ON BDC.GuideSerie = ACD.GuideSerie AND BDC.GuideNumber = ACD.GuideNumber
 				INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
 					ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
+				WHERE BDC.[BatchCODId] = @BatchCODId
 
 				EXEC spUpdateBalanceByIdClient @TempData
 
