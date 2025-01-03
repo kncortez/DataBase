@@ -200,8 +200,36 @@ BEGIN TRY
 		, ISNULL(@Description,'')  AS 'Description'
 		, ISNULL(DO.ReceiverCountryId,'GT') AS 'Country'
 		, SO.CatStatusProcessId AS 'StatusTracking'
-		, ISNULL(ER.Nombre,'') AS 'StatusTrackingTitle'
-		, ISNULL(ER.Descripcion,'') AS 'StatusTrackingDescription'
+		, CASE
+			WHEN ER.Nombre != 'Entregado' THEN ISNULL(ER.Nombre,'')
+			ELSE
+				CASE
+					WHEN SO.StatusOrderId IN (22)
+					THEN 'Entregado en Express Center'
+					WHEN SO.StatusOrderId IN (7)
+					THEN 'Anulado'
+					WHEN SO.StatusOrderId IN (14)
+					THEN 'Devuelto'
+					WHEN SO.StatusOrderId IN (23)
+					THEN 'Devuelto en Express Center'
+					ELSE ISNULL(ER.Nombre,'')
+				END
+		  END AS 'StatusTrackingTitle'
+		, CASE
+			WHEN ER.Nombre != 'Entregado' THEN ISNULL(ER.Descripcion,'')
+			ELSE
+				CASE
+					WHEN SO.StatusOrderId IN (22)
+					THEN 'Entregado en Express Center el'
+					WHEN SO.StatusOrderId IN (7)
+					THEN 'Anulado el'
+					WHEN SO.StatusOrderId IN (14)
+					THEN 'Devuelto el'
+					WHEN SO.StatusOrderId IN (23)
+					THEN 'Devuelto en Express Center el'
+					ELSE ISNULL(ER.Descripcion,'')
+				END
+		  END AS 'StatusTrackingDescription'
 		,CASE 
 			-- Caso 1: El número comienza con '+' y tiene al menos 11 dígitos (ej. +50244444444)
 			WHEN LEFT(Receiver_Phone, 1) = '+' AND LEN(Receiver_Phone) >= 11 THEN 
