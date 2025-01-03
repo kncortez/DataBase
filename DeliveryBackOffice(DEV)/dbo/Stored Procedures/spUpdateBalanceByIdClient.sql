@@ -122,7 +122,8 @@ BEGIN
                          AND dts.PortfolioId = 0
                          AND dts.BalanceStatus IN ('DEVOLUCION',
                                                    'PENDIENTE',
-                                                   'PAGADO')
+                                                   'PAGADO',
+												   'COBRADO')
                        GROUP BY dts.CustomerId, dts.PortfolioId
                ) AS AllDetail
                OUTER APPLY (
@@ -132,7 +133,7 @@ BEGIN
                         FROM #CustomerAnticipatedCOD dts 
                        WHERE dts.CustomerId = achs.CustomerId
                          AND dts.PortfolioId = 0
-                         AND dts.BalanceStatus IN ('PAGADO')
+                         AND dts.BalanceStatus IN ('PAGADO','COBRADO')
                        GROUP BY dts.CustomerId, dts.PortfolioId
                ) AS AmountByPayed
                RIGHT JOIN #CustomerAnticipatedCOD cacod 
