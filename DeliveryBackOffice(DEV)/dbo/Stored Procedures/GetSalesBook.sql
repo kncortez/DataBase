@@ -20,8 +20,8 @@ BEGIN
            ih.inv_date       [date]
            ,ih.inv_cli_nit   [id_client]
            ,ih.inv_cli_name  [client_name]
-           ,CASE WHEN @IdCountry = 'GT' THEN ih.inv_certificationFEL 
-                 WHEN @IdCountry = 'HN' THEN ih.inv_serieFEL ELSE 0 
+           ,CASE WHEN @IdCountry = 'GT' THEN ih.inv_serieFEL 
+                 WHEN @IdCountry = 'HN' THEN ih.inv_certificationFEL ELSE '0' 
             END  [document_serie]
            ,ih.inv_numberFEL [document_correlative]
            --ctd.name [document_type], 
