@@ -605,7 +605,10 @@ BEGIN
                                 UPDATE acodh
                                     SET acodh.BalanceStatus = 'DEVOLUCION',
 									    acodh.DateUpdated = GETDATE(),
-										acodh.TokenUpdated = @TokenP
+										acodh.TokenUpdated = @TokenP,
+									    acodh.IsAgaintsBalancePaid = 1,
+									    acodh.AgaintsBalanceAmount = bdcod.Amount,
+									    acodh.AgaintsBalancePaid = bdcod.Amount
                                 FROM AnticipatedCODDetail acodh WITH(NOLOCK)
                                     INNER JOIN #listGuidesEnabled tug
                                         ON tug.Guide_Serie = acodh.GuideSerie
