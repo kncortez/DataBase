@@ -20,14 +20,15 @@ BEGIN
            ih.inv_date       [date]
            ,ih.inv_cli_nit   [id_client]
            ,ih.inv_cli_name  [client_name]
-           ,ih.inv_serieFEL  [document_serie]
+           ,CASE WHEN @IdCountry = 'GT' THEN ih.inv_certificationFEL 
+                 WHEN @IdCountry = 'HN' THEN ih.inv_serieFEL ELSE 0 
+            END  [document_serie]
            ,ih.inv_numberFEL [document_correlative]
            --ctd.name [document_type], 
            ,CASE WHEN ih.inv_type = 1 THEN 'FACTURA' 
                  WHEN ih.inv_type = 2 THEN 'NOTA DE CREDITO' 
                  ELSE 'NO DEFINIDO'
             END [document_type]
-           ,f.CtsName   [document_type_description]
            --,cit.Name [document_subtype_description]
            ,0 [exportation]
            ,0 [sales]
@@ -40,6 +41,7 @@ BEGIN
            ,0 [discount]
            ,(inv_amount-inv_IVA) [amount_base]
            ,inv_IVA [tax]
+           ,f.CtsName   [document_type_description]
            ,dt.dti_description [document_description]
            --, do.*
     from invoiceHeader ih          WITH (NOLOCK)
@@ -47,7 +49,7 @@ BEGIN
         --ON ih.inv_type = ctd.IdTypeDocument
     --LEFT JOIN CatInvoiceType cit  WITH (NOLOCK)
         --ON IH.CatInvoiceTypeId = cit.IdCatInvoiceType
-    OUTER APPLY --generación si es bien o servicio solo se toma un articulo
+    OUTER APPLY --generación si es bien o servicio solo se toma un articulo63.5
     (    
         SELECT TOP 1 
                id.dti_fk_orderSerie, 
