@@ -143,6 +143,6 @@ BEGIN
     END
     ELSE -- El contenedor se encuentra liquidado
     BEGIN
-        SELECT 0 AS [StatusCode], 'No se pudieron agregar guías al contenedor porque este se encuentra liquidado' AS [Message]
+        SELECT 0 AS [StatusCode], 'El contenedor que intentas gestionar ya ha sido liquidado y no permite nuevas transacciones. Por favor, verifica que el contenedor ingresado sea correcto.' AS [Message]
     END
 END;
