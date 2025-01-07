@@ -53,15 +53,38 @@ BEGIN
 
     CREATE NONCLUSTERED INDEX tempGuides ON #listGuides (Guide_Serie, Guide_Number);
 
-    INSERT INTO #listGuides
-    (
-        Guide_Serie,
-        Guide_Number
-    )
-    SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
-           SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
-    ----------------------------------------------------------------------------------------------------
+
+	IF @InGuidesP IS NOT NULL AND @InGuidesP != ''
+	BEGIN
+	PRINT ' NORMAL '
+		INSERT INTO #listGuides
+		(
+			Guide_Serie,
+			Guide_Number
+		)
+		SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
+			   SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+	END
+	ELSE
+	BEGIN
+
+		SET @InGuidesP = ''
+		SELECT @InGuidesP = STRING_AGG(CAST(CONCAT(Guide_Serie, Guide_Number) AS VARCHAR(MAX)), ',')
+		FROM DeliveryOrder WITH (NOLOCK)
+		WHERE Ticket_Number IN ( @TicketNumber )
+
+		INSERT INTO #listGuides
+		(
+			Guide_Serie,
+			Guide_Number
+		)
+		SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
+			   SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+
+	END
+	----------------------------------------------------------------------------------------------------
 
     ---- Obtener guias que no existen ------------------------------------
     SELECT lg.Guide_Serie,
