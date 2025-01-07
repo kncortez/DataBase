@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatRoute] (
+CREATE TABLE [dbo].[CatRoute] (
     [IdRoute]      INT           IDENTITY (1, 1) NOT NULL,
     [CodeRoute]    VARCHAR (100) NOT NULL,
     [Description]  VARCHAR (200) NOT NULL,
@@ -17,7 +17,6 @@
 );
 
 
-GO
 
 
 GO
@@ -57,4 +56,9 @@ GO
 
 
 GO
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CodeRoute]
+    ON [dbo].[CatRoute]([CodeRoute] ASC);
 

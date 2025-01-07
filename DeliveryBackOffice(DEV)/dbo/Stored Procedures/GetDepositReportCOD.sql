@@ -173,8 +173,13 @@ BEGIN
 								   AND btd.[GuideNumber] = do.[Guide_Number]
 							LEFT JOIN dbo.Township twn WITH (NOLOCK)
 								ON twn.IdTownship = do.ReceiverIdTownship
-							LEFT JOIN dbo.Township tw WITH (NOLOCK)
-								ON tw.TownshipName = do.Receiver_Town
+							--LEFT JOIN dbo.Township tw WITH (NOLOCK)
+							--	ON tw.TownshipName = do.Receiver_Town
+							OUTER APPLY
+							( SELECT TOP 1 TW.IdProvince, TW.TownshipName  FROM  dbo.Township tw WITH (NOLOCK)
+							INNER JOIN dbo.Province PR WITH(NOLOCK) ON PR.IdProvince = tw.IdProvince
+							WHERE TW.TownshipName = DO.Receiver_Town AND PR.IdCountry = DO.ReceiverCountryId
+							)tw
 							LEFT JOIN dbo.Province prv WITH (NOLOCK)
 								ON prv.IdProvince = twn.IdProvince
 							LEFT JOIN dbo.Province pr WITH (NOLOCK)
@@ -299,8 +304,13 @@ BEGIN
 								   AND btd.[GuideNumber] = do.[Guide_Number]
 							LEFT JOIN dbo.Township twn WITH (NOLOCK)
 								ON twn.IdTownship = do.ReceiverIdTownship
-							LEFT JOIN dbo.Township tw WITH (NOLOCK)
-								ON tw.TownshipName = do.Receiver_Town
+							--LEFT JOIN dbo.Township tw WITH (NOLOCK)
+							--	ON tw.TownshipName = do.Receiver_Town
+							OUTER APPLY
+							( SELECT TOP 1 TW.IdProvince, TW.TownshipName  FROM  dbo.Township tw WITH (NOLOCK)
+							INNER JOIN dbo.Province PR WITH(NOLOCK) ON PR.IdProvince = tw.IdProvince
+							WHERE TW.TownshipName = DO.Receiver_Town AND PR.IdCountry = DO.ReceiverCountryId
+							)tw
 							LEFT JOIN dbo.Province prv WITH (NOLOCK)
 								ON prv.IdProvince = twn.IdProvince
 							LEFT JOIN dbo.Province pr WITH (NOLOCK)
@@ -475,8 +485,13 @@ BEGIN
                        AND btd.[GuideNumber] = do.[Guide_Number]
                 LEFT JOIN dbo.Township twn WITH (NOLOCK)
                     ON twn.IdTownship = do.ReceiverIdTownship
-                LEFT JOIN dbo.Township tw WITH (NOLOCK)
-                    ON tw.TownshipName = do.Receiver_Town
+                --LEFT JOIN dbo.Township tw WITH (NOLOCK)
+                --    ON tw.TownshipName = do.Receiver_Town
+				OUTER APPLY
+							( SELECT TOP 1 TW.IdProvince, TW.TownshipName  FROM  dbo.Township tw WITH (NOLOCK)
+							INNER JOIN dbo.Province PR WITH(NOLOCK) ON PR.IdProvince = tw.IdProvince
+							WHERE TW.TownshipName = DO.Receiver_Town AND PR.IdCountry = DO.ReceiverCountryId
+							)tw
                 LEFT JOIN dbo.Province prv WITH (NOLOCK)
                     ON prv.IdProvince = twn.IdProvince
                 LEFT JOIN dbo.Province pr WITH (NOLOCK)

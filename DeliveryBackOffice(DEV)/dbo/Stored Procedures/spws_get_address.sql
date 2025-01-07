@@ -59,6 +59,8 @@ BEGIN
 		 , CAST(ISNULL(vp.IsOriginVisitPoint, 1) AS NVARCHAR(1)) AS IsOrigin
 		 , CAST(ISNULL(ua.UadFavorite,0) AS NVARCHAR(1)) AS IsFavorite
 		 , ISNULL(vp.Email,'') AS Email
+		 , ISNULL(vp.IdSettlement,0) AS IdSettlement
+		 , ISNULL(st.Settlement,'') AS SettlementName
 	FROM dbo.RolByUserByAccount rua WITH (NOLOCK)
 	INNER JOIN dbo.UserAddress ua WITH (NOLOCK)
 		ON ua.UadIdAccount = rua.RuaIdAccount
@@ -71,6 +73,8 @@ BEGIN
 		   AND ctp.CityPlaceRowStatus = 'true'
 	LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 		ON vp.CodeOfReference = ua.CodeOfReference
+	LEFT JOIN dbo.Settlement st WITH (NOLOCK)
+		ON vp.IdSettlement = st.IdSettlement
 	LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
 		ON conf.NirPhone = ua.UadNirPhone
 		AND conf.Phone = ua.UadPhone

@@ -12,21 +12,13 @@ BEGIN
 
 	BEGIN TRANSACTION
 	BEGIN TRY
-
-	   /*
-			InvoiceBatchHeader
-			status = 1 y enable = 1 es cuando el lote esta habilidado y activo
-			status = 0 y enable = 1 es un error - no contemplado
-			status = 1 y enable = 0 es cuando no se puede facturar, porque se detuvo facturación (Ya viene lote nuevo ejemplo)
-		*/
-
 		/*********************************************************************************************************************
 		***************************** ACTUALIZACIÓN DE LISTADO DE FACTURAS PENDIENTES DE ENVIAR CORREO ***************************
 		*********************************************************************************************************************/
 		UPDATE InvoiceBatchDetail
 		SET SendEmail = 1
 			,DateUpdated = GETDATE()
-			,TokenUpdated = 'CAZURDIA-SYS'
+			,TokenUpdated = 'SYSTEM'
 		WHERE inv_pk_id = @IdInvoice
 
 		SELECT 200 [StatusCode], 'Actualizacion exitosa' [Message]

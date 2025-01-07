@@ -412,14 +412,12 @@ SET ARITHABORT ON
 									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
 									ON
 									RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
-									AND
-									RPD.RowStatus = 1
+									
 								INNER JOIN
 									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
-									AND
-									RP.RowStatus = 1
+									
 							WHERE 
 								RPDP.RowStatus = 1
 								AND
@@ -430,6 +428,10 @@ SET ARITHABORT ON
 								RP.IdRoutePreparation <> @IdRoutePreparation
 								AND
 								RP.DateRoutePreparation = @Date
+								AND
+									RPD.RowStatus = 1
+									AND
+									RP.RowStatus = 1
 									
 							--- Extraer de los demas detalles la guía ingresada
 							UPDATE RPD
@@ -442,8 +444,7 @@ SET ARITHABORT ON
 									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
-									AND
-									RP.RowStatus = 1
+									
 							WHERE 
 								RPD.RowStatus = 1
 								AND
@@ -454,6 +455,8 @@ SET ARITHABORT ON
 								RP.IdRoutePreparation <> @IdRoutePreparation
 								AND
 								RP.DateRoutePreparation = @Date
+								AND
+									RP.RowStatus = 1
 
 							--- Actualizar el estado de la guía
 							UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]

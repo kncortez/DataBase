@@ -3,6 +3,10 @@
 -- Create date: <Create Date,2024-10-25>
 -- Description:	<Description,Actualizar estado Link de entrega >
 -- =============================================
+-- Author:			<Brandon Pedroza>
+-- Modified date:	<2024-10-10>
+-- Description:		<Se devuelve url si es un link creado con usuario logeado o no>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_UpdateDeliveryLink] 
 @Token         NVARCHAR(250),
 @ReceiverName  NVARCHAR(200),
@@ -27,8 +31,10 @@ BEGIN
   DECLARE @Canceled    INT =(SELECT TOP 1  IdDeliveryLinkStatus FROM [DeliveryBackOffice].[dbo].[DeliveryLinkStatus] WITH(NOLOCK) WHERE [Name]='Anulado' );
   DECLARE @OriginCodeOfReference INT =(SELECT	TOP 1 OriginCodeOfReference FROM dbo.DeliveryLink WITH(NOLOCK) WHERE Token = @Token)
   DECLARE @IdAccount INT =(SELECT	TOP 1 AccountId FROM dbo.DeliveryLink WITH(NOLOCK) WHERE Token = @Token)
+  DECLARE @IsLinkWOLogin INT =(SELECT TOP 1 IsUserWithoutLogin FROM dbo.DeliveryLink WITH(NOLOCK) WHERE Token = @Token)
   DECLARE @NickName NVARCHAR(100) = ( SELECT    TOP 1    
-                                            RU.UsrNickName
+                                            CASE WHEN @IsLinkWOLogin = 0 THEN RU.UsrNickName
+										   ELSE VPC.DescriptionOfClient END
 							              FROM 
 											 [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
 											INNER JOIN
@@ -43,10 +49,12 @@ BEGIN
 											  INNER JOIN 
 											  [DeliveryBackOffice].[dbo].RegisterUser RU WITH(NOLOCK)
 												 ON RU.UsrIdUser = RUBA.RuaIdUser
-											WHERE A.AccIdAccount = @IdAccount
+											WHERE A.AccIdAccount = @IdAccount AND VPC.CodeOfReference = @OriginCodeOfReference
 										)
 
-    DECLARE @CountryId NVARCHAR(2) = (SELECT TOP 1  ISNULL(Cu.CountryID,'GT')
+    DECLARE @CountryId NVARCHAR(2) = (SELECT TOP 1  
+											CASE WHEN @IsLinkWOLogin = 0 THEN ISNULL(Cu.CountryID,'GT')
+											ELSE ISNULL(VPC.CountryId, 'GT') END
                                          FROM 
 											 [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
 											INNER JOIN
@@ -61,12 +69,14 @@ BEGIN
 											  INNER JOIN 
 											  [DeliveryBackOffice].[dbo].RegisterUser RU WITH(NOLOCK)
 												 ON RU.UsrIdUser = RUBA.RuaIdUser
-											WHERE A.AccIdAccount = @IdAccount
+											WHERE A.AccIdAccount = @IdAccount AND VPC.CodeOfReference = @OriginCodeOfReference
 															)
                          
 					
    DECLARE @SenderPhone NVARCHAR(8) = (
-                                         SELECT TOP 1  RIGHT(RU.Phone,8)
+                                         SELECT TOP 1  
+												CASE WHEN @IsLinkWOLogin = 0 THEN RIGHT(RU.Phone,8)
+												ELSE RIGHT(VPC.Phone,8) END		
                                          FROM 
 											 [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
 											INNER JOIN
@@ -81,11 +91,13 @@ BEGIN
 											  INNER JOIN 
 											  [DeliveryBackOffice].[dbo].RegisterUser RU WITH(NOLOCK)
 												 ON RU.UsrIdUser = RUBA.RuaIdUser
-											WHERE A.AccIdAccount = @IdAccount
+											WHERE A.AccIdAccount = @IdAccount AND VPC.CodeOfReference = @OriginCodeOfReference
 									)
     
      DECLARE @SenderEmail NVARCHAR(100) = (
-                                         SELECT TOP 1  Ru.UsrEmail
+                                         SELECT TOP 1  
+												CASE WHEN @IsLinkWOLogin = 0 THEN Ru.UsrEmail
+												ELSE VPC.Email END	
                                          FROM 
 											 [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
 											INNER JOIN
@@ -100,10 +112,16 @@ BEGIN
 											  INNER JOIN 
 											  [DeliveryBackOffice].[dbo].RegisterUser RU WITH(NOLOCK)
 												 ON RU.UsrIdUser = RUBA.RuaIdUser
-											WHERE A.AccIdAccount = @IdAccount)
+											WHERE A.AccIdAccount = @IdAccount AND VPC.CodeOfReference = @OriginCodeOfReference)
    
    DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX')
-   DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry= @CountryId)
+   DECLARE @URL NVARCHAR(200) = (SELECT 
+										CASE 
+											WHEN DL.IsUserWithoutLogin = 1 THEN (SELECT [Value] FROM dbo.ConfigParams WITH(NOLOCK) WHERE [Name]='URLWithoutLogin')
+											ELSE (SELECT [Value] FROM dbo.ConfigParams WITH(NOLOCK) WHERE [Name]='URLLinkdeEntrega') 
+										END
+									FROM dbo.DeliveryLink DL WITH(NOLOCK)
+									WHERE DL.Token = @Token);
   BEGIN TRANSACTION
 	BEGIN TRY
 	   
