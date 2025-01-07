@@ -277,7 +277,7 @@ BEGIN
 					  THEN NULL
 					  ELSE T.ProductGiftShippingEmail
 					  END,
-		@PhoneNumber
+		RIGHT(@PhoneNumber,8)
     FROM @TblSalePackageMarketPlace AS T;
 
 	COMMIT TRAN

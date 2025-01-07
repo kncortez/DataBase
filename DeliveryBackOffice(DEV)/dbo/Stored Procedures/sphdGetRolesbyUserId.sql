@@ -8,11 +8,11 @@ CREATE PROCEDURE [dbo].[sphdGetRolesbyUserId]
 	@idUser int
 AS
 BEGIN
-
+SET ARITHABORT ON
 IF EXISTS(
         select 
         1
-        from  InternalUser IU 
+        from  InternalUser IU WITH(NOLOCK)
         where IU.IdUser=@idUser)
 
 		BEGIN
@@ -27,10 +27,13 @@ IF EXISTS(
         	cr.RolAdminInternal,
 			4 RusIdRol ,
 			/*IU.SaleAdvisorID*/0 SaleAdvisorID
-        from dbo.RolByUserBySystem rus 
-        Inner Join InternalUser IU on  rus.RusIdUser= IU.RegisterUserID and IU.RowStatus=1
-        inner join CatRol cr on rus.RusIdRol=cr.RolIdRol and cr.RolRowStatus=1
-        where IU.IdUser=@idUser and rus.RusRowStatus=1;
+        from dbo.RolByUserBySystem rus  WITH(NOLOCK)
+        Inner Join InternalUser IU WITH(NOLOCK) on  rus.RusIdUser= IU.RegisterUserID 
+        inner join CatRol cr WITH(NOLOCK) ON rus.RusIdRol=cr.RolIdRol 
+        where IU.IdUser=@idUser and rus.RusRowStatus=1
+		and IU.RowStatus=1
+		AND cr.RolRowStatus=1 --BNHL 15/11/2024
+		;
 
 		END;
 

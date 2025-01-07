@@ -37,6 +37,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_NC_GuideSerieGuideNumber_DeliveryOrderPaymentDetail]
     ON [dbo].[DeliveryOrderPaymentDetail]([GuideSerie] ASC, [GuideNumber] ASC);
@@ -59,4 +61,10 @@ CREATE NONCLUSTERED INDEX [idx_TimePlaId]
 GO
 CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_ShipmentCompleted_TimePlaId]
     ON [dbo].[DeliveryOrderPaymentDetail]([GuideSerie] ASC, [GuideNumber] ASC, [ShipmentCompleted] ASC, [TimePlaId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_TimePlaId_included]
+    ON [dbo].[DeliveryOrderPaymentDetail]([TimePlaId] ASC)
+    INCLUDE([GuideNumber], [GuideSerie]);
 

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[RateHeader] (
+CREATE TABLE [dbo].[RateHeader] (
     [RheId]                INT             IDENTITY (1, 1) NOT NULL,
     [RheName]              VARCHAR (200)   NOT NULL,
     [RheShortName]         VARCHAR (3)     NOT NULL,
@@ -36,6 +36,8 @@
     CONSTRAINT [FK_RateHeader_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_RateHeader_CatTypeRate] FOREIGN KEY ([RateTypeId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
 );
+
+
 
 
 
@@ -149,3 +151,6 @@ GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion de los tarifarios' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader'
 GO
+CREATE NONCLUSTERED INDEX [idx_RheName]
+    ON [dbo].[RateHeader]([RheName] ASC);
+

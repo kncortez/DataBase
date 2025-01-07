@@ -3,8 +3,13 @@
 -- Create date: <2024-06-26>
 -- Description:	<Crear Guías - Método que devuelva un listado de clientes corporativos filtrado por país.>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-10-23>
+-- Description:	<Regresar informacion de poblados>
+-- =============================================
 
-CREATE PROCEDURE [dbo].[spGetCorporateCustomersMC]
+CREATE  PROCEDURE [dbo].[spGetCorporateCustomersMC]
     -- Add the parameters for the stored procedure here
     @pOthers VARCHAR(100) = '',
     @pCountryId NVARCHAR(3) = 'GT'
@@ -41,7 +46,9 @@ SELECT DISTINCT
     REPLACE(CONVERT(NVARCHAR, ISNULL(dbk.[Acronym], '')), '"', '') AS Acronym,
     REPLACE(ISNULL([CODAccountName], ''), '"', '') AS NameAccount,
     CONVERT(NVARCHAR, ISNULL(cba.[BankAccountType], '')) AS TypeAccount,
-    ISNULL([CODAccountNumber], '') AS NumberAcc
+    ISNULL([CODAccountNumber], '') AS NumberAcc,
+	ISNULL(STL.IdSettlement,0) AS IdSettlement,
+	CONCAT(STL.Settlement,', ',TWS.TownshipName,', ', pr.ProvinceName) AS SettlementName
 FROM DeliveryBackOffice.dbo.Customer cu WITH(NOLOCK)
 LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank dbk WITH(NOLOCK)
     ON cu.CODAccountBankID = dbk.Id_bank
@@ -77,6 +84,9 @@ WHERE IdCustomerType = 1
          OR cu.Name LIKE CONCAT('%', @pOthers, '%')
          OR vpc.DescriptionOfClient LIKE CONCAT('%', @pOthers, '%'))
 	AND (cu.CountryID = @pCountryId OR (@pCountryId = 'GT' AND cu.CountryID IS NULL))
-    AND RowSatus = 1;
+    AND RowSatus = 1
+	AND STL.SettlementSatus = 1
+	AND TWS.TownshipStatus = 1
+	AND pr.ProvinceStatus = 1;
                                
 END;

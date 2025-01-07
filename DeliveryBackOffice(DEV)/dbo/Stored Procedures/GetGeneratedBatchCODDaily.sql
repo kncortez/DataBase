@@ -550,14 +550,25 @@ BEGIN
                      DCBA_BankAccountType
             ORDER BY Guide_Number;
 
-            CREATE NONCLUSTERED INDEX IX_TACT_ISINCTPCP
+            CREATE NONCLUSTERED INDEX IX_TACT_ISINCTPCP_GuideSerie_GuideNumber
             ON #TableAmountCODDailyTemp (
                                             [Guide_Serie],
-                                            [Guide_Number],
-                                            [CODtoPay],
-                                            Commision,
-                                            [Price]
+                                            [Guide_Number]
                                         );
+
+			CREATE NONCLUSTERED INDEX IX_TACT_ISINCTPCP_CODtoPay
+            ON #TableAmountCODDailyTemp (
+                                           [CODtoPay]
+                                        );
+
+			 --CREATE NONCLUSTERED INDEX IX_TACT_ISINCTPCP
+    --        ON #TableAmountCODDailyTemp (
+    --                                        [Guide_Serie],
+    --                                        [Guide_Number],
+    --                                        [CODtoPay],
+    --                                        Commision,
+    --                                        [Price]
+    --                                    );
 
             -- ASIGNACION DEL ROWSTATUS CERO 
             -- PARA LAS GUIAS QUE NO TIENE CODTOPAY EN LA TABLA PROCESSGUIDE
@@ -568,10 +579,12 @@ BEGIN
                 INNER JOIN #TableAmountCODDailyTemp tact
                     ON pgc.GuideSerie = tact.Guide_Serie
                        AND pgc.GuideNumber = tact.Guide_Number
-                       AND tact.CODtoPay <= 0
+                       --AND tact.CODtoPay <= 0
             WHERE pgc.BatchCODId IS NULL
                   AND pgc.BatchCODIdCommission IS NULL
-                  AND pgc.RowStatus = 1;
+                  AND pgc.RowStatus = 1
+				  AND tact.CODtoPay <= 0 --BNHL 14/11/2024 
+				  ;
 
             -- OBTENCION DEL NUMERO DE REFERENCIA (CORRELATIVO) PARA BAC
             SELECT @Reference = Last
@@ -837,7 +850,10 @@ BEGIN
                            DiscountPrice,
 						   @IdCountrySender
                     FROM #TableCustomerPaymentTempDaily tcpt
-					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tcpt.GuideSerie, tcpt.GuideNumber)
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) 
+					--ON c.ProductNumber = CONCAT(tcpt.GuideSerie, tcpt.GuideNumber)
+					ON c.GuideSerie = tcpt.GuideSerie
+					AND c.GuideNumber =  tcpt.GuideNumber --CAMBIO BNHL 14/11/2024
                     WHERE NOT EXISTS
                     (
                         SELECT 1
@@ -944,7 +960,10 @@ BEGIN
                            DiscountPrice,
 						   @IdCountrySender
                     FROM #TableForzaPaymentTempDaily tfpt
-					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) 
+					--ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
+					ON  c.GuideSerie  =  tfpt.GuideSerie
+					AND c.GuideNumber =  tfpt.GuideNumber --CAMBIO BNHL 14/11/2024
                     WHERE NOT EXISTS
                     (
                         SELECT 1
