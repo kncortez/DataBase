@@ -10,14 +10,14 @@ BEGIN TRY
 		--UPDATE DeliveryBackOffice.dbo.RateHeader
 		--SET GuideAmountCOD = 800,
 		--ReturnPercent = 4,
-		--IsOldest = 30,
+		--IsOldest = 90,
 		--MinGuidesPerMonth = 25
 		--WHERE IdCountry = 'GT';
 
 		--UPDATE DeliveryBackOffice.dbo.RateHeader
 		--SET GuideAmountCOD = 2400,
 		--ReturnPercent = 4,
-		--IsOldest = 30,
+		--IsOldest = 90,
 		--MinGuidesPerMonth = 25
 		--WHERE IdCountry = 'HN';
 	COMMIT TRANSACTION 

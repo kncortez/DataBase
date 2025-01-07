@@ -206,7 +206,7 @@ BEGIN
               ,COUNT(do.Guide_Number) AS NumbersGuides
               ,SUM(ISNULL(do.Collect_OnDelivery,0)) AS AmountCOD
           FROM #TempDate CU WITH (NOLOCK)
-               LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+               LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
                  ON do.IdCustomer = CU.IdCustomer
                 AND do.VisitpointClientPortfolioId = CU.PortfolioID
                 AND do.DateCreated BETWEEN @DayMount AND GETDATE()
@@ -223,7 +223,7 @@ BEGIN
               ,COUNT(do.Guide_Number) AS NumbersGuides
               ,SUM(ISNULL(do.Collect_OnDelivery,0)) AS AmountCOD
           FROM #TempDate CU WITH (NOLOCK)
-               LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+               LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
                  ON do.IdCustomer = CU.IdCustomer
                 AND do.DateCreated BETWEEN @DayMount AND GETDATE()
                 AND do.TypeService = 'COD'

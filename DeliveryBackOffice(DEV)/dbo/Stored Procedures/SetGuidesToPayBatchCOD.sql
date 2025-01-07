@@ -7,6 +7,10 @@
 -- Create date: <2024-12-19>
 -- Description:	<Se agregaron validaciones para COD Pagado en COD Anticipado>
 -- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2020-12-12>
+-- Description:	<Se agrego actualizacion de estado PAGADO para guias COD Anticipado>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetGuidesToPayBatchCOD]
 -- Add the parameters for the stored procedure here
 	@BatchCODId INT,
@@ -75,6 +79,35 @@ BEGIN
 				  )
 				SELECT GuideSerie,GuideNumber,@StatusOrderAnticipatedCOD, @TokenCreated,GETDATE() FROM [dbo].[BatchDetailCOD] 
 				WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2
+
+				UPDATE ACD
+				SET ACD.BalanceStatus = 'PAGADO',
+					DateUpdated = GETDATE(),
+					TokenUpdated = @TokenCreated
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail ACD
+				INNER JOIN [dbo].[BatchDetailCOD] BDC
+				    ON BDC.GuideSerie = ACD.GuideSerie AND BDC.GuideNumber = ACD.GuideNumber
+				WHERE BDC.[BatchCODId] = @BatchCODId
+						
+                DECLARE @TempData TblAnticipatedCODCustomerBalance;
+
+				INSERT INTO @TempData
+				(
+					CustomerId,
+					PortfolioId
+				)
+				SELECT DISTINCT ach.CustomerId, ach.PortfolioId
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+				INNER JOIN [dbo].[BatchDetailCOD] BDC WITH(NOLOCK) 
+				    ON BDC.GuideSerie = ACD.GuideSerie AND BDC.GuideNumber = ACD.GuideNumber
+				INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
+					ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
+				WHERE BDC.[BatchCODId] = @BatchCODId
+
+				EXEC spUpdateBalanceByIdClient @TempData
+
+                DELETE 
+                    FROM @TempData
 			END
 			ELSE
 			BEGIN

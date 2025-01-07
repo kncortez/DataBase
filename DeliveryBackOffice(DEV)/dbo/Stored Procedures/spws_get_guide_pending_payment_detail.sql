@@ -689,9 +689,9 @@ BEGIN
                          + ', ' + '"CODAmount": ' + CAST(CAST(ISNULL(pg.CODAmount, 0) AS DECIMAL(18, 2)) AS VARCHAR)
                          + ', ' + '"IsCollect": ' + CAST(ISNULL(pg.IsCollect, 0) AS VARCHAR) + ', ' + '"Pieces": '
                          + CAST(ISNULL(pg.Pieces, 0) AS VARCHAR) + ', ' + '"ServiceType": "' + pg.ServiceType + '", '
-						 + '"IdCustomer": ' + CAST(c.IdCustomer AS VARCHAR) + ', '
-						 + '"IdPortafolio": ' + CAST(c.IdPortafolio AS VARCHAR) + ', '
-						 + '"COD": ' + CAST(c.COD AS VARCHAR) + ', '
+						 + '"IdCustomer": ' + CAST(ISNULL(c.IdCustomer,0) AS VARCHAR) + ', '
+						 + '"IdPortafolio": ' + CAST(ISNULL(c.IdPortafolio,0) AS VARCHAR) + ', '
+						 + '"COD": ' + CAST(ISNULL(c.COD,0) AS VARCHAR) + ', '
 						 + '"ComisionCOD": ' + 
 						 CASE
 							WHEN pg.ServiceType != 'COD' --Si la guía no es de tipo COD no deberia cobrar comision
@@ -701,10 +701,10 @@ BEGIN
 							ELSE ISNULL(CAST(c.ComisionCOD AS VARCHAR) , '0')
 						END
 						 + ', '
-						 + '"ComisionCODAnticipated": ' + CAST(c.ComisionCODAnticipated AS VARCHAR) + ', '
+						 + '"ComisionCODAnticipated": ' + CAST(ISNULL(c.ComisionCODAnticipated,0) AS VARCHAR) + ', '
                          + '"GuideDetail": [ '
                   FROM #PendingPaymentTempId pg
-				  INNER JOIN @CODAnticipatedTable c
+				  left JOIN @CODAnticipatedTable c
 					ON pg.GuideSerie = c.GuideSerie AND pg.GuideNumber = c.GuideNumber
                   WHERE Id = @Index
               );
