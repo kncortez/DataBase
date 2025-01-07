@@ -382,6 +382,7 @@ BEGIN
                                                                 ELSE
                                                                     'FALSE'
                                                             END + '",' + '"Hub":"' + ISNULL(dsc.Hub, '') + '",'
+                                                          + '"IdCityPlace": ' + ISNULL(CONVERT(VARCHAR, SUB.IdCityPlace),'0') + ' ,'
                                                           + '"IdVisitPointByClientPortfolio":"'
                                                           + ISNULL(CONVERT(VARCHAR, SUB.VisitPointByClientPortfolioId), ' ')
                                                           + '"}'
