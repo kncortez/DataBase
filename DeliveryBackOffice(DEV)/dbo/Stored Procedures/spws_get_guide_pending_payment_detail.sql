@@ -80,7 +80,7 @@ BEGIN
     CREATE NONCLUSTERED INDEX tempGuides ON #listGuides (Guide_Serie, Guide_Number);
 
 
-	IF @InGuidesP IS NOT NULL
+	IF @InGuidesP IS NOT NULL AND @InGuidesP != ''
 	BEGIN
 	PRINT ' NORMAL '
 		INSERT INTO #listGuides
