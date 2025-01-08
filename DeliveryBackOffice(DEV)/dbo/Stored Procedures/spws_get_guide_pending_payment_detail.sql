@@ -352,7 +352,8 @@ BEGIN
 		CurrencyPriceSymbol      NVARCHAR(8),
         AmountToPay DECIMAL(18, 2) NULL,
         CODAmount DECIMAL(18, 2) NULL,
-        ReturnRates DECIMAL(18, 2) NULL
+        ReturnRates DECIMAL(18, 2) NULL,
+		TypePayment NVARCHAR(10)
     );
 
     CREATE NONCLUSTERED INDEX IX_PPT_GNS ON #PendingPaymentTemp (GuideSerie,GuideNumber);
@@ -385,7 +386,8 @@ BEGIN
 		CurrencyPriceSymbol,
         AmountToPay,
         CODAmount,
-        ReturnRates
+        ReturnRates,
+		TypePayment
     )
     EXEC DeliveryBackOffice.dbo.spws_get_guide_pending_payment @InGuides = @InGuidesP,
                                                                @InTime = @InTimeP,
@@ -502,7 +504,8 @@ BEGIN
                                                                ) Indications,
            (ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) Pieces,
            IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType,
-           ppt.CurrencyPriceSymbol
+           ppt.CurrencyPriceSymbol,
+		   ppt.TypePayment
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
@@ -687,6 +690,8 @@ BEGIN
                          + '"AmountToCollect": ' + CAST(CAST(pg.AmountToCollect AS DECIMAL(18, 2)) AS VARCHAR) + ', '
                          + '"ServicePrice": ' + CAST(CAST(ISNULL(pg.AmountToPay, 0) AS DECIMAL(18, 2)) AS VARCHAR)
                          + ', ' + '"CODAmount": ' + CAST(CAST(ISNULL(pg.CODAmount, 0) AS DECIMAL(18, 2)) AS VARCHAR)
+                         + ', ' + '"PriceShippment": ' + CAST(CAST(ISNULL(pg.Price, 0) AS DECIMAL(18, 2)) AS VARCHAR)
+                         + ', ' + '"TypePayment": "' + pg.TypePayment +'"'
                          + ', ' + '"IsCollect": ' + CAST(ISNULL(pg.IsCollect, 0) AS VARCHAR) + ', ' + '"Pieces": '
                          + CAST(ISNULL(pg.Pieces, 0) AS VARCHAR) + ', ' + '"ServiceType": "' + pg.ServiceType + '", '
 						 + '"IdCustomer": ' + CAST(ISNULL(c.IdCustomer,0) AS VARCHAR) + ', '
