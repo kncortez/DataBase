@@ -85,7 +85,6 @@ BEGIN
             END
             ELSE
             BEGIN
-                -- Actualiza guías existentes pero eliminadas
                 UPDATE ShippingContainerDetail
                 SET IdContainer = @IdContainer, 
                     UserUpdated = @User,

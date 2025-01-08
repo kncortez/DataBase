@@ -84,7 +84,6 @@ BEGIN
                 END
                 ELSE
                 BEGIN
-                    -- Actualiza guías existentes pero eliminadas
                     UPDATE ShippingContainerDetail
                     SET UserUpdated = @User,
                         DateUpdated = GETDATE(),

@@ -39,7 +39,6 @@ BEGIN
                 END
                 ELSE
                 BEGIN
-                    -- Actualiza guías existentes pero eliminadas
                     UPDATE DeliveryOrder
                     SET Ticket_Number = gUP.TicketNumber
                     FROM #Guides AS gUP
