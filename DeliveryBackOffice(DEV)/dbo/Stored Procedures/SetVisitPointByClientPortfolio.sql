@@ -148,7 +148,7 @@ BEGIN
 						,null
 						,null
 						,null
-						,null
+						,ni.IdCityPlace
 						,@VisitPointByClientPortfolioIdTransact
 						,ni.IdSettlement
 						,ni.IdDeliveryOption
@@ -276,7 +276,7 @@ if( @IdVisitPointByClientPortfolio > 0 )
 						,null
 						,null
 						,null
-						,null
+						,ni.IdCityPlace
 						,ni.IdVisitPointByClientPortfolio
 						,ni.IdSettlement
 						,ni.IdDeliveryOption
@@ -287,7 +287,7 @@ if( @IdVisitPointByClientPortfolio > 0 )
 
 							update UserAddress set UadIdTownship = ni.IdTownship, UadIdAccount = ni.IdAccount , UadIdCountry = ni.IdCountry, UadFullName = ni.FullName, UadAddress1 = ni.Address1,
 							UadAddress2 = ni.Address2, UadNirPhone = ni.NirPhone, UadPhone = ni.Phone,UadAdditionalInstructions = ni.AdditionalInstructions, UadRowStatus = ni.Status, UadTokenUpdated = ni.Token,
-							UadDateUpdated = GETDATE(), VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio, UadIdSettlement= ni.IdSettlement,UadIdDeliveryOption=ni.IdDeliveryOption
+							UadDateUpdated = GETDATE(), VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio, UadIdSettlement= ni.IdSettlement,UadIdDeliveryOption=ni.IdDeliveryOption, IdCityPlace = IIF(ni.IdCityPlace = 0, NULL, ni.IdCityPlace)
 							from @TblAddressesList ni
 							join UserAddress ud on ud.UadIdAddress = ni.IdAddress
 							where ni.IdAddress > 0 and ud.VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio

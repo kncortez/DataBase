@@ -180,7 +180,7 @@ BEGIN
                      , NULL
                      , NULL
                      , NULL
-                     , NULL
+                     , ni.IdCityPlace
                      , @VisitPointByClientPortfolioIdTransact
                      , @IdSettlementcalc
                      , ni.IdDeliveryOption
@@ -322,7 +322,7 @@ BEGIN
                  , NULL
                  , NULL
                  , NULL
-                 , NULL
+                 , ni.IdCityPlace
                  , ni.IdVisitPointByClientPortfolio
                  , @IdSettlementcalc
                  , ni.IdDeliveryOption
@@ -348,6 +348,7 @@ BEGIN
               , VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio
               , UadIdSettlement = @IdSettlementcalc
               , UadIdDeliveryOption = ni.IdDeliveryOption
+			  , IdCityPlace = IIF(ni.IdCityPlace = 0, NULL, ni.IdCityPlace)
             FROM @TblAddressesList ni
                 JOIN UserAddress   ud
                     ON ud.UadIdAddress = ni.IdAddress
