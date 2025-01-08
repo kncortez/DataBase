@@ -352,8 +352,7 @@ BEGIN
 		CurrencyPriceSymbol      NVARCHAR(8),
         AmountToPay DECIMAL(18, 2) NULL,
         CODAmount DECIMAL(18, 2) NULL,
-        ReturnRates DECIMAL(18, 2) NULL,
-		TypePayment NVARCHAR(10)
+        ReturnRates DECIMAL(18, 2) NULL
     );
 
     CREATE NONCLUSTERED INDEX IX_PPT_GNS ON #PendingPaymentTemp (GuideSerie,GuideNumber);
@@ -386,8 +385,7 @@ BEGIN
 		CurrencyPriceSymbol,
         AmountToPay,
         CODAmount,
-        ReturnRates,
-		TypePayment
+        ReturnRates
     )
     EXEC DeliveryBackOffice.dbo.spws_get_guide_pending_payment @InGuides = @InGuidesP,
                                                                @InTime = @InTimeP,
@@ -505,12 +503,40 @@ BEGIN
            (ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) Pieces,
            IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType,
            ppt.CurrencyPriceSymbol,
-		   ppt.TypePayment
+		     IIF(ISNULL(pyt.ShipmentCompleted, 0) = 0,
+				'PENDIENTE',
+				(ISNULL(
+					CONVERT(
+								VARCHAR,
+								CASE
+									WHEN pyt.TypeofInOutMoneyId = 1 THEN
+										UPPER(cpt.PayTypeName)
+									WHEN pyt.TypeofInOutMoneyId = 2 THEN
+										UPPER(cpt.PayTypeName)
+									WHEN pyt.TypeofInOutMoneyId = 8 THEN
+										UPPER('credito')
+									ELSE
+										CASE
+											WHEN ppt.IsCollect = 1 THEN
+												'COLLECT'
+											ELSE
+												'CONTADO'
+										END
+								END
+							),
+					'N/A'
+				)
+				)) AS TypePayment
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON ppt.GuideSerie = do.Guide_Serie
                AND ppt.GuideNumber = do.Guide_Number
+        LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH (NOLOCK)
+            ON pyt.GuideSerie = ppt.GuideSerie
+               AND pyt.GuideNumber = ppt.GuideNumber
+		LEFT JOIN [dbo].[CatPaymentType] cpt WITH(NOLOCK)
+			ON (cpt.PayTypeId = pyt.PayTypeId)
    WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry;
 
     CREATE NONCLUSTERED INDEX IX_PPTID_ID ON #PendingPaymentTempId ([Id]);
