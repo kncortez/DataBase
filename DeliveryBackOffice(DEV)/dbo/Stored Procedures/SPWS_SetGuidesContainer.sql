@@ -45,7 +45,7 @@ BEGIN
             FROM #Guides G
             CROSS APPLY (
                 SELECT TOP 1 Guide_Serie, Guide_Number, IdCustomer
-                FROM DeliveryOrder O
+                FROM DeliveryOrder O WITH(NOLOCK)
                 WHERE O.IdCustomer = G.IdCustomer
                 AND O.Ticket_Number = G.TicketNumber
                 ORDER BY O.DateCreated DESC
@@ -59,10 +59,9 @@ BEGIN
             FROM #Guides G
             CROSS APPLY (
                 SELECT TOP 1 Ticket_Number, StatusOrderId, IdCustomer
-                FROM DeliveryOrder O
+                FROM DeliveryOrder O WITH(NOLOCK)
                 WHERE O.Guide_Serie = G.GuideSerie
                 AND O.Guide_Number = G.GuideNumber
-                ORDER BY DateCreated DESC
             ) O;
             
             -- Valida que las guías correspondan al cliente y se encuentren en el estado correcto
