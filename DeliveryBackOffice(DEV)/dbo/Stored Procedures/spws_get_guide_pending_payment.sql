@@ -91,7 +91,7 @@ BEGIN
         DROP TABLE #RevalueGuides; */
 
 PRINT '************************************************************************************* INSERT SPLIT'
-	
+
     --INSERT INTO @listGuidesBrain
     --(
     --    ItemSerie,
@@ -149,6 +149,30 @@ PRINT '*************************************************************************
 			, ord20.[CurrencyPrice_CODSymbol]
 			, ord20.[CurrencyPriceCodeISO]   
 			, ord20.[CurrencyPriceSymbol]
+			, IIF(ISNULL(pyt.ShipmentCompleted, 0) = 0,
+				'PENDIENTE',
+				(ISNULL(
+						CONVERT(
+									VARCHAR,
+									CASE
+										WHEN pyt.TypeofInOutMoneyId = 1 THEN
+											UPPER(cpt.PayTypeName)
+										WHEN pyt.TypeofInOutMoneyId = 2 THEN
+											UPPER(cpt.PayTypeName)
+										WHEN pyt.TypeofInOutMoneyId = 8 THEN
+											UPPER('credito')
+										ELSE
+											CASE
+												WHEN ord20.IsCollect = 1 THEN
+													'COLLECT'
+												ELSE
+													'CONTADO'
+											END
+									END
+								),
+						'N/A'
+					)
+				)) AS TypePayment
     INTO #TempPrice
     FROM #listGuidesBrain lg WITH(NOLOCK)
 		OUTER APPLY
@@ -252,6 +276,8 @@ PRINT '*************************************************************************
         LEFT JOIN dbo.RateHeader rhd WITH (NOLOCK)
             ON rhd.RheDefault = 'true'
                AND cdp.RowStatus = 1
+		LEFT JOIN [dbo].[CatPaymentType] cpt WITH(NOLOCK)
+			ON (cpt.PayTypeId = pyt.PayTypeId)
     WHERE --rc.RbcCodeOfReference IS NULL
          ISNULL(rcv.RbcRowStatus,rc.RbcRowStatus) = 1
          --AND IIF(ord20.SenderCountryId IS NULL, 'GT',ord20.SenderCountryId) = @IdCountry
@@ -355,6 +381,7 @@ PRINT '*************************************************************************
                            0
                    END
            END [ReturnRate]
+		   , tp.TypePayment
     FROM #TempPrice tp
     ORDER BY tp.IsCustomer,
              tp.GuideNumber
