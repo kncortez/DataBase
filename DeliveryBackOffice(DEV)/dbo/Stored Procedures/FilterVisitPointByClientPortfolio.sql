@@ -128,6 +128,7 @@ BEGIN
                             '"IsTDA":"' + CASE WHEN dsc.TDA = 1 THEN 'TRUE' ELSE 'FALSE' END+ '",' +
                             '"HasSDD":"' + CASE WHEN dsc.SDD = 1 THEN 'TRUE' ELSE 'FALSE' END+ '",' +
 							'"Hub":"' + ISNULL(dsc.Hub,'') + '",' +
+							'"IdCityPlace": ' + ISNULL(CONVERT(VARCHAR, SUB.IdCityPlace),'0') + ' ,' +
 														'"IdVisitPointByClientPortfolio":"' +   isnull( convert(varchar, SUB.VisitPointByClientPortfolioId) , ' ')  
 														+'"}'
 													 FROM UserAddress SUB with (nolock)
