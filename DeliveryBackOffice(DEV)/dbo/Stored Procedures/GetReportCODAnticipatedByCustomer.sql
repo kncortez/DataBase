@@ -70,8 +70,8 @@ BEGIN
                           ON cdcod.GuideNumber = acd.GuideNumber
                          AND cdcod.GuideSerie = acd.GuideSerie
                          AND cdcod.CatConceptCODId = 2
-                 WHERE acd.DateCreated >= @startDate
-                   AND acd.DateCreated <= @endDate
+                 WHERE CAST(acd.DateCreated AS DATE) >= @startDate
+                   AND CAST(acd.DateCreated AS DATE) <= @endDate
                    AND do.SenderCountryId = @IdCountry
                  ORDER BY ach.CustomerId DESC, ach.PortfolioId DESC, acd.GuideSerie DESC, acd.GuideNumber DESC
 
