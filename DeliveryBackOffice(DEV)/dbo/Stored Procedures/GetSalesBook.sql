@@ -59,6 +59,7 @@ BEGIN
         FROM invoiceDetail id         WITH (NOLOCK)
         LEFT JOIN CatArticleSAP cas   WITH (NOLOCK)
             ON id.SAPCode = cas.SAPCode
+            AND cas.IdCountry = @IdCountry
         where id.dti_fk_header = ih.inv_pk_id
     ) dt
     OUTER APPLY --generación de datos subtipo
