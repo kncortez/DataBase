@@ -35,13 +35,17 @@ BEGIN
 	UPDATE  DeliveryBackOffice.dbo.AnticipatedCODDetail
 	SET     AgaintsBalancePaid = 0,
 	        IsAgaintsBalancePaid = 0,
-	        BalanceStatus = 'PAGADO'
+	        BalanceStatus = 'PAGADO',
+			TokenUpdated = @Token,
+			DateUpdated = GETDATE()
 	WHERE   GuideSerie = @GuideSerie
 	AND	    GuideNumber = @GuideNumber
 
 	-- SE ACTUALIZA EL SALDO EN CONTRA DE LA CUENTA DEL CLIENTE SOBRE LA GUIA REVERTIDA
-	UPDATE DeliveryBackOffice.dbo.AnticipatedCODHeader
-	SET AgaintsBalance = AgaintsBalance - @AgaintsBalanceRestore
-	WHERE IdAnticipatedCODHeader = @AnticipatedCODHeaderId
+	UPDATE  DeliveryBackOffice.dbo.AnticipatedCODHeader
+	SET	    AgaintsBalance = AgaintsBalance - @AgaintsBalanceRestore,
+	        TokenUpdated = @Token,
+	        DateUpdated = GETDATE()
+	WHERE   IdAnticipatedCODHeader = @AnticipatedCODHeaderId
 
 END;
