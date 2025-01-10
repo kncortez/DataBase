@@ -26,22 +26,22 @@ BEGIN
                    ach.PortfolioId AS [PortfolioId],
                    cdcod.Amount AS [AnticipatedCOD],
                    cdcod.ComisionCODAnticipated AS [AnticipatedCODComission],
-                   do.Collect_OnDelivery AS [AmountCOD],
+                   acd.CollectOnDelivery AS [AmountCOD],
                    cdcod.Commission AS [Comission],
                    do.PriceShippment AS [Delivery],
                    CASE 
                        WHEN acd.BalanceStatus = 'PENDIENTE'
-                           THEN do.Collect_OnDelivery
+                           THEN acd.CollectOnDelivery
                        ELSE 0.00
                    END AS [CODInProcess],
                    CASE 
                        WHEN acd.BalanceStatus = 'COBRADO'
-                           THEN do.Collect_OnDelivery
+                           THEN acd.CollectOnDelivery
                        ELSE 0.00
                    END AS [CODPayed],
                    CASE
                        WHEN acd.BalanceStatus = 'DEVOLUCION'
-                           THEN do.Collect_OnDelivery
+                           THEN acd.CollectOnDelivery
                        ELSE 0.00
                    END AS [CODToReceivable],
                    0 AS [CODcollected]
