@@ -12,13 +12,41 @@ CREATE PROCEDURE [dbo].[SPWHProductionCredentialsRegistration]
 
 AS
 BEGIN
-	
+
+DECLARE @RandomPassword NVARCHAR(32)
+DECLARE @Characters NVARCHAR(MAX) = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+DECLARE @Length INT = 32
+DECLARE @Index INT = 0
+
+SET @RandomPassword = ''
+
+WHILE @Index < @Length
+BEGIN
+    SET @RandomPassword = @RandomPassword + SUBSTRING(@Characters, ABS(CHECKSUM(NEWID())) % LEN(@Characters) + 1, 1)
+    SET @Index = @Index + 1
+END
+
 	----------EJECUTAR SP PARA CREAR CREDENCIALES------------
+DECLARE @Password NVARCHAR(32) = @RandomPassword
+DECLARE @Key NVARCHAR(32) = 'ClaveSecreta'
+DECLARE @HashedPassword VARBINARY(32)
+
+-- Concatenar contraseña y clave para HMAC
+SET @HashedPassword = HASHBYTES('SHA2_256', @Key + @Password)
+
+DECLARE @Date NVARCHAR(15) = (SELECT 
+								CONCAT(
+									FORMAT(GETDATE(), 'yyyy'),
+									FORMAT(GETDATE(), 'MM'),
+									FORMAT(GETDATE(), 'dd'),
+									FORMAT(GETDATE(), 'hh'),
+									FORMAT(GETDATE(), 'mm')
+								) AS FechaHoraSinSeparadores);
 
 DECLARE @Url nvarchar(100) = ''
 DECLARE @Name nvarchar(100) = (SELECT [Name] FROM [dbo].[Customer] WHERE IdCustomer = @IdCustomer);
-DECLARE @CodApp nvarchar(50) = 'SICOMLAXAPIECOM200920231525'
-DECLARE @KeyEncrypt nvarchar(100) = 'n4IapUw4C49ehE+S6YCvJdpxvnh9XPScSLTCCNcE6epnri1ohPmBhSAkXv7DhJEm'
+DECLARE @CodApp nvarchar(50) = 'SI'+ @Name + 'APICOM' + @Date --PALABRA "SI" + "NOMBRE DE CLIENTE" + "APICOM" + FECHA Y HORA
+DECLARE @KeyEncrypt nvarchar(100) = @HashedPassword--'n4IapUw4C49ehE+S6YCvJdpxvnh9XPScSLTCCNcE6epnri1ohPmBhSAkXv7DhJEm'
 
 
 
