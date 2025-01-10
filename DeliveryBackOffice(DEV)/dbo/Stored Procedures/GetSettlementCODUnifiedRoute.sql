@@ -49,6 +49,9 @@ BEGIN
 		FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
 			INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
 				ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
+			INNER JOIN DBO.DeliveryOrder DOR WITH(NOLOCK)
+				ON DOR.GUIDE_NUMBER=DSD.Guide_Number
+				AND DOR.GUIDE_SERIE=DSD.Guide_Serie
 			LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH(NOLOCK)
 					ON dbs.ID = msi.ManifestNumber
 			LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
@@ -56,6 +59,10 @@ BEGIN
 		WHERE CAST(dbs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
 		  AND dsd.RowStatus = 1   
 		  AND dbs.CATRouteId = @IdRoute
+and Guide_Settlement=1
+and Guide_Delivered=1
+AND ( DOR.IsLastMileReturn=0
+		OR (dor.IsLastMileReturn = 1 AND dor.IsCollect =1))
 		UNION
 		SELECT DISTINCT
 			   dsd.ID_DeliveryOrderBySettlement [id]
@@ -66,6 +73,9 @@ BEGIN
 		FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
 			INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
 				ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
+			INNER JOIN DBO.DeliveryOrder DOR WITH(NOLOCK)
+				ON DOR.GUIDE_NUMBER=DSD.Guide_Number
+				AND DOR.GUIDE_SERIE=DSD.Guide_Serie
 			LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH(NOLOCK)
 					ON dbs.ID = msi.ManifestNumber
 			LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
@@ -76,6 +86,10 @@ BEGIN
 		  AND dbs.Date_Received_COD IS NULL
 		  AND dbs.User_Received_COD IS NULL 
 		  AND CAST(dbs.Date_Dispatched AS DATE) < CAST(GETDATE() AS DATE)  
+		  and Guide_Settlement=1
+		and Guide_Delivered=1
+		AND( DOR.IsLastMileReturn=0
+		OR (dor.IsLastMileReturn = 1 AND dor.IsCollect =1))
 	) AS s
 
 
@@ -88,7 +102,7 @@ BEGIN
            dbs.ID_Courier,
            ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name
     FROM  @GuidesFound gf
-		INNER JOIN	DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs
+		INNER JOIN	DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs WITH(NOLOCK)
 			ON gf.Id = dbs.ID
         INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
             ON sr.ID = dbs.ID_Courier
@@ -123,7 +137,7 @@ BEGIN
             (
                 SELECT TOP 1
                        1
-                FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod
+                FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
                 WHERE dod.Guide_Serie = gf.Guide_Serie
                       AND dod.Guide_Number = gf.Guide_Number
                       AND dod.StatusOrderId = 5
