@@ -301,7 +301,7 @@ BEGIN
             ) AS [ImagePath],
             CASE WHEN dod.StatusOrderId = 5 THEN 
 				ISNULL(
-						(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR)) as VARCHAR(300))),
+						(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR(50))) as VARCHAR(300))),
 						--'http://develop.apicore.forzadelivery.io/Comprobantes/Comprobante_FD9561473.jpg',
 						''
 					  )

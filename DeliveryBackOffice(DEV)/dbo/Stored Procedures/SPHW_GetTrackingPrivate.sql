@@ -235,8 +235,7 @@ BEGIN TRY
 		WHERE ImagePath IS NOT NULL		
 		
 		SELECT c.IsVoucherRequired,
-				Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR)) as VARCHAR(300)) AS [ScannedVoucherImageUrl]
-							--ISNULL('https://tracking.forzadelivery.com/DocImages/GT.DELIVERYZ12/Copia1/V291/17088433.jpg',
+				Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) as VARCHAR(300)) AS [ScannedVoucherImageUrl]
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH(NOLOCK) 
 				ON do.IdCustomer = c.IdCustomer
