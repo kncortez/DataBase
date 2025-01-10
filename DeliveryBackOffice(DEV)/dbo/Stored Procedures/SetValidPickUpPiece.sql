@@ -3,11 +3,17 @@
 -- Create date: <2024-10-15>
 -- Description:	<Se validan las piezas que se van a procesar para la nueva APP de escaneo>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<2025-01-09>
+-- Description:	<Contenerizar guias - Se agrega parametro que indica numero de referencia y numero de contenedor>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetValidPickUpPiece]
     @InGuides NVARCHAR(MAX) = 'FD9559566-1,FD9559566-2',
     @IdPickup INT = NULL,
     @Token NVARCHAR(200) = NULL,
-    @IdCountry NVARCHAR(2) = 'GT'
+    @IdCountry NVARCHAR(2) = 'GT',
+	@Container NVARCHAR(150) = NULL,
+	@Reference NVARCHAR(150) = NULL
 AS
 BEGIN
     BEGIN TRY
@@ -19,7 +25,8 @@ BEGIN
                 @GuideNumber INT,
                 @Valid INT,
                 @ValidCountry INT,
-                @GuideSerie NVARCHAR(2) = 'FD'
+                @GuideSerie NVARCHAR(2) = 'FD',
+				@InContainerGuides NVARCHAR(MAX) = ''
 
         IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
             DROP TABLE #Temp;
@@ -41,9 +48,25 @@ BEGIN
                 Guide VARCHAR(255),
                 Message VARCHAR(255),
             );
+			CREATE TABLE #TempContainerGuides (
+				GuideSerie NVARCHAR(2),
+				GuideNumber INT,
+				NoPiece INT
+			);
 
 			CREATE NONCLUSTERED INDEX tempTemp ON #Temp (Guide);
+			CREATE NONCLUSTERED INDEX tempContainerGuide ON #TempContainerGuides (GuideSerie, GuideNumber);
 
+			--BUSCAR GUIAS POR REFERENCIA  Y POR CONTENEDOR
+			INSERT INTO #TempContainerGuides
+			EXEC GetGuidesByContainerByReference @Container, @Reference, @IdCountry;
+
+			SET @InContainerGuides = (SELECT STRING_AGG(CONCAT(GuideSerie, GuideNumber, '-', NoPiece), ',')
+					FROM #TempContainerGuides);
+			SET @InGuides = CONCAT(@InGuides,',',@InContainerGuides)			
+			SET @InGuides = IIF(@InContainerGuides<>'',@InGuides,LEFT(@InGuides, LEN(@InGuides) - 1))
+			SET @InGuides = IIF(LEFT(@InGuides,1)<>',',@InGuides, SUBSTRING(@InGuides, 2, LEN(@InGuides)) )
+			--
             INSERT INTO #Temp
             (
                 Guide,
@@ -88,6 +111,26 @@ BEGIN
 						ELSE CAST(SUBSTRING(Item, 3, CHARINDEX('-', Item) - 3) AS INT)
 					END AS ItemNumber
 				FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+
+				--VALIDAR SI ES CONTENEDOR
+				IF @Container IS NOT NULL
+				BEGIN
+					IF EXISTS (SELECT 1 FROM #TempContainerGuides)
+					BEGIN						
+						SELECT 
+							200 AS [StatusCode],
+							'Contenedor válido, listo para procesar' AS [Message],
+							1 AS [NoPiece]
+						RETURN
+					END
+					ELSE
+					BEGIN
+						SELECT 
+							0 AS [StatusCode],
+							'Contenedor no existe' AS [Message]
+						RETURN
+					END
+				END
 
                 --Validamos la cantidad de piezas que debe de escanear de 1 guia
 
