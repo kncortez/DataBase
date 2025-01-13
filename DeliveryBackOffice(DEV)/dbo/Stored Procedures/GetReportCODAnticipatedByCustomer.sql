@@ -73,6 +73,7 @@ BEGIN
                  WHERE CAST(acd.DateCreated AS DATE) >= @startDate
                    AND CAST(acd.DateCreated AS DATE) <= @endDate
                    AND do.SenderCountryId = @IdCountry
+			       AND acd.RowStatus = 1
                  ORDER BY ach.CustomerId DESC, ach.PortfolioId DESC, acd.GuideSerie DESC, acd.GuideNumber DESC
 
         IF @TypeClient = 1
