@@ -1793,6 +1793,17 @@
     <Build Include="dbo\Functions\GetPhone.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
+    <Build Include="dbo\Tables\VisitPointClient20230217.sql" />
+    <Build Include="dbo\Tables\DumpServiceCoverageLogGT.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_ValidatePhone.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_ValidateFlags.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_UpdateLatLongAddress.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_SetSettlementIncidenceValidate.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetSettlementIncidenceValidate.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_getGuidesFromReferenceNumber.sql" />
+    <Build Include="dbo\Stored Procedures\spg_get_RouteLastMile.sql" />
+    <Build Include="dbo\Stored Procedures\GetSettlementCODUnifiedRoute.sql" />
+    <Build Include="dbo\Stored Procedures\GetQualityControlData_N.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
