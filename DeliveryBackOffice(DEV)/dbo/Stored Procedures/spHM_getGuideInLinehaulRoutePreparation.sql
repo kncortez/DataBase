@@ -61,8 +61,6 @@ BEGIN
 		ON		[LRP].[CatLinehaulStatusId] = [CLS].[IdCatLinehaulStatus]
 	INNER JOIN	[dbo].[Container] C WITH (NOLOCK)
 		ON		[LRPC].[ContainerId] = [C].[IdContainer]
-		AND		[LRPC].[CatLinehaulStatusId] != @LIQUIDATED_STATUS_ID
-		AND		[LRPC].[CatLinehaulStatusId] != @STOPOVER_STATUS_ID
 	INNER JOIN	[dbo].[CatTypeContainer] CTP WITH (NOLOCK)
 		ON		[C].[CatTypeContainerId] = [CTP].[IdCatTypeContainer]
 	INNER JOIN	[dbo].[HubLogistics] HL WITH (NOLOCK)
@@ -70,5 +68,7 @@ BEGIN
 	WHERE		[LRPCD].[GuideSerie] = @GuideSerie
 		AND		[LRPCD].[GuideNumber] = @GuideNumber
 		AND		[LRPCD].[IsOpenProcess] = 0
-		AND		[LRPCD].[RowStatus] = 1;
+		AND		[LRPCD].[RowStatus] = 1
+		AND		[LRPC].[CatLinehaulStatusId] != @LIQUIDATED_STATUS_ID
+		AND		[LRPC].[CatLinehaulStatusId] != @STOPOVER_STATUS_ID
 END

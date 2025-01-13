@@ -30,7 +30,7 @@ BEGIN
 			[LRP].[GuideQuantity],
 			[LRP].[DryPieceQuantity],
 			[LRP].[ColdPieceQuantity]
-	FROM	[dbo].[LinehaulRoutePreparation] LRP
+	FROM	[dbo].[LinehaulRoutePreparation] LRP WITH(NOLOCK)
 	WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
 		AND [LRP].[CatLinehaulStatusId] = (	SELECT	[CLS].[IdCatLinehaulStatus]
 											FROM	[dbo].[CatLinehaulStatus] CLS
