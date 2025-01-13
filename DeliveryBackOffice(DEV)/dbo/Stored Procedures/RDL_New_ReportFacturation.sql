@@ -106,6 +106,7 @@ BEGIN
 									   CTM.SAPCardCode 'Código SAP', --SI
 									   COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '') 'Remitente', --SI
 									   COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '') 'Destinatario', --SI
+									   DOR.ReceiverCountryId 'País Destino', 
 									   DOR.Receiver_Department 'Departamento Destino',--SI
 									   DOR.Receiver_Town 'Municipio Destino', --SI
 									   DOR.DateCreated 'Fecha de solicitud del servicio', --SI
