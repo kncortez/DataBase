@@ -67,7 +67,8 @@ BEGIN
 		UPDATE res
         SET res.UstStatus ='ACTIVE'
 		, res.UstOperationDate = GETDATE()
-		, res.UstAccessRetries =0
+		, res.UstAccessRetries =10
+		, res.UstRetries =0
         FROM dbo.InternalUser           it
             INNER JOIN dbo.RegisterUser rg
                 ON rg.UsrIdUser = it.RegisterUserID
