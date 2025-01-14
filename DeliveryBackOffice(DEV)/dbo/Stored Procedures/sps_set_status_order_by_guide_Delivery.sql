@@ -5,6 +5,10 @@
 -- Create date: <2021-05-14>
 -- Description:	<Se crea un servicio de entrega>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date:<18-12-2024>
+-- Description:	<Se realizan optimizaciones recomendadas por DBA>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide_Delivery]
 		@Guide_Serie AS VARCHAR(2), -- same guide for all numbers provided
 		@Guide_Number AS VARCHAR(MAX), -- a list of guides separated by comma
