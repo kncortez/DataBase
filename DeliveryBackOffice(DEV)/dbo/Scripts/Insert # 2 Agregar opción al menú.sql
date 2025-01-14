@@ -1,0 +1,4 @@
+
+INSERT [dbo].[CatModule] ( [ModName], [ModIdModuleParent], [ModPath], [ModDescription], [ModOrder], [ModMetadata], [ModVisible], [ModRowStatus], [ModTokenCreated], [ModDateCreated], [ModTokenUpdated], [ModDateUpdated], [ModGroup]) VALUES ( N'Integraciones', 99, N'/individual/Integraciones', N'Nuevo módulo individual de Integraciones', 1, N'bi bi-check2-circle', 1, 1, N'SYS-evasquez', CAST(N'2024-12-12T15:15:55.900' AS DateTime), NULL, NULL, 0)
+
+INSERT [dbo].[CatModule] ( [ModName], [ModIdModuleParent], [ModPath], [ModDescription], [ModOrder], [ModMetadata], [ModVisible], [ModRowStatus], [ModTokenCreated], [ModDateCreated], [ModTokenUpdated], [ModDateUpdated], [ModGroup]) VALUES ( N'Integraciones', 63, N'/Integraciones', N'Integraciones', 2, N'file.png', 1, 1, N'SYS-MESPINOZA', CAST(N'2022-05-24T22:39:46.200' AS DateTime), NULL, NULL, 0)
