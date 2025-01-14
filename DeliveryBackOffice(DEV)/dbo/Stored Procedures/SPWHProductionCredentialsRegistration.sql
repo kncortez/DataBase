@@ -44,9 +44,24 @@ DECLARE @Date NVARCHAR(15) = (SELECT
 								) AS FechaHoraSinSeparadores);
 
 DECLARE @Url nvarchar(100) = ''
-DECLARE @Name nvarchar(100) = (SELECT [Name] FROM [dbo].[Customer] WHERE IdCustomer = @IdCustomer);
-DECLARE @CodApp nvarchar(50) = 'SI'+ @Name + 'APICOM' + @Date --PALABRA "SI" + "NOMBRE DE CLIENTE" + "APICOM" + FECHA Y HORA
+DECLARE @Name nvarchar(100) = (SELECT TOP 1 [Name] FROM [dbo].[Customer] WIY WHERE IdCustomer = @IdCustomer);
+DECLARE @NameAbrev nvarchar(100) = (SELECT TOP 1 [Abbreviation] FROM [dbo].[Customer] WHERE IdCustomer = @IdCustomer);
+DECLARE @ClientEmail nvarchar(100) = (SELECT TOP 1 [ContactEmail] FROM [dbo].[Customer] WHERE IdCustomer = @IdCustomer);
+DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='SupportEmailByCountry' AND					IdCountry=@IdCountry)
+DECLARE @CodeOfReference INT =(
+                                SELECT TOP 1 CodeOfReference FROM dbo.VisitPointClient
+                                                                        WHERE CustomerId=@IdCustomer)
+
+DECLARE @IdAccount INT = (SELECT TOP 1 AccIdAccount FROM dbo.Account
+                                                       WHERE IdCustomer= @IdCustomer)
+
+SET @NameAbrev = LTRIM(RTRIM(@NameAbrev)); -- Elimina espacios al principio y al final
+SET @NameAbrev = REPLACE(@NameAbrev, '.', ''); -- Elimina el carácter especial '.'
+SET @NameAbrev = REPLACE(@NameAbrev, ' ', ''); -- Elimina los espacios internos
+
+DECLARE @CodApp nvarchar(50) = 'SI'+ @NameAbrev + 'APICOM' + @Date --PALABRA "SI" + "NOMBRE DE CLIENTE" + "APICOM" + FECHA Y HORA
 DECLARE @KeyEncrypt nvarchar(100) = @HashedPassword--'n4IapUw4C49ehE+S6YCvJdpxvnh9XPScSLTCCNcE6epnri1ohPmBhSAkXv7DhJEm'
+
 
 
 
@@ -97,8 +112,17 @@ DECLARE @KeyEncrypt nvarchar(100) = @HashedPassword--'n4IapUw4C49ehE+S6YCvJdpxvn
 							  @Name AS 'EcomerceName',
 							  @Name AS 'EcommerceDescription',
 							  @CodApp AS 'UserKey',
-							  @KeyEncrypt AS 'SecretKey'
+							  @KeyEncrypt AS 'SecretKey',
+							  'https://sandbox.apicore.forzadelivery.io:40467/ecommerce/GetListTownshipByHeaderCode' AS 'Endpoint',
+							  @ClientEmail AS 'UsrEmail',
+							  @SoportEmail AS 'SoportEmail',
+							  CAST(@CodeOfReference AS nvarchar) AS 'CodeOfReference',
+							  CAST(@IdAccount AS nvarchar) AS 'IdAccount'
+
 
 END
 GO
+
+
+
 
