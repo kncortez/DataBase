@@ -141,3 +141,8 @@ VALUES ( N'SoportEmail', N'Correo de soporte de integración GT', N'eduardo.lope
 INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) 
 VALUES ( N'SoportEmail', N'Correo de soporte de integración HN', N'ulises.caceres@forzadelivery.com', 1, CAST(N'2024-12-13T00:00:00.000' AS DateTime), N'HN', NULL)
 
+
+INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) 
+VALUES ( N'APIUrlQA', N'Dirección base para API Forza Delivery QA', N'https://sandbox.apicore.forzadelivery.io:40467/', 1, CAST(N'2025-01-14T23:06:31.357' AS DateTime), N'GT', NULL)
+
+

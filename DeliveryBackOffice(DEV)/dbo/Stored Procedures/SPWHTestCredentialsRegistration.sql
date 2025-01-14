@@ -29,6 +29,7 @@ BEGIN
     DECLARE @IdAccount INT = (SELECT TOP 1 AccIdAccount FROM dbo.Account WITH (NOLOCK)
                                                        WHERE IdCustomer= @IdCustomer)
 
+    DECLARE @Url nvarchar(100) = (SELECT TOP 1 [Value] FROM dbo.ConfigParams WHERE [Name]='APIUrlQA')
 
 	BEGIN TRANSACTION
 	BEGIN TRY
@@ -75,7 +76,7 @@ BEGIN
 							  @EcommerceDescription AS 'EcommerceDescription',
 							  @UserKey AS 'UserKey',
 							  @SecretKey AS 'SecretKey',
-							  'https://sandbox.apicore.forzadelivery.io:40467/ecommerce/GetListTownshipByHeaderCode' AS 'Endpoint',
+							  @Url AS 'Endpoint',
 							  @ClientEmail AS 'UsrEmail',
 							  @SoportEmail AS 'SoportEmail',
 							  CAST(@CodeOfReference AS nvarchar) AS 'CodeOfReference',
@@ -91,7 +92,7 @@ BEGIN
 							  @EcommerceDescription AS 'EcommerceDescription',
 							  @UserKey AS 'UserKey',
 							  @SecretKey AS 'SecretKey',
-							  'https://sandbox.apicore.forzadelivery.io:40467/ecommerce/GetListTownshipByHeaderCode' AS 'Endpoint',
+							  @Url AS 'Endpoint',
 							  @ClientEmail AS 'UsrEmail',
 							  @SoportEmail AS 'SoportEmail',
 							  CAST(@CodeOfReference AS nvarchar) AS 'CodeOfReference',
