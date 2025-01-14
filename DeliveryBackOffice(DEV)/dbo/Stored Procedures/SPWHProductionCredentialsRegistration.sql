@@ -1,4 +1,4 @@
-
+﻿
 -- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2024-12-12>
@@ -44,15 +44,15 @@ DECLARE @Date NVARCHAR(15) = (SELECT
 								) AS FechaHoraSinSeparadores);
 
 DECLARE @Url nvarchar(100) = ''
-DECLARE @Name nvarchar(100) = (SELECT TOP 1 [Name] FROM [dbo].[Customer] WIY WHERE IdCustomer = @IdCustomer);
-DECLARE @NameAbrev nvarchar(100) = (SELECT TOP 1 [Abbreviation] FROM [dbo].[Customer] WHERE IdCustomer = @IdCustomer);
-DECLARE @ClientEmail nvarchar(100) = (SELECT TOP 1 [ContactEmail] FROM [dbo].[Customer] WHERE IdCustomer = @IdCustomer);
-DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='SupportEmailByCountry' AND					IdCountry=@IdCountry)
+DECLARE @Name nvarchar(100) = (SELECT TOP 1 [Name] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
+DECLARE @NameAbrev nvarchar(100) = (SELECT TOP 1 [Abbreviation] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
+DECLARE @ClientEmail nvarchar(100) = (SELECT TOP 1 [ContactEmail] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
+DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WITH (NOLOCK) WHERE [Name]='SupportEmailByCountry' AND					IdCountry=@IdCountry)
 DECLARE @CodeOfReference INT =(
-                                SELECT TOP 1 CodeOfReference FROM dbo.VisitPointClient
+                                SELECT TOP 1 CodeOfReference FROM dbo.VisitPointClient WITH (NOLOCK)
                                                                         WHERE CustomerId=@IdCustomer)
 
-DECLARE @IdAccount INT = (SELECT TOP 1 AccIdAccount FROM dbo.Account
+DECLARE @IdAccount INT = (SELECT TOP 1 AccIdAccount FROM dbo.Account WITH (NOLOCK)
                                                        WHERE IdCustomer= @IdCustomer)
 
 SET @NameAbrev = LTRIM(RTRIM(@NameAbrev)); -- Elimina espacios al principio y al final

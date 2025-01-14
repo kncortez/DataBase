@@ -20,13 +20,13 @@ BEGIN
     DECLARE @UserKey NVARCHAR(200)  =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='UserKey');
     DECLARE @SecretKey NVARCHAR(200)  =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='SecretKeyQA');
 
-	DECLARE @ClientEmail nvarchar(100) = (SELECT TOP 1 [ContactEmail] FROM [dbo].[Customer] WHERE IdCustomer = @IdCustomer);
-    DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='SupportEmailByCountry' AND					IdCountry=@IdCountry)
+	DECLARE @ClientEmail nvarchar(100) = (SELECT TOP 1 [ContactEmail] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
+    DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WITH (NOLOCK) WHERE [Name]='SupportEmailByCountry' AND					IdCountry=@IdCountry)
     DECLARE @CodeOfReference INT =(
-                                SELECT TOP 1 CodeOfReference FROM dbo.VisitPointClient
+                                SELECT TOP 1 CodeOfReference FROM dbo.VisitPointClient WITH (NOLOCK)
                                                                         WHERE CustomerId=@IdCustomer)
 
-    DECLARE @IdAccount INT = (SELECT TOP 1 AccIdAccount FROM dbo.Account
+    DECLARE @IdAccount INT = (SELECT TOP 1 AccIdAccount FROM dbo.Account WITH (NOLOCK)
                                                        WHERE IdCustomer= @IdCustomer)
 
 
