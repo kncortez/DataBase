@@ -8,6 +8,10 @@
 -- Update date: <2023-03-02>
 -- Description:	<Validation for visit point status>
 -- =============================================
+-- Author:		<Aylinne Recinos>
+-- Update date: <2025-01-15>
+-- Description:	<Modificacion en consulta de país de la cuenta>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_get_login]
     -- Add the parameters for the stored procedure here
@@ -32,7 +36,13 @@ BEGIN
     DECLARE @CODPercentage NVARCHAR(10);
     DECLARE @IdAccount INT;
 
-    
+        
+     SELECT  @CountryId = ISNULL(pe.PerNationality, 'GT')
+        FROM RegisterUser   us WITH (NOLOCK)  
+			INNER JOIN [dbo].Person               pe WITH (NOLOCK)  
+				ON pe.PerIdPerson = us.UsrIdPerson  
+        WHERE UsrEmail = @Username   
+
      DECLARE @CountryIdOrigin NVARCHAR(3)=(SELECT TOP 1  
 	                                            CASE 
 												    WHEN LEFT(UsrCurrency,2)='HN' 
