@@ -15,7 +15,7 @@ BEGIN
 
 		SET NOCOUNT ON;
 
-	DECLARE @EcomerceName NVARCHAR(200) =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='EcomerceName');
+	DECLARE @EcomerceName NVARCHAR(200) =(SELECT TOP 1 [Name] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
     DECLARE @EcommerceDescription NVARCHAR(200) =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='EcommerceDescription');
     DECLARE @UserKey NVARCHAR(200)  =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='UserKey');
     DECLARE @SecretKey NVARCHAR(200)  =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='SecretKeyQA');
