@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<Aylinne Recinos>
 -- Create date: <2024-28-10>
 -- Description:	<Método para consultar datos del cliente (sin menu)>
