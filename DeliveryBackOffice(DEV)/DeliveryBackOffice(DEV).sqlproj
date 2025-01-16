@@ -1808,6 +1808,7 @@
     <Build Include="dbo\Stored Procedures\sphw_generate_batch_cod_anticipated.sql" />
     <Build Include="dbo\Stored Procedures\spws_getCustomersReportAnticipatedCOD.sql" />
     <Build Include="dbo\Stored Procedures\spws_revertDevolutionAgainstBalance.sql" />
+    <Build Include="dbo\Stored Procedures\HM_GetGuideAtContainer.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
