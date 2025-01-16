@@ -1,34 +1,36 @@
--- =============================================
+﻿-- =============================================
 -- Author:      <Oscar, Rodriguez>
 -- Create date: <2024-11-27>
 -- Description: < Se creo tabla para manejo de historial de validaciones por guia de COD Anticipado >
 -- =============================================
-CREATE TABLE dbo.AnticipatedCODDetail(
-IdAnticipatedCODDetail		INT IDENTITY (1, 1) NOT NULL,
-AnticipatedCODHeaderId		INT					NOT NULL,
-GuideSerie					NVARCHAR (2)        NULL,
-GuideNumber					INT				    NOT NULL,
-IsOldest					INT					NOT NULL,
-ReturnPercent				DECIMAL(18,2)		NOT NULL,
-MinGuidesPerMonth			INT					NOT NULL,
-DailyAmount					DECIMAL(18,2)		NOT NULL,
-IsCODAnticipatedValid		INT					NOT NULL,
-CollectOnDelivery			DECIMAL(18,2)		NOT NULL,
-IsAgaintsBalancePaid		INT					NULL,
-AgaintsBalanceAmount		DECIMAL(18,2)		NULL,
-AgaintsBalancePaid			DECIMAL(18,2)		NULL,
-AnticipatedCODComissionId	INT					NULL,
-BalanceStatus				NVARCHAR(50)		NOT NULL,
-RowStatus					BIT					NOT NULL,
-TokenCreated				NVARCHAR(50)		NOT NULL,
-DateCreated					DATETIME			NOT NULL,
-TokenUpdated				NVARCHAR(50)		NULL,
-DateUpdated					DATETIME			NULL,
-PRIMARY KEY CLUSTERED (IdAnticipatedCODDetail ASC),
-CONSTRAINT [FKGuideSerie_AnticipatedCODDetail] FOREIGN KEY (GuideSerie, GuideNumber) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-CONSTRAINT [FKAnticipatedCODHeaderId_AnticipatedCODDetail] FOREIGN KEY (AnticipatedCODHeaderId) REFERENCES dbo.AnticipatedCODHeader (IdAnticipatedCODHeader),
-CONSTRAINT [FKAnticipatedCODComissionId_AnticipatedCODDetail] FOREIGN KEY (AnticipatedCODComissionId) REFERENCES dbo.AnticipatedCODComission (IdAnticipatedCodComission)
+CREATE TABLE [dbo].[AnticipatedCODDetail] (
+    [IdAnticipatedCODDetail]    INT             IDENTITY (1, 1) NOT NULL,
+    [AnticipatedCODHeaderId]    INT             NOT NULL,
+    [GuideSerie]                NVARCHAR (2)    NULL,
+    [GuideNumber]               INT             NOT NULL,
+    [IsOldest]                  INT             NOT NULL,
+    [ReturnPercent]             DECIMAL (18, 2) NOT NULL,
+    [MinGuidesPerMonth]         INT             NOT NULL,
+    [DailyAmount]               DECIMAL (18, 2) NOT NULL,
+    [IsCODAnticipatedValid]     INT             NOT NULL,
+    [CollectOnDelivery]         DECIMAL (18, 2) NOT NULL,
+    [AnticipatedCODComissionId] INT             NULL,
+    [BalanceStatus]             NVARCHAR (50)   NOT NULL,
+    [RowStatus]                 BIT             NOT NULL,
+    [TokenCreated]              NVARCHAR (50)   NOT NULL,
+    [DateCreated]               DATETIME        NOT NULL,
+    [TokenUpdated]              NVARCHAR (50)   NULL,
+    [DateUpdated]               DATETIME        NULL,
+    [IsAgaintsBalancePaid]      INT             NULL,
+    [AgaintsBalanceAmount]      DECIMAL (18, 2) NULL,
+    [AgaintsBalancePaid]        DECIMAL (18, 2) NULL,
+    PRIMARY KEY CLUSTERED ([IdAnticipatedCODDetail] ASC),
+    CONSTRAINT [FKAnticipatedCODComissionId_AnticipatedCODDetail] FOREIGN KEY ([AnticipatedCODComissionId]) REFERENCES [dbo].[AnticipatedCODComission] ([IdAnticipatedCodComission]),
+    CONSTRAINT [FKAnticipatedCODHeaderId_AnticipatedCODDetail] FOREIGN KEY ([AnticipatedCODHeaderId]) REFERENCES [dbo].[AnticipatedCODHeader] ([IdAnticipatedCODHeader]),
+    CONSTRAINT [FKGuideSerie_AnticipatedCODDetail] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Llave principal e identificador de la tabla historico COD anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail', @level2type = N'COLUMN', @level2name = N'IdAnticipatedCODDetail';

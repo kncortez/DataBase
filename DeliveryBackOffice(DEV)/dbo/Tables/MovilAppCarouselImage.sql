@@ -1,4 +1,4 @@
--- =============================================
+Ôªø-- =============================================
 -- Author:		<Oscar Rodriguez>
 -- Create date: <2024-11-19>
 -- Description:	<Se creo tabla para manejo de informacion sobre carrousel de imagenes para proyecto Navenik>
@@ -10,7 +10,7 @@ CREATE TABLE [dbo].[MovilAppCarouselImage] (
     [LDImageURL]      NVARCHAR (200) NOT NULL,
     [ImageOrder]      INT            NOT NULL,
     [RowStatus]       BIT            NOT NULL,
-    [IdCountry]		  NVARCHAR (2)	 NULL,
+    [IdCountry]       NVARCHAR (2)   NULL,
     [TokenCreated]    NVARCHAR (50)  NOT NULL,
     [DateCreated]     DATETIME       NOT NULL,
     [TokenUpdated]    NVARCHAR (50)  NULL,
@@ -18,6 +18,8 @@ CREATE TABLE [dbo].[MovilAppCarouselImage] (
     [IdTypeAccount]   INT            NULL,
     CONSTRAINT [PK_MovilAppCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC)
 );
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del atributo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'IdCarouselImage'
@@ -32,7 +34,9 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Imagen en carrousel LD' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'LDImageURL'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Order de apariciÛn de im·genes' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'ImageOrder'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Order de aparici√≥n de im√°genes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MovilAppCarouselImage', @level2type = N'COLUMN', @level2name = N'ImageOrder';
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'RowStatus'
@@ -41,19 +45,28 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador del pais para la imagen' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'IdCountry'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario de creaciÛn' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'TokenCreated'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario de creaci√≥n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MovilAppCarouselImage', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de creaciÛn' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'DateCreated'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creaci√≥n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MovilAppCarouselImage', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario de modificaciÛn' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'TokenUpdated'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario de modificaci√≥n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MovilAppCarouselImage', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de modificaciÛn' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'DateUpdated'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de modificaci√≥n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MovilAppCarouselImage', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de tipo de cuenta de usuario (Individual o Corporativo)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'IdTypeAccount'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Lista de im·genes del carrousel' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Lista de im√°genes del carrousel', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MovilAppCarouselImage';
+

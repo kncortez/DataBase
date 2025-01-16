@@ -67,7 +67,7 @@
     [BillingCut_offDate]      DATE           NULL,
     [NumImgEvidence]          INT            NULL,
     [IsCOD]                   INT            NULL,
-	[IsVoucherRequired]		  INT			 NULL,
+    [IsVoucherRequired]       INT            NULL,
     CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED ([IdCustomer] ASC),
     CONSTRAINT [FK_Customer_CatBankAccountType] FOREIGN KEY ([CODAccountTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
     CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),
@@ -84,6 +84,8 @@
     CONSTRAINT [FK_Customer_DeliveryBank] FOREIGN KEY ([CODAccountBankID]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_Customer_DeliveryCurrency] FOREIGN KEY ([CODCurrencyID]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id])
 );
+
+
 
 
 
@@ -301,13 +303,19 @@ GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Meta de envíos para cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CustomerGoalQuantity'
 GO
 
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de el tiempo en que se requiere la facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatBillingTimeId';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de el tiempo en que se requiere la facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatBillingTimeId';
+
+
 GO
 
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador que indica volumen de facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatBillingVolumeId';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador que indica volumen de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatBillingVolumeId';
+
+
 GO
 
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fechad e corte de facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'BillingCut_offDate';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fechad e corte de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'BillingCut_offDate';
+
+
 GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Almacenar cantidad de imagenes de evidencias permitidas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'NumImgEvidence'
