@@ -1,8 +1,8 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Oscar Rodriguez>
 -- Create date: <2024-10-14>
 -- Description:	<Obtener informacion de todos los puntos de ventas disponibles>
--- nombre, direcci�n, horarios, latitud, longitud
+-- nombre, dirección, horarios, latitud, longitud
 -- =============================================
 
 CREATE PROCEDURE [dbo].[SPMA_GetStoreInformation]

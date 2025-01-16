@@ -3,7 +3,7 @@
 -- Create date: <2024-11-26>
 -- Description: <Se agrego procedimiento para registrar factura para cliente corporativo>
 -- =============================================
-ALTER PROCEDURE [dbo].[sps_RegisterInvoiceForzaCorp]
+CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForzaCorp]
 (
   @VpCodeOfReferences int
  ,@cmp_nit varchar(100)

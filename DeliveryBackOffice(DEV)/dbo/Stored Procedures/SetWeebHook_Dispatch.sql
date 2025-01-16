@@ -151,12 +151,12 @@ BEGIN
 			IF @@RowCount > 0
 			COMMIT TRANSACTION;
             SELECT 1 AS StatusCode,
-                   'Resgistros actualizados' AS Description
+                   'Registros actualizados' AS Description
         END
         ELSE
         BEGIN
             SELECT 0 AS StatusCode,
-                   'Resgistro no encontrado o se encuentra con una incidencia' AS Description
+                   'Registro no encontrado o se encuentra con una incidencia' AS Description
         END
     END TRY
     BEGIN CATCH
