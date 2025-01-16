@@ -3,6 +3,10 @@
 -- Create date: <2022-10-12>
 -- Description:	<Realiza acciones para guías pendientes de liquidar en liquidación de rutas unificadas>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date:<18-11-2024>
+-- Description:	<Se agrega nueva validación IsCompleted>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_SetActionToGuidesPendingSettlement]
 	-- Add the parameters for the stored procedure here
 	@Action TINYINT, --1=entrega, 2=devuelto, 3=traslado, 4=incidencia, 5=extraviado
@@ -65,6 +69,15 @@ BEGIN
 		NoPiece INT,
 		IsDry BIT
 	)
+	IF OBJECT_ID('tempdb.dbo.#InsertedRecordTempT', 'U') IS NOT NULL
+		DROP TABLE #InsertedRecordTempT;
+
+	CREATE TABLE #InsertedRecordTempT (
+		GuideNumber INT,
+		GuideSerie  NVARCHAR(2),
+		IdProcessedGuideCOD INT
+	);
+	CREATE NONCLUSTERED INDEX INDEX_ProcessedGuideCOD_T ON #InsertedRecordTempT (GuideSerie, GuideNumber);
 
 	BEGIN TRANSACTION
 
@@ -336,6 +349,11 @@ BEGIN
 						, Notificated
 						, Token
 						, CustomerID)
+						OUTPUT
+							inserted.GuideSerie,
+							inserted.GuideNumber,
+							inserted.IdProcessedGuideCOD
+						INTO #InsertedRecordTempT
 							VALUES (@GuideSerie, @GuideNumber, @CourierId, GETDATE(), NULL, NULL, @CatModuleId, 0, @Token, @IdCustomer)
 
 					END
@@ -385,6 +403,11 @@ BEGIN
 						, Notificated
 						, Token
 						, CustomerId)
+						OUTPUT
+							inserted.GuideSerie,
+							inserted.GuideNumber,
+							inserted.IdProcessedGuideCOD
+						INTO #InsertedRecordTempT
 							VALUES (@GuideSerie, @GuideNumber, @CourierId, GETDATE(), NULL, NULL, @CatModuleId, 0, @Token, @IdCustomer)
 
 					END
@@ -473,6 +496,11 @@ BEGIN
 						, Notificated
 						, Token
 						, CustomerID)
+						OUTPUT
+							inserted.GuideSerie,
+							inserted.GuideNumber,
+							inserted.IdProcessedGuideCOD
+						INTO #InsertedRecordTempT
 							VALUES (@GuideSerie, @GuideNumber, @CourierId, GETDATE(), NULL, NULL, @CatModuleId, 0, @Token, @IdCustomer)
 
 					END
@@ -522,6 +550,11 @@ BEGIN
 						, Notificated
 						, Token
 						, CustomerId)
+						OUTPUT
+							inserted.GuideSerie,
+							inserted.GuideNumber,
+							inserted.IdProcessedGuideCOD
+						INTO #InsertedRecordTempT
 							VALUES (@GuideSerie, @GuideNumber, @CourierId, GETDATE(), NULL, NULL, @CatModuleId, 0, @Token, @IdCustomer)
 
 					END
@@ -976,7 +1009,18 @@ BEGIN
 		END
 		IF @IsValidOperation = 1
 		BEGIN
-			COMMIT TRANSACTION
+			COMMIT TRANSACTION				
+		
+			UPDATE PG
+			SET IsCompleted = 1
+			FROM DeliveryBackOffice.dbo.ProcessedGuideCOD PG  WITH(NOLOCK)
+			INNER JOIN #InsertedRecordTempT IR
+				ON PG.GuideSerie = IR.GuideSerie
+					AND PG.GuideNumber = IR.GuideNumber
+			WHERE  IR.IdProcessedGuideCOD = PG.IdProcessedGuideCOD;
+
+			IF OBJECT_ID('tempdb.dbo.#InsertedRecordTempT', 'U') IS NOT NULL
+				DROP TABLE #InsertedRecordTempT;
 
 			SELECT
 				1 'StatusCode'
