@@ -30,10 +30,11 @@ END
 DECLARE @Password NVARCHAR(32) = @RandomPassword
 DECLARE @Key NVARCHAR(32) = 'ClaveSecreta'
 DECLARE @HashedPassword VARBINARY(32)
-
+DECLARE @HashedPasswordHex NVARCHAR(MAX)
 -- Concatenar contraseña y clave para HMAC
 SET @HashedPassword = HASHBYTES('SHA2_256', @Key + @Password)
-
+SET @HashedPasswordHex = CONVERT(NVARCHAR(MAX), @HashedPassword, 2)
+select @Password, @HashedPassword,@HashedPasswordHex
 DECLARE @Date NVARCHAR(15) = (SELECT 
 								CONCAT(
 									FORMAT(GETDATE(), 'yyyy'),
@@ -43,11 +44,11 @@ DECLARE @Date NVARCHAR(15) = (SELECT
 									FORMAT(GETDATE(), 'mm')
 								) AS FechaHoraSinSeparadores);
 
-DECLARE @Url nvarchar(100) = (SELECT TOP 1 [Value] FROM dbo.ConfigParams WHERE [Name]='APIUrl')
+DECLARE @Url nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='APIUrl')
 DECLARE @Name nvarchar(100) = (SELECT TOP 1 [Name] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
 DECLARE @NameAbrev nvarchar(100) = (SELECT TOP 1 [Abbreviation] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
 DECLARE @ClientEmail nvarchar(100) = (SELECT TOP 1 [ContactEmail] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
-DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WITH (NOLOCK) WHERE [Name]='SupportEmailByCountry' AND					IdCountry=@IdCountry)
+DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='SupportEmailByCountry' AND					IdCountry=@IdCountry)
 DECLARE @CodeOfReference INT =(
                                 SELECT TOP 1 CodeOfReference FROM dbo.VisitPointClient WITH (NOLOCK)
                                                                         WHERE CustomerId=@IdCustomer)
@@ -60,7 +61,7 @@ SET @NameAbrev = REPLACE(@NameAbrev, '.', ''); -- Elimina el carácter especial 
 SET @NameAbrev = REPLACE(@NameAbrev, ' ', ''); -- Elimina los espacios internos
 
 DECLARE @CodApp nvarchar(50) = 'SI'+ @NameAbrev + 'APICOM' + @Date --PALABRA "SI" + "NOMBRE DE CLIENTE" + "APICOM" + FECHA Y HORA
-DECLARE @KeyEncrypt nvarchar(100) = @HashedPassword--'n4IapUw4C49ehE+S6YCvJdpxvnh9XPScSLTCCNcE6epnri1ohPmBhSAkXv7DhJEm'
+
 
 
 
@@ -97,7 +98,7 @@ DECLARE @KeyEncrypt nvarchar(100) = @HashedPassword--'n4IapUw4C49ehE+S6YCvJdpxvn
 				   ,''
 				   ,@CodApp-- SE CONSTRUYE CON : PALABRA "SI" + "NOMBRE DE CLIENTE" + "APICOM" + FECHA Y HORA
 				   ,''
-				   ,@KeyEncrypt --CONTRASEÑA ENCRIPTADA
+				   ,@HashedPasswordHex --@KeyEncrypt --CONTRASEÑA ENCRIPTADA
 				   ,''
 				   ,'TRUE'
 				   ,@Token
@@ -112,7 +113,7 @@ DECLARE @KeyEncrypt nvarchar(100) = @HashedPassword--'n4IapUw4C49ehE+S6YCvJdpxvn
 							  @Name AS 'EcomerceName',
 							  @Name AS 'EcommerceDescription',
 							  @CodApp AS 'UserKey',
-							  @KeyEncrypt AS 'SecretKey',
+							  @HashedPasswordHex AS 'SecretKey',
 							  @Url AS 'Endpoint',
 							  @ClientEmail AS 'UsrEmail',
 							  @SoportEmail AS 'SoportEmail',
@@ -121,8 +122,3 @@ DECLARE @KeyEncrypt nvarchar(100) = @HashedPassword--'n4IapUw4C49ehE+S6YCvJdpxvn
 
 
 END
-GO
-
-
-
-
