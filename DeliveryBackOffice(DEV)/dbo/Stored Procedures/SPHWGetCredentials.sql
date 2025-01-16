@@ -1,12 +1,4 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[SPHWGetCredentials]    Script Date: 10/01/2025 08:33:11 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman Vásquez>
 -- Create date: <Create Date,09-12-2024>
 -- Description:	<Description,Obtener credenciales de prueba o de producción si el usuario posee>
