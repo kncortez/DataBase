@@ -24,7 +24,7 @@
 -- Description:	<Se guarda en la tabla ConfirmationOfIncidence el comentario que registra el piloto al momento de crear la incidencia>
 -- =============================================
 
-CREATE procedure [dbo].[sps_proof_onincident]
+CREATE PROCEDURE [dbo].[sps_proof_onincident]
     @GuideSerie nvarchar(2),
     @GuideNumber int,
     @PhoneNumber nvarchar(50),
@@ -957,6 +957,30 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
 
     IF @@TRANCOUNT > 0
     BEGIN
+
+
+	EXEC dbo.CreateIncidentRecord @GuideSerie = @GuideSerie                      -- nvarchar(2)
+	                            , @GuideNumber = @GuideNumber                       -- int
+	                            , @TokenCreated = 'SYS-AUTOSIGNED'                    -- nvarchar(200)
+	                            , @IsRealIncident = 1                 -- bit
+	                            , @IsServiceDesired = 1               -- bit
+	                            , @IsAddressModificationRequested = 0 -- bit
+	                            , @IsExpressCenterAddress = 0         -- bit
+	                            , @IdExpressCenter = 0                   -- int
+	                            , @NewAddress = N''                      -- nvarchar(600)
+	                            , @NewPhoneNumber = N''                  -- nvarchar(100)
+	                            , @DeliveryDateChange =0             -- bit
+	                            , @NewDeliveryDate = '2024-12-04'        -- date
+	                            , @Observations = N'Incidencia autoconfirmada'                    -- nvarchar(600)
+	                            , @LiquidatorRemarks = N'Incidencia autoconfirmada'               -- nvarchar(600)
+	                            , @ValidGeolocationEvidence = 1       -- bit
+	                            , @ValidPhotographicEvidence = 1      -- bit
+	                            , @IdIncident = 0                        -- int
+	                            , @ConfirmedTypeIncidenceId = 0          -- int
+	                            , @CommentOnConfirmedTypeIncidence = N'' -- nvarchar(600)
+	
+
+
         IF (@RInserted > 0)
             SELECT 1 AS 'StatusCode',
                    'Registro guardado correctamente' AS 'Description',
@@ -971,6 +995,10 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
                    @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
                    @MessageReturn 'MessageReturn',
                    @TokenLinkGeneration 'TokenLinkGeneration';
+
+
+		
+
 
         COMMIT TRANSACTION;
     END;

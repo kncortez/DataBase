@@ -846,6 +846,7 @@ BEGIN
 								'WeightLB',
 								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
 	    	ISNULL(DSC.RouteCode,'') AS 'RouteCode',
+			ISNULL(DSC.RouteCode,'') AS 'Route_Code',
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
