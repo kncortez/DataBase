@@ -23,8 +23,10 @@
 -- Create date: <2022-06-20>
 -- Description:	<Agregar filtro para validar que no tiene pagos de TC o Datafono, en dbo.CostDetail>
 -- =============================================
-
-
+-- Author:		<Tito Garcia>
+-- Updated date:<18-11-2024>
+-- Description:	<Se agrega nueva validación IsCompleted>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetFinishPickUp]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD22221,FD22361,FD22223,FD22359,FD22226',
@@ -113,6 +115,16 @@ BEGIN
     -- Variables para verificar ubicación en geocerca
     DECLARE @FixedLatitude NVARCHAR(20) = @PickupLatitude;
     DECLARE @FixedLongitude NVARCHAR(20) = @PickupLongitude;
+
+	IF OBJECT_ID('tempdb.dbo.#InsertedRecords', 'U') IS NOT NULL
+		DROP TABLE #InsertedRecords;
+
+	CREATE TABLE #InsertedRecords (
+		GuideNumber INT,
+		GuideSerie  NVARCHAR(2),
+		IdProcessedGuideCOD INT
+	);
+	CREATE NONCLUSTERED INDEX INDX_ProcessedGuideCOD_TempTable ON #InsertedRecords (GuideSerie, GuideNumber);
 
     BEGIN TRY
 
@@ -1240,8 +1252,14 @@ BEGIN
                     CourierManId,
                     DataOriginId,
                     Token,
-                    CustomerId
+                    CustomerId,
+					Date
                 )
+				OUTPUT
+					inserted.GuideSerie,
+					inserted.GuideNumber,
+					inserted.IdProcessedGuideCOD
+				INTO #InsertedRecords
                 SELECT DISTINCT
                        lge.ItemSerie GuideSerie,
                        lge.ItemNumber GuideNumber,
@@ -1253,7 +1271,8 @@ BEGIN
                        ) AS 'CourierManId',
                        @DataOriginId AS 'DataOriginId',
                        @Token UserCreated,
-                       cus.IdCustomer CustomerId
+                       cus.IdCustomer CustomerId,
+					   GETDATE()
                 FROM #listGuides lge
                     INNER JOIN dbo.DeliveryOrder dlo WITH (NOLOCK)
                         ON lge.ItemSerie = dlo.Guide_Serie
@@ -1323,6 +1342,14 @@ BEGIN
             IF @@TRANCOUNT > 0
             BEGIN
                 COMMIT TRANSACTION;
+
+				UPDATE PG
+				SET IsCompleted = 1
+				FROM DeliveryBackOffice.dbo.ProcessedGuideCOD PG  WITH(NOLOCK)
+				INNER JOIN #InsertedRecords IR
+					ON PG.GuideSerie = IR.GuideSerie
+						AND PG.GuideNumber = IR.GuideNumber
+				WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
 
                 PRINT 'hago commit';
 
@@ -1513,6 +1540,9 @@ BEGIN
 
     IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
         DROP TABLE #Temp;
+
+	IF OBJECT_ID('tempdb.dbo.#InsertedRecords', 'U') IS NOT NULL
+		DROP TABLE #InsertedRecords;
     PRINT 'tablas destruidas';
 -- retornar resultado en formato json
 

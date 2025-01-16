@@ -3,6 +3,14 @@
 -- Create date: <2021-06-23>
 -- Description:	<Set datos lote COD>
 -- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Create date: <2024-12-19>
+-- Description:	<Se agregaron validaciones para COD Pagado en COD Anticipado>
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2020-12-12>
+-- Description:	<Se agrego actualizacion de estado PAGADO para guias COD Anticipado>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetGuidesToPayBatchCOD]
 -- Add the parameters for the stored procedure here
 	@BatchCODId INT,
@@ -23,6 +31,7 @@ BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 		
+		DECLARE @StatusOrderAnticipatedCOD INT = (SELECT StatusOrderId FROM DeliveryBackOffice.dbo.StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'COD Pagado Anticipado')
 		IF @Valid = 0
 			SET @Times = (
 				SELECT COUNT(1)
@@ -56,25 +65,71 @@ BEGIN
 															FROM [dbo].[BatchDetailCOD]
 															WHERE [BatchCODId] = @BatchCODId AND [Excluded] = 0);
 
-			-- Cambia el estado de la guia en tabla DeliveryOrder a 25 "COD Pagado".
-			UPDATE [dbo].[DeliveryOrder]
-			SET StatusOrderId = 25
-			WHERE [Guide_Number] IN 
-			(SELECT GuideNumber FROM [dbo].[BatchDetailCOD] 
-			WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2)
+			IF ((SELECT IsAnticipatedCOD FROM DeliveryBackOffice.dbo.BatchCOD WHERE IdBatchCOD = @BatchCODId) = 1)
+			BEGIN
 
-			-- Inserta el estado 25 "COD Pagado" en tabla DeliveryOrderDetail.
-			INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-              (
-              Guide_Serie,
-              Guide_number,
-              StatusOrderId,
-              UserCreated,
-              DateCreated
-              )
-      SELECT GuideSerie,GuideNumber,25, @TokenCreated,GETDATE() FROM [dbo].[BatchDetailCOD] 
-	    WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2
+				-- Inserta el estado "COD Pagado Anticipado" en tabla DeliveryOrderDetail.
+				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
+				  (
+				  Guide_Serie,
+				  Guide_number,
+				  StatusOrderId,
+				  UserCreated,
+				  DateCreated
+				  )
+				SELECT GuideSerie,GuideNumber,@StatusOrderAnticipatedCOD, @TokenCreated,GETDATE() FROM [dbo].[BatchDetailCOD] 
+				WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2
 
+				UPDATE ACD
+				SET ACD.BalanceStatus = 'PAGADO',
+					DateUpdated = GETDATE(),
+					TokenUpdated = @TokenCreated
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail ACD
+				INNER JOIN [dbo].[BatchDetailCOD] BDC
+				    ON BDC.GuideSerie = ACD.GuideSerie AND BDC.GuideNumber = ACD.GuideNumber
+				WHERE BDC.[BatchCODId] = @BatchCODId
+						
+                DECLARE @TempData TblAnticipatedCODCustomerBalance;
+
+				INSERT INTO @TempData
+				(
+					CustomerId,
+					PortfolioId
+				)
+				SELECT DISTINCT ach.CustomerId, ach.PortfolioId
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+				INNER JOIN [dbo].[BatchDetailCOD] BDC WITH(NOLOCK) 
+				    ON BDC.GuideSerie = ACD.GuideSerie AND BDC.GuideNumber = ACD.GuideNumber
+				INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
+					ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
+				WHERE BDC.[BatchCODId] = @BatchCODId
+
+				EXEC spUpdateBalanceByIdClient @TempData
+
+                DELETE 
+                    FROM @TempData
+			END
+			ELSE
+			BEGIN
+				-- Cambia el estado de la guia en tabla DeliveryOrder a 25 "COD Pagado".
+				UPDATE [dbo].[DeliveryOrder]
+				SET StatusOrderId = 25
+				WHERE [Guide_Number] IN 
+				(SELECT GuideNumber FROM [dbo].[BatchDetailCOD] 
+				WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2) --OR, Se comento por proyecto COD Anticipado
+
+				-- Inserta el estado 25 "COD Pagado" en tabla DeliveryOrderDetail.
+				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
+				  (
+				  Guide_Serie,
+				  Guide_number,
+				  StatusOrderId,
+				  UserCreated,
+				  DateCreated
+				  )
+				SELECT GuideSerie,GuideNumber,25, @TokenCreated,GETDATE() FROM [dbo].[BatchDetailCOD] 
+				WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2
+			END
 		
 		-----------------WEBHOOK.INI-----------------------		
 		DECLARE @WebhookCustomerTable AS TABLE(
