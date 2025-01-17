@@ -103,6 +103,7 @@
     <Build Include="dbo\User Defined Types\TblLocationReview.sql" />
     <Build Include="dbo\User Defined Types\TblListGuidesTransfer.sql" />
     <Build Include="dbo\User Defined Types\TblListGuides.sql" />
+    <Build Include="dbo\User Defined Types\TblListGuidesWithAnticipatedCOD.sql" />
     <Build Include="dbo\User Defined Types\TblListGuidePiece.sql" />
     <Build Include="dbo\User Defined Types\TblListGuideActa.sql" />
     <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />
@@ -1742,6 +1743,7 @@
     <Build Include="dbo\Stored Procedures\AddSAPCode.sql" />
     <Build Include="dbo\Stored Procedures\AddMarketplaceProductstoCart.sql" />
     <Build Include="dbo\Stored Procedures\ActiveProductMarketplace.sql" />
+    <Build Include="dbo\Stored Procedures\GetUpdateRegisterCODearly.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1798,6 +1800,17 @@
     <Build Include="dbo\Functions\GetPhone.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetInfoAnticipatedCOD.sql" />
+    <Build Include="dbo\Tables\AnticipatedCODHeader.sql" />
+    <Build Include="dbo\Tables\AnticipatedCODComission.sql" />
+    <Build Include="dbo\Tables\AnticipatedCODDetail.sql" />
+    <Build Include="dbo\Stored Procedures\GetAnticipatedCODExecutionQueue.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_generate_batch_cod_anticipated.sql" />
+    <Build Include="dbo\Stored Procedures\spws_getCustomersReportAnticipatedCOD.sql" />
+    <Build Include="dbo\Stored Procedures\spws_revertDevolutionAgainstBalance.sql" />
+    <Build Include="dbo\Stored Procedures\HM_GetGuideAtContainer.sql" />
+    <Build Include="dbo\User Defined Types\TblContainerList.sql" />
+    <Build Include="dbo\User Defined Types\TblReferencesList.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

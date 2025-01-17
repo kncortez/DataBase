@@ -91,7 +91,7 @@ BEGIN
         DROP TABLE #RevalueGuides; */
 
 PRINT '************************************************************************************* INSERT SPLIT'
-	
+
     --INSERT INTO @listGuidesBrain
     --(
     --    ItemSerie,
