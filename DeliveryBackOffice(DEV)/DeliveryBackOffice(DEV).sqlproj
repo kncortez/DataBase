@@ -1809,6 +1809,9 @@
     <Build Include="dbo\Stored Procedures\spws_getCustomersReportAnticipatedCOD.sql" />
     <Build Include="dbo\Stored Procedures\spws_revertDevolutionAgainstBalance.sql" />
     <Build Include="dbo\Stored Procedures\HM_GetGuideAtContainer.sql" />
+    <Build Include="dbo\User Defined Types\TblContainerList.sql" />
+    <Build Include="dbo\User Defined Types\TblReferencesList.sql" />
+    <Build Include="dbo\Stored Procedures\GetGuidesByContainerByReference.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

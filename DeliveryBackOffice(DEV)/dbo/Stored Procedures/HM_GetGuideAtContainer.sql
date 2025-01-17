@@ -13,12 +13,11 @@ BEGIN
 		SELECT TOP 1
 			  SCD.GuideSerie	AS 'GuideSerie'
 			, SCD.GuideNumber	AS 'GuideNumber'
-			, DOP.NoPiece		AS 'Pieces'
+			, COALESCE([DO].[Pieces_Dry], 0) + COALESCE([DO].[Pieces_Cold], 0)		AS 'Pieces'
 		FROM DeliveryBackOffice.dbo.ShippingContainerDetail SCD WITH(NOLOCK)
-		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
-			ON SCD.GuideSerie = DOP.GuideSerie AND SCD.GuideNumber = DOP.GuideNumber
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+			ON SCD.GuideSerie = DO.Guide_Serie AND SCD.GuideNumber = DO.Guide_Number
 		WHERE SCD.TicketNumber = @TicketNumber AND SCD.RowStatus = 1
-		ORDER BY DOP.NoPiece DESC
 
 	END TRY
 	BEGIN CATCH
