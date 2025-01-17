@@ -284,8 +284,8 @@ BEGIN TRY
 								ELSE
 									CAST(CPv3.value AS DECIMAL)
 							END
-					END													AS 'ComisionCODAnticipated'
-					, ISNULL(RH.GuideAmountCOD,0)						AS 'MaxAmountCODAnticipated'
+					END													        AS 'ComisionCODAnticipated'
+					, ISNULL(RH.GuideAmountCOD,CAST(CPV4.value AS DECIMAL))		AS 'MaxAmountCODAnticipated'
 					, CASE
 						WHEN VPC.ExcludePriceShippingCOD = 1 OR C.ExcludePriceShippingCOD = 1
 						THEN
@@ -320,6 +320,8 @@ BEGIN TRY
 					ON CPv2.IdCountry = DO.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'
 				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)
 					ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
+				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPV4 WITH(NOLOCK)
+					ON CPV4.IdCountry = DO.ReceiverCountryId AND CPV4.Name = 'GuideAmountCODAnticipatedParam'
 				WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 			END;
 
@@ -441,8 +443,8 @@ BEGIN TRY
 								ELSE
 									CAST(CPv3.value AS DECIMAL)
 							END
-					END													AS 'ComisionCODAnticipated'
-					, ISNULL(RH.GuideAmountCOD,0)						AS 'MaxAmountCODAnticipated'
+					END													        AS 'ComisionCODAnticipated'
+					, ISNULL(RH.GuideAmountCOD,CAST(CPV4.value AS DECIMAL))		AS 'MaxAmountCODAnticipated'
 					, CASE
 						WHEN VPC.ExcludePriceShippingCOD = 1 OR C.ExcludePriceShippingCOD = 1
 						THEN
@@ -477,6 +479,8 @@ BEGIN TRY
 					ON CPv2.IdCountry = DO.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'
 				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)
 					ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
+				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPV4 WITH(NOLOCK)
+					ON CPV4.IdCountry = DO.ReceiverCountryId AND CPV4.Name = 'GuideAmountCODAnticipatedParam'
 				WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 			END;
 
