@@ -25,6 +25,11 @@
 -- Update date: <2024-11-18>
 -- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <03-09-2024>
+-- Description:	<Se agrega la variable @Receiver_CUI para almacenar el CUI de la persona que recibe>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
@@ -353,6 +358,7 @@ BEGIN
                 -- actualizar tabla de registro de guías electrónicas
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET NameOfReceiver = @ReceiverName,
+					Receiver_CUI = @Receiver_CUI,
                     StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
                                         @StatusEXC,
                                         IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
