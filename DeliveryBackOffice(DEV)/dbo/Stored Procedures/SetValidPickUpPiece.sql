@@ -34,6 +34,9 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
             DROP TABLE #listGuides;
 
+		IF OBJECT_ID('tempdb.dbo.#TempContainerGuides', 'U') IS NOT NULL
+            DROP TABLE #TempContainerGuides;
+
         SELECT TOP 1
             @TokenAct = RowStatus,
             @hourtoken = DATEDIFF(HOUR, DateCreated, GETDATE())
@@ -58,14 +61,22 @@ BEGIN
 			CREATE NONCLUSTERED INDEX tempContainerGuide ON #TempContainerGuides (GuideSerie, GuideNumber);
 
 			--BUSCAR GUIAS POR REFERENCIA  Y POR CONTENEDOR
+			DECLARE @ListContainer TblContainerList; 
+			DECLARE @ListReferences TblReferencesList;
+			INSERT INTO @ListContainer VALUES (@Container); 
+			INSERT INTO @ListReferences VALUES (@Reference);
+
 			INSERT INTO #TempContainerGuides
-			EXEC GetGuidesByContainerByReference @Container, @Reference, @IdCountry;
+			EXEC GetGuidesByContainerByReference @ListContainer, @ListReferences, @IdCountry;
 
 			SET @InContainerGuides = (SELECT STRING_AGG(CONCAT(GuideSerie, GuideNumber, '-', NoPiece), ',')
 					FROM #TempContainerGuides);
-			SET @InGuides = CONCAT(@InGuides,',',@InContainerGuides)			
-			SET @InGuides = IIF(@InContainerGuides<>'',@InGuides,LEFT(@InGuides, LEN(@InGuides) - 1))
-			SET @InGuides = IIF(LEFT(@InGuides,1)<>',',@InGuides, SUBSTRING(@InGuides, 2, LEN(@InGuides)) )
+			IF (@Reference IS NOT NULL)
+			BEGIN
+				SET @InGuides = CONCAT(@InGuides,',',@InContainerGuides)			
+				SET @InGuides = IIF(@InContainerGuides<>'',@InGuides,LEFT(@InGuides, LEN(@InGuides) - 1))
+				SET @InGuides = IIF(LEFT(@InGuides,1)<>',',@InGuides, SUBSTRING(@InGuides, 2, LEN(@InGuides)) )
+			END
 			--
             INSERT INTO #Temp
             (
@@ -75,7 +86,10 @@ BEGIN
             --Validacion de estado de la guia
             EXEC [dbo].[spws_get_validate_guides_pickup] @InGuides = @InGuides,
                                                          @IdPickup = @IdPickup,
-                                                         @Token = @Token;
+                                                         @Token = @Token,
+														 @ReferencesGuide =		@ListReferences,
+														 @ContainerReferences = @ListContainer,
+														 @IdCountry =			@IdCountry;
 
 
             SET @Valid =
