@@ -1779,6 +1779,7 @@
     <Build Include="dbo\Stored Procedures\SPWHProductionCredentialsRegistration.sql" />
     <Build Include="dbo\Stored Procedures\SPWHTestCredentialsRegistration.sql" />
     <Build Include="dbo\Stored Procedures\SPHWHelpRequest.sql" />
+	  <Build Include="dbo\Stored Procedures\GetValidaReturnGuide.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
