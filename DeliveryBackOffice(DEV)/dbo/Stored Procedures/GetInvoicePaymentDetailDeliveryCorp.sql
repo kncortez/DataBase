@@ -5,16 +5,19 @@
 -- =============================================
 CREATE PROCEDURE GetInvoicePaymentDetailDeliveryCorp
 (
-  @LstVisitPointClient NVARCHAR(MAX) = '',
-  @CutOffDate          DATETIME,
-  @IdCountry           NVARCHAR(2) = 'GT'
+ @LstVisitPointClient NVARCHAR(MAX) = '',
+ @StartDate           DATETIME,
+ @CutOffDate          DATETIME,
+ @IdCountry           NVARCHAR(2) = 'GT',
+ @Option              TINYINT = 0
 )
 AS
 BEGIN
   --     Inicia el bloque de manejo de excepciones
     BEGIN TRY
         --Variables locales
-        DECLARE @XmlVisitPointClient XML; 
+        DECLARE @XmlVisitPointClient XML,
+                @TypeService         NVARCHAR(3);
 
         DECLARE @IdCatInvoiceType INT =
                 (
@@ -24,6 +27,12 @@ BEGIN
                   WHERE [Name] = 'Envío'
                     AND RowStatus = 1
                 );
+
+        SELECT @TypeService = CASE
+                                 WHEN @Option = 1 THEN 'STD'
+                                 WHEN @Option = 3 THEN 'COD'
+                                 ELSE 'STD'
+                              END
 
         -- Verificar si la tabla existe y eliminarla si es necesario
         IF OBJECT_ID('tempdb..#InvoiceByVisitPointDetails') IS NOT NULL
@@ -75,9 +84,11 @@ BEGIN
                                            SELECT v.value('.', 'NVARCHAR(MAX)') AS Valor
                                              FROM @XmlVisitPointClient.nodes('/LstVisitPointClient/PointClient') AS x(v)
                                           )
+           AND CAST(do.Preparation_Date AS DATE) >= CAST(@StartDate AS DATE)
            AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)
            AND do.IsCollect = 0
            AND do.SenderCountryId = @IdCountry
+           AND do.TypeService = @TypeService
            AND EXISTS
                      (
                       SELECT TOP 1 1

@@ -6,8 +6,10 @@
 CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailCommissionCODCorp]
 (
  @LstVisitPointClient NVARCHAR(MAX),
+ @StartDate           DATETIME,
  @CutOffDate          DATETIME,
- @IdCountry           NVARCHAR(2) = 'GT'
+ @IdCountry           NVARCHAR(2) = 'GT',
+ @Option TINYINT = 0
 )
 AS
 BEGIN
@@ -15,15 +17,19 @@ BEGIN
         -- Inicia una transacción
         BEGIN TRANSACTION;
 
-        DECLARE @DEBUG BIT = 'TRUE'; --PARA PRUEBAS -> TRUE  
-        DECLARE @SAPCode VARCHAR(100);
-        DECLARE @CardPercent DECIMAL(3, 2);
-        DECLARE @CardAmount DECIMAL(14, 2);
-        DECLARE @Category VARCHAR(50);
-        DECLARE @Name NVARCHAR(100);
-        DECLARE @Description NVARCHAR(100);
-        DECLARE @NameVolumeBillingDefault NVARCHAR(50) = N'Completo';
-        DECLARE @NameArticle VARCHAR(100) = N'COMISION COD';
+        DECLARE @DEBUG BIT = 'TRUE', --PARA PRUEBAS -> TRUE  
+                @SAPCode VARCHAR(100),
+                @CardPercent DECIMAL(3, 2),
+                @CardAmount DECIMAL(14, 2),
+                @Category VARCHAR(50),
+                @Name NVARCHAR(100),
+                @Description NVARCHAR(100),
+                @NameVolumeBillingDefault NVARCHAR(50) = N'Completo',
+                @NameArticle VARCHAR(100) = N'COMISION COD',
+                @XmlVisitPointClient XML
+
+        -- Convertir la cadena a XML
+        SET @XmlVisitPointClient = CAST('<LstVisitPointClient><PointClient>' + REPLACE(@LstVisitPointClient, ',', '</PointClient><PointClient>') + '</PointClient></LstVisitPointClient>' AS XML);
 
         DECLARE @IdCatConceptCOD INT =
                 (
@@ -38,11 +44,11 @@ BEGIN
                 (
                  SELECT TOP 1
                         IdCatInvoiceType
-                   FROM CatInvoiceType  WITH(NOLOCK)
+                   FROM CatInvoiceType WITH (NOLOCK)
                   WHERE [Name] = 'Comisión COD'
                     AND RowStatus = 1
                 );
-  
+
         IF OBJECT_ID('tempdb.dbo.#GuidesCommission', 'U') IS NOT NULL
             DROP TABLE #GuidesCommission;
 
@@ -125,10 +131,14 @@ BEGIN
            AND ISNULL(vpc.ExcludeCommissionCOD, cus.ExcludeCommissionCOD) = 0
            AND bdCOD.CatConceptCODId = @IdCatConceptCOD
            AND bdCOD.RowStatus = 1
+           AND bdCOD.Excluded = 0
+           AND bdCOD.AuthorizationNumber IS NOT NULL
            AND bdCOD.Commission > 0
            AND bdCOD.idCountry = @IdCountry
+           AND CAST(bdCOD.CreditDate AS DATE) >= CAST(@StartDate AS DATE)
            AND CAST(bdCOD.CreditDate AS DATE) <= CAST(@CutOffDate AS DATE)
-           AND vpc.IdVisitPointClient IN (SELECT Item FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@LstVisitPointClient, ','))
+           AND vpc.IdVisitPointClient IN (SELECT v.value('.', 'NVARCHAR(MAX)') AS Valor
+                                            FROM @XmlVisitPointClient.nodes('/LstVisitPointClient/PointClient') AS x(v))
          GROUP BY bdCOD.GuideSerie,
                   bdCOD.GuideNumber
 
@@ -156,8 +166,8 @@ BEGIN
                      ON cCt.IdCountry = gc.IdCountry
                  LEFT JOIN CatBillingVolume        cbv WITH (NOLOCK)
                      ON ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = cbv.IdCatBillingVolume
-           WHERE gc.CreditDate <= @CutOffDate
-             AND ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = 2 --Billing Volume -> Completo;
+           WHERE gc.CreditDate >= @StartDate
+             AND gc.CreditDate <= @CutOffDate
 
             -- Validar si hay registros en la tabla temporal
             IF EXISTS (SELECT TOP 1 1
@@ -202,5 +212,5 @@ BEGIN
 
             SELECT 0 AS StatusCode,
                    'Ha ocurrido un error en el proceso' AS StatusMessage
-    END CATCH;  
+    END CATCH;
 END;
