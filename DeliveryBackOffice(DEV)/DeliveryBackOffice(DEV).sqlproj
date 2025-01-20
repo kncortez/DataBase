@@ -990,7 +990,7 @@
     <Build Include="dbo\Stored Procedures\spg_get_RouteZone.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RouteV2.sql" />
     <Build Include="dbo\Stored Procedures\spws_GetRouteHubBySettlement.sql" />
-    <Build Include="dbo\Stored Procedures\spws_GetSettlementByProvinceAndTownship.sql" />
+    <Build Include="dbo\Stored Procedures\spws_GetSettlementByHeaderCode.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RouteServiceAssigment.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RoutePreparation_test_cg.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RoutePreparation_test.sql" />
