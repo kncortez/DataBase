@@ -564,8 +564,7 @@ BEGIN
                                             'Devueldo a ' + @Name
                                     END          Observations
                                 --@CUI+'-'+@Name
-                                FROM #listGuidesEnabled lge
-								WHERE lge.IsAnticipatedCOD <> 1;
+                                FROM #listGuidesEnabled lge;
 
                                 UPDATE dot
                                 SET dot.Observations = 'Entregado a ' + @Name + ', Entrega sin cobro COD '

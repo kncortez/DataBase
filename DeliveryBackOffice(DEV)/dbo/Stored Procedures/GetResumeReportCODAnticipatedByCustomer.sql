@@ -59,6 +59,7 @@ BEGIN
              WHERE CAST(acd.DateCreated AS DATE) >= @startDate
                AND CAST(acd.DateCreated AS DATE) <= @endDate
                AND do.SenderCountryId = @IdCountry
+			   AND acd.RowStatus = 1
 
         IF @TypeClient = 1
         BEGIN
