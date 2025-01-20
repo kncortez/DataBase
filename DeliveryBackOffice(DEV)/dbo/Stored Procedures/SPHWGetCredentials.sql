@@ -30,7 +30,7 @@ BEGIN
 	DECLARE @SecretKeyProduction NVARCHAR(200)
 	DECLARE @Email NVARCHAR(50)
     DECLARE @CodeOfReference INT = (SELECT Top 1 ISNULL(CodeOfReference,0) FROM dbo.VisitPointClient WHERE CustomerId = @IdCustomer)
-    DECLARE @IdCountry NVARCHAR(2)=(SELECT Top 1 ISNULL(CountryId,'GT') FROM dbo.visitpointclient WHERE CustomerId=68546)
+    DECLARE @IdCountry NVARCHAR(2)=(SELECT Top 1 ISNULL(CountryId,'GT') FROM dbo.visitpointclient WHERE CustomerId=@IdCustomer)
 	DECLARE @SoportEmail NVARCHAR(50) =(SELECT Top 1 [Value] FROM dbo.ConfigParams WHERE [Name] = 'SoportEmail' AND IdCountry =@IdCountry)
 
 	IF (@IsCorporate=1)
