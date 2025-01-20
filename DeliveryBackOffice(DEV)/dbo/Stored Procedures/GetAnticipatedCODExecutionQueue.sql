@@ -1,20 +1,9 @@
-﻿
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-06-07>
--- Description:	< Obtener cola de ejecución de procesos de servicio HermesWireTransfer >
--- =============================================
--- =============================================
--- Author:		<Oscar,Rodriguez>
--- Modification date: <2024-06-26>
--- Description:	< Filtrar cola de ejcucion de procesos por pais para el servicio HermesWireTransfer >
--- =============================================
 -- =============================================
 -- Author:		<Oscar,Rodriguez>
 -- Modification date: <2024-12-02>
--- Description:	< Filtrar cola de ejcucion de procesos por tipo de servicio, COD Inmediato >
+-- Description:	< Filtrar cola de ejcucion de procesos por tipo de servicio, COD Anticipado >
 -- =============================================
-CREATE PROCEDURE [dbo].[GetWireTransferExecutionQueue]
+CREATE PROCEDURE [dbo].[GetAnticipatedCODExecutionQueue]
 	@IdCountrySender NVARCHAR(2)= 'GT'
 AS
 BEGIN
@@ -55,13 +44,13 @@ BEGIN
 				1 
 		FROM 
 			[DeliveryBackOffice].[dbo].[CoDDailyExecution] CDE WITH(NOLOCK) 
-			INNER JOIN DeliveryBackOffice.dbo.CatCoDDailySchedule CCDS WITH(NOLOCK) ON CCDS.IdCatCODDailySchedule = CDE.CODDailyScheduleId
+			INNER JOIN DeliveryBackOffice.dbo.CatCoDDailySchedule CCDS ON CCDS.IdCatCODDailySchedule = CDE.CODDailyScheduleId
 		WHERE 
 			CDE.ExecutionDate = CAST(GETDATE() AS DATE) 
 			AND 
 			CDE.RowStatus = 1
 			AND
-			CCDS.IsCODAnticipated = 0
+			CCDS.IsCODAnticipated = 1
 			AND
 			CDE.IdCountry = @IdCountrySender
 	),0)
@@ -117,7 +106,7 @@ BEGIN
 			WHERE
 				CCDS.RowStatus = 1
 				AND	db.Id_Country = @IdCountrySender
-				AND (CCDS.IsCodAnticipated = 0 OR CCDS.IsCodAnticipated IS NULL)
+				and CCDS.IsCodAnticipated = 1
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @DailyExecutionQueue) )
 			BEGIN

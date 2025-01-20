@@ -4,7 +4,7 @@
 -- Description: <Validar incidencias de liquidaciones>
 
 -- =============================================
-ALTER PROCEDURE [dbo].[spHM_SetSettlementIncidenceValidate]
+CREATE PROCEDURE [dbo].[spHM_SetSettlementIncidenceValidate]
 	@ManifestSettlementIncidenceId INT = 0,
 	@ResolutionComment NVARCHAR(600) = '',
 	@Token NVARCHAR(64),
