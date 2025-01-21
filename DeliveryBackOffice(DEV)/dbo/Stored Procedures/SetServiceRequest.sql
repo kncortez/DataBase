@@ -2,7 +2,7 @@
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
     @TblServiceRequest AS TblServiceRequest3 READONLY,
-    @TblDeliveryOrders AS TblDeliveryOrders READONLY,
+    @TblDeliveryOrders AS TblDeliveryOrders_v2 READONLY,
 	@IsArticle BIT = 0
 AS
 BEGIN
@@ -134,7 +134,6 @@ BEGIN
                -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                --[Collect],
                NULL 'SenderIdTownship',
-               NULL 'ReceiverIdTownship',
                NULL 'HubOriginId',
                NULL 'HubDestinationId',
                NULL 'SourceSystemId',
@@ -147,6 +146,8 @@ BEGIN
 			   -- SE MANDA EL PAIS CRISTIAN SUAZO
 			   '  ' AS 'ReceiverCountryId'
         -- FIN MODIFICACION
+               [ReceiverIdTownship],
+			   [ReceiverIdSettlement]
 
         INTO #GuideTable
         FROM @TblDeliveryOrders
@@ -214,18 +215,6 @@ BEGIN
                           SELECT IdProvince
                           FROM [DeliveryBackOffice].[dbo].[Province]
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
-                      )
-            ),
-            ReceiverIdTownship =
-            (
-                SELECT IdTownship
-                FROM [DeliveryBackOffice].[dbo].[Township]
-                WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Town)
-                      AND IdProvince =
-                      (
-                          SELECT IdProvince
-                          FROM [DeliveryBackOffice].[dbo].[Province]
-                          WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
                       )
             ),
             SourceSystemId =
@@ -371,8 +360,9 @@ BEGIN
             [SalePipeLineId],
 			[SenderCountryId],
 			[ReceiverCountryId],
-            [GuideType]
+            [GuideType],
         -- FIN MODIFICACION
+			[ReceiverIdSettlement]
         )
         SELECT GT.[Ticket_Number],
                GT.[Order_Number],
@@ -443,8 +433,9 @@ BEGIN
                GT.SalePipeLineId,
 			   GT.IdCountrySender,
 			   GT.ReceiverCountryId,
-               CASE WHEN GT.IdCountrySender = ReceiverCountryId THEN 'DOM' ELSE 'INT' END
+               CASE WHEN GT.IdCountrySender = ReceiverCountryId THEN 'DOM' ELSE 'INT' END,
         -- FIN MODIFICACION
+               GT.ReceiverIdSettlement
         FROM #GuideTable GT;
 
 		SELECT @IdCountry = IdCountrySender  FROM #GuideTable
