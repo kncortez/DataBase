@@ -16,6 +16,7 @@ BEGIN
 
 
 
+
 DECLARE @Date NVARCHAR(15) = (SELECT 
 								CONCAT(
 									FORMAT(GETDATE(), 'yyyy'),
