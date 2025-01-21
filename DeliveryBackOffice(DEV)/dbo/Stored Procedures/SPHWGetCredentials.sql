@@ -20,12 +20,13 @@ BEGIN
 	SET NOCOUNT ON;
 
 
-	DECLARE @EndPointTest  NVARCHAR(200)
+	DECLARE @EndPointTest  NVARCHAR(200)=(SELECT TOP 1 [Value] FROM dbo.ConfigParams WHERE [Name]='APIUrlQA')
 	DECLARE @UserKeyTest   NVARCHAR(200)
 	DECLARE @SecretKeyTest NVARCHAR(200)
 
 
-	DECLARE @EndPointProduction  NVARCHAR(200)
+	DECLARE @EndPointProduction  NVARCHAR(200)=(SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='APIUrl')
+	DECLARE @UserKeyProduction   NVARCHAR(200)
 	DECLARE @UserKeyProduction   NVARCHAR(200)
 	DECLARE @SecretKeyProduction NVARCHAR(200)
 	DECLARE @Email NVARCHAR(50)
@@ -51,7 +52,6 @@ BEGIN
 
 	/* Obtener Credenciales de prueba si el cliente posee */
 	SELECT TOP 1			  
-	 @EndPointTest = [EcomerceName],
 	 @UserKeyTest  = [UserKey] ,
 	 @SecretKeyTest=[SecretKey]
 	FROM [DeliveryBackOffice].[dbo].[Ecommerce] WITH (NOLOCK)
@@ -60,7 +60,6 @@ BEGIN
 	   ORDER BY DateCreated DESC
 	 /* Obtener Credenciales de Producción si el cliente posee */
 	SELECT TOP 1
-	 @EndPointProduction = [EcomerceName],
 	 @UserKeyProduction  = [UserKey],
 	 @SecretKeyProduction=[SecretKey]
 	FROM [DeliveryBackOffice].[dbo].[Ecommerce] WITH (NOLOCK)
