@@ -1,7 +1,7 @@
 
 INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) VALUES ( N'UserKey', N'SIFDCAPIECOM230920201910', N'1', 1, CAST(N'2024-11-27T00:00:00.000' AS DateTime), N'GT', NULL)
 
-INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) VALUES ( N'SecretKeyQA', N'AnvMc+t/0RswIrob9EiU6IjoK6j2wzrr1zpeXAuY80c', N'1', 1, CAST(N'2024-11-27T00:00:00.000' AS DateTime), N'GT', NULL)
+INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) VALUES ( N'SecretKeyQA', N'AnvMc+t/0RswIrob9EiU6IGIf/ks+y4LH8kaKh7ugJ57N5N/wyLVuWpJkok0i27K', N'1', 1, CAST(N'2024-11-27T00:00:00.000' AS DateTime), N'GT', NULL)
 
 INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) VALUES ( N'TermsandConditions', N'<h1 class="text-h2">TERMINOS Y CONDICIONES GENERALES</h1>
 

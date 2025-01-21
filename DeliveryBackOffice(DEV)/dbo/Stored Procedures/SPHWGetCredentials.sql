@@ -21,14 +21,17 @@ BEGIN
 	DECLARE @UserKeyProduction   NVARCHAR(200)
 	DECLARE @SecretKeyProduction NVARCHAR(200)
 	DECLARE @Email NVARCHAR(50)
-    DECLARE @CodeOfReference INT = (SELECT Top 1 ISNULL(CodeOfReference,0) FROM dbo.VisitPointClient WHERE CustomerId = @IdCustomer)
-    DECLARE @IdCountry NVARCHAR(2)=(SELECT Top 1 ISNULL(CountryId,'GT') FROM dbo.visitpointclient WHERE CustomerId=@IdCustomer)
+	DECLARE @CodeOfReference INT = (SELECT Top 1 ISNULL(CodeOfReference,0) FROM dbo.VisitPointClient WHERE CustomerId = @IdCustomer)
+	DECLARE @IdCountry NVARCHAR(2)=(SELECT Top 1 ISNULL(CountryId,'GT') FROM dbo.visitpointclient WHERE CustomerId=@IdCustomer)
 	DECLARE @SoportEmail NVARCHAR(50) =(SELECT Top 1 [Value] FROM dbo.ConfigParams WHERE [Name] = 'SoportEmail' AND IdCountry =@IdCountry)
+	
+
+
 
 	IF (@IsCorporate=1)
 	BEGIN 
 	 
-	 SET  @Email= ( SELECT Top 1  RegexEmail 
+	 SET  @Email= ( SELECT Top 1  ContactEmail
 	                      FROM [dbo].[Customer] WITH (NOLOCK)
 	                           WHERE  IdCustomer = @IdCustomer 
 	           );
@@ -62,7 +65,7 @@ BEGIN
 
    SELECT 
          CASE  
-		      WHEN  LEN(@EndPointTest) > 0 THEN 1
+		      WHEN  LEN(@UserKeyTest) > 0 THEN 1
 		 ELSE 0 END AS 'IsTest',
 		 ISNULL(@EndPointTest,'')  AS 'EndPointTest',
 		 ISNULL(@UserKeyTest,'')   AS 'UserKeyTest', 
@@ -74,7 +77,7 @@ BEGIN
 		 ISNULL(@UserKeyProduction,'')   AS 'UserKeyProduction',
 		 ISNULL(@SecretKeyProduction,'') AS 'SecretKeyProduction',
 		 ISNULL(@Email,'') AS Email,
-		  @CodeOfReference AS  'CodeOfReference',
+		  ISNULL(@CodeOfReference,0) AS  'CodeOfReference',
 		  @SoportEmail  AS 'SoportEmail'
 		 
    
@@ -85,3 +88,4 @@ BEGIN
 
 
 END
+
