@@ -3,7 +3,7 @@
 -- Create date: <2025-01-03>
 -- Description:	<Retorna listado de poblados desde su codigo de cabecera del municipio>
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_GetSettlementByHeaderCode]
+CREATE PROCEDURE [dbo].[spws_GetSettlementsByHeaderCode]
     @HeaderCode VARCHAR(10)
 AS
 BEGIN
