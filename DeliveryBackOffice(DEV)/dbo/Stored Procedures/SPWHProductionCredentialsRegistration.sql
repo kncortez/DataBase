@@ -8,33 +8,15 @@ CREATE PROCEDURE [dbo].[SPWHProductionCredentialsRegistration]
 @IdCustomer INT,
 @IsCorporate INT,
 @IdCountry NVARCHAR(2),
-@Token NVARCHAR(100)
+@Token NVARCHAR(100),
+@HashedPasswordHex NVARCHAR(100)
 
 AS
 BEGIN
 
-DECLARE @RandomPassword NVARCHAR(32)
-DECLARE @Characters NVARCHAR(MAX) = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-DECLARE @Length INT = 32
-DECLARE @Index INT = 0
 
-SET @RandomPassword = ''
 
-WHILE @Index < @Length
-BEGIN
-    SET @RandomPassword = @RandomPassword + SUBSTRING(@Characters, ABS(CHECKSUM(NEWID())) % LEN(@Characters) + 1, 1)
-    SET @Index = @Index + 1
-END
 
-	----------EJECUTAR SP PARA CREAR CREDENCIALES------------
-DECLARE @Password NVARCHAR(32) = @RandomPassword
-DECLARE @Key NVARCHAR(32) = 'ClaveSecreta'
-DECLARE @HashedPassword VARBINARY(32)
-DECLARE @HashedPasswordHex NVARCHAR(MAX)
--- Concatenar contraseña y clave para HMAC
-SET @HashedPassword = HASHBYTES('SHA2_256', @Key + @Password)
-SET @HashedPasswordHex = CONVERT(NVARCHAR(MAX), @HashedPassword, 2)
-select @Password, @HashedPassword,@HashedPasswordHex
 DECLARE @Date NVARCHAR(15) = (SELECT 
 								CONCAT(
 									FORMAT(GETDATE(), 'yyyy'),

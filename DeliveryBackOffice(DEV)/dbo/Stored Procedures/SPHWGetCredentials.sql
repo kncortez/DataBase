@@ -12,15 +12,19 @@ BEGIN
 	SET NOCOUNT ON;
 
 
-	DECLARE @EndPointTest  NVARCHAR(200)
+	DECLARE @EndPointTest  NVARCHAR(200)=(SELECT TOP 1 [Value] FROM dbo.ConfigParams WHERE [Name]='APIUrlQA')
 	DECLARE @UserKeyTest   NVARCHAR(200)
 	DECLARE @SecretKeyTest NVARCHAR(200)
 
 
-	DECLARE @EndPointProduction  NVARCHAR(200)
+	DECLARE @EndPointProduction  NVARCHAR(200)=(SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='APIUrl')
+	DECLARE @UserKeyProduction   NVARCHAR(200)
 	DECLARE @UserKeyProduction   NVARCHAR(200)
 	DECLARE @SecretKeyProduction NVARCHAR(200)
 	DECLARE @Email NVARCHAR(50)
+    DECLARE @CodeOfReference INT = (SELECT Top 1 ISNULL(CodeOfReference,0) FROM dbo.VisitPointClient WHERE CustomerId = @IdCustomer)
+    DECLARE @IdCountry NVARCHAR(2)=(SELECT Top 1 ISNULL(CountryId,'GT') FROM dbo.visitpointclient WHERE CustomerId=@IdCustomer)
+	DECLARE @SoportEmail NVARCHAR(50) =(SELECT Top 1 [Value] FROM dbo.ConfigParams WHERE [Name] = 'SoportEmail' AND IdCountry =@IdCountry)
 
 	IF (@IsCorporate=1)
 	BEGIN 
@@ -40,7 +44,6 @@ BEGIN
 
 	/* Obtener Credenciales de prueba si el cliente posee */
 	SELECT TOP 1			  
-	 @EndPointTest = [EcomerceName],
 	 @UserKeyTest  = [UserKey] ,
 	 @SecretKeyTest=[SecretKey]
 	FROM [DeliveryBackOffice].[dbo].[Ecommerce] WITH (NOLOCK)
@@ -49,7 +52,6 @@ BEGIN
 	   ORDER BY DateCreated DESC
 	 /* Obtener Credenciales de Producción si el cliente posee */
 	SELECT TOP 1
-	 @EndPointProduction = [EcomerceName],
 	 @UserKeyProduction  = [UserKey],
 	 @SecretKeyProduction=[SecretKey]
 	FROM [DeliveryBackOffice].[dbo].[Ecommerce] WITH (NOLOCK)
@@ -72,7 +74,9 @@ BEGIN
 		 ISNULL(@EndPointProduction ,'') AS 'EndPointProduction',
 		 ISNULL(@UserKeyProduction,'')   AS 'UserKeyProduction',
 		 ISNULL(@SecretKeyProduction,'') AS 'SecretKeyProduction',
-		 ISNULL(@Email,'') AS Email
+		 ISNULL(@Email,'') AS Email,
+		  @CodeOfReference AS  'CodeOfReference',
+		  @SoportEmail  AS 'SoportEmail'
 		 
    
 
