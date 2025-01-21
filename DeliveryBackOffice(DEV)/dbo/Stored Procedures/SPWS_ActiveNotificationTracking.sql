@@ -51,7 +51,7 @@ BEGIN
                 INSERT INTO dbo.GuideSuscription ([IdNotificationTracking], [GuideSerie], [GuideNumber], [UserCreated], [DateCreated], [TokenCreated])
                 VALUES(@IdNotificationTracking, @GuideSerie, @GuideNumber, @User, GETDATE(), @Token)
 
-                SELECT 1 AS [StatusCode], 'La guía ha sido suscrita a las notificaciones de forma exitosa' AS [Message]
+                SELECT 1 AS [StatusCode], 'Los datos se han confirmado exitosamente. Te estaremos notificando todo acerca de esta guía.' AS [Message]
                 COMMIT TRANSACTION;
             END
             ELSE
@@ -94,7 +94,7 @@ BEGIN
                         TokenUpdated = @Token
                     WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber
 
-                    SELECT 1 AS [StatusCode], 'La guía ha sido suscrita a las notificaciones de forma exitosa' AS [Message]
+                    SELECT 1 AS [StatusCode], 'Los datos se han confirmado exitosamente. Te estaremos notificando todo acerca de esta guía.' AS [Message]
                     COMMIT TRANSACTION;
                 END
             END
