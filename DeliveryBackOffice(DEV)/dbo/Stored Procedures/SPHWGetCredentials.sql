@@ -27,7 +27,6 @@ BEGIN
 
 	DECLARE @EndPointProduction  NVARCHAR(200)=(SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='APIUrl')
 	DECLARE @UserKeyProduction   NVARCHAR(200)
-	DECLARE @UserKeyProduction   NVARCHAR(200)
 	DECLARE @SecretKeyProduction NVARCHAR(200)
 	DECLARE @Email NVARCHAR(50)
     DECLARE @CodeOfReference INT = (SELECT Top 1 ISNULL(CodeOfReference,0) FROM dbo.VisitPointClient WHERE CustomerId = @IdCustomer)
