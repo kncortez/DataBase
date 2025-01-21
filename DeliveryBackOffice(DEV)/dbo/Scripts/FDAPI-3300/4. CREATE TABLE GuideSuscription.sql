@@ -1,6 +1,6 @@
 CREATE TABLE [dbo].[GuideSuscription] (
     [IdGuideSuscription]            INT IDENTITY (1, 1) NOT NULL,
-    [IdUserSuscription]             INT NOT NULL,
+    [IdNotificationTracking]        INT NOT NULL,
     [GuideSerie]                    NVARCHAR(2) NOT NULL,
     [GuideNumber]                   INT NOT NULL,
     [RowStatus]                     BIT NOT NULL DEFAULT 1,
@@ -11,7 +11,7 @@ CREATE TABLE [dbo].[GuideSuscription] (
 	[DateUpdated]                   DATETIME NULL,
 	[TokenUpdated]                  NVARCHAR(50) NULL,
     CONSTRAINT [PK_GuideSuscription] PRIMARY KEY CLUSTERED ([IdGuideSuscription] ASC),
-	CONSTRAINT [FK_GuideSuscription_UserSuscription] FOREIGN KEY (IdUserSuscription) REFERENCES [dbo].[UserSuscription] (IdUserSuscription),
+	CONSTRAINT [FK_GuideSuscription_NotificationTracking] FOREIGN KEY (IdNotificationTracking) REFERENCES [dbo].[NotificationTracking] (IdNotificationTracking),
 	CONSTRAINT FK_GuideSuscription_Guide FOREIGN KEY (GuideSerie, GuideNumber) REFERENCES [dbo].[DeliveryOrder] (Guide_Serie, Guide_Number)
 );
 
@@ -19,9 +19,9 @@ CREATE NONCLUSTERED INDEX [IDX_GuideSuscription_GuideNumber_GuideSerie]
     ON [dbo].[GuideSuscription]([GuideNumber] ASC, [GuideSerie] ASC);
 GO
 
-EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador del tipo de suscripción', N'SCHEMA', N'dbo', N'TABLE', N'GuideSuscription', N'COLUMN', N'IdGuideSuscription'
+EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la suscripción de la guía', N'SCHEMA', N'dbo', N'TABLE', N'GuideSuscription', N'COLUMN', N'IdGuideSuscription'
 GO
-EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la suscripción', N'SCHEMA', N'dbo', N'TABLE', N'GuideSuscription', N'COLUMN', N'IdUserSuscription'
+EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la suscripción', N'SCHEMA', N'dbo', N'TABLE', N'GuideSuscription', N'COLUMN', N'IdNotificationTracking'
 GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Serie de la guía de la tabla DeliveryOrder', N'SCHEMA', N'dbo', N'TABLE', N'GuideSuscription', N'COLUMN', N'GuideSerie'
 GO
