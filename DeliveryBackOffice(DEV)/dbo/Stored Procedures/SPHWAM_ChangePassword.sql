@@ -18,7 +18,8 @@ BEGIN
     SELECT @FirstName = pe.PerFirstName,
 			@LastName = pe.PerLastName,
             @IdAccount = ac.AccIdAccount,
-            @IsConfirmed = ac.AccConfirm            
+            @IsConfirmed = ac.AccConfirm,
+            @CountryId = ISNULL(pe.PerNationality, 'GT')            
         FROM RegisterUser   us WITH (NOLOCK)  
 			INNER JOIN [dbo].Person               pe WITH (NOLOCK)  
 				ON pe.PerIdPerson = us.UsrIdPerson  
