@@ -46,6 +46,13 @@ DECLARE @CodApp nvarchar(50) = 'SI'+ @NameAbrev + 'APICOM' + @Date --PALABRA "SI
 
 
 
+IF ( NOT EXISTS(SELECT TOP 1 1			  
+	                FROM [DeliveryBackOffice].[dbo].[Ecommerce] WITH (NOLOCK)
+			   WHERE IdCustomer = @IdCustomer AND EcommerceDescription <> 'Credenciales de prueba para  integracion'
+			   AND LEN(SecretKey)>0
+			   AND EcommerceStatus =1)
+	   )
+	   BEGIN
 
 
 		INSERT INTO [dbo].[Ecommerce]
@@ -101,6 +108,27 @@ DECLARE @CodApp nvarchar(50) = 'SI'+ @NameAbrev + 'APICOM' + @Date --PALABRA "SI
 							  @SoportEmail AS 'SoportEmail',
 							  CAST(@CodeOfReference AS nvarchar) AS 'CodeOfReference',
 							  CAST(@IdAccount AS nvarchar) AS 'IdAccount'
+			END
+			ELSE
+                BEGIN
+                     
+					    SELECT 1 [IdResult],
+							  'Credenciales ya existen' [Message],
+							  [EcomerceName] AS 'EcomerceName',
+							  [EcommerceDescription] AS 'EcommerceDescription',
+							  [UserKey] AS 'UserKey',
+							  [SecretKey] AS 'SecretKey',
+							  @Url AS 'Endpoint',
+							  @ClientEmail AS 'UsrEmail',
+							  @SoportEmail AS 'SoportEmail',
+							  CAST(@CodeOfReference AS nvarchar) AS 'CodeOfReference',
+							  CAST(@IdAccount AS nvarchar) AS 'IdAccount'
+							  FROM [DeliveryBackOffice].[dbo].[Ecommerce] WITH (NOLOCK)
+							WHERE IdCustomer = @IdCustomer AND EcommerceDescription <> 'Credenciales de prueba para  integracion'
+										AND LEN(SecretKey)>0
+										AND EcommerceStatus =1
+
+				END
 
 
 END
