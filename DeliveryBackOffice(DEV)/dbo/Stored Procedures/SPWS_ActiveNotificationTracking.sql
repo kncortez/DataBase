@@ -58,7 +58,7 @@ BEGIN
             BEGIN
                 IF(@StatusGuide = 1)
                 BEGIN
-                    SELECT 0 AS [StatusCode], 'La guía ya está suscrita a las notificaciones' AS [Message]
+                    SELECT 0 AS [StatusCode], '¡No te preocupes! Activaste las notificaciones de esta guía previamente. Seguiremos informándote.' AS [Message]
                     ROLLBACK TRANSACTION
                 END
                 ELSE
