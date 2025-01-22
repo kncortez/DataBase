@@ -1,4 +1,9 @@
-﻿CREATE PROCEDURE [dbo].[GetGuidesByContainerByReference]
+﻿-- =============================================  
+-- Author:    <Brandon, Pedroza>  
+-- Create date: <2025-01-13>  
+-- Description: <Contenerizacion guias - obtiene las guias por referencia y por contenedor>  
+-- =============================================  
+CREATE PROCEDURE [dbo].[GetGuidesByContainerByReference]
 	@Container TblContainerList READONLY,
 	@References TblReferencesList READONLY,
 	@IdCountry NVARCHAR(2) = 'GT'
@@ -30,6 +35,7 @@ BEGIN
                  (
 	              SELECT ReferenceGuide
 	                FROM @References
+					WHERE ReferenceGuide NOT IN ('','0')
 	             )
             AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry 
        )

@@ -1797,6 +1797,8 @@
     <Build Include="dbo\Stored Procedures\GetCourierInRoute.sql" />
     <Build Include="dbo\Stored Procedures\SphwGuideStatusNotification.sql" />
     <Build Include="dbo\Stored Procedures\sphwLoginKiosk.sql" />
+	<Build Include="dbo\Stored Procedures\SetValidPickUpPiece.sql" />
+	<Build Include="dbo\Stored Procedures\SetPickUpFinishAppPieces.sql" />
     <Build Include="dbo\Functions\GetPhone.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />

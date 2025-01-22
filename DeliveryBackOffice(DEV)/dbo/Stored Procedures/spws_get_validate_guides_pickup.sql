@@ -72,7 +72,7 @@ BEGIN
 		        INNER JOIN DeliveryOrderPiece DOP
 			        ON DO.Guide_Serie = DOP.GuideSerie
 			        AND DO.Guide_Number = DOP.GuideNumber
-		        WHERE DO.Ticket_Number IN (SELECT ReferenceGuide FROM @ReferencesGuide)
+		        WHERE DO.Ticket_Number IN (SELECT ReferenceGuide FROM @ReferencesGuide WHERE ReferenceGuide NOT IN ('','0'))
 			        AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry
 	    )
 		INSERT INTO #listGuides
