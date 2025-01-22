@@ -144,7 +144,7 @@ BEGIN
                NULL 'OrderUserCreated',
                NULL 'SalePipeLineId',
 			   -- SE MANDA EL PAIS CRISTIAN SUAZO
-			   '  ' AS 'ReceiverCountryId'
+			   '  ' AS 'ReceiverCountryId',
         -- FIN MODIFICACION
                [ReceiverIdTownship],
 			   [ReceiverIdSettlement]
