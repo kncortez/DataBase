@@ -18,6 +18,24 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
+    DECLARE @CountPieces INT;
+	DECLARE @IsReference INT=0;
+	--Validar si es erferencia
+	IF(EXISTS(SELECT TOP 1   1
+                     FROM DeliveryOrder WITH(NOLOCK) WHERE Ticket_Number = @GuideNumber ORDER BY Preparation_Date DESC
+	   ))
+	BEGIN
+
+	   SELECT TOP 1    @GuideSerie = [Guide_Serie],
+                    @GuideNumber = [Guide_Number],
+                    @CountPieces = [Pieces_Dry] + [Pieces_Cold],
+					@IsReference=1
+           FROM DeliveryOrder WITH(NOLOCK) WHERE Ticket_Number = @GuideNumber ORDER BY Preparation_Date DESC
+
+
+
+	END
+
     --- Conteo para verificar cantidad correcta de validaciones
     DECLARE @RModified INT = 0;
 
@@ -260,6 +278,34 @@ BEGIN
 
                             IF @IdRoutePreparationDetail IS NOT NULL
                             BEGIN
+
+                               IF(@IsReference = 1)
+										BEGIN
+						  
+										  ---Asignar todas las piezas de la guía segun la referencia
+													INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]
+														(
+															[RoutePreparationDetailId]
+															,[PieceNumber]
+															,[PieceType]
+															,[RowStatus]
+															,[TokenCreated]
+															,[DateCreated]
+													)
+													SELECT @IdRoutePreparationDetail
+														   ,NoPiece
+														   ,@GuidePieceIsDry
+															,1
+															,@Token
+															,GETDATE()
+														 FROM  dbo.DeliveryOrderPiece WITH(NOLOCK) 
+															WHERE GuideNumber = @GuideNumber
+										
+
+
+										END
+										ELSE
+										   BEGIN
 
                                 --- Verificar si existe la pieza de la guía dentro del detalle de la preparación de la ruta
                                 SELECT @IdRoutePreparationDetailPiece = rpdp.IdRoutePreparationDetailPiece
@@ -728,7 +774,8 @@ BEGIN
                                                @UserProcess
                                                      ) 'UserProcess';
                                 END;
-                            END;
+                             END;
+                            END
                             ELSE
                             BEGIN
                                 ROLLBACK TRANSACTION;
