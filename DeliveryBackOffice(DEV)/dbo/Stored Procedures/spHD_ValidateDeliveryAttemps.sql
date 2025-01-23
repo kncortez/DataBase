@@ -18,6 +18,15 @@ BEGIN
         IncidenceId INT
     );
 
+    DECLARE @TblUpdatesGuides AS TABLE
+    (
+        IsLastMileReturn BIT
+      , StatusOrderId    TINYINT
+      , GuideNumber      INT
+      , GuideSerie       NVARCHAR(2)
+      , TypeService      NVARCHAR(3)
+    );
+
     -- Insert statements for procedure here
     DECLARE @TblGuides AS TABLE
     (
@@ -100,7 +109,7 @@ BEGIN
               AND dsd.Guide_Returned = 1;
 
 
-        -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
+     -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
         UPDATE do
         SET do.IsLastMileReturn = 1
           , do.StatusOrderId = @STATUSDECLAREDRETURNED_DO

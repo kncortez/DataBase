@@ -4,6 +4,10 @@
 -- Create date: <2022-09-02>
 -- Description:	< Registrar prueba de entrega en sitio para Fresh Delivery >
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date:<18-11-2024>
+-- Description:	<Se agrega nueva validación IsCompleted>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetExternalDelivery]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
@@ -39,6 +43,16 @@ BEGIN
     -- Variables para verificar ubicación en geocerca
     DECLARE @FixedLatitude NVARCHAR(20) = @Latitude;
     DECLARE @FixedLongitude NVARCHAR(20) = @Longitude;
+
+	IF OBJECT_ID('tempdb.dbo.#InsertedRecord', 'U') IS NOT NULL
+		DROP TABLE #InsertedRecord;
+
+	CREATE TABLE #InsertedRecord (
+		GuideNumber INT,
+		GuideSerie  NVARCHAR(2),
+		IdProcessedGuideCOD INT
+	);
+	CREATE NONCLUSTERED INDEX INDX_ProcessedGuideCOD_Temp ON #InsertedRecord (GuideSerie, GuideNumber);
 
     BEGIN TRY
 
@@ -234,14 +248,20 @@ BEGIN
 
 					INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
 					(
-						GuideSerie, GuideNumber, CourierManId, DataOriginId, Token, CustomerId
+						GuideSerie, GuideNumber, CourierManId, DataOriginId, Token, CustomerId, Date
 					)
+					OUTPUT
+						inserted.GuideSerie,
+						inserted.GuideNumber,
+						inserted.IdProcessedGuideCOD
+					INTO #InsertedRecord
 					SELECT ord.Guide_Serie AS 'GuideSerie',
 						   ord.Guide_Number AS 'GuideNumber',
 						   DAP.CourierId AS 'CourierManId',
 						   @DataOriginId AS 'DataOriginId',
 						   @Token AS 'Token',
-						   cus.IdCustomer
+						   cus.IdCustomer,
+						   GETDATE()
 					FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
 						LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK)
 							ON vp.CodeOfReference = ord.Sender_ID
@@ -262,7 +282,8 @@ BEGIN
 						   DAP.CourierId AS 'CourierManId',
 						   @DataOriginId AS 'DataOriginId',
 						   @Token AS 'Token',
-						   cus.IdCustomer
+						   cus.IdCustomer,
+						   GETDATE()
 					FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
 						LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK)
 							ON vp.CodeOfReference = ord.Sender_ID
@@ -284,7 +305,8 @@ BEGIN
 						   DAP.CourierId AS 'CourierManId',
 						   @DataOriginId AS 'DataOriginId',
 						   @Token AS 'Token',
-						   cus.IdCustomer
+						   cus.IdCustomer,
+						   GETDATE()
 					FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
 						INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH(NOLOCK)
 							ON ord.Guide_Serie = DOP.GuideSerie
@@ -322,6 +344,17 @@ BEGIN
         IF (@IsProcessSuccessful > 0)
 		BEGIN
 			COMMIT TRANSACTION SetExternalDeliveryTransaction;
+
+			UPDATE PG
+			SET IsCompleted = 1
+			FROM DeliveryBackOffice.dbo.ProcessedGuideCOD PG  WITH(NOLOCK)
+			INNER JOIN #InsertedRecord IR
+				ON PG.GuideSerie = IR.GuideSerie
+					AND PG.GuideNumber = IR.GuideNumber
+			WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
+
+			IF OBJECT_ID('tempdb.dbo.#InsertedRecord', 'U') IS NOT NULL
+				DROP TABLE #InsertedRecord;
 
             SELECT 
 				CAST(1 AS BIT) AS 'boolResult',
