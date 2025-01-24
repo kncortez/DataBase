@@ -897,7 +897,7 @@
     <Build Include="dbo\Stored Procedures\sphdGetCoverage.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetCountry.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetCatalog.sql" />
-    <Build Include="dbo\Stored Procedures\GetCustomerByCustType.sql" />
+    <Build Include="dbo\Stored Procedures\GetCustomerByCountry.sql" />
     <Build Include="dbo\Stored Procedures\GetVisitPointsByCustomer.sql" />
     <Build Include="dbo\Stored Procedures\GetSystemAccessByUser.sql" />
     <Build Include="dbo\Stored Procedures\GetUsersByVisitPoint.sql" />

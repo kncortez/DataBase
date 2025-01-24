@@ -1,26 +1,31 @@
 -- =============================================
 -- Author:		<Tito Garcia>
 -- Create date: <2024-12-10>
--- Description:	<Devuelve listado de clientes por tipo de cliente y país de origen>
+-- Description:	<Devuelve listado de clientes corporativos por país de origen>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetCustomerByCustType] 
-	@CountryId AS VARCHAR(2)='GT',
-	@CustomerTypeID AS INT = 1  --Corporativos
+CREATE PROCEDURE [dbo].[GetCustomerByCountry] 
+	@CountryId AS VARCHAR(2)='GT'
 AS
 BEGIN	
 	SET NOCOUNT ON;
 
 	BEGIN TRY
+		DECLARE @CorporativeCustomerID INT
+
+		SELECT @CorporativeCustomerID = idCustomerType 
+		FROM customerType WITH (NOLOCK)
+		WHERE CustomerTypeStatus = 1
+			AND Description = 'CORPORATIVO'
 
 		SELECT IdCustomer AS Id, Name
 		FROM Customer WITH (NOLOCK)
-		WHERE idCustomerType = @CustomerTypeID
+		WHERE idCustomerType = @CorporativeCustomerID
 			AND CountryID = @CountryId
 			AND RowSatus = 1
-		ORDER BY Name ASC 
-        
+		ORDER BY Name ASC
+
 		SELECT 1 AS 'StatusCode', 
-        'SUCCESS' AS 'Description'
+        'SUCCESS' AS 'Description' 
 
     END TRY 
 	BEGIN CATCH

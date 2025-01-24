@@ -4,7 +4,7 @@
 -- Description:	<Devuelve los sistemas a los que el usuario tiene acceso>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetSystemAccessByUser] 
-	@Code AS INT
+	@UserId AS INT
 AS
 BEGIN	
 	SET NOCOUNT ON;
@@ -18,7 +18,7 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.CatSystem cs WITH (NOLOCK)
                 ON ur.UstIdSystem = cs.SysIdSystem
         WHERE ur.UstRowStatus = 1
-            AND iu.IdUser = @Code
+            AND iu.IdUser = @UserId
         
 		SELECT 1 AS 'StatusCode', 
         'SUCCESS' AS 'Description'

@@ -16,6 +16,7 @@ BEGIN
 			INNER JOIN dbo.Customer cu WITH (NOLOCK)
 				ON vpc.CustomerID = cu.IdCustomer
 		WHERE vpc.StatusClient = 1
+			AND cu.RowStatus = 1
 			AND cu.IdCustomer = @CustomerId
 		ORDER BY vpc.DescriptionOfClient ASC;
 

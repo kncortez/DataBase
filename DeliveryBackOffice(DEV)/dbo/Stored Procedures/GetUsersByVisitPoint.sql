@@ -11,7 +11,9 @@ BEGIN
 
 	BEGIN TRY
 
-		SELECT iu.IdUser AS Id, iu.Username AS UserName, ru.UsrEmail AS Email
+		SELECT iu.IdUser AS Id
+			, iu.Username AS UserName
+			, ru.UsrEmail AS Email
 		FROM DeliveryBackOffice.dbo.RegisterUser ru WITH (NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH (NOLOCK)
 				ON ru.UsrIdUser = iu.RegisterUserID
