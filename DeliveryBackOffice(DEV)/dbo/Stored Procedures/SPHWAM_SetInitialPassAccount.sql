@@ -18,7 +18,11 @@ BEGIN TRY
           WHERE AccIdAccount = @IdAccount
   IF(@Status = 'V')
   BEGIN
-    SELECT  @UsrIdUser = us.UsrIdUser
+      DECLARE @Email					AS VARCHAR(200);
+      DECLARE @PasswordVerification	AS INT;
+
+      SELECT  @UsrIdUser = us.UsrIdUser,
+              @Email = us.UsrEmail
         FROM RegisterUser   us WITH (NOLOCK)  
 			INNER JOIN [dbo].Person               pe WITH (NOLOCK)  
 				ON pe.PerIdPerson = us.UsrIdPerson  
@@ -31,22 +35,52 @@ BEGIN TRY
 			INNER JOIN [dbo].CatTypeAccount       ta WITH (NOLOCK)  
 				ON ta.TacIdTypeAccount = ac.AccIdTypeAccount  
         WHERE ac.AccIdAccount = @IdAccount
-    BEGIN TRANSACTION  
-        UPDATE RegisterUser
-            SET UsrLastPassword = @Password, 
-                UsrTokenUpdated = @Token,
-                UsrDateUpdated = GETDATE()
-        WHERE UsrIdUser = @UsrIdUser;
-        UPDATE Account
-            SET AccConfirm = 'C', 
-                AccTokenUpdated = @Token,
-                AccDateUpdated = GETDATE()
-        WHERE AccIdAccount = @IdAccount;
-      IF @@TRANCOUNT > 0 
-      BEGIN  
-        COMMIT TRANSACTION;  
-        SELECT 1 AS [StatusCode], 'Cambio de contraseña exitoso' AS[MessageResponse] 
-      END  
+
+      SET @PasswordVerification =
+      (
+          SELECT COUNT(1) AS PasswordVerification
+          FROM dbo.PasswordLog pl
+          WHERE pl.PslPassword = @Password
+          AND pl.PslIdUser = @UsrIdUser
+      );
+      IF @PasswordVerification > 0
+      BEGIN
+            SELECT 0 AS [StatusCode], 'Contraseña ya usada anteriormente, Para proteger su cuenta, debe elegir una nueva contraseña cada vez que la restablezca.' AS [MessageResponse]
+      END
+      ELSE 
+      BEGIN
+          BEGIN TRANSACTION  
+            UPDATE RegisterUser
+                SET UsrLastPassword = @Password, 
+                    UsrTokenUpdated = @Token,
+                    UsrDateUpdated = GETDATE()
+            WHERE UsrIdUser = @UsrIdUser;
+            UPDATE Account
+                SET AccConfirm = 'C', 
+                    AccTokenUpdated = @Token,
+                    AccDateUpdated = GETDATE()
+            WHERE AccIdAccount = @IdAccount;
+
+            --Almacenar en el log de contraseñas
+            INSERT INTO [dbo].[PasswordLog]
+            ([PslIdUser], 
+              [PslPassword], 
+              [PslTokenCreated], 
+              [PslDateCreated]
+            )
+            VALUES
+            (@UsrIdUser, 
+              @Password, 
+              @Email, 
+              GETDATE()
+            );
+          IF @@TRANCOUNT > 0 
+          BEGIN  
+            COMMIT TRANSACTION;  
+            SELECT 1 AS [StatusCode], 'Cambio de contraseña exitoso' AS[MessageResponse] 
+          END  
+      END
+          
   END
   ELSE IF(@Status = 'C')
   BEGIN
