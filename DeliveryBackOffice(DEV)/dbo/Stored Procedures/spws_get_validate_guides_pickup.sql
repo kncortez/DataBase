@@ -108,7 +108,15 @@ BEGIN
 	    UNION
         SELECT SUBSTRING(Item, 1, 2) ItemSerie,
                SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
-               SUBSTRING(Item, CHARINDEX('-', Item), LEN(Item)) ItemPiece,
+               ISNULL(   (CASE
+										WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))) > 1 THEN
+											1
+										ELSE
+											SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))
+									END
+									),
+									0
+								) ItemPiece,
                CHARINDEX('-', Item) charinde,
                LEN(Item) len
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');

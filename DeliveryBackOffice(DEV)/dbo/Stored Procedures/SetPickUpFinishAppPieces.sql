@@ -245,7 +245,8 @@ BEGIN
 									),
 									0
 								) ItemPiece
-				FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+				FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',')
+				WHERE Item <>'';
 
 				UPDATE
 					[#listGuides]
