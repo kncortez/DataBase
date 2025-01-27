@@ -13,11 +13,14 @@ AS
 BEGIN
 
 DECLARE @pk_id INT = 0;
+DECLARE @InvoiceBalance DECIMAL(18,2) = 0;
+DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
 
     IF(@idCountry = 'GT')
     BEGIN
         SELECT
               @pk_id = inv_pk_id
+             ,@InvoiceBalance = inv_amount
         FROM  InvoiceHeader
         WHERE inv_SerieFEL = @Inv_SerieFEL
           AND inv_numberFEL = @Inv_NumberFEL
@@ -27,10 +30,20 @@ DECLARE @pk_id INT = 0;
     BEGIN
         SELECT
               @pk_id = inv_pk_id
+             ,@InvoiceBalance = inv_amount
         FROM  InvoiceHeader
         WHERE inv_SerieFEL = @Inv_SerieFEL
           AND inv_certificationFEL = @Inv_NumberFEL
           AND IdCountry = @idCountry
+
+        --CALCULOS DE MONTOS  NOTAS DE CREDITO
+        SELECT @AmountNotesCredits = ISNULL(SUM(inv_amount),0)
+        FROM InvoiceHeader WITH (NOLOCK)
+        WHERE inv_invoiceOfCreditNote = @pk_id
+           AND inv_type = 2;
+
+       SET @InvoiceBalance = @InvoiceBalance - @AmountNotesCredits;
+
     END
 
     SELECT
@@ -40,6 +53,7 @@ DECLARE @pk_id INT = 0;
            ,inv_numberFEL
            ,inv_certificationFEL
            ,inv_amount
+           ,@InvoiceBalance inv_balance
            --,*
     FROM invoiceHeader 
     WHERE inv_pk_id = @pk_id;
