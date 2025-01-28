@@ -1,16 +1,10 @@
-﻿--EXEC  [dbo].[sphw_generate_batch_cod] 33,'8'
-
--- =============================================
--- Author:		<Cristian Azurdia>
--- Update date: <2024-11-18>
--- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
 -- =============================================
 -- Author:		<Oscar Rodriguez>
 -- Update date: <2024-12-09>
 -- Description:	<Separacion de flujos para generacion de lotes cod inmediato y cod anticipado>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[sphw_generate_batch_cod]
+CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_anticipated]
     @IdBankParam INT
   , @BatchTimeRange VARCHAR(300) = ''
   , @CoDProcessID INT
@@ -84,7 +78,7 @@ BEGIN
         DECLARE @IdModule INT =
                 (
                     SELECT cm.ModIdModule
-                    FROM DeliveryBackOffice.dbo.CatModule cm WITH(NOLOCK)
+                    FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
                     WHERE cm.ModName = @ModuleName
                 );
         DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
@@ -114,7 +108,7 @@ BEGIN
         DECLARE @FrecuencyCOD INT =
                 (
                     SELECT CatBatchFrequencyCODId
-                    FROM CatBatchFrequencyCOD WITH(NOLOCK)
+                    FROM CatBatchFrequencyCOD WITH (NOLOCK)
                     WHERE Name = 'Inmediata'
                 );
 
@@ -153,14 +147,14 @@ BEGIN
                                  AND pg.RowStatus = 1
                                  AND COALESCE(VPO.CODAccountBankID, cus.CODAccountBankID, dcba.DCBA_Bank_Id) = @IdBankParam
                                  AND pg.Date > '2024-09-30 00:00:00.000'
-                                 AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
+                                 --AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                                  --AND ( cus.IdCustomerType IN(2,3)
                                  --	  OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))
                                  AND do.StatusOrderId != 7
-                                 AND do.StatusOrderId IN ( 5, 22, 24 )
+                                 --AND do.StatusOrderId IN ( 5, 22, 24, 1, (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recepcionado en Express Center COD Anticipado') )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
-								 AND ISNULL(pg.IsAnticipatedCOD,0) = 0
+								 AND pg.IsAnticipatedCOD = 1
 								 AND pg.IsCompleted = 1
                            FOR XML PATH('')
                        )
@@ -211,12 +205,12 @@ BEGIN
                                  --OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))						
 
                                  AND pg.Date > '2024-09-30 00:00:00.000'
-                                 AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
+                                 --AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
-                                 AND do.StatusOrderId IN ( 5, 22, 24 )
+                                 --AND do.StatusOrderId IN ( 5, 22, 24, 1, (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recepcionado en Express Center COD Anticipado')  )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
                                  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender --BNHL
-								 AND ISNULL(pg.IsAnticipatedCOD,0) = 0
+								 AND pg.IsAnticipatedCOD = 1
 								 AND pg.IsCompleted = 1
                            FOR XML PATH('')
                        )
@@ -294,7 +288,7 @@ BEGIN
                     (
                         SELECT
                                rh.RheId
-                        FROM DeliveryBackOffice.dbo.RateHeader rh WITH(NOLOCK)
+                        FROM DeliveryBackOffice.dbo.RateHeader rh WITH (NOLOCK)
                         WHERE rh.RheRowStatus = 1
                               AND rh.RheDefault = 1
 							  AND rh.RateTypeId = 1
@@ -305,7 +299,7 @@ BEGIN
             DECLARE @MinCODCommissionAmount DECIMAL(12, 2) =
                     (
                         SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
-                        FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
+                        FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'MinCODCommissionAmount'
                               AND Status = 1
 							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
@@ -313,7 +307,7 @@ BEGIN
             DECLARE @CODRateDefault DECIMAL(12, 2) =
                     (
                         SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
-                        FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
+                        FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODRateDef'
                               AND Status = 1
 							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
@@ -321,7 +315,7 @@ BEGIN
             DECLARE @CODExemptDefault DECIMAL(12, 2) =
                     (
                         SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
-                        FROM DeliveryBackOffice.dbo.ConfigParams cf WITH(NOLOCK)
+                        FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODExemptDef'
                               AND Status = 1
 							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
@@ -394,7 +388,7 @@ BEGIN
                     (
                         SELECT TOP 1
                                CrsId
-                        FROM dbo.CatRateSegment WITH(NOLOCK)
+                        FROM dbo.CatRateSegment WITH (NOLOCK)
                         WHERE CrsShortName = 'FOR'
                               AND CrsRowStatus = 'true'
                     );
@@ -433,8 +427,11 @@ BEGIN
                                   , 0
                                   , IIF(a1.TimePlaId = 2, 0, IIF(a1.TimePlaId = 1, 0, a1.PriceShippment))))
                          )
+						--Comision COD Anticipado
+						- a1.ComisionCODAnticipated
                      , 0) CODtoPay
                  , a1.Price
+				 , a1.ComisionCODAnticipated
             INTO #TableAmountCOD
             FROM
             (
@@ -476,6 +473,27 @@ BEGIN
                                    ))
                              , 0)
                          , 0)                                                                    Commision
+						 ,
+						CASE
+							WHEN 
+								(ACC.AnticipatedCODComission IS NOT NULL AND ACC.AnticipatedCODComission > 0.00)
+								AND (ACC.InitialRange <= ord.Collect_OnDelivery AND ord.Collect_OnDelivery <= ACC.FinalRange)
+							THEN
+								ACC.AnticipatedCODComission
+							ELSE
+								CASE
+									WHEN
+										CPmin1.Value >= ord.Collect_OnDelivery AND ord.Collect_OnDelivery <= CPmax1.Value
+									THEN
+										CAST(CPv1.value AS DECIMAL)
+									WHEN
+										CPmin2.Value >= ord.Collect_OnDelivery AND ord.Collect_OnDelivery <= CPmax2.Value
+									THEN
+										CAST(CPv2.value AS DECIMAL)
+									ELSE
+										CAST(CPv3.value AS DECIMAL)
+								END
+						END																		 ComisionCODAnticipated
                      , ord.PriceShippment                                                        DeliveryPrice
                      , .0                                                                        CODPaid
                      , 0                                                                         ReturnRates
@@ -551,6 +569,10 @@ BEGIN
                         ON rcv.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
                            AND rcv.RbcRowStatus = 1
                            AND rcv.RbcCodeOfReference = ord.Sender_ID
+					LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
+						ON rc.RbcIdRate = RH.RheId
+					LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODComission ACC WITH(NOLOCK)
+						ON RH.RheId = ACC.RateHeaderId
                     LEFT JOIN dbo.Township                    twn WITH (NOLOCK)
                         ON twn.IdTownship = ord.ReceiverIdTownship
                     LEFT JOIN dbo.Township                    twnm WITH (NOLOCK)
@@ -599,6 +621,21 @@ BEGIN
                     LEFT JOIN dbo.DeliveryOrderPaymentDetail  pyt WITH (NOLOCK)
                         ON pyt.GuideSerie = ord.Guide_Serie
                            AND pyt.GuideNumber = ord.Guide_Number
+					--Son rangos por default que tenemos si en dado caso el tarifario no cumple su rango
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin1 WITH(NOLOCK)
+						ON CPmin1.IdCountry = ord.ReceiverCountryId AND CPmin1.Name = 'MinRangeCODComisison1Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin2 WITH(NOLOCK)
+						ON CPmin2.IdCountry = ord.ReceiverCountryId AND CPmin2.Name = 'MinRangeCODComisison2Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmax1 WITH(NOLOCK)
+						ON CPmax1.IdCountry = ord.ReceiverCountryId AND CPmax1.Name = 'MaxRangeCODComisison1Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmax2 WITH(NOLOCK)
+						ON CPmax2.IdCountry = ord.ReceiverCountryId AND CPmax2.Name = 'MaxRangeCODComisison2Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv1 WITH(NOLOCK)
+						ON CPv1.IdCountry = ord.ReceiverCountryId AND CPv1.Name = 'ValueCODComisison1Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv2 WITH(NOLOCK)
+						ON CPv2.IdCountry = ord.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'
+					LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)
+						ON CPv3.IdCountry = ord.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
                 WHERE ord.Collect_OnDelivery > 0
                   AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender --BNHL
             ) a1
@@ -621,6 +658,7 @@ BEGIN
                  , CODRate
                  , CODExempt
                  , Commision
+				 , ComisionCODAnticipated
                  , SUM(DeliveryPrice)      DeliveryPrice
                  , SUM(ISNULL(CODPaid, 0)) CODPaid
                  , ReturnRates
@@ -641,6 +679,7 @@ BEGIN
                    , CODRate
                    , CODExempt
                    , Commision
+				   , ComisionCODAnticipated
                    , ReturnRates
                    , Id_bank
                    , [Name]
@@ -656,6 +695,7 @@ BEGIN
                                      , [Guide_Number]
                                      , [CODtoPay]
                                      , Commision
+				                     , ComisionCODAnticipated
                                      , [Price]
                                    );
 
@@ -666,7 +706,7 @@ BEGIN
             -- PARA CONOCER QUE GUIAS NO SE TIENEN QUE REPROCESAR
             UPDATE pgc
             SET pgc.RowStatus = 0
-            FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH (NOLOCK)
                 INNER JOIN #TableAmountCODTemp            tact
                     ON pgc.GuideSerie = tact.Guide_Serie
                        AND pgc.GuideNumber = tact.Guide_Number
@@ -674,11 +714,11 @@ BEGIN
                   AND pgc.BatchCODIdCommission IS NULL
                   AND pgc.RowStatus = 1
                   AND tact.CODtoPay <= 0
-				  AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
+				  AND pgc.IsAnticipatedCOD = 1;
 
             -- OBTENCION DEL NUMERO DE REFERENCIA (CORRELATIVO) PARA BAC
             SELECT @Reference = Last
-            FROM DeliveryBackOffice.dbo.CatCorrelativeCOD WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.CatCorrelativeCOD WITH (NOLOCK)
             WHERE BankId = @BankBAC
                   AND RowStatus = 1;
 
@@ -687,7 +727,7 @@ BEGIN
                  , tact.Guide_Number                                                          GuideNumber
                  , (
                        SELECT IdCatDebitAccountCOD
-                       FROM DeliveryBackOffice.dbo.CatDebitAccountCOD WITH(NOLOCK)
+                       FROM DeliveryBackOffice.dbo.CatDebitAccountCOD WITH (NOLOCK)
                        WHERE BankId = @BankBAC
                              AND RowStatus = 1
                    )                                                                          CatDebitAccountCODId
@@ -696,7 +736,7 @@ BEGIN
                       , IIF(tact.Commision < ISNULL(@MinCODCommissionAmount, 0)
                             , ISNULL(@MinCODCommissionAmount, 0)
                             , tact.Commision)
-                      , tact.Commision) + IIF(do.IsCollect = 'true', ISNULL(do.PriceShippment, 0), tact.Price)
+                      , tact.Commision) + IIF(do.IsCollect = 'true', ISNULL(do.PriceShippment, 0), tact.Price) + ISNULL(tact.ComisionCODAnticipated,0)
                    )                                                                          Amount      --CRASFIX
                                                                                                           --, tact.Commision                                                                          [Commision]
                  , IIF(CS.IdCustomerType != 1
@@ -704,9 +744,10 @@ BEGIN
                            , ISNULL(@MinCODCommissionAmount, 0)
                            , tact.Commision)
                      , tact.Commision)                                                        [Commision] --CRASFIX
+			     , tact.ComisionCODAnticipated                                                ComisionCODAnticipated
                  , (
                        SELECT IdCatTransactionTypeCOD
-                       FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH(NOLOCK)
+                       FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH (NOLOCK)
                        WHERE BankId = @BankBAC
                              AND RowStatus = 1
                              AND Description = @InAccount
@@ -714,13 +755,13 @@ BEGIN
                  , @BankBAC                                                                   BankId
                  , (
                        SELECT IdCatAccountTypeCOD
-                       FROM DeliveryBackOffice.dbo.CatAccountTypeCOD WITH(NOLOCK)
+                       FROM DeliveryBackOffice.dbo.CatAccountTypeCOD WITH (NOLOCK)
                        WHERE RowStatus = 1
                              AND AccountType = UPPER(@AccountType)
                    )                                                                          CatAccountTypeCODId
                  , (
                        SELECT IdCatConceptCOD
-                       FROM DeliveryBackOffice.dbo.CatConceptCOD WITH(NOLOCK)
+                       FROM DeliveryBackOffice.dbo.CatConceptCOD WITH (NOLOCK)
                        WHERE RowStatus = 1
                              AND Concept LIKE (@ConceptForza + '%')
                    )                                                                          CatConceptCODId
@@ -741,7 +782,7 @@ BEGIN
                 LEFT JOIN dbo.Customer                          CS WITH (NOLOCK)
                     ON CS.IdCustomer = ISNULL(do.IdCustomer, VPC.CustomerID)
             WHERE (
-                      (tact.Commision + tact.Price) > 0
+                      (tact.Commision + tact.Price + tact.ComisionCODAnticipated) > 0
                       OR do.IsCollect = 'true'
                   )
                   AND tact.CODtoPay > 0
@@ -770,7 +811,7 @@ BEGIN
                  , tact.Guide_Number                GuideNumber
                  , (
                        SELECT IdCatDebitAccountCOD
-                       FROM DeliveryBackOffice.dbo.CatDebitAccountCOD WITH(NOLOCK)
+                       FROM DeliveryBackOffice.dbo.CatDebitAccountCOD WITH (NOLOCK)
                        WHERE BankId = IIF(@BankBAC <> @IdBankParam, tact.Id_bank, @BankBAC)
                              AND RowStatus = 1
                    )                                CatDebitAccountCODId
@@ -781,11 +822,12 @@ BEGIN
                            , ISNULL(@MinCODCommissionAmount, 0)
                            , tact.Commision)
                      , tact.Commision)              [Commision] --CRASFIX
+				 , tact.ComisionCODAnticipated      ComisionCODAnticipated
                  , IIF(
                        tact.Id_bank NOT IN
                        (
                            SELECT PayingBank
-                           FROM DeliveryBackOffice.dbo.DeliveryBank WITH(NOLOCK)
+                           FROM DeliveryBackOffice.dbo.DeliveryBank WITH (NOLOCK)
                            WHERE ISNULL(Id_country,'GT') = @IdCountrySender
                                  AND Id_status = 1
                                  AND PayingBank <> @BankBAC
@@ -794,14 +836,14 @@ BEGIN
                      , IIF(tact.Id_bank = @BankBAC
                          , (
                                SELECT IdCatTransactionTypeCOD
-                               FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH(NOLOCK)
+                               FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH (NOLOCK)
                                WHERE BankId = tact.Id_bank
                                      AND RowStatus = 1
                                      AND Description = @InAccount
                            )
                          , (
                                SELECT IdCatTransactionTypeCOD
-                               FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH(NOLOCK)
+                               FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD WITH (NOLOCK)
                                WHERE BankId = @BankBAC
                                      AND RowStatus = 1
                                      AND Description = @OutAccount
@@ -810,13 +852,13 @@ BEGIN
                  , tact.Id_bank                     BankId
                  , (
                        SELECT IdCatAccountTypeCOD
-                       FROM DeliveryBackOffice.dbo.CatAccountTypeCOD WITH(NOLOCK)
+                       FROM DeliveryBackOffice.dbo.CatAccountTypeCOD WITH (NOLOCK)
                        WHERE RowStatus = 1
                              AND AccountType = UPPER(tact.DCBA_BankAccountType)
                    )                                CatAccountTypeCODId
                  , (
                        SELECT IdCatConceptCOD
-                       FROM DeliveryBackOffice.dbo.CatConceptCOD WITH(NOLOCK)
+                       FROM DeliveryBackOffice.dbo.CatConceptCOD WITH (NOLOCK)
                        WHERE RowStatus = 1
                              AND Concept LIKE (@ConceptCustomer + '%')
                    )                                CatConceptCODId
@@ -878,7 +920,7 @@ BEGIN
             -- SECCION PARA LA CREACION DEL LOTE PARA EL PAGO A CLIENTES
             DECLARE @MaxBatchNumber INT = 1 +
                                           (
-                                              SELECT ISNULL(MAX(IdBatchCOD), 0)FROM DeliveryBackOffice.dbo.BatchCOD WITH(NOLOCK)
+                                              SELECT ISNULL(MAX(IdBatchCOD), 0)FROM DeliveryBackOffice.dbo.BatchCOD WITH (NOLOCK)
                                           );
             DECLARE @NewIdBatchCODCustomer INT;
 
@@ -896,7 +938,7 @@ BEGIN
 				  , IsAnticipatedCOD
                 )
                 VALUES
-                (@IdBankParam, @MaxBatchNumber, @BatchTimeRange, 0);
+                (@IdBankParam, @MaxBatchNumber, @BatchTimeRange,1);
 
                 -- OBTENCION DEL ID QUE CORRESPONDE AL LOTE CREADO
                 SELECT @NewIdBatchCODCustomer = SCOPE_IDENTITY();
@@ -945,6 +987,7 @@ BEGIN
                       , CODDiscount
 					  , IdCountry
 					  , IsAnticipatedCOD
+					  , ComisionCODAnticipated
                     )
 					OUTPUT						
 						INSERTED.GuideSerie,
@@ -988,14 +1031,15 @@ BEGIN
                          , 0
                          , 0
 						 , @IdCountrySender
-						 , 0
+						 , 1
+						 , tcpt.ComisionCODAnticipated
                     FROM #TableCustomerPaymentTemp tcpt
 					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.GuideSerie  = tcpt.GuideSerie
                                                                          AND c.GuideNumber = tcpt.GuideNumber
                     WHERE NOT EXISTS
                     (
                         SELECT 1
-                        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdcod WITH(NOLOCK)
+                        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdcod WITH (NOLOCK)
                         WHERE bdcod.GuideSerie = tcpt.GuideSerie
                               AND bdcod.GuideNumber = tcpt.GuideNumber
                               AND bdcod.CreditAccountId = tcpt.CreditAccountId
@@ -1020,7 +1064,7 @@ BEGIN
 				  , IsAnticipatedCOD
                 )
                 VALUES
-                (@BankBAC, @MaxBatchNumber, @BatchTimeRange, 0);
+                (@BankBAC, @MaxBatchNumber, @BatchTimeRange, 1);
 
                 -- OBTENCION DEL ID QUE CORRESPONDE AL LOTE CREADO
                 SELECT @NewIdBatchCODForza = SCOPE_IDENTITY();
@@ -1065,6 +1109,7 @@ BEGIN
                       , DiscountPrice
 					  , IdCountry
 					  , IsAnticipatedCOD
+					  , ComisionCODAnticipated
                     )
 					OUTPUT						
 						INSERTED.GuideSerie,
@@ -1106,13 +1151,14 @@ BEGIN
                          , CODRate
                          , DiscountPrice
 						 , @IdCountrySender
-						 , 0
+						 , 1
+						 , tfpt.ComisionCODAnticipated
                     FROM #TableForzaPaymentTemp tfpt
 					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
                     WHERE NOT EXISTS
                     (
                         SELECT 1
-                        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdcod WITH(NOLOCK)
+                        FROM DeliveryBackOffice.dbo.BatchDetailCOD bdcod WITH (NOLOCK)
                         WHERE bdcod.GuideSerie = tfpt.GuideSerie
                               AND bdcod.GuideNumber = tfpt.GuideNumber
                               AND bdcod.CreditAccountId = tfpt.CreditAccountId
@@ -1137,7 +1183,7 @@ BEGIN
                 UPDATE pgc
                 SET pgc.BatchCODId = @NewIdBatchCODCustomer
                   , pgc.BatchCODIdCommission = @NewIdBatchCODForza
-                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH (NOLOCK)
                     INNER JOIN #TableCustomerPaymentTemp      tcpt
                         ON pgc.GuideSerie = tcpt.GuideSerie
                            AND pgc.GuideNumber = tcpt.GuideNumber
@@ -1147,7 +1193,7 @@ BEGIN
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
+					  AND pgc.IsAnticipatedCOD = 1;
             END;
 
             IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -1159,13 +1205,13 @@ BEGIN
                 -- ESTAS GUIAS CREAN SOLO EL REGISTRO DE PAGO A CLIENTE
                 UPDATE pgc
                 SET pgc.BatchCODId = @NewIdBatchCODCustomer
-                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH (NOLOCK)
                     INNER JOIN #TableCustomerPaymentTemp      tcpt
                         ON pgc.GuideSerie = tcpt.GuideSerie
                            AND pgc.GuideNumber = tcpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.RowStatus = 1
-					  AND ISNULL(pgc.IsAnticipatedCOD,0)  = 0;
+					  AND pgc.IsAnticipatedCOD = 1;
             END;
 
             IF ((@NewIdBatchCODForza IS NOT NULL) AND (@NewIdBatchCODForza > 0))
@@ -1177,13 +1223,13 @@ BEGIN
                 -- ESTAS GUIAS CREAN SOLO EL REGISTRO DE COMISION Y ENVIO
                 UPDATE pgc
                 SET pgc.BatchCODIdCommission = @NewIdBatchCODForza
-                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc WITH (NOLOCK)
                     INNER JOIN #TableForzaPaymentTemp         tfpt
                         ON pgc.GuideSerie = tfpt.GuideSerie
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
+					  AND pgc.IsAnticipatedCOD = 1;
             END;
         END;
         ELSE

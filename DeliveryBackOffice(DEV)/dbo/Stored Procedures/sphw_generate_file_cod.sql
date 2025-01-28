@@ -1868,7 +1868,7 @@ BEGIN
 		Id_bank
 	FROM DeliveryBank
 	WHERE Name = 'BANCO PROMERICA'
-	AND Id_country = 'GT'
+	AND Id_country = @IdCountrySender
 	AND Id_status = 1)
     BEGIN
         --------DETALLADO
