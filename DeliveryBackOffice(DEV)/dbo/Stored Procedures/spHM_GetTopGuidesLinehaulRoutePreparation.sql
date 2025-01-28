@@ -19,7 +19,7 @@ BEGIN
 	SELECT		TOP 40
 				[LRPCD].[GuideSerie],
 				[LRPCD].[GuideNumber],
-				ISNULL([SCD].[TicketNumber],'') AS 'TicketNumber',
+				ISNULL([DO].[Ticket_Number],'') AS 'TicketNumber',
 				[LRPCD].[DryPieceQuantity],
 				[LRPCD].[ColdPieceQuantity],
 				[CTC].[TypeContainerSerie],
@@ -32,8 +32,8 @@ BEGIN
 		ON		[LRPC].[ContainerId] = [C].[IdContainer]
 	INNER JOIN	[dbo].[CatTypeContainer] CTC WITH(NOLOCK)
 		ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
-	LEFT JOIN	[dbo].[ShippingContainerDetail] SCD WITH(NOLOCK)
-		ON		[LRPCD].[GuideSerie] = [SCD].[GuideSerie] AND [LRPCD].[GuideNumber] = [SCD].[GuideNumber]
+	LEFT JOIN	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+		ON		[LRPCD].[GuideSerie] = [DO].[Guide_Serie] AND [LRPCD].[GuideNumber] = [DO].[Guide_Number]
 	WHERE		[LRPCD].[RowStatus] = 1
 	AND			[LRPCD].[IsOpenProcess] = 0
 	ORDER BY	[LRPCD].[DateCreated] DESC;
