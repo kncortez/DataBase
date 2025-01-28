@@ -133,7 +133,8 @@ BEGIN
 			PriceShippment DECIMAL(18,2),
 			Collect_OnDelivery DECIMAL(18,2),
 			TypeService NVARCHAR(5),
-			DateCreated DATETIME
+			DateCreated DATETIME,
+			Receiver_Location NVARCHAR(100)
 		);
 
 		CREATE NONCLUSTERED INDEX IX_ProductVendor_Guide ON #AccountFilteredGuides (GuideSerie, GuideNumber);
@@ -158,6 +159,7 @@ BEGIN
 					,Collect_OnDelivery
 					,TypeService
 					,DateCreated
+					,Receiver_Location
 				)
 			SELECT
 				DISTINCT
@@ -175,6 +177,7 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
+					,ST.Settlement
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				OUTER APPLY (
@@ -186,7 +189,7 @@ BEGIN
 						INNER JOIN
 							[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 							ON
-								[SO].[StatusOrderId] = [DOD].[StatusOrderId]								
+								[SO].[StatusOrderId] = [DOD].[StatusOrderId]					
 					WHERE
 						DOD.[Guide_Serie] = DO.[Guide_Serie]
 						AND
@@ -198,6 +201,10 @@ BEGIN
 					ORDER BY
 						DOD.[DateCreated] DESC
 				) LastExternalStatus
+				INNER JOIN
+							[DeliveryBackOffice].[dbo].[Settlement] ST WITH(NOLOCK)	
+							ON 
+								[ST].[IdSettlement] = [DO].[ReceiverIdSettlement]	
 				INNER  JOIN
 					@FilteredStatus FS
 					ON
@@ -234,6 +241,7 @@ BEGIN
 					,Collect_OnDelivery
 					,TypeService
 					,DateCreated
+					,Receiver_Location
 				)
 			SELECT
 				DISTINCT
@@ -251,8 +259,13 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
+					,ST.Settlement
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				INNER JOIN
+							[DeliveryBackOffice].[dbo].[Settlement] ST WITH(NOLOCK)	
+							ON 
+								[ST].[IdSettlement] = [DO].[ReceiverIdSettlement]			
 				INNER JOIN
 					@FilteredStatus FS
 					ON
@@ -287,6 +300,7 @@ BEGIN
 					,Collect_OnDelivery
 					,TypeService
 					,DateCreated
+					,Receiver_Location
 				)
 			SELECT
 				DISTINCT
@@ -304,8 +318,13 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
+					,ST.Settlement
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				INNER JOIN
+							[DeliveryBackOffice].[dbo].[Settlement] ST WITH(NOLOCK)	
+							ON 
+								[ST].[IdSettlement] = [DO].[ReceiverIdSettlement]			
 				INNER JOIN
 					@FilteredStatus FS
 					ON
@@ -369,7 +388,8 @@ BEGIN
 					ELSE ISNULL(CONVERT(VARCHAR, DOPD.TimePlaId), '') 
 				END) 'TimePayment',
 				ISNULL(CPTime.TimePlaName, '') 'TimePaymentDescription',
-				ISNULL(CCC.Symbol+'.','Q.') 'CurrencySymbol'
+				ISNULL(CCC.Symbol+'.','Q.') 'CurrencySymbol',
+				ISNULL(DO.Receiver_Location,'') 'ReceiverLocation'
 			FROM
 				#AccountFilteredGuides DO WITH(NOLOCK)
 				INNER JOIN
