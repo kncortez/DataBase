@@ -3,6 +3,9 @@ BEGIN TRY
     BEGIN TRANSACTION;
 		ALTER TABLE [DeliveryBackOffice].[dbo].[RegisterUser]
 		ADD UsrCodeVerif varchar(100);
+
+		ALTER TABLE [DeliveryBackOffice].[dbo].[RegisterUser]
+		ADD UsrIsResetPass BIT;
 	COMMIT TRANSACTION 
 END TRY
 BEGIN CATCH
