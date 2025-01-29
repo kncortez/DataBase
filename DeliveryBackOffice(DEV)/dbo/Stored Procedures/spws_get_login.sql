@@ -12,7 +12,10 @@
 -- Update date: <2025-01-15>
 -- Description:	<Modificacion en consulta de país de la cuenta>
 -- =============================================
-
+-- Author:		<Aylinne Recinos>
+-- Update date: <2025-01-29>
+-- Description:	<Modificacion en consulta estado de la cuenta>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_login]
     -- Add the parameters for the stored procedure here
     @Username VARCHAR(200)
@@ -33,6 +36,7 @@ BEGIN
     DECLARE @StatusAccount CHAR(1);
     DECLARE @PasswordExpired BIT;
     DECLARE @VisitPointValid BIT = 0;
+    DECLARE @PasswordResetFlag BIT = 0;
     DECLARE @CODPercentage NVARCHAR(10);
     DECLARE @IdAccount INT;
 
@@ -84,6 +88,8 @@ BEGIN
                     0
             END
            )                            PasswordExpired
+         , ISNULL(usr.UsrIsResetPass,0) PasswordResetFlag
+         , ISNULL(ac.AccIdAccount,0) IdAccount
     INTO #User
     FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
         INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
@@ -205,9 +211,18 @@ BEGIN
             (
                 SELECT TOP 1 PasswordExpired FROM #User
             );
+            SET @PasswordResetFlag =
+            (
+                SELECT TOP 1 PasswordResetFlag FROM #User
+            );
+
+            SET @IdAccount =
+            (
+                SELECT TOP 1 IdAccount FROM #User
+            );
         IF @CountryIdOrigin = @CountryId
          BEGIN
-            IF @StatusAccount = 'C'
+            IF (@StatusAccount = 'C' OR ((@StatusAccount = 'P' OR @StatusAccount = 'V') AND @PasswordResetFlag = 1))
             BEGIN
                 IF @StatusRestrinct = 'ACTIVE' --USUARIO sin restricciones
                 BEGIN
@@ -216,6 +231,15 @@ BEGIN
 
                         IF @StatusUser = 1 -- usuario activo
                         BEGIN
+                            UPDATE RegisterUser
+                            SET UsrIsResetPass = 0,
+                            UsrCodeVerif = NULL
+                            WHERE UsrIdUser = @IdUser
+
+                            UPDATE Account 
+                            SET AccConfirm = 'C'
+                            WHERE AccIdAccount = @IdAccount
+
                             -- GENERAR TOKEN 
                             DECLARE @Token AS NVARCHAR(50)
                                 =

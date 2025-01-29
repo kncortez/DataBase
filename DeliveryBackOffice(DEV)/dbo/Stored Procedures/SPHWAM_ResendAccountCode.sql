@@ -14,6 +14,7 @@ BEGIN
 	DECLARE @FirstName AS NVARCHAR(100); 
 	DECLARE @LastName AS NVARCHAR(100); 
     DECLARE @Email AS NVARCHAR(200); 
+	DECLARE @PasswordReset AS BIT;
 	DECLARE @PBX NVARCHAR (5) = (SELECT [Value] FROM ConfigParams WHERE IdCountry = @CountryId AND Name = 'PBX');  
   	SELECT @IsConfirmed = AccConfirm 
           FROM Account 
@@ -27,7 +28,8 @@ BEGIN
     SELECT  @CodeTemporal = UsrCodeVerif,
 			@FirstName = pe.PerFirstName,
 			@LastName = pe.PerLastName,
-            @Email = us.UsrEmail
+            @Email = us.UsrEmail,
+			@PasswordReset = ISNULL(us.UsrIsResetPass,0)
         FROM RegisterUser   us WITH (NOLOCK)  
 			INNER JOIN [dbo].Person               pe WITH (NOLOCK)  
 				ON pe.PerIdPerson = us.UsrIdPerson  
@@ -42,7 +44,7 @@ BEGIN
         WHERE ac.AccIdAccount = @IdAccount
 
 	DECLARE @CountryName NVARCHAR (50) = (SELECT CountryNameES FROM CatCountry WHERE IdCountry = @CountryId);  
-	SELECT 1 AS [StatusCode], 'Se reenvío el correo exitosamente' AS[MessageResponse], @CodeTemporal AS [Code],@FirstName AS [FirstName], @LastName AS [LastName], @CountryName AS [CountryName], @Email AS [Email], @PBX AS [PBX] 
+	SELECT 1 AS [StatusCode], 'Se reenvío el correo exitosamente' AS[MessageResponse], @CodeTemporal AS [Code],@FirstName AS [FirstName], @LastName AS [LastName], @CountryName AS [CountryName], @Email AS [Email], @PBX AS [PBX], @PasswordReset AS [PasswordReset] 
 	END
 	ELSE
 	BEGIN

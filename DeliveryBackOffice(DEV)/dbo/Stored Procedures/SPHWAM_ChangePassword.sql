@@ -52,7 +52,8 @@ BEGIN
             UPDATE RegisterUser
                 SET UsrCodeVerif = @Code, 
                     UsrTokenUpdated = @Token,
-                    UsrDateUpdated = GETDATE()
+                    UsrDateUpdated = GETDATE(),
+                    UsrIsResetPass = 1
             WHERE UsrEmail = @Email;
             IF @@TRANCOUNT > 0 
             BEGIN  

@@ -53,7 +53,8 @@ BEGIN TRY
             UPDATE RegisterUser
                 SET UsrLastPassword = @Password, 
                     UsrTokenUpdated = @Token,
-                    UsrDateUpdated = GETDATE()
+                    UsrDateUpdated = GETDATE(),
+                    UsrIsResetPass = 0
             WHERE UsrIdUser = @UsrIdUser;
             UPDATE Account
                 SET AccConfirm = 'C', 
