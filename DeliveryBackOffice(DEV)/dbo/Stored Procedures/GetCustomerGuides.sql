@@ -177,7 +177,7 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
-					,ST.Settlement
+					,(DO.Receiver_Address +','+ Receiver_Town + ',' + Receiver_Department)
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				OUTER APPLY (
@@ -201,10 +201,6 @@ BEGIN
 					ORDER BY
 						DOD.[DateCreated] DESC
 				) LastExternalStatus
-				INNER JOIN
-							[DeliveryBackOffice].[dbo].[Settlement] ST WITH(NOLOCK)	
-							ON 
-								[ST].[IdSettlement] = [DO].[ReceiverIdSettlement]	
 				INNER  JOIN
 					@FilteredStatus FS
 					ON
@@ -259,13 +255,9 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
-					,ST.Settlement
+					,(DO.Receiver_Address +','+ Receiver_Town + ',' + Receiver_Department)
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-				INNER JOIN
-							[DeliveryBackOffice].[dbo].[Settlement] ST WITH(NOLOCK)	
-							ON 
-								[ST].[IdSettlement] = [DO].[ReceiverIdSettlement]			
 				INNER JOIN
 					@FilteredStatus FS
 					ON
@@ -318,13 +310,9 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
-					,ST.Settlement
+					,(DO.Receiver_Address +','+ Receiver_Town + ',' + Receiver_Department)
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-				INNER JOIN
-							[DeliveryBackOffice].[dbo].[Settlement] ST WITH(NOLOCK)	
-							ON 
-								[ST].[IdSettlement] = [DO].[ReceiverIdSettlement]			
 				INNER JOIN
 					@FilteredStatus FS
 					ON
