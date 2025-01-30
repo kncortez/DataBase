@@ -3,7 +3,7 @@ CREATE TABLE [dbo].[NotificationTrackingLog] (
     [Title]                         NVARCHAR (50) NOT NULL,
     [Message]                       NVARCHAR (150) NOT NULL,
     [StatusOrderId]                 TINYINT NOT NULL,
-    [IdGuideSuscription]            INT NOT NULL,
+    [IdNotificationTracking]            INT NOT NULL,
     [RowStatus]                     BIT NOT NULL DEFAULT 1,
     [UserCreated]                   NVARCHAR(50) NOT NULL,
 	[DateCreated]                   DATETIME NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE [dbo].[NotificationTrackingLog] (
 	[TokenUpdated]                  NVARCHAR(50) NULL,
     CONSTRAINT [PK_NotificationTrackingLog] PRIMARY KEY CLUSTERED ([IdNotificationTrackingLog] ASC),
     CONSTRAINT [FK_NotificationTrackingLog_StatusOrder] FOREIGN KEY (StatusOrderId) REFERENCES [dbo].[StatusOrder] (StatusOrderId),
-    CONSTRAINT [FK_NotificationTrackingLog_GuideSuscription] FOREIGN KEY ([IdGuideSuscription]) REFERENCES [dbo].[GuideSuscription] ([IdGuideSuscription])
+    CONSTRAINT [FK_NotificationTrackingLog_NotificationTracking] FOREIGN KEY ([IdNotificationTracking]) REFERENCES [dbo].[NotificationTracking] ([IdNotificationTracking])
 );
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la notificación', N'SCHEMA', N'dbo', N'TABLE', N'NotificationTrackingLog', N'COLUMN', N'IdNotificationTrackingLog'
 GO
@@ -23,7 +23,7 @@ EXECUTE sp_addextendedproperty N'MS_Description', N'Mensaje de la notificación'
 GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Estado de la guía, de la tabla StatusOrder', N'SCHEMA', N'dbo', N'TABLE', N'NotificationTrackingLog', N'COLUMN', N'StatusOrderId'
 GO
-EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la suscripción de la guía de la tabla GuideSuscription', N'SCHEMA', N'dbo', N'TABLE', N'NotificationTrackingLog', N'COLUMN', N'IdGuideSuscription'
+EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la suscripción de la tabla NotificationTracking', N'SCHEMA', N'dbo', N'TABLE', N'NotificationTrackingLog', N'COLUMN', N'IdNotificationTracking'
 GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Estado lógico del registro', N'SCHEMA', N'dbo', N'TABLE', N'NotificationTrackingLog', N'COLUMN', N'RowStatus'
 GO

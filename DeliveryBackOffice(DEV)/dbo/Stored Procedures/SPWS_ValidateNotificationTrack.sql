@@ -15,20 +15,18 @@ BEGIN
     BEGIN TRANSACTION
         BEGIN TRY
             DECLARE @IdNotificationTracking INT;
-            DECLARE @IdGuideSuscription INT;
             DECLARE @StatusGuide BIT;
 
-            SELECT  @IdGuideSuscription = IdGuideSuscription,
-                    @IdNotificationTracking = IdNotificationTracking
+            SELECT  @IdNotificationTracking = IdNotificationTracking
             FROM GuideSuscription WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber AND RowStatus = 1;
 
-            IF(@IdGuideSuscription IS NOT NULL)
+            IF(@IdNotificationTracking IS NOT NULL)
             BEGIN 
-                INSERT INTO dbo.NotificationTrackingLog ([Title], [Message], [StatusOrderId], [IdGuideSuscription], [UserCreated], [DateCreated], [TokenCreated])
+                INSERT INTO dbo.NotificationTrackingLog ([Title], [Message], [StatusOrderId], [IdNotificationTracking], [UserCreated], [DateCreated], [TokenCreated])
                 SELECT  @Title, 
                         @Message,
                         do.StatusOrderId,
-                        @IdGuideSuscription,
+                        @IdNotificationTracking,
                         @User, 
                         GETDATE(), 
                         @Token
