@@ -31,11 +31,22 @@ BEGIN
 	DECLARE @IdCountryByCustomer NVARCHAR(2) = 'GT'
 	DECLARE @InactiveUser INT = 1;
 
-	SET @InactiveUser = (SELECT TOP 1 CASE WHEN AccRowStatus=0 THEN 0 ELSE 1 END FROM [dbo].[Account] WHERE AccIdAccount = @IdAccount)
-
 
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
+
+	IF (@IdAccount IS NOT NULL)
+		BEGIN
+	         SET @InactiveUser = (SELECT TOP 1 CASE WHEN AccRowStatus=0 THEN 0 ELSE 1 END
+	                                         FROM [dbo].[Account] WHERE AccIdAccount = @IdAccount)
+			END 
+			  ELSE
+			  BEGIN 
+			   
+			   SET @InactiveUser = (SELECT TOP 1 CASE WHEN AccRowStatus=0 THEN 0
+			                                      ELSE 1 END
+	                                         FROM [dbo].[Account] WHERE IdCustomer = @CustomerID)
+			   END 
 	--FIN MODIFICACIÓN
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
 	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WHERE CustomerID = @CustomerID )
