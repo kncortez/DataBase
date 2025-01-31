@@ -7,6 +7,7 @@ CREATE PROCEDURE [dbo].[SPWS_ValidateNotificationGen]
 @Title NVARCHAR(50),
 @Message NVARCHAR(150),
 @IdAccount INT,
+@Action INT,
 @User NVARCHAR(50),
 @Token NVARCHAR(50)
 AS
@@ -20,8 +21,8 @@ BEGIN
 
             IF(@IdNotificationGeneral IS NOT NULL)
             BEGIN 
-                INSERT INTO dbo.NotificationGeneralLog ([Title], [Message], [IdNotificationGeneral], [UserCreated], [DateCreated], [TokenCreated])
-                VALUES (@Title, @Message, @IdNotificationGeneral, @User, GETDATE(), @Token)
+                INSERT INTO dbo.NotificationGeneralLog ([Title], [Message], [IdNotificationGeneral], [IdActionNotification], [UserCreated], [DateCreated], [TokenCreated])
+                VALUES (@Title, @Message, @IdNotificationGeneral, @Action, @User, GETDATE(), @Token)
 
                 SELECT 1 AS [StatusCode]
                 COMMIT TRANSACTION;

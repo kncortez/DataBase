@@ -3,6 +3,8 @@ CREATE TABLE [dbo].[NotificationGeneralLog] (
     [Title]                         NVARCHAR (50) NOT NULL,
     [Message]                       NVARCHAR (150) NOT NULL,
     [IdNotificationGeneral]         INT NOT NULL,
+    [IdActionNotification]          INT NOT NULL,
+    [IsRead]                        BIT NOT NULL DEFAULT 0,
     [RowStatus]                     BIT NOT NULL DEFAULT 1,
     [UserCreated]                   NVARCHAR(50) NOT NULL,
 	[DateCreated]                   DATETIME NOT NULL,
@@ -11,8 +13,13 @@ CREATE TABLE [dbo].[NotificationGeneralLog] (
 	[DateUpdated]                   DATETIME NULL,
 	[TokenUpdated]                  NVARCHAR(50) NULL,
     CONSTRAINT [PK_NotificationGeneralLog] PRIMARY KEY CLUSTERED ([IdNotificationGeneralLog] ASC),
-    CONSTRAINT [FK_NotificationGeneralLog_NotificationGeneral] FOREIGN KEY ([IdNotificationGeneral]) REFERENCES [dbo].[NotificationGeneral] ([IdNotificationGeneral])
+    CONSTRAINT [FK_NotificationGeneralLog_NotificationGeneral] FOREIGN KEY ([IdNotificationGeneral]) REFERENCES [dbo].[NotificationGeneral] ([IdNotificationGeneral]),
+    CONSTRAINT [FK_NotificationGeneralLog_CatActionNotification] FOREIGN KEY ([IdActionNotification]) REFERENCES [dbo].[CatActionNotification] ([IdActionNotification])
 );
+
+CREATE NONCLUSTERED INDEX [IDX_NotificationGeneralLog_DateCreated]
+    ON [dbo].[NotificationGeneralLog]([DateCreated] ASC);
+GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la notificación', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'IdNotificationGeneralLog'
 GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Título de la notificación', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'Title'
@@ -20,6 +27,10 @@ GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Mensaje de la notificación', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'Message'
 GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la suscripción de la tabla NotificationGeneral', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'IdNotificationGeneral'
+GO
+EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador del tipo de acción de la tabla CatActionNotification', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'IdActionNotification'
+GO
+EXECUTE sp_addextendedproperty N'MS_Description', N'Valida si la notificacion ya fue leída', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'IsRead'
 GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Estado lógico del registro', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'RowStatus'
 GO

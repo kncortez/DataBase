@@ -1,0 +1,8 @@
+INSERT INTO dbo.CatActionNotification ([Name], [Description], [UserCreated], [DateCreated], [TokenCreated])
+ VALUES('Rastreo de guías','Abrir pantalla de "Detalle del rastreo" precargando rastreo de la guía','SYS-ARECINOS', GETDATE(), 'SYS-ARECINOS')
+INSERT INTO dbo.CatActionNotification ([Name], [Description], [UserCreated], [DateCreated], [TokenCreated])
+ VALUES('Recolección confirmada','Abrir pantalla de "Recolecciones" aplicando el filtro de "Creado"','SYS-ARECINOS', GETDATE(), 'SYS-ARECINOS')
+INSERT INTO dbo.CatActionNotification ([Name], [Description], [UserCreated], [DateCreated], [TokenCreated])
+ VALUES('Recolección realizada','Abrir pantalla de "Recolecciones" aplicando el filtro de "Recolectado"','SYS-ARECINOS', GETDATE(), 'SYS-ARECINOS')
+INSERT INTO dbo.CatActionNotification ([Name], [Description], [UserCreated], [DateCreated], [TokenCreated])
+ VALUES('Acreditación de beneficios','Pantalla mis beneficios','SYS-ARECINOS', GETDATE(), 'SYS-ARECINOS')

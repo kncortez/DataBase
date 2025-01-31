@@ -5,9 +5,14 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[SPWS_GetNotificationsTrack]
 @IdOneSignal NVARCHAR(100),
-@IdAccount INT = NULL
+@IdAccount INT = NULL,
+@PageNumber INT,
+@PageSize INT
 AS
 BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @offset INT = (@PageNumber - 1) * @PageSize;
     BEGIN TRY
         DECLARE @IdNotificationTracking INT;
 
@@ -17,9 +22,12 @@ BEGIN
         AND (@IdAccount = 0 OR IdAccount = @IdAccount)
         AND RowStatus = 1;
 
-        SELECT [Title], [Message] 
+        SELECT [Title], [Message], [IdActionNotification], [DateCreated]
         FROM dbo.NotificationTrackingLog 
         WHERE IdNotificationTracking = @IdNotificationTracking
+        AND IsRead = 0
+        ORDER BY DateCreated DESC
+        OFFSET @offset ROWS FETCH NEXT @PageSize ROWS ONLY
     END TRY
     BEGIN CATCH
         SELECT 0 AS [StatusCode], ERROR_MESSAGE() AS [Message]

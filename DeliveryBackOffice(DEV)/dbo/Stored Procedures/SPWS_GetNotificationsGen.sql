@@ -5,9 +5,14 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[SPWS_GetNotificationsGen]
 @IdOneSignal NVARCHAR(100),
-@IdAccount INT
+@IdAccount INT,
+@PageNumber INT,
+@PageSize INT
 AS
 BEGIN
+  SET NOCOUNT ON;
+
+    DECLARE @offset INT = (@PageNumber - 1) * @PageSize;
     BEGIN TRY
         DECLARE @IdNotificationGeneral INT;
 
@@ -17,9 +22,12 @@ BEGIN
         AND IdOneSignal = @IdOneSignal
         AND RowStatus = 1;
 
-        SELECT [Title], [Message] 
+        SELECT [Title], [Message], [IdActionNotification], [DateCreated]
         FROM dbo.NotificationGeneralLog 
         WHERE IdNotificationGeneral = @IdNotificationGeneral
+        AND IsRead = 0
+        ORDER BY DateCreated DESC
+        OFFSET @offset ROWS FETCH NEXT @PageSize ROWS ONLY
     END TRY
     BEGIN CATCH
         SELECT 0 AS [StatusCode], ERROR_MESSAGE() AS [Message]
