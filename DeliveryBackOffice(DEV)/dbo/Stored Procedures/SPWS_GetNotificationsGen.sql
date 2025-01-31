@@ -22,7 +22,7 @@ BEGIN
         AND IdOneSignal = @IdOneSignal
         AND RowStatus = 1;
 
-        SELECT [Title], [Message], [IdActionNotification], [DateCreated]
+        SELECT [IdNotificationGeneralLog], [Title], [Message], [IdActionNotification], 2 AS [TypeSuscription], [DateCreated]
         FROM dbo.NotificationGeneralLog 
         WHERE IdNotificationGeneral = @IdNotificationGeneral
         AND IsRead = 0
