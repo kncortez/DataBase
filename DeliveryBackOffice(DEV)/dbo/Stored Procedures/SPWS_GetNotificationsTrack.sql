@@ -22,7 +22,7 @@ BEGIN
         AND (@IdAccount = 0 OR IdAccount = @IdAccount)
         AND RowStatus = 1;
 
-        SELECT [Title], [Message], [IdActionNotification], [DateCreated]
+        SELECT [IdNotificationTrackingLog], [Title], [Message], [IdActionNotification], 1 AS [TypeSuscription], [DateCreated]
         FROM dbo.NotificationTrackingLog 
         WHERE IdNotificationTracking = @IdNotificationTracking
         AND IsRead = 0
