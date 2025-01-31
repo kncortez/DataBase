@@ -8,6 +8,7 @@ CREATE PROCEDURE [dbo].[SPWS_ValidateNotificationTrack]
 @GuideNumber INT,
 @Title NVARCHAR(50),
 @Message NVARCHAR(150),
+@Action INT,
 @User NVARCHAR(50),
 @Token NVARCHAR(50)
 AS
@@ -22,11 +23,12 @@ BEGIN
 
             IF(@IdNotificationTracking IS NOT NULL)
             BEGIN 
-                INSERT INTO dbo.NotificationTrackingLog ([Title], [Message], [StatusOrderId], [IdNotificationTracking], [UserCreated], [DateCreated], [TokenCreated])
+                INSERT INTO dbo.NotificationTrackingLog ([Title], [Message], [StatusOrderId], [IdNotificationTracking], [IdActionNotification], [UserCreated], [DateCreated], [TokenCreated])
                 SELECT  @Title, 
                         @Message,
                         do.StatusOrderId,
                         @IdNotificationTracking,
+                        @Action,
                         @User, 
                         GETDATE(), 
                         @Token
