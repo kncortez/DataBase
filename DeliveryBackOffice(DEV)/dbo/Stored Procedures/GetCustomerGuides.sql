@@ -9,6 +9,11 @@
 -- Create date: <2022-11-03>
 -- Description:	< filtro para usuarios individuales para que meustre último estado externo>
 -- =============================================
+-- =============================================
+-- Author:		<Recinos, Aylinne>
+-- Create date: <2025-01-31>
+-- Description:	<Devuelve datos de dirección, municipio y departamento>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetCustomerGuides]
 	@AccountId INT, 
 	@StartDate DATETIME = NULL,
@@ -177,7 +182,7 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
-					,(DO.Receiver_Address +','+ DO.Receiver_Town + ',' + DO.Receiver_Department)
+					,(ISNULL(DO.Receiver_Address,'') +','+ ISNULL(DO.Receiver_Town,'') + ',' + ISNULL(DO.Receiver_Department,''))
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				OUTER APPLY (
@@ -255,7 +260,7 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
-					,(DO.Receiver_Address +','+ DO.Receiver_Town + ',' + DO.Receiver_Department)
+					,(ISNULL(DO.Receiver_Address,'') +','+ ISNULL(DO.Receiver_Town,'') + ',' + ISNULL(DO.Receiver_Department,''))
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				INNER JOIN
@@ -310,7 +315,7 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
-					,(DO.Receiver_Address +','+ DO.Receiver_Town + ',' + DO.Receiver_Department)
+					,(ISNULL(DO.Receiver_Address,'') +','+ ISNULL(DO.Receiver_Town,'') + ',' + ISNULL(DO.Receiver_Department,''))
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				INNER JOIN
