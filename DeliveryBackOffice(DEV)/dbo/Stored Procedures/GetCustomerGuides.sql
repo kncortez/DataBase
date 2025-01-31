@@ -134,7 +134,7 @@ BEGIN
 			Collect_OnDelivery DECIMAL(18,2),
 			TypeService NVARCHAR(5),
 			DateCreated DATETIME,
-			Receiver_Location NVARCHAR(100)
+			Receiver_Location NVARCHAR(800)
 		);
 
 		CREATE NONCLUSTERED INDEX IX_ProductVendor_Guide ON #AccountFilteredGuides (GuideSerie, GuideNumber);
@@ -177,7 +177,7 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
-					,(DO.Receiver_Address +','+ Receiver_Town + ',' + Receiver_Department)
+					,(DO.Receiver_Address +','+ DO.Receiver_Town + ',' + DO.Receiver_Department)
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				OUTER APPLY (
@@ -255,7 +255,7 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
-					,(DO.Receiver_Address +','+ Receiver_Town + ',' + Receiver_Department)
+					,(DO.Receiver_Address +','+ DO.Receiver_Town + ',' + DO.Receiver_Department)
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				INNER JOIN
@@ -310,7 +310,7 @@ BEGIN
 					,DO.Collect_OnDelivery
 					,DO.TypeService
 					,DO.DateCreated
-					,(DO.Receiver_Address +','+ Receiver_Town + ',' + Receiver_Department)
+					,(DO.Receiver_Address +','+ DO.Receiver_Town + ',' + DO.Receiver_Department)
 			FROM
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				INNER JOIN
