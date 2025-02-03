@@ -25,6 +25,10 @@
 -- Update date: <2024-11-18>
 -- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2025-01-31>
+-- Description:	<Se quitan las PK de las tablas temporales y se agregar logs en los CATCH>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
@@ -32,9 +36,9 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @ReceiverName NVARCHAR(200),
     -- @PhotoDryB64 VARCHAR(MAX),
     -- @PhotoColdB64 VARCHAR(MAX),
-    @Latitude NVARCHAR(20),
-    @Longitude NVARCHAR(20),
-    @Accuracy NVARCHAR(20),
+    @Latitude NVARCHAR(20) = NULL,
+    @Longitude NVARCHAR(20) = NULL,
+    @Accuracy NVARCHAR(20) = NULL,
     @TblDetail AS TblPaymentList READONLY,
     @FullPayment DECIMAL(12, 2) = 0,
     @Token VARCHAR(50),
@@ -55,8 +59,10 @@ BEGIN
 		GuideSerie NVARCHAR(8),
 		GuideNumber INT,
 		BatchCodId INT,
-		CONSTRAINT PK_GuidesProcessCOD PRIMARY KEY (GuideSerie, GuideNumber)
     );
+
+	CREATE NONCLUSTERED INDEX IDX_GuidesProcessCOD ON 
+	#GuidesProcessCOD (GuideSerie, GuideNumber)
 
     -- control de inserciones para transacción
     DECLARE @RInserted INT;
@@ -85,7 +91,6 @@ BEGIN
     (
        IdCustomer INT NOT NULL,
        PortfolioId INT NOT NULL,
-       CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
     );
 
     --Estado para Reenviado a Express Center
@@ -126,7 +131,7 @@ BEGIN
 
 	--Variable para validar si la guia ha sido procesada en un lote al momento de entrega
 	DECLARE @IsGuideProcessed BIT;
-	SET @IsGuideProcessed = IIF(EXISTS (SELECT 1 FROM ProcessedGuideCOD WITH(NOLOCK)WHERE GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie), 1, 0);
+	SET @IsGuideProcessed = IIF(EXISTS (SELECT 1 FROM ProcessedGuideCOD WITH(NOLOCK) WHERE GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie), 1, 0);
 
     BEGIN TRY
 
@@ -199,6 +204,29 @@ BEGIN
 
         SET @FixedLatitude = NULL;
         SET @FixedLongitude = NULL;
+		
+		INSERT INTO [dbo].[RoutePreparationLogError]
+		(
+		    [ErrorDescription],
+		    [ErrorNumber],
+		    [ErrorProcedure],
+		    [ErrorLine],
+		    [GuideSerie],
+		    [GuideNumber],
+		    [TokenCreated],
+		    [DateCreated]
+		)
+		VALUES
+		(   
+			ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+		    ERROR_NUMBER(),     -- ErrorNumber - int
+		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+		    ERROR_LINE(),     -- ErrorLine - int
+		    @GuideSerie,     -- GuideSerie - nvarchar(2)
+		    @GuideNumber,     -- GuideNumber - int
+		    @Token,       -- TokenCreated - varchar(50)
+		    GETDATE() -- DateCreated - datetime
+		);
     END CATCH;
 
     BEGIN TRANSACTION;
@@ -388,7 +416,7 @@ BEGIN
                                         @StatusEXC,
                                         IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5)))
 								FROM 
-									[dbo].[DeliverySettlementDetail] ds
+									[dbo].[DeliverySettlementDetail] ds WITH (NOLOCK)
 								INNER JOIN 
 									[LatestID] li 
 								ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
@@ -446,7 +474,7 @@ BEGIN
 						acodd.IsAgaintsBalancePaid = 1,
 						acodd.AgaintsBalanceAmount = bdcod.Amount,
 						acodd.AgaintsBalancePaid = bdcod.Amount
-                   FROM DeliveryOrderDetail dod
+                   FROM DeliveryOrderDetail dod WITH (NOLOCK)
                         INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                 ON dod.Guide_Serie = acodd.GuideSerie
                                AND dod.Guide_Number = acodd.GuideNumber
@@ -680,6 +708,29 @@ BEGIN
                     END;
                 END TRY
                 BEGIN CATCH
+		
+					INSERT INTO [dbo].[RoutePreparationLogError]
+					(
+						[ErrorDescription],
+						[ErrorNumber],
+						[ErrorProcedure],
+						[ErrorLine],
+						[GuideSerie],
+						[GuideNumber],
+						[TokenCreated],
+						[DateCreated]
+					)
+					VALUES
+					(   
+						ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+						ERROR_NUMBER(),     -- ErrorNumber - int
+						ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+						ERROR_LINE(),     -- ErrorLine - int
+						@GuideSerie,     -- GuideSerie - nvarchar(2)
+						@GuideNumber,     -- GuideNumber - int
+						@Token,       -- TokenCreated - varchar(50)
+						GETDATE() -- DateCreated - datetime
+					);
 
                 END CATCH;
                 -------------------WEBHOOK.FIN------------------------------			
@@ -724,7 +775,7 @@ BEGIN
 									[CPP].[Saturday],
 									[CPP].[Sunday],
 									[CPP].[PointPromoFactor]
-					FROM	[dbo].[CatPointPromo] CPP
+					FROM	[dbo].[CatPointPromo] CPP WITH (NOLOCK)
 					WHERE	[CPP].[RowStatus] = 1
 						AND [CPP].[InPointGeneration] = 1
 						AND SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
@@ -822,7 +873,7 @@ BEGIN
 						TOP 1
 							@GuideAlreadyInPointLog = 1
 					FROM
-						[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL
+						[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH (NOLOCK)
 					WHERE
 						PBSL.GuideNumber = @GuideNumber
 						AND
@@ -897,7 +948,7 @@ BEGIN
 																												WHEN @ForzaPointsGenerationType = 'MONTO' THEN CAST([PSL].[PointsReceived] / (SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
 																												ELSE 0
 																											END
-											FROM		[dbo].[PointsByServiceLog] PSL
+											FROM		[dbo].[PointsByServiceLog] PSL WITH (NOLOCK)
 											WHERE PSL.GuideSerie = @GuideSerie
 											AND PSL.GuideNumber = @GuideNumber
 											AND PSL.RowStatus = 1;
@@ -906,7 +957,7 @@ BEGIN
 
 							-- Agregar puntos a membresía
 							SET @PointsGenerated = ISNULL((SELECT	SUM([PSL].[PointsReceived])
-													FROM	[dbo].[PointsByServiceLog] PSL
+													FROM	[dbo].[PointsByServiceLog] PSL WITH (NOLOCK)
 													WHERE	[PSL].[GuideSerie] = @GuideSerie
 														AND [PSL].[GuideNumber] = @GuideNumber
 														AND PSL.RowStatus = 1), 0);
@@ -920,6 +971,29 @@ BEGIN
 
 				END TRY
 				BEGIN CATCH
+		
+					INSERT INTO [dbo].[RoutePreparationLogError]
+					(
+						[ErrorDescription],
+						[ErrorNumber],
+						[ErrorProcedure],
+						[ErrorLine],
+						[GuideSerie],
+						[GuideNumber],
+						[TokenCreated],
+						[DateCreated]
+					)
+					VALUES
+					(   
+						ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+						ERROR_NUMBER(),     -- ErrorNumber - int
+						ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+						ERROR_LINE(),     -- ErrorLine - int
+						@GuideSerie,     -- GuideSerie - nvarchar(2)
+						@GuideNumber,     -- GuideNumber - int
+						@Token,       -- TokenCreated - varchar(50)
+						GETDATE() -- DateCreated - datetime
+					);
 
 				END CATCH
 				-------------------FORZA POINTS.FIN------------------------------
@@ -1084,12 +1158,7 @@ BEGIN
 						p.DataOriginId = d.DataOriginId,
 						p.Token = d.Token,
 						p.CustomerId = d.IdCustomer	
-					OUTPUT
-						INSERTED.GuideSerie,
-						INSERTED.GuideNumber,
-						INSERTED.IdProcessedGuideCOD
-					INTO #GuidesProcessCOD
-					FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p
+					FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p WITH (NOLOCK)
 					INNER JOIN DataToUpdate d
 						ON p.GuideSerie = d.GuideSerie AND p.GuideNumber = d.GuideNumber;
 				END; --FIN VALIDACION COD ANTICIPADO
@@ -1180,11 +1249,6 @@ BEGIN
 						SET p.DataOriginId = d.DataOriginId,
 							p.Token = d.Token,
 							p.CustomerId = d.CustomerId
-						OUTPUT
-							INSERTED.GuideSerie,
-							INSERTED.GuideNumber,
-							INSERTED.IdProcessedGuideCOD
-						INTO #GuidesProcessCOD
 						FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p WITH(NOLOCK)
 						INNER JOIN DataToUpdate d
 							ON p.GuideSerie = d.GuideSerie AND p.GuideNumber = d.GuideNumber;
@@ -1313,6 +1377,29 @@ BEGIN
 
 		END TRY
 		BEGIN CATCH
+		
+			INSERT INTO [dbo].[RoutePreparationLogError]
+			(
+				[ErrorDescription],
+				[ErrorNumber],
+				[ErrorProcedure],
+				[ErrorLine],
+				[GuideSerie],
+				[GuideNumber],
+				[TokenCreated],
+				[DateCreated]
+			)
+			VALUES
+			(   
+				ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+				ERROR_NUMBER(),     -- ErrorNumber - int
+				ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+				ERROR_LINE(),     -- ErrorLine - int
+				@GuideSerie,     -- GuideSerie - nvarchar(2)
+				@GuideNumber,     -- GuideNumber - int
+				@Token,       -- TokenCreated - varchar(50)
+				GETDATE() -- DateCreated - datetime
+			);
 		    
 		END CATCH
 
@@ -1341,11 +1428,12 @@ BEGIN
 		    ERROR_NUMBER(),     -- ErrorNumber - int
 		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
 		    ERROR_LINE(),     -- ErrorLine - int
-		    NULL,     -- GuideSerie - nvarchar(2)
-		    NULL,     -- GuideNumber - int
-		    '',       -- TokenCreated - varchar(50)
+		    @GuideSerie,     -- GuideSerie - nvarchar(2)
+		    @GuideNumber,     -- GuideNumber - int
+		    @Token,       -- TokenCreated - varchar(50)
 		    GETDATE() -- DateCreated - datetime
-		    )
+		);
+
     END CATCH;
 
     IF @@TRANCOUNT > 0
