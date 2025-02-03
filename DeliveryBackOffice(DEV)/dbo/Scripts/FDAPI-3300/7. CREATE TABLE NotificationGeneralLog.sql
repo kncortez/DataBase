@@ -4,6 +4,8 @@ CREATE TABLE [dbo].[NotificationGeneralLog] (
     [Message]                       NVARCHAR (150) NOT NULL,
     [IdNotificationGeneral]         INT NOT NULL,
     [IdActionNotification]          INT NOT NULL,
+    [GuideSerie]                    NVARCHAR(2) NULL,
+    [GuideNumber]                   INT NULL,
     [IsRead]                        BIT NOT NULL DEFAULT 0,
     [RowStatus]                     BIT NOT NULL DEFAULT 1,
     [UserCreated]                   NVARCHAR(50) NOT NULL,
@@ -14,7 +16,8 @@ CREATE TABLE [dbo].[NotificationGeneralLog] (
 	[TokenUpdated]                  NVARCHAR(50) NULL,
     CONSTRAINT [PK_NotificationGeneralLog] PRIMARY KEY CLUSTERED ([IdNotificationGeneralLog] ASC),
     CONSTRAINT [FK_NotificationGeneralLog_NotificationGeneral] FOREIGN KEY ([IdNotificationGeneral]) REFERENCES [dbo].[NotificationGeneral] ([IdNotificationGeneral]),
-    CONSTRAINT [FK_NotificationGeneralLog_CatActionNotification] FOREIGN KEY ([IdActionNotification]) REFERENCES [dbo].[CatActionNotification] ([IdActionNotification])
+    CONSTRAINT [FK_NotificationGeneralLog_CatActionNotification] FOREIGN KEY ([IdActionNotification]) REFERENCES [dbo].[CatActionNotification] ([IdActionNotification]),
+    CONSTRAINT [FK_NotificationGeneralLog_Guide] FOREIGN KEY (GuideSerie, GuideNumber) REFERENCES [dbo].[DeliveryOrder] (Guide_Serie, Guide_Number)
 );
 
 CREATE NONCLUSTERED INDEX [IDX_NotificationGeneralLog_DateCreated]
@@ -29,6 +32,10 @@ GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la suscripción de la tabla NotificationGeneral', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'IdNotificationGeneral'
 GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador del tipo de acción de la tabla CatActionNotification', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'IdActionNotification'
+GO
+EXECUTE sp_addextendedproperty N'MS_Description', N'Serie de la guía de la tabla DeliveryOrder', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'GuideSerie'
+GO
+EXECUTE sp_addextendedproperty N'MS_Description', N'Número de la guía de la tabla DeliveryOrder', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'GuideNumber'
 GO
 EXECUTE sp_addextendedproperty N'MS_Description', N'Valida si la notificacion ya fue leída', N'SCHEMA', N'dbo', N'TABLE', N'NotificationGeneralLog', N'COLUMN', N'IsRead'
 GO

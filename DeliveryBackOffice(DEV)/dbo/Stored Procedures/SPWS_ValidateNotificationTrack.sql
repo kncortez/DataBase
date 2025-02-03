@@ -23,12 +23,14 @@ BEGIN
 
             IF(@IdNotificationTracking IS NOT NULL)
             BEGIN 
-                INSERT INTO dbo.NotificationTrackingLog ([Title], [Message], [StatusOrderId], [IdNotificationTracking], [IdActionNotification], [UserCreated], [DateCreated], [TokenCreated])
+                INSERT INTO dbo.NotificationTrackingLog ([Title], [Message], [StatusOrderId], [IdNotificationTracking], [IdActionNotification],[GuideSerie],[GuideNumber], [UserCreated], [DateCreated], [TokenCreated])
                 SELECT  @Title, 
                         @Message,
                         do.StatusOrderId,
                         @IdNotificationTracking,
                         @Action,
+                        @GuideSerie,
+                        @GuideNumber,
                         @User, 
                         GETDATE(), 
                         @Token
