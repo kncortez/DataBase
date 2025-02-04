@@ -22,10 +22,9 @@ BEGIN
         AND IdOneSignal = @IdOneSignal
         AND RowStatus = 1;
 
-        SELECT [IdNotificationGeneralLog], [Title], [Message], [IdActionNotification], 2 AS [TypeSuscription], [DateCreated], ISNULL([GuideSerie],'') AS [GuideSerie], ISNULL([GuideNumber],0) AS [GuideNumber]
+        SELECT [IdNotificationGeneralLog], [Title], [Message], [IdActionNotification], 2 AS [TypeSuscription], [DateCreated], ISNULL([GuideSerie],'') AS [GuideSerie], ISNULL([GuideNumber],0) AS [GuideNumber], [IsRead]
         FROM dbo.NotificationGeneralLog 
         WHERE IdNotificationGeneral = @IdNotificationGeneral
-        AND IsRead = 0
         ORDER BY DateCreated DESC
         OFFSET @offset ROWS FETCH NEXT @PageSize ROWS ONLY
     END TRY
