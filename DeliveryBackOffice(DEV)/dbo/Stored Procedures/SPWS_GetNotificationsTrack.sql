@@ -22,10 +22,9 @@ BEGIN
         AND (@IdAccount = 0 OR IdAccount = @IdAccount)
         AND RowStatus = 1;
 
-        SELECT [IdNotificationTrackingLog], [Title], [Message], [IdActionNotification], 1 AS [TypeSuscription], [DateCreated], [GuideSerie], [GuideNumber]
+        SELECT [IdNotificationTrackingLog], [Title], [Message], [IdActionNotification], 1 AS [TypeSuscription], [DateCreated], [GuideSerie], [GuideNumber], [IsRead]
         FROM dbo.NotificationTrackingLog 
         WHERE IdNotificationTracking = @IdNotificationTracking
-        AND IsRead = 0
         ORDER BY DateCreated DESC
         OFFSET @offset ROWS FETCH NEXT @PageSize ROWS ONLY
     END TRY
