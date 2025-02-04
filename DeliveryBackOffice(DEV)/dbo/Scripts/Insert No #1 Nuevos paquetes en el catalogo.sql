@@ -98,3 +98,11 @@ c/u.', 2, N'PAQUETE PRO', @IdCatSubscriptionFLEXI, 1, GETDATE(), N'SYS-EVASQUEZ'
 
 INSERT [dbo].[CatSubscriptionDescription] ( [Title], [Description], [Position], [Type], [CatSubscriptionId], [RowStatus], [DateCreated], [TokenCreated], [DateUpdated], [TokenUpdated]) VALUES ( N'Aplican restricciones', N'En caso de que tu envío exceda el peso, +Q1.00 por libra adicional, consulta los términos y condiciones.', 3, N'PAQUETE PRO', @IdCatSubscriptionFLEXI, 1, GETDATE(), N'SYS-EVASQUEZ', NULL, NULL)
 
+
+
+
+INSERT [dbo].[CatSubscriptionDiscountRange] ( [CatSubscriptionId], [DiscountLowServiceRange], [DiscountTopServiceRange], [ValueTypeId], [DiscountValue], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated])
+ VALUES ( @IdCatSubscriptionMICRO, 15, NULL, 1, CAST(0.00 AS Decimal(5, 2)), 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL)
+
+INSERT [dbo].[CatSubscriptionDiscountRange] ( [CatSubscriptionId], [DiscountLowServiceRange], [DiscountTopServiceRange], [ValueTypeId], [DiscountValue], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated]) 
+VALUES ( @IdCatSubscriptionFLEXI, 300, NULL, 1, CAST(0.00 AS Decimal(5, 2)), 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL)
