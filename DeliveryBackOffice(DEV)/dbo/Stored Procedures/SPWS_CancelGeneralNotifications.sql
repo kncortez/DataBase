@@ -12,14 +12,39 @@ AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION
+        -- Desactivar las notificaciones generales
             UPDATE NotificationGeneral
             SET RowStatus = 0,
             UserUpdated = @User,
             TokenUpdated = @Token,
             DateUpdated = GETDATE()
             WHERE IdOneSignal = @IdOneSignal
-            AND IdAccount = @IdAccount
+            AND (@IdAccount = 0 OR @IdAccount IS NULL OR IdAccount = @IdAccount)
             AND RowStatus = 1;
+
+        -- Desactivar las notificaciones de las guías
+            DECLARE @IdNotificationTracking INT = (SELECT IdNotificationTracking 
+                                                    FROM NotificationTracking 
+                                                    WHERE IdOneSignal = @IdOneSignal 
+                                                    AND (@IdAccount = 0 OR @IdAccount IS NULL OR IdAccount = @IdAccount)
+                                                    AND RowStatus = 1) 
+
+            UPDATE GuideSuscription
+            SET RowStatus = 0,
+            UserUpdated = @User,
+            TokenUpdated = @Token,
+            DateUpdated = GETDATE()
+            WHERE IdNotificationTracking = @IdNotificationTracking
+            AND RowStatus = 1;
+
+            UPDATE NotificationTracking
+            SET RowStatus = 0,
+            UserUpdated = @User,
+            TokenUpdated = @Token,
+            DateUpdated = GETDATE()
+            WHERE IdNotificationTracking = @IdNotificationTracking
+
+
 
             IF(@@ROWCOUNT > 0)
             BEGIN
