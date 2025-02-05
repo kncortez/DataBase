@@ -17,6 +17,7 @@ BEGIN
     BEGIN TRANSACTION
         BEGIN TRY
             DECLARE @IdNotificationGeneral INT;
+            DECLARE @NewIdNotificationLog INT;
 
             SELECT  @IdNotificationGeneral = IdNotificationGeneral
             FROM NotificationGeneral WHERE IdAccount = @IdAccount AND RowStatus = 1;
@@ -25,8 +26,12 @@ BEGIN
             BEGIN 
                 INSERT INTO dbo.NotificationGeneralLog ([Title], [Message], [IdNotificationGeneral], [IdActionNotification], [GuideSerie], [GuideNumber], [UserCreated], [DateCreated], [TokenCreated])
                 VALUES (@Title, @Message, @IdNotificationGeneral, @Action, IIF(@GuideSerie = '', NULL, @GuideSerie), IIF(@GuideNumber = 0, NULL, @GuideNumber), @User, GETDATE(), @Token)
-
-                SELECT 1 AS [StatusCode]
+                
+                SET @NewIdNotificationLog = SCOPE_IDENTITY();
+                
+                SELECT  1 AS [StatusCode],
+                        @NewIdNotificationLog AS [IdNotification],
+                        GETDATE() AS [DateCreated]
                 COMMIT TRANSACTION;
             END
             ELSE
