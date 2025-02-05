@@ -17,6 +17,7 @@ BEGIN
         BEGIN TRY
             DECLARE @IdNotificationTracking INT;
             DECLARE @StatusGuide BIT;
+            DECLARE @NewIdNotificationLog INT;
 
             SELECT  @IdNotificationTracking = IdNotificationTracking
             FROM GuideSuscription WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber AND RowStatus = 1;
@@ -37,9 +38,13 @@ BEGIN
                 FROM DeliveryOrder do WITH(NOLOCK)
                 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 
+                SET @NewIdNotificationLog = SCOPE_IDENTITY();
+
                 SELECT 1 AS [StatusCode],
                         [IdOneSignal],
-                        ISNULL(IdAccount, 0) AS [IdAccount]
+                        ISNULL(IdAccount, 0) AS [IdAccount],
+                        @NewIdNotificationLog AS [IdNotification],
+                        GETDATE() AS [DateCreated]
                 FROM NotificationTracking WHERE IdNotificationTracking = @IdNotificationTracking
                 COMMIT TRANSACTION;
             END
