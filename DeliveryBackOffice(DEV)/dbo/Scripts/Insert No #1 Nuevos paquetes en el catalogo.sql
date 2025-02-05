@@ -17,12 +17,16 @@ INSERT [dbo].[MarketplaceTagsByProduct] ( [MarketplaceProductTagsId], [RowStatus
 
 INSERT [dbo].[MarketplaceTagsByProduct] ([MarketplaceProductTagsId], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [Position]) VALUES (2, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionFLEXI, NULL, 6)
 
+INSERT [dbo].[MarketplaceTagsByProduct] ( [MarketplaceProductTagsId], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [Position]) VALUES (4, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionMICRO, NULL, 2)
+
+INSERT [dbo].[MarketplaceTagsByProduct] ([MarketplaceProductTagsId], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [Position]) VALUES (4, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionFLEXI, NULL, 3)
+
 
 /*Agregar imagenes*/
 
-INSERT [dbo].[CatProductImage] ( [CatProductImageSmallImageURL], [CatProductImageLargeImageURL], [CatProductImageOrder], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [CatProductImageBigImageURL], [CatProductImageXXXLImageURL]) VALUES (16, N'https://www.forzadelivery.com/images/Tienda/micro-500-347.jpg', N'https://www.forzadelivery.com/images/Tienda/micro-1200-722.jpg', 9, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionMICRO, NULL, N'https://www.forzadelivery.com/images/Tienda/micro-2103-521.jpg', NULL)
+INSERT [dbo].[CatProductImage] ( [CatProductImageSmallImageURL], [CatProductImageLargeImageURL], [CatProductImageOrder], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [CatProductImageBigImageURL], [CatProductImageXXXLImageURL]) VALUES ( N'https://www.forzadelivery.com/images/Miniatura/micro-500-347.jpg', N'https://www.forzadelivery.com/images/Miniatura/micro-1200-722.jpg', 9, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionMICRO, NULL, N'https://www.forzadelivery.com/images/Miniatura/micro-2103-521.jpg', NULL)
 
-INSERT [dbo].[CatProductImage] ( [CatProductImageSmallImageURL], [CatProductImageLargeImageURL], [CatProductImageOrder], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [CatProductImageBigImageURL], [CatProductImageXXXLImageURL]) VALUES (17, N'https://www.forzadelivery.com/images/Tienda/flexi-500-347.jpg', N'https://www.forzadelivery.com/images/Tienda/flexi-1200-722.jpg', 10, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionFLEXI, NULL, N'https://www.forzadelivery.com/images/Tienda/flexi-2103-521.jpg', NULL)
+INSERT [dbo].[CatProductImage] ( [CatProductImageSmallImageURL], [CatProductImageLargeImageURL], [CatProductImageOrder], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [CatProductImageBigImageURL], [CatProductImageXXXLImageURL]) VALUES ( N'https://www.forzadelivery.com/images/Miniatura/flexi-500-347.jpg', N'https://www.forzadelivery.com/images/Miniatura/flexi-1200-722.jpg', 10, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionFLEXI, NULL, N'https://www.forzadelivery.com/images/Miniatura/flexi-2103-521.jpg', NULL)
 
 /*Agregar Atributos*/
 
