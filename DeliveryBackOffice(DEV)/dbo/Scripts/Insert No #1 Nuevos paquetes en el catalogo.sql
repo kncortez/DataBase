@@ -17,6 +17,10 @@ INSERT [dbo].[MarketplaceTagsByProduct] ( [MarketplaceProductTagsId], [RowStatus
 
 INSERT [dbo].[MarketplaceTagsByProduct] ([MarketplaceProductTagsId], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [Position]) VALUES (2, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionFLEXI, NULL, 6)
 
+INSERT [dbo].[MarketplaceTagsByProduct] ( [MarketplaceProductTagsId], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [Position]) VALUES (4, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionMICRO, NULL, 2)
+
+INSERT [dbo].[MarketplaceTagsByProduct] ([MarketplaceProductTagsId], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId], [Position]) VALUES (4, 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL, @IdCatSubscriptionFLEXI, NULL, 3)
+
 
 /*Agregar imagenes*/
 
