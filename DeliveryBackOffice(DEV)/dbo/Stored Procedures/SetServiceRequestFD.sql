@@ -40,13 +40,8 @@ BEGIN
 	         SET @InactiveUser = (SELECT TOP 1 CASE WHEN AccRowStatus=0 THEN 0 ELSE 1 END
 	                                         FROM [dbo].[Account] WHERE AccIdAccount = @IdAccount)
 			END 
-			  ELSE
-			  BEGIN 
-			   
-			   SET @InactiveUser = (SELECT TOP 1 CASE WHEN AccRowStatus=0 THEN 0
-			                                      ELSE 1 END
-	                                         FROM [dbo].[Account] WHERE IdCustomer = @CustomerID)
-			   END 
+			  
+			
 	--FIN MODIFICACIÓN
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
 	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WHERE CustomerID = @CustomerID )
