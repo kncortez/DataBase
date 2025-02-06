@@ -86,13 +86,6 @@
 );
 
 
-
-
-
-
-
-
-
 GO
 CREATE NONCLUSTERED INDEX [idx_IdCustomerType_RowSatus]
 ON [dbo].[Customer]([IdCustomerType] ASC, [RowSatus] ASC)
@@ -103,8 +96,14 @@ CREATE NONCLUSTERED INDEX [IDX_Customer_CODContactEmail]
 ON [dbo].[Customer]([CODContactEmail] ASC, [RegexEmail] ASC);
 
 
+GO
+CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
+    ON [dbo].[Customer]([IdCustomerType] ASC)
+    INCLUDE([Name], [Abbreviation], [CountryID], [RowSatus], [SAPCardCode]);
 
-
+GO
+CREATE NONCLUSTERED INDEX [IDX_Customer_IVR_A]
+    ON [dbo].[Customer]([IsVoucherRequired] ASC, [Abbreviation] ASC);
 
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Id para la tabla Customer ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IdCustomer'
@@ -319,8 +318,4 @@ GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'La tabla Cliente almacena informacon relacionada con los clientes de la empresa Forza Delivery' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer'
 GO
 
-GO
-CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
-    ON [dbo].[Customer]([IdCustomerType] ASC)
-    INCLUDE([Name], [Abbreviation], [CountryID], [RowSatus], [SAPCardCode]);
 
