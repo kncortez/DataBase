@@ -16,30 +16,29 @@ BEGIN
 		SELECT do.Guide_Serie, do.Guide_Number AS GuidesEsp
 		FROM [dbo].[DeliverySettlementDetail] dsd WITH (NOLOCK)  
 			INNER JOIN [dbo].[DeliveryOrder] do WITH (NOLOCK)
-				ON dsd.Guide_Number = do.Guide_Number AND dsd.Guide_Serie = do.Guide_Serie
+				ON dsd.Guide_Serie = do.Guide_Serie AND dsd.Guide_Number = do.Guide_Number 
 			LEFT JOIN VisitPointClient vpc WITH(NOLOCK)
 				ON vpc.CodeOfReference = do.Sender_ID
 			LEFT JOIN Customer cu WITH(NOLOCK)
 				ON cu.IdCustomer = COALESCE(do.IdCustomer, vpc.CustomerID)
-		WHERE vpc.CountryId = @CountryId
-			AND ID_DeliveryOrderBySettlement = @ManifestId
-			AND cu.Abbreviation IS NOT NULL
+		WHERE cu.IsVoucherRequired = 1
 			AND cu.Abbreviation IN ('IGSS','RENAP')
-			AND cu.IsVoucherRequired = 1
+			AND vpc.CountryId = @CountryId
+			AND dsd.ID_DeliveryOrderBySettlement = @ManifestId
 
 		--TABLA 1, Guías para todos los clientes 
 		SELECT do.Guide_Serie, do.Guide_Number AS Guides
 		FROM [dbo].[DeliverySettlementDetail] dsd WITH (NOLOCK)  
 			INNER JOIN [dbo].[DeliveryOrder] do WITH (NOLOCK)
-				ON dsd.Guide_Number = do.Guide_Number AND dsd.Guide_Serie = do.Guide_Serie
+				ON dsd.Guide_Serie = do.Guide_Serie AND dsd.Guide_Number = do.Guide_Number
 			LEFT JOIN VisitPointClient vpc WITH(NOLOCK)
 				ON vpc.CodeOfReference = do.Sender_ID
 			LEFT JOIN Customer cu WITH(NOLOCK)
 				ON cu.IdCustomer = COALESCE(do.IdCustomer, vpc.CustomerID)
-		WHERE vpc.CountryId = @CountryId
-			AND ID_DeliveryOrderBySettlement = @ManifestId
-			AND cu.IsVoucherRequired = 1
+		WHERE cu.IsVoucherRequired = 1
 			AND cu.Abbreviation NOT IN ('IGSS','RENAP')
+			AND vpc.CountryId = @CountryId
+			AND dsd.ID_DeliveryOrderBySettlement = @ManifestId
 
     END TRY 
 	BEGIN CATCH
