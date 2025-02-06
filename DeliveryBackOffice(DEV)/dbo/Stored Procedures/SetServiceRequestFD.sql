@@ -34,12 +34,20 @@ BEGIN
 
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
+    DECLARE @CodeOfReference INT =(SELECT [Sender_ID] From @TblDeliveryOrdersFD);
 
-	IF (@IdAccount IS NOT NULL)
+		
+
+		IF (@IdAccount IS NOT NULL)
 		BEGIN
 	         SET @InactiveUser = (SELECT TOP 1 CASE WHEN AccRowStatus=0 THEN 0 ELSE 1 END
 	                                         FROM [dbo].[Account] WHERE AccIdAccount = @IdAccount)
 			END 
+			  ELSE
+			  BEGIN 
+			   
+			   SET @InactiveUser = (SELECT CASE WHEN [StatusClient] = 0 THEN 0 ELSE 1 END FROM [dbo].[VisitPointClient] WHERE  CodeOfReference = @CodeOfReference)
+			   END 
 			  
 			
 	--FIN MODIFICACIÓN
