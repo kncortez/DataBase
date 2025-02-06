@@ -32,11 +32,12 @@ BEGIN
     SELECT 1 [Code], 'Cliente si existe' [Message];
 
     SELECT INH.inv_pk_id
-          ,MIN(INH.inv_serieFEL)       inv_serieFEL
-          ,MIN(INH.inv_numberFEL)      inv_numberFEL
-          ,MIN(INH.inv_amount)         inv_amount
+          ,MIN(INH.inv_serieFEL)           inv_serieFEL
+          ,MIN(INH.inv_numberFEL)          inv_numberFEL
+          ,MIN(INH.inv_certificationFEL)   inv_certificationFEL
+          ,MIN(INH.inv_amount)             inv_amount
           ,(MIN(INH.inv_amount) - MIN(NCI.AmountNotesCredits)) inv_balance
-          ,MIN(INH.inv_descriptionFEL) inv_descriptionFEL
+          ,MIN(INH.inv_descriptionFEL)     inv_descriptionFEL
     FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
     INNER JOIN
     (
@@ -74,7 +75,6 @@ BEGIN
            AND inv_type = 2
     ) NCI
     WHERE DOR.IdCustomer = @ID
-      AND DOR.SenderCountryId = @IdCountry 
       AND DOR.DateCreated > '2025-01-25'
       AND DOR.DateCreated < '2025-01-31'
     GROUP BY INH.inv_pk_id
