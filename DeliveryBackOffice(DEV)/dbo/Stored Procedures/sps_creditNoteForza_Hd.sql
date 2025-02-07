@@ -33,9 +33,9 @@ BEGIN
     DECLARE @idNotaCredito AS INT = NULL;
     DECLARE @vpCodeOfReferences NVARCHAR(10);
 
-    BEGIN TRANSACTION;
     BEGIN TRY
 
+        BEGIN TRANSACTION;
         --CACULO DEL IVA
         SELECT @AmountInvoice = inv_amount,
                @InvoiceStatus = inv_status
@@ -45,7 +45,7 @@ BEGIN
         SELECT @Iva = ISNULL([Value],1.12)
         FROM ConfigParams WITH (NOLOCK)
         WHERE [Name] = 'TaxPercentage'
-           AND IdCountry = @IdCountry
+           AND IdCountry = @IdCountry;
 
         --CALCULOS DE MONTOS  NOTAS DE CREDITO
         SELECT @AmountNotesCredits = ISNULL(SUM(inv_amount),0)
@@ -54,24 +54,6 @@ BEGIN
           AND inv_certificationFEL != ''
           AND inv_type = 2;
         --PRINT 'Monto de la factura: ' + CONVERT(NVARCHAR(20),@AmountINvoice) + ' Monto de las Notas de Credito: ' + CONVERT(NVARCHAR(20),@AmountNotesCredits);
-
-        --Validación si la factura esta anulada o si el monto de la notas de crédito ya sobrepaso a la factura
-        IF(@IdCountry = 'GT' AND  @AmountInvoice >= @AmountNotesCredits)
-        BEGIN
-            SELECT 0'id',
-                   0 'Detalles',
-                   0 'vpCodeOfReference',
-                   0'Correlative'
-            RETURN
-        END
-        ELSE IF(@IdCountry = 'HN' AND @InvoiceStatus <> -1 AND @AmountInvoice >= @AmountNotesCredits)
-        BEGIN
-            SELECT 0'id',
-                   0 'Detalles',
-                   0 'vpCodeOfReference',
-                   0'Correlative'
-            RETURN
-        END
 
         --CALCULOS DE MONTOS APLICADOS A GUIAS POR MEDIO DE NOTAS DE CREDITO
         DECLARE @GuideNoteCredit TABLE
@@ -91,6 +73,24 @@ BEGIN
             ON ih.inv_pk_id = id.dti_fk_header
         WHERE inv_invoiceOfCreditNote = @idInvoice
         GROUP BY id.dti_fk_orderSerie, id.dti_fk_orderNumber;
+
+        --Validación si la factura esta anulada o si el monto de la notas de crédito ya sobrepaso a la factura
+        IF(@IdCountry = 'GT' AND  @AmountInvoice <= @AmountNotesCredits)
+        BEGIN
+            SELECT 0'id',
+                   0 'Detalles',
+                   0 'vpCodeOfReference',
+                   0'Correlative'
+            RETURN
+        END
+        ELSE IF(@IdCountry = 'HN' AND @InvoiceStatus = -1 AND @AmountInvoice <= @AmountNotesCredits)
+        BEGIN
+            SELECT 0'id',
+                   0 'Detalles',
+                   0 'vpCodeOfReference',
+                   0'Correlative'
+            RETURN
+        END
 
         -- Declaración de tabla temporal para almacenar los detalles procesados
         DECLARE @InvoiceDetailProcess TABLE
