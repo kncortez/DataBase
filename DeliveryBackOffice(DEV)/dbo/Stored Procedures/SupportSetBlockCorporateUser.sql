@@ -12,7 +12,7 @@ CREATE PROCEDURE [dbo].[SupportSetBlockCorporateUser]
 AS
 BEGIN
 
-IF EXISTS(SELECT * FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 1)
+IF EXISTS(SELECT TOP 1 1 FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 1)
 BEGIN
 
     BEGIN TRY
@@ -41,7 +41,7 @@ BEGIN
 
 		-- Inactivar Persona
 		 UPDATE per
-        SET per.PerRowStatus =1
+        SET per.PerRowStatus = 0
 			, per.PerTokenUpdated = @Token
 			, per.PerDateUpdated = GETDATE()
         FROM dbo.InternalUser           it
@@ -111,6 +111,76 @@ BEGIN
 	END
 	ELSE
 	BEGIN
-	    SELECT 'Usuario no exite '
+	     BEGIN TRY
+            BEGIN TRANSACTION;
+	  IF (EXISTS(SELECT TOP 1 1 FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 0) AND @Typeofprocess = 1)
+	   BEGIN
+	      -- Activar Usuario Interno
+        UPDATE dbo.InternalUser
+        SET RowStatus = 1
+		, TokenUpdated = @Token
+		, DateUpdated = GETDATE()
+		, Comment = @Comment
+        WHERE IdUser = @Code
+              AND Username = @UserName;
+
+		-- Activar register user
+        UPDATE rg
+        SET rg.UsrRowStatus = 1
+		, rg.UsrTokenUpdated =@Token
+		, rg.UsrDateUpdated = GETDATE()
+        FROM dbo.InternalUser           it
+            INNER JOIN dbo.RegisterUser rg
+                ON rg.UsrIdUser = it.RegisterUserID
+        WHERE it.IdUser = @Code
+              AND it.Username = @UserName;
+
+		-- Activar Persona
+		 UPDATE per
+        SET per.PerRowStatus = 1
+			, per.PerTokenUpdated = @Token
+			, per.PerDateUpdated = GETDATE()
+        FROM dbo.InternalUser           it
+            INNER JOIN dbo.RegisterUser rg
+			INNER JOIN dbo.Person per ON per.PerIdPerson = rg.UsrIdPerson
+                ON rg.UsrIdUser = it.RegisterUserID
+        WHERE it.IdUser = @Code
+              AND it.Username = @UserName;
+
+
+		-- ACTIVE Restiction
+		UPDATE res
+        SET res.UstStatus ='ACTIVE'
+		, res.UstOperationDate = GETDATE()
+        FROM dbo.InternalUser           it
+            INNER JOIN dbo.RegisterUser rg
+                ON rg.UsrIdUser = it.RegisterUserID
+			INNER JOIN dbo.UserSystemRestriction res ON res.UstIdUser = rg.UsrIdUser
+        WHERE it.IdUser = @Code
+              AND it.Username = @UserName;
+			  
+			  
+			  
+			  	UPDATE DenariusUser_Dev.dbo.LGN_Restriction
+		SET	 RST_Status ='ACTIVE'
+		WHERE RST_IdUser = @Code AND RST_Username =@UserName
+			  
+			   COMMIT TRANSACTION;
+			  	SELECT 'EL usuario se dio de ALTA correctamete'
+		END TRY
+    BEGIN CATCH
+
+        ROLLBACK TRANSACTION;
+
+        SELECT ERROR_LINE()
+             , ERROR_MESSAGE()
+             , ERROR_NUMBER()
+             , ERROR_PROCEDURE()
+             , ERROR_STATE();
+    END CATCH;
+		END	  
+			ELSE  
+	           SELECT 'Usuario no exite '
+			   END
 	END
 END;
