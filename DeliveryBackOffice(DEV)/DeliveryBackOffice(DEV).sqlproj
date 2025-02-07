@@ -1768,6 +1768,7 @@
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromDeliverySettlement.sql" />
+<<<<<<< HEAD
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Stored Procedures\GetTypeCityPlace.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetFullAddressList.sql" />
@@ -1784,6 +1785,9 @@
     <Build Include="dbo\Stored Procedures\SPWHTestCredentialsRegistration.sql" />
     <Build Include="dbo\Stored Procedures\SPHWHelpRequest.sql" />
 	  <Build Include="dbo\Stored Procedures\GetValidaReturnGuide.sql" />
+=======
+    <Build Include="dbo\Stored Procedures\GetSignaturePathByGuide.sql" />
+>>>>>>> feature/FDAPI-2646-desktop---reimpresion-de-comp
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />

@@ -2,6 +2,8 @@
 -- Author:		<Tito García>
 -- Create date: <2024-10-11>
 -- Description:	<Se obtiene el path de la firma ingresada en la entrega en POD>
+-- Create date: <19/08/2024>
+-- Description:	<Retorna el path de la firma>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetSignaturePathByGuide]
 	@GuideSerie VARCHAR(2),
@@ -26,4 +28,13 @@ BEGIN
                 ERROR_MESSAGE() AS 'Description' 
 	
 	END CATCH
+END
+
+	SELECT TOP 1 dp.PathSignature AS [SignaturePath]
+	FROM [dbo].[DeliveryProof] dp WITH (NOLOCK)
+	WHERE dp.Guide_Serie = @GuideSerie
+		AND dp.Guide_Number = @GuideNumber
+		AND dp.PathSignature IS NOT NULL
+	ORDER BY dp.ID DESC
+
 END
