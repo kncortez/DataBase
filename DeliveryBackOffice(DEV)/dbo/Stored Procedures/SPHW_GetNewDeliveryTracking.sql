@@ -9,21 +9,26 @@ CREATE PROCEDURE [dbo].[SPHW_GetNewDeliveryTracking]
 @TicketNumber NVARCHAR(300),
 @GuideSerie NVARCHAR(4),
 @GuideNumber INT,
+@IdCustomer INT = NULL,
 @Phone NVARCHAR(200)
 AS
 BEGIN
 BEGIN TRY
+	
+	DECLARE @GuideCount INT = 0;--Contador para duplicidad de guías por ticket number
 
 	IF(@TicketNumber != '' AND @GuideSerie = '' AND @GuideNumber < 1)
 	BEGIN
 		SELECT
 			@GuideSerie = ISNULL(Guide_Serie,''),
-			@GuideNumber = ISNULL(Guide_Number,0)
+			@GuideNumber = ISNULL(Guide_Number,0),
+			@GuideCount = COUNT(Guide_Number) OVER ()
 		FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-		WHERE Ticket_Number = @TicketNumber
+		WHERE Ticket_Number = @TicketNumber 
+		AND (@IdCustomer IS NULL OR IdCustomer = @IdCustomer)
 	END;
 
-	IF(@GuideSerie != '' AND @GuideNumber > 0)
+	IF(@GuideSerie != '' AND @GuideNumber > 0 AND @GuideCount = 1)
 	BEGIN
 		DECLARE @Receiver_Phone NVARCHAR(200) = (SELECT RIGHT(LTRIM(RTRIM(Receiver_Phone)), 8) FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
 											 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
@@ -479,9 +484,27 @@ BEGIN TRY
 	END
 	ELSE
 	BEGIN
-		SELECT 
+		IF(@GuideCount > 1)
+		BEGIN
+			SELECT 
+				  400 AS 'IdResult'
+				, 'El número de referencia ingresado tiene varios clientes asignados' AS 'Message'
+				, DO.Guide_Serie	AS 'GuideSerie'
+				, DO.Guide_Number	AS 'GuideNumber'
+				, C.IdCustomer AS 'IdCustomer'
+				, C.Name AS 'CustomerName'
+			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+			LEFT JOIN DeliveryBackOffice.dbo.Customer C WITH(NOLOCK)
+				ON DO.IdCustomer = C.IdCustomer
+			WHERE DO.Ticket_Number = @TicketNumber 
+			AND (@IdCustomer IS NULL OR DO.IdCustomer = @IdCustomer)
+		END
+		ELSE
+		BEGIN
+			SELECT 
 			  404 AS 'IdResult'
 			, 'El número de referencia ingresado o escaneado no tiene una guía asociada. Verifica que el número de referencia sea correcto. Si el problema persiste, contacta a soporte.' AS 'Message'
+		END;
 	END;
 
 END TRY
