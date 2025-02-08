@@ -7,6 +7,10 @@
 -- Modified:	<2025-01-09>
 -- Description:	<Contenerizar guias - Se agrega parametro que indica numero de referencia y numero de contenedor>
 -- =============================================
+-- Author:		<Brandon, Pedroza>  
+-- Modifie:		<2025-02-04>  
+-- Description: <Contenerizacion guias - aceptar paquete unicamente del cliente asignado a la recoleccion>  
+-- =============================================   
 CREATE PROCEDURE [dbo].[SetValidPickUpPiece]
     @InGuides NVARCHAR(MAX) = 'FD9559566-1,FD9559566-2',
     @IdPickup INT = NULL,
@@ -26,7 +30,8 @@ BEGIN
                 @Valid INT,
                 @ValidCountry INT,
                 @GuideSerie NVARCHAR(2) = 'FD',
-				@InContainerGuides NVARCHAR(MAX) = ''
+				@InContainerGuides NVARCHAR(MAX) = '',
+				@IdCustomerPickup INT;
 
         IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
             DROP TABLE #Temp;
@@ -36,6 +41,16 @@ BEGIN
 
 		IF OBJECT_ID('tempdb.dbo.#TempContainerGuides', 'U') IS NOT NULL
             DROP TABLE #TempContainerGuides;
+
+        SET @IdCustomerPickup =(
+			SELECT TOP 1 VPC.CustomerID
+				FROM SchedulePickup SP WITH(NOLOCK)
+							INNER JOIN VisitPointClient VPC WITH(NOLOCK)
+							ON SP.SenderId = VPC.CodeOfReference
+							WHERE SP.SchedulePickupStatus = 1
+							AND SP.SchedulePickupId =@IdPickup
+		)
+
 
         SELECT TOP 1
             @TokenAct = RowStatus,
@@ -67,7 +82,7 @@ BEGIN
 			INSERT INTO @ListReferences VALUES (@Reference);
 
 			INSERT INTO #TempContainerGuides
-			EXEC GetGuidesByContainerByReference @ListContainer, @ListReferences, @IdCountry;
+			EXEC GetGuidesByContainerByReference @ListContainer, @ListReferences, @IdCountry, @IdPickup;;
 
 			SET @InContainerGuides = (SELECT STRING_AGG(CONCAT(GuideSerie, GuideNumber, '-', NoPiece), ',')
 					FROM #TempContainerGuides);
@@ -126,23 +141,68 @@ BEGIN
 					END AS ItemNumber
 				FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
 
-				--VALIDAR SI ES CONTENEDOR
-				IF @Container IS NOT NULL
+				--validar si guia es del cliente
+				IF @Container IS NULL
 				BEGIN
-					IF EXISTS (SELECT 1 FROM #TempContainerGuides)
+					IF NOT EXISTS (SELECT 1 FROM DeliveryOrder DO WITH (NOLOCK)
+									INNER JOIN #listGuides LS
+									ON DO.Guide_Serie = LS.ItemSerie
+								AND DO.Guide_Number = LS.ItemNumber)
 					BEGIN						
 						SELECT 
-							200 AS [StatusCode],
-							'Contenedor válido, listo para procesar' AS [Message],
+							2 AS [StatusCode],
+							'La Guia no existe' AS [Message],
 							1 AS [NoPiece]
 						RETURN
 					END
 					ELSE
 					BEGIN
+						IF NOT EXISTS (SELECT 1 FROM DeliveryOrder DO WITH (NOLOCK)
+											INNER JOIN #listGuides LS
+											ON DO.Guide_Serie = LS.ItemSerie
+										AND DO.Guide_Number = LS.ItemNumber
+										AND DO.IdCustomer = @IdCustomerPickup)
+						BEGIN						
+							SELECT 
+								3 AS [StatusCode],
+								'La Guia no pertenece al cliente de la recoleccion' AS [Message],
+								1 AS [NoPiece]
+							RETURN
+						END
+					END
+
+				END
+
+
+				--VALIDAR SI ES CONTENEDOR
+				IF @Container IS NOT NULL
+				BEGIN
+
+					IF NOT EXISTS(SELECT 1 FROM ShippingContainer WITH(NOLOCK) WHERE ReferenceContainer =@Container)
+					BEGIN
 						SELECT 
-							0 AS [StatusCode],
-							'Contenedor no existe' AS [Message]
+							2 AS [StatusCode],
+							'El contenedor no existe' AS [Message]
 						RETURN
+					END
+					ELSE
+					BEGIN
+						IF EXISTS (SELECT 1 FROM #TempContainerGuides)
+							BEGIN						
+								SELECT 
+									200 AS [StatusCode],
+									'Contenedor válido, listo para procesar' AS [Message],
+									1 AS [NoPiece]
+								RETURN
+							END
+						ELSE
+						BEGIN
+							SELECT 
+								3 AS [StatusCode],
+								'Contenedor no pertenece al cliente de la recoleccion' AS [Message]
+							RETURN
+						END
+						
 					END
 				END
 

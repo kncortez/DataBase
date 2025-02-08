@@ -20,7 +20,7 @@ BEGIN
 				[C].[ContainerNumber],
 				[LRPCD].[GuideSerie],
 				[LRPCD].[GuideNumber],
-				ISNULL([SCD].[TicketNumber],'') AS TicketNumber,
+				ISNULL([DO].[Ticket_Number],'') AS TicketNumber,
 				COALESCE([LRPCDP].[PieceNumber], 0) AS PieceNumber,
 				COALESCE([LRPCDP].[IsDryPiece], 0) AS IsDryPiece
 	FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP WITH(NOLOCK)
@@ -35,8 +35,8 @@ BEGIN
 		ON		[LRPC].[ContainerId] = [C].[IdContainer]
 	INNER JOIN	[dbo].[CatTypeContainer] CTC WITH(NOLOCK)
 		ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
-	LEFT JOIN	[dbo].[ShippingContainerDetail] SCD WITH(NOLOCK)
-		ON		[LRPCD].[GuideSerie] = [SCD].[GuideSerie] AND [LRPCD].[GuideNumber] = [SCD].[GuideNumber]
+	LEFT JOIN	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+		ON		[LRPCD].[GuideSerie] = [DO].[Guide_Serie] AND [LRPCD].[GuideNumber] = [DO].[Guide_Number]
 	WHERE		[LRPCDP].[CatLinehaulStatusId] = (SELECT	[CLS].[IdCatLinehaulStatus] 
 												FROM	[dbo].[CatLinehaulStatus] CLS
 												WHERE	[CLS].[StatusName] = 'IN TRANSIT')
@@ -47,7 +47,7 @@ BEGIN
 				[C].[ContainerNumber],
 				[LRSCD].[GuideSerie],
 				[LRSCD].[GuideNumber],
-				ISNULL([SCD].[TicketNumber],'') AS TicketNumber,
+				ISNULL([DO].[Ticket_Number],'') AS TicketNumber,
 				COALESCE([LRSCDP].[PieceNumber], 0) AS PieceNumber,
 				COALESCE([LRSCDP].[IsDryPiece], 0) AS IsDryPiece
 	FROM		[dbo].[LinehaulRouteSettlementContainerDetailPiece] LRSCDP WITH(NOLOCK)
@@ -62,8 +62,8 @@ BEGIN
 		ON		[LRSC].[ContainerId] = [C].[IdContainer]
 	INNER JOIN	[dbo].[CatTypeContainer] CTC WITH(NOLOCK)
 		ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
-	LEFT JOIN	[dbo].[ShippingContainerDetail] SCD WITH(NOLOCK)
-		ON		[LRSCD].[GuideSerie] = [SCD].[GuideSerie] AND [LRSCD].[GuideNumber] = [SCD].[GuideNumber]
+	LEFT JOIN	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+		ON		[LRSCD].[GuideSerie] = [DO].[Guide_Serie] AND [LRSCD].[GuideNumber] = [DO].[Guide_Number]
 	WHERE 		[LRSCDP].[RowStatus] = 0
 	ORDER BY	[CTC].[TypeContainerSerie],
 				[C].[ContainerNumber],
