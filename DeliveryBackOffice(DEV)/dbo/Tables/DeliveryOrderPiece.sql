@@ -30,8 +30,11 @@
     [TokenRegistrationExternalCode]     NVARCHAR (50)   NULL,
     [DateRegistrationExternalCode]      DATETIME        NULL,
     [AccountIdRegistrationExternalCode] BIGINT          NULL,
+    [IdStatusGuideByContainer]          INT             NULL, 
+    [IsNewInContainer] BIT NULL, 
     CONSTRAINT [PK_DeliveryOrderPiece] PRIMARY KEY NONCLUSTERED ([GuideSerie] ASC, [GuideNumber] ASC, [GuidePiece] ASC),
-    CONSTRAINT [FK_CategoryCheck] FOREIGN KEY ([CategoryCheck]) REFERENCES [dbo].[CatArticle] ([ArtId])
+    CONSTRAINT [FK_CategoryCheck] FOREIGN KEY ([CategoryCheck]) REFERENCES [dbo].[CatArticle] ([ArtId]),
+    CONSTRAINT [FK_DeliveryOrderPiece_CatStatusGuideByContainer] FOREIGN KEY (IdStatusGuideByContainer) REFERENCES [dbo].[CatStatusGuideByContainer] (IdStatus)
 );
 
 
@@ -102,3 +105,22 @@ GO
 CREATE NONCLUSTERED INDEX [IX_DeliveryOrderPiece_GetQueryRelationshipPieceCode]
 	ON [dbo].[DeliveryOrderPiece] ([ExternalPieceId])
 	INCLUDE ([GuideSerie],[GuideNumber],[NoPiece])
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Indica estado de la pieza dentro del contenedor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPiece',
+    @level2type = N'COLUMN',
+    @level2name = N'IdStatusGuideByContainer'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Indica si la pieza es nueva dentro del contenedor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPiece',
+    @level2type = N'COLUMN',
+    @level2name = N'IsNewInContainer'
