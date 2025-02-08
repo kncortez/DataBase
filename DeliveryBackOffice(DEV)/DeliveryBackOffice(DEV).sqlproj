@@ -1819,6 +1819,7 @@
     <Build Include="dbo\Stored Procedures\sphdUpdateStatusContainer.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByContainer.sql" />
     <Build Include="dbo\Stored Procedures\sphdValidateGuideByContainer.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetContainerInfoToSendEmail.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
