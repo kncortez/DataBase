@@ -355,11 +355,9 @@ BEGIN
                                         @StatusEXC,
                                         IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5)))
 								FROM 
-									[dbo].[DeliverySettlementDetail] ds
-								INNER JOIN 
-									[LatestID] li 
-								ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
-									AND ds.Guide_Serie = li.Guide_Serie
+									[dbo].[DeliverySettlementDetail] ds WITH (NOLOCK)
+								INNER JOIN [LatestID] li 
+									ON ds.Guide_Serie = li.Guide_Serie AND ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
 					
 				---------------------------------------------------------------------------------------------
 

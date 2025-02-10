@@ -267,8 +267,6 @@ BEGIN
                                            INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                                ON da.Guide_Serie = dp.Guide_Serie
                                                   AND da.Guide_Number = dp.Guide_Number
-                                                  AND da.Verified = 1
-                                                  AND da.Accepted = 1
                                        WHERE dp.Guide_Serie = @Guide_Serie 
                                              AND dp.Guide_Number = @Guide_Number
                                              AND
@@ -276,6 +274,8 @@ BEGIN
                                                  dp.Proof_Incident != 0x
                                                  OR dp.Proof_Incident IS NULL
                                              )
+                                            AND da.Verified = 1
+                                            AND da.Accepted = 1
                                    ) L1
                                    ORDER BY L1.Date_Photo DESC
                                ),
