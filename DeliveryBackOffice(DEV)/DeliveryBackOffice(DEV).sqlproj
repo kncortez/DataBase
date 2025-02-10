@@ -1769,6 +1769,7 @@
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromDeliverySettlement.sql" />
 <<<<<<< HEAD
+<<<<<<< HEAD
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Stored Procedures\GetTypeCityPlace.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetFullAddressList.sql" />
@@ -1788,6 +1789,9 @@
 =======
     <Build Include="dbo\Stored Procedures\GetSignaturePathByGuide.sql" />
 >>>>>>> feature/FDAPI-2646-desktop---reimpresion-de-comp
+=======
+	<Build Include="dbo\Stored Procedures\GetValidaReturnGuide.sql" />
+>>>>>>> release/v2.2.4.0
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1990,6 +1994,7 @@
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_ConfirmAddress.sql" />
+<<<<<<< HEAD
     <Build Include="dbo\Stored Procedures\SPHW_GetInfoAnticipatedCOD.sql" />
     <Build Include="dbo\Tables\AnticipatedCODHeader.sql" />
     <Build Include="dbo\Tables\AnticipatedCODComission.sql" />
@@ -2031,6 +2036,9 @@
     <Build Include="dbo\User Defined Types\TblBillingGuideDetail.sql" />
     <Build Include="dbo\User Defined Types\TblAnticipatedCODCustomerBalance.sql" />
     <Build Include="dbo\Stored Procedures\SP_GetUserInformation.sql" />
+=======
+    <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
+>>>>>>> release/v2.2.4.0
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\130\SqlSchemas\master.dacpac">

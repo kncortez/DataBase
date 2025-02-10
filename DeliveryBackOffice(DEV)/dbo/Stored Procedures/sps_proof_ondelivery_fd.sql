@@ -47,8 +47,8 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @ImageCold VARCHAR(300),
     @CODPayment DECIMAL(12, 2) = 0,
     @ExcludeCODPyament BIT = 'false',
-    @Receiver_CUI NVARCHAR(25) = '',
 	@IdCountry NVARCHAR(8) = 'GT'
+    @Receiver_CUI NVARCHAR(25) = ''
 AS
 BEGIN
 	

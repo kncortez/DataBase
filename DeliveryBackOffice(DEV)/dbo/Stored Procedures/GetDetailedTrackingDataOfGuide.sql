@@ -363,19 +363,19 @@ BEGIN
              , (CASE
                     WHEN dod.StatusOrderId = 5 THEN
                     ISNULL((Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR(50))) as VARCHAR(300))),
-                        (
-                            SELECT TOP 1
-                                   IIF([dp].[Path_Dry] = '', dp.Path_Dry, ISNULL([Path_Dry], [Path_Dry]))
-                            FROM [DeliveryBackOffice].[dbo].[DeliveryProof]       dp WITH (NOLOCK)
-                                INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-                                    ON da.Guide_Serie = dp.Guide_Serie
-                                       AND da.Guide_Number = dp.Guide_Number
-                            WHERE dp.Guide_Serie = @Guide_Serie
-                                  AND dp.Guide_Number = @Guide_Number
-                                  AND da.Delivered = 1
-                            ORDER BY dp.Date_Photo DESC
-                        )
-                    )ELSE
+                    (
+                        SELECT TOP 1
+                               IIF([dp].[Path_Dry] = '', dp.Path_Dry, ISNULL([Path_Dry], [Path_Dry]))
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryProof]       dp WITH (NOLOCK)
+                            INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+                                ON da.Guide_Serie = dp.Guide_Serie
+                                   AND da.Guide_Number = dp.Guide_Number
+                        WHERE dp.Guide_Serie = @Guide_Serie
+                              AND dp.Guide_Number = @Guide_Number
+                              AND da.Delivered = 1
+                        ORDER BY dp.Date_Photo DESC
+                    )
+                    ELSE
                         ''
                 END)                                                                       AS [Dry]
              , (CASE
