@@ -3,6 +3,10 @@
 -- Create date: <2025-01-13>  
 -- Description: <Contenerizacion guias - Obtiene guias por numero de referencia>  
 -- =============================================  
+-- Author:		<Brandon, Pedroza>  
+-- Modified:	<2025-02-11>  
+-- Description: <Contenerizacion guias - Se agregan mensajes informativos >  
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sphwGetGuidesByTicketNumber]
     @TicketNumber NVARCHAR(50),
@@ -44,5 +48,41 @@ BEGIN
 		WHERE A1.Ticket_Number = @TicketNumber
 		  AND ISNULL(A1.SenderCountryId, 'GT') = @IdCountry
 		  AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest)
+	END	
+	IF NOT EXISTS(SELECT A1.Guide_Number			
+		FROM DeliveryOrder A1 WITH (NOLOCK)
+		INNER JOIN Customer A2 WITH (NOLOCK) 
+			ON A1.IdCustomer = A2.IdCustomer
+		WHERE A1.Ticket_Number = @TicketNumber)
+	BEGIN
+		SELECT 1 AS [StatusCode] ,
+				CONCAT('La referencia: ', @TicketNumber, ' no existe.') AS  [Description]
+		RETURN
+	END
+
+	IF NOT EXISTS(SELECT A1.Guide_Number			
+		FROM DeliveryOrder A1 WITH (NOLOCK)
+		INNER JOIN Customer A2 WITH (NOLOCK) 
+			ON A1.IdCustomer = A2.IdCustomer
+		WHERE A1.Ticket_Number = @TicketNumber
+			AND ISNULL(A1.SenderCountryId, 'GT') = @IdCountry)
+	BEGIN
+		SELECT 1 AS [StatusCode] ,
+				CONCAT('La referencia: ', @TicketNumber, ' pertenece a otro país') AS  [Description]
+		RETURN
+	END
+
+	IF NOT EXISTS(SELECT A1.Guide_Number			
+		FROM DeliveryOrder A1 WITH (NOLOCK)
+		INNER JOIN Customer A2 WITH (NOLOCK) 
+			ON A1.IdCustomer = A2.IdCustomer
+		WHERE A1.Ticket_Number = @TicketNumber
+		AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest)
+			AND ISNULL(A1.SenderCountryId, 'GT') = @IdCountry
+			)
+	BEGIN
+		SELECT 2 AS [StatusCode] ,
+				CONCAT('La referencia: ', @TicketNumber, ' ya ha sido procesada.') AS  [Description]
+		RETURN
 	END
 END;
