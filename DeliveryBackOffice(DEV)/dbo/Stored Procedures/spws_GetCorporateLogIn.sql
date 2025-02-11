@@ -66,15 +66,15 @@ BEGIN
        AND pe.PerRowStatus = 1
 
        	DECLARE @UserValidate INT = ( SELECT COUNT(1)
-									 FROM DeliveryBackOffice.[dbo].RegisterUser                   usr
-							INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu
-								ON iu.RegisterUserID = usr.UsrIdUser
-							INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus
+									 FROM DeliveryBackOffice.[dbo].RegisterUser                   usr WITH (NOLOCK)
+							INNER JOIN DeliveryBackOffice.[dbo].InternalUser           iu WITH (NOLOCK)
+								ON iu.RegisterUserID = [usr].UsrIdUser
+							INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus WITH (NOLOCK)
 								ON rus.RusIdUser = usr.UsrIdUser
-							LEFT JOIN DeliveryBackOffice.[dbo].UserSystemRestriction res
+							LEFT JOIN DeliveryBackOffice.[dbo].UserSystemRestriction res WITH (NOLOCK)
 								ON res.UstIdUser = rus.RusIdUser
 								   AND res.UstIdSystem = rus.RusIdSystem
-							LEFT JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount]  rua
+							LEFT JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 								ON rua.RuaIdUser = usr.UsrIdUser
 								   AND rua.RuaRowStatus = 1
 							INNER JOIN DeliveryBackOffice.[dbo].Account              ac
@@ -87,14 +87,14 @@ BEGIN
 							  AND usr.UsrRowStatus=1);
 
        DECLARE @VisitPointClientStatus  INT= (SELECT TOP 1   ISNULL(vpc.StatusClient,0)
-													 FROM DeliveryBackOffice.[dbo].RegisterUser      usr
-											INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu
+													 FROM DeliveryBackOffice.[dbo].RegisterUser      usr WITH (NOLOCK)
+											INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu WITH (NOLOCK)
 												ON iu.RegisterUserID = usr.UsrIdUser
-											INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus
+											INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus WITH (NOLOCK)
 												ON rus.RusIdUser = usr.UsrIdUser
-											INNER JOIN DeliveryBackOffice.[dbo].VisitPointByUser     vpu
+											INNER JOIN DeliveryBackOffice.[dbo].VisitPointByUser     vpu WITH (NOLOCK)
 											   ON usr.UsrIdUser = vpu.RegisterUserID
-											INNER JOIN DeliveryBackOffice.[dbo].VisitPointClient     vpc
+											INNER JOIN DeliveryBackOffice.[dbo].VisitPointClient     vpc WITH (NOLOCK)
 											   ON vpu.IdVisitPointClient = vpc.IdVisitPointClient
 										   WHERE iu.IdUser = @UserCode);
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN

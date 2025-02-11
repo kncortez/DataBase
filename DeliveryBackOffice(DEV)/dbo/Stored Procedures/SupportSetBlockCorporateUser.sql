@@ -13,7 +13,7 @@ CREATE PROCEDURE [dbo].[SupportSetBlockCorporateUser]
 AS
 BEGIN
 
-IF EXISTS(SELECT * FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 1)
+IF EXISTS(SELECT top 1 1 FROM dbo.InternalUser it WITH (NOLOCK) WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 1)
 BEGIN
 
     BEGIN TRY
@@ -113,7 +113,7 @@ BEGIN
 	ELSE
 	BEGIN
 	   
-	  IF (EXISTS(SELECT * FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 0) AND @Typeofprocess = 1)
+	  IF (EXISTS(SELECT TOP 1 1 FROM dbo.InternalUser it WITH (NOLOCK) WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 0) AND @Typeofprocess = 1)
 	   BEGIN
 
 	     BEGIN TRY
