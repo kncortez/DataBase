@@ -323,10 +323,10 @@ BEGIN
                     INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                         ON da.Guide_Serie = dp.Guide_Serie
                            AND da.Guide_Number = dp.Guide_Number
-                           AND da.Verified = 1
-                           AND da.Accepted = 1
                 WHERE dp.Guide_Serie = @Guide_Serie 
-                      AND dp.Guide_Number = @Guide_Number
+                    AND dp.Guide_Number = @Guide_Number
+                    AND da.Verified = 1
+                    AND da.Accepted = 1
                 ORDER BY dp.Date_Photo DESC
             ) AS [Cold],
             '' AS NameOfReceiver,
