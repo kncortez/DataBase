@@ -9,10 +9,11 @@ CREATE PROCEDURE [dbo].[SupportSetBlockCorporateUser]
   , @UserName NVARCHAR(100)
   , @Token NVARCHAR(60)
   , @Comment NVARCHAR(200)
+  , @Typeofprocess INT = 0 --- 1 ACTIVAR,0 INACTIVAR USARIOS
 AS
 BEGIN
 
-IF EXISTS(SELECT TOP 1 1 FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 1)
+IF EXISTS(SELECT * FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 1)
 BEGIN
 
     BEGIN TRY
@@ -111,10 +112,13 @@ BEGIN
 	END
 	ELSE
 	BEGIN
+	   
+	  IF (EXISTS(SELECT * FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 0) AND @Typeofprocess = 1)
+	   BEGIN
+
 	     BEGIN TRY
             BEGIN TRANSACTION;
-	  IF (EXISTS(SELECT TOP 1 1 FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 0) AND @Typeofprocess = 1)
-	   BEGIN
+
 	      -- Activar Usuario Interno
         UPDATE dbo.InternalUser
         SET RowStatus = 1
@@ -159,15 +163,11 @@ BEGIN
         WHERE it.IdUser = @Code
               AND it.Username = @UserName;
 			  
-			  
-			  
-			  	UPDATE DenariusUser_Dev.dbo.LGN_Restriction
-		SET	 RST_Status ='ACTIVE'
-		WHERE RST_IdUser = @Code AND RST_Username =@UserName
-			  
-			   COMMIT TRANSACTION;
-			  	SELECT 'EL usuario se dio de ALTA correctamete'
-		END TRY
+	
+        COMMIT TRANSACTION;
+
+		SELECT 'El usuario se dio de alta correctamete'
+    END TRY
     BEGIN CATCH
 
         ROLLBACK TRANSACTION;
@@ -178,9 +178,10 @@ BEGIN
              , ERROR_PROCEDURE()
              , ERROR_STATE();
     END CATCH;
-		END	  
+	END
 			ELSE  
-	           SELECT 'Usuario no exite '
+			    BEGIN
+	              SELECT 'Usuario no exite '
 			   END
 	END
 END;

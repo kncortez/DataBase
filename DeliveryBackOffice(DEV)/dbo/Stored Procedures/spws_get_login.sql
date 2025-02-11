@@ -30,6 +30,23 @@ BEGIN
     DECLARE @PasswordExpired BIT;
     DECLARE @VisitPointValid BIT = 0;
     DECLARE @CODPercentage NVARCHAR(10);
+    DECLARE @IdSystemIndividualUserWeb INT= (SELECT SysIdSystem FROM [dbo].[CatSystem] WHERE SysNameSystem='Hermes Web')
+    DECLARE @UserValidate INT = (SELECT COUNT(1)
+										FROM [dbo].RegisterUser                   usr WITH (NOLOCK)  
+													INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)  
+														ON rus.RusIdUser = usr.UsrIdUser  
+														   AND rus.RusIdSystem = 1  
+													LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)  
+														ON res.UstIdUser = rus.RusIdUser  
+														   AND res.UstIdSystem = rus.RusIdSystem  
+													LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)  
+														ON rua.RuaIdUser = usr.UsrIdUser  
+													INNER JOIN [dbo].Account              ac WITH (NOLOCK)  
+														ON ac.AccIdAccount = rua.RuaIdAccount  
+										WHERE usr.UsrEmail = @Username  
+											  AND usr.UsrLastPassword = @Password  
+											  AND rua.RuaRowStatus = 1  
+											  AND ac.AccRowStatus = 1 );
 
     
      DECLARE @CountryIdOrigin NVARCHAR(3)=(SELECT TOP 1  
@@ -810,6 +827,30 @@ BEGIN
                         )
         );
     END;
+
+
+    	IF (@UserValidate=0)
+        BEGIN
+                IF(@IdSystemIndividualUserWeb = @IdSystem)
+                BEGIN
+                    SET @jsonResult =  
+                            (  
+                                SELECT STUFF(  
+                                                (  
+                                                    SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message  
+                                                        + '"}'  
+                                                    FROM #errormessage  
+                                                    WHERE Id = 'InactiveUserIndividual'  
+                                                    FOR XML PATH(''), TYPE  
+                                                ).value('.', 'varchar(max)')  
+                                            , 1  
+                                            , 1  
+                                            , ''  
+                                            )  
+                            );  
+                END
+        
+        END;
 
     -- destruir tablas temporales
 
