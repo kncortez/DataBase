@@ -377,10 +377,13 @@ BEGIN
 					WHEN dod.StatusOrderId = @StatusIncident  THEN
 								(CASE 
 									WHEN (SELECT TOP 1 dttt.ID_Courier FROM DeliveryAttempt dttt WITH (NOLOCK) WHERE dttt.ID = dod.DeliveryAttemptId) IS NOT NULL THEN
-									(SELECT TOP 1 (srv.First_Name +' '+srv.Last_Name) FROM SenderReceiver srv WITH (NOLOCK) 
-											INNER JOIN DeliveryAttempt dat WITH (NOLOCK) 
+									(SELECT TOP 1 (srv.First_Name +' '+srv.Last_Name) 
+                                    FROM SenderReceiver srv WITH (NOLOCK) 
+										INNER JOIN DeliveryAttempt dat WITH (NOLOCK) 
 											ON srv.ID = dat.ID_Courier
-											WHERE dod.Guide_Number = @Guide_Number AND dat.ID = dod.DeliveryAttemptId)
+									WHERE dod.Guide_Serie = @Guide_Serie
+                                        AND dod.Guide_Number = @Guide_Number 
+                                        AND dat.ID = dod.DeliveryAttemptId)
 									
 									ELSE
 
