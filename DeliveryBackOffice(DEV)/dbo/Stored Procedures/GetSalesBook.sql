@@ -16,68 +16,70 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    select --top 100 
-           ih.inv_date       [date]
-           ,ih.inv_cli_nit   [id_client]
-           ,ih.inv_cli_name  [client_name]
-           ,CASE WHEN @IdCountry = 'GT' THEN ih.inv_serieFEL 
-                 WHEN @IdCountry = 'HN' THEN ih.inv_certificationFEL ELSE '0' 
-            END  [document_serie]
-           ,ih.inv_numberFEL [document_correlative]
-           --ctd.name [document_type], 
-           ,CASE WHEN ih.inv_type = 1 THEN 'FACTURA' 
-                 WHEN ih.inv_type = 2 THEN 'NOTA DE CREDITO' 
-                 ELSE 'NO DEFINIDO'
-            END [document_type]
-           --,cit.Name [document_subtype_description]
-           ,0 [exportation]
-           ,0 [sales]
-           ,CASE WHEN dt.category = 'BIEN'  THEN ih.inv_amount  
+    SELECT INH.inv_pk_id
+          ,INH.inv_date       [inv_date]
+          ,INH.inv_cli_name   [inv_cli_name]
+          ,CASE WHEN @IdCountry = 'GT' THEN INH.inv_serieFEL
+                WHEN @IdCountry = 'HN' THEN INH.inv_certificationFEL ELSE '0' 
+           END  [document_serie]
+          ,INH.inv_numberFEL   [document_correlative]
+          ,CASE WHEN INH.inv_type = 1 THEN 'FACTURA' 
+                WHEN INH.inv_type = 2 THEN 'NOTA DE CREDITO' 
+                ELSE 'NO DEFINIDO'
+            END                    [document_type]
+          ,0                       [exportation]
+          ,0                       [sales]
+          ,CASE WHEN MIN(IND.dti_category) = 'BIEN'  THEN INH.inv_amount
                  ELSE 0
             END [sales_goods]
-           ,CASE WHEN dt.category = 'SERVICIO'  THEN ih.inv_amount  
+          ,CASE WHEN MIN(IND.dti_category) = 'SERVICIO'  THEN INH.inv_amount
             ELSE 0
-            END [sales_services]
-           ,0 [discount]
-           ,(inv_amount-inv_IVA) [amount_base]
-           ,inv_IVA [tax]
-           ,f.CtsName   [document_type_description]
-           ,dt.dti_description [document_description]
-           --, do.*
-    from invoiceHeader ih          WITH (NOLOCK)
-    --LEFT JOIN CatTypeDocument ctd
-        --ON ih.inv_type = ctd.IdTypeDocument
-    --LEFT JOIN CatInvoiceType cit  WITH (NOLOCK)
-        --ON IH.CatInvoiceTypeId = cit.IdCatInvoiceType
-    OUTER APPLY --generación si es bien o servicio solo se toma un articulo63.5
-    (    
-        SELECT TOP 1 
-               id.dti_fk_orderSerie, 
-               id.dti_fk_orderNumber,
-               id.dti_description,
-               cas.category
-        FROM invoiceDetail id         WITH (NOLOCK)
-        LEFT JOIN CatArticleSAP cas   WITH (NOLOCK)
-            ON id.SAPCode = cas.SAPCode
-            AND cas.IdCountry = @IdCountry
-        where id.dti_fk_header = ih.inv_pk_id
-    ) dt
-    OUTER APPLY --generación de datos subtipo
-    (
-        SELECT do.Guide_Serie, do.Guide_Number, cts.CtsName
-        FROM DeliveryOrder do        WITH (NOLOCK)
-        LEFT JOIN CatTypeService cts WITH (NOLOCK)
-             ON do.TypeService = cts.CtsShortName
-        WHERE   do.Guide_Serie = dt.dti_fk_orderSerie
-           AND  do.Guide_Number = dt.dti_fk_orderNumber
-    ) f
-    WHERE CONVERT(DATE,ih.inv_date) >= @beginDate
-          AND CONVERT(DATE,ih.inv_date) <= @endDate
-          AND ISNULL(ih.IdCountry,'GT') = @IdCountry
-          AND ih.inv_type IN (1,2)
-          --and ih.inv_status <> 0
-          AND ISNULL(ih.inv_certificationFEL, ' ') <> ' '
-       --and dti_category = 'BIEN'
-    order by ih.inv_date desc
+            END                     [sales_services]
+          ,0                        [discount]
+          ,(INH.inv_amount-INH.inv_IVA) [amount_base]
+          ,INH.inv_IVA              [tax]
+          ,DOR.CtsName              [document_type_description]
+          ,MIN(IND.dti_description) [document_description]
+          ,IIF(ISNULL(DOR.ConditionOfPaymentID, 1) =1 , 'CONTADO', 'CREDITO') [payment_method]
+          ,DOR.IsCollect                         [IsCollect]
+          ,DOR.SAPCardCode                       [SAPCardCode]
+    FROM DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
+            ON IND.dti_fk_header = INH.inv_pk_id
+        LEFT JOIN
+        (
+            SELECT  DO.Guide_Serie    [Guide_Serie]
+                   ,DO.Guide_Number   [Guide_Number]
+                   ,DO.IsCollect      [IsCollect]
+                   ,Cs.ConditionOfPaymentID [ConditionOfPaymentID]
+                   ,Cs.SAPCardCode    [SAPCardCode]
+                   ,CTS.CtsName       [CtsName]
+            FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+            INNER JOIN dbo.Customer cs WITH(NOLOCK) 
+                ON cs.IdCustomer = DO.IdCustomer
+            LEFT JOIN CatTypeService cts WITH (NOLOCK)
+                ON DO.TypeService = cts.CtsShortName
+        ) DOR
+            ON DOR.Guide_Serie   = IND.dti_fk_orderSerie
+            AND DOR.Guide_Number = IND.dti_fk_orderNumber
+    WHERE  INH.inv_date >= @BeginDate
+      AND  INH.inv_date <= @EndDate
+      AND INH.IdCountry = @IdCountry
+      AND INH.inv_certificationFEL IS NOT NULL
+      AND INH.inv_type IN (1,2)
+    GROUP BY inv_pk_id
+            ,inv_date
+            ,inv_cli_name
+            ,inv_serieFEL
+            ,inv_certificationFEL
+            ,inv_numberFEL
+            ,inv_type
+            ,inv_amount
+            ,inv_IVA
+            ,dor.CtsName
+            ,dor.ConditionOfPaymentID
+            ,dor.IsCollect
+            ,dor.SAPCardCode
+    ORDER BY INH.inv_date desc
 
 END
