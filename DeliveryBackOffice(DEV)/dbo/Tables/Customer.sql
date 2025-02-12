@@ -67,6 +67,7 @@
     [BillingCut_offDate]      DATE           NULL,
     [NumImgEvidence]          INT            NULL,
     [IsCOD]                   INT            NULL,
+	[IsVoucherRequired]		  INT			 NULL,
     CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED ([IdCustomer] ASC),
     CONSTRAINT [FK_Customer_CatBankAccountType] FOREIGN KEY ([CODAccountTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
     CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),
@@ -85,13 +86,6 @@
 );
 
 
-
-
-
-
-
-
-
 GO
 CREATE NONCLUSTERED INDEX [idx_IdCustomerType_RowSatus]
 ON [dbo].[Customer]([IdCustomerType] ASC, [RowSatus] ASC)
@@ -102,8 +96,14 @@ CREATE NONCLUSTERED INDEX [IDX_Customer_CODContactEmail]
 ON [dbo].[Customer]([CODContactEmail] ASC, [RegexEmail] ASC);
 
 
+GO
+CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
+    ON [dbo].[Customer]([IdCustomerType] ASC)
+    INCLUDE([Name], [Abbreviation], [CountryID], [RowSatus], [SAPCardCode]);
 
-
+GO
+CREATE NONCLUSTERED INDEX [IDX_Customer_IVR_A]
+    ON [dbo].[Customer]([IsVoucherRequired] ASC, [Abbreviation] ASC);
 
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Id para la tabla Customer ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IdCustomer'
@@ -301,27 +301,21 @@ EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Meta de envíos
 GO
 
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de el tiempo en que se requiere la facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatBillingTimeId';
-
-
 GO
 
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador que indica volumen de facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatBillingVolumeId';
-
-
 GO
 
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fechad e corte de facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'BillingCut_offDate';
-
-
 GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Almacenar cantidad de imagenes de evidencias permitidas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'NumImgEvidence'
 GO
 
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identifica si con el cliente desplegara o no constancia de Entrega' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IsVoucherRequired'
+GO
+
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'La tabla Cliente almacena informacon relacionada con los clientes de la empresa Forza Delivery' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer'
 GO
-GO
-CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
-    ON [dbo].[Customer]([IdCustomerType] ASC)
-    INCLUDE([Name], [Abbreviation], [CountryID], [RowSatus], [SAPCardCode]);
+
 
