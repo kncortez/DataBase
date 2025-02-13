@@ -1744,6 +1744,7 @@
     <Build Include="dbo\Stored Procedures\AddMarketplaceProductstoCart.sql" />
     <Build Include="dbo\Stored Procedures\ActiveProductMarketplace.sql" />
     <Build Include="dbo\Stored Procedures\GetUpdateRegisterCODearly.sql" />
+	<Build Include="dbo\Stored Procedures\GetGuideDuplicator.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
