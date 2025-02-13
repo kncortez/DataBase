@@ -1,4 +1,5 @@
 -- =============================================
+﻿-- =============================================
 -- Author:		<Tito Garcia>
 -- Update date: <2024-08-26>
 -- Description: <Se agrega SP para reporte de monitoreo de servicios de recolecci�n>
@@ -167,3 +168,4 @@ BEGIN
 
     END CATCH;
 END;
+
