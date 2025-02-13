@@ -550,7 +550,8 @@ BEGIN
 							),
 					'N/A'
 				)
-				)) AS TypePayment
+				)) AS TypePayment,
+	DO.IdCustomer
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
