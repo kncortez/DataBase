@@ -12,6 +12,10 @@
 -- Create date: <2024-11-28>
 -- Description:	<Modificación en bandera IsDefault >
 -- =============================================
+-- Author:		<Recinos, Aylinne>
+-- Create date: <2025-02-14>
+-- Description:	<Modificación en selección de unica cuenta favorita>
+-- =============================================
 CREATE PROCEDURE [dbo].[spsSetAccountFavCOD]
 	
 	@Id int = null,
@@ -34,34 +38,44 @@ CREATE PROCEDURE [dbo].[spsSetAccountFavCOD]
 
 AS
 BEGIN
-Declare @Filter varchar(50) = null;
-declare @idAccount int = null;
-
-set @Filter = (select TOP 1 AliasFavCOD from DeliveryBackOffice.dbo.DeliveryFavCOD where AliasFavCOD = @Alias and IdAccountFavCOD = @IdAcount  )
-set @idAccount = ( select TOP 1 IdAccountFavCOD from DeliveryBackOffice.dbo.DeliveryFavCOD where IdAccountFavCOD = @IdAcount)
 
 IF(@Id is null or @Id = 0)
 BEGIN
+	IF(@IsDefault = 1)
+	BEGIN
+		UPDATE DeliveryBackOffice.dbo.DeliveryFavCOD 
+		SET IsDefault = 0
+		WHERE IdAccountFavCOD = @IdAcount
+		AND StatusFavCOD = 1
+	END
+
 	INSERT INTO DeliveryBackOffice.dbo.DeliveryFavCOD (AliasFavCOD, NameAccountFavCOD, TypeAccountFavCOD, DocumentIdFavCOD, StatusFavCOD, IdAccountFavCOD,TokenCreated, DateCreated, TokenUpdate, DateUpdate ,IdBank, NumberAccFavCOD, IsDefault)
 	VALUES (@Alias, @NameAccount, @TypeAccount, @DocID, 1,@IdAcount, @Token,GETDATE(), NULL, NULL, @IdBank, @NumberAcc, @IsDefault)
 	
 	SELECT  'Se ha guardado correctamente sus registros' as Response 
 END
-
-IF( @Id is not null )
+ELSE
 BEGIN 
 
 	if (@Status =1) -- estado activo
 		begin
+			IF(@IsDefault = 1)
+			BEGIN
+				UPDATE DeliveryBackOffice.dbo.DeliveryFavCOD 
+				SET IsDefault = 0
+				WHERE IdAccountFavCOD = @IdAcount
+				AND StatusFavCOD = 1
+			END
+
 			UPDATE DeliveryBackOffice.dbo.DeliveryFavCOD
 			SET  AliasFavCOD = @Alias , NameAccountFavCOD = @NameAccount, TypeAccountFavCOD = @TypeAccount, DocumentIdFavCOD = @DocID, StatusFavCOD = 1, IdAccountFavCOD = @IdAcount, TokenUpdate = @Token, DateUpdate = GETDATE(), IdBank = @IDBank, NumberAccFavCOD = @NumberAcc, IsDefault = @IsDefault
-			WHERE IdDeliveryFavCOD = @Id
+			WHERE IdDeliveryFavCOD = @Id AND IdAccountFavCOD = @IdAcount
 			SELECT  'Se ha actualizado actualizado sus registros' as Response
 		end
 	else 
 		begin
 			UPDATE DeliveryBackOffice.dbo.DeliveryFavCOD set StatusFavCOD = @Status
-			WHERE IdDeliveryFavCOD = @Id
+			WHERE IdDeliveryFavCOD = @Id AND IdAccountFavCOD = @IdAcount
 			SELECT  'Registro eliminado' as Response
 		end
 	
