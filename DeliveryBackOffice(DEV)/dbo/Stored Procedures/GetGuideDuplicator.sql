@@ -3,7 +3,7 @@
 -- Update date: <2025-02-10>  
 -- Description: <Valida si ticket number contiene mas de una guia>  
 -- ============================================= 
-ALTER PROCEDURE [dbo].[GetGuideDuplicator]
+CREATE PROCEDURE [dbo].[GetGuideDuplicator]
     @GuideNumber INT,
     @GuideSerie NVARCHAR(2),
     @TicketNumber NVARCHAR(300) = 'ZULY ',
@@ -13,21 +13,23 @@ BEGIN
     DECLARE @Valid INT,
             @Counter INT
 
-	IF @GuideNumber IS NOT NULL AND @GuideSerie IS NOT NULL OR @GuideNumber != 0 AND @GuideSerie != ''
-	BEGIN
-		SELECT @Valid = COUNT(Guide_Number)
-        FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
-        WHERE Guide_Number = @GuideNumber
-		AND Guide_Serie = @GuideSerie
-	END
+
+	
     --VALIDAMOS SI TIENE MAS DE UN GUIA ASOCIADA
-    IF @TicketNumber IS NOT NULL
-       OR @TicketNumber != ''
+    IF @TicketNumber IS NOT NULL AND @TicketNumber != ''
     BEGIN
         SELECT @Valid = COUNT(Guide_Number)
         FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
         WHERE Ticket_Number = @TicketNumber
     END
+	ELSE IF @TicketNumber = ''
+	BEGIN
+		PRINT ' NO ENTRO'
+		SELECT @Valid = COUNT(Guide_Number)
+		FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
+		WHERE Guide_Number = @GuideNumber
+		AND Guide_Serie = @GuideSerie
+	END
 
     IF @Valid > 1
     BEGIN
@@ -100,6 +102,11 @@ BEGIN
             END
         END
     END
+	ELSE IF @Valid = 0
+	BEGIN
+		SELECT 1 AS StatusCode,
+                   'La guía no existe' AS [Message]
+	END
     ELSE
     BEGIN
         SELECT 1 AS StatusCode,
