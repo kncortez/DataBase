@@ -4,6 +4,10 @@
 -- Description:	<Delivery Tracking - Método para obtener información del seguimiento de la guía personalizado al nuevo tracking.>
 -- Description: <Contenerización - Se agrega TicketNumber para código de referencia y busca relación con una guía asociada.>
 -- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Modified:	<2025-02--14>
+-- Description: <Contenerización - Se realiza ajuste para obtener numero de guia si no trae referencia>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetNewDeliveryTracking]
 @TicketNumber NVARCHAR(300),
@@ -26,6 +30,16 @@ BEGIN TRY
 		FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
 		WHERE Ticket_Number = @TicketNumber 
 		AND (@IdCustomer IS NULL OR IdCustomer = @IdCustomer)
+	END
+	ELSE
+	BEGIN
+		SELECT
+			@GuideSerie = ISNULL(Guide_Serie,''),
+			@GuideNumber = ISNULL(Guide_Number,0),
+			@GuideCount = COUNT(Guide_Number) OVER ()
+		FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+		WHERE Guide_Number = @GuideNumber
+		AND	Guide_Serie = @GuideSerie		
 	END;
 
 	IF(@GuideSerie != '' AND @GuideNumber > 0 AND @GuideCount = 1)
