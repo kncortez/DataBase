@@ -25,6 +25,12 @@
 -- Update date: <2024-11-18>
 -- Description:	<Se agrega la Campo IsCompleted em tabla ProcessedGuideCOD, así como actualizacion de campos en Commmit padre>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Update date: <2025-01-12>
+-- Description:	<Se agrega la funcion del proceso por ticket number para las guías>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
@@ -44,10 +50,19 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @CODPayment DECIMAL(12, 2) = 0,
     @ExcludeCODPyament BIT = 'false',
     @Receiver_CUI NVARCHAR(25) = '',
-	@IdCountry NVARCHAR(8) = 'GT'
+	@IdCountry NVARCHAR(8) = 'GT',
+	@TicketNumber NVARCHAR(300) = NULL
 AS
 BEGIN
 	
+	IF @GuideNumber IS NULL OR @GuideNumber = 0 OR @GuideSerie IS NULL OR @GuideSerie = ''
+	BEGIN
+		SELECT @GuideNumber = Guide_Number,
+			   @GuideSerie=Guide_Serie
+		FROM DeliveryOrder WITH (NOLOCK)
+		WHERE Ticket_Number = @TicketNumber
+	END
+
 	DROP TABLE IF EXISTS #GuidesProcessCOD
 	--TABLA PARA PODER CONFIRMAR QUE LA TRANSACCCION COD HA SIDO REALIZADA CORRECTAMENTE
 	CREATE TABLE #GuidesProcessCOD
