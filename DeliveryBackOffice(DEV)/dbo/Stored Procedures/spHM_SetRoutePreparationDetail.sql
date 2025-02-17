@@ -7,11 +7,12 @@ CREATE PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
     -- Add the parameters for the stored procedure here
     @RouteId INT,
     @Date DATE,
-    @GuideSerie NVARCHAR(2),
-    @GuideNumber INT,
+    @GuideSerie NVARCHAR(2)='FD',
+    @GuideNumber INT=0,
     @GuidePiece SMALLINT,
     @Token NVARCHAR(50),
-    @CountryId NVARCHAR(2)='GT'
+    @CountryId NVARCHAR(2)='GT',
+	@Reference NVARCHAR(150)=''
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -59,6 +60,14 @@ BEGIN
 
     --- Contro procesos abiertos en otras rutas
     DECLARE @CodeOfRoute VARCHAR(100);
+
+     IF (@GuideNumber=0)
+    BEGIN
+	      SELECT TOP 1  @GuideNumber = Guide_Number 
+		                    FROM [dbo].[DeliveryOrder]
+						         WHERE Ticket_Number = @Reference
+								     ORDER BY DateCreated DESC
+	    END
 
     BEGIN TRANSACTION;
 
