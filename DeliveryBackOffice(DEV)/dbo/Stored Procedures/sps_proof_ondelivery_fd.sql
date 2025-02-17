@@ -69,9 +69,14 @@ BEGIN
     (
 		GuideSerie NVARCHAR(8),
 		GuideNumber INT,
-		BatchCodId INT,
-		CONSTRAINT PK_GuidesProcessCOD PRIMARY KEY (GuideSerie, GuideNumber)
+		BatchCodId INT
+		--CONSTRAINT PK_GuidesProcessCOD PRIMARY KEY (GuideSerie, GuideNumber)
     );
+
+	CREATE NONCLUSTERED INDEX IDX_GuidesProcessCOD ON #GuidesProcessCOD (
+        GuideSerie
+       ,GuideNumber
+    )
 
     -- control de inserciones para transacción
     DECLARE @RInserted INT;
@@ -99,9 +104,14 @@ BEGIN
     CREATE TABLE  #TempDataClient
     (
        IdCustomer INT NOT NULL,
-       PortfolioId INT NOT NULL,
-       CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
+       PortfolioId INT NOT NULL
+       --CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
     );
+
+	CREATE NONCLUSTERED INDEX IDX_PK_TempDataClient ON #TempDataClient (
+        IdCustomer
+       ,PortfolioId
+    )
 
     --Estado para Reenviado a Express Center
     DECLARE @StatusEXC AS INT =
@@ -214,6 +224,34 @@ BEGIN
 
         SET @FixedLatitude = NULL;
         SET @FixedLongitude = NULL;
+
+		INSERT INTO [dbo].[RoutePreparationLogError] (
+                        [ErrorDescription]
+                        ,[ErrorNumber]
+                        ,[ErrorProcedure]
+                        ,[ErrorLine]
+                        ,[GuideSerie]
+                        ,[GuideNumber]
+                        ,[TokenCreated]
+                        ,[DateCreated]
+                        )
+                VALUES (
+                        ERROR_MESSAGE()
+                        ,-- ErrorDescription - varchar(300)
+                        ERROR_NUMBER()
+                        ,-- ErrorNumber - int
+                        ERROR_PROCEDURE()
+                        ,-- ErrorProcedure - varchar(100)
+                        ERROR_LINE()
+                        ,-- ErrorLine - int
+                        NULL
+                        ,-- GuideSerie - nvarchar(2)
+                        NULL
+                        ,-- GuideNumber - int
+                        ''
+                        ,-- TokenCreated - varchar(50)
+                        GETDATE() -- DateCreated - datetime
+                        )
     END CATCH;
 
     BEGIN TRANSACTION;
@@ -441,7 +479,7 @@ BEGIN
                         INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                 ON dod.Guide_Serie = acodd.GuideSerie
                                AND dod.Guide_Number = acodd.GuideNumber
-                               AND acodd.RowStatus = 1
+                               --AND acodd.RowStatus = 1
                         INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
                                 ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
                         INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
@@ -465,7 +503,7 @@ BEGIN
                         INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                 ON dod.Guide_Serie = acodd.GuideSerie
                                AND dod.Guide_Number = acodd.GuideNumber
-                               AND acodd.RowStatus = 1
+                               --AND acodd.RowStatus = 1
                         INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
                                 ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
                         INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
@@ -684,7 +722,9 @@ BEGIN
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 									    ON do.IdCustomer = WHE.CustomerId
 									INNER JOIN @GuidePiecesTable gpt
-									    ON dop.GuideNumber = gpt.GuideNumber
+									    ON dop.GuideSerie = gpt.GuideSerie
+                                        AND --BNHL 29 01 2025
+                                            dop.GuideNumber = gpt.GuideNumber
 									INNER JOIN @PiecesGuideRelatedTable pgt
 									    ON gpt.GuideNumber = pgt.GuideNumber
 										WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
@@ -695,6 +735,33 @@ BEGIN
                     END;
                 END TRY
                 BEGIN CATCH
+				INSERT INTO [dbo].[RoutePreparationLogError] (
+                                                [ErrorDescription]
+                                                ,[ErrorNumber]
+                                                ,[ErrorProcedure]
+                                                ,[ErrorLine]
+                                                ,[GuideSerie]
+                                                ,[GuideNumber]
+                                                ,[TokenCreated]
+                                                ,[DateCreated]
+                                                )
+                                        VALUES (
+                                                ERROR_MESSAGE()
+                                                ,-- ErrorDescription - varchar(300)
+                                                ERROR_NUMBER()
+                                                ,-- ErrorNumber - int
+                                                ERROR_PROCEDURE()
+                                                ,-- ErrorProcedure - varchar(100)
+                                                ERROR_LINE()
+                                                ,-- ErrorLine - int
+                                                NULL
+                                                ,-- GuideSerie - nvarchar(2)
+                                                NULL
+                                                ,-- GuideNumber - int
+                                                ''
+                                                ,-- TokenCreated - varchar(50)
+                                                GETDATE() -- DateCreated - datetime
+                                                )
 
                 END CATCH;
                 -------------------WEBHOOK.FIN------------------------------			
@@ -935,7 +1002,33 @@ BEGIN
 
 				END TRY
 				BEGIN CATCH
-
+				INSERT INTO [dbo].[RoutePreparationLogError] (
+                                                [ErrorDescription]
+                                                ,[ErrorNumber]
+                                                ,[ErrorProcedure]
+                                                ,[ErrorLine]
+                                                ,[GuideSerie]
+                                                ,[GuideNumber]
+                                                ,[TokenCreated]
+                                                ,[DateCreated]
+                                                )
+                                        VALUES (
+                                                ERROR_MESSAGE()
+                                                ,-- ErrorDescription - varchar(300)
+                                                ERROR_NUMBER()
+                                                ,-- ErrorNumber - int
+                                                ERROR_PROCEDURE()
+                                                ,-- ErrorProcedure - varchar(100)
+                                                ERROR_LINE()
+                                                ,-- ErrorLine - int
+                                                NULL
+                                                ,-- GuideSerie - nvarchar(2)
+                                                NULL
+                                                ,-- GuideNumber - int
+                                                ''
+                                                ,-- TokenCreated - varchar(50)
+                                                GETDATE() -- DateCreated - datetime
+                                                )
 				END CATCH
 				-------------------FORZA POINTS.FIN------------------------------
                 -- ********************************** PROCESO DE COD ********************************************************************************
@@ -1328,7 +1421,33 @@ BEGIN
 
 		END TRY
 		BEGIN CATCH
-		    
+		    INSERT INTO [dbo].[RoutePreparationLogError] (
+                                [ErrorDescription]
+                                ,[ErrorNumber]
+                                ,[ErrorProcedure]
+                                ,[ErrorLine]
+                                ,[GuideSerie]
+                                ,[GuideNumber]
+                                ,[TokenCreated]
+                                ,[DateCreated]
+                                )
+                        VALUES (
+                                ERROR_MESSAGE()
+                                ,-- ErrorDescription - varchar(300)
+                                ERROR_NUMBER()
+                                ,-- ErrorNumber - int
+                                ERROR_PROCEDURE()
+                                ,-- ErrorProcedure - varchar(100)
+                                ERROR_LINE()
+                                ,-- ErrorLine - int
+                                NULL
+                                ,-- GuideSerie - nvarchar(2)
+                                NULL
+                                ,-- GuideNumber - int
+                                ''
+                                ,-- TokenCreated - varchar(50)
+                                GETDATE() -- DateCreated - datetime
+                                )
 		END CATCH
 
     END TRY
