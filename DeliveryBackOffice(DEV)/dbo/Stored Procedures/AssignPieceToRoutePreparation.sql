@@ -17,6 +17,10 @@
 -- update date: <2024-10-01>
 -- Description:	<Permitir asociar varios manifiestos a una ruta para que sean liquidados en un mismo proceso>
 -- =============================================
+-- Author:		<Aylinne Recinos>
+-- update date: <2025-02-17>
+-- Description:	<Revalorización de la guía cuando se encuentra en monto 0>
+-- =============================================
 CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
 	@IdRoute INT,
 	@Date DATE,
@@ -86,9 +90,32 @@ SET ARITHABORT ON
 	DECLARE @RouteAssigmentId AS INT= NULL
 	DECLARE @ServiceManagementDetailId AS INT = NULL;
 	DECLARE @FirstPieceEntered AS BIT=1;
+	DECLARE @PriceShippmentPre AS DECIMAL(14,2);
 
 	BEGIN TRANSACTION
 		BEGIN TRY
+			SELECT @PriceShippmentPre = PriceShippment
+			FROM dbo.DeliveryOrder do WITH (NOLOCK)
+			WHERE do.Guide_Serie = @GuideSerie 
+			AND do.Guide_Number = @GuideNumber;  
+			IF @PriceShippmentPre = 0.00
+			BEGIN
+				EXEC dbo.spws_revalue_guide 
+						@GuideSerie = @GuideSerie,
+						@GuideNumber = @GuideNumber,
+						@CodeApp = '',
+						@Format = N'DATATABLE',
+						@CalculateTaxes = 'TRUE',
+						@IdModule = 33,
+						@SetUpdate = 'true',
+						@Token = 'AssignPieceToRoutePreparation',
+						@ParIsCollect = NULL,
+						@ParIsInsurance = NULL,
+						@ParInsuranceAmount = NULL,
+						@ParIsCreditCard = NULL,
+						@ParPesos = '',
+						@IsReturn = 'FALSE'
+			END
 		-- FDD-1321  Se valida si la ruta ya tiene asignado un manifiesto para esta fecha
 			DECLARE @ForceNewRoutePreparation AS TINYINT = 0;
 			DECLARE @RoutePreparationID AS BIGINT; 
