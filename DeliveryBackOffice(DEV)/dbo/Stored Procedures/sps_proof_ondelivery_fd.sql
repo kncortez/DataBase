@@ -17,6 +17,11 @@
 -- Create date: <2023-03-02>
 -- Description:	<En proceso de entregas desde CourierApp, cuando sea flujo de guías marcadas para devolución, ingresar las guías marcadas para devolución al proceso de COD para lotes Collect>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Update date: <2025-01-12>
+-- Description:	<Se agrega la funcion del proceso por ticket number para las guías>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
@@ -36,9 +41,30 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @ImageCold VARCHAR(300),
     @CODPayment DECIMAL(12, 2) = 0,
     @ExcludeCODPyament BIT = 'false',
-	@IdCountry NVARCHAR(8) = 'GT'
+    @Receiver_CUI NVARCHAR(25) = '',
+	@IdCountry NVARCHAR(8) = 'GT',
+	@TicketNumber NVARCHAR(300) = NULL
 AS
 BEGIN
+	
+	IF @GuideNumber IS NULL OR @GuideNumber = 0 OR @GuideSerie IS NULL OR @GuideSerie = ''
+	BEGIN
+		SELECT @GuideNumber = Guide_Number,
+			   @GuideSerie=Guide_Serie
+		FROM DeliveryOrder WITH (NOLOCK)
+		WHERE Ticket_Number = @TicketNumber
+	END
+
+	DROP TABLE IF EXISTS #GuidesProcessCOD
+	--TABLA PARA PODER CONFIRMAR QUE LA TRANSACCCION COD HA SIDO REALIZADA CORRECTAMENTE
+	CREATE TABLE #GuidesProcessCOD
+    (
+		GuideSerie NVARCHAR(8),
+		GuideNumber INT,
+		BatchCodId INT,
+		CONSTRAINT PK_GuidesProcessCOD PRIMARY KEY (GuideSerie, GuideNumber)
+    );
+
     -- control de inserciones para transacción
     DECLARE @RInserted INT;
     DECLARE @IsReturn BIT = 0;
