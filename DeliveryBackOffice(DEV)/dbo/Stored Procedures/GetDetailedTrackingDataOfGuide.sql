@@ -8,6 +8,14 @@
 -- Update date: <21-02-2023>
 -- Description: <Management for checkpoint icons>
 -- =============================================
+-- Author:		<Tito García>
+-- Update date: <17-10-2024>
+-- Description: <Se modifica para que se tome en primer lugar el comprobante digitalizado y en segundo lugar la imagen tomada por el courier en POD ref.: FDD-1359>
+-- =============================================
+-- Author:		<Tito García>
+-- Update date: <11-11-2024>
+-- Description: <Se agregan los campos isVoucherRequired y digitalProofDelivery ref.: FDAPI-3147>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
     @Guide_Serie NVARCHAR(2)
   , @Guide_Number BIGINT
@@ -143,6 +151,7 @@ BEGIN
          , RES.[ClasificationIncident]
          , RES.[StageDescription]
          , RES.[CheckpointIcon]
+	     , RES.[digitalProofDelivery]
          , RES.[ImagePath]
          , RES.[Dry]
          , RES.[Cold]
@@ -159,6 +168,7 @@ BEGIN
          , RES.Receiver_Phone
          , RES.ValidGeolocationEvidence
          , RES.ValidPhotographicEvidence
+	 , RES.IsVoucherRequired
     INTO #OrdChkpnt
     FROM
     (
@@ -180,6 +190,7 @@ BEGIN
              , ''                                                      AS [ClasificationIncident]
              , ''                                                      AS [StageDescription]
              , ''                                                      AS [CheckpointIcon]
+	         , ''						                               AS [digitalProofDelivery]
              , ''                                                      AS [ImagePath]
              , ''                                                      AS [Dry]
              , ''                                                      AS [Cold]
@@ -196,6 +207,7 @@ BEGIN
              , do.Receiver_Phone
              , '0'                                                     AS ValidGeolocationEvidence
              , '0'                                                     AS ValidPhotographicEvidence
+	         , cu.IsVoucherRequired
         FROM @GuideOrderTemp                                 do
             INNER JOIN dbo.DeliveryOrder                     dor WITH (NOLOCK)
                 ON do.Guide_Serie = dor.Guide_Serie
@@ -207,6 +219,8 @@ BEGIN
                 ON dod.DeliveryAttemptId = da.ID
             LEFT JOIN [dbo].[ConfirmationOfIncidence]        COI WITH (NOLOCK)
                 ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+	    LEFT JOIN DeliveryBackOffice.dbo.Customer		cu WITH (NOLOCK)
+		ON cu.IdCustomer = dor.Sender_ID
         WHERE do.Guide_Serie = @Guide_Serie
               AND do.Guide_Number = @Guide_Number
         UNION
@@ -319,6 +333,13 @@ BEGIN
                 END
                )                                                                            AS [StageDescription]
              , ISNULL([CCT].[CheckpointIcon], '')                                           AS [CheckpointIcon]
+	 , CASE WHEN dod.StatusOrderId = 5 THEN 
+		ISNULL(
+				(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR(50))) as VARCHAR(300))),
+				''
+			  )
+	ELSE '' 
+	END										AS [digitalProofDelivery]
              , (CASE
                     WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
                     --(SELECT TOP 1 Path_Incident FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
@@ -341,6 +362,7 @@ BEGIN
                )                                                                            AS [ImagePath]
              , (CASE
                     WHEN dod.StatusOrderId = 5 THEN
+                    ISNULL((Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR(50))) as VARCHAR(300))),
                     (
                         SELECT TOP 1
                                IIF([dp].[Path_Dry] = '', dp.Path_Dry, ISNULL([Path_Dry], [Path_Dry]))
@@ -348,7 +370,7 @@ BEGIN
                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                 ON da.Guide_Serie = dp.Guide_Serie
                                    AND da.Guide_Number = dp.Guide_Number
-                        WHERE dp.Guide_Serie = 'FD'
+                        WHERE dp.Guide_Serie = @Guide_Serie
                               AND dp.Guide_Number = @Guide_Number
                               AND da.Delivered = 1
                         ORDER BY dp.Date_Photo DESC
@@ -366,7 +388,7 @@ BEGIN
                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                 ON da.Guide_Serie = dp.Guide_Serie
                                    AND da.Guide_Number = dp.Guide_Number
-                        WHERE dp.Guide_Serie = 'FD'
+                        WHERE dp.Guide_Serie = @Guide_Serie
                               AND dp.Guide_Number = @Guide_Number
                               AND da.Delivered = 1
                         ORDER BY dp.Date_Photo DESC
@@ -493,6 +515,7 @@ BEGIN
                    AND dod.StatusOrderId = 50
                  , IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId = 50, 1, 0)
                  , IIF(COI.ValidPhotographicEvidence = 1 AND dod.StatusOrderId = 50, 1, 0)) AS 'ValidPhotographicEvidence'
+		    , '' AS 'IsVoucherRequired'
         FROM dbo.DeliveryOrderDetail                      dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
@@ -566,6 +589,7 @@ BEGIN
                       )
                 )                     AS [StageDescription]
          , OrdChkPnt.[CheckpointIcon]
+	     , OrdChkPnt.[digitalProofDelivery]
          , OrdChkPnt.[ImagePath]
          , OrdChkPnt.[Dry]
          , OrdChkPnt.[Cold]
@@ -576,13 +600,14 @@ BEGIN
          , OrdChkPnt.[Longitude]
          , @CurrencyPrice [CurrencyPrice]
          , ISNULL(OrdChkPnt.Price, 0) Price
-		 , @CurrencyCOD [CurrencyCOD]
+	     , @CurrencyCOD [CurrencyCOD]
          , ISNULL(OrdChkPnt.COD, 0)   COD
          , OrdChkPnt.[NextSteps]
          , OrdChkPnt.[UserIncident]
          , OrdChkPnt.[Receiver_Phone]
          , OrdChkPnt.ValidGeolocationEvidence
          , OrdChkPnt.ValidPhotographicEvidence
+	     , OrdChkPnt.IsVoucherRequired
     FROM #OrdChkpnt                                        OrdChkPnt
         -- Obtener datos desde usuario Desktop
         LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken      token WITH (NOLOCK)

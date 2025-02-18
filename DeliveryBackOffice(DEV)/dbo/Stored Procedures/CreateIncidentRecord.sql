@@ -11,6 +11,8 @@
 -- Update date: <2024-07-18>
 -- Description:	<Se confirma el tipo de incidencia por el currier, guardando Id original y comentario si hubiera cambio de tipo de incidencia>
 -- =============================================
+-- Author:      <Cristian Suazo> FDAPI-3278
+-- =============================================
 CREATE PROCEDURE [dbo].[CreateIncidentRecord]
     @GuideSerie NVARCHAR(2) = 'FD'        --serie
   , @GuideNumber INT                      --número de guía
