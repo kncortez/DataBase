@@ -690,6 +690,23 @@ BEGIN
                                              do.Receiver_Address,
                                              rpd.GuideOrder;
 
+                         IF (@Reference <> '')
+								  BEGIN
+									  SELECT 
+                                           do.Guide_Serie 'GuideSerie',
+                                           do.Guide_Number 'GuideNumber',
+                                           COUNT(1) 'Pieces',
+                                           COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) 'guidePiecesTotal'
+                                    FROM 
+                                         DeliveryOrder do WITH (NOLOCK)
+                                    WHERE do.Ticket_Number = @Reference
+                                    GROUP BY 
+                                             do.Guide_Serie,
+                                             do.Guide_Number,
+                                             do.Pieces_Dry,
+                                             do.Pieces_Cold
+									END
+
                                     -- Si es proceso abierto, retornar información de las piezas
                                     IF @IsOpenProcess = 1
                                         SELECT dop.NoPiece,
