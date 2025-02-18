@@ -997,7 +997,8 @@ BEGIN
 												INNER JOIN	@AcceptedGuides AG
 													ON		[PSL].[GuideSerie] = [AG].[GuideSerie]
 													AND		[PSL].[GuideNumber] = [AG].[GuideNumber]
-													AND		([AG].[LogServiceNumber] > @MaxServiceMembership OR [AG].[LogServiceNumber] = 0);
+													--AND		([AG].[LogServiceNumber] > @MaxServiceMembership OR [AG].[LogServiceNumber] = 0)
+												WHERE [AG].[LogServiceNumber] > @MaxServiceMembership OR [AG].[LogServiceNumber] = 0 ;
 											END
 									END
 

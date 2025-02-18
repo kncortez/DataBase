@@ -8,6 +8,7 @@ CREATE TABLE [dbo].[CatManagementLevel] (
     [TokenCreated]          NVARCHAR (50)   NOT NULL,
     [DateUpdated]           DATETIME        NULL,
     [TokenUpdated]          NVARCHAR (50)   NULL,
+    [CountryId] [nvarchar](2) NULL,
     PRIMARY KEY CLUSTERED ([IdCatManagementLevel] ASC)
 );
 GO
@@ -26,4 +27,6 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatManagementLevel', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatManagementLevel', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+GO
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de país' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatManagementLevel', @level2type=N'COLUMN',@level2name=N'CountryId'
 GO

@@ -10,8 +10,11 @@
     [TokenUpdate]       NVARCHAR (50) NULL,
     [UpdatedDatetime]   DATETIME      NULL,
     [SentTypeStatus]    INT           NULL,
+    [StatusOrderId]     INT           NULL
     CONSTRAINT [PK_SMS_Sent] PRIMARY KEY CLUSTERED ([Sent_Id] ASC)
 );
+
+
 
 
 
@@ -25,4 +28,11 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de envío realizado (NULL o 0 = sin enviar; 1 = enviado recoleccion; 2 = enviado arribo instalaciones)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SMS_Sent', @level2type = N'COLUMN', @level2name = N'SentTypeStatus';
 
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado de la guía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'SMS_Sent', @level2type=N'COLUMN',@level2name=N'StatusOrderId'
+GO
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Sent_Batch_Id]
+    ON [dbo].[SMS_Sent]([Sent_Batch_Id] ASC);
 

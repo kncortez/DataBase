@@ -320,7 +320,7 @@ BEGIN
                                        + ISNULL(CONVERT(VARCHAR, PRV.IdProvince), '') + '",' + '"ProvinceName":"'
                                        + ISNULL(PRV.ProvinceDescription, '') + '",' + '"Address":"'
                                        + ISNULL(VPC.Address, '') + '",' + '"HeaderCode":"' + ISNULL(TWS.HeaderCode, '') + '",'
-                                       + '"SettlementDescription":"'+ ISNULL( STL.Settlement, '') + '",'
+                                       + '"SettlementDescription":"'+ CONCAT(STL.Settlement,', ',TWS.TownshipName,', ',prv.ProvinceName) + '",'
 									   + '"IdSettlement":"'+ ISNULL(CONVERT(NVARCHAR, STL.IdSettlement), '') + '",'
 									   + '"CodeOfReference":"'+ ISNULL(CONVERT(NVARCHAR, VPC.CodeOfReference), '') + '"'
                                        + '}'
@@ -333,6 +333,9 @@ BEGIN
                                         ON PRV.IdProvince = TWS.IdProvince
                                 WHERE IdKindOfVPClient = 1
 								AND VPC.StatusClient = 1
+								AND STL.SettlementSatus = 1
+								AND TWS.TownshipStatus = 1
+								AND PRV.ProvinceStatus = 1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,
@@ -446,6 +449,9 @@ BEGIN
                                           WHERE ccp.ConditionOfPayment = 'CONTADO'
                                       )*/
                                       AND RowSatus = 1
+									  AND STL.SettlementSatus = 1
+									  AND TWS.TownshipStatus = 1
+									  AND pr.ProvinceStatus = 1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,
@@ -648,7 +654,21 @@ BEGIN
 								     AND RowStatus = 1
                                      AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)
                                      AND SubscriptionMaxServiceFixedValue >	ActualServiceCount 
-                                     ))
+                                     )
+                                     
+                                +
+									 
+								(SELECT TOP 1 COUNT(IdSubscription)
+                                FROM [DeliveryBackOffice].[dbo].[Subscription] S WITH (NOLOCK)  
+								   INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription] SC WITH (NOLOCK)
+								   ON S.CatSubscriptionId = SC.IdCatSubscription
+                                WHERE AccountId = @IdAccount
+								     AND S.RowStatus = 1
+                                     AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)
+                                     AND SC.SubscriptionDescription ='Plan de descuentos'
+                                     )
+                                     
+                                     )
         SET @jsonResult =
         (
           SELECT STUFF(
