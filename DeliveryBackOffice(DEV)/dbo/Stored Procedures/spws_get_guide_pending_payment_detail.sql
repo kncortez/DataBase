@@ -71,14 +71,38 @@ BEGIN
     );
     CREATE NONCLUSTERED INDEX tempGuides ON #listGuides (Guide_Serie, Guide_Number);
 
-    INSERT INTO #listGuides
-    (
-        Guide_Serie,
-        Guide_Number
-    )
-    SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
-           SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+
+	IF @InGuidesP IS NOT NULL AND @InGuidesP != ''
+	BEGIN
+	PRINT ' NORMAL '
+		INSERT INTO #listGuides
+		(
+			Guide_Serie,
+			Guide_Number
+		)
+		SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
+			   SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+	END
+	ELSE
+	BEGIN
+
+		SET @InGuidesP = ''
+		SELECT @InGuidesP = STRING_AGG(CAST(CONCAT(Guide_Serie, Guide_Number) AS VARCHAR(MAX)), ',')
+		FROM DeliveryOrder WITH (NOLOCK)
+		WHERE Ticket_Number IN ( @TicketNumber )
+
+		INSERT INTO #listGuides
+		(
+			Guide_Serie,
+			Guide_Number
+		)
+		SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
+			   SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+
+	END
+	----------------------------------------------------------------------------------------------------
 
     ---- Obtener guias que no existen ------------------------------------
     SELECT lg.Guide_Serie,
@@ -286,7 +310,7 @@ BEGIN
 
 		----Obtener bandera de tipo de suscripcion para enviar a sp revalorizador----
 		DECLARE @TypeSubsId INT;
-		SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId 
+		SET @TypeSubsId = (SELECT TOP 1 sb.CatTypeSubscriptionId 
         FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
 		INNER JOIN Subscription sb WITH (NOLOCK)
 		ON sbl.SubscriptionId = sb.IdSubscription
@@ -526,7 +550,8 @@ BEGIN
 							),
 					'N/A'
 				)
-				)) AS TypePayment
+				)) AS TypePayment,
+	DO.IdCustomer
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
@@ -631,6 +656,9 @@ BEGIN
 			ON do.Guide_Serie = acd.GuideSerie AND do.Guide_Number = acd.GuideNumber
 		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK)
 			ON do.IdCustomer = ach.CustomerId 
+            AND ISNULL(do.VisitpointClientPortfolioId, 0) = ISNULL(ach.PortfolioId, 0)
+            --Tomar en cuenta validar especificamente
+            --por portafolio cuando el cliente sea redistribuidor 10/02/2025
 		LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 			ON VPC.CodeOfReference = DO.Sender_ID
 		LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)

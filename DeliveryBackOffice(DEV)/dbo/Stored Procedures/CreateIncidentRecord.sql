@@ -11,6 +11,8 @@
 -- Update date: <2024-07-18>
 -- Description:	<Se confirma el tipo de incidencia por el currier, guardando Id original y comentario si hubiera cambio de tipo de incidencia>
 -- =============================================
+-- Author:      <Cristian Suazo> FDAPI-3278
+-- =============================================
 CREATE PROCEDURE [dbo].[CreateIncidentRecord]
     @GuideSerie NVARCHAR(2) = 'FD'        --serie
   , @GuideNumber INT                      --número de guía
@@ -31,6 +33,7 @@ CREATE PROCEDURE [dbo].[CreateIncidentRecord]
   , @IdIncident INT                       --Id incidencia
   , @ConfirmedTypeIncidenceId INT = 0                        --Id del tipo de incidencia si es que se cambia en la validación 
   , @CommentOnConfirmedTypeIncidence NVARCHAR(600) = ''		-- Comentario del cambio del tipo de incidencia
+  , @TicketNumber NVARCHAR(300) = NULL
 AS
 BEGIN
     DECLARE @StatusOrderId TINYINT;
@@ -76,6 +79,15 @@ BEGIN
 
     -- Variables de control de cambios
     DECLARE @UpdatedRP BIT = 0;
+
+    	--- VALIDAMOS QUE NO VENGA VACIO GUIDE NUMBER Y GUIDE SERIE 
+	IF @GuideNumber IS NULL OR @GuideNumber = 0 AND @GuideSerie IS NULL OR @GuideSerie = ''
+	BEGIN
+		SELECT @GuideSerie = Guide_Serie,
+			   @GuideNumber = Guide_Number
+		FROM DeliveryOrder WITH(NOLOCK)
+		WHERE Ticket_Number = @TicketNumber 
+	END
 
     DECLARE @Terminal INT =
             (

@@ -15,7 +15,8 @@ CREATE PROCEDURE [dbo].[spg_get_SenderReceiver]
 AS
 BEGIN
 	SELECT sr.ID,
-	CONCAT(sr.First_Name,' ', sr.Last_Name) as Name
+	CONCAT(sr.First_Name,' ', sr.Last_Name) as Name,
+    Phone AS [Phone]
 	FROM  [DeliveryBackOffice].[dbo].[SenderReceiver] as sr
    WHERE IIF(sr.IdCountry IS NULL, 'GT',sr.IdCountry) = @IdCountry
 	order by [Name]

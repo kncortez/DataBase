@@ -7,16 +7,18 @@ CREATE PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
     -- Add the parameters for the stored procedure here
     @RouteId INT,
     @Date DATE,
-    @GuideSerie NVARCHAR(2),
-    @GuideNumber INT,
+    @GuideSerie NVARCHAR(2)='FD',
+    @GuideNumber INT=0,
     @GuidePiece SMALLINT,
     @Token NVARCHAR(50),
-    @CountryId NVARCHAR(2)='GT'
+    @CountryId NVARCHAR(2)='GT',
+	@Reference NVARCHAR(150)=''
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+    SET ARITHABORT ON;
 
     --- Conteo para verificar cantidad correcta de validaciones
     DECLARE @RModified INT = 0;
@@ -59,6 +61,14 @@ BEGIN
 
     --- Contro procesos abiertos en otras rutas
     DECLARE @CodeOfRoute VARCHAR(100);
+
+     IF (@GuideNumber=0)
+    BEGIN
+	      SELECT TOP 1  @GuideNumber = Guide_Number 
+		                    FROM [dbo].[DeliveryOrder]
+						         WHERE Ticket_Number = @Reference
+								     ORDER BY DateCreated DESC
+	    END
 
     BEGIN TRANSACTION;
 
@@ -679,6 +689,23 @@ BEGIN
                                              do.Receiver_Town,
                                              do.Receiver_Address,
                                              rpd.GuideOrder;
+
+                         IF (@Reference <> '')
+								  BEGIN
+									  SELECT 
+                                           do.Guide_Serie 'GuideSerie',
+                                           do.Guide_Number 'GuideNumber',
+                                           COUNT(1) 'Pieces',
+                                           COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) 'guidePiecesTotal'
+                                    FROM 
+                                         DeliveryOrder do WITH (NOLOCK)
+                                    WHERE do.Ticket_Number = @Reference
+                                    GROUP BY 
+                                             do.Guide_Serie,
+                                             do.Guide_Number,
+                                             do.Pieces_Dry,
+                                             do.Pieces_Cold
+									END
 
                                     -- Si es proceso abierto, retornar información de las piezas
                                     IF @IsOpenProcess = 1

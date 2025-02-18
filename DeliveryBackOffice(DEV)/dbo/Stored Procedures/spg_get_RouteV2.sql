@@ -34,6 +34,13 @@ BEGIN
 			WHERE rta.DateOfRoute = @dateRoute
 			AND rta.IdRoute = ctr.IdRoute)
 		NameCourier
+	   ,(SELECT TOP 1 snr.Phone
+			FROM [DeliveryBackOffice].[dbo].[RouteAssigment] rta
+			INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] snr
+				ON snr.ID = rta.IdCurrierMan
+			WHERE rta.DateOfRoute = @dateRoute
+			AND rta.IdRoute = ctr.IdRoute)
+		PhoneCourrier
 	   ,(SELECT TOP 1
 				cv.UnitNumber
 			FROM [DeliveryBackOffice].[dbo].[RouteAssigment] rta
