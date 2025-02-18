@@ -23,7 +23,8 @@ BEGIN
     SELECT
 		do.Ticket_Number
 		,(do.pieces_Dry + do.Pieces_Cold) AS Pieces
-		,ISNULL(do.Receiver_FirstName,'') + ' ' + ISNULL(do.Receiver_LastName,'') AS receiver_name
+		,ISNULL(do.NameOfReceiver,'')  AS receiver_name
+		,ISNULL(do.Receiver_FirstName,'') + ' ' + ISNULL(do.Receiver_LastName,'') AS receiver_namepod
 		,do.Receiver_Address AS Receiver_Address
 		,do.Receiver_Phone
 		,do.Sender_FirstName + ' ' + do.Sender_LastName AS sender_name
@@ -54,13 +55,16 @@ BEGIN
 		,dp.PathSignature
 		,CONVERT(VARCHAR, dod.DateCreated, 103) AS Delivery_Date
 		,CONVERT(VARCHAR(5), dod.DateCreated, 108) as Delivery_Time
+		,CAST( CAST( SUBSTRING(dp.PathSignature, CHARINDEX('id=', dp.PathSignature) + 3, LEN(dp.PathSignature) - CHARINDEX('id=', dp.PathSignature) + 3 + 1) AS XML ).value('text()[1]','VARBINARY(MAX)') AS VARCHAR(MAX) ) AS SignatureFileName
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
-		INNER JOIN [DeliveryBackOffice].[dbo].deliveryorderdetail dod WITH(NOLOCK) ON do.Guide_Number = dod.Guide_Number   
-		INNER JOIN [DeliveryBackOffice].[dbo].DeliveryProof dp WITH(NOLOCK) ON do.Guide_Number = dp.Guide_Number AND dp.PathSignature IS NOT NULL
-	WHERE do.Guide_Serie = @_serie
+		INNER JOIN [DeliveryBackOffice].[dbo].deliveryorderdetail dod WITH(NOLOCK) 
+			ON do.Guide_Serie = dod.Guide_Serie AND do.Guide_Number = dod.Guide_Number   
+		INNER JOIN [DeliveryBackOffice].[dbo].DeliveryProof dp WITH(NOLOCK) 
+			ON do.Guide_Serie = dp.Guide_Serie AND do.Guide_Number = dp.Guide_Number AND dp.PathSignature IS NOT NULL
+	WHERE dod.StatusOrderId IN (SELECT StatusOrderId FROM statusOrder WHERE OrderDescription IN('Entregado','Devuelto'))
+		AND dod.RowStatus = 1
+		AND do.Guide_Serie = @_serie
 		AND do.Guide_Number IN (SELECT ItemNumber FROM #listGuides)
-		AND do.Guide_Number IS NOT NULL
-		AND dod.StatusOrderId IN (SELECT StatusOrderId FROM statusOrder WHERE OrderDescription IN('Entregado','Devuelto'))
 	ORDER BY dod.StatusOrderId ASC, do.Guide_Number DESC
 
 	IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL

@@ -1,4 +1,8 @@
-﻿-- =============================================  
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <024-12-10>
+-- Description:	<Liquidacion Rutas Express - Se obtienen guias por numero de ticket>
+-- =============================================
 -- Author:		<Brandon, Pedroza>  
 -- Create date: <2025-01-13>  
 -- Description: <Contenerizacion guias - Obtiene guias por numero de referencia>  
