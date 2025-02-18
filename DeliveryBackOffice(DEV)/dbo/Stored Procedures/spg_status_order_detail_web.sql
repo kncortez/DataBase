@@ -20,6 +20,157 @@ CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
 AS
 BEGIN
 
+    DECLARE @StatusIncident INT;
+    DECLARE @StatusIncidentValidated INT;
+    DECLARE @GuideDeliveryLatitude NVARCHAR(20) = '';
+    DECLARE @GuideDeliveryLongitude NVARCHAR(20) = '';
+
+	SELECT
+		TOP 1
+			@GuideDeliveryLatitude = DA.Latitude,
+			@GuideDeliveryLongitude = DA.Longitude
+			
+	FROM
+		[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].[DeliveryProof] DP WITH(NOLOCK)
+			ON
+				DA.Guide_Number = DP.Guide_Number
+				AND
+				DA.Guide_Serie = DP.Guide_Serie
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].[SenderReceiver] SR WITH(NOLOCK)
+			ON
+				DA.ID_Courier = SR.ID
+	WHERE
+		DA.Guide_Serie = @Guide_Serie
+		AND
+		DA.Guide_Number = @Guide_Number
+		AND
+		DA.Delivered = 1
+	ORDER BY
+		DA.Date_Created DESC;
+
+    SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription =  'Incidencia en ruta')
+    SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription =  'Incidencia Validada')
+
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
+
+    IF OBJECT_ID('tempdb.dbo.#OrdChkpnt', 'U') IS NOT NULL
+        DROP TABLE #OrdChkpnt;
+
+    SELECT RES.[EventID],
+           RES.[OrderId],
+           RES.[CustomerFullname],
+           RES.[OriginAdress],
+           RES.[OriginLatitude],
+           RES.[OriginLongitude],
+           RES.[DestinyAddress],
+           RES.[DestintyLatitude],
+           RES.[DestinyLongitude],
+           RES.[EstimatedDeliveryDate],
+           RES.[CourierName],
+           RES.[StageId],
+           RES.[StageDate],
+           RES.[StageTitle],
+           RES.[StageSource],
+           RES.[ClasificationIncident],
+           RES.[CommentOnIncident],
+           RES.[StageDescription],
+           RES.[CheckpointIcon],
+           RES.[ImagePath],
+           CASE WHEN RES.digitalProofDelivery = '' THEN RES.digitalProofDelivery ELSE NULL END [digitalProofDelivery],
+           RES.[Dry],
+           RES.[Cold],
+           RES.[NameOfReceiver],
+           RES.[Place],
+           RES.[ManifestNumber],
+           RES.[Latitude],
+           RES.[Longitude],
+           RES.Token,
+           RES.NextSteps,
+           RES.UserIncident,
+           RES.ValidGeolocationEvidence,
+           RES.ValidPhotographicEvidence
+    INTO #OrdChkpnt
+    FROM
+    (
+        SELECT 0 [EventID],
+               do.Guide_Serie + CAST(do.Guide_Number AS NVARCHAR) AS [OrderId],
+               ISNULL(do.Receiver_FirstName, '') + ' ' + ISNULL(do.Receiver_LastName, '') AS [CustomerFullname],
+               do.Sender_Address AS [OriginAdress],
+               '' AS [OriginLatitude],
+               '' AS [OriginLongitude],
+               do.Receiver_Address AS [DestinyAddress],
+               '' AS [DestintyLatitude],
+               '' AS [DestinyLongitude],
+               CONVERT(VARCHAR, do.Delivery_Max_Date, 120) AS [EstimatedDeliveryDate],
+               '' [CourierName],
+               '' [StageId],
+               '' [StageDate],
+               '' [StageTitle],
+               'web' [StageSource],
+               '' AS [ClasificationIncident],
+               '' AS [CommentOnIncident],
+               '' AS [StageDescription],
+               '' AS [CheckpointIcon],
+               '' AS [ImagePath],
+               --(Select top 1 Path_Dry from DeliveryProof where Guide_Number = 247619 order by Date_Photo desc) AS Dry,
+               --(Select top 1 Path_Cold from DeliveryProof where Guide_Number = 247619 order by Date_Photo desc) AS Cold,
+               '' [digitalProofDelivery],
+               '' AS [Dry],
+               '' AS [Cold],
+               --ISNULL([Cold], '') AS Cold,
+               ISNULL([NameOfReceiver], '') AS NameOfReceiver,
+               ISNULL(Sender_FirstName, '') + ' ' + ISNULL(Sender_LastName, '') AS Place,
+               do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) AS [ManifestNumber],
+               ISNULL(da.Latitude, '') [Latitude],
+               ISNULL(da.Longitude, '') [Longitude],
+               '' [Token],
+               '' NextSteps,
+               '' [UserIncident],
+               ''   AS 'ValidGeolocationEvidence',
+               '' AS 'ValidPhotographicEvidence'
+        FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+                ON da.Guide_Serie = do.Guide_Serie
+                   AND da.Guide_Number = do.Guide_Number
+        WHERE do.Guide_Serie = @Guide_Serie
+              AND do.Guide_Number = @Guide_Number
+        UNION
+        SELECT
+            --ROW_NUMBER() OVER (ORDER BY  dod.StatusOrderId ASC)  AS EventID,
+            RANK() OVER (PARTITION BY dod.Guide_Number
+                         ORDER BY CONVERT(DATE, dod.DateCreated),
+                                  dod.StatusOrderId ASC
+                        ) AS EventID,
+            dod.Guide_Serie + CAST(dod.Guide_Number AS VARCHAR) AS [OrderId],
+            '' [CustomerFullname],
+            '' [OriginAdress],
+            '' [OriginLatitude],
+            '' [OriginLongitude],
+            '' [DestinyAddress],
+            '' [DestintyLatitude],
+            '' [DestinyLongitude],
+            '' [EstimatedDeliveryDate],
+            '' [CourierName],
+            CAST(dod.StatusOrderId AS NVARCHAR) AS [StageId],
+            (MAX(dod.DateCreated)) AS [StageDate],
+            so.OrderDescription AS [StageTitle],
+            'web' AS [StageSource],
+			 ( CASE
+                    WHEN dod.StatusOrderId = @StatusIncident THEN
+						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla WITH (NOLOCK)
+						INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+						ON dla.ID_Incident = cti.IdIncidenceType 
+						INNER JOIN CatIncidenceClasification cic WITH (NOLOCK)
+						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
+						WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number AND dod.DeliveryAttemptId = dla.ID)
+				ELSE
+                       ''
+                END
 
 			   ) AS [ClasificationIncident],
 			 ( CASE
