@@ -78,7 +78,8 @@ SET ARITHABORT ON
 		GUidePriceShippment decimal(14,2),
 		GuideCOD decimal(14,2),
 		SenderId INT,
-		ReceiverId INT
+		ReceiverId INT,
+		Ticket_Number NVARCHAR(150)
 	);
 
 	------Variables para proceso de generación de datos de servicio marcados como devolución
@@ -403,7 +404,8 @@ SET ARITHABORT ON
 												[GuideReceiverFirstName],
 												[GuideReceiverLastName],
 												[SenderId],
-												[ReceiverId]
+												[ReceiverId],
+												[Ticket_Number]
 									)
 									SELECT
 										@IdRoutePreparation
@@ -431,6 +433,7 @@ SET ARITHABORT ON
 										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_LastName ELSE DO.Receiver_LastName END)
 										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_ID ELSE DO.Sender_ID END)
 										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_ID ELSE DO.Receiver_ID END)
+										,ISNULL(DO.[Ticket_Number],'0')
 									FROM
 										[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 									WHERE
@@ -987,6 +990,7 @@ SET ARITHABORT ON
 				,RT.GuidePieceType 'Piece_Type'
 				,NULL 'GuideOrder'
 				,@IdRoutePreparation 'NewRoutePreparation'
+				,RT.Ticket_Number
 			FROM
 				@ResponseTable RT
 			COMMIT TRANSACTION;
