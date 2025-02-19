@@ -348,8 +348,17 @@ SET ARITHABORT ON
 															,1
 															,@Token
 															,GETDATE()
-														 FROM  dbo.DeliveryOrderPiece
+														 FROM  dbo.DeliveryOrderPiece WITH (NOLOCK)
 															WHERE GuideNumber = @GuideNumber
+
+												--- Actualziar el estado de las piezas
+														UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
+														SET
+															StatusOrderId = 3 --- Programado para entrega
+														WHERE
+															GuideSerie = @GuideSerie
+															AND
+															GuideNumber = @GuideNumber
 										
 
 
