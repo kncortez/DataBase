@@ -272,8 +272,6 @@ BEGIN
                                            INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                                ON da.Guide_Serie = dp.Guide_Serie
                                                   AND da.Guide_Number = dp.Guide_Number
-                                                  AND da.Verified = 1
-                                                  AND da.Accepted = 1
                                        WHERE dp.Guide_Serie = @Guide_Serie 
                                              AND dp.Guide_Number = @Guide_Number
                                              AND
@@ -281,6 +279,8 @@ BEGIN
                                                  dp.Proof_Incident != 0x
                                                  OR dp.Proof_Incident IS NULL
                                              )
+                                            AND da.Verified = 1
+                                            AND da.Accepted = 1
                                    ) L1
                                    ORDER BY L1.Date_Photo DESC
                                ),
@@ -331,10 +331,10 @@ BEGIN
                     INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                         ON da.Guide_Serie = dp.Guide_Serie
                            AND da.Guide_Number = dp.Guide_Number
-                           AND da.Verified = 1
-                           AND da.Accepted = 1
                 WHERE dp.Guide_Serie = @Guide_Serie 
-                      AND dp.Guide_Number = @Guide_Number
+                    AND dp.Guide_Number = @Guide_Number
+                    AND da.Verified = 1
+                    AND da.Accepted = 1
                 ORDER BY dp.Date_Photo DESC
             ) AS [Cold],
             '' AS NameOfReceiver,
@@ -385,10 +385,13 @@ BEGIN
 					WHEN dod.StatusOrderId = @StatusIncident  THEN
 								(CASE 
 									WHEN (SELECT TOP 1 dttt.ID_Courier FROM DeliveryAttempt dttt WITH (NOLOCK) WHERE dttt.ID = dod.DeliveryAttemptId) IS NOT NULL THEN
-									(SELECT TOP 1 (srv.First_Name +' '+srv.Last_Name) FROM SenderReceiver srv WITH (NOLOCK) 
-											INNER JOIN DeliveryAttempt dat WITH (NOLOCK) 
+									(SELECT TOP 1 (srv.First_Name +' '+srv.Last_Name) 
+                                    FROM SenderReceiver srv WITH (NOLOCK) 
+										INNER JOIN DeliveryAttempt dat WITH (NOLOCK) 
 											ON srv.ID = dat.ID_Courier
-											WHERE dod.Guide_Number = @Guide_Number AND dat.ID = dod.DeliveryAttemptId)
+									WHERE dod.Guide_Serie = @Guide_Serie
+                                        AND dod.Guide_Number = @Guide_Number 
+                                        AND dat.ID = dod.DeliveryAttemptId)
 									
 									ELSE
 

@@ -65,7 +65,7 @@ BEGIN
         RETURN;
     END
 
-    -- Si todas las verificaciones son exitosas
-    SET @Resultado = 'Acceso concedido';
+    -- Si no existe registros
+    SET @Resultado = 'Acceso denegado';
     SELECT @Resultado AS Mensaje;
 END

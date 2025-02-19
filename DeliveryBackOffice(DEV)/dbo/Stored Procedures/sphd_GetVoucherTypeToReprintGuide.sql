@@ -30,8 +30,7 @@ BEGIN
 				   ELSE 'Otro Estado'
 			   	END AS StatusOrderId
 		FROM [dbo].[DeliveryOrder] DDO WITH (NOLOCK)
-		WHERE DDO.Guide_Number IS NOT NULL
-			AND DDO.Guide_Serie = @GuideSerie 
+		WHERE DDO.Guide_Serie = @GuideSerie 
 			AND DDO.Guide_Number = @GuideNumber 
 			AND DDO.SenderCountryId = @IdCountry
 
