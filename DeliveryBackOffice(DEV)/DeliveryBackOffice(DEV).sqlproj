@@ -1463,6 +1463,7 @@
     <Build Include="dbo\Stored Procedures\SPHWPMembershipOrSubscriptionActivation.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPCouponData.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPBuyMembershipsandSubscriptions.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetDeliveryVoucherURL.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ValidationGuideinAct.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ValidateTerminalStatus.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ValidateGuideStatus.sql" />

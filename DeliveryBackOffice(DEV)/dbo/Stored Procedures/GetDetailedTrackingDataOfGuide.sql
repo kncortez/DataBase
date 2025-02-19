@@ -14,7 +14,7 @@
 -- =============================================
 -- Author:		<Tito García>
 -- Update date: <11-11-2024>
--- Description: <Se agregan los campos isVoucherRequired y digitalProofDelivery ref.: FDAPI-3147>
+-- Description: <Se agregan los campos isVoucherRequired ref.: FDAPI-3147>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
     @Guide_Serie NVARCHAR(2)
@@ -151,7 +151,6 @@ BEGIN
          , RES.[ClasificationIncident]
          , RES.[StageDescription]
          , RES.[CheckpointIcon]
-	     , RES.[digitalProofDelivery]
          , RES.[ImagePath]
          , RES.[Dry]
          , RES.[Cold]
@@ -190,7 +189,6 @@ BEGIN
              , ''                                                      AS [ClasificationIncident]
              , ''                                                      AS [StageDescription]
              , ''                                                      AS [CheckpointIcon]
-	         , ''						                               AS [digitalProofDelivery]
              , ''                                                      AS [ImagePath]
              , ''                                                      AS [Dry]
              , ''                                                      AS [Cold]
@@ -333,13 +331,6 @@ BEGIN
                 END
                )                                                                            AS [StageDescription]
              , ISNULL([CCT].[CheckpointIcon], '')                                           AS [CheckpointIcon]
-	 , CASE WHEN dod.StatusOrderId = 5 THEN 
-		ISNULL(
-				(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR(50))) as VARCHAR(300))),
-				''
-			  )
-	ELSE '' 
-	END										AS [digitalProofDelivery]
              , (CASE
                     WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
                     --(SELECT TOP 1 Path_Incident FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
@@ -588,7 +579,6 @@ BEGIN
                       )
                 )                     AS [StageDescription]
          , OrdChkPnt.[CheckpointIcon]
-	     , OrdChkPnt.[digitalProofDelivery]
          , OrdChkPnt.[ImagePath]
          , OrdChkPnt.[Dry]
          , OrdChkPnt.[Cold]
