@@ -12,7 +12,8 @@ CREATE PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
     @GuidePiece SMALLINT,
     @Token NVARCHAR(50),
     @CountryId NVARCHAR(2)='GT',
-	@Reference NVARCHAR(150)=''
+	@Reference NVARCHAR(150)='',
+    @IdCustomer INT=0
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -62,13 +63,38 @@ BEGIN
     --- Contro procesos abiertos en otras rutas
     DECLARE @CodeOfRoute VARCHAR(100);
 
-     IF (@GuideNumber=0)
-    BEGIN
-	      SELECT TOP 1  @GuideNumber = Guide_Number 
-		                    FROM [dbo].[DeliveryOrder]
-						         WHERE Ticket_Number = @Reference
-								     ORDER BY DateCreated DESC
+ --- Validar referencia unica
+	DECLARE @GuideCount INT = 0;
+		
+		
+		IF(@GuideNumber=0)
+		BEGIN
+			SET @GuideCount 	= ( SELECT
+											  COUNT(1)                   
+												   FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+														WHERE do.Ticket_Number = @Reference AND do.Ticket_Number<>'' AND do.Ticket_Number!='0');
+          END;
+
+    -- Buscar la guía de la referencia
+	      IF (@GuideNumber=0 AND @GuideCount=1 )
+         BEGIN
+			  SELECT TOP 1  @GuideNumber = Guide_Number 
+								FROM [dbo].[DeliveryOrder] WITH (NOLOCK)
+									 WHERE Ticket_Number = @Reference
+										 ORDER BY DateCreated DESC
 	    END
+		   
+		   IF(@GuideNumber=0 AND @GuideCount>1 AND @IdCustomer>0)
+		      BEGIN
+				   SELECT
+							TOP 1  @GuideNumber =	 do.Guide_Number
+						
+							   FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+								  INNER JOIN [dbo].[VisitPointClient] vpc WITH (NOLOCK)
+								  ON  do.Sender_ID = vpc.CodeOfReference
+									WHERE do.Ticket_Number = @Reference  AND vpc.CustomerID = @IdCustomer
+							END;
+	 
 
     BEGIN TRANSACTION;
 
@@ -91,7 +117,26 @@ BEGIN
               AND dop.NoPiece = @GuidePiece
 			  AND ISNULL(do.ReceiverCountryId,'GT') = @CountryId
 
-        IF @GuidePieceExists = 1
+     IF   (@GuideCount > 1 AND @Reference<>'' AND @IdCustomer=0 ) 
+     BEGIN
+
+
+	    SELECT 11 'StatusCode',
+                   'Referencia duplicada en más de una guía' 'Description';
+	     SELECT
+                         do.Guide_Serie 'GuideSerie',
+                         do.Guide_Number 'GuideNumber',
+						 vpc.CustomerID 'IdCustomer',
+						 vpc.DescriptionOfClient 'CustomerName'
+                       FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+					      INNER JOIN [dbo].[VisitPointClient] vpc WITH (NOLOCK)
+						  ON  do.Sender_ID = vpc.CodeOfReference
+                            WHERE do.Ticket_Number = @Reference;
+
+							COMMIT TRANSACTION;
+
+	 END 
+       ELSE IF @GuidePieceExists = 1
         BEGIN
             --- Verificar si esta en un estado válido 
             SET @StatusOrderId =
