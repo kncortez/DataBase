@@ -1826,6 +1826,7 @@
     <Build Include="dbo\Stored Procedures\sphdGetContainerInfoToSendEmail.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_ConfirmAddress.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetGuidesByTicketNumberNoRestriction.sql" />
+    <Build Include="dbo\Stored Procedures\sphwGetGuidesByTNConfirmation.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
