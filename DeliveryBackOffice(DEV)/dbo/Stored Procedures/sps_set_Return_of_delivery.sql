@@ -195,6 +195,7 @@ BEGIN
                             WHERE Guide_Serie = @Guide_Serie
                                   AND Guide_Number = @Guide_Number
                         );
+                        SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
 
                         UPDATE acodh 
                            SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0),
@@ -250,7 +251,6 @@ BEGIN
 
                         EXEC spUpdateBalanceByIdClient @AnticipatedCODDetail
 
-                        SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
 
                         -------------------WEBHOOK.INI--------------------------------------------------------------------------------------------
                         DECLARE @WebhookCustomerId INT = -1;
