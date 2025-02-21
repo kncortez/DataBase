@@ -172,6 +172,7 @@ BEGIN
 		, CAST(IIF(DOP.StatusOrderId = 3, 1 ,0) AS BIT) 'IsProgrammed'
 		, cu.Abbreviation 'CustomerAbbreviation' 
 		, RPD.ETAGuide 'GuideETA'
+		, cu.IsVoucherRequired
 	FROM RoutePreparation RP WITH(NOLOCK)
 	LEFT JOIN RoutePreparationDetail RPD WITH(NOLOCK)
 		ON
