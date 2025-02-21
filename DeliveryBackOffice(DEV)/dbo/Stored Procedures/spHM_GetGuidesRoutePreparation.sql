@@ -11,6 +11,7 @@ CREATE PROCEDURE [dbo].[spHM_GetGuidesRoutePreparation]
 	,@RouteId INT = NULL
 	,@DatePreparation DATE = NULL
 	,@RoutePreparationId INT = NULL
+	,@Reference NVARCHAR(150)=''
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -18,6 +19,16 @@ BEGIN
 	DECLARE @RecordExist BIT=0;
 	DECLARE @BelongsToRoute bit=0;
 	DECLARE @Msg_error NVARCHAR(100)='';
+
+     IF(@Number=0)
+		BEGIN
+		
+			SELECT TOP 1 @Number = Guide_Number
+				From [dbo].[DeliveryOrder]
+					WHERE Ticket_Number = @Reference
+		END;
+
+
 	--DECLARE @RecordExist BIT=0;
 	IF NOT ((@DatePreparation IS NOT NULL) AND (@RouteId IS NOT NULL)) AND @RoutePreparationId IS NULL
 	BEGIN 
