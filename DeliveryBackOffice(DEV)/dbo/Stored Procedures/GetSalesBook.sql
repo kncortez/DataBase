@@ -16,9 +16,10 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    SELECT INH.inv_pk_id
-          ,INH.inv_date       [inv_date]
-          ,INH.inv_cli_name   [inv_cli_name]
+    SELECT ROW_NUMBER() OVER(ORDER BY INH.inv_numberFEL) [row_number]
+          ,INH.inv_date       [date]
+          ,INH.inv_cli_nit    [id_client]
+          ,INH.inv_cli_name   [client_name]
           ,CASE WHEN @IdCountry = 'GT' THEN INH.inv_serieFEL
                 WHEN @IdCountry = 'HN' THEN INH.inv_certificationFEL ELSE '0' 
            END  [document_serie]
@@ -39,10 +40,10 @@ BEGIN
           ,(INH.inv_amount-INH.inv_IVA) [amount_base]
           ,INH.inv_IVA              [tax]
           ,DOR.CtsName              [document_type_description]
-          ,MIN(IND.dti_description) [document_description]
+          --,MIN(IND.dti_description) [document_description]
           ,IIF(ISNULL(DOR.ConditionOfPaymentID, 1) =1 , 'CONTADO', 'CREDITO') [payment_method]
-          ,DOR.IsCollect                         [IsCollect]
-          ,DOR.SAPCardCode                       [SAPCardCode]
+          ,CASE WHEN DOR.IsCollect = 1 THEN 'SI' ELSE 'NO' END                [IsCollect]
+          ,DOR.SAPCardCode          [SAPCardCode]
     FROM DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             ON IND.dti_fk_header = INH.inv_pk_id
@@ -67,8 +68,8 @@ BEGIN
       AND INH.IdCountry = @IdCountry
       AND INH.inv_certificationFEL IS NOT NULL
       AND INH.inv_type IN (1,2)
-    GROUP BY inv_pk_id
-            ,inv_date
+    GROUP BY inv_date
+            ,inv_cli_nit
             ,inv_cli_name
             ,inv_serieFEL
             ,inv_certificationFEL
@@ -80,6 +81,6 @@ BEGIN
             ,dor.ConditionOfPaymentID
             ,dor.IsCollect
             ,dor.SAPCardCode
-    ORDER BY INH.inv_date desc
+    ORDER BY [row_number] asc
 
 END
