@@ -65,7 +65,7 @@ BEGIN
 		INNER JOIN [DeliveryBackOffice].[dbo].deliveryorderdetail dod WITH(NOLOCK) 
 			ON do.Guide_Serie = dod.Guide_Serie AND do.Guide_Number = dod.Guide_Number   
 		LEFT JOIN [DeliveryBackOffice].[dbo].DeliveryProof dp WITH(NOLOCK) 
-			ON do.Guide_Serie = dp.Guide_Serie AND do.Guide_Number = dp.Guide_Number
+			ON do.Guide_Serie = dp.Guide_Serie AND do.Guide_Number = dp.Guide_Number AND dp.PathSignature IS NOT NULL
 	WHERE dod.StatusOrderId IN (SELECT StatusOrderId FROM statusOrder WHERE OrderDescription IN('Entregado','Devuelto'))
 		AND dod.RowStatus = 1
 		AND do.Guide_Serie = @_serie
