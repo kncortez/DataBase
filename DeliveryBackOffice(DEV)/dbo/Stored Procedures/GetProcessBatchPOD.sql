@@ -4,7 +4,7 @@
 -- Description: <Se procesa lote de POD para el servicio>  
 -- ============================================= 
 CREATE PROCEDURE [dbo].[GetProcessBatchPOD] 
-				@IdPickup INT = 1250129
+				@IdPickup INT
 AS
 BEGIN
     BEGIN TRY
@@ -19,17 +19,8 @@ BEGIN
                 @EndDate DATETIME = NULL,
                 @PickupLatitude NVARCHAR(20) = NULL,
                 @PickupLongitude NVARCHAR(20) = NULL,
-				@PickUpEmail NVARCHAR(200)
-
-        DECLARE @Guides NVARCHAR(MAX),
-                @BatchStatus INT
-
-        SET @BatchStatus =
-        (
-            SELECT IdServiceStatus
-            FROM CatServiceStatus WITH (NOLOCK)
-            WHERE Name = 'Recolectado'
-        )
+				@PickUpEmail NVARCHAR(200),
+				@Guides NVARCHAR(MAX)
 
         IF EXISTS
         (
@@ -44,7 +35,7 @@ BEGIN
                    @Observations = ISNULL(Observation, ' '),
                    @Amount = Amount,
                    @Voucher = ISNULL(Voucher, ' '),
-                   @PuSignaturePath = Signature,
+                   @PuSignaturePath = [Signature],
                    @StartDate = StartDate,
                    @EndDate = EndDate,
 				   @PickUpEmail = PickupEmail,
@@ -62,11 +53,6 @@ BEGIN
                 WHERE SchedulePickupId = @IdPickup
             ) [Data]
 
-			SELECT 200 AS StatusCode,
-                   'Se procesaron las guías con exito' AS Message,
-				   @Token AS Token,
-				   @PickUpEmail AS Email
-
             EXEC [dbo].[SetFinishPickUpBatch] @InGuides = @Guides,
                                          @IdPickup = @IdPickup,
                                          @TypeofInOutMoneyId = @TypeofInOutMoneyId,
@@ -78,29 +64,27 @@ BEGIN
                                          @StartDate = @StartDate,
                                          @EndDate = @EndDate,
                                          @PickupLatitude = @PickupLatitude,
-                                         @PickupLongitude = @PickupLongitude
-
-            UPDATE FinishPickUpHeader
-            SET ServiceStatusId = @BatchStatus,
-                TokenUpdated = 'SYS-GetProcessBatchPOD',
-                DateUpdated = GETDATE()
-            WHERE SchedulePickupId = @IdPickup
+                                         @PickupLongitude = @PickupLongitude,
+										 @PickUpEmail = @PickUpEmail
         END
         ELSE
         BEGIN
             SELECT 0 AS StatusCode,
-                   'No se encontro la recoleccion en los lotes' AS Message
+                   'No se encontro la recoleccion en los lotes' AS [Message],
+				   '' Token,
+				   '' Email
         END
 
 		IF @@TRANCOUNT > 0
 			COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
+        SELECT 0 AS StatusCode,
+               ERROR_MESSAGE() AS [Message],
+			   '' Token,
+			   '' Email
+
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
-
-        SELECT 0 AS StatusCode,
-               ERROR_MESSAGE() AS Description,
-               ERROR_LINE() AS ErrorLine
     END CATCH
 END

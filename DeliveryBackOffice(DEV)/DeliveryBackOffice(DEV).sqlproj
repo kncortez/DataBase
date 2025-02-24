@@ -1751,12 +1751,12 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetLoadingElementsandSubelements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\spGenerateArrivedGuides.sql" />
-	  <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
+    <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromDeliverySettlement.sql" />
-	<Build Include="dbo\Stored Procedures\GetValidaReturnGuide.sql" />
-	<Build Include="dbo\Stored Procedures\GetBatchPOD.sql" />
-	<Build Include="dbo\Stored Procedures\GetProcessBatchPOD.sql" />
+    <Build Include="dbo\Stored Procedures\GetValidaReturnGuide.sql" />
+    <Build Include="dbo\Stored Procedures\GetBatchPOD.sql" />
+    <Build Include="dbo\Stored Procedures\GetProcessBatchPOD.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1810,6 +1810,7 @@
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_ConfirmAddress.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
+    <Build Include="dbo\Stored Procedures\SetFinishPickUpBatch.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
