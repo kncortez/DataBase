@@ -50,7 +50,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KoVPC  WITH(NOLOCK) 
 		WHERE
-			[KoVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KoVPC].[KindOfVPName] = 'Express Center'  
           AND ISNULL(IdCountry,'GT') = @IdCountry
 	)
 
