@@ -69,8 +69,7 @@ BEGIN
 	INNER JOIN dbo.Province prv WITH (NOLOCK)
 		ON prv.IdProvince = twn.IdProvince
 	INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
-		ON ua.IdCityPlace = ctp.IdCityPlace
-		   AND ctp.CityPlaceRowStatus = 'true'
+		ON ua.IdCityPlace = ctp.IdCityPlace		   
 	LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 		ON vp.CodeOfReference = ua.CodeOfReference
 	LEFT JOIN dbo.Settlement st WITH (NOLOCK)
@@ -83,6 +82,7 @@ BEGIN
 		  AND ua.UadRowStatus = 1
 		  AND conf.TownshipId = vp.IdTownship
 		  AND conf.[Address] = vp.[Address]
+		  AND ctp.CityPlaceRowStatus = 'true'
           AND
           (
               ua.UadIdAddress = @IdAddress
