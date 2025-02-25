@@ -28,6 +28,7 @@ BEGIN
                 1
             FROM FinishPickUpHeader WITH (NOLOCK)
             WHERE SchedulePickupId = @IdPickup
+            AND RowStatus = 1
         )
         BEGIN
             SELECT @TypeofInOutMoneyId = TypeofInOutMoneyId,
@@ -43,6 +44,7 @@ BEGIN
                    @PickupLongitude = PickupLongitude
             FROM FinishPickUpHeader WITH (NOLOCK)
             WHERE SchedulePickupId = @IdPickup
+            AND RowStatus = 1
 
 
             SELECT @Guides = STRING_AGG(Guide, ',')
