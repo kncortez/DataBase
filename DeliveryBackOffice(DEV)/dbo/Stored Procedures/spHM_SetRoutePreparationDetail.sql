@@ -335,6 +335,49 @@ BEGIN
 
                                 IF @IdRoutePreparationDetailPiece IS NULL
                                 BEGIN
+
+                                   IF @Reference !='' 
+								  BEGIN
+						  
+										  ---Asignar todas las piezas de la guía segun la referencia
+													INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]
+														(
+															[RoutePreparationDetailId]
+															,[PieceNumber]
+															,[PieceType]
+															,[RowStatus]
+															,[TokenCreated]
+															,[DateCreated]
+													)
+													SELECT @IdRoutePreparationDetail
+														   ,NoPiece
+														   , @GuidePieceIsDry
+															,1
+															,@Token
+															,GETDATE()
+														 FROM  dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
+														   WHERE DOP.GuideNumber = @GuideNumber
+											
+												SET @IdRoutePreparationDetailPiece = SCOPE_IDENTITY();
+
+											
+
+														--- Actualizar el estado de la pieza
+														UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
+														SET StatusOrderId = @StatusOrderId
+														WHERE GuideSerie = @GuideSerie
+															  AND GuideNumber = @GuideNumber
+
+												--- Actualizar contadores de piezas
+															UPDATE RoutePreparation
+															SET PiecesDry += @GuidePieceIsDry,
+																PiecesCold += IIF(@GuidePieceIsDry = 0, 1, 0)
+															WHERE IdRoutePreparation = @IdRoutePreparation;
+										
+
+
+							 END
+							    ELSE
                                     INSERT INTO RoutePreparationDetailPiece
                                     (
                                         [RoutePreparationDetailId],
