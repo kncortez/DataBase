@@ -1,14 +1,13 @@
 -- =============================================
--- Author:		<Cristian Suazo>
+-- Author:        <Cristian Suazo>
 -- Updated date:<21-02-2025>
--- Description:	<Se crea sp para manejo de recolecciones en servicio PickupProcessingService>
+-- Description:    <Se crea sp para manejo de recolecciones en servicio PickupProcessingService>
 -- =============================================
-CREATE PROCEDURE [dbo].[SetFinishPickUpBatch]
+ALTER PROCEDURE [dbo].[SetFinishPickUpBatch]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX),
     @IdPickup INT,
     @TypeofInOutMoneyId INT = 1,
-    --	@IdStatusPickup int = 3,
     @Token VARCHAR(200) = NULL,
     @Observations VARCHAR(200) = NULL,
     @Amount DECIMAL(12, 2) = 0,
@@ -18,7 +17,7 @@ CREATE PROCEDURE [dbo].[SetFinishPickUpBatch]
     @EndDate DATETIME = NULL,
     @PickupLatitude NVARCHAR(20) = NULL,
     @PickupLongitude NVARCHAR(20) = NULL,
-	@PickUpEmail NVARCHAR(200) = NULL
+    @PickUpEmail NVARCHAR(200) = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -70,36 +69,20 @@ BEGIN
                'Transac' AS Id
     ) AS errror;
 
-    --DECLARE @TokenAct INT =
-    --        (
-    --            SELECT TOP 1
-    --                   RowStatus
-    --            FROM LogTokenPOD
-    --            WHERE LogTokenPOD LIKE '%' + @Token + '%'
-    --            ORDER BY DateCreated DESC
-    --        );
-    --DECLARE @hourtoken INT =
-    --        (
-    --            SELECT TOP 1
-    --                   DATEDIFF(HOUR, DateCreated, GETDATE()) AS horas
-    --            FROM LogTokenPOD
-    --            WHERE LogTokenPOD LIKE '%' + @Token + '%'
-    --        );
-
-
     -- Variables para verificar ubicación en geocerca
     DECLARE @FixedLatitude NVARCHAR(20) = @PickupLatitude;
     DECLARE @FixedLongitude NVARCHAR(20) = @PickupLongitude;
 
-	IF OBJECT_ID('tempdb.dbo.#InsertedRecords', 'U') IS NOT NULL
-		DROP TABLE #InsertedRecords;
+    IF OBJECT_ID('tempdb.dbo.#InsertedRecords', 'U') IS NOT NULL
+       DROP TABLE #InsertedRecords;
 
-	CREATE TABLE #InsertedRecords (
-		GuideNumber INT,
-		GuideSerie  NVARCHAR(2),
-		IdProcessedGuideCOD INT
-	);
-	CREATE NONCLUSTERED INDEX INDX_ProcessedGuideCOD_TempTable ON #InsertedRecords (GuideSerie, GuideNumber);
+    CREATE TABLE #InsertedRecords 
+    (
+       GuideNumber         INT,
+       GuideSerie          NVARCHAR(2),
+       IdProcessedGuideCOD INT
+    );
+    CREATE NONCLUSTERED INDEX INDX_ProcessedGuideCOD_TempTable ON #InsertedRecords (GuideSerie, GuideNumber);
 
     BEGIN TRY
 
@@ -132,8 +115,8 @@ BEGIN
                                                INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint                  
                                            WHERE G.RowStatus = 1
-												 AND GP.RowStatus = 1
-												 AND P.RowStatus = 1
+                                                 AND GP.RowStatus = 1
+                                                 AND P.RowStatus = 1
                                                  AND G.IdGeofence = 1 -- Geocerca de GT
                                            ORDER BY GP.GeofencePointOrder ASC
                                            FOR XML PATH(''), TYPE
@@ -172,8 +155,6 @@ BEGIN
         SET @FixedLongitude = NULL;
     END CATCH;
 
-    --IF ((@TokenAct = 1 AND @hourtoken <= 8) OR 1 = 1)
-    --BEGIN
 
         CREATE TABLE #Temp
         (
@@ -181,30 +162,23 @@ BEGIN
             Message VARCHAR(255),
         );
 
-        --select * from #Temp
-        --DECLARE @Tabla1 TABLE(id INT, nombreVARCHAR(20), telefonoVARCHAR(12));
         CREATE NONCLUSTERED INDEX tempTemp ON #Temp (Guide);
 
+        -- Add the parameters for the stored procedure here
         INSERT INTO #Temp
         (
-            Guide,
-            [Message]
+          Guide,
+          [Message]
         )
         EXEC [dbo].[spws_get_validate_guides_pickup]
-            -- Add the parameters for the stored procedure here
-            @InGuides = @InGuides,
-            @IdPickup = @IdPickup,
-            @Token = @Token;
-        --if (SELECT  count(*) FROM #Temp)=0
-
-
+             @InGuides = @InGuides,
+             @IdPickup = @IdPickup,
+             @Token = @Token;
 
         DECLARE @test INT =
                 (
                     SELECT COUNT(*)FROM #Temp
                 );
-
-
 
         IF (@test = 0)
         BEGIN
@@ -254,28 +228,17 @@ BEGIN
                              ) ItemPiece
                 FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
 
-				UPDATE
-					[#listGuides]
-				SET
-					[ItemPiece] = 1
-				WHERE
-					[ItemPiece] = 0;
-
-                ---SELECT * FROM #listGuides
-
-                ---declare @IdCustomer int = (select IdCustomer from Account where AccIdAccount =@IdAccount)
+                UPDATE [#listGuides]
+                   SET [ItemPiece] = 1
+                 WHERE [ItemPiece] = 0;
 
                 --------------------------------inserta en una tabla temporal, los campos requeridos para insertar en DeliveryPaymentDetail las guias no generadas en el portal--------------------------------------
-
                 DECLARE @AmountPickup DECIMAL(14, 2) =
                         (
                             SELECT CONVERT(DECIMAL(14, 2), Value)
                             FROM CatToCharge
                             WHERE IdToCharge = 1
                         );
-
-                --	select Guide_Number, Guide_Serie, PriceShippment from DeliveryOrder
-                --	where Guide_Number = 198915			
 
                 SELECT [Guide_Number],
                        [Guide_Serie],
@@ -303,17 +266,19 @@ BEGIN
                                )
                     WHERE ord.Guide_Number IN
                           (
-                              SELECT ItemNumber FROM #listGuides -- WHERE ItemSerie = 'fd'
+                           SELECT ItemNumber 
+                             FROM #listGuides 
                           )
                           AND ord.Guide_Serie IN 
-						  (
-								SELECT ItemSerie FROM #listGuides
-						  )
+                          (
+                           SELECT ItemSerie 
+                             FROM #listGuides
+                          )
                           AND ord.StatusOrderId IN ( 15, 1, 16 )
                           AND dop.GuideNumber IS NULL
                 ) AS Table1;
 
-                --	declare @AmountPickup decimal (18,2) = (select  Convert(decimal(18,2),Value) from ConfigParams where ConfigParamsId = 15)
+                --    declare @AmountPickup decimal (18,2) = (select  Convert(decimal(18,2),Value) from ConfigParams where ConfigParamsId = 15)
 
                 CREATE NONCLUSTERED INDEX tempNowInsert
                 ON #NowInsert (
@@ -397,15 +362,6 @@ BEGIN
                        NULL
                 FROM #listGuides ni;
 
-
-                --- UPDATE PARA MANEJO DE ENVIO DE MENSAJITOS EN HORA DE RECOLECCION
-                /*
-				update [DeliveryBackOffice].[dbo].[SMS_UpdatedElements]
-				set UpdateStatus=1
-				where ElementId=1002
-			*/
-                --- FIN MODIFICACION
-
                 -------------------------- Drop la tabla temporal -------------------------------------------------------------------
 
                 --DROP TABLE #UpdateNow
@@ -425,12 +381,12 @@ BEGIN
                                        )
                             WHERE ord.Guide_Number IN
                                   (
-                                      SELECT ItemNumber FROM #listGuides
+                                    SELECT ItemNumber FROM #listGuides
                                   )
-                                    AND ord.Guide_Serie IN 
-						            (
-							            SELECT ItemSerie FROM #listGuides
-						            )
+                                  AND ord.Guide_Serie IN 
+                                  (
+                                    SELECT ItemSerie FROM #listGuides
+                                  )
                         );
 
                 DECLARE @CustomerId INT =
@@ -445,12 +401,12 @@ BEGIN
                                        )
                             WHERE ord.Guide_Number IN
                                   (
-                                      SELECT ItemNumber FROM #listGuides
+                                   SELECT ItemNumber FROM #listGuides
                                   )
-                                   AND ord.Guide_Serie IN 
-						            (
-								        SELECT ItemSerie FROM #listGuides
-						            )
+                                  AND ord.Guide_Serie IN 
+                                  (
+                                   SELECT ItemSerie FROM #listGuides
+                                  )
                         );
 
                 DECLARE @SenderName VARCHAR(50) =
@@ -465,12 +421,12 @@ BEGIN
                                        )
                             WHERE ord.Guide_Number IN
                                   (
-                                      SELECT ItemNumber FROM #listGuides
+                                    SELECT ItemNumber FROM #listGuides
                                   )
                                    AND ord.Guide_Serie IN 
-						          (
-								        SELECT ItemSerie FROM #listGuides
-						          )
+                                  (
+                                    SELECT ItemSerie FROM #listGuides
+                                  )
                         );
 
                 DECLARE @Sender_Phone VARCHAR(20) =
@@ -485,115 +441,113 @@ BEGIN
                                        )
                             WHERE ord.Guide_Number IN
                                   (
-                                      SELECT ItemNumber FROM #listGuides
+                                   SELECT ItemNumber FROM #listGuides
                                   )
-                                   AND ord.Guide_Serie IN 
-						            (
-								        SELECT ItemSerie FROM #listGuides
-						            )
+                                  AND ord.Guide_Serie IN 
+                                  (
+                                   SELECT ItemSerie FROM #listGuides
+                                  )
                         );
-
 
                 DECLARE @IdHublogistic INT =
                         (
-                            SELECT TOP 1
-                                  -- thb.IdHublogistic
-								  HBG.IdHubLogistic
+                          SELECT TOP 1
+                                 HBG.IdHubLogistic
                             FROM #listGuides ls
-                                INNER JOIN DeliveryOrder ord WITH (NOLOCK)
-                                    ON (
-                                           ord.Guide_Number = ls.ItemNumber
-                                           AND ord.Guide_Serie = ls.ItemSerie
-                                       )
-                                --INNER JOIN TownshipByHubLogistic thb WITH (NOLOCK)
-                                --    ON (ord.SenderIdTownship = thb.IdTownship)
-								INNER JOIN DeliveryBackOffice.dbo.Township TWN WITH(NOLOCK)
-									ON ord.SenderIdTownship = twn.IdTownship 
-								INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage THB WITH(NOLOCK)
-									ON THB.HeaderCode = twn.HeaderCode
-                                INNER JOIN DeliveryBackOffice.dbo.HubLogistics HBG WITH(NOLOCK)
-									ON HBG.HubAbbreviation = THB.Hub 
-								INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
-                                    ON (
-                                           dop.GuideNumber = ord.Guide_Number
-                                           AND dop.GuideSerie = ord.Guide_Serie
-                                       )
-                            WHERE ord.Guide_Number IN
-                                  (
-                                      SELECT ItemNumber FROM #listGuides
-                                  )
-								  AND ord.Guide_Serie IN 
-								  (
-										SELECT ItemSerie FROM #listGuides
-								  )
-								  AND THB.RowStatus = 1
-                                  AND twn.TownshipStatus = 1
-                                  AND HBG.HubStatus = 1
+                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
+                                     ON (
+                                            ord.Guide_Number = ls.ItemNumber
+                                            AND ord.Guide_Serie = ls.ItemSerie
+                                        )
+                                 INNER JOIN DeliveryBackOffice.dbo.Township TWN WITH(NOLOCK)
+                                     ON ord.SenderIdTownship = twn.IdTownship 
+                                 INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage THB WITH(NOLOCK)
+                                     ON THB.HeaderCode = twn.HeaderCode
+                                 INNER JOIN DeliveryBackOffice.dbo.HubLogistics HBG WITH(NOLOCK)
+                                     ON HBG.HubAbbreviation = THB.Hub 
+                                 INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
+                                     ON (
+                                         dop.GuideNumber = ord.Guide_Number
+                                         AND dop.GuideSerie = ord.Guide_Serie
+                                        )
+                           WHERE ord.Guide_Number IN
+                                 (
+                                     SELECT ItemNumber FROM #listGuides
+                                 )
+                                 AND ord.Guide_Serie IN 
+                                 (
+                                       SELECT ItemSerie FROM #listGuides
+                                 )
+                                 AND THB.RowStatus = 1
+                                 AND twn.TownshipStatus = 1
+                                 AND HBG.HubStatus = 1
                         );
-
 
                 DECLARE @Sender_Address VARCHAR(200) =
                         (
-                            SELECT TOP 1
-                                   ord.Sender_Address
-                            FROM #listGuides ls
+                         SELECT TOP 1
+                                  ord.Sender_Address
+                           FROM #listGuides ls
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
-                                    ON (
-                                           ord.Guide_Number = ls.ItemNumber
-                                           AND ord.Guide_Serie = ls.ItemSerie
-                                       )
+                                   ON (
+                                       ord.Guide_Number = ls.ItemNumber
+                                       AND ord.Guide_Serie = ls.ItemSerie
+                                      )
                             WHERE ord.Guide_Number IN
                                   (
-                                      SELECT ItemNumber FROM #listGuides
+                                   SELECT ItemNumber 
+                                     FROM #listGuides
                                   )
-								  AND ord.Guide_Serie IN 
-								  (
-										SELECT ItemSerie FROM #listGuides
-								  )
+                                  AND ord.Guide_Serie IN 
+                                  (
+                                   SELECT ItemSerie
+                                     FROM #listGuides
+                                  )
                         );
 
                 DECLARE @Sender_Email VARCHAR(200) =
                         (
-                            SELECT TOP 1
-                                   ISNULL(REPLACE(REPLACE(cus.RegexEmail, '$', ''), '^', ''), ' ')
-                            FROM #listGuides ls
+                         SELECT TOP 1
+                                ISNULL(REPLACE(REPLACE(cus.RegexEmail, '$', ''), '^', ''), ' ')
+                           FROM #listGuides ls
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
-                                    ON (
-                                           ord.Guide_Number = ls.ItemNumber
-                                           AND ord.Guide_Serie = ls.ItemSerie
-                                       )
+                                   ON (
+                                          ord.Guide_Number = ls.ItemNumber
+                                          AND ord.Guide_Serie = ls.ItemSerie
+                                      )
                                 LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                                    ON cus.IdCustomer = ord.IdCustomer
+                                   ON cus.IdCustomer = ord.IdCustomer
                         );
 
-
                 -----------------------------------------------------Actualiza los datos obtenidos anteriormente para la tabla SchedulePickup-----------------------------------------------------------
-
                 UPDATE dbo.SchedulePickup
-                SET AmountPickup = @AmountPickup
-                WHERE SchedulePickupId = @IdPickup;
-
+                   SET AmountPickup = @AmountPickup,
+                       TokenUpdated = @Token,
+                       DateUpdated  = GETDATE()
+                 WHERE SchedulePickupId = @IdPickup;
                 ---------------------------------------------------------Agrupa el lote de guias a una sola transaccion ------------------------------------------------------------------------------
 
                 UPDATE DeliveryOrderPaymentDetail
-                SET IdHeaderRecolection = @IdPickup
-                FROM DeliveryOrderPaymentDetail dop
-                    INNER JOIN DeliveryOrder ord
-                        ON (
-                               ord.Guide_Number = dop.GuideNumber
-                               AND ord.Guide_Serie = dop.GuideSerie
-                           )
-                WHERE dop.GuideSerie = 'FD'
-                      AND dop.GuideNumber IN
-                          (
-                              SELECT ItemNumber FROM #listGuides
-                          )
-                      AND ord.StatusOrderId IN ( 15, 1, 16 )
-                      AND
-                      (
-                          dop.IdHeaderRecolection = @IdPickup
-                          OR dop.IdHeaderRecolection IS NULL
-                      );
+                   SET IdHeaderRecolection = @IdPickup,
+                       TokenUpdated = @Token,
+                       DateUpdated  = GETDATE()
+                  FROM DeliveryOrderPaymentDetail dop
+                       INNER JOIN DeliveryOrder ord
+                           ON (
+                                  ord.Guide_Number = dop.GuideNumber
+                                  AND ord.Guide_Serie = dop.GuideSerie
+                              )
+                  WHERE dop.GuideSerie = 'FD'
+                        AND dop.GuideNumber IN
+                            (
+                                SELECT ItemNumber FROM #listGuides
+                            )
+                        AND ord.StatusOrderId IN ( 15, 1, 16 )
+                        AND
+                        (
+                            dop.IdHeaderRecolection = @IdPickup
+                            OR dop.IdHeaderRecolection IS NULL
+                        );
 
                 -- Quitar guías no recolectadas asociadas al servicio
                 UPDATE DeliveryOrderPaymentDetail
@@ -609,16 +563,18 @@ BEGIN
                 ------------------------------------------------- Actualiza su StatusId a 2 = Recoleccion todas las guias del lote -------------------------------------
 
                 UPDATE DeliveryOrder
-                SET StatusOrderId = 2
-                FROM DeliveryOrder
-                WHERE Guide_Number IN
-                      (
-                          SELECT ItemNumber FROM #listGuides
-                      )
-                      AND Guide_Serie IN
-                          (
-                              SELECT ItemSerie FROM #listGuides
-                          );
+                   SET StatusOrderId = 2
+                  FROM DeliveryOrder
+                 WHERE Guide_Number IN
+                       (
+                        SELECT ItemNumber 
+                          FROM #listGuides
+                       )
+                       AND Guide_Serie IN
+                       (
+                        SELECT ItemSerie 
+                          FROM #listGuides
+                       );
 
                 DECLARE @CartGuides AS TABLE
                 (
@@ -642,10 +598,7 @@ BEGIN
                         ON DOPD.GuideSerie = CG.GuideSerie
                            AND DOPD.GuideNumber = CG.GuideNumber;
 
-
                 ---------------------WEBHOOK.INI--------------------------------
-
-
                 DECLARE @WebhookCustomerTable AS TABLE
                 (
                     CustomerId INT,
@@ -726,19 +679,19 @@ BEGIN
                             ON WCT.CustomerId = WRBU.CustomerId
                                AND WCT.GuideStatusId = WRBU.StatusOrderId
                                AND WCT.WebhookType = WRBU.WebhookTypeId
-						INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE
-							ON WRBU.CustomerId = WHE.CustomerId
+                        INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE
+                            ON WRBU.CustomerId = WHE.CustomerId
                         LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
                             ON WCT.GuideSerie = WTQ.GuideSerie
                                AND WCT.GuideNumber = WTQ.GuideNumber
                                AND WCT.GuideStatusId = WTQ.StatusOrderId
                     WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
                           AND WTQ.IdWebhookTrackingQueue IS NULL
-						  AND WHE.TypeConnectionId = 1
+                          AND WHE.TypeConnectionId = 1
 
-					
-				--Agregar datos en cola de webhooks de cliente DHL---INI
-				DECLARE @GuidePiecesTable AS TABLE
+                    
+                --Agregar datos en cola de webhooks de cliente DHL---INI
+                DECLARE @GuidePiecesTable AS TABLE
                 (
                     CustomerId INT,
                     CustomerEndpointId BIGINT,
@@ -746,39 +699,39 @@ BEGIN
                     GuideSerie NVARCHAR(2),
                     GuideNumber INT,
                     GuideStatusId TINYINT,
-					NumberPieces INT,
-					NumberRelatedPieces INT
-					
+                    NumberPieces INT,
+                    NumberRelatedPieces INT
+                    
                 );
 
-				INSERT INTO @GuidePiecesTable 
-							( 
-						CustomerId,
-                        GuideSerie,
-                        GuideNumber,
-                        GuideStatusId,
-						NumberPieces
-						)
-						SELECT wct.CustomerId,
-						dop.GuideSerie,dop.GuideNumber, 
-						wct.GuideStatusId,
-						Count(dop.GuideNumber)
-						FROM DeliveryOrderPiece dop WITH(NOLOCK)
-						INNER JOIN @WebhookCustomerTable wct
-							ON dop.GuideSerie = wct.GuideSerie
-							AND dop.GuideNumber = wct.GuideNumber
-						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-						    ON wct.CustomerId = WHE.CustomerId
-						INNER JOIN DeliveryOrder do WITH(NOLOCK)
-							ON dop.GuideSerie = do.Guide_Serie 
-							AND dop.GuideNumber = do.Guide_Number
-							WHERE do.IdCustomer = wct.CustomerId
-							AND WHE.TypeConnectionId = 2
-							GROUP BY wct.CustomerId,
-						dop.GuideSerie,dop.GuideNumber, 
-						wct.GuideStatusId
+                INSERT INTO @GuidePiecesTable 
+                       (
+                       CustomerId,
+                       GuideSerie,
+                       GuideNumber,
+                       GuideStatusId,
+                       NumberPieces
+                       )
+                       SELECT wct.CustomerId,
+                              dop.GuideSerie,dop.GuideNumber, 
+                              wct.GuideStatusId,
+                              Count(dop.GuideNumber)
+                         FROM DeliveryOrderPiece dop WITH(NOLOCK)
+                              INNER JOIN @WebhookCustomerTable wct
+                                  ON dop.GuideSerie = wct.GuideSerie
+                                  AND dop.GuideNumber = wct.GuideNumber
+                              INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+                                  ON wct.CustomerId = WHE.CustomerId
+                              INNER JOIN DeliveryOrder do WITH(NOLOCK)
+                                  ON dop.GuideSerie = do.Guide_Serie 
+                                  AND dop.GuideNumber = do.Guide_Number
+                        WHERE do.IdCustomer = wct.CustomerId
+                          AND WHE.TypeConnectionId = 2
+                        GROUP BY wct.CustomerId,
+                          dop.GuideSerie,dop.GuideNumber, 
+                          wct.GuideStatusId
 
-				   DECLARE @PiecesGuideRelatedTable AS TABLE
+                   DECLARE @PiecesGuideRelatedTable AS TABLE
                 (
                     CustomerId INT,
                     CustomerEndpointId BIGINT,
@@ -786,70 +739,70 @@ BEGIN
                     GuideSerie NVARCHAR(2),
                     GuideNumber INT,
                     GuideStatusId TINYINT,
-					NumberRelatedPieces INT
-					
+                    NumberRelatedPieces INT
+                    
                 );
 
-				INSERT INTO @PiecesGuideRelatedTable 
-							( 
-						CustomerId,
+                INSERT INTO @PiecesGuideRelatedTable 
+                       ( 
+                        CustomerId,
                         GuideSerie,
                         GuideNumber,
                         GuideStatusId,
-						NumberRelatedPieces
-						)
-						SELECT wct.CustomerId,
-						dop.GuideSerie,dop.GuideNumber, 
-						wct.GuideStatusId,
-						Count(dop.GuideNumber)
-						FROM DeliveryOrderPiece dop WITH(NOLOCK)
-						INNER JOIN @WebhookCustomerTable wct
-							ON dop.GuideSerie = wct.GuideSerie
-							AND dop.GuideNumber = wct.GuideNumber
-						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-						    ON wct.CustomerId = WHE.CustomerId
-						INNER JOIN DeliveryOrder do WITH(NOLOCK)
-							ON dop.GuideSerie = do.Guide_Serie
-							AND dop.GuideNumber = do.Guide_Number
-							WHERE do.IdCustomer = wct.CustomerId
-							AND WHE.TypeConnectionId = 2
-							AND dop.ExternalPieceId IS NOT NULL
-							GROUP BY wct.CustomerId,
-						dop.GuideSerie,dop.GuideNumber, 
-						wct.GuideStatusId
+                        NumberRelatedPieces
+                       )
+                       SELECT wct.CustomerId,
+                              dop.GuideSerie,dop.GuideNumber, 
+                              wct.GuideStatusId,
+                              Count(dop.GuideNumber)
+                         FROM DeliveryOrderPiece dop WITH(NOLOCK)
+                              INNER JOIN @WebhookCustomerTable wct
+                                  ON dop.GuideSerie = wct.GuideSerie
+                                  AND dop.GuideNumber = wct.GuideNumber
+                              INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+                                  ON wct.CustomerId = WHE.CustomerId
+                              INNER JOIN DeliveryOrder do WITH(NOLOCK)
+                                  ON dop.GuideSerie = do.Guide_Serie
+                                  AND dop.GuideNumber = do.Guide_Number
+                        WHERE do.IdCustomer = wct.CustomerId
+                          AND WHE.TypeConnectionId = 2
+                          AND dop.ExternalPieceId IS NOT NULL
+                        GROUP BY wct.CustomerId,
+                              dop.GuideSerie,dop.GuideNumber, 
+                              wct.GuideStatusId
 
-	
-				INSERT INTO WebhookTrackingQueueDetailForSFTP 
-							(CustomerId,
-							GuideSerie,
-							GuideNumber,
-							GuidePiece,
-							ExternalNumber,
-							ExternalPieceId,
-							StatusOrderId,
-							RowStatus,
-							DateCreated,
-							TokenCreated)
-						SELECT wct.CustomerId,
-						dop.GuideSerie,dop.GuideNumber, dop.GuidePiece, do.Ticket_Number,dop.ExternalPieceId, 
-						wct.GuideStatusId, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
-						FROM DeliveryOrderPiece dop WITH(NOLOCK)
-						INNER JOIN @WebhookCustomerTable wct
-							ON dop.GuideSerie = wct.GuideSerie
-							AND dop.GuideNumber = wct.GuideNumber
-						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-							ON wct.CustomerId = WHE.CustomerId
-						INNER JOIN DeliveryOrder do WITH(NOLOCK)
-							ON dop.GuideSerie = do.Guide_Serie
-							AND dop.GuideNumber = do.Guide_Number
-						INNER JOIN @GuidePiecesTable gpt
-						    ON wct.GuideNumber = gpt.GuideNumber
-						INNER JOIN @PiecesGuideRelatedTable pgt
-						    ON gpt.GuideNumber = pgt.GuideNumber
-							WHERE do.IdCustomer = wct.CustomerId
-							AND WHE.TypeConnectionId = 2
-							AND gpt.NumberPieces = pgt.NumberRelatedPieces
-				--Agregar datos en cola de webhooks de cliente DHL---FIN
+                INSERT INTO WebhookTrackingQueueDetailForSFTP 
+                      (
+                       CustomerId,
+                       GuideSerie,
+                       GuideNumber,
+                       GuidePiece,
+                       ExternalNumber,
+                       ExternalPieceId,
+                       StatusOrderId,
+                       RowStatus,
+                       DateCreated,
+                       TokenCreated
+                      )
+                      SELECT wct.CustomerId,
+                             dop.GuideSerie,dop.GuideNumber, dop.GuidePiece, do.Ticket_Number,dop.ExternalPieceId, 
+                             wct.GuideStatusId, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
+                        FROM DeliveryOrderPiece dop WITH(NOLOCK)
+                             INNER JOIN @WebhookCustomerTable wct
+                                 ON dop.GuideSerie = wct.GuideSerie
+                                 AND dop.GuideNumber = wct.GuideNumber
+                             INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+                                 ON wct.CustomerId = WHE.CustomerId
+                             INNER JOIN DeliveryOrder do WITH(NOLOCK)
+                                 ON dop.GuideSerie = do.Guide_Serie
+                                 AND dop.GuideNumber = do.Guide_Number
+                             INNER JOIN @GuidePiecesTable gpt
+                                 ON wct.GuideNumber = gpt.GuideNumber
+                             INNER JOIN @PiecesGuideRelatedTable pgt
+                                 ON gpt.GuideNumber = pgt.GuideNumber
+                       WHERE do.IdCustomer = wct.CustomerId
+                         AND WHE.TypeConnectionId = 2
+                         AND gpt.NumberPieces = pgt.NumberRelatedPieces
 
                 END TRY
                 BEGIN CATCH
@@ -859,19 +812,17 @@ BEGIN
                 --------------------WEBHOOK.FIN------------------------------
 
                 ---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
-
-
                 UPDATE DeliveryOrderPiece
-                SET IsPickup = 1
-                FROM DeliveryOrderPiece
-                WHERE GuideNumber IN
-                      (
-                          SELECT ItemNumber FROM #listGuides
-                      )
-                      AND GuideSerie IN
-                          (
-                              SELECT ItemSerie FROM #listGuides
-                          );
+                   SET IsPickup = 1
+                  FROM DeliveryOrderPiece
+                 WHERE GuideNumber IN
+                       (
+                           SELECT ItemNumber FROM #listGuides
+                       )
+                       AND GuideSerie IN
+                       (
+                           SELECT ItemSerie FROM #listGuides
+                       );
 
                 ---------------------------------------------- Actualiza el Status del Servicio  -------------------------------------------------------------------------
 
@@ -894,11 +845,11 @@ BEGIN
                         (
                             SELECT TOP 1
                                    IdServiceManagement
-                            FROM ServiceManagement
-                            WHERE IdSchedulePickup = @IdPickup
+                              FROM ServiceManagement
+                             WHERE IdSchedulePickup = @IdPickup
                         );
 
-                ---------------------------------------------- Inserta en EventService el comportamiento del Pickup  -------------------------------------------------------------------------	
+                ---------------------------------------------- Inserta en EventService el comportamiento del Pickup  -------------------------------------------------------------------------    
 
                 INSERT INTO EventService
                 (
@@ -1013,10 +964,10 @@ BEGIN
                                   (
                                       SELECT ItemNumber FROM #listGuides
                                   )
-								  AND ord.Guide_Serie IN 
-								  (
-										SELECT ItemSerie FROM #listGuides
-								  )
+                                  AND ord.Guide_Serie IN 
+                                  (
+                                        SELECT ItemSerie FROM #listGuides
+                                  )
                         );
 
 
@@ -1047,7 +998,7 @@ BEGIN
                 )
                 VALUES
                 (@ManifestSerie, @CourierID, NULL, 1, @Token, GETDATE(), NULL, NULL);
-				
+                
                 DECLARE @IdManifest AS BIGINT = SCOPE_IDENTITY();
 
                 SET @ManifestNumber = @IdManifest;
@@ -1197,8 +1148,8 @@ BEGIN
 
                 SELECT TOP 1
                        @DataOriginId = cm.ModIdModule
-                FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
-                WHERE cm.ModName = @ModName;
+                  FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
+                 WHERE cm.ModName = @ModName;
 
                 INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
                 (
@@ -1208,51 +1159,49 @@ BEGIN
                     DataOriginId,
                     Token,
                     CustomerId,
-					Date
+                    Date
                 )
-				OUTPUT
-					inserted.GuideSerie,
-					inserted.GuideNumber,
-					inserted.IdProcessedGuideCOD
-				INTO #InsertedRecords
+                OUTPUT inserted.GuideSerie,
+                       inserted.GuideNumber,
+                       inserted.IdProcessedGuideCOD
+                  INTO #InsertedRecords
                 SELECT DISTINCT
                        lge.ItemSerie GuideSerie,
                        lge.ItemNumber GuideNumber,
                        (
-                           SELECT TOP 1
-                                  IdCourierman
+                         SELECT TOP 1
+                                IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD
-                           WHERE LogTokenPOD = @Token
+                          WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
                        @DataOriginId AS 'DataOriginId',
                        @Token UserCreated,
                        cus.IdCustomer CustomerId,
-					   GETDATE()
+                       GETDATE()
                 FROM #listGuides lge
-                    INNER JOIN dbo.DeliveryOrder dlo WITH (NOLOCK)
-                        ON lge.ItemSerie = dlo.Guide_Serie
-                           AND lge.ItemNumber = dlo.Guide_Number
-                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
-                        ON dlo.Guide_Serie = DOP.GuideSerie
-                           AND dlo.Guide_Number = DOP.GuideNumber
-                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                        ON vp.CodeOfReference = dlo.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
-                        ON pcd.GuideSerie = dlo.Guide_Serie
-                           AND pcd.GuideNumber = dlo.Guide_Number
+                     INNER JOIN dbo.DeliveryOrder dlo WITH (NOLOCK)
+                         ON lge.ItemSerie = dlo.Guide_Serie
+                            AND lge.ItemNumber = dlo.Guide_Number
+                     INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
+                         ON dlo.Guide_Serie = DOP.GuideSerie
+                            AND dlo.Guide_Number = DOP.GuideNumber
+                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                         ON vp.CodeOfReference = dlo.Sender_ID
+                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                         ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                     LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                         ON pcd.GuideSerie = dlo.Guide_Serie
+                            AND pcd.GuideNumber = dlo.Guide_Number
                 WHERE (
-                          dlo.Collect_OnDelivery = 0
-                          AND dlo.IsCollect = 'false'
-                          AND DOP.TimePlaId = 2
+                       dlo.Collect_OnDelivery = 0
+                       AND dlo.IsCollect = 'false'
+                       AND DOP.TimePlaId = 2
                       )
                       AND pcd.IdProcessedGuideCOD IS NULL;
 
                 --------------PROCESSGUIDECOD.FIN
 
-            -- retornar resultado en formato json
-
+            -- Retornar resultado en formato json
             END TRY
             BEGIN CATCH
                 ROLLBACK TRANSACTION;
@@ -1294,7 +1243,7 @@ BEGIN
             IF @@TRANCOUNT > 0
             BEGIN
                 COMMIT TRANSACTION;
-				DECLARE @BatchStatus INT
+                DECLARE @BatchStatus INT
 
                 SET @BatchStatus =
                 (
@@ -1304,18 +1253,23 @@ BEGIN
                 )
 
                 UPDATE FinishPickUpHeader
-                SET ServiceStatusId = @BatchStatus,
-                    TokenUpdated = 'SYS-GetProcessBatchPOD',
-                    DateUpdated = GETDATE()
+                   SET ServiceStatusId = @BatchStatus,
+                       TokenUpdated = 'SYS-GetProcessBatchPOD',
+                       DateUpdated = GETDATE()
+                 WHERE SchedulePickupId = @IdPickup
+
+                UPDATE FinishPickUpDetail
+                   SET TokenUpdated = 'SYS-GetProcessBatchPOD',
+                       DateUpdated = GETDATE()
                 WHERE SchedulePickupId = @IdPickup
-				
-				UPDATE PG
-				SET IsCompleted = 1
-				FROM DeliveryBackOffice.dbo.ProcessedGuideCOD PG  WITH(NOLOCK)
-				INNER JOIN #InsertedRecords IR
-					ON PG.GuideSerie = IR.GuideSerie
-						AND PG.GuideNumber = IR.GuideNumber
-				WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
+
+                UPDATE PG
+                   SET IsCompleted = 1
+                  FROM DeliveryBackOffice.dbo.ProcessedGuideCOD PG  WITH(NOLOCK)
+                       INNER JOIN #InsertedRecords IR
+                          ON PG.GuideSerie = IR.GuideSerie
+                              AND PG.GuideNumber = IR.GuideNumber
+                 WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
 
                 SET @jsonResult =
                 (
@@ -1331,19 +1285,19 @@ BEGIN
                 );
 
             END;
-			
+            
 
-			SELECT 200 AS StatusCode,
+            SELECT 200 AS StatusCode,
                    'Se procesaron las guías con exito' AS [Message],
-				   @Token AS Token,
-				   @PickUpEmail AS Email
+                   @Token AS Token,
+                   @PickUpEmail AS Email
 
             SELECT ('[' + @jsonResult + ']') jsonResult;
 
-			-- CORREO A ENVIAR MANIFIESTO
+            -- CORREO A ENVIAR MANIFIESTO
             SELECT @mail;
 
-			-- DATOS DEL MANIFIESTO A GENERAR
+            -- DATOS DEL MANIFIESTO A GENERAR
             SELECT @ManifestNumber AS 'IdManifest',
                    @ManifestSerie AS 'Manifest_Serie',
                    @ManifestNumber AS 'Manifest_Number',
@@ -1359,10 +1313,10 @@ BEGIN
                     ON vpc.CodeOfReference = slp.SenderId
             WHERE slp.SchedulePickupId = @IdPickup;
 
-			-- DETALLE DE LAS GUIAS RECOLECTADAS
+            -- DETALLE DE LAS GUIAS RECOLECTADAS
             WITH GUIDEMONITOR (GuideNumber, PiecesColdCounter, PiecesDryCounter, TotalPieces)
             AS (
-				SELECT COALESCE(dop.GuideNumber, dop2.GuideNumber) GuideNumber,
+                SELECT COALESCE(dop.GuideNumber, dop2.GuideNumber) GuideNumber,
                        COUNT(dop.GuideNumber) 'PiecesColdCounter',
                        COUNT(dop2.GuideNumber) 'PiecesDryCounter',
                        COUNT(dop.NoPiece) + COUNT(dop2.NoPiece) 'TotalPieces'
@@ -1379,7 +1333,7 @@ BEGIN
                            AND dop2.IsDry = 1
                 GROUP BY dop.GuideNumber,
                          dop2.GuideNumber
-			)
+            )
 
             SELECT COUNT(GM.GuideNumber) 'GuidesCounter',
                    SUM(GM.PiecesColdCounter) 'PiecesColdCounter',
@@ -1387,11 +1341,11 @@ BEGIN
                    SUM(GM.TotalPieces) 'TotalPieces'
             FROM GUIDEMONITOR GM;
 
-			-- DETALLE DE LAS PIEZAS DE LAS GUIAS RECOLECTADAS
+            -- DETALLE DE LAS PIEZAS DE LAS GUIAS RECOLECTADAS
             SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) [Piece],
                    CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)  [ReceiverName],
-                   LEFT(do.Receiver_Address, 200)							 [ReceiverAddress],
-				   ISNULL(do.ReceiverCountryId,'GT')						 [ReceiverCountryId]
+                   LEFT(do.Receiver_Address, 200)                             [ReceiverAddress],
+                   ISNULL(do.ReceiverCountryId,'GT')                         [ReceiverCountryId]
             FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
                 INNER JOIN #listGuides lp
                     ON lp.ItemSerie = dop.GuideSerie
@@ -1405,7 +1359,7 @@ BEGIN
                      do.Receiver_FirstName,
                      do.Receiver_LastName,
                      do.Receiver_Address,
-					 do.ReceiverCountryId
+                     do.ReceiverCountryId
             ORDER BY dop.GuideNumber ASC;
 
         END;
@@ -1465,43 +1419,16 @@ BEGIN
 
         END;
 
-
-
-    --END;
-    --ELSE IF (@TokenAct = 0 OR @TokenAct IS NULL OR @hourtoken > 8)
-    --BEGIN
-    --    SET @jsonToken =
-    --    (
-    --        SELECT STUFF(
-    --                        (
-    --                            SELECT ',{"IdResult":' + '403' + ',' + '"DescriptionError":"' + 'Token inválido' + '"'
-    --                                   + '}'
-    --                            FOR XML PATH(''), TYPE
-    --                        ).value('.', 'varchar(max)'),
-    --                        1,
-    --                        1,
-    --                        ''
-    --                    )
-    --    );
-    --    SELECT '[' + @jsonToken + ']' jsonToken;
-
-    --    RETURN;
-    --END;
-
-
-    --		DROP TABLE #Temp
-
-    -- destruir tablas temporales
+    -- Destruir tablas temporales
     IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
         DROP TABLE #listGuides;
 
     IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
         DROP TABLE #Temp;
 
-	IF OBJECT_ID('tempdb.dbo.#InsertedRecords', 'U') IS NOT NULL
-		DROP TABLE #InsertedRecords;
--- retornar resultado en formato json
+    IF OBJECT_ID('tempdb.dbo.#InsertedRecords', 'U') IS NOT NULL
+        DROP TABLE #InsertedRecords;
 
-
+    -- Retornar resultado en formato json
 
 END;

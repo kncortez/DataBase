@@ -27,7 +27,7 @@
 -- Updated date:<18-11-2024>
 -- Description:	<Se agrega nueva validación IsCompleted>
 -- =============================================
-CREATE PROCEDURE [dbo].[SetFinishPickUp]
+ALTER PROCEDURE [dbo].[SetFinishPickUp]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD22221,FD22361,FD22223,FD22359,FD22226',
     @IdPickup INT = 2,
@@ -53,36 +53,29 @@ BEGIN
     DECLARE @jsonResult1 NVARCHAR(MAX);
     DECLARE @jsonResult2 NVARCHAR(MAX);
     DECLARE @jsonError NVARCHAR(MAX);
-    DECLARE @jsonToken NVARCHAR(MAX);
-    DECLARE @ManifestSerie VARCHAR(10) = 'FM';
-    DECLARE @ManifestNumber BIGINT;
+    DECLARE @ValIdPickup INT = NULL;
 
-    DECLARE @CodeOfReference INT;
-    DECLARE @CourierID INT;
-
-
-    PRINT 'validar token';
     -- insertar en tabla temporal posbibles mensajes de respuesta
     --IF OBJECT_ID('tempdb.dbo.#UpdateNow', 'U') IS NOT NULL DROP TABLE #UpdateNow;
     IF OBJECT_ID('tempdb.dbo.#NowInsert', 'U') IS NOT NULL
-        DROP TABLE #NowInsert;
+       DROP TABLE #NowInsert;
     IF OBJECT_ID('tempdb.dbo.#responsemessage', 'U') IS NOT NULL
-        DROP TABLE #responsemessage;
+       DROP TABLE #responsemessage;
     IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
-        DROP TABLE #Temp;
+       DROP TABLE #Temp;
 
     DECLARE @responsemessage AS TABLE
     (
-        IdResult INT,
-        Message NVARCHAR(500),
-        Id NVARCHAR(20)
+      IdResult  INT,
+      [Message] NVARCHAR(500),
+      Id        NVARCHAR(20)
     );
 
     INSERT INTO @responsemessage
     (
-        IdResult,
-        Message,
-        Id
+      IdResult,
+      [Message],
+      Id
     )
     SELECT *
       FROM (
@@ -95,41 +88,18 @@ BEGIN
                    'Transac' AS Id
            ) AS errror;
 
-    DECLARE @TokenAct INT =
-            (
-                SELECT TOP 1
-                       RowStatus
-                FROM LogTokenPOD
-                WHERE LogTokenPOD LIKE '%' + @Token + '%'
-                ORDER BY DateCreated DESC
-            );
-    DECLARE @hourtoken INT =
-            (
-                SELECT TOP 1
-                       DATEDIFF(HOUR, DateCreated, GETDATE()) AS horas
-                FROM LogTokenPOD
-                WHERE LogTokenPOD LIKE '%' + @Token + '%'
-            );
-
-
-    -- Variables para verificar ubicación en geocerca
-    DECLARE @FixedLatitude NVARCHAR(20) = @PickupLatitude;
-    DECLARE @FixedLongitude NVARCHAR(20) = @PickupLongitude;
-
-    IF ((@TokenAct = 1 AND @hourtoken <= 8) OR 1 = 1)
-    BEGIN
         CREATE TABLE #Temp
         (
-            Guide VARCHAR(255),
-            Message VARCHAR(255),
+         Guide     VARCHAR(255),
+         [Message] VARCHAR(255),
         );
 
         CREATE NONCLUSTERED INDEX tempTemp ON #Temp (Guide);
 
         INSERT INTO #Temp
         (
-            Guide,
-            Message
+          Guide,
+          [Message]
         )
         EXEC [dbo].[spws_get_validate_guides_pickup]
              @InGuides = @InGuides,
@@ -138,10 +108,19 @@ BEGIN
 
         DECLARE @test INT =
                 (
-                 SELECT COUNT(*)FROM #Temp
+                 SELECT COUNT(*)
+                   FROM #Temp
                 );
 
-        IF (@test = 0)
+        SET @ValIdPickup = 
+        (
+          SELECT TOP 1 SchedulePickupId
+            FROM FinishPickUpHeader
+           WHERE SchedulePickupId = @IdPickup
+        )
+
+        IF (@test = 0 AND 
+            @ValIdPickup IS NULL )
         BEGIN
             BEGIN TRANSACTION;
             BEGIN TRY
@@ -157,22 +136,22 @@ BEGIN
                   INSERT INTO DeliveryBackOffice.dbo.FinishPickUpHeader
                   (
                    SchedulePickupId
-                  ,TypeofInOutMoneyId
-                  ,Amount
-                  ,[Signature]
-                  ,StartDate
-                  ,EndDate
-                  ,PickupEmail
-                  ,PickupLatitude
-                  ,PickupLongitude
-                  ,ServiceStatusId
-                  ,Observation
-                  ,Voucher
-                  ,RowStatus
-                  ,TokenCreated
-                  ,DateCreated
-                  ,TokenUpdated
-                  ,DateUpdated
+                   ,TypeofInOutMoneyId
+                   ,Amount
+                   ,[Signature]
+                   ,StartDate
+                   ,EndDate
+                   ,PickupEmail
+                   ,PickupLatitude
+                   ,PickupLongitude
+                   ,ServiceStatusId
+                   ,Observation
+                   ,Voucher
+                   ,RowStatus
+                   ,TokenCreated
+                   ,DateCreated
+                   ,TokenUpdated
+                   ,DateUpdated
                   )
                   VALUES
                   (
@@ -209,8 +188,8 @@ BEGIN
                   )
                   SELECT @IdPickup
                          ,SUBSTRING(Item, 1, 2) AS GuideSerie
-                         ,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) AS GuideNumber -- Extrae el número de la guía
-                         ,REPLACE(SUBSTRING(Item, CHARINDEX('-', Item), LEN(Item)),'-','')  AS GuidePiece -- Extrae la pieza
+                         ,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) AS GuideNumber
+                         ,REPLACE(SUBSTRING(Item, CHARINDEX('-', Item), LEN(Item)),'-','')  AS GuidePiece
                          ,1
                          ,@Token
                          ,GETDATE()
@@ -228,34 +207,41 @@ BEGIN
                 -- Retornar mensaje de error
                 SET @jsonResult =
                 (
-                    SELECT STUFF(
-                                    (
-                                        SELECT '"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
-                                               + CONVERT(NVARCHAR(MAX), ERROR_MESSAGE()) + '"}'
-                                        FROM @responsemessage
-                                        WHERE Id = 'Invalid'
-                                        FOR XML PATH(''), TYPE
-                                    ).value('.', 'varchar(max)'),
-                                    1,
-                                    1,
-                                    ''
-                                )
+                 SELECT STUFF(
+                              (
+                               SELECT '"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
+                                      + CONVERT(NVARCHAR(MAX), ERROR_MESSAGE()) + '"}'
+                                 FROM @responsemessage
+                                WHERE Id = 'Invalid'
+                                  FOR XML PATH(''), TYPE
+                              ).value('.', 'varchar(max)'),
+                              1,
+                              1,
+                              ''
+                             )
                 );
 
                 INSERT INTO dbo.RoutePreparationLogError
                 (
-                    ErrorDescription,
-                    ErrorNumber,
-                    ErrorProcedure,
-                    ErrorLine,
-                    GuideSerie,
-                    GuideNumber,
-                    TokenCreated,
-                    DateCreated
+                 ErrorDescription,
+                 ErrorNumber,
+                 ErrorProcedure,
+                 ErrorLine,
+                 GuideSerie,
+                 GuideNumber,
+                 TokenCreated,
+                 DateCreated
                 )
                 VALUES
-                (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)),
-                 ERROR_LINE(), 0, 0, 'SetFinishPickup', GETDATE());
+                (
+                 CAST(ERROR_MESSAGE() AS VARCHAR(300)),
+                 ERROR_NUMBER(),
+                 CAST(ERROR_PROCEDURE() AS VARCHAR(100)),
+                 ERROR_LINE(),
+                 0,
+                 0,
+                 'SetFinishPickup', GETDATE()
+                );
 
             END CATCH;
 
@@ -263,11 +249,26 @@ BEGIN
             BEGIN
                 COMMIT TRANSACTION;
 
+                DECLARE @StatusNew INT =
+                        (
+                            SELECT IdServiceStatus FROM CatServiceStatus WHERE IdServiceStatus = 3
+                        );
+
+                UPDATE ServiceManagement
+                   SET ServiceStatusId = @StatusNew,
+                       PuSignaturePath = @PuSignaturePath,
+                       CiPuDate = @StartDate,
+                       CoPuDate = @EndDate,
+                       TokenUpdated = @Token,
+                       DateUpdated = GETDATE()
+                  FROM ServiceManagement
+                 WHERE IdSchedulePickup = @IdPickup;
+
                 SET @jsonResult =
                 (
                   SELECT STUFF(
                                (
-                                   SELECT ',{"Message":"Cambios realizados exitosamente"}'
+                                SELECT ',{"Message":"Cambios realizados exitosamente"}'
                                    FOR XML PATH(''), TYPE
                                ).value('.', 'varchar(max)'),
                                1,
@@ -282,7 +283,6 @@ BEGIN
             SELECT ('[' + @jsonResult + ']') jsonResult;
 
         END;
-
         ELSE IF (@test > 0)
         BEGIN
             SET @jsonResult1 =
@@ -290,31 +290,11 @@ BEGIN
                 SELECT STUFF(
                               (
                                SELECT ',{"Error":"' + ISNULL(CONVERT(VARCHAR, Guide), 'N/A') + +'"}'
-                               FROM #Temp
-                               WHERE Guide IN
-                                     (
-                                         SELECT Guide FROM #Temp
-                                     )
-                               FOR XML PATH(''), TYPE
-                              ).value('.', 'varchar(max)'),
-                              1,
-                              1,
-                              ''
-                            )
-            );
-
-            PRINT @jsonResult1;
-
-            SET @jsonResult2 =
-            (
-                SELECT STUFF(
-                              (
-                                  SELECT ',{"Message":"' + ISNULL(CONVERT(NVARCHAR(MAX), Message), 'N/A') + +'"}'
-                                  FROM #Temp
-                                  WHERE Guide IN
-                                        (
-                                            SELECT Guide FROM #Temp
-                                        )
+                                 FROM #Temp
+                                WHERE Guide IN
+                                      (
+                                          SELECT Guide FROM #Temp
+                                      )
                                   FOR XML PATH(''), TYPE
                               ).value('.', 'varchar(max)'),
                               1,
@@ -323,49 +303,82 @@ BEGIN
                             )
             );
 
-            PRINT @jsonResult2;
+            SET @jsonResult2 =
+            (
+             SELECT STUFF(
+                           (
+                            SELECT ',{"Message":"' + ISNULL(CONVERT(NVARCHAR(MAX), Message), 'N/A') + +'"}'
+                              FROM #Temp
+                             WHERE Guide IN
+                                   (
+                                       SELECT Guide FROM #Temp
+                                   )
+                               FOR XML PATH(''), TYPE
+                           ).value('.', 'varchar(max)'),
+                           1,
+                           1,
+                           ''
+                         )
+            );
+
             SET @jsonError =
             (
-                SELECT STUFF(
-                             (
-                                 SELECT '{"IdResult":412' + ',' + '"Guides":[' + @jsonResult1 + '],' + '"Messege":['
-                                        + @jsonResult2 + ']' + ''
-                                 FOR XML PATH(''), TYPE
-                             ).value('.', 'varchar(max)'),
-                             1,
-                             1,
-                             ''
-                            )
+             SELECT STUFF(
+                          (
+                              SELECT '{"IdResult":412' + ',' + '"Guides":[' + @jsonResult1 + '],' + '"Messege":['+ @jsonResult2 + ']' + ''
+                              FOR XML PATH(''), TYPE
+                          ).value('.', 'varchar(max)'),
+                          1,
+                          1,
+                          ''
+                         )
             );
-            PRINT @jsonError;
 
             SELECT ('{' + @jsonError + '}') jsonError;
+        END
+        ELSE IF (@ValIdPickup IS NOT NULL)
+        BEGIN
+            SET @jsonResult1 =
+            (
+                SELECT STUFF(
+                              (
+                               SELECT ',{"Error":"' + ISNULL(CONVERT(VARCHAR, @IdPickup), 'N/A') + +'"}'
+                                  FOR XML PATH(''), TYPE
+                              ).value('.', 'varchar(max)'),
+                              1,
+                              1,
+                              ''
+                            )
+            );
 
-        END;
+            SET @jsonResult2 =
+            (
+             SELECT STUFF(
+                           (
+                            SELECT ',{"Message":"' + ISNULL(CONVERT(NVARCHAR(MAX), 'El id de servicio de recolección ya ha sido procesado anteriormente'), 'N/A') + +'"}'
+                               FOR XML PATH(''), TYPE
+                           ).value('.', 'varchar(max)'),
+                           1,
+                           1,
+                           ''
+                         )
+            );
 
+            SET @jsonError =
+            (
+             SELECT STUFF(
+                          (
+                              SELECT '{"IdResult":412' + ',' + '"IdPickup":[' + @jsonResult1 + '],' + '"Messege":['+ @jsonResult2 + ']' + ''
+                                 FOR XML PATH(''), TYPE
+                          ).value('.', 'varchar(max)'),
+                          1,
+                          1,
+                          ''
+                         )
+            );
 
-
-    END;
-    ELSE IF (@TokenAct = 0 OR @TokenAct IS NULL OR @hourtoken > 8)
-    BEGIN
-        PRINT 'token inválido';
-        SET @jsonToken =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT ',{"IdResult":' + '403' + ',' + '"DescriptionError":"' + 'Token inválido' + '"'
-                                       + '}'
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)'),
-                            1,
-                            1,
-                            ''
-                        )
-        );
-        SELECT '[' + @jsonToken + ']' jsonToken;
-
-        RETURN;
-    END;
+            SELECT ('{' + @jsonError + '}') jsonError;
+        END
 
     IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
        DROP TABLE #Temp;

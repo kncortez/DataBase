@@ -3,8 +3,10 @@
 -- Update date: <2025-02-18>  
 -- Description: <Se procesa lote de POD para el servicio>  
 -- ============================================= 
-CREATE PROCEDURE [dbo].[GetProcessBatchPOD] 
-				@IdPickup INT
+ALTER PROCEDURE [dbo].[GetProcessBatchPOD] 
+(
+ @IdPickup INT
+)
 AS
 BEGIN
     BEGIN TRY
@@ -24,11 +26,10 @@ BEGIN
 
         IF EXISTS
         (
-            SELECT TOP 1
-                1
-            FROM FinishPickUpHeader WITH (NOLOCK)
-            WHERE SchedulePickupId = @IdPickup
-            AND RowStatus = 1
+            SELECT TOP 1 1
+              FROM FinishPickUpHeader WITH (NOLOCK)
+             WHERE SchedulePickupId = @IdPickup
+               AND RowStatus = 1
         )
         BEGIN
             SELECT @TypeofInOutMoneyId = TypeofInOutMoneyId,
@@ -39,35 +40,33 @@ BEGIN
                    @PuSignaturePath = [Signature],
                    @StartDate = StartDate,
                    @EndDate = EndDate,
-				   @PickUpEmail = PickupEmail,
+                   @PickUpEmail = PickupEmail,
                    @PickupLatitude = PickupLatitude,
                    @PickupLongitude = PickupLongitude
-            FROM FinishPickUpHeader WITH (NOLOCK)
-            WHERE SchedulePickupId = @IdPickup
-            AND RowStatus = 1
-
+              FROM FinishPickUpHeader WITH (NOLOCK)
+             WHERE SchedulePickupId = @IdPickup
+               AND RowStatus = 1
 
             SELECT @Guides = STRING_AGG(Guide, ',')
-            FROM
-            (
-                SELECT (CONCAT(GuideSerie, GuideNumber, '-', GuidePiece)) AS Guide
-                FROM FinishPickUpDetail WITH (NOLOCK)
-                WHERE SchedulePickupId = @IdPickup
-            ) [Data]
+              FROM (
+                    SELECT (CONCAT(GuideSerie, GuideNumber, '-', GuidePiece)) AS Guide
+                      FROM FinishPickUpDetail WITH (NOLOCK)
+                     WHERE SchedulePickupId = @IdPickup
+                   ) [Data]
 
             EXEC [dbo].[SetFinishPickUpBatch] @InGuides = @Guides,
-                                         @IdPickup = @IdPickup,
-                                         @TypeofInOutMoneyId = @TypeofInOutMoneyId,
-                                         @Token = @Token,
-                                         @Observations = @Observations,
-                                         @Amount = @Amount,
-                                         @Voucher = @Voucher,
-                                         @PuSignaturePath = @PuSignaturePath,
-                                         @StartDate = @StartDate,
-                                         @EndDate = @EndDate,
-                                         @PickupLatitude = @PickupLatitude,
-                                         @PickupLongitude = @PickupLongitude,
-										 @PickUpEmail = @PickUpEmail
+                                              @IdPickup = @IdPickup,
+                                              @TypeofInOutMoneyId = @TypeofInOutMoneyId,
+                                              @Token = @Token,
+                                              @Observations = @Observations,
+                                              @Amount = @Amount,
+                                              @Voucher = @Voucher,
+                                              @PuSignaturePath = @PuSignaturePath,
+                                              @StartDate = @StartDate,
+                                              @EndDate = @EndDate,
+                                              @PickupLatitude = @PickupLatitude,
+                                              @PickupLongitude = @PickupLongitude,
+                                              @PickUpEmail = @PickUpEmail
         END
         ELSE
         BEGIN
