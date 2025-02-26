@@ -16,11 +16,28 @@ BEGIN
 
     DECLARE @GuidesFound TABLE
     (
-		[Id]			 BIGINT,
-        [Guide_Serie]	 NVARCHAR(2),
-        [Guide_Number]	 INT,
-		[Status]		 INT,
-		[StatusDescription]     NVARCHAR(64)
+        [Id] BIGINT,
+        [Guide_Serie] NVARCHAR(2),
+        [Guide_Number] INT,
+        [Status] INT,
+        [StatusDescription] NVARCHAR(64)
+    );
+
+    DECLARE @GuidesDetail TABLE
+    (
+        id INT,
+        Guide NVARCHAR(16),
+        GuideSerie NVARCHAR(2),
+        GuideNumber INT,
+        Delivered BIT,
+        Price DECIMAL(18, 2),
+        COD DECIMAL(18, 2),
+        Total DECIMAL(18, 2),
+        FEL VARCHAR(251),
+        StatusOrderId TINYINT,
+        OrderDescription NVARCHAR(100),
+        StatusOrderValid BIT,
+        DescriptionStatusOrderValid VARCHAR(100)
     );
 
     DECLARE @StatusOrderValid TABLE
@@ -30,102 +47,88 @@ BEGIN
     );
 
     INSERT INTO @GuidesFound
-	SELECT	s.[id], 
-			s.[Guide_Serie], 
-			s.[Guide_Number], 
-			s.[Status], 
-			s.[StatusDescription]
-	FROM
-	(
-		SELECT DISTINCT
-			   dsd.ID_DeliveryOrderBySettlement [id]
-			   ,dsd.Guide_Serie
-			   ,dsd.Guide_Number
-			   ,msi.CatManifestSettlementIncidenceTypeId  [Status]
-			   ,CASE WHEN msi.CatManifestSettlementIncidenceTypeId IS NOT NULL AND msi.CatManifestSettlementIncidenceTypeId > 0 AND msi.isCOD = 1 THEN 'Liquidado con Incidencia'
-					 WHEN dbs.User_Received_COD IS NOT NULL AND dbs.Date_Received_COD IS NOT NULL THEN 'Liquidado'
-					 ELSE 'Pendiente'
-				END AS [StatusDescription]
-		FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
-			INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
-				ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
-			INNER JOIN DBO.DeliveryOrder DOR WITH(NOLOCK)
-				ON DOR.GUIDE_NUMBER=DSD.Guide_Number
-				AND DOR.GUIDE_SERIE=DSD.Guide_Serie
-			LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH(NOLOCK)
-					ON dbs.ID = msi.ManifestNumber
-			LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
-				ON cs.IdStation = dbs.DispatchedStationId
-		WHERE CAST(dbs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
-		  AND dsd.RowStatus = 1   
-		  AND dbs.CATRouteId = @IdRoute
-and Guide_Settlement=1
-and Guide_Delivered=1
-AND ( DOR.IsLastMileReturn=0
-		OR (dor.IsLastMileReturn = 1 AND dor.IsCollect =1))
-		UNION
-		SELECT DISTINCT
-			   dsd.ID_DeliveryOrderBySettlement [id]
-			   ,dsd.Guide_Serie
-			   ,dsd.Guide_Number
-			   ,msi.CatManifestSettlementIncidenceTypeId  [Status]
-			   ,'Pendiente'  [StatusDescription]
-		FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
-			INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
-				ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
-			INNER JOIN DBO.DeliveryOrder DOR WITH(NOLOCK)
-				ON DOR.GUIDE_NUMBER=DSD.Guide_Number
-				AND DOR.GUIDE_SERIE=DSD.Guide_Serie
-			LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH(NOLOCK)
-					ON dbs.ID = msi.ManifestNumber
-			LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
-				ON cs.IdStation = dbs.DispatchedStationId
-		WHERE CAST(dbs.Date_Dispatched AS DATE) > @DateProduction
-		  AND dsd.RowStatus = 1
-		  AND dbs.CATRouteId = @IdRoute
-		  AND dbs.Date_Received_COD IS NULL
-		  AND dbs.User_Received_COD IS NULL 
-		  AND CAST(dbs.Date_Dispatched AS DATE) < CAST(GETDATE() AS DATE)  
-		  and Guide_Settlement=1
-		and Guide_Delivered=1
-		AND( DOR.IsLastMileReturn=0
-		OR (dor.IsLastMileReturn = 1 AND dor.IsCollect =1))
-	) AS s
-
-
-    SELECT distinct
-		   dbs.ID,
-           dbs.Date_Dispatched,
-           dbs.Pieces_Dry_Dispatched,
-           dbs.Pieces_Cold_Dispatched,
-           dbs.Guides_Dispatched,
-           dbs.ID_Courier,
-           ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name
-    FROM  @GuidesFound gf
-		INNER JOIN	DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs WITH(NOLOCK)
-			ON gf.Id = dbs.ID
-        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
-            ON sr.ID = dbs.ID_Courier
-        --LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
-            --ON cs.IdStation = dbs.DispatchedStationId
-    --WHERE dbs.CATRouteId = @IdRoute;
-
-    DECLARE @GuidesDetail TABLE
+    SELECT s.[id],
+           s.[Guide_Serie],
+           s.[Guide_Number],
+           s.[Status],
+           s.[StatusDescription]
+    FROM
     (
-		id			INT,
-        Guide		NVARCHAR(16),
-        GuideSerie	NVARCHAR(2),
-        GuideNumber INT,
-        Delivered	BIT,
-        Price		DECIMAL(18, 2),
-        COD			DECIMAL(18, 2),
-        Total		DECIMAL(18, 2),
-        FEL			VARCHAR(251),
-        StatusOrderId	 TINYINT,
-        OrderDescription NVARCHAR(100),
-        StatusOrderValid BIT,
-        DescriptionStatusOrderValid VARCHAR(100)
-    );
+        SELECT DISTINCT
+               dsd.ID_DeliveryOrderBySettlement [id],
+               dsd.Guide_Serie,
+               dsd.Guide_Number,
+               msi.CatManifestSettlementIncidenceTypeId [Status],
+               CASE
+                   WHEN msi.CatManifestSettlementIncidenceTypeId IS NOT NULL
+                        AND msi.CatManifestSettlementIncidenceTypeId > 0
+                        AND msi.isCOD = 1 THEN
+                       'Liquidado con Incidencia'
+                   WHEN dbs.User_Received_COD IS NOT NULL
+                        AND dbs.Date_Received_COD IS NOT NULL THEN
+                       'Liquidado'
+                   ELSE
+                       'Pendiente'
+               END AS [StatusDescription]
+        FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
+                ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
+            INNER JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
+                ON DOR.Guide_Number = dsd.Guide_Number
+                   AND DOR.Guide_Serie = dsd.Guide_Serie
+            LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH (NOLOCK)
+                ON dbs.ID = msi.ManifestNumber
+            LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
+                ON cs.IdStation = dbs.DispatchedStationId
+        WHERE CAST(dbs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
+              AND dsd.RowStatus = 1
+              AND dbs.CatRouteId = @IdRoute
+              AND dsd.Guide_Settlement = 1
+              AND dsd.Guide_Delivered = 1
+              AND
+              (
+                  DOR.IsLastMileReturn = 0
+                  OR
+                  (
+                      DOR.IsLastMileReturn = 1
+                      AND DOR.IsCollect = 1
+                  )
+              )
+        UNION
+        SELECT DISTINCT
+               dsd.ID_DeliveryOrderBySettlement [id],
+               dsd.Guide_Serie,
+               dsd.Guide_Number,
+               msi.CatManifestSettlementIncidenceTypeId [Status],
+               'Pendiente' [StatusDescription]
+        FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
+                ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
+            INNER JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
+                ON DOR.Guide_Number = dsd.Guide_Number
+                   AND DOR.Guide_Serie = dsd.Guide_Serie
+            LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH (NOLOCK)
+                ON dbs.ID = msi.ManifestNumber
+            LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
+                ON cs.IdStation = dbs.DispatchedStationId
+        WHERE CAST(dbs.Date_Dispatched AS DATE) > @DateProduction
+              AND dsd.RowStatus = 1
+              AND dbs.CatRouteId = @IdRoute
+              AND dbs.Date_Received_COD IS NULL
+              AND dbs.User_Received_COD IS NULL
+              AND CAST(dbs.Date_Dispatched AS DATE) < CAST(GETDATE() AS DATE)
+              AND dsd.Guide_Settlement = 1
+              AND dsd.Guide_Delivered = 1
+              AND
+              (
+                  DOR.IsLastMileReturn = 0
+                  OR
+                  (
+                      DOR.IsLastMileReturn = 1
+                      AND DOR.IsCollect = 1
+                  )
+              )
+    ) AS s;
 
     INSERT INTO @GuidesDetail
     SELECT DISTINCT
@@ -207,6 +210,30 @@ AND ( DOR.IsLastMileReturn=0
               OR vp.IdKindOfVPClient IS NULL
           );
 
+    SELECT DISTINCT
+           dbs.ID,
+           dbs.Date_Dispatched,
+           dbs.Pieces_Dry_Dispatched,
+           dbs.Pieces_Cold_Dispatched,
+           c.Guides_Dispatched,
+           dbs.ID_Courier,
+           ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name
+    FROM @GuidesFound gf
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs WITH (NOLOCK)
+            ON gf.Id = dbs.ID
+        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
+            ON sr.ID = dbs.ID_Courier
+        CROSS APPLY
+        (
+            SELECT gd.id
+                  ,COUNT(gd.GuideNumber) Guides_Dispatched
+            FROM @GuidesDetail gd
+            WHERE  dbs.Id = gd.id
+            GROUP BY gd.id
+        ) as c
+    --LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
+    --ON cs.IdStation = dbs.DispatchedStationId
+    --WHERE dbs.CATRouteId = @IdRoute;
 
     --Validar el estado guía por guía
     -- mientras la tabla no este vacía
@@ -260,19 +287,19 @@ AND ( DOR.IsLastMileReturn=0
     SELECT SUM(Total) AS COD_Manifest
     FROM @GuidesDetail;
 
-    SELECT  id
-			,Guide		
-			,GuideSerie
-			,GuideNumber
-			,Delivered
-			,Price
-			,COD
-			,Total
-			,FEL
-			,StatusOrderId
-			,OrderDescription
-			,StatusOrderValid
-			,DescriptionStatusOrderValid
+    SELECT id,
+           Guide,
+           GuideSerie,
+           GuideNumber,
+           Delivered,
+           Price,
+           COD,
+           Total,
+           FEL,
+           StatusOrderId,
+           OrderDescription,
+           StatusOrderValid,
+           DescriptionStatusOrderValid
     FROM @GuidesDetail gd
     ORDER BY gd.id DESC;
 
