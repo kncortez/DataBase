@@ -11,7 +11,10 @@
 -- Modified:	<2025-02-11>  
 -- Description: <Contenerizacion guias - Se agregan mensajes informativos >  
 -- =============================================
-
+-- Author:		<Brandon, Pedroza>  
+-- Modified:	<2025-02-11>  
+-- Description: <Contenerizacion guias - Se agrega estado Recolectado >  
+-- =============================================
 CREATE PROCEDURE [dbo].[sphwGetGuidesByTicketNumber]
     @TicketNumber NVARCHAR(50),
     @IdCountry NVARCHAR(5),
@@ -21,6 +24,7 @@ BEGIN
     SET NOCOUNT ON;
 	DECLARE @IdStatusGenerated INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Solicitado');
 	DECLARE @IdStatusRequest INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Generado');
+	DECLARE @IdStatusRecolleted INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recolectado');
 
 	IF @IdCustomer <> 0
 	BEGIN
@@ -36,7 +40,7 @@ BEGIN
 		WHERE A1.Ticket_Number = @TicketNumber
 		  AND ISNULL(A1.SenderCountryId, 'GT') = @IdCountry
 		  AND A1.IdCustomer = @IdCustomer
-		  AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest)
+		  AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest,@IdStatusRecolleted)
 	END 
 	ELSE
 	BEGIN 
@@ -51,7 +55,7 @@ BEGIN
 			ON A1.IdCustomer = A2.IdCustomer
 		WHERE A1.Ticket_Number = @TicketNumber
 		  AND ISNULL(A1.SenderCountryId, 'GT') = @IdCountry
-		  AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest)
+		  AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest,@IdStatusRecolleted)
 	END	
 	IF NOT EXISTS(SELECT A1.Guide_Number			
 		FROM DeliveryOrder A1 WITH (NOLOCK)
@@ -81,7 +85,7 @@ BEGIN
 		INNER JOIN Customer A2 WITH (NOLOCK) 
 			ON A1.IdCustomer = A2.IdCustomer
 		WHERE A1.Ticket_Number = @TicketNumber
-		AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest)
+		AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest,@IdStatusRecolleted)
 			AND ISNULL(A1.SenderCountryId, 'GT') = @IdCountry
 			)
 	BEGIN
