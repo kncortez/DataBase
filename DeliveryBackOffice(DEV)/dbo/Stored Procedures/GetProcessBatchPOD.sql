@@ -21,8 +21,8 @@ BEGIN
                 @EndDate DATETIME = NULL,
                 @PickupLatitude NVARCHAR(20) = NULL,
                 @PickupLongitude NVARCHAR(20) = NULL,
-				@PickUpEmail NVARCHAR(200),
-				@Guides NVARCHAR(MAX)
+                @PickUpEmail NVARCHAR(200),
+                @Guides NVARCHAR(MAX)
 
         IF EXISTS
         (
@@ -47,7 +47,7 @@ BEGIN
              WHERE SchedulePickupId = @IdPickup
                AND RowStatus = 1
 
-            SELECT @Guides = STRING_AGG(Guide, ',')
+            SELECT @Guides = STRING_AGG(CAST(Guide AS NVARCHAR(MAX)), ',')
               FROM (
                     SELECT (CONCAT(GuideSerie, GuideNumber, '-', GuidePiece)) AS Guide
                       FROM FinishPickUpDetail WITH (NOLOCK)
@@ -72,20 +72,18 @@ BEGIN
         BEGIN
             SELECT 0 AS StatusCode,
                    'No se encontro la recoleccion en los lotes' AS [Message],
-				   '' Token,
-				   '' Email
+                   '' Token,
+                   '' Email
         END
 
-		IF @@TRANCOUNT > 0
-			COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
         SELECT 0 AS StatusCode,
                ERROR_MESSAGE() AS [Message],
-			   '' Token,
-			   '' Email
+               '' Token,
+               '' Email
 
-        IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
     END CATCH
 END

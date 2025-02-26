@@ -1199,9 +1199,8 @@ BEGIN
                       )
                       AND pcd.IdProcessedGuideCOD IS NULL;
 
-                --------------PROCESSGUIDECOD.FIN
-
-            -- Retornar resultado en formato json
+                  --------------PROCESSGUIDECOD.FIN
+                  -- Retornar resultado en formato json
             END TRY
             BEGIN CATCH
                 ROLLBACK TRANSACTION;
@@ -1238,129 +1237,154 @@ BEGIN
                 (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)),
                  ERROR_LINE(), 0, 0, 'SetFinishPickup', GETDATE());
 
+                IF OBJECT_ID('tempdb.dbo.#InsertedRecords', 'U') IS NOT NULL
+                DROP TABLE #InsertedRecords;
 
             END CATCH;
+
             IF @@TRANCOUNT > 0
             BEGIN
-                COMMIT TRANSACTION;
-                DECLARE @BatchStatus INT
+                DECLARE @BatchStatus INT = 0;
 
-                SET @BatchStatus =
-                (
-                    SELECT IdServiceStatus
-                    FROM CatServiceStatus WITH (NOLOCK)
-                    WHERE Name = 'Recolectado'
-                )
+                BEGIN TRY
 
-                UPDATE FinishPickUpHeader
-                   SET ServiceStatusId = @BatchStatus,
-                       TokenUpdated = 'SYS-GetProcessBatchPOD',
-                       DateUpdated = GETDATE()
-                 WHERE SchedulePickupId = @IdPickup
+                    BEGIN TRAN Detail_SetFinishPickUpBatch
 
-                UPDATE FinishPickUpDetail
-                   SET TokenUpdated = 'SYS-GetProcessBatchPOD',
-                       DateUpdated = GETDATE()
-                WHERE SchedulePickupId = @IdPickup
+                       SET @jsonResult =
+                       (
+                           SELECT STUFF(
+                                        (
+                                         SELECT ',{"Message":"Cambios realizados exitosamente"}'
+                                            FOR XML PATH(''), TYPE
+                                        ).value('.', 'varchar(max)'),
+                                           1,1,'')
+                       );
 
-                UPDATE PG
-                   SET IsCompleted = 1
-                  FROM DeliveryBackOffice.dbo.ProcessedGuideCOD PG  WITH(NOLOCK)
-                       INNER JOIN #InsertedRecords IR
-                          ON PG.GuideSerie = IR.GuideSerie
-                              AND PG.GuideNumber = IR.GuideNumber
-                 WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
+                       SET @BatchStatus =
+                       (
+                           SELECT IdServiceStatus
+                           FROM CatServiceStatus WITH (NOLOCK)
+                           WHERE Name = 'Recolectado'
+                       )
 
-                SET @jsonResult =
-                (
-                    SELECT STUFF(
-                                    (
-                                        SELECT ',{"Message":"Cambios realizados exitosamente"}'
-                                        FOR XML PATH(''), TYPE
-                                    ).value('.', 'varchar(max)'),
-                                    1,
-                                    1,
-                                    ''
-                                )
-                );
+                       UPDATE FinishPickUpHeader
+                          SET ServiceStatusId = @BatchStatus,
+                              TokenUpdated = 'SYS-GetProcessBatchPOD',
+                              DateUpdated = GETDATE()
+                        WHERE SchedulePickupId = @IdPickup
+                       
+                       UPDATE FinishPickUpDetail
+                          SET TokenUpdated = 'SYS-GetProcessBatchPOD',
+                              DateUpdated = GETDATE()
+                       WHERE SchedulePickupId = @IdPickup
 
+                       UPDATE PG
+                          SET IsCompleted = 1
+                         FROM DeliveryBackOffice.dbo.ProcessedGuideCOD PG  WITH(NOLOCK)
+                              INNER JOIN #InsertedRecords IR
+                                 ON PG.GuideSerie = IR.GuideSerie
+                                     AND PG.GuideNumber = IR.GuideNumber
+                        WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
+
+                       SELECT 200 AS StatusCode,
+                              'Se procesaron las guías con exito' AS [Message],
+                              @Token AS Token,
+                              @PickUpEmail AS Email
+
+                       SELECT ('[' + @jsonResult + ']') jsonResult;
+
+                       -- CORREO A ENVIAR MANIFIESTO
+                       SELECT @mail;
+
+                       -- DATOS DEL MANIFIESTO A GENERAR
+                       SELECT @ManifestNumber AS 'IdManifest',
+                              @ManifestSerie AS 'Manifest_Serie',
+                              @ManifestNumber AS 'Manifest_Number',
+                              slp.SenderName AS 'Sender_FirstName',
+                              slp.AddressPickup AS 'Sender_Address',
+                              ISNULL(vpc.Zone, '') AS 'Sender_Zone',
+                              ISNULL(vpc.Town, '') AS 'Sender_Town',
+                              ISNULL(vpc.Department, '') AS 'Sender_Department',
+                              0 AS 'Consolidated_Number',
+                              ISNULL(vpc.Email, '') AS 'Sender_Email'
+                       FROM DeliveryBackOffice.dbo.SchedulePickup slp WITH (NOLOCK)
+                           RIGHT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
+                               ON vpc.CodeOfReference = slp.SenderId
+                       WHERE slp.SchedulePickupId = @IdPickup;
+
+                       -- DETALLE DE LAS GUIAS RECOLECTADAS
+                       WITH GUIDEMONITOR (GuideNumber, PiecesColdCounter, PiecesDryCounter, TotalPieces)
+                       AS (
+                           SELECT COALESCE(dop.GuideNumber, dop2.GuideNumber) GuideNumber,
+                                  COUNT(dop.GuideNumber) 'PiecesColdCounter',
+                                  COUNT(dop2.GuideNumber) 'PiecesDryCounter',
+                                  COUNT(dop.NoPiece) + COUNT(dop2.NoPiece) 'TotalPieces'
+                           FROM #listGuides lp
+                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
+                                   ON lp.ItemSerie = dop.GuideSerie
+                                      AND lp.ItemNumber = dop.GuideNumber
+                                      AND lp.ItemPiece = dop.NoPiece
+                                      AND dop.IsDry = 0
+                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop2 WITH (NOLOCK)
+                                   ON lp.ItemSerie = dop2.GuideSerie
+                                      AND lp.ItemNumber = dop2.GuideNumber
+                                      AND lp.ItemPiece = dop2.NoPiece
+                                      AND dop2.IsDry = 1
+                           GROUP BY dop.GuideNumber,
+                                    dop2.GuideNumber
+                       )
+
+                       SELECT COUNT(GM.GuideNumber) 'GuidesCounter',
+                              SUM(GM.PiecesColdCounter) 'PiecesColdCounter',
+                              SUM(GM.PiecesDryCounter) 'PiecesDryCounter',
+                              SUM(GM.TotalPieces) 'TotalPieces'
+                       FROM GUIDEMONITOR GM;
+
+                       -- DETALLE DE LAS PIEZAS DE LAS GUIAS RECOLECTADAS
+                       SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) [Piece],
+                              CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)  [ReceiverName],
+                              LEFT(do.Receiver_Address, 200)                             [ReceiverAddress],
+                              ISNULL(do.ReceiverCountryId,'GT')                         [ReceiverCountryId]
+                       FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
+                           INNER JOIN #listGuides lp
+                               ON lp.ItemSerie = dop.GuideSerie
+                                  AND lp.ItemNumber = dop.GuideNumber
+                           INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                               ON do.Guide_Serie = dop.GuideSerie
+                                  AND do.Guide_Number = dop.GuideNumber
+                       GROUP BY dop.GuideNumber,
+                                dop.GuideSerie,
+                                dop.NoPiece,
+                                do.Receiver_FirstName,
+                                do.Receiver_LastName,
+                                do.Receiver_Address,
+                                do.ReceiverCountryId
+                       ORDER BY dop.GuideNumber ASC;
+
+                    COMMIT TRAN Detail_SetFinishPickUpBatch
+                END TRY
+                BEGIN CATCH
+                     ROLLBACK TRAN detail
+
+                     SET @jsonResult =
+                     (
+                         SELECT STUFF(
+                                         (
+                                             SELECT '"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
+                                                    + CONVERT(NVARCHAR(MAX), ERROR_MESSAGE()) + '"}'
+                                             FROM @responsemessage
+                                             WHERE Id = 'Invalid'
+                                             FOR XML PATH(''), TYPE
+                                         ).value('.', 'varchar(max)'),
+                                         1,
+                                         1,
+                                         ''
+                                     )
+                     );
+                END CATCH
+
+               COMMIT TRANSACTION;
             END;
-            
-
-            SELECT 200 AS StatusCode,
-                   'Se procesaron las guías con exito' AS [Message],
-                   @Token AS Token,
-                   @PickUpEmail AS Email
-
-            SELECT ('[' + @jsonResult + ']') jsonResult;
-
-            -- CORREO A ENVIAR MANIFIESTO
-            SELECT @mail;
-
-            -- DATOS DEL MANIFIESTO A GENERAR
-            SELECT @ManifestNumber AS 'IdManifest',
-                   @ManifestSerie AS 'Manifest_Serie',
-                   @ManifestNumber AS 'Manifest_Number',
-                   slp.SenderName AS 'Sender_FirstName',
-                   slp.AddressPickup AS 'Sender_Address',
-                   ISNULL(vpc.Zone, '') AS 'Sender_Zone',
-                   ISNULL(vpc.Town, '') AS 'Sender_Town',
-                   ISNULL(vpc.Department, '') AS 'Sender_Department',
-                   0 AS 'Consolidated_Number',
-                   ISNULL(vpc.Email, '') AS 'Sender_Email'
-            FROM DeliveryBackOffice.dbo.SchedulePickup slp WITH (NOLOCK)
-                RIGHT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
-                    ON vpc.CodeOfReference = slp.SenderId
-            WHERE slp.SchedulePickupId = @IdPickup;
-
-            -- DETALLE DE LAS GUIAS RECOLECTADAS
-            WITH GUIDEMONITOR (GuideNumber, PiecesColdCounter, PiecesDryCounter, TotalPieces)
-            AS (
-                SELECT COALESCE(dop.GuideNumber, dop2.GuideNumber) GuideNumber,
-                       COUNT(dop.GuideNumber) 'PiecesColdCounter',
-                       COUNT(dop2.GuideNumber) 'PiecesDryCounter',
-                       COUNT(dop.NoPiece) + COUNT(dop2.NoPiece) 'TotalPieces'
-                FROM #listGuides lp
-                    LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
-                        ON lp.ItemSerie = dop.GuideSerie
-                           AND lp.ItemNumber = dop.GuideNumber
-                           AND lp.ItemPiece = dop.NoPiece
-                           AND dop.IsDry = 0
-                    LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop2 WITH (NOLOCK)
-                        ON lp.ItemSerie = dop2.GuideSerie
-                           AND lp.ItemNumber = dop2.GuideNumber
-                           AND lp.ItemPiece = dop2.NoPiece
-                           AND dop2.IsDry = 1
-                GROUP BY dop.GuideNumber,
-                         dop2.GuideNumber
-            )
-
-            SELECT COUNT(GM.GuideNumber) 'GuidesCounter',
-                   SUM(GM.PiecesColdCounter) 'PiecesColdCounter',
-                   SUM(GM.PiecesDryCounter) 'PiecesDryCounter',
-                   SUM(GM.TotalPieces) 'TotalPieces'
-            FROM GUIDEMONITOR GM;
-
-            -- DETALLE DE LAS PIEZAS DE LAS GUIAS RECOLECTADAS
-            SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) [Piece],
-                   CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)  [ReceiverName],
-                   LEFT(do.Receiver_Address, 200)                             [ReceiverAddress],
-                   ISNULL(do.ReceiverCountryId,'GT')                         [ReceiverCountryId]
-            FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
-                INNER JOIN #listGuides lp
-                    ON lp.ItemSerie = dop.GuideSerie
-                       AND lp.ItemNumber = dop.GuideNumber
-                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-                    ON do.Guide_Serie = dop.GuideSerie
-                       AND do.Guide_Number = dop.GuideNumber
-            GROUP BY dop.GuideNumber,
-                     dop.GuideSerie,
-                     dop.NoPiece,
-                     do.Receiver_FirstName,
-                     do.Receiver_LastName,
-                     do.Receiver_Address,
-                     do.ReceiverCountryId
-            ORDER BY dop.GuideNumber ASC;
 
         END;
 
@@ -1430,5 +1454,4 @@ BEGIN
         DROP TABLE #InsertedRecords;
 
     -- Retornar resultado en formato json
-
 END;
