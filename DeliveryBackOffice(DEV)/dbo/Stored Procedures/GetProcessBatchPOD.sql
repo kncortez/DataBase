@@ -3,7 +3,7 @@
 -- Update date: <2025-02-18>  
 -- Description: <Se procesa lote de POD para el servicio>  
 -- ============================================= 
-ALTER PROCEDURE [dbo].[GetProcessBatchPOD] 
+CREATE PROCEDURE [dbo].[GetProcessBatchPOD] 
 (
  @IdPickup INT
 )

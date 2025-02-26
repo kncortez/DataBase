@@ -3,7 +3,7 @@
 -- Updated date:<21-02-2025>
 -- Description:    <Se crea sp para manejo de recolecciones en servicio PickupProcessingService>
 -- =============================================
-ALTER PROCEDURE [dbo].[SetFinishPickUpBatch]
+CREATE PROCEDURE [dbo].[SetFinishPickUpBatch]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX),
     @IdPickup INT,
