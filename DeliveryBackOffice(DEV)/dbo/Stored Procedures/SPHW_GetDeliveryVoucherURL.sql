@@ -12,25 +12,41 @@ BEGIN
     SET NOCOUNT ON;
 
     BEGIN TRY
+		DECLARE @IsVoucherRequired INT;
+		DECLARE @URL VARCHAR(300);
 
-        SELECT 
-            200 AS StatusCode,
-            'Se obtiene URL de comprobante escaneado' AS Description,
-            COALESCE(CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) AS VARCHAR(300)), '') AS URL
-        FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do
-        INNER JOIN [DeliveryBackOffice].[dbo].[Customer] c 
+		SELECT @IsVoucherRequired = c.IsVoucherRequired
+        FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH(NOLOCK)
             ON do.IdCustomer = c.IdCustomer
         WHERE do.Guide_Serie = @GuideSerie
             AND do.Guide_Number = @GuideNumber
-            AND c.IsVoucherRequired = 1
             AND c.RowSatus = 1;
-        
-        IF @@ROWCOUNT = 0
-        BEGIN
-            SELECT 404 AS StatusCode, 
-                   'No se encontró URL de comprobante escaneado' AS Description, 
-                   '' AS URL;
-        END       
+
+		
+		IF @IsVoucherRequired = 1
+		BEGIN
+			SET @URL = COALESCE(CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) AS VARCHAR(300)), '');
+
+			IF @URL IS NULL OR @URL = ''
+			BEGIN
+				SELECT 404 AS StatusCode, 
+						'No se encontro URL de comprobante escaneado' AS Description, 
+						'' AS URL;
+			END
+			ELSE
+			BEGIN
+				SELECT 200 AS StatusCode,
+					'Se obtiene URL de comprobante escaneado' AS Description,
+					 @URL AS URL
+			END   
+		END
+		ELSE
+		BEGIN
+			SELECT 404 AS StatusCode,
+					'El cliente no tiene configurado la impresion de los comprobantes de entrega' AS Description,
+					@URL AS URL
+		END   
     
     END TRY
     BEGIN CATCH    
