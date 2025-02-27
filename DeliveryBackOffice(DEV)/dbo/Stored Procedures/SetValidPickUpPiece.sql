@@ -11,6 +11,10 @@
 -- Modifie:		<2025-02-04>  
 -- Description: <Contenerizacion guias - aceptar paquete unicamente del cliente asignado a la recoleccion>  
 -- =============================================   
+-- Author:		<Brandon, Pedroza>  
+-- Modifie:		<2025-02-27>  
+-- Description: <Contenerizacion guias - se acepta cualquier paquete si se escanea por guia >  
+-- =============================================  
 CREATE PROCEDURE [dbo].[SetValidPickUpPiece]
     @InGuides NVARCHAR(MAX) = 'FD9559566-1,FD9559566-2',
     @IdPickup INT = NULL,
@@ -157,17 +161,20 @@ BEGIN
 					END
 					ELSE
 					BEGIN
-						IF NOT EXISTS (SELECT 1 FROM DeliveryOrder DO WITH (NOLOCK)
+						IF @Reference IS NOT NULL
+						BEGIN
+							IF NOT EXISTS (SELECT 1 FROM DeliveryOrder DO WITH (NOLOCK)
 											INNER JOIN #listGuides LS
 											ON DO.Guide_Serie = LS.ItemSerie
 										AND DO.Guide_Number = LS.ItemNumber
 										AND DO.IdCustomer = @IdCustomerPickup)
-						BEGIN						
-							SELECT 
-								3 AS [StatusCode],
-								'La Guia no pertenece al cliente de la recoleccion' AS [Message],
-								1 AS [NoPiece]
-							RETURN
+							BEGIN						
+								SELECT 
+									3 AS [StatusCode],
+									'La Guia no pertenece al cliente de la recoleccion' AS [Message],
+									1 AS [NoPiece]
+								RETURN
+							END
 						END
 					END
 
