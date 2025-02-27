@@ -69,7 +69,7 @@ BEGIN
                'Transac' AS Id
     ) AS errror;
 
-    -- Variables para verificar ubicaci髇 en geocerca
+    -- Variables para verificar ubicaci贸n en geocerca
     DECLARE @FixedLatitude NVARCHAR(20) = @PickupLatitude;
     DECLARE @FixedLongitude NVARCHAR(20) = @PickupLongitude;
 
@@ -549,7 +549,7 @@ BEGIN
                             OR dop.IdHeaderRecolection IS NULL
                         );
 
-                -- Quitar gu韆s no recolectadas asociadas al servicio
+                -- Quitar gu铆as no recolectadas asociadas al servicio
                 UPDATE DeliveryOrderPaymentDetail
                 SET IdHeaderRecolection = NULL
                 FROM DeliveryOrderPaymentDetail dop
@@ -618,7 +618,7 @@ BEGIN
                                       AND WT.RowStatus = 1
                             );
 
-                    -- Clientes de las gu韆s por procesar
+                    -- Clientes de las gu铆as por procesar
                     INSERT INTO @WebhookCustomerTable
                     (
                         CustomerId,
@@ -901,7 +901,7 @@ BEGIN
                         GuideNumber INT
                     );
 
-                    --- REGISTRO DE PAGO DE LAS GU虯S RECOLECTADAS
+                    --- REGISTRO DE PAGO DE LAS GU脥AS RECOLECTADAS
                     UPDATE C
                     SET C.TotalAmountPaid = C.TotalAmount,
                         C.PaymentDate = @fecha,
@@ -915,17 +915,17 @@ BEGIN
                         CostId,
                         GuideSerie,
                         GuideNumber
-                    ) -- Control de gu韆s pagadas
+                    ) -- Control de gu铆as pagadas
                     FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
                         INNER JOIN #listGuides LG
                             ON C.GuideSerie = LG.ItemSerie AND C.GuideNumber = LG.ItemNumber
                         LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                             ON LG.ItemSerie = DOPD.GuideSerie
                                AND LG.ItemNumber = DOPD.GuideNumber
-                    WHERE DOPD.TimePlaId = 2 -- Gu韆s cuyo pago sea solo en la recolecci髇
+                    WHERE DOPD.TimePlaId = 2 -- Gu铆as cuyo pago sea solo en la recolecci贸n
                           AND C.TotalAmountPaid IS NULL;
 
-                    --- REGISTRO DEL DETALLE DEL PAGO DE LAS GU虯S RECOLECTADAS
+                    --- REGISTRO DEL DETALLE DEL PAGO DE LAS GU脥AS RECOLECTADAS
                     INSERT INTO dbo.CostDetail
                     (
                         IdCost,
@@ -1056,16 +1056,16 @@ BEGIN
                        )
                     BEGIN
 
-                        -- Punto de visita con ubicaci髇 existente
+                        -- Punto de visita con ubicaci贸n existente
                         IF (
                                RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> ''
                                AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> ''
                            )
                         BEGIN
 
-                            -- Si existe una ubicaci髇 para registrar
-                            -- Distancia (en metros) entre recolecci髇 y el punto de visita
-                            -- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicaci髇 correcta
+                            -- Si existe una ubicaci贸n para registrar
+                            -- Distancia (en metros) entre recolecci贸n y el punto de visita
+                            -- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicaci贸n correcta
                             IF ((geography::STPointFromText(
                                                                CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'),
                                                                4326
@@ -1084,7 +1084,7 @@ BEGIN
                                )
                             BEGIN
                                 -- Si la distancia es mayor a 10 metros
-                                -- Guardar 鷏tima ubicaci髇
+                                -- Guardar 煤ltima ubicaci贸n
                                 UPDATE [DeliveryBackOffice].[dbo].[VisitPointClient]
                                 SET LogLatitude = Latitude,
                                     LogLongitude = Longitude,
@@ -1092,7 +1092,7 @@ BEGIN
                                     DateUpdated = GETDATE()
                                 WHERE CodeOfReference = @CodeOfReference;
 
-                                -- Guardar nueva ubicaci髇 de recolecci髇
+                                -- Guardar nueva ubicaci贸n de recolecci贸n
                                 UPDATE [DeliveryBackOffice].[dbo].[VisitPointClient]
                                 SET Latitude = @FixedLatitude,
                                     Longitude = @FixedLongitude,
@@ -1103,7 +1103,7 @@ BEGIN
                             END;
                             ELSE
                             BEGIN
-                                -- Guardar nueva ubicaci髇 de recolecci髇 en "bit醕ora" para revisi髇
+                                -- Guardar nueva ubicaci贸n de recolecci贸n en "bit谩cora" para revisi贸n
                                 UPDATE [DeliveryBackOffice].[dbo].[VisitPointClient]
                                 SET LogLatitude = @FixedLatitude,
                                     LogLongitude = @FixedLongitude,
@@ -1118,14 +1118,14 @@ BEGIN
                     ELSE
                     BEGIN
 
-                        -- Punto de visita sin ubicaci髇 registrada
+                        -- Punto de visita sin ubicaci贸n registrada
                         IF (
                                RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> ''
                                AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> ''
                            )
                         BEGIN
 
-                            -- Si existe una ubicaci髇 para registrar
+                            -- Si existe una ubicaci贸n para registrar
                             UPDATE [DeliveryBackOffice].[dbo].[VisitPointClient]
                             SET Latitude = @FixedLatitude,
                                 Longitude = @FixedLongitude,
@@ -1139,9 +1139,9 @@ BEGIN
                 ----------------------------------------------------------------
                 --------------PROCESSGUIDECOD.INI
                 --HW-67
-                -- variable para obtener el m骴ulo de origen de los datos
+                -- variable para obtener el m贸dulo de origen de los datos
                 DECLARE @DataOriginId INT;
-                -- variable para asignar el nombre del m骴ulo del cu醠 se desea obtener su id
+                -- variable para asignar el nombre del m贸dulo del cu谩l se desea obtener su id
                 DECLARE @ModName NVARCHAR(50);
                 -- asignar valor a la variable ModName
                 SET @ModName = N'Courier App';
@@ -1287,7 +1287,7 @@ BEGIN
                         WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
 
                        SELECT 200 AS StatusCode,
-                              'Se procesaron las gu韆s con exito' AS [Message],
+                              'Se procesaron las gu铆as con exito' AS [Message],
                               @Token AS Token,
                               @PickUpEmail AS Email
 

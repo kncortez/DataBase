@@ -27,7 +27,7 @@
 -- Updated date:<18-11-2024>
 -- Description:	<Se agrega nueva validación IsCompleted>
 -- =============================================
-ALTER PROCEDURE [dbo].[SetFinishPickUp]
+CREATE PROCEDURE [dbo].[SetFinishPickUp]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD22221,FD22361,FD22223,FD22359,FD22226',
     @IdPickup INT = 2,
