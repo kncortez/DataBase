@@ -1,0 +1,6 @@
+INSERT INTO dbo.CatTypeSuscription ([Name], [Description], [UserCreated], [DateCreated], [TokenCreated])
+ VALUES('Rastreo de guías sin login','Suscripción de notificaciones para el rastreo de guías sin loggeo','SYS-ARECINOS', GETDATE(), 'SYS-ARECINOS')
+INSERT INTO dbo.CatTypeSuscription ([Name], [Description], [UserCreated], [DateCreated], [TokenCreated])
+ VALUES('Rastreo de guías con login','Suscripción de notificaciones para el rastreo de guías con loggeo','SYS-ARECINOS', GETDATE(), 'SYS-ARECINOS')
+INSERT INTO dbo.CatTypeSuscription ([Name], [Description], [UserCreated], [DateCreated], [TokenCreated])
+ VALUES('Notificaciones varias','Suscripción de notificaciones para COD, Recolecciones, Beneficios y Envíos','SYS-ARECINOS', GETDATE(), 'SYS-ARECINOS')

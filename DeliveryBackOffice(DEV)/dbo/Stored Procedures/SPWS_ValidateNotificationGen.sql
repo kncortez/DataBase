@@ -1,0 +1,68 @@
+-- =============================================
+-- Author:		<Aylinne Recinos>
+-- Create date: <2025-24-01>
+-- Description:	<Método para guardar el mensaje y validar si cuenta con suscripción activa>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPWS_ValidateNotificationGen]
+@Title NVARCHAR(50),
+@Message NVARCHAR(150),
+@GuideSerie NVARCHAR(2),
+@GuideNumber INT,
+@IdAccount INT,
+@Action INT,
+@User NVARCHAR(50),
+@Token NVARCHAR(50)
+AS
+BEGIN
+    BEGIN TRANSACTION
+        BEGIN TRY
+            DECLARE @IdNotificationGeneral INT;
+            DECLARE @NewIdNotificationLog INT;
+
+            SELECT  @IdNotificationGeneral = IdNotificationGeneral
+            FROM NotificationGeneral WHERE IdAccount = @IdAccount AND RowStatus = 1;
+
+            IF(@IdNotificationGeneral IS NOT NULL)
+            BEGIN 
+                INSERT INTO dbo.NotificationGeneralLog ([Title], [Message], [IdNotificationGeneral], [IdActionNotification], [GuideSerie], [GuideNumber], [UserCreated], [DateCreated], [TokenCreated])
+                VALUES (@Title, @Message, @IdNotificationGeneral, @Action, IIF(@GuideSerie = '', NULL, @GuideSerie), IIF(@GuideNumber = 0, NULL, @GuideNumber), @User, GETDATE(), @Token)
+                
+                SET @NewIdNotificationLog = SCOPE_IDENTITY();
+                
+                SELECT  1 AS [StatusCode],
+                        @NewIdNotificationLog AS [IdNotification],
+                        GETDATE() AS [DateCreated]
+                COMMIT TRANSACTION;
+            END
+            ELSE
+            BEGIN
+                -- El usuario no está suscrito a notificaciones
+                SELECT 2 AS [StatusCode]
+                COMMIT TRANSACTION;
+            END
+        END TRY
+        BEGIN CATCH
+            SELECT 0 AS [StatusCode], ERROR_MESSAGE() AS [Message]
+            ROLLBACK TRANSACTION
+                INSERT INTO dbo.RoutePreparationLogError
+                (
+                    ErrorDescription,
+                    ErrorNumber,
+                    ErrorProcedure,
+                    ErrorLine,
+                    GuideSerie,
+                    GuideNumber,
+                    TokenCreated,
+                    DateCreated
+                )
+                VALUES
+                (CAST(ERROR_MESSAGE() AS VARCHAR(300))
+                        ,ERROR_NUMBER()
+                        ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+                        ,ERROR_LINE()
+                        ,0
+                        ,0
+                        ,'Error al insertar notificacion'
+                        ,GETDATE())
+        END CATCH;
+END
