@@ -7,7 +7,7 @@ CREATE PROCEDURE [dbo].[SetPaymentMethod]
 	-- Add the parameters for the stored procedure here
 	@AccountId BIGINT,
 	@CustomerId INT,
-	@VisitPointId INT,
+	@VisitPointId INT = NULL,
 	@TokenizedToken NVARCHAR(100),
 	@TokenizedExpirationDate NVARCHAR(50),
 	@TokenizedCVV NVARCHAR(50),

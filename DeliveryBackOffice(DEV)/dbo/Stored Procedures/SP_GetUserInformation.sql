@@ -36,10 +36,12 @@ SELECT  @UserEmail = us.UsrEmail,
                 ELSE  
                     'FALSE'  
             END;  
+
+
     SELECT pe.PerFirstName AS FirstName,
         pe.PerLastName AS Lastname,
         ISNULL(pe.PerGender,'') AS Gender,
-        ISNULL(pe.PerBirthdate,'') AS Birthdate,
+        FORMAT (ISNULL(pe.PerBirthdate,''), 'yyyy-MM-dd') AS Birthdate,    
         ISNULL(pe.PerIdentification,'') AS Identification,
         ISNULL(pe.PerNationality,'') AS Nationality,
         ISNULL(us.UsrNickName,'') AS NickName,

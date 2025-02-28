@@ -9,7 +9,7 @@
 -- Description:	<Registrar favoritos >
 -- =============================================
 -- Author:		<Recinos, Aylinne>
--- Create date: <2024-11-28>
+-- Create date: <2024-11-27>
 -- Description:	<Modificación en bandera IsDefault >
 -- =============================================
 CREATE PROCEDURE [dbo].[spsSetAccountFavCOD]
@@ -54,7 +54,7 @@ BEGIN
 	if (@Status =1) -- estado activo
 		begin
 			UPDATE DeliveryBackOffice.dbo.DeliveryFavCOD
-			SET  AliasFavCOD = @Alias , NameAccountFavCOD = @NameAccount, TypeAccountFavCOD = @TypeAccount, DocumentIdFavCOD = @DocID, StatusFavCOD = 1, IdAccountFavCOD = @IdAcount, TokenUpdate = @Token, DateUpdate = GETDATE(), IdBank = @IDBank, NumberAccFavCOD = @NumberAcc, IsDefault = @IsDefault
+			SET  AliasFavCOD = @Alias , NameAccountFavCOD = @NameAccount, TypeAccountFavCOD = @TypeAccount, DocumentIdFavCOD = @DocID, StatusFavCOD = 1, IdAccountFavCOD = @IdAcount, TokenUpdate = @Token, DateUpdate = GETDATE(), IdBank = @IDBank, NumberAccFavCOD = @NumberAcc, IsDefault = @IsDefault 
 			WHERE IdDeliveryFavCOD = @Id
 			SELECT  'Se ha actualizado actualizado sus registros' as Response
 		end

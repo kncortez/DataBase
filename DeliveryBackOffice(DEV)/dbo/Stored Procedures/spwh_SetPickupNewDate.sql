@@ -1,18 +1,12 @@
-﻿
--- =============================================
--- Author:		<Alberto Ixchop>
--- Create date: <16-09-2022>
--- Description:	<Activa o desactiva un servicio de recolección (servicemanagement) y su respectiva recoleccion programada(schedulepickup) >
--- =============================================
+﻿-- =============================================
 -- Author:		<Aylinne Recinos>
--- Create date: <16-01-2025>
--- Description:	<Agrega estado de reprogramación>
+-- Create date: <2025-01-15>
+-- Description:	<Cambia la fecha programada para la recolección>
 -- =============================================
-CREATE PROCEDURE [dbo].[spwh_SetPickupStatus]
+CREATE PROCEDURE [dbo].[spwh_SetPickupNewDate]
 	@ServiceManagementId INT,
-	@Status BIT,
-	@Token NVARCHAR(50),
-	@Validate bit = 1--Activa o desactiva la validación de estados validos a ser activados/reactivados
+	@NewDate DATETIME,
+	@Token NVARCHAR(50)
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -32,7 +26,7 @@ BEGIN
 	DECLARE @IdchedulePickup BIGINT
 	DECLARE @StatusOld INT;
 	DECLARE @StatusNew INT;
-	DECLARE @statusschedulepickup BIT;
+	DECLARE @EndDate AS DATETIME;
 	BEGIN TRY
 
 		SELECT
@@ -42,27 +36,11 @@ BEGIN
 		WHERE sm.IdServiceManagement = @ServiceManagementId
 
 	    IF @IdchedulePickup IS NOT NULL AND 
-			(@Validate =0 OR (@StatusOld is not null and @StatusOld IN (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name IN ('Creado','Asignado a ruta','Cancelado', 'Reprogramado'))))
+			(@StatusOld is not null and @StatusOld IN (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name IN ('Creado','Asignado a ruta','Reprogramado')))
 		BEGIN
-			IF @Status = 1
-			BEGIN
-				SET @StatusNew = (SELECT TOP 1
-						smsl.ServiceStatusIdOld
-					FROM ServiceManagementStatusLog smsl
-					WHERE smsl.ServiceManagementId = @ServiceManagementId
-					ORDER BY smsl.DateCreated DESC)
-				IF @StatusNew IS NULL
-					SET @StatusNew= (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name ='Creado')
-			END
-			ELSE
-				SET @StatusNew = (SELECT
-						IdServiceStatus
-					FROM CatServiceStatus
-					WHERE Name = 'Cancelado')	
+			SET @StatusNew= (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name ='Reprogramado')
 
-			IF @StatusOld IS NULL
-				SET @StatusOld= (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name ='Creado')
-
+			SET @EndDate=DATEADD(HOUR,2,@NewDate)
 			UPDATE ServiceManagement
 			SET ServiceStatusId = @StatusNew,
 				TokenUpdated = @Token,
@@ -71,7 +49,8 @@ BEGIN
 
 			UPDATE SchedulePickup
 			SET	
-				SchedulePickupStatus = @Status,
+				StartDate = @NewDate,
+				EndDate = @EndDate,
 				TokenUpdated = @Token,
 				DateUpdated = GETDATE()
 			WHERE SchedulePickupId = @IdchedulePickup
@@ -81,7 +60,7 @@ BEGIN
 		ELSE
 			SELECT			  
 				0 AS 'StatusCode',
-				'Estado inválido para ser cancelado/activado o servicio inexistente' AS 'Description', 
+				'Estado inválido para ser reprogramado o servicio inexistente' AS 'Description', 
 				@StatusOld 'Status';
 
 		IF @TranCounter = 0  
@@ -90,8 +69,7 @@ BEGIN
 	BEGIN CATCH
 		SELECT 
 			0 'StatusCode', 
-			ERROR_MESSAGE() 'Description', 
-			@Status 'Status';
+			ERROR_MESSAGE() 'Description'
 
         IF @TranCounter = 0  
             ROLLBACK TRANSACTION;  
@@ -118,16 +96,14 @@ BEGIN
 			1, 
 			@Token, 
 			GETDATE(), 
-			IIF(@Status=1,'Servicio reactivado','Servicio cancelado')
+			'Servicio reprogramado'
 		);
 		SELECT			  
 			1 'StatusCode',
-			'Registro actualizado correctamente' 'Description', 
-			@Status 'Status';
+			'Registro actualizado correctamente' 'Description'
 	END
 	ELSE
 		SELECT			  
 			0 AS 'StatusCode',
-			'Registro no encontrado' AS 'Description', 
-			@Status 'Status';
+			'Registro no encontrado' AS 'Description'
 END

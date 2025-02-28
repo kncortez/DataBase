@@ -22,7 +22,7 @@ CREATE PROCEDURE [dbo].[spws_get_login]
   , @Password VARCHAR(200)
   , @IP VARCHAR(30)
   , @IdSystem INT = 1
-  , @CountryId VARCHAR(2) ='GT'
+  , @CountryId VARCHAR(2) =NULL
 AS
 BEGIN
     PRINT 'TEST';
@@ -54,7 +54,10 @@ BEGIN
 						                     FROM dbo.RegisterUser WITH(NOLOCK) WHERE UsrEmail=@Username);
 
 
-				
+	IF @CountryId IS NULL
+	BEGIN
+		SET @CountryId=@CountryIdOrigin
+	END
 
 	DECLARE @CodeIsoMoney NVARCHAR(3) = (SELECT TOP 1 CodeISO  FROM [dbo].[CatCurrencyCOD] WHERE CodeISO LIKE '%' + @CountryId +'%');
 
@@ -827,7 +830,6 @@ BEGIN
                 ON res.UstIdUser = usr.UsrIdUser
                    AND res.UstIdSystem = @IdSystem
         WHERE usr.UsrEmail = @Username;
-        
         SELECT  @StatusAccount = ISNULL(ac.AccConfirm, ''),
                 @IdAccount = ac.AccIdAccount
         FROM RegisterUser   us WITH (NOLOCK)  

@@ -338,6 +338,7 @@ BEGIN
 							  AND ua.UadRowStatus = 1
 							  AND ua.UadFavorite = 1 --Debe ser favorita
 							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
+							  
 
 						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
 						BEGIN
