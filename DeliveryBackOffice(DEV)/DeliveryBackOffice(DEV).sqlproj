@@ -733,7 +733,7 @@
     <Build Include="dbo\Stored Procedures\sps_get_linehauls_by_service.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintMultipleGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetManifestWithIncidenceByRoute.sql" />
-    <Build Include="dbo\Stored Procedures\GetBlockedRoutesHavingCourier.sql" />    
+    <Build Include="dbo\Stored Procedures\GetBlockedRoutesHavingCourier.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintGuie_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintGuie.sql" />
     <Build Include="dbo\Stored Procedures\sps_edit_guide.sql" />
@@ -1606,8 +1606,8 @@
     <Build Include="dbo\Stored Procedures\GetTypeCityPlace.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetFullAddressList.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetInformationFromDeliveryLink.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_UpdateDeliveryLink.sql" /> 
-	<Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkCompleted.sql" /> 
+    <Build Include="dbo\Stored Procedures\SPHW_UpdateDeliveryLink.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkCompleted.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1780,6 +1780,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_RegisterLinkWhatsAppId.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetTokenProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetFinalLink.sql" />
+    <Build Include="dbo\Stored Procedures\spws_get_guide_change_address_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
