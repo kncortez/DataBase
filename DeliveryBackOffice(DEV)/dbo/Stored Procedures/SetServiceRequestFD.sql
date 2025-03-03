@@ -38,21 +38,41 @@ BEGIN
 
 
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
-    DECLARE @CodeOfReference INT =(SELECT [Sender_ID] From @TblDeliveryOrdersFD);
+	DECLARE @CustomerID      INT = (SELECT [CustomerID] FROM @TblServiceRequestFD)
+	DECLARE @CodeOfReference INT = (SELECT [Sender_ID] From @TblDeliveryOrdersFD);
+	DECLARE @IdCustomerType  INT = (select top 1 IdCustomerType from dbo.Customer Where IdCustomer = @CustomerID)
+	DECLARE @IdRegisterUser  INT = (Select Top 1 RuaIdUser 
+	                                    From [dbo].[RolByUserByAccount]
+		                                       Where  RuaIdAccount = (Select Top 1  AccIdAccount 
+											                                     From [dbo].[Account] 
+																				       Where IdCustomer= @CustomerID));
+	DECLARE @RowstatusRegisterUser INT = (Select top 1  Case When UsrRowStatus =  0 THEN 0 ELSE 1 END
+	                                               From [dbo].[RegisterUser]
+												      WHERE UsrIdUser = @IdRegisterUser
+	                                                   );
+	
 
-		
-
-		IF (@IdAccount IS NOT NULL)
+		IF (@IdCustomerType != 1) --- Flujo de usuario Individual
 		BEGIN
-	         SET @InactiveUser = (SELECT TOP 1 CASE WHEN AccRowStatus=0 THEN 0 ELSE 1 END
-	                                         FROM [dbo].[Account] WHERE AccIdAccount = @IdAccount)
+	         SET @InactiveUser = @RowstatusRegisterUser
 			END 
 			  --ELSE
 			  --BEGIN 
 			   
 			   --SET @InactiveUser = (SELECT CASE WHEN [StatusClient] = 0 THEN 0 ELSE 1 END FROM [dbo].[VisitPointClient] WHERE                                                                                  CodeOfReference = @CodeOfReference)
 			   --END 
+			  ELSE
+			  BEGIN 
+			         IF (@RowstatusRegisterUser=1) --- Flujo Corporativo cuando el Socio de Negocio esta activo
+					 BEGIN
+			              SET @InactiveUser = (SELECT CASE WHEN [StatusClient] = 0 THEN 0 ELSE 1 END --- Flujo para validar usuario inactivo para un socio de negocio
+						                           FROM [dbo].[VisitPointClient] WHERE CodeOfReference = @CodeOfReference);
+					END 
+					 ELSE
+					    BEGIN
+						       SET @InactiveUser = 0;
+						END
+			   END 
 			   
 			  
 			 

@@ -65,6 +65,38 @@ BEGIN
        AND iu.RowStatus = 1
        AND pe.PerRowStatus = 1
 
+       	DECLARE @UserValidate INT = ( SELECT COUNT(1)
+									 FROM DeliveryBackOffice.[dbo].RegisterUser                   usr WITH (NOLOCK)
+							INNER JOIN DeliveryBackOffice.[dbo].InternalUser           iu WITH (NOLOCK)
+								ON iu.RegisterUserID = [usr].UsrIdUser
+							INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus WITH (NOLOCK)
+								ON rus.RusIdUser = usr.UsrIdUser
+							LEFT JOIN DeliveryBackOffice.[dbo].UserSystemRestriction res WITH (NOLOCK)
+								ON res.UstIdUser = rus.RusIdUser
+								   AND res.UstIdSystem = rus.RusIdSystem
+							LEFT JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+								ON rua.RuaIdUser = usr.UsrIdUser
+								   AND rua.RuaRowStatus = 1
+							INNER JOIN DeliveryBackOffice.[dbo].Account              ac
+								ON ac.AccIdAccount = rua.RuaIdAccount
+						WHERE iu.IdUser = @UserCode
+							  AND iu.Username = @UserName
+							  AND usr.UsrLastPassword = @Password
+							  AND ac.AccRowStatus = 1
+	                          AND rus.RusIdSystem = @IdSystem 
+							  AND usr.UsrRowStatus=1);
+
+       DECLARE @VisitPointClientStatus  INT= (SELECT TOP 1   ISNULL(vpc.StatusClient,0)
+													 FROM DeliveryBackOffice.[dbo].RegisterUser      usr WITH (NOLOCK)
+											INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu WITH (NOLOCK)
+												ON iu.RegisterUserID = usr.UsrIdUser
+											INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus WITH (NOLOCK)
+												ON rus.RusIdUser = usr.UsrIdUser
+											INNER JOIN DeliveryBackOffice.[dbo].VisitPointByUser     vpu WITH (NOLOCK)
+											   ON usr.UsrIdUser = vpu.RegisterUserID
+											INNER JOIN DeliveryBackOffice.[dbo].VisitPointClient     vpc WITH (NOLOCK)
+											   ON vpu.IdVisitPointClient = vpc.IdVisitPointClient
+										   WHERE iu.IdUser = @UserCode);
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN
 
     SELECT ISNULL(res.UstStatus, 'N/A') UstStatus
@@ -816,6 +848,30 @@ BEGIN
                         )
         );
     END;
+
+
+       	IF (@UserValidate=0 OR @VisitPointClientStatus=0)
+            BEGIN
+                
+                            SET @jsonResult =  
+                                (  
+                                    SELECT STUFF(  
+                                                    (  
+                                                        SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message  
+                                                            + '"}'  
+                                                        FROM #errormessage  
+                                                        WHERE Id = 'InactiveUserCorporate'  
+                                                        FOR XML PATH(''), TYPE  
+                                                    ).value('.', 'varchar(max)')  
+                                                , 1  
+                                                , 1  
+                                                , ''  
+                                                )  
+                                ); 
+
+                    
+            
+            END;
 
     -- destruir tablas temporales
 
