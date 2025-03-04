@@ -130,6 +130,10 @@ BEGIN
              , 'Usuario inactivo' AS Message
              , 'Inactive'         AS Id
         UNION
+        SELECT 500                AS IdResult
+             , 'Usuario Individual Inactivo' AS Message
+             , 'InactiveUserIndividual'      AS Id
+        UNION
         SELECT 500                   AS IdResult
              , 'Contraseña expirada' AS Message
              , 'PasswordExpired'     AS Id
