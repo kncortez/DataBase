@@ -270,7 +270,7 @@ BEGIN
                     END
                     ELSE
                     BEGIN
-                        SELECT 0 AS StatusCode,
+                        SELECT 4 AS StatusCode,
                                CONCAT('Faltan:', @NoPiece - @NoPieceEntered, ' piezas por escanear') AS Message
                     END
                 END
