@@ -833,7 +833,7 @@ BEGIN
     END;
 
 
-    	IF (@UserValidate=0)
+    	IF (@VERIFYUSER =0)
         BEGIN
                 IF(@IdSystemIndividualUserWeb = @IdSystem)
                 BEGIN
