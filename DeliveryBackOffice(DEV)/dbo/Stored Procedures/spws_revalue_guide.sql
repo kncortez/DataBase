@@ -24,6 +24,11 @@
 -- Create date: <2024-08-12>
 -- Description:	<Modificación de forma dinamica los códigos para los articulos filtrado por país.>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2025-03-06>
+-- Description:	<Se agrego select para devolver precio de envio de guia para creacion de guias clientes integracion>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @GuideSerie VARCHAR(2) = 'FD'
   , @GuideNumber INT = 200307
@@ -1166,6 +1171,8 @@ BEGIN
           , PriceShippment = @NewPrice
         WHERE Guide_Serie = @GuideSerie
               AND Guide_Number = @GuideNumber;
+
+              SELECT @NewPrice, @InsuranceAmount, @IsCollect
 
         -- Actualizar pesos de piezas
         PRINT 'guardando  tabla costos';
