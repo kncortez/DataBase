@@ -854,7 +854,7 @@ BEGIN
     END;
 
 
-       	IF (@UserValidate=0 OR @VisitPointClientStatus=0)
+       	IF (@VERIFYUSER =0 OR @VisitPointClientStatus=0)
             BEGIN
                 
                             SET @jsonResult =  
