@@ -1172,8 +1172,6 @@ BEGIN
         WHERE Guide_Serie = @GuideSerie
               AND Guide_Number = @GuideNumber;
 
-              SELECT @NewPrice, @InsuranceAmount, @IsCollect
-
         -- Actualizar pesos de piezas
         PRINT 'guardando  tabla costos';
         PRINT CONVERT(VARCHAR, GETDATE(), 9);
