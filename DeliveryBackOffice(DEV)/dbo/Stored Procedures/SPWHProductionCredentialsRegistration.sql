@@ -26,11 +26,11 @@ DECLARE @Date NVARCHAR(15) = (SELECT
 									FORMAT(GETDATE(), 'mm')
 								) AS FechaHoraSinSeparadores);
 
-DECLARE @Url nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='APIUrl')
+DECLARE @Url nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='APIUrl' AND IdCountry=@IdCountry)
 DECLARE @Name nvarchar(100) = (SELECT TOP 1 [Name] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
 DECLARE @NameAbrev nvarchar(100) = (SELECT TOP 1 [Abbreviation] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
 DECLARE @ClientEmail nvarchar(100) = (SELECT TOP 1 [ContactEmail] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
-DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='SupportEmailByCountry' AND					IdCountry=@IdCountry)
+DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WHERE [Name]='SupportEmailByCountry' AND IdCountry=@IdCountry)
 DECLARE @CodeOfReference INT =(
                                 SELECT TOP 1 CodeOfReference FROM dbo.VisitPointClient WITH (NOLOCK)
                                                                         WHERE CustomerId=@IdCustomer)
@@ -79,7 +79,7 @@ IF ( NOT EXISTS(SELECT TOP 1 1
 				   (@Url --esta url debe de venir en el correo de solicitud
 				   ,@Name --nombre del negocio 
 				   ,'FALSE'
-				   ,'GT'
+				   ,@IdCountry
 				   ,'forza.systems'
 				   ,''
 				   ,''
