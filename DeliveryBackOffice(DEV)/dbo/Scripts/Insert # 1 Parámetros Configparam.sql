@@ -1,6 +1,8 @@
+INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) VALUES ( N'EcommerceDescription', N'Credenciales de prueba para  integracion', N'1', 1, CAST(N'2024-11-27T00:00:00.000' AS DateTime), N'GT', NULL)
+
 INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) VALUES ( N'UserKey', N'SIFDCAPIECOM230920201910', N'1', 1, CAST(N'2024-11-27T00:00:00.000' AS DateTime), N'GT', NULL)
 
-INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) VALUES ( N'SecretKeyQA', N'AnvMc+t/0RswIrob9EiU6IGIf/ks+y4LH8kaKh7ugJ57N5N/wyLVuWpJkok0i27K', N'1', 1, CAST(N'2024-11-27T00:00:00.000' AS DateTime), N'GT', NULL)
+INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) VALUES ( N'SecretKeyQA', N'es7D2rr88iTCQ6WSNWa5y6Xy8iHRPo41', N'1', 1, CAST(N'2024-11-27T00:00:00.000' AS DateTime), N'GT', NULL)
 
 INSERT [dbo].[ConfigParams] ( [Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD]) VALUES ( N'UserKey', N'SIUCHNAPIECOM111120241114', N'1', 1, CAST(N'2024-11-27T00:00:00.000' AS DateTime), N'HN', NULL)
 
