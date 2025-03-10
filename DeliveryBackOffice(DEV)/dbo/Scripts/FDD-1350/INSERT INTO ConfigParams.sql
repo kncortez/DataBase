@@ -1,9 +1,9 @@
 /*
 En el campo Value ingresar el valor según el ambiente:
-Desarrollo:       develop.apicore.forzadelivery.io/comprobantes/
-QA:               sandbox.apicore.forzadelivery.io/comprobantes/
-Staging:          staging.apicore.forzadelivery.io/comprobantes/
-Producción:       apicore.forzadelivery.io/comprobantes/
+Desarrollo:       https://develop.apicore.forzadelivery.io/comprobantes/
+QA:               https://sandbox.apicore.forzadelivery.io/comprobantes/
+Staging:          https://staging.apicore.forzadelivery.io/Comprobantes/
+Producción:       https://apicore.forzadelivery.io/comprobantes/
 */
 
 INSERT INTO [dbo].[ConfigParams]
@@ -17,7 +17,7 @@ INSERT INTO [dbo].[ConfigParams]
      VALUES
            ('PathSignatureImage'
            ,'Carpeta para Almacenar las firmas que se mostraran en los comprobantes digitales del módulo de reimpresión de comprobantes'
-           ,'develop.apicore.forzadelivery.io/comprobantes/'
+           ,'https://apicore.forzadelivery.io/comprobantes/'
            ,1
            ,GETDATE()
            ,NULL
