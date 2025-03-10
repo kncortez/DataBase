@@ -18,7 +18,7 @@ BEGIN
 	DECLARE @EcomerceName NVARCHAR(200) =(SELECT TOP 1 [Name] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
     DECLARE @EcommerceDescription NVARCHAR(200) =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='EcommerceDescription');
     DECLARE @UserKey NVARCHAR(200)  =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='UserKey' AND IdCountry =@IdCountry);
-    DECLARE @SecretKey NVARCHAR(200)  =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='SecretKeyQA' AND IdCountry =@IdCountry);
+    DECLARE @SecretKey NVARCHAR(200)  =(SELECT [Description] FROM [dbo].[ConfigParams] WITH (NOLOCK) WHERE [Name]='EncryptedSecretKeyQA' AND IdCountry =@IdCountry);
 
 	DECLARE @ClientEmail nvarchar(100) = (SELECT TOP 1 [ContactEmail] FROM [dbo].[Customer] WITH (NOLOCK) WHERE IdCustomer = @IdCustomer);
     DECLARE @SoportEmail nvarchar(100) = (SELECT TOP 1[Value] FROM dbo.ConfigParams WITH (NOLOCK) WHERE [Name]='SupportEmailByCountry' AND	IdCountry=@IdCountry)
