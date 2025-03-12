@@ -609,6 +609,8 @@
     <Build Include="dbo\Tables\AccountBankFormatRule.sql" />
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
+    <Build Include="dbo\Tables\FinishPickUpHeader.sql" />
+    <Build Include="dbo\Tables\FinishPickUpHeaderDetail.sql" />
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
@@ -1767,6 +1769,7 @@
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromDeliverySettlement.sql" />
+<<<<<<< HEAD
 
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Stored Procedures\GetTypeCityPlace.sql" />
@@ -1785,6 +1788,11 @@
     <Build Include="dbo\Stored Procedures\SPHWHelpRequest.sql" />
 	  <Build Include="dbo\Stored Procedures\GetValidaReturnGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetSignaturePathByGuide.sql" />
+=======
+    <Build Include="dbo\Stored Procedures\GetValidaReturnGuide.sql" />
+    <Build Include="dbo\Stored Procedures\GetBatchPOD.sql" />
+    <Build Include="dbo\Stored Procedures\GetProcessBatchPOD.sql" />
+>>>>>>> feature/FDAPI-3448-pod-mejoras
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -2029,7 +2037,11 @@
     <Build Include="dbo\User Defined Types\TblAnticipatedCODCustomerBalance.sql" />
     <Build Include="dbo\Stored Procedures\SP_GetUserInformation.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
+<<<<<<< HEAD
 
+=======
+    <Build Include="dbo\Stored Procedures\SetFinishPickUpBatch.sql" />
+>>>>>>> feature/FDAPI-3448-pod-mejoras
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\130\SqlSchemas\master.dacpac">
