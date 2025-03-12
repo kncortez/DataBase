@@ -228,9 +228,16 @@ BEGIN TRY
 		SELECT ImagePath,
 			   ValidPhotographicEvidence
 		FROM #Temp 
-		WHERE ImagePath IS NOT NULL
+		WHERE ImagePath IS NOT NULL;		
 
-
+		SELECT so.OrderDescription AS [Status]
+		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]		dod WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]		so  WITH (NOLOCK)
+				ON [so].[StatusOrderId] = [dod].[StatusOrderId]
+		WHERE dod.Guide_Serie = @GuideSerie
+			AND dod.Guide_Number = @GuideNumber
+			AND dod.rowstatus = 1
+			AND dod.StatusOrderId = 5;
 
 	END
 	ELSE
