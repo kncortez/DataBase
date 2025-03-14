@@ -180,7 +180,20 @@ BEGIN
                            LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
                                ON vpc.CodeOfReference = do.Sender_ID
                            LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                               ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerId)
+                               ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerId)	   
+						   OUTER APPLY (
+						       SELECT TOP 1 cd.Voucher, C.TotalAmount, C.TotalAmountPaid, dopd.TransaccionFAC, A1.ReasonCode
+							   FROM  DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
+							   INNER JOIN DeliveryBackOffice.dbo.CostDetail cd WITH (NOLOCK)
+							        ON cd.IdCost = C.IdCost
+							   INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+								    ON dopd.GuideSerie = do.Guide_Serie
+									    AND dopd.GuideNumber = do.Guide_Number
+								INNER JOIN DeliveryBackOffice.dbo.CreditCardTransactionByCustomer A1 WITH(NOLOCK)
+								    ON A1.OrderNumber = CONCAT('FD',CONVERT(NVARCHAR(100),DO.Guide_Number)) 
+								WHERE C.GuideSerie = do.Guide_Serie
+								    AND C.GuideNumber = do.Guide_Number
+							)tbl
                        WHERE pg.BatchCODId IS NULL
                              AND do.Collect_OnDelivery = 0
                              AND do.IsCollect = 'true'
@@ -209,6 +222,8 @@ BEGIN
 							 AND do.SenderCountryId = @IdCountrySender
 							 AND ISNULL(pg.IsAnticipatedCOD,0) = 0
 							 AND pg.IsCompleted = 1
+		                     AND tbl.TransaccionFAC IS NULL
+		                     AND tbl.ReasonCode IS NULL
                        FOR XML PATH('')
                    ),
                    1,
