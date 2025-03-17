@@ -8,6 +8,10 @@
 -- Create date: <2024-04-23>
 -- Description:	<Se agrego modificacion para campo isCOD>
 -- =============================================
+-- Modified:	<Tito Garcia>
+-- Update date: <2024-10-21>
+-- Description:	<Se agrega nuevo campo IsVoucherRequired>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer INT
@@ -74,6 +78,7 @@ CREATE PROCEDURE [dbo].[sphdSetCustomer]
                             -----------------------------------------------------
   , @NumImg INT = NULL
   , @isCOD INT = NULL
+  , @IsVoucherRequired INT = 0
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -228,6 +233,7 @@ BEGIN
                   , [BillingCut_offDate]
                   , [NumImgEvidence]
 				  , [IsCOD]
+				  , [IsVoucherRequired]
                 )
                 VALUES
                 (   @NameCustomer, @Description, @Domain, @RegexSubject, @RegexEmail, @RegexFilename, @Abbreviation
@@ -246,7 +252,7 @@ BEGIN
                   , @CardCode
                                                                                    -------------------------
                   , @ExcludePriceShippingCOD, @ExcludeCommissionCOD, @CatBatchTypeCODId, @CatBatchFrequencyCODId
-                  , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg, @isCOD);
+                  , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg, @isCOD,@IsVoucherRequired);
 
                 SELECT 'TRUE'                            [blnResult]
                      , CAST(SCOPE_IDENTITY() AS VARCHAR) [IdResult]
@@ -339,6 +345,7 @@ BEGIN
               , [BillingCut_offDate] = @BillingCut_offDate
               , [NumImgEvidence] = @NumImg
 			  , [IsCOD] = @isCOD
+			  , [IsVoucherRequired] = @IsVoucherRequired
             WHERE IdCustomer = @IdCustomer;
 
             -- Inactivar el registro

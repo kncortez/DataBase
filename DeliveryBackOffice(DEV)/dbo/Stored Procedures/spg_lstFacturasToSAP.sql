@@ -26,15 +26,15 @@ BEGIN
             LEFT JOIN dbo.InvoiceRestriction ir WITH(NOLOCK)
             ON ihd.inv_pk_id = ir.inv_pk_id
         WHERE ISNULL(ihd.IdCountry,'GT') = 'GT'
-			  AND ihd.inv_status IN ( -1, 2 )
+			  --AND ihd.inv_status IN ( -1, 2 )
               -- 1 CREA LOCALMENTE EL REGISTRO DE FACTURA
               -- 2 CUANDO SE ENVIA FACTURA A FEL
               -- 3 CUANDO YA ESTÁ ENVIADA A SAP
               -- -1 ES ANULADA
               AND ihd.inv_type IN ( 1, 2 )			 
-              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2024-11-01' AS DATE)
-			-- AND CAST(ihd.inv_dateRegister AS DATE)  <= CAST('2024-10-31' AS DATE)
-
+              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2025-03-01' AS DATE)
+			-- AND CAST(ihd.inv_dateRegister AS DATE)  <= CAST('2025-02-28' AS DATE)
+			 --AND ihd.inv_pk_id IN (4768858,4757945,4776676,4778749,4866106,4868155,4868223,4784902,4788014,4801084,4801779,4894868,4878348,4822837,4824449,4808097,4793032,4793718,4826545,4814330,4922047,4835284,4926314,4926724,4960218,4854811,4861629,4961828)
 			  --AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2023-09-27' AS DATE)
              -- AND cast(ihd.inv_dateRegister as date) <= CAST('2023-10-31' as date)
               AND
@@ -50,6 +50,8 @@ BEGIN
               )
 			  AND IHD.IsManualInvoice IS NULL	
 			  
+			 
+
 			  --AND ihd.inv_pk_id = 4006353 --PRIMER ENVÍO A SAP 10.0
 			  --AND ihd.inv_pk_id IN (3963185,3972448,4006354,4006355)
 			  --AND ihd.inv_pk_id IN (4006356,4006357,4006358,4006360,4006361)

@@ -41,6 +41,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de recolección programada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SchedulePickup', @level2type = N'COLUMN', @level2name = N'SchedulePickupId';
 
@@ -226,3 +228,17 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'SchedulePickup',
     @level2type = N'COLUMN',
     @level2name = N'TransaccionFAC'
+GO
+CREATE NONCLUSTERED INDEX [idx_SenderId]
+    ON [dbo].[SchedulePickup]([SenderId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdHubLogistics]
+    ON [dbo].[SchedulePickup]([IdHubLogistics] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountId_DateCreated]
+    ON [dbo].[SchedulePickup]([AccountId] ASC, [DateCreated] ASC);
+

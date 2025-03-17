@@ -9,6 +9,7 @@ CREATE PROCEDURE [dbo].[spHM_addContainerToLinehaulRoutePreparation]
     @TknUser AS VARCHAR(100)
 AS
 BEGIN
+	set arithabort on;
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;

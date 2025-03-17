@@ -25,6 +25,7 @@ BEGIN
 			DeliveryBackOffice.dbo.VisitPointClient vp
 			inner join KindOfVPClient kvp on kvp.IdKindOfVPClient = vp.IdKindOfVPClient
 			where vp.CountryId = @IdCountry  and kvp.IdKindOfVPClient !=4
+            ORDER BY 1 DESC
 
 		end
 		if @ValName != '' begin

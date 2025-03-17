@@ -1,3 +1,4 @@
+﻿
 -- =============================================
 -- Author: <Daniel Ramirez>
 -- Create date: <2024-05-09>
@@ -7,7 +8,7 @@ CREATE PROCEDURE [dbo].[spGenerateArrivedGuides]
 (
  @InitDate AS DATETIME, --Fecha de inicio del periodo a considerar / Opcional - valor defecto fecha inicial del mes
  @EndDate  AS DATETIME, --Fecha final del periodo a considerar / Opcional - valor por defecto fecha final del mes
- @user     AS NVARCHAR(70) --Usuario a reportar en los registros de guias / Opcional - valor por defecto SYS-MANUALINV + <fecha fin del mes>
+ @user     AS NVARCHAR(70) = 'SYS-MANUALINVJOB' --Usuario a reportar en los registros de guias / Opcional - valor por defecto SYS-MANUALINV + <fecha fin del mes>
 )
 AS
 BEGIN
@@ -16,7 +17,7 @@ BEGIN
      DECLARE @factor DECIMAL(10,6)= CAST((2.00/24.00) AS DECIMAL(10,6))
 
      SELECT @user = CASE
-                        WHEN @user IS NULL OR @user = '' THEN 'SYS-MANUALINV' + FORMAT(EOMONTH(GETDATE()),'yyyyMMdd')
+                        WHEN @user IS NULL OR @user = '' THEN 'SYS-MANUALINVJOB' + FORMAT(EOMONTH(GETDATE()),'yyyyMMdd')
                            ELSE @user
                     END,
             @InitDate = CASE
