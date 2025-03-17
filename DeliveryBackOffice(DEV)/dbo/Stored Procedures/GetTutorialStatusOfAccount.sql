@@ -21,14 +21,14 @@ BEGIN
 		INNER JOIN
 			[DeliveryBackOffice].[dbo].[Tutorial] Tut WITH(NOLOCK)
 			ON
-				TBA.TutorialId = Tut.IdTutorial
-				AND
-				Tut.RowStatus = 1
+				TBA.TutorialId = Tut.IdTutorial			
 	WHERE
 		TBA.AccountId = @AccountId
 		AND
 		TBA.ToDisplay = 1
 		AND
-		TBA.RowStatus = 1;
+		TBA.RowStatus = 1
+		AND
+		Tut.RowStatus = 1
 
 END

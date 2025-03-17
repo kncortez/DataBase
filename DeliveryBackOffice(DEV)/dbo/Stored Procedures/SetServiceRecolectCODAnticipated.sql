@@ -196,22 +196,30 @@ BEGIN
 			ON RH.RheId = ACC.RateHeaderId   
 		   --Son rangos por default que tenemos si en dado caso el tarifario no cumple su rango  
 		   LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin1 WITH(NOLOCK)  
-			ON CPmin1.IdCountry = DO.ReceiverCountryId AND CPmin1.Name = 'MinRangeCODComisison1Param'  
+			ON CPmin1.IdCountry = DO.ReceiverCountryId  
 		   LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmin2 WITH(NOLOCK)  
-			ON CPmin2.IdCountry = DO.ReceiverCountryId AND CPmin2.Name = 'MinRangeCODComisison2Param'  
+			ON CPmin2.IdCountry = DO.ReceiverCountryId  
 		   LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmax1 WITH(NOLOCK)  
-			ON CPmax1.IdCountry = DO.ReceiverCountryId AND CPmax1.Name = 'MaxRangeCODComisison1Param'  
+			ON CPmax1.IdCountry = DO.ReceiverCountryId   
 		   LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPmax2 WITH(NOLOCK)  
-			ON CPmax2.IdCountry = DO.ReceiverCountryId AND CPmax2.Name = 'MaxRangeCODComisison2Param'  
+			ON CPmax2.IdCountry = DO.ReceiverCountryId 
 		   LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv1 WITH(NOLOCK)  
-			ON CPv1.IdCountry = DO.ReceiverCountryId AND CPv1.Name = 'ValueCODComisison1Param'  
+			ON CPv1.IdCountry = DO.ReceiverCountryId  
 		   LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv2 WITH(NOLOCK)  
-			ON CPv2.IdCountry = DO.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'  
+			ON CPv2.IdCountry = DO.ReceiverCountryId  
 		   LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)  
-			ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'  
+			ON CPv3.IdCountry = DO.ReceiverCountryId  
 		   LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv4 WITH(NOLOCK)  
-			ON CPv4.IdCountry = DO.ReceiverCountryId AND CPv4.Name = 'ReturnPercentParam'  
+			ON CPv4.IdCountry = DO.ReceiverCountryId  
 		   WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber  
+		   AND CPmin1.Name = 'MinRangeCODComisison1Param' 
+		   AND CPmin2.Name = 'MinRangeCODComisison2Param' 
+		   AND CPmax1.Name = 'MaxRangeCODComisison1Param'
+		   AND CPmax2.Name = 'MaxRangeCODComisison2Param' 
+		   AND CPv1.Name = 'ValueCODComisison1Param' 
+		   AND CPv2.Name = 'ValueCODComisison2Param' 
+		   AND CPv3.Name = 'ValueCODComisison3Param' 
+		   AND CPv4.Name = 'ReturnPercentParam' 
 
 		--3.4 VAlidar que no se exceda del monto diario
 		IF(@DailyAmount >=  @CollectOnDelivery)  

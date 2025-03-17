@@ -77,16 +77,16 @@ BEGIN
                acd.IdAnticipatedCODDetail,
                acd.CollectOnDelivery, 
                acd.BalanceStatus
-          FROM @AnticipatedCODDetail td 
-               LEFT JOIN AnticipatedCODHeader ach
-                  ON ach.CustomerId = td.CustomerId
-                 AND ach.PortfolioId IS NULL
-                 AND ach.RowStatus = 1
-               INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
-                  ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
-                 AND acd.RowStatus = 1
-         WHERE td.PortfolioId = 0
-           AND ach.CustomerId IS NOT NULL
+        FROM @AnticipatedCODDetail td 
+            LEFT JOIN AnticipatedCODHeader ach
+                ON ach.CustomerId = td.CustomerId
+                AND ach.PortfolioId IS NULL
+                AND ach.RowStatus = 1
+            INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
+                ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId               
+        WHERE td.PortfolioId = 0
+        AND ach.CustomerId IS NOT NULL
+		AND acd.RowStatus = 1
 
         INSERT INTO #CustomerAnticipatedCOD
         SELECT ach.CustomerId, 
@@ -95,16 +95,16 @@ BEGIN
                acd.IdAnticipatedCODDetail,
                acd.CollectOnDelivery, 
                acd.BalanceStatus
-          FROM @AnticipatedCODDetail td 
-               LEFT JOIN AnticipatedCODHeader ach
-                  ON ach.CustomerId = td.CustomerId
-                 AND ach.PortfolioId = td.PortfolioId
-                 AND ach.RowStatus = 1
-               INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
-                  ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
-                 AND acd.RowStatus = 1
-         WHERE td.PortfolioId != 0
-           AND ach.CustomerId IS NOT NULL
+        FROM @AnticipatedCODDetail td 
+            LEFT JOIN AnticipatedCODHeader ach
+                ON ach.CustomerId = td.CustomerId
+                AND ach.PortfolioId = td.PortfolioId
+                AND ach.RowStatus = 1
+            INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
+                ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId                
+        WHERE td.PortfolioId != 0
+        AND ach.CustomerId IS NOT NULL
+		AND acd.RowStatus = 1
 
         INSERT INTO #AnticipatedCODSummary
         SELECT achs.IdAnticipatedCODHeader,

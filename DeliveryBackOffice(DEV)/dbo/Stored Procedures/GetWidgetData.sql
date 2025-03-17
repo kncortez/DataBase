@@ -49,10 +49,9 @@ BEGIN
 	SET @CustomerId = ISNULL((SELECT TOP 1 Acc.IdCustomer FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK) WHERE Acc.AccIdAccount = @AccoundId),0)
 		
 	-- Limpieza de tablas
-	IF OBJECT_ID('tempdb.dbo.#FilteredGuides', 'U') IS NOT NULL
-			DROP TABLE #FilteredGuides
-	IF OBJECT_ID('tempdb.dbo.#FilteredServices', 'U') IS NOT NULL
-			DROP TABLE #FilteredServices
+			DROP TABLE IF EXISTS #FilteredGuides
+
+			DROP TABLE IF EXISTS #FilteredServices
 
 	-- De requerir datos para nuevos filtros, adicionar a esta tabla para minimizar el consumo de DeliveryOrder
 	CREATE TABLE #FilteredGuides (
@@ -78,7 +77,7 @@ BEGIN
 	);
 
 	BEGIN TRY
-		IF(@WidgetName = 'EnviosRealizados' COLLATE Latin1_General_CI_AI)
+		IF(@WidgetName = 'EnviosRealizados')
 		BEGIN
 
 			INSERT INTO #FilteredGuides
@@ -154,7 +153,7 @@ BEGIN
 					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 		END
-		ELSE IF(@WidgetName = 'MontosCoD' COLLATE Latin1_General_CI_AI)
+		ELSE IF(@WidgetName = 'MontosCoD')
 		BEGIN
 
 			INSERT INTO #FilteredGuides
@@ -228,7 +227,7 @@ BEGIN
 			END
 
 		END
-		ELSE IF(@WidgetName = 'VelocidadEntrega' COLLATE Latin1_General_CI_AI)
+		ELSE IF(@WidgetName = 'VelocidadEntrega')
 		BEGIN
 		
 			INSERT INTO #FilteredGuides
@@ -379,11 +378,11 @@ BEGIN
 			END
 
 		END
-		ELSE IF(@WidgetName = 'RecoleccionesRealizados' COLLATE Latin1_General_CI_AI)
+		ELSE IF(@WidgetName = 'RecoleccionesRealizados')
 		BEGIN
 
-			DECLARE @PickupServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Recolectado' COLLATE Latin1_General_CI_AI)
-			DECLARE @CancelServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Cancelado' COLLATE Latin1_General_CI_AI)
+			DECLARE @PickupServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Recolectado')
+			DECLARE @CancelServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Cancelado')
 
 			INSERT INTO #FilteredServices
 				(ServiceManagement, SchedulePickup, ServiceStatus, ServiceDate, ServicePickupDate)
@@ -496,9 +495,7 @@ BEGIN
 			'' 'Currency' 
 	END CATCH
 	
-	IF OBJECT_ID('tempdb.dbo.#FilteredGuides', 'U') IS NOT NULL
-			DROP TABLE #FilteredGuides
-	IF OBJECT_ID('tempdb.dbo.#FilteredServices', 'U') IS NOT NULL
-			DROP TABLE #FilteredServices
+		DROP TABLE IF EXISTS #FilteredGuides
+		DROP TABLE IF EXISTS #FilteredServices
 
 END

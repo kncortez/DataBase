@@ -42,15 +42,15 @@ BEGIN
 	IF(@OriginGuideSystem IS NULL)
 		SET @GuideServiceType = dbo.fn_GetGuideServiceType(@GuideSerie, @GuideNumber, NULL, (CASE WHEN @IdCustomer != 0 THEN @IdCustomer ELSE (SELECT TOP 1 ECM.IdCustomer FROM dbo.Ecommerce ECM WITH(NOLOCK) WHERE ECM.UserKey = @CodApp) END));
 
-	update DeliveryBackOffice.[dbo].[DeliveryOrder] 
-	set IdCustomer =
-			case 
-			when @IdCustomer != 0 
-			then @IdCustomer 
-			else (select top 1 e.IdCustomer 
-				from dbo.Ecommerce e 
-				where e.UserKey = @CodApp)
-			end 
+	UPDATE DeliveryBackOffice.[dbo].[DeliveryOrder] 
+	SET IdCustomer =
+			CASE 
+			WHEN @IdCustomer != 0 
+			THEN @IdCustomer 
+			ELSE (SELECT TOP 1 e.IdCustomer 
+				FROM dbo.Ecommerce e 
+				WHERE e.UserKey = @CodApp)
+			END 
 	, TypeService = @GuideServiceType
 	,IndicationsToSendOrigin = @IndicationsOrigin
 	, IndicationsToSendDestination = @IndicationsDestination
@@ -59,31 +59,32 @@ BEGIN
 	,IsInsuarance = @IsInsuarance
 	,InsuranceAmount = @InsuranceAmount
 	,idDeliveryOption =
-			case
-			when @IdDeliveryOption != 0
-			then @IdDeliveryOption
-			else NULL 
-			end
-	,ReceiverIdSettlement = case
-			when @ReceiverIdSettlement > 0
-			then @ReceiverIdSettlement
-			else NULL 
-			end
-	,SalePipeLineId = case
-			when @IdSalePipeLine > 0
-			then @IdSalePipeLine
-			else NULL 
-			end
+			CASE
+			WHEN @IdDeliveryOption != 0
+			THEN @IdDeliveryOption
+			ELSE NULL 
+			END
+	,ReceiverIdSettlement = CASE
+			WHEN @ReceiverIdSettlement > 0
+			THEN @ReceiverIdSettlement
+			ELSE NULL 
+			END
+	,SalePipeLineId = CASE
+			WHEN @IdSalePipeLine > 0
+			THEN @IdSalePipeLine
+			ELSE NULL 
+			END
 	,Receiver_ID = @ReceiverId
 	,OriginSenderId = @OriginSenderId
 	,IsReturn = @IsReturn
 	,OrderUserCreated = @OrderUserCreated
-	where Guide_Number = @GuideNumber and Guide_Serie = @GuideSerie;
+	WHERE Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie;
 
 	DECLARE @Price DECIMAL(12,2)
 	DECLARE @CouponApplied BIT
 
-	SELECT @Price = ISNULL(dr.PriceShippment,0) FROM dbo.DeliveryOrder dr
+	SELECT @Price = ISNULL(dr.PriceShippment,0) 
+	FROM dbo.DeliveryOrder dr WITH (NOLOCK)
 	WHERE dr.Guide_Serie = @GuideSerie AND dr.Guide_Number =@GuideNumber
 
 	SET @CouponApplied = ISNULL((

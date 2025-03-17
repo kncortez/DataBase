@@ -8,6 +8,12 @@
 -- Update date: <2022-07-20>
 -- Description:	< Cambio de agrupaciones para evitar duplicados en servicios de recolección (Falsos positivos) >
 -- =============================================
+-- =============================================
+-- Author:		<Cristian, Suazo>
+-- Update date: <2025-03-11>
+-- Description:	< Se pasa a tablas las respuestas del Json >
+-- =============================================
+
 CREATE PROCEDURE [dbo].[SetRecolectionRequest]
     @TblDeliveryOrdersList AS [TblDeliveryOrdersList2] READONLY,
     @Iscollected BIT = true,
@@ -94,21 +100,9 @@ BEGIN
             FROM @TblDeliveryOrdersList tdop;
         END TRY
         BEGIN CATCH
-            DECLARE @jsonOutput NVARCHAR(MAX);
-            SET @jsonOutput =
-            (
-                SELECT ''
-                       + STUFF(
-                                  (
-                                      SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
-                                  ).value('.', 'varchar(max)'),
-                                  1,
-                                  1,
-                                  ''
-                              ) + ''
-            );
+            
+            SELECT ERROR_MESSAGE() AS [Status]
 
-            SELECT ('[' + @jsonOutput + ']') jsonOutput;
             ROLLBACK TRANSACTION;
 
             INSERT INTO dbo.RoutePreparationLogError
@@ -131,22 +125,8 @@ BEGIN
         IF @@TRANCOUNT > 0
         BEGIN
             COMMIT TRANSACTION;
+            SELECT 'Cambios realizados exitosamente' AS [Status]
 
-            DECLARE @jsonOutput1 NVARCHAR(MAX);
-            SET @jsonOutput1 =
-            (
-                SELECT '' + STUFF(
-                                     (
-                                         SELECT ',{"Status":"Cambios realizados exitosamente"}'
-                                         FOR XML PATH(''), TYPE
-                                     ).value('.', 'varchar(max)'),
-                                     1,
-                                     1,
-                                     ''
-                                 ) + ''
-            );
-
-            SELECT ('[' + @jsonOutput1 + ']') jsonOutput1;
         END;
 
     END;
@@ -272,21 +252,9 @@ BEGIN
                 END;
             END TRY
             BEGIN CATCH
-                DECLARE @jsonOutput2 NVARCHAR(MAX);
-                SET @jsonOutput2 =
-                (
-                    SELECT ''
-                           + STUFF(
-                                      (
-                                          SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
-                                      ).value('.', 'varchar(max)'),
-                                      1,
-                                      1,
-                                      ''
-                                  ) + ''
-                );
 
-                SELECT ('[' + @jsonOutput2 + ']') jsonOutput2;
+                SELECT ERROR_MESSAGE() AS [Status] 
+
                 ROLLBACK TRANSACTION;
 
                 INSERT INTO dbo.RoutePreparationLogError
@@ -310,40 +278,16 @@ BEGIN
             BEGIN
                 COMMIT TRANSACTION;
 
-                DECLARE @jsonOutput3 NVARCHAR(MAX);
-                SET @jsonOutput3 =
-                (
-                    SELECT '' + STUFF(
-                                         (
-                                             SELECT ',{"Status":"Cambios actualizados exitosamente"}'
-                                             FOR XML PATH(''), TYPE
-                                         ).value('.', 'varchar(max)'),
-                                         1,
-                                         1,
-                                         ''
-                                     ) + ''
-                );
-
-                SELECT ('[' + @jsonOutput3 + ']') jsonOutput3;
+                SELECT 'Cambios actualizados exitosamente' AS [Status]
             END;
         END;
         ELSE
         BEGIN
             DECLARE @jsonOutM NVARCHAR(MAX);
-            SET @jsonOutM =
-            (
-                SELECT '' + STUFF(
-                                     (
-                                         SELECT ',{"Status":"La guía ya ha sido transaccionada"}'
-                                         FOR XML PATH(''), TYPE
-                                     ).value('.', 'varchar(max)'),
-                                     1,
-                                     1,
-                                     ''
-                                 ) + ''
-            );
 
-            SELECT ('[' + @jsonOutM + ']') jsonOutM;
+            SELECT 'La guía ya ha sido transaccionada' AS [Status]
+
+
         END;
     -- FIN MODIFICACIÓN
     END;
@@ -819,21 +763,9 @@ BEGIN
 
         END TRY
         BEGIN CATCH
-            DECLARE @jsonOutput4 NVARCHAR(MAX);
-            SET @jsonOutput4 =
-            (
-                SELECT ''
-                       + STUFF(
-                                  (
-                                      SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
-                                  ).value('.', 'varchar(max)'),
-                                  1,
-                                  1,
-                                  ''
-                              ) + ''
-            );
 
-            SELECT ('[' + @jsonOutput4 + ']') jsonOutput4;
+            SELECT ERROR_MESSAGE() AS [Status]
+
             ROLLBACK TRANSACTION;
             INSERT INTO dbo.RoutePreparationLogError
             (
@@ -857,21 +789,8 @@ BEGIN
         BEGIN
             COMMIT TRANSACTION;
 
-            DECLARE @jsonOutput5 NVARCHAR(MAX);
-            SET @jsonOutput5 =
-            (
-                SELECT '' + STUFF(
-                                     (
-                                         SELECT ',{"Status":"Agrupación realizada exitosamente"}'
-                                         FOR XML PATH(''), TYPE
-                                     ).value('.', 'varchar(max)'),
-                                     1,
-                                     1,
-                                     ''
-                                 ) + ''
-            );
+		    SELECT 'Agrupación realizada exitosamente' AS [Status]
 
-            SELECT ('[' + @jsonOutput5 + ']') jsonOutput5;
         END;
 
     END;
@@ -894,20 +813,9 @@ BEGIN
         END TRY
         BEGIN CATCH
             DECLARE @jsonOutput6 NVARCHAR(MAX);
-            SET @jsonOutput =
-            (
-                SELECT ''
-                       + STUFF(
-                                  (
-                                      SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
-                                  ).value('.', 'varchar(max)'),
-                                  1,
-                                  1,
-                                  ''
-                              ) + ''
-            );
 
-            SELECT ('[' + @jsonOutput2 + ']') jsonOutput2;
+            SELECT ERROR_MESSAGE() AS [Status]
+
             ROLLBACK TRANSACTION;
 
         END CATCH;
@@ -916,21 +824,8 @@ BEGIN
         BEGIN
             COMMIT TRANSACTION;
 
-            DECLARE @jsonOutput7 NVARCHAR(MAX);
-            SET @jsonOutput7 =
-            (
-                SELECT '' + STUFF(
-                                     (
-                                         SELECT ',{"Status":"Cambios actualizados exitosamente"}'
-                                         FOR XML PATH(''), TYPE
-                                     ).value('.', 'varchar(max)'),
-                                     1,
-                                     1,
-                                     ''
-                                 ) + ''
-            );
+            SELECT 'Cambios actualizados exitosamente' AS [Status]
 
-            SELECT ('[' + @jsonOutput5 + ']') jsonOutput5;
         END;
 
     END;
@@ -1045,21 +940,9 @@ BEGIN
 
         END TRY
         BEGIN CATCH
-            DECLARE @jsonOut NVARCHAR(MAX);
-            SET @jsonOut =
-            (
-                SELECT ''
-                       + STUFF(
-                                  (
-                                      SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
-                                  ).value('.', 'varchar(max)'),
-                                  1,
-                                  1,
-                                  ''
-                              ) + ''
-            );
 
-            SELECT ('[' + @jsonOut + ']') jsonOut;
+            SELECT ERROR_MESSAGE() AS [Status]
+
             ROLLBACK TRANSACTION;
 
         END CATCH;
@@ -1068,21 +951,8 @@ BEGIN
         BEGIN
             COMMIT TRANSACTION;
 
-            DECLARE @jsonOut1 NVARCHAR(MAX);
-            SET @jsonOut1 =
-            (
-                SELECT '' + STUFF(
-                                     (
-                                         SELECT ',{"Status":"Cambios realizados exitosamente"}'
-                                         FOR XML PATH(''), TYPE
-                                     ).value('.', 'varchar(max)'),
-                                     1,
-                                     1,
-                                     ''
-                                 ) + ''
-            );
+            SELECT 'Cambios realizados exitosamente' AS [Status]
 
-            SELECT ('[' + @jsonOut1 + ']') jsonOut1;
         END;
 
     END;

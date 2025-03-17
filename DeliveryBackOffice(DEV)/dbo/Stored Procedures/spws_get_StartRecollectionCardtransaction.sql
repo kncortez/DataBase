@@ -1,16 +1,17 @@
 ﻿
+
 CREATE PROCEDURE [dbo].[spws_get_StartRecollectionCardtransaction]
- @System						as int					= 1 
-,@Currency						as int					= 320
-,@IdCustomer					as int					= 1  	  	
-,@Token							as nvarchar(50)    	    = ''
-,@NumberGuides 					as varchar(MAX)			= ''/*123-54*/
-,@SerieGuides					as varchar(Max)			= ''/*FD-FD*/
-,@DateCreated					as datetime				
+ @System						AS INT					= 1 
+,@Currency						AS INT					= 320
+,@IdCustomer					AS INT					= 1  	  	
+,@Token							AS NVARCHAR(50)    	    = ''
+,@NumberGuides 					AS NVARCHAR(MAX)			= ''/*123-54*/
+,@SerieGuides					AS NVARCHAR(Max)			= ''/*FD-FD*/
+,@DateCreated					AS DATETIME				
 AS
 BEGIN
 	DECLARE @IdTransaction BIGINT= 0, @TEMPOrderNumber VARCHAR(38), @TOTALPAGAR INT = 0;
-	select @IdTransaction = count(1) from DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+	SELECT @IdTransaction = count(1) FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
 	SELECT @TEMPOrderNumber = 'TMP'+CONVERT(VARCHAR,@IdTransaction)  
 	/*VALIDAR QUE NO EXISTA EL PAGO POR DETALLE*/
 	DECLARE @TBGUIDES TABLE (ITERATOR int Identity(1,1), GuideNumber INT , SerieGuide VARCHAR(2));
@@ -44,12 +45,13 @@ BEGIN
 			       FROM CTE C
 			            LEFT JOIN CTE1 C1 ON C1.RN = C.RN;
 
-			SELECT @TOTALPAGAR = COUNT(1) FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail O
-			JOIN @TBGUIDES T
+			SELECT @TOTALPAGAR = COUNT(1) 
+			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail O WITH (NOLOCK)
+			INNER JOIN @TBGUIDES T
 			ON O.ProductNumber = T.GuideNumber AND O.SerieNumber = T.SerieGuide
-			join DeliveryBackOffice.dbo.DeliveryOrder D
-			on D.Guide_Number = T.GuideNumber and D.Guide_Serie = T.SerieGuide
-			where D.IsCollect <> 1 or D.IsCollect is null;
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder D WITH(NOLOCK)
+			ON D.Guide_Number = T.GuideNumber AND D.Guide_Serie = T.SerieGuide
+			WHERE D.IsCollect <> 1 OR D.IsCollect IS NULL;
 			
 			IF (@TOTALPAGAR = 0) ---INTENTO 1 DE PAGO
 			BEGIN
@@ -99,33 +101,33 @@ BEGIN
 				,ProductNumber
 				,SerieNumber
 				)
-				SELECT distinct 'HR'+CONVERT(VARCHAR,@IdTransaction), T.GuideNumber, T.SerieGuide FROM @TBGUIDES T
-				join DeliveryBackOffice.dbo.DeliveryOrder D
-			on D.Guide_Number = T.GuideNumber and D.Guide_Serie = T.SerieGuide
-			where D.IsCollect <> 1 or D.IsCollect is null;
+				SELECT DISTINCT 'HR'+CONVERT(VARCHAR,@IdTransaction), T.GuideNumber, T.SerieGuide 
+				FROM @TBGUIDES T
+				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder D WITH (NOLOCK)
+				ON D.Guide_Number = T.GuideNumber AND D.Guide_Serie = T.SerieGuide
+				WHERE D.IsCollect <> 1 OR D.IsCollect IS NULL;
 			 
 
 				UPDATE DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
 				SET OrderNumber =  'HR'+CONVERT(VARCHAR,@IdTransaction)
 				WHERE IdTransaction = @IdTransaction
 
-			     select 'HR'+CONVERT(VARCHAR,@IdTransaction) OrderNumber, @TOTALPAGAR TOTAL; 
+			    SELECT 'HR'+CONVERT(VARCHAR,@IdTransaction) OrderNumber, @TOTALPAGAR TOTAL; 
 			END
 			ELSE IF (@TOTALPAGAR > 0) ---REINTENTO DE PAGO
 			BEGIN
 			DECLARE @TMPOrderNumber VARCHAR(50) = '';
 			 --validar si el pago es exitoso o sino generar otro No. de orden
-			SELECT top 1 @TMPOrderNumber = ISNULL(O.OrderNumber,'HR0') FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail O
-			JOIN @TBGUIDES T
+			SELECT TOP 1 @TMPOrderNumber = ISNULL(O.OrderNumber,'HR0') 
+			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail O WITH(NOLOCK)
+			INNER JOIN @TBGUIDES T
 			ON  O.ProductNumber = T.GuideNumber AND O.SerieNumber = T.SerieGuide;
 
-			SELECT @TOTALPAGAR = COUNT(1) FROM 
-			DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-			WHERE OrderNumber = @TMPOrderNumber  And (StatusSend <> 1 or StatusSend is null)
+			SELECT @TOTALPAGAR = COUNT(1) 
+			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
+			WHERE OrderNumber = @TMPOrderNumber  AND (StatusSend <> 1 OR StatusSend IS NULL)
 			
-			
-	
-
-			select @TMPOrderNumber OrderNumber, @TOTALPAGAR TOTAL;
-			END 
+		
+			SELECT @TMPOrderNumber OrderNumber, @TOTALPAGAR TOTAL;
+		END 
 END

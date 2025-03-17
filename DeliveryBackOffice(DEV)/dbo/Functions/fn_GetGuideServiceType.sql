@@ -97,7 +97,7 @@ BEGIN
 		AND
 		RD.ArticleId IS NULL
 		AND
-		CTS.CtsShortName = @StatedTypeService COLLATE Latin1_General_CI_AI
+		CTS.CtsShortName = @StatedTypeService 
 
 	-- Se adminte que ya se encontro tipo de servicio
 	IF(@FinalTypeServiceFound = 1)
