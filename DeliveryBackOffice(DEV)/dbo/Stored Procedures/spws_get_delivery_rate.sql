@@ -191,7 +191,7 @@ BEGIN
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Promo Paquetequiero'
+                WHERE RH.RheName = 'Tarifario de servicio interfer'
                       AND CountryId = @Country
             );
     DECLARE @NewRateGeneralDiscount INT =

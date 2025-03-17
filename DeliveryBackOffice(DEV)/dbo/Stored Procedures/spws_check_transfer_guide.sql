@@ -52,7 +52,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Intento de entrega fallida'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'Incidencia Validada'  COLLATE Latin1_General_CI_AI 
 	)
 
 	DECLARE @ValidatedIncident INT = (

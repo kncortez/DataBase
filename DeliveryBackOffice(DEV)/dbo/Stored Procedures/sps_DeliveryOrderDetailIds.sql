@@ -123,5 +123,8 @@ BEGIN
 	--END
 
 	select 1,
-		ISNULL(@GuideServiceType, 'STD') [GuideServiceType];
+		ISNULL(@GuideServiceType, 'STD') [GuideServiceType]
+		, PriceShippment
+	FROM DeliveryBackOffice.dbo.DeliveryOrder
+	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber;
 END

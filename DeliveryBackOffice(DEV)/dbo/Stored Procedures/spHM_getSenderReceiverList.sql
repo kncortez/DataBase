@@ -3,6 +3,11 @@
 -- Create date: <22-07-2022>
 -- Description:	<Get complete information list of sender receiver>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <17-02-2025>
+-- Description:	<Filter the country.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_getSenderReceiverList] 
 	@IdCountry VARCHAR  (2) = 'GT'
 AS
@@ -23,7 +28,7 @@ BEGIN
 				ISNULL([SR].[IdCountry],'GT') IdCountry
 	FROM		[dbo].[SenderReceiver] SR
 	WHERE		[SR].[Estatus] = 1
-	AND ISNULL([SR].IdCountry,'GT') = 'GT'
-	--AND ISNULL([SR].IdCountry,'GT') =  @IdCountry
+	--AND ISNULL([SR].IdCountry,'GT') = 'GT'
+	AND ISNULL([SR].IdCountry,'GT') =  @IdCountry
 	ORDER BY	[SR].[Last_Name];
 END

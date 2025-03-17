@@ -11,6 +11,7 @@ begin
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	set nocount on;
+	SET ARITHABORT ON;
 	DECLARE @IS_HUB_DESTINY AS INT;		-- Delivery Order
 	DECLARE @HUB_ID AS INT;				-- Hub Logistics
 

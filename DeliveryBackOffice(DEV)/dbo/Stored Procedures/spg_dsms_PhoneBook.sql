@@ -22,6 +22,23 @@ CREATE PROCEDURE [dbo].[spg_dsms_PhoneBook]
 AS
 BEGIN
 	SET NOCOUNT ON;
+
+	DECLARE @CustomerCorporative INT,
+			@ConditionPayment INT
+
+	SET @CustomerCorporative = 
+	(
+		SELECT IdCustomerType 
+		FROM CustomerType WITH(NOLOCK)
+		WHERE Description = 'CORPORATIVO'
+	)
+
+	SET @ConditionPayment = 
+	(
+		SELECT IdConditionOfPayment 
+		FROM CatConditionOfPayment WITH(NOLOCK)
+		WHERE ConditionOfPayment = 'CONTADO'
+	)
 		
 	declare @LastUpdate datetime=  dateadd(MINUTE,-200,@MaxDeliveryDate)
 	
@@ -68,14 +85,6 @@ BEGIN
 	WHERE DOD.DateCreatedInSystem >= @LastUpdate
 		  and CAST(dod.DateCreatedInSystem as date) >= CAST('2022-03-07' as date)
 		  AND DOD.StatusOrderId = 4
-	AND NOT EXISTS 
-	(
-		SELECT 1 
-		FROM DeliveryBackOffice.dbo.SMS_Sent SS2 with(nolock)
-		WHERE SS2.Sent_Guide_Number = do.Guide_Number
-		AND SS2.Sent_Guide_Series = do.Guide_Serie
-		AND SS2.StatusOrderId = 4
-	)
 	
 
 	declare @PhoneBook as table (
@@ -144,9 +153,29 @@ BEGIN
 	   CS.Name AS CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
-	   CASE WHEN DO.IsCollect = 1 THEN CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',(DO.PriceShippment - ISNULL(CO.TotalAmountPaid,0)),'* al recibir tu paquete o en la opción de pagar envío.')
-			WHEN (DO.PriceShippment - ISNULL(CO.TotalAmountPaid,0)) > 0 THEN CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',(DO.PriceShippment - ISNULL(CO.TotalAmountPaid,0)),'* al recibir tu paquete o en la opción de pagar envío.') 
-			ELSE ' ' END AS InsuranceAmount
+	   CASE
+           WHEN DO.IsCollect = 1 THEN
+               CONCAT(
+                         'Debes cancelar el Monto *',
+                         CCU.Symbol,
+                         '.',
+                         (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)),
+                         '* al recibir tu paquete o en la opción de pagar envío.'
+                     )
+           WHEN CS.IdCustomerType = @CustomerCorporative
+                AND CCD.IdConditionOfPayment != @ConditionPayment THEN
+               ' '
+           WHEN (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) > 0 THEN
+               CONCAT(
+                         'Debes cancelar el Monto *',
+                         CCU.Symbol,
+                         '.',
+                         (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)),
+                         '* al recibir tu paquete o en la opción de pagar envío.'
+                     )
+           ELSE
+               ' '
+       END AS InsuranceAmount
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
@@ -167,6 +196,8 @@ BEGIN
 		ON CVE.IdTypeVehicle = CTV.IdTypeVehicle
 	LEFT JOIN Customer CS WITH(NOLOCK)
 		ON DO.IdCustomer = CS.IdCustomer
+	LEFT JOIN CatConditionOfPayment CCD WITH (NOLOCK)
+		ON CS.ConditionOfPaymentID = CCD.IdConditionOfPayment
 	INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
 		ON DO.SenderCountryId = DC.Currency_IdCountry
 	INNER JOIN CatCurrencyCOD CCU WITH(NOLOCK)
@@ -231,9 +262,29 @@ BEGIN
 	   CS.Name AS CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
-	    	   CASE WHEN DO.IsCollect = 1 THEN CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',(DO.PriceShippment - ISNULL(CO.TotalAmountPaid,0)),'* al recibir tu paquete o en la opción de pagar envío.')
-			WHEN (DO.PriceShippment - ISNULL(CO.TotalAmountPaid,0)) > 0 THEN CONCAT('Debes cancelar el Monto *',CCU.Symbol,'.',(DO.PriceShippment - ISNULL(CO.TotalAmountPaid,0)),'* al recibir tu paquete o en la opción de pagar envío.') 
-			ELSE ' ' END AS InsuranceAmount
+	   CASE
+           WHEN DO.IsCollect = 1 THEN
+               CONCAT(
+                         'Debes cancelar el Monto *',
+                         CCU.Symbol,
+                         '.',
+                         (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)),
+                         '* al recibir tu paquete o en la opción de pagar envío.'
+                     )
+           WHEN CS.IdCustomerType = @CustomerCorporative
+                AND CCD.IdConditionOfPayment != @ConditionPayment THEN
+               ' '
+           WHEN (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) > 0 THEN
+               CONCAT(
+                         'Debes cancelar el Monto *',
+                         CCU.Symbol,
+                         '.',
+                         (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)),
+                         '* al recibir tu paquete o en la opción de pagar envío.'
+                     )
+           ELSE
+               ' '
+       END AS InsuranceAmount
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
@@ -254,6 +305,8 @@ BEGIN
 		ON CVE.IdTypeVehicle = CTV.IdTypeVehicle
 	LEFT JOIN Customer CS WITH(NOLOCK)
 		ON DO.IdCustomer = CS.IdCustomer
+	LEFT JOIN CatConditionOfPayment CCD WITH (NOLOCK)
+		ON CS.ConditionOfPaymentID = CCD.IdConditionOfPayment
 	INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
 		ON DO.SenderCountryId = DC.Currency_IdCountry
 	INNER JOIN CatCurrencyCOD CCU WITH(NOLOCK)
