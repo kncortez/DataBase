@@ -111,6 +111,7 @@ BEGIN
               AND bdCOD.Commission > 0
             --  AND [bdCOD].[CreditDate] >= @MinimumHistoricDate
 			AND bdCOD.CreditDate BETWEEN @MinimumHistoricDate AND '2023-07-31'
+			AND 1=0 --DESHABILITADO TEMPORALMENTE BNHL
         GROUP BY bdCOD.GuideSerie
                , bdCOD.GuideNumber;
 
@@ -178,6 +179,7 @@ BEGIN
                         ON bp.BlpIdAccount = ac.AccIdAccount
                 WHERE ac.IdCustomer = cu.IdCustomer
                       AND bp.BlpRowStatus = 1
+					  AND 1=0 --DESHABILITADO TEMPORALMENTE BNHL
                 ORDER BY bp.IsDefault DESC
             )                                     bp
             WHERE (
@@ -219,6 +221,7 @@ BEGIN
 ,24643
 ,33070
 				  )
+				  AND 1=0 --DESHABILITADO TEMPORALMENTE BNHL
 				  ;
 
 
@@ -269,6 +272,7 @@ BEGIN
                              WHERE CEP.NameExternalPlatform = 'HermesInvoiceHelper' COLLATE Latin1_General_CI_AI
                                    AND ConfEP.ConfigParameterName = 'Retries'
                                    AND ConfEP.RowStatus = 1
+								   AND 1=0 --DESHABILITADO TEMPORALMENTE BNHL
                          )
                        , 2
                         );
@@ -286,7 +290,10 @@ BEGIN
                   (
                       Retries IS NULL
                       OR Retries <= @Retries
-                  );
+                  )
+				  AND 1=0 --DESHABILITADO TEMPORALMENTE BNHL
+				  ;
+
         END;
         ELSE
         BEGIN

@@ -3,8 +3,7 @@
 -- Create date: <2021-01-08>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
 -- =============================================
-
-ALTER PROCEDURE [dbo].[spws_get_price_courierapp]
+create PROCEDURE [dbo].[spws_get_price_courierapp]
     -- Add the parameters for the stored procedure here
     -- Add the parameters for the stored procedure here
     @Token VARCHAR(200),

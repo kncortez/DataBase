@@ -8,10 +8,6 @@
 -- Create date: <2024-11-08>
 -- Description:	<Se agrega la imagen  la longitud y latutud para el trakin>
 -- =============================================
--- Author:		<Tito García>
--- Create date: <2024-11-12>
--- Description:	<Se obtiene si el cliente requiere el comprobante de entrega impreso y si ya tiene el comprobante ya digitalizado ref.: FDAPI-3151>
--- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetTrackingPrivate]
 @GuideSerie NVARCHAR(4),
@@ -232,15 +228,16 @@ BEGIN TRY
 		SELECT ImagePath,
 			   ValidPhotographicEvidence
 		FROM #Temp 
-		WHERE ImagePath IS NOT NULL		
-		
-		SELECT c.IsVoucherRequired,
-				Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) as VARCHAR(300)) AS [ScannedVoucherImageUrl]
-		FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
-			INNER JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH(NOLOCK) 
-				ON do.IdCustomer = c.IdCustomer
-		WHERE do.Guide_Serie = @GuideSerie
-			AND do.Guide_Number = @GuideNumber
+		WHERE ImagePath IS NOT NULL;		
+
+		SELECT so.OrderDescription AS [Status]
+		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]		dod WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]		so  WITH (NOLOCK)
+				ON [so].[StatusOrderId] = [dod].[StatusOrderId]
+		WHERE dod.Guide_Serie = @GuideSerie
+			AND dod.Guide_Number = @GuideNumber
+			AND dod.rowstatus = 1
+			AND dod.StatusOrderId = 5;
 
 	END
 	ELSE

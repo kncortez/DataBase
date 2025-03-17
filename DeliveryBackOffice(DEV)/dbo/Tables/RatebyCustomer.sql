@@ -21,6 +21,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para vincular tarifario con un punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RatebyCustomer', @level2type = N'COLUMN', @level2name = N'RbcCodeOfReference';
 
@@ -74,4 +76,9 @@ CREATE NONCLUSTERED INDEX [idx_RbcIdRate]
 GO
 CREATE NONCLUSTERED INDEX [idx_RbcIdCustomer_RbcRowStatus_RbcCodeOfReference]
     ON [dbo].[RatebyCustomer]([RbcIdCustomer] ASC, [RbcRowStatus] ASC, [RbcCodeOfReference] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RbcIdCustomer]
+    ON [dbo].[RatebyCustomer]([RbcIdCustomer] ASC);
 

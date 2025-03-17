@@ -668,8 +668,10 @@ BEGIN
 													    ON dop.GuideNumber = gpt.GuideNumber AND dop.GuideSerie = gpt.GuideSerie
 													INNER JOIN @PiecesGuideRelatedTable pgt
 													    ON gpt.GuideNumber = pgt.GuideNumber AND gpt.GuideSerie = pgt.GuideSerie
-														WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-															AND WHE.TypeConnectionId = 2
+														 AND gpt.NumberPieces = pgt.NumberRelatedPieces
+														WHERE
+														--	AND
+															WHE.TypeConnectionId = 2
 
 							 END
 
@@ -960,11 +962,12 @@ BEGIN
                     INNER JOIN SchedulePickup sp WITH(NOLOCK)
                         ON sp.SchedulePickupId = sm.IdSchedulePickup
                     INNER JOIN DeliveryOrder do WITH (NOLOCK)
-                        ON do.Guide_Serie = @GuideSerie
-                           AND do.Guide_Number = @GuideNumber
-                           AND sp.AddressPickup = do.Sender_Address
+                        ON sp.AddressPickup = do.Sender_Address
                 WHERE ra.IdRoute = @IdRoute
-                      AND ra.DateOfRoute = @tiempo;
+                      AND ra.DateOfRoute = @tiempo
+					  AND do.Guide_Serie = @GuideSerie
+                           AND do.Guide_Number = @GuideNumber
+                            ;
             END;
 
             --Si se encuentra el vp entre los servicios de recolección, se asigna

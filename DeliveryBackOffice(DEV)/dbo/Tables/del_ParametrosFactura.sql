@@ -31,13 +31,13 @@
     [dpf_OcrCode2]                   NVARCHAR (50)  NULL,
     [dpf_StatusFACE]                 NVARCHAR (1)   NULL,
     [dpf_WarehouseCode]              INT            NULL,
-    [inv_cmp_name]                   VARCHAR(500)   NULL,
-    [inv_cmp_nameComercial]          VARCHAR(500)   NULL,
-    [KioskCode]                      INT            NULL, 
-    CONSTRAINT [PK_del_ParametrosFactura] PRIMARY KEY CLUSTERED ([dpf_VpCodeOfReference] ASC),
-    CONSTRAINT UQ_KioskCode UNIQUE (KioskCode),
-    CONSTRAINT CK_KioskCode_4Digits CHECK (KioskCode BETWEEN 1000 AND 9999)
+    [inv_cmp_name]                   VARCHAR (500)  NULL,
+    [inv_cmp_nameComercial]          VARCHAR (500)  NULL,
+    [KioskCode]                      INT            NULL,
+    CONSTRAINT [PK_del_ParametrosFactura] PRIMARY KEY CLUSTERED ([dpf_VpCodeOfReference] ASC)
 );
+
+
 
 
 

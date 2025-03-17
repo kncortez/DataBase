@@ -11,6 +11,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_LogTokenPOD]
     ON [dbo].[LogTokenPOD]([LogTokenPOD] ASC);
@@ -19,4 +21,10 @@ CREATE NONCLUSTERED INDEX [IDX_LogTokenPOD]
 GO
 CREATE NONCLUSTERED INDEX [IDX_IdCourierman]
     ON [dbo].[LogTokenPOD]([IdCourierman] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCourierman_RowStatus_INCLUDE]
+    ON [dbo].[LogTokenPOD]([IdCourierman] ASC, [RowStatus] ASC)
+    INCLUDE([LogTokenPOD], [DateCreated]);
 
