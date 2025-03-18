@@ -32,21 +32,21 @@ BEGIN
     SET @CUSTOMER_ID =
     (
         SELECT [A].[IdCustomer]
-        FROM [dbo].[Account] A
+        FROM [dbo].[Account] A WITH(NOLOCK)
         WHERE [A].[AccIdAccount] = @AccountId
     );
 
     SET @MEMBERSHIP_STATUS_ACTIVE_ID =
     (
         SELECT [CSPS].[IdCatSalesPackageStatus]
-        FROM [dbo].[CatSalesPackageStatus] CSPS
+        FROM [dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
         WHERE [CSPS].[SalesPackageStatusName] = 'Activa'
     );
 
     SET @MEMBERSHIP_STATUS_INACTIVE_ID =
     (
         SELECT [CSPS].[IdCatSalesPackageStatus]
-        FROM [dbo].[CatSalesPackageStatus] CSPS
+        FROM [dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
         WHERE [CSPS].[SalesPackageStatusName] = 'Inactiva'
     );
 
@@ -54,7 +54,7 @@ BEGIN
     (
         SELECT TOP 1
                [M].[IdMembership]
-        FROM [dbo].[Membership] M
+        FROM [dbo].[Membership] M WITH (NOLOCK)
         WHERE [M].[AccountId] = @AccountId
               AND [M].[RowStatus] = 1
               AND [M].[CatMembershipStatusId] IN ( @MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID )
@@ -63,14 +63,14 @@ BEGIN
     SET @NULL_STATUS_ORDER =
     (
         SELECT [SO].[StatusOrderId]
-        FROM [dbo].[StatusOrder] SO
+        FROM [dbo].[StatusOrder] SO WITH (NOLOCK)
         WHERE [SO].[OrderDescription] = 'Anulado'
     );
 
     SET @DESTROYED_STATUS_ORDER =
     (
         SELECT [SO].[StatusOrderId]
-        FROM [dbo].[StatusOrder] SO
+        FROM [dbo].[StatusOrder] SO WITH (NOLOCK)
         WHERE [SO].[OrderDescription] = 'Paquete destruido'
     );
 
@@ -88,10 +88,11 @@ BEGIN
          , [M].[ExpirationDate]
          , ISNULL([M].[AccumulatedPoints], 0)                                     [AccumulatedPoints]
          , ISNULL([M].[AvailablePoints], 0)                                       [AvailablePoints]
-    FROM [dbo].[Membership]                      M
-        INNER JOIN [dbo].[CatMembership]         CM
+		 ,[CM].[LinkImage]
+    FROM [dbo].[Membership] M WITH (NOLOCK)
+        INNER JOIN [dbo].[CatMembership] CM WITH (NOLOCK)
             ON [M].[CatMembershipId] = [CM].[IdCatMembership]
-        INNER JOIN [dbo].[CatSalesPackageStatus] CSPS
+        INNER JOIN [dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
             ON [M].[CatMembershipStatusId] = [CSPS].[IdCatSalesPackageStatus]
     WHERE [M].[AccountId] = @AccountId
           AND [M].[RowStatus] = 1
@@ -101,10 +102,10 @@ BEGIN
     SELECT [CMA].[IdCatMembershipAttribute]
          , [CMA].[MembershipAttributeDescription]
          , [CMA].[MembershipAttributePosition]
-    FROM [dbo].[CatMembershipAttribute]  CMA
-        INNER JOIN [dbo].[CatMembership] CM
+    FROM [dbo].[CatMembershipAttribute]  CMA WITH (NOLOCK)
+        INNER JOIN [dbo].[CatMembership] CM WITH (NOLOCK)
             ON [CMA].[CatMembershipId] = [CM].[IdCatMembership]
-        INNER JOIN [dbo].[Membership]    M
+        INNER JOIN [dbo].[Membership]    M WITH (NOLOCK)
             ON [CM].[IdCatMembership] = [M].[CatMembershipId]
     WHERE [CMA].[RowStatus] = 1
       AND [M].[IdMembership] = @MEMBERSHIP_ID
@@ -136,17 +137,17 @@ BEGIN
                ELSE
                    'En proceso'
            END                                                        [OrderStatus]
-    FROM [dbo].[MembershipSubscriptionLog] MSL
+    FROM [dbo].[MembershipSubscriptionLog] MSL WITH (NOLOCK)
         INNER JOIN [dbo].[DeliveryOrder]   DO WITH (NOLOCK)
             ON [MSL].[LogGuideSerie] = [DO].[Guide_Serie]
                AND [MSL].[LogGuideNumber] = [DO].[Guide_Number]
-        INNER JOIN [dbo].[StatusOrder]     SO
+        INNER JOIN [dbo].[StatusOrder]     SO WITH (NOLOCK)
             ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
-        LEFT JOIN [dbo].[Membership] M
+        LEFT JOIN [dbo].[Membership] M WITH (NOLOCK)
 			ON [MSL].[MembershipId] = [M].[IdMembership]
-		LEFT JOIN [dbo].[CatMembership] CM
+		LEFT JOIN [dbo].[CatMembership] CM WITH (NOLOCK)
 			ON [M].[CatMembershipId] = [CM].[IdCatMembership]
-		LEFT JOIN [dbo].[CatCurrencyCOD] C
+		LEFT JOIN [dbo].[CatCurrencyCOD] C WITH (NOLOCK)
 			ON [CM].[IdCatCurrencyCOD] = [C].[IdCatCurrencyCOD]
     WHERE [MSL].[CustomerId] = @CUSTOMER_ID
          -- AND [MSL].[MembershipId] = @MEMBERSHIP_ID
@@ -184,12 +185,13 @@ BEGIN
          , [S].[DateCreated]
          , [S].[ExpirationDate]
          , ISNULL([CS].[Icon], '')                                                          [Icon]
-    FROM [dbo].[Subscription]                    S
-        INNER JOIN [dbo].[CatSubscription]       CS
+		 , [CS].[LinkImage]
+    FROM [dbo].[Subscription] S WITH (NOLOCK)
+        INNER JOIN [dbo].[CatSubscription] CS WITH (NOLOCK)
             ON [S].[CatSubscriptionId] = [CS].[IdCatSubscription]
-        INNER JOIN [dbo].[CatSalesPackageStatus] CSPS
+        INNER JOIN [dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
             ON [S].[CatSubscriptionStatusId] = [CSPS].[IdCatSalesPackageStatus]
-        LEFT JOIN [dbo].[CatCurrencyCOD] C
+        LEFT JOIN [dbo].[CatCurrencyCOD] C WITH (NOLOCK)
 			ON [CS].[IdCatCurrencyCOD] = [C].[IdCatCurrencyCOD]
     WHERE-- [S].[MembershipId] = @MEMBERSHIP_ID
            [S].[RowStatus] = 1
@@ -203,13 +205,13 @@ BEGIN
          , [CA].[AttributeName]
          , [CSA].[SubscriptionAttributeValue]
          , [CSA].[SubscriptionAttributeDescription]
-    FROM [dbo].[CatSubscriptionAtribute] CSA
-        INNER JOIN [dbo].[CatAttribute]  CA
+    FROM [dbo].[CatSubscriptionAtribute] CSA WITH (NOLOCK)
+        INNER JOIN [dbo].[CatAttribute]  CA WITH (NOLOCK)
             ON [CSA].[CatAttributeId] = [CA].[IdCatAttribute]
     WHERE [CSA].[CatSubscriptionId] IN
           (
               SELECT [S].[CatSubscriptionId]
-              FROM [dbo].[Subscription] S
+              FROM [dbo].[Subscription] S WITH (NOLOCK)
 			  Where S.RowStatus=1
             --  WHERE [S].[MembershipId] = @MEMBERSHIP_ID
 			AND S.AccountId= @AccountId
@@ -245,17 +247,17 @@ BEGIN
                ELSE
                    'En proceso'
            END                                                        [OrderStatus]
-    FROM [dbo].[MembershipSubscriptionLog] MSL
+    FROM [dbo].[MembershipSubscriptionLog] MSL WITH (NOLOCK)
         INNER JOIN [dbo].[DeliveryOrder]   DO WITH (NOLOCK)
             ON [MSL].[LogGuideSerie] = [DO].[Guide_Serie]
                AND [MSL].[LogGuideNumber] = [DO].[Guide_Number]
-        INNER JOIN [dbo].[StatusOrder]     SO
+        INNER JOIN [dbo].[StatusOrder]   SO WITH (NOLOCK)
             ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
-        LEFT JOIN [dbo].[Membership] M
+        LEFT JOIN [dbo].[Membership] M WITH (NOLOCK)
 			ON [MSL].[MembershipId] = [M].[IdMembership]
-		LEFT JOIN [dbo].[CatMembership] CM
+		LEFT JOIN [dbo].[CatMembership] CM WITH (NOLOCK)
 			ON [M].[CatMembershipId] = [CM].[IdCatMembership]
-		LEFT JOIN [dbo].[CatCurrencyCOD] C
+		LEFT JOIN [dbo].[CatCurrencyCOD] C WITH (NOLOCK)
 			ON [CM].[IdCatCurrencyCOD] = [C].[IdCatCurrencyCOD]
     WHERE --[MSL].[MembershipId] = @MEMBERSHIP_ID
            [MSL].[SubscriptionId] IS NOT NULL

@@ -17,7 +17,8 @@ CREATE TABLE [dbo].[CatMembership] (
 	[Tag] 							[nvarchar](100)  NULL,
 	[Position] 						[int] 			 NULL,
     [IdCountry]                     VARCHAR(2)      NULL,
-	[IdCatCurrencyCOD]              INT              NULL,	
+	[IdCatCurrencyCOD]              INT              NULL,
+    [LinkImage]                     [nvarchar](150)  NULL,	
     CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC),
     CONSTRAINT [FK_CatMembership_CatCurrencyCOD] FOREIGN KEY ([IdCatCurrencyCOD]) REFERENCES [dbo].[CatCurrencyCOD]([IdCatCurrencyCOD]),
     CONSTRAINT [FK_CatMembership_CatCountry] FOREIGN KEY([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
@@ -81,6 +82,8 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de catalogo de membresias.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership'
 GO
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Link de la imagen' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'LinkImage'
+GO
 
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'etiqueta de identificación ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'Tag'
