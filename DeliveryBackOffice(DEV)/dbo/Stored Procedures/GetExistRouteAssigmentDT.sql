@@ -13,12 +13,12 @@ CREATE PROCEDURE [dbo].[GetExistRouteAssigmentDT]
 AS
 BEGIN
     IF EXISTS (SELECT IdRouteAssigment
-                 FROM [DeliveryBackOffice].[dbo].[RouteAssigment]
+                 FROM [DeliveryBackOffice].[dbo].[RouteAssigment] WITH(NOLOCK)
                 WHERE IdRoute = @idRoute
                   AND DateOfRoute = @dateRoute)
     BEGIN
-         SELECT ISNULL(IdRouteDispatchTrack,0) AS [IdRouteDispatchTrack]
-           FROM [DeliveryBackOffice].[dbo].[RouteAssigment]
+         SELECT ISNULL(IdRouteDispatchTrack,0) AS [IdRouteDispatchTrack] 
+           FROM [DeliveryBackOffice].[dbo].[RouteAssigment] WITH(NOLOCK)
           WHERE IdRoute = @idRoute
             AND DateOfRoute = @dateRoute
     END

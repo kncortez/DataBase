@@ -27,7 +27,7 @@ BEGIN
             AND DateOfRoute = @DateOfRoute
 
         SELECT ISNULL(IdRouteDispatchTrack,0)
-          FROM [RouteAssigment]
+          FROM [RouteAssigment] WITH(NOLOCK)
          WHERE IdRoute = @IdRoute
            AND DateOfRoute = @DateOfRoute
    END
@@ -35,7 +35,7 @@ BEGIN
    BEGIN
         -- Obtener un servicio ya creado
         SELECT ISNULL(IdRouteDispatchTrack,0)
-          FROM [RouteAssigment]
+          FROM [RouteAssigment] WITH(NOLOCK)
          WHERE IdRoute = @IdRoute
            AND DateOfRoute = @DateOfRoute
    END

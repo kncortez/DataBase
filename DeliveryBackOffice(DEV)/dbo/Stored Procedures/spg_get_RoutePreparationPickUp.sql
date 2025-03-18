@@ -241,6 +241,6 @@ BEGIN
              Address,
             
              SchedulePickupStatus
-  OPTION (OPTIMIZE FOR UNKNOWN);
+  --OPTION (OPTIMIZE FOR UNKNOWN); -- Removed by DBA commments
 
 END;

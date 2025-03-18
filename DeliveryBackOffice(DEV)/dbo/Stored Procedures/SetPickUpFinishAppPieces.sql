@@ -52,7 +52,7 @@ BEGIN
 		SELECT TOP 1
 			   @TokenAct = RowStatus,
 			   @hourtoken = DATEDIFF(HOUR, DateCreated, GETDATE()) 
-		FROM LogTokenPOD
+		FROM LogTokenPOD WITH(NOLOCK)
 		WHERE LogTokenPOD = @Token 
 		ORDER BY DateCreated DESC
 
