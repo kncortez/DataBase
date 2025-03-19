@@ -3,7 +3,7 @@
 -- Create date: <2025-01-09>
 -- Description: <Retorna los datos de una factura, asi como su detalle y guías>
 -- =============================================
-ALTER PROCEDURE [dbo].[GetInvoiceData]
+CREATE PROCEDURE [dbo].[GetInvoiceData]
 
     @Inv_SerieFEL NVARCHAR(200) = NULL,
     @Inv_NumberFEL NVARCHAR(200) = NULL,
