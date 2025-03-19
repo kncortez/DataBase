@@ -13,6 +13,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id para la tabla HistoricalSAPInvoice ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HistoricalSAPInvoice', @level2type = N'COLUMN', @level2name = N'HistoricalSAPInvoiceId';
 
@@ -43,4 +45,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es la fecha
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es estatus del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HistoricalSAPInvoice', @level2type = N'COLUMN', @level2name = N'TransactionStatus';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_certificationFEL]
+    ON [dbo].[HistoricalSAPInvoice]([inv_certificationFEL] ASC);
 

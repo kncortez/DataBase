@@ -11,7 +11,7 @@ AS
 BEGIN	
 DECLARE @RESULT VARCHAR(10) = 'FALSE'
 
-	SET @RESULT = (SELECT 'TRUE' FROM HistoricalSAPInvoice 
+	SET @RESULT = (SELECT 'TRUE' FROM HistoricalSAPInvoice WITH(NOLOCK)
 	WHERE inv_certificationFEL = @inv_certificationFEL 
 	)
 

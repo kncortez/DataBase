@@ -64,7 +64,7 @@ BEGIN
             IF (@GuideNumber = 0)
             BEGIN
                 PRINT 'ENTRO CUSTOMER -1 Y GUIDENUMBER = 0';
-                SELECT CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' '
+                SELECT   CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' '
                        + ISNULL(UPPER(serv.Sender_LastName), '') [NameOfSender],
                        ISNULL(UPPER(serv.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(serv.Receiver_LastName), '') [NameOfReceiver],
                        ISNULL(UPPER(NameOfReceiver), '') AS [ReceiverName],
@@ -267,7 +267,7 @@ BEGIN
             IF (@GuideNumber = 0)
             BEGIN
                 PRINT 'ENTRO CUSTOMER <> -1 Y GUIDENUMBER = 0';
-                SELECT CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' '
+                SELECT  TOP 10000  CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' '
                        + ISNULL(UPPER(serv.Sender_LastName), '') [NameOfSender],
                        ISNULL(UPPER(serv.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(serv.Receiver_LastName), '') [NameOfReceiver],
                        ISNULL(UPPER(NameOfReceiver), '') AS [ReceiverName],

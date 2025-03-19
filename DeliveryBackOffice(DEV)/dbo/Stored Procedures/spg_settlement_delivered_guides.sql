@@ -87,7 +87,13 @@ BEGIN
                             WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0
                             ELSE do.PriceShippment
                         END
-                        ELSE do.PriceShippment
+                        ELSE 
+						
+						--do.PriceShippment
+						 --sino es una devolución que hago?
+                        IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
+
+
                     END
                 ),
                 0
@@ -135,6 +141,9 @@ BEGIN
 				AND do.Guide_Serie = co.GuideSerie
 	INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
 			ON ISNULL(co.ShippingCurrency,@CurrencyGT) = CCU.IdCatCurrencyCOD
+	LEFT JOIN dbo.CreditCardTransactionByCustomer A1 WITH (NOLOCK)
+            ON A1.OrderNumber = do.Guide_Serie + CONVERT(VARCHAR, do.Guide_Number)
+               AND A1.ReasonCode = '00'
 	WHERE do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
 	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest AND RowStatus = 1)
 	AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega

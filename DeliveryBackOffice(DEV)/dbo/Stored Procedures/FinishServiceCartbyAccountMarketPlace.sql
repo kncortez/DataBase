@@ -108,7 +108,93 @@ SET @AccountStatement =	(SELECT
 
 			
 
-
+	-- Insertar registro de los productos que se adquirieron
+	INSERT [dbo].[Product] (
+	                        [CatProductId],
+							[ProductCost],
+							[ProductPurchaseEmail],
+							[ProductGiftShippingEmail],
+							[ProductCustomerId],
+							[ProductAccountId],
+							[ProductCodeOfReference],
+							[ProductVisitPointclientByClientPortfolioId],
+							[ProductInvoiceName],
+							[ProductTaxIdNumber],
+							[ProductFiscalAddress], 
+							[ProductCustomerPaymentId],
+							[ProductIsAutoRenewable],
+							[ProductMaxServiceFixedValue],
+							[ProductActualServiceCount],
+							[ProductExpirationDate],
+							[ProductDiscountValue],
+							[ProductCatProductSupplierId],
+							[ProductCatPointsAccumulation],
+							[ProductCatConfigPointsId],
+							[ProductCatSystemId],
+							[ProductCatModuleId],
+							[ArticleSAPId],
+							[RowStatus], 
+							[TokenCreated],
+							[DateCreated],
+							[ActivationCode])
+				SELECT 
+				        CP.IdCatProduct,
+						CP.CatProductCost,
+						@ProductPurchaseEmail,
+						PL.ProductGiftShippingEmail,
+						@IdCustomer,
+						@IdAccount, 
+						NULL,
+						NULL,
+						@ProductInvoiceName,
+						@ProductTaxIdNumber,
+						@ProductFiscalAddress,
+						@CardId,--identifcador de tarjeta
+						0,--es autorenovable
+						0,
+						1,
+						GETDATE()+(ISNULL(CP.CatProductVality,1)*30),
+						0,--descuento
+						CP.CatProductSupplierId,
+						CP.PointsAccumulation,
+						CP.CatConfigPointsId,
+						18,
+						22,
+						CP.ArticleSAPId, 
+						CASE 
+						    WHEN PL.IsGift = 1 AND (SELECT  ISNULL(res.UstStatus, 'N/A')
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+														WHERE usr.UsrEmail = PL.ProductGiftShippingEmail AND rus.RusIdSystem = 1
+															  AND ac.AccRowStatus = 1) ='ACTIVE'
+							
+							THEN 1
+							WHEN PL.IsGift = 0 AND @IdAccount IS NOT NULL AND @AccountStatement = 'ACTIVE'  THEN 1
+							ELSE 0
+							END,
+						@Token,
+						GETDATE(),
+						(SELECT TOP 1
+							CASE 
+								WHEN number < 8 THEN CHAR(number + 65)  -- Convertir número a letra (A=65, B=66, ..., H=72)
+								ELSE CHAR(number + 73)  -- Saltar las letras "I" y "O"
+							END
+						 FROM master.dbo.spt_values
+						 WHERE type = 'P' AND number BETWEEN 0 AND 25
+						 ORDER BY NEWID()
+						) + RIGHT('000000' + CAST(CP.IdCatProduct AS NVARCHAR(6)), 6) + CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65)
+				FROM @TblProductsList PL 
+				INNER JOIN dbo.CatProduct CP WITH(NOLOCK)
+				ON PL.IdCatProduct = CP.IdCatProduct 
 			
 
 			-------------------------Facturación------------------------------------------------------------
