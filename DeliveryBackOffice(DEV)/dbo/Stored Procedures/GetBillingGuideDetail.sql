@@ -459,7 +459,7 @@ BEGIN
                    1
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticle
-              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
+              AND (ca.IdCountry = @CountryByGuide OR (ca.IdCountry IS NULL AND @CountryByGuide = 'GT'));
 			
         IF @AmountCollect IS NOT NULL
            AND @AmountCollect > 0
@@ -472,7 +472,7 @@ BEGIN
                    1
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticleCollect
-              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
+              AND (ca.IdCountry = @CountryByGuide OR (ca.IdCountry IS NULL AND @CountryByGuide = 'GT'));
 
         IF @AmountWeight IS NOT NULL
            AND @AmountWeight > 0
@@ -485,7 +485,7 @@ BEGIN
                    1
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticleWeight
-              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
+              AND (ca.IdCountry = @CountryByGuide OR (ca.IdCountry IS NULL AND @CountryByGuide = 'GT'));
 
         IF @AmountSecure IS NOT NULL
            AND @AmountSecure > 0
@@ -498,7 +498,7 @@ BEGIN
                    1
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticleSecure
-              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
+              AND (ca.IdCountry = @CountryByGuide OR (ca.IdCountry IS NULL AND @CountryByGuide = 'GT'));
     END;
 
 		
