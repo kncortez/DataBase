@@ -1843,6 +1843,7 @@
     <Build Include="dbo\Stored Procedures\GetCustomParameterConfig_1.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetailForList_1.sql" />
     <Build Include="dbo\Stored Procedures\GetAnticipatedCODExecutionQueue_1.sql" />
+	<Build Include="dbo\Stored Procedures\GetBatchPOD.sql" />
     <Build Include="dbo\User Defined Types\TblBillingGuideDetail_1.sql" />
     <Build Include="dbo\User Defined Types\TblAnticipatedCODCustomerBalance_1.sql" />
   </ItemGroup>
