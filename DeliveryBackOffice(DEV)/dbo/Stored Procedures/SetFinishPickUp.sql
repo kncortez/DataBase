@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<Hugo,Gomez>
 -- Create date: <2021-02-06>
 -- Description:	<Finaliza el proceso de recoleccion insertando informacion en las tablas de costos>
