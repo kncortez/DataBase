@@ -27,6 +27,11 @@
 -- Create date: <2024-06-21>
 -- Description:	<Se agrega configuracion para multipais y multimoneda en EXC>
 -- =============================================
+-- =============================================
+-- Author:		<Brandon,Pedroza>
+-- Create date: <2025-03-21>
+-- Description:	<Cotizador - Se agrega configuracion para tarifas locales por medio de coberturas>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @CodApp AS NVARCHAR(50) = ''
   , @IdCustomerParams AS INT = 0
@@ -876,30 +881,8 @@ BEGIN
     END;
     DECLARE @IdSegment INT;
 
-    -- HeaderCodes Iguales - LOC
-    IF (@HeaderCodeSource = @HeaderCodeDestiny)
-    BEGIN
-        IF @Country = 'HN'
-        BEGIN
-            PRINT @Country;
+    -- HeaderCodes  - revisar tabla
 
-            SELECT TOP 1
-                   @IdSegment = sg.CrsId
-            FROM dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsShortName = 'LOH';
-
-        END;
-        ELSE
-        BEGIN
-            SELECT TOP 1
-                   @IdSegment = sg.CrsId
-            FROM dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsShortName = 'LOC';
-        END;
-    END;
-    -- HeaderCodes diferentes - revisar tabla
-    ELSE
-    BEGIN
         IF (@CustomerType != 1)
         BEGIN
 
@@ -937,7 +920,7 @@ BEGIN
                   AND CTC.RowStatus = 1;
         END;
 
-    END;
+
 
     IF @IdSegment IS NULL -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
     BEGIN
@@ -1434,17 +1417,7 @@ BEGIN
                )
             BEGIN
                 -- Cálculo de segmento - nuevas tarifas
-                -- HeaderCodes Iguales - LOC
-                IF (@HeaderCodeSource = @HeaderCodeDestiny)
-                BEGIN
-                    SELECT TOP 1
-                           @IdSegment = sg.CrsId
-                    FROM dbo.CatRateSegment sg WITH (NOLOCK)
-                    WHERE sg.CrsShortName = IIF(@Country ='HN','LOH','LOC');
-                END;
-                -- HeaderCodes diferentes - revisar tabla
-                ELSE
-                BEGIN
+                -- HeaderCodes  - revisar tabla
                     SELECT TOP 1
                            @IdSegment = RTC.SegmentTypeId
                     FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
@@ -1457,7 +1430,7 @@ BEGIN
                           AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
                           AND RTC.RowStatus = 1;
 
-                END;
+
 
                 IF (@IdSegment IS NULL) -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
                 BEGIN
