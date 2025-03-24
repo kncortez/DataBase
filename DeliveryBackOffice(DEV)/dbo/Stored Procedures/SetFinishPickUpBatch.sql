@@ -97,38 +97,23 @@ BEGIN
             DECLARE @TargetPoint GEOMETRY;
             DECLARE @TargetPointAsText NVARCHAR(MAX) = CONCAT('POINT (', @PickupLongitude, ' ', @PickupLatitude, ')');
 
-            SET @TargetGeofenceAsText
-                = (CONCAT(
-                             'POLYGON ((',
-                   (
-                       SELECT STUFF(
-                                       (
-                                           SELECT ', '
-                                                  + CONCAT(
-                                                              CAST(P.PointLongitude AS DECIMAL(9, 6)),
-                                                              ' ',
-                                                              CAST(P.PointLatitude AS DECIMAL(9, 6))
-                                                          )
-                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
-                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
-                                                   ON G.IdGeofence = GP.IdGeofence             
-                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
-                                                   ON GP.IdPoint = P.IdPoint                  
-                                           WHERE G.RowStatus = 1
-                                                 AND GP.RowStatus = 1
-                                                 AND P.RowStatus = 1
-                                                 AND G.IdGeofence = 1 -- Geocerca de GT
-                                           ORDER BY GP.GeofencePointOrder ASC
-                                           FOR XML PATH(''), TYPE
-                                       ).value('.', 'varchar(max)'),
-                                       1,
-                                       1,
-                                       ''
-                                   )
-                   ),
-                             '))'
-                         )
-                  );
+            SET @TargetGeofenceAsText = 
+				'POLYGON ((' + 
+				(
+					SELECT STRING_AGG(
+						CAST(CONCAT(CAST(P.PointLongitude AS DECIMAL(9, 6)), ' ', CAST(P.PointLatitude AS DECIMAL(9, 6))) AS NVARCHAR(MAX)), ', '
+					) 
+					FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
+					INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
+						ON G.IdGeofence = GP.IdGeofence             
+					INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
+						ON GP.IdPoint = P.IdPoint                  
+					WHERE G.RowStatus = 1
+						AND GP.RowStatus = 1
+						AND P.RowStatus = 1
+						AND G.IdGeofence = 1 -- Geocerca de GT
+				) 
+				+ '))';
 
             SET @TargetGeofence = geometry::STGeomFromText(@TargetGeofenceAsText, 0);
 
@@ -1206,21 +1191,12 @@ BEGIN
                 ROLLBACK TRANSACTION;
                 SELECT ERROR_MESSAGE();
                 -- retornar mensaje de error
-                SET @jsonResult =
-                (
-                    SELECT STUFF(
-                                    (
-                                        SELECT '"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
-                                               + CONVERT(NVARCHAR(MAX), ERROR_MESSAGE()) + '"}'
-                                        FROM @responsemessage
-                                        WHERE Id = 'Invalid'
-                                        FOR XML PATH(''), TYPE
-                                    ).value('.', 'varchar(max)'),
-                                    1,
-                                    1,
-                                    ''
-                                )
-                );
+
+                    SELECT IdResult AS IdResult, 
+                            ERROR_MESSAGE() AS [Message] 
+                    FROM @responsemessage
+                    WHERE Id = 'Invalid'
+
 
                 INSERT INTO dbo.RoutePreparationLogError
                 (
@@ -1250,15 +1226,6 @@ BEGIN
 
                     BEGIN TRAN Detail_SetFinishPickUpBatch
 
-                       SET @jsonResult =
-                       (
-                           SELECT STUFF(
-                                        (
-                                         SELECT ',{"Message":"Cambios realizados exitosamente"}'
-                                            FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'),
-                                           1,1,'')
-                       );
 
                        SET @BatchStatus =
                        (
@@ -1291,10 +1258,8 @@ BEGIN
                               @Token AS Token,
                               @PickUpEmail AS Email
 
-                       SELECT ('[' + @jsonResult + ']') jsonResult;
 
                        -- CORREO A ENVIAR MANIFIESTO
-                       SELECT @mail;
 
                        -- DATOS DEL MANIFIESTO A GENERAR
                        SELECT @ManifestNumber AS 'IdManifest',
@@ -1366,21 +1331,11 @@ BEGIN
                 BEGIN CATCH
                      ROLLBACK TRAN detail
 
-                     SET @jsonResult =
-                     (
-                         SELECT STUFF(
-                                         (
-                                             SELECT '"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
-                                                    + CONVERT(NVARCHAR(MAX), ERROR_MESSAGE()) + '"}'
-                                             FROM @responsemessage
-                                             WHERE Id = 'Invalid'
-                                             FOR XML PATH(''), TYPE
-                                         ).value('.', 'varchar(max)'),
-                                         1,
-                                         1,
-                                         ''
-                                     )
-                     );
+                        SELECT CONVERT(VARCHAR, IdResult) AS IdResult, 
+                            ERROR_MESSAGE() AS [Message] 
+                        FROM @responsemessage
+                        WHERE Id = 'Invalid'
+
                 END CATCH
 
                COMMIT TRANSACTION;
@@ -1390,56 +1345,15 @@ BEGIN
 
         ELSE IF (@test > 0)
         BEGIN
-            SET @jsonResult1 =
-            (
-                SELECT STUFF(
-                                (
-                                    SELECT ',{"Error":"' + ISNULL(CONVERT(VARCHAR, Guide), 'N/A') + +'"}'
-                                    FROM #Temp
-                                    WHERE Guide IN
-                                          (
-                                              SELECT Guide FROM #Temp
-                                          )
-                                    FOR XML PATH(''), TYPE
-                                ).value('.', 'varchar(max)'),
-                                1,
-                                1,
-                                ''
-                            )
-            );
 
-            SET @jsonResult2 =
-            (
-                SELECT STUFF(
-                                (
-                                    SELECT ',{"Message":"' + ISNULL(CONVERT(NVARCHAR(MAX), Message), 'N/A') + +'"}'
-                                    FROM #Temp
-                                    WHERE Guide IN
-                                          (
-                                              SELECT Guide FROM #Temp
-                                          )
-                                    FOR XML PATH(''), TYPE
-                                ).value('.', 'varchar(max)'),
-                                1,
-                                1,
-                                ''
-                            )
-            );
-            SET @jsonError =
-            (
-                SELECT STUFF(
-                                (
-                                    SELECT '{"IdResult":412' + ',' + '"Guides":[' + @jsonResult1 + '],' + '"Messege":['
-                                           + @jsonResult2 + ']' + ''
-                                    FOR XML PATH(''), TYPE
-                                ).value('.', 'varchar(max)'),
-                                1,
-                                1,
-                                ''
-                            )
-            );
-
-            SELECT ('{' + @jsonError + '}') jsonError;
+            SELECT 'IdResult' AS IdResult,
+					Guide,
+					Message
+            FROM #Temp
+            WHERE Guide IN
+                    (
+                        SELECT Guide FROM #Temp
+                    )
 
         END;
 

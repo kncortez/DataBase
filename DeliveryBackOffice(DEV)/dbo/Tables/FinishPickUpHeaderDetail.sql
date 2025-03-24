@@ -7,8 +7,8 @@ CREATE TABLE FinishPickUpDetail
 (
    IdFinishPickUpDetail BIGINT IDENTITY(1,1) PRIMARY KEY,
    SchedulePickupId     BIGINT,
-   GuideSerie           NVARCHAR(4),
-   GuideNumber          INT,
+   GuideSerie           NVARCHAR(4) NOT NULL,
+   GuideNumber          INT NOT NULL,
    GuidePiece           INT,
    RowStatus            BIT,
    TokenCreated         NVARCHAR(200),
@@ -16,8 +16,12 @@ CREATE TABLE FinishPickUpDetail
    TokenUpdated         NVARCHAR(200),
    DateUpdated          DATETIME,
    CONSTRAINT FK_PickupDetail_PickupHeader FOREIGN KEY (SchedulePickupId)
-            REFERENCES FinishPickUpHeader (SchedulePickupId)
+            REFERENCES FinishPickUpHeader (SchedulePickupId),
+   CONSTRAINT FK_FinishPickUpDetail_Guides FOREIGN KEY ([GuideSerie], [GuideNumber])
+            REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+CREATE NONCLUSTERED INDEX IX_FinishPickUpDetail_Guide ON [dbo].[FinishPickUpDetail] ([GuideSerie], [GuideNumber])
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
