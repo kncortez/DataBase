@@ -1,11 +1,11 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Tito Garcia>
 -- Create date: 01/08/2024
 -- Description:	Devuelve el listado de comprobantes de entregas y devoluciones de guías
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_deliveryorders_by_number_delivery_returns]
-	@_serie nvarchar(2) = 'FD'
-	,@_number nvarchar(max) 
+	@_serie NVARCHAR(2) = 'FD'
+	,@_number NVARCHAR(MAX) 
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -50,6 +50,11 @@ BEGIN
 		,do.Contact_Confirmed
 		,do.Contact_Instructions
 		,ISNULL(do.Receiver_CUI,' ') AS Receiver_CUI
+		,CASE 
+			WHEN do.Receiver_CUI IS NULL THEN ''
+			WHEN do.ReceiverCountryId = 'GT' THEN CONCAT('DPI ', do.Receiver_CUI)
+			WHEN do.ReceiverCountryId = 'HN' THEN CONCAT('DNI ', do.Receiver_CUI)
+		END AS ReceiverCUIAndLabel
 		,do.IsLastMileReturn
 		,dod.StatusOrderId
 		,dp.PathSignature
@@ -59,13 +64,13 @@ BEGIN
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN [DeliveryBackOffice].[dbo].deliveryorderdetail dod WITH(NOLOCK) 
 			ON do.Guide_Serie = dod.Guide_Serie AND do.Guide_Number = dod.Guide_Number   
-		INNER JOIN [DeliveryBackOffice].[dbo].DeliveryProof dp WITH(NOLOCK) 
+		LEFT JOIN [DeliveryBackOffice].[dbo].DeliveryProof dp WITH(NOLOCK) 
 			ON do.Guide_Serie = dp.Guide_Serie AND do.Guide_Number = dp.Guide_Number AND dp.PathSignature IS NOT NULL
 	WHERE dod.StatusOrderId IN (SELECT StatusOrderId FROM statusOrder WHERE OrderDescription IN('Entregado','Devuelto'))
 		AND dod.RowStatus = 1
 		AND do.Guide_Serie = @_serie
 		AND do.Guide_Number IN (SELECT ItemNumber FROM #listGuides)
-	ORDER BY dod.StatusOrderId ASC, do.Guide_Number DESC
+	ORDER BY dod.StatusOrderId ASC, do.Guide_Number DESC;
 
 	IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
 			DROP TABLE #listGuides;

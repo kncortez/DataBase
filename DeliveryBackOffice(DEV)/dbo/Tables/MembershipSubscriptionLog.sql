@@ -43,6 +43,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_MembershipSubscriptionLog_RowStatus]
     ON [dbo].[MembershipSubscriptionLog]([RowStatus] ASC)
@@ -63,4 +65,9 @@ CREATE NONCLUSTERED INDEX [IDX_SubscriptionId_RowStatus_INCLUDE]
 GO
 CREATE NONCLUSTERED INDEX [IDX_LogGuideNumber]
     ON [dbo].[MembershipSubscriptionLog]([LogGuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_LogGuideNumber_LogGuideSerie]
+    ON [dbo].[MembershipSubscriptionLog]([LogGuideNumber] ASC, [LogGuideSerie] ASC);
 

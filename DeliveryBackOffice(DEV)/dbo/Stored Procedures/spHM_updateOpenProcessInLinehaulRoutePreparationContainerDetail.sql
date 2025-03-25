@@ -41,7 +41,9 @@ BEGIN
 		FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-			AND		[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
+		WHERE
+			--AND
+			[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
 			AND		[GuideSerie] = @GuideSerie
 			AND		[GuideNumber] = @GuideNumber;
 
@@ -80,21 +82,23 @@ BEGIN
 											FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 											INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 												ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-												AND		[LRPCD].[RowStatus] = 1
+												
 											WHERE		[LRPCDP].[IsDryPiece] = 1
 												AND		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
 												AND		[LRPCDP].[RowStatus] = 1
-												AND		[LRPCDP].[ActCode] IS NULL);
+												AND		[LRPCDP].[ActCode] IS NULL
+												AND		[LRPCD].[RowStatus] = 1);
 
 		SET @COLD_PIECE_QUANTITY_PIECE =	(SELECT	COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
 											FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP WITH (NOLOCK)
 											INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 												ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-												AND		[LRPCD].[RowStatus] = 1
+												
 											WHERE		[LRPCDP].[IsDryPiece] = 0
 												AND		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
 												AND		[LRPCDP].[RowStatus] = 1
-												AND		[LRPCDP].[ActCode] IS NULL);
+												AND		[LRPCDP].[ActCode] IS NULL
+												AND		[LRPCD].[RowStatus] = 1);
 
 		UPDATE	[LinehaulRoutePreparationContainerDetail]
 		SET		[DryPieceQuantity] =							@DRY_PIECE_QUANTITY_PIECE,
