@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatSubscription] (
+CREATE TABLE [dbo].[CatSubscription] (
     [IdCatSubscription]                INT             IDENTITY (1, 1) NOT NULL,
     [SubscriptionName]                 NVARCHAR (50)   NOT NULL,
     [SubscriptionDescription]          NVARCHAR (300)  NULL,
@@ -67,3 +67,46 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País de la suscripcion ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSubscription', @level2type=N'COLUMN',@level2name=N'IdCountry'
 GO
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'IdCatSubscription';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre de la categoría de suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'SubscriptionName';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción de la categoría de suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'SubscriptionDescription';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Costo de la suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'SubscriptionCost';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Número fijo de servicios incluidos ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'SubscriptionFixedValue';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Número máximo de servicios permitidos', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'SubscriptionMaxServiceFixedValue';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Duración de la suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'SubscriptionValidity';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Peso de la suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'SubscriptionWeight';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Estado de la suscripción (1 Activa, 0 Inactiva).', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Ícono de la suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'Icon';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Moneda asociada a la suscripción. Referencia a tabla CatCurrencyCOD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'IdCatCurrencyCOD';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Tabla de catalogos de suscripciones',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatSubscription',
+    @level2type = NULL,
+    @level2name = NULL

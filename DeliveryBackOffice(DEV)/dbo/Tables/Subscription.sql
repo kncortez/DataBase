@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Subscription] (
+CREATE TABLE [dbo].[Subscription] (
     [IdSubscription]                   INT             IDENTITY (1, 1) NOT NULL,
     [MembershipId]                     INT             NULL,
     [CatSubscriptionId]                INT             NOT NULL,
@@ -59,6 +59,66 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'código de act
 
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'correo al cual se envía el regalo del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ProductGiftShippingEmail'
+
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'IdSubscription';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la membresía asociada.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'MembershipId';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la tipo de suscripción. Referencia a tabla CatSuscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'CatSubscriptionId';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Estado (1 activo, 0 inactivo)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'CatSubscriptionStatusId';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Código único de la suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'SubscriptionCode';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Costo de la suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'SubscriptionCost';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del cliente asociado. Referencia a tabla Customer', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'CustomerId';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la cuenta asociada. Referencia a tabla account', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'AccountId';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Punto de visita del cliente. Referencia a tabla VisitPointClient', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'VisitPointClientId';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del pago del cliente asociado.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'CustomerPaymentId';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si la suscripción se renueva automáticamente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'IsAutoRenewable';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de servicios incluidos en la suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'SubscriptionFixedValue';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Máximo número de servicios permitidos en la suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'SubscriptionMaxServiceFixedValue';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Número actual de servicios utilizados.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'ActualServiceCount';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de expiración de la suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'ExpirationDate';
+
+GO
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Estado de la suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Tabla de suscripciones',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Subscription',
+    @level2type = NULL,
+    @level2name = NULL
+
 
 GO
 CREATE NONCLUSTERED INDEX [idx_CatSubscriptionId]
