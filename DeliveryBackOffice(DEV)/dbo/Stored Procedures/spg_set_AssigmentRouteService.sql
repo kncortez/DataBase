@@ -436,7 +436,7 @@ BEGIN
             SET StatusOrderId = @status,
                 TokenUpdated = @token,
                 DateUpdated = GETDATE()
-            FROM ServiceManagement sm
+            FROM ServiceManagement sm WITH (NOLOCK)
                 INNER JOIN SchedulePickup sp WITH (NOLOCK)
                     ON (sm.IdSchedulePickup = sp.SchedulePickupId)
                 INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
