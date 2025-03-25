@@ -19,7 +19,7 @@ CREATE TABLE FinishPickUpDetail
             REFERENCES FinishPickUpHeader (SchedulePickupId),
    CONSTRAINT FK_FinishPickUpDetail_Guides FOREIGN KEY ([GuideSerie], [GuideNumber])
             REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
-);
+); 
 
 CREATE NONCLUSTERED INDEX IX_FinishPickUpDetail_Guide ON [dbo].[FinishPickUpDetail] ([GuideSerie], [GuideNumber])
 
