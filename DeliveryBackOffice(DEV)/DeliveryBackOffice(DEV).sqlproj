@@ -608,6 +608,8 @@
     <Build Include="dbo\Tables\AccountBankFormatRule.sql" />
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
+    <Build Include="dbo\Tables\FinishPickUpHeader.sql" />
+    <Build Include="dbo\Tables\FinishPickUpHeaderDetail.sql" />
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
@@ -1753,6 +1755,8 @@
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromDeliverySettlement.sql" />
     <Build Include="dbo\Stored Procedures\GetValidaReturnGuide.sql" />
+    <Build Include="dbo\Stored Procedures\GetBatchPOD.sql" />
+    <Build Include="dbo\Stored Procedures\GetProcessBatchPOD.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1845,6 +1849,7 @@
     <Build Include="dbo\Stored Procedures\GetAnticipatedCODExecutionQueue_1.sql" />
     <Build Include="dbo\User Defined Types\TblBillingGuideDetail_1.sql" />
     <Build Include="dbo\User Defined Types\TblAnticipatedCODCustomerBalance_1.sql" />
+    <Build Include="dbo\Stored Procedures\SetFinishPickUpBatch.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
