@@ -500,26 +500,31 @@ BEGIN
 			   ,NULL
 			   ,NULL
 			FROM #GuideTable GT
-			INNER JOIN RateByCustomer rc WITH (NOLOCK)
-				ON rc.RbcId = (SELECT TOP 1 rbc.RbcId
-                                FROM RatebyCustomer rbc WITH (NOLOCK)
-                                INNER JOIN VisitPointClient vpc WITH (NOLOCK)
-                                    ON GT.Sender_ID = vpc.CodeOfReference
-                                    AND rbc.RbcCodeOfReference = vpc.CodeOfReference
-                                WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
-                                    AND rbc.RbcRowStatus = 1
-                                UNION ALL
-                                SELECT TOP 1 rbc.RbcId
-                                FROM RatebyCustomer rbc WITH (NOLOCK)
-                                INNER JOIN VisitPointClient vpc WITH (NOLOCK)
-                                    ON GT.Sender_ID = vpc.CodeOfReference
-                                    AND rbc.RbcCodeOfReference IS NULL
-                                WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
-                                    AND rbc.RbcRowStatus = 1
-                                ORDER BY rbc.RbcCodeOfReference DESC                           
-                                )
-			INNER JOIN RateHeader rh WITH (NOLOCK)
-				ON rc.RbcIdRate = rh.RheId
+            CROSS APPLY (
+                SELECT TOP 1 RbcId FROM (
+                    SELECT TOP 1 rbc.RbcId, 1 AS Priority
+                    FROM RatebyCustomer rbc WITH (NOLOCK)
+                    INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+                        ON GT.Sender_ID = vpc.CodeOfReference
+                    WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
+                        AND rbc.RbcRowStatus = 1
+                        AND rbc.RbcCodeOfReference = vpc.CodeOfReference        
+                    UNION ALL        
+                    SELECT TOP 1 rbc.RbcId, 2 AS Priority
+                    FROM RatebyCustomer rbc WITH (NOLOCK)
+                    INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+                        ON GT.Sender_ID = vpc.CodeOfReference
+                    WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
+                        AND rbc.RbcRowStatus = 1
+                        AND rbc.RbcCodeOfReference IS NULL
+                    ORDER BY rbc.RbcCodeOfReference DESC                           
+                ) AS CombinedResults
+                ORDER BY Priority
+            ) AS BestRate
+            INNER JOIN RateByCustomer rc WITH (NOLOCK)
+                ON rc.RbcId = BestRate.RbcId
+            INNER JOIN RateHeader rh WITH (NOLOCK)
+                ON rc.RbcIdRate = rh.RheId;
         -- Fin FDAPI-1418 Oscar Morales 2023-02-23
 
         -- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
