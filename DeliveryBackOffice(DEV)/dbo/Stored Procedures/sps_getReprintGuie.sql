@@ -7,14 +7,38 @@
 -- Create date: <2024-07-24>
 -- Description: <Se retiro el parametro de pais, y se toma el pais desde la guia>
 -- =============================================
+-- =============================================
+-- Modified:    <Edelman>
+-- Create date: <2025-27-03>
+-- Description: <Trasladar Json a nivel de código de API>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
 as
-begin
-    DECLARE @CountryThatConsults VARCHAR(2) = 'GT'
+BEGIN
+ DECLARE @CountryThatConsults VARCHAR(2) = 'GT'
 
-    
+	DECLARE @Integration TABLE
+	(
+		Currency NVARCHAR(5),
+		[Description] NVARCHAR(50),
+		Price DECIMAL(8, 2)
+	)
+
+	DECLARE @Temp TABLE
+	(
+		[length] DECIMAL(8, 2),
+		width DECIMAL(8, 2),
+		height DECIMAL(8, 2),
+		[weight] DECIMAL(8, 2),
+		amount DECIMAL(8, 2),
+		currency NVARCHAR(10),
+		ParcelCode NVARCHAR(15),
+		fragil NVARCHAR(10),
+		descripcion NVARCHAR(100)
+	)
+
     SET @CountryThatConsults = (
 		SELECT TOP 1 SenderCountryId
 			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
@@ -35,7 +59,7 @@ begin
 		from
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
 		where
-			[KOVPC].[KindOfVPName] = 'Concesionario' AND ISNULL([KOVPC].[IdCountry],'GT')=@CountryThatConsults --collate Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario' AND ISNULL([KOVPC].[IdCountry],'GT')=@CountryThatConsults 
 	)
 	declare @ExpressVisitPointTypeId int = 
 	(
@@ -45,7 +69,7 @@ begin
 		from
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
 		where
-			[KOVPC].[KindOfVPName] = 'Express Center' AND ISNULL([KOVPC].[IdCountry],'GT')=@CountryThatConsults --collate Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center' AND ISNULL([KOVPC].[IdCountry],'GT')=@CountryThatConsults 
 	)
 	declare @IndividualWebSys int =
 	(
@@ -55,7 +79,7 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web'  
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -65,7 +89,7 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter' 
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -75,7 +99,7 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -85,7 +109,7 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Parser'  
 	)
 	DECLARE @GuidePriority INT = 0;
     DECLARE @jsonOutput VARCHAR(MAX) = '',
@@ -134,8 +158,9 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI 
-		AND ISNULL(IdCountry,'GT')=@CountryThatConsults
+			[KOVPC].[KindOfVPName] = 'Express Center'  
+		--AND ISNULL(IdCountry,'GT')=@CountryThatConsults
+		 AND (IdCountry = @CountryThatConsults OR (IdCountry IS NULL AND @CountryThatConsults = 'GT'))
 	);
 
     DECLARE @DaysToExpiration INT =
@@ -179,7 +204,9 @@ begin
                                        END;
     DECLARE @ExpressName VARCHAR(50) = '';
 
-	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B'AND ISNULL(IdCountry,'GT')=@CountryThatConsults);
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B'AND
+ (IdCountry = @CountryThatConsults OR (IdCountry IS NULL AND @CountryThatConsults = 'GT')));
+
 
     IF (@Impersonate = 'TRUE')
     BEGIN
@@ -211,19 +238,23 @@ begin
 
     WHILE @i > 0
     BEGIN
-        SELECT @arpieces
-            = @arpieces + '{"length":' + CONVERT(VARCHAR, ISNULL(PieceLength, 0)) + ',' + +'"width":'
-              + CONVERT(VARCHAR, ISNULL(PieceWidth, 0)) + ',' + +'"height":' + CONVERT(VARCHAR, ISNULL(PieceHeight, 0))
-              + ',' + +'"weight":' + CONVERT(VARCHAR, ISNULL(PieceWeight, 0)) + ',' + +'"amount":'
-              + CONVERT(VARCHAR, ISNULL(Amount, 0)) + ', ' + '"currency":"' + COALESCE(Currency, '') + '",'
-			  +'"ParcelCode":"'+ COALESCE(ParcelCode,'')+'",'+
-              + +'"fragil":' + CASE
-                                   WHEN fragile = 1 THEN
-                                       'true'
-                                   ELSE
-                                       'false'
-                               END + ',' + +'"description":"' + COALESCE(Detail, '') + '"' + '},',
-               @calcurrency = COALESCE(Currency, '')
+
+		SET  @calcurrency = (SELECT TOP 1 COALESCE(Currency, '') FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH (NOLOCK) WHERE GuideNumber = @Guide_Number AND GuideSerie = @Serie_Number)
+		INSERT INTO @Temp ([length], width, height, [weight], amount, currency, ParcelCode, fragil, descripcion)
+        SELECT PieceLength AS [length], 
+               PieceWidth AS width, 
+			   PieceHeight AS height,
+               PieceWeight AS weight, 
+               Amount AS amount,
+			   COALESCE(Currency, '') AS currency, 
+			   COALESCE(ParcelCode,'') AS ParcelCode,
+               CASE
+                    WHEN fragile = 1 THEN
+                        'true'
+                    ELSE
+                        'false'
+                END AS fragil,
+				COALESCE(Detail, '') AS [description]
         FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH (NOLOCK)
         WHERE GuideNumber = @Guide_Number
 		AND GuideSerie = @Serie_Number
@@ -261,10 +292,10 @@ begin
 
     WHILE @j > 0
     BEGIN
-        SELECT @integrationCost
-            = @integrationCost + '{"Currency":"' + @calcurrency + '",' + +'"Description":"'
-              + CONVERT(VARCHAR, ISNULL(Description, 0)) + '",' + +'"Price":"' + CONVERT(VARCHAR, ISNULL(Amount, 0))
-              + '"' + '},'
+		INSERT INTO @Integration (Currency, [Description], Price)
+        SELECT @calcurrency  AS Currency,
+               [Description] , 
+			   Amount AS Price
         FROM DeliveryBackOffice.[dbo].[Cost] ct WITH (NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.BreakdownOfPayment bdp WITH (NOLOCK)
                 ON bdp.IdCost = ct.IdCost
@@ -311,451 +342,338 @@ begin
 
     /*end integration cost*/
 
-    SET @jsonOutput =
-    (
-        SELECT ''
-               + STUFF(
-                          (
-                              SELECT DISTINCT TOP 1 --Price
-                                     ',{"DateOfSale":"' + CONVERT(VARCHAR, ISNULL(dev.Preparation_Date, GETDATE()), 121)
-                                     + '",' + '"ContentDescription":"'
-                                     + CONVERT(VARCHAR, ISNULL(dev.Package_Description, '')) + '",' + '"IdCountry":"'
-									 --SE AGREGA EL ID DEL PAIS DESTINO Y SI TIENE INCIDENCIAS AL PAIS ORIGEN, CRISTIAN SUAZO
-                                     + CASE WHEN dev.IsLastMileReturn=0   
-											THEN CONVERT(VARCHAR, COALESCE(dev.ReceiverCountryId, 'GT')) 
-											ELSE CONVERT(VARCHAR, COALESCE(dev.SenderCountryId, 'GT'))
-									   END+ '",' + '"CountPieces":'
-									 --FIN CAMBIO
-                                     + CONVERT(VARCHAR, ISNULL(dev.Pieces_Dry + dev.Pieces_Cold, 0)) + ','
-                                     + '"Collected":' + CASE
-                                                            WHEN dev.IsCollect = 1 THEN
-                                                                'true'
-                                                            ELSE
-                                                                'false'
-                                                        END + ',' +
-                                  /*valor del felte para imprimir en la guia*/
-                                  '"Price":"' + COALESCE(CONVERT(VARCHAR, dev.PriceShippment), '0.00') + '",' +
-								  '"PaymentAllowsCollect":"'  + COALESCE(CONVERT(VARCHAR, @PaymentAllowsCollect), '0') + '",' +
-                                  /*valor collect*/
-                                  '"IdCustomer":'
-                                     + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0')
-                                     + ',' + 
-									 
-									 (
-									 CASE WHEN dev.IsLastMileReturn=1 THEN
-										'"to_address":'
-										ELSE
-										'"from_address":'
-										END
-									 )
-									 +' {' + '"HeaderCodeTownship":"'
-                                     + CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) + '",' +
-                                  -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
-                                  '"name":"' + IIF(ISNULL([dev].[IsLastMileReturn], 0) = 1 AND [vp].[IdKindOfVPClient] = @EXCKindOfVPC, REPLACE(dbo.fnt_String_Escape(ISNULL([vp].[DescriptionOfClient], ''), 'json'), '"','') + ' - ' , '') +
-                                     + REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           (CASE
-                                                                                WHEN @Impersonate = 'TRUE' THEN
-                                                                                    --IMPERSONADO
-                                                                                    CASE
-                                                                                        WHEN (dev.IsReturn = 1) THEN
-                                                                                            --SI DEVOLUCION
-                                                                                            CASE
-                                                                                                WHEN (@customerType = 1) THEN
-                                                                                                    --CORPORATIVO
-                                                                                                    COALESCE(
-                                                                                                                dev.Sender_FirstName,
-                                                                                                                ''
-                                                                                                            )
-                                                                                                ELSE
-                                                                                                    --INDIVIDUAL
-                                                                                                    COALESCE(
-                                                                                                                dev.Sender_FirstName,
-                                                                                                                ''
-                                                                                                            )
-                                                                                            END
-                                                                                        ELSE
-                                                                                            -- NO DEVOLUCION
-                                                                                            CASE
-                                                                                                WHEN (@customerType = 1) THEN
-                                                                                                    --CORPORATIVO
-                                                                                                    COALESCE(
-                                                                                                                vp.DescriptionOfClient,
-                                                                                                                ''
-                                                                                                            )
-                                                                                                ELSE
-                                                                                                    --INDIVIDUAL
-                                                                                                    COALESCE(
-                                                                                                                dev.Sender_FirstName,
-                                                                                                                ''
-                                                                                                            )
-                                                                                            END
-                                                                                    END
-                                                                                ELSE
-                                                                                    --NO IMPERSONADO
-                                                                                    CONVERT(
-                                                                                               VARCHAR,
-                                                                                               COALESCE(
-                                                                                                           dev.Sender_FirstName,
-                                                                                                           ''
-                                                                                                       )
-                                                                                           ) + ' '
-                                                                                    + CONVERT(
-                                                                                                 VARCHAR,
-                                                                                                 COALESCE(
-                                                                                                             dev.Sender_LastName,
-                                                                                                             ''
-                                                                                                         )
-                                                                                             )
-                                                                            END
-                                                                           ),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  ' '
-                                              ) + '",' + '"phone":"'
-                                     + REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ') + '",'
-                                     + '"email":"' + CONVERT(VARCHAR, COALESCE(rgu.UsrEmail, '')) + '",' + '"address1":"'
-                                     + REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           CONVERT(
-                                                                                      VARCHAR(200),
-                                                                                      COALESCE(dev.Sender_Address, '')
-                                                                                  ),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  '\"'
-                                              ) + '",' + '"address2":"'
-                                     + REPLACE(dbo.fnt_String_Escape(COALESCE(dev.TypeService, 'EXP'), 'json'), '"', ' ')
-                                     + '",' + '"city":"' + COALESCE(ctm.Abbreviation, '') + '",' + '"IdMerchant":'
-                                     + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0')
-                                     + ',' +
-									 + '"ReceiverIdSettlement":0'
-                                      + ', ' +
-                                  -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
-                                  '"contact":"'
-                                     + REPLACE(
-										dbo.fnt_String_Escape(
-																(CASE
-																	WHEN dev.[IsLastMileReturn] = 1 THEN ''
-																	WHEN @Impersonate = 'TRUE' THEN
-																		--IMPERSONADO
-																		CASE
-																			WHEN (dev.IsReturn = 1) THEN
-																				--SI DEVOLUCION
-																				CASE
-																					WHEN (@customerType = 1) THEN
-																						--CORPORATIVO
-																						COALESCE(@ExpressName, '')
-																					ELSE
-																						--INDIVIDUAL
-																						COALESCE(@ExpressName, '')
-																				END
-																			ELSE
-																				-- NO DEVOLUCION
-																				CASE
-																					WHEN (@customerType = 1) THEN
-																						--CORPORATIVO
-																						COALESCE(dev.Sender_FirstName, '')
-																					ELSE
-																						--INDIVIDUAL
-																						COALESCE(@ExpressName, '')
-																				END
-																		END
-																	ELSE
-																		--NO IMPERSONADO
-																		CONVERT(VARCHAR, COALESCE(dev.Sender_FirstName, '')) + ' '
-																		+ CONVERT(VARCHAR, COALESCE(dev.Sender_LastName, ''))
-																END)
-											                ,'json')
-									   ,'"'
-									   ,' ') + '"' + '},' +
-									   
-									 (
-									 CASE WHEN dev.IsLastMileReturn=1 THEN
-										'"from_address":'
-										ELSE
-										'"to_address":'
-										END
-									 )									   
-									   
-									   +'{' + '"HeaderCodeTownship":"'
-                                     + CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, '')) + '",' + '"name":"'
-                                     + REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           COALESCE(dev.Receiver_FirstName, '') + ' '
-                                                                           + COALESCE(dev.Receiver_LastName, ''),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  ' '
-                                              ) + '",' + '"phone":"' + REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ')
-                                     + '",' + '"email":"' + REPLACE(COALESCE(dev.Receiver_Email, ''), '"', ' ') + '",'
-                                     + '"address1":"'
-                                     + REPLACE(dbo.fnt_String_Escape(COALESCE(dev.Receiver_Address, ''), 'json'), '"', '\"')
-                                     + '",' + '"address2":"'
-                                     + REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           COALESCE(
-                                                                                       LOWER(dev.IndicationsToSendDestination),
-                                                                                       ''
-                                                                                   ),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  '\"'
-                                              ) + '",' + '"city":"' + '' + '",' 
-											  
-											  +'"IdMerchant":'
-                                     + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0') + ','
+			SELECT 200 AS StatusCode,
+				   'Información encontrado con exito' AS [Message]
 
-											  + '"ReceiverIdSettlement":'
-                                     + CONVERT(VARCHAR, ISNULL(dev.ReceiverIdSettlement, 0)) + ', ' + '"contact":"'
-                                     + REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           COALESCE(dev.Receiver_Alternant_FullName, ''),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  '\"'
-                                              ) + '"' + '},' + '"parcels": [' + COALESCE(@arpieces, '') + ' ] , '
-                                     + '"TotalWeight":' + CONVERT(VARCHAR, @TotalWeight) + ', ' + '"TotalValue":'
-                                     + CONVERT(VARCHAR, @TotalValue) + ',' + '"Currency":"' + @calcurrency + '",'
-                                     + '"ProductInsuranceAmount":'
-                                     + CONVERT(VARCHAR, CAST(ISNULL(dev.InsuranceAmount, 0) AS MONEY)) + ','
-                                     + '"InsuranceCurrency":"' + CONVERT(VARCHAR, @calcurrency) + '",'
-                                     + '"CodeOfReference":' + CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) + ',' +
-									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
-                                     + '"IdInternalOrderRef":"' 
-                                     + REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                        CONVERT(VARCHAR, COALESCE(dev.Ticket_Number, '')) ,
-                                                                        'json'
-                                                                       ),
-                                                  '"',
-                                                  '\"'
-                                              ) 
-                                     + '",'
-									 +'"IdInternalOrderRef2":"'
-                                     + REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                        CONVERT(VARCHAR, COALESCE([dev].[Order_Number], '')) ,
-                                                                        'json'
-                                                                       ),
-                                                  '"',
-                                                  '\"'
-                                              ) 
-                                     + '",'
-									 + '"Service_Ref1":"' 
-                                     + REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           COALESCE(
-                                                                                       LOWER(dev.IndicationsToSendDestination),
-                                                                                       ''
-                                                                                   ),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  '\"'
-                                              ) 
-                                     + '",'
-                                     + '"Username":"'
-                                     + dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json')
-                                     + '",' + '"ExpirationDate":"'
-                                     + CONVERT(
+			SELECT DISTINCT TOP 1 --Price
+					CONVERT(VARCHAR, ISNULL(dev.Preparation_Date, GETDATE()), 121) AS DateOfSale,
+					dev.Package_Description AS ContentDescription, 
+					--SE AGREGA EL ID DEL PAIS DESTINO Y SI TIENE INCIDENCIAS AL PAIS ORIGEN, CRISTIAN SUAZO
+					CASE WHEN dev.IsLastMileReturn=0   
+						THEN CONVERT(VARCHAR, COALESCE(dev.ReceiverCountryId, 'GT')) 
+						ELSE CONVERT(VARCHAR, COALESCE(dev.SenderCountryId, 'GT'))
+					END AS IdCountry,
+					--FIN CAMBIO
+					dev.Pieces_Dry + dev.Pieces_Cold AS CountPieces, 
+					CASE
+					WHEN dev.IsCollect = 1 THEN
+						'true'
+					ELSE
+						'false'
+				END AS Collected, 
+				/*valor del felte para imprimir en la guia*/
+				COALESCE(dev.PriceShippment, '0.00') AS Price, 
+				COALESCE(@PaymentAllowsCollect, '0') AS PaymentAllowsCollect, 
+				/*valor collect*/
+				COALESCE(ctm.IdCustomer, vp.CustomerID, '0') AS IdCustomer,
+				@TotalWeight AS TotalWeight,
+				@TotalValue AS TotalValue,
+				@calcurrency AS Currency,
+				dev.InsuranceAmount AS ProductInsuranceAmount,
+				@calcurrency AS InsuranceCurrency,
+				COALESCE(dev.Sender_ID, 0) AS CodeOfReference,
+				COALESCE(dev.Receiver_ID, 0) AS CodeOfReferenceDestiny,
+				COALESCE(dev.Ticket_Number, '') AS IdInternalOrderRef,
+				COALESCE([dev].[Order_Number], '') AS IdInternalOrderRef2,
+				COALESCE(LOWER(dev.IndicationsToSendDestination),'') AS Service_Ref1,
+				COALESCE(dev.OrderUserCreated, '') AS Username,
+				--COALESCE(DATEADD(DAY, @DaysToExpiration, dev.DateCreated), '') AS ExpirationDate,
+				CONVERT(
                                                   VARCHAR,
                                                   COALESCE(DATEADD(DAY, @DaysToExpiration, dev.DateCreated), ''),
                                                   103
-                                              ) + '",' + '"Route":"",'
-                                     + '"TypeService":"' + dbo.fnt_String_Escape(COALESCE(dev.TypeService, 'EXP'), 'json')
-                                     + '",' + '"Service_Payment":"' + COALESCE(CPT.TimePlaName, '') + '",' +
-                                  /*nueva seccion del si esta asegurado o no*/
-                                  '"IsInsuarance":' + (CASE
-                                                           WHEN dev.IsInsuarance = 1 THEN
-                                                               'true'
-                                                           ELSE
-                                                               'false'
-                                                       END
-                                                      ) + ',' +
-                                  /**/
-                                  '"IsReturn":' + (CASE
-                                                       WHEN dev.IsReturn = 1 THEN
-                                                           'true'
-                                                       ELSE
-                                                           'false'
-                                                   END
-                                                  ) + ',' + '"VisitPointByClientPortfolioId":'
-                                     + CONVERT(   VARCHAR,
-                                                  (CASE
-                                                       WHEN ISNULL(dev.VisitpointClientPortfolioId, 0) > 0 THEN
-                                                           dev.VisitpointClientPortfolioId
-                                                       ELSE
-                                                           0
-                                                   END
-                                                  )
-                                              ) + ',' +
-                                  /*Campos descripcion de entrega*/
-                                  '"idDeliveryOption":' + CONVERT(NVARCHAR, COALESCE(cdo.IdDeliveryOption, 0)) + ','
-                                     + '"descriptionDelivery":"'
-                                     + REPLACE(dbo.fnt_String_Escape(COALESCE(cdo.[Name], ''), 'json'), '"', ' ') + '",'
-                                     + '"Impersonate":"' + @Impersonate + '",' + '"SaleChannel":'
-                                     + CONVERT(NVARCHAR, COALESCE(@SalesChannel, 0)) + ',' +
-                                  /**/
-                                  '"COD":  {' + '"CashOnDelivery": ' + (CASE
-                                                                            WHEN dev.Collect_OnDelivery > 0 THEN
-                                                                                'true'
-                                                                            ELSE
-                                                                                'false'
-                                                                        END
-                                                                       ) + ',' + '"CreditNumber":"'
-                                     + CONVERT(VARCHAR, ISNULL(dev.Order_Number, 0)) + '",' + '"AmmountCashOnDelivery": '
-                                     + COALESCE(CONVERT(VARCHAR, dev.Collect_OnDelivery), '0') + ','
-                                     + '"CashOnDeliveryCurrency":"' + 
-                                        CASE 
-                                            WHEN dev.SenderCountryId = 'GT' THEN 'GTQ'
-                                            WHEN dev.SenderCountryId = 'HN' THEN 'HNL'
-                                            ELSE 'HNL'
-                                        END  
-                                     + '",'
-                                     + '"BankAccountName":"AccountName",' /*,*/ + '"BankId":"'
-                                     + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Bank_Id), '') + '",' + '"BankAccountType":"'
-                                     + COALESCE(CONVERT(VARCHAR, dcba.DCBA_BankAccountType), '') + '",'
-                                     + '"BankAccountId":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Num_account), '') + '",'
-                                     + '"Identification":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Identification), '')
-                                     + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ], ' 
-									  + '"Priority": "' + 
-										COALESCE(
-											(CASE 
-												WHEN ISNULL([dev].[IsLastMileReturn], 0) = 1 THEN 'D'
-												WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
-												WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
-												ELSE 'E'
-											END)
-										, '') + '",' 
-									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
-									 + '"UseMembership": ' + CONVERT(VARCHAR, CAST(ISNULL((CASE WHEN [MSL].[IdMembershipSubscriptionLog] IS NOT NULL THEN 1 ELSE 0 END), 0) AS BIT)) + ',' 
-									 + '"AllowsCollect": ' + CONVERT(VARCHAR, IIF(CSBT.CatTypeSubscriptionId = 2, 0,1)) + ','  
-									 + '"CategoryProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL, CMSL.CatProductCategoryId,IIF(CSBT.CatProductCategoryId IS NOT NULL,CSBT.CatProductCategoryId, 0) )) + ',' 
-									 + '"ProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL,[MSL].[MembershipId], IIF(MSL.SubscriptionId IS NOT NULL,MSL.SubscriptionId, 0))) + ','  
-									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
-									 + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ',' 
-                                     + '"Route_Code": "' + ISNULL(CAST(DSC.RouteCode AS varchar),'') + '",' 
-									 + '"DeliveryETA": "' + COALESCE
-																(
-																	FORMAT([dev].[DeliveryETA], 'ddMM')
-																	, ''
-																) + '",' 
-									 + '"WayToPayDescription": "' + COALESCE
-																		(
-																			(
-																				CASE
-																					WHEN ISNULL([dev].[IsCollect], 0) = 1 THEN 'COLLECT'
-																					WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
-																					WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
-																					WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'
-																					WHEN [DOPD].[TimePlaId] = 4 THEN 'CRÉDITO'
-																					ELSE 'CRÉDITO'
-																				END
-																			)
-																			, ''
-																		) + '",' 
-									 + '"GuideOrigin": "' + COALESCE
-																(
-																	(
-																		CASE
-																			WHEN [vp].[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
-																			WHEN [vp].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
-																			WHEN [vpori].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
-																			WHEN [dev].[CatSystemId] = @IndividualWebSys THEN 'WEB'
-																			WHEN [dev].[CatSystemId] = @ExpressWebSys THEN 'EXC'
-																			WHEN [dev].[CatSystemId] = @CorporateWebSys THEN 'COR'
-																			WHEN [dev].[CatSystemId] = @ParserSys THEN 'PAR'
-																			WHEN [dev].[CatSystemId] IS NULL THEN 'API'
-																			ELSE 'API'
-																		END
-																	)
-																	, ''
-																) + '",' 
-									 + '"Icon": "' + (CASE
-															WHEN 
-																(dev.IsCollect <> 1 AND dev.Collect_OnDelivery>0 )
-																or ctm.Abbreviation IN ('IGSS','RENAP')
+                                              )AS ExpirationDate,
+				COALESCE(dev.TypeService, 'EXP') AS TypeService,
+				COALESCE(CPT.TimePlaName, '') AS Service_Payment,
+				CASE
+					WHEN dev.IsInsuarance = 1 THEN
+						'true'
+					ELSE
+						'false'
+				END AS IsInsuarance,
+				CASE
+					WHEN dev.IsReturn = 1 THEN
+						'true'
+					ELSE
+						'false'
+				END AS IsReturn,
+				CASE
+					WHEN COALESCE(dev.VisitpointClientPortfolioId, 0) > 0 THEN
+						dev.VisitpointClientPortfolioId
+					ELSE
+						0
+				END AS VisitPointByClientPortfolioId,
+				COALESCE(cdo.IdDeliveryOption, 0) AS idDeliveryOption,
+				COALESCE(cdo.[Name], '') AS descriptionDelivery,
+				@Impersonate AS Impersonate,
+				COALESCE(@SalesChannel, 0) AS SaleChannel,
+				CASE 
+					WHEN ISNULL([dev].[IsLastMileReturn], 0) = 1 THEN 'D'
+					WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
+					WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
+					ELSE 'E'
+				END AS [Priority],
+				COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') AS QRLink,
+				COALESCE((CASE WHEN [MSL].[IdMembershipSubscriptionLog] IS NOT NULL THEN 1 ELSE 0 END), 0) AS UseMembership,
+				IIF(CSBT.CatTypeSubscriptionId = 2, 0,1) AS AllowsCollect,
+				IIF([MSL].[MembershipId] IS NOT NULL, CMSL.CatProductCategoryId,IIF(CSBT.CatProductCategoryId IS NOT NULL,CSBT.CatProductCategoryId, 0)) AS CategoryProductId,
+				IIF([MSL].[MembershipId] IS NOT NULL,[MSL].[MembershipId], IIF(MSL.SubscriptionId IS NOT NULL,MSL.SubscriptionId, 0)) AS ProductId,
+				COALESCE(dev.Pieces_Dry,'') AS Pieces_Dry,
+				COALESCE([dev].[Pieces_Cold], '') AS Pieces_Cold,
+				ISNULL(DSC.RouteCode,'') AS Route_Code,
+				COALESCE(FORMAT([dev].[DeliveryETA], 'ddMM'), '') AS DeliveryETA,
+				CASE
+					WHEN ISNULL([dev].[IsCollect], 0) = 1 THEN 'COLLECT'
+					WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
+					WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
+					WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'
+					WHEN [DOPD].[TimePlaId] = 4 THEN 'CRÉDITO'
+					ELSE 'CRÉDITO'
+				END AS WayToPayDescription,
+				CASE
+					WHEN [vp].[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
+					WHEN [vp].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+					WHEN [vpori].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+					WHEN [dev].[CatSystemId] = @IndividualWebSys THEN 'WEB'
+					WHEN [dev].[CatSystemId] = @ExpressWebSys THEN 'EXC'
+					WHEN [dev].[CatSystemId] = @CorporateWebSys THEN 'COR'
+					WHEN [dev].[CatSystemId] = @ParserSys THEN 'PAR'
+					WHEN [dev].[CatSystemId] IS NULL THEN 'API'
+					ELSE 'API'
+				END AS GuideOrigin,
+				CASE
+					WHEN 
+						(dev.IsCollect <> 1 AND dev.Collect_OnDelivery>0 )
+						OR ctm.Abbreviation IN ('IGSS','RENAP')
+					THEN
+						'D'
+					ELSE
+						''
+				END AS Icon
+			FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
+				ON vp.CodeOfReference = dev.Sender_ID
+			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
+				ON [vpori].[CodeOfReference] = [dev].[OriginSenderId]
+			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
+				ON ctm.IdCustomer = dev.IdCustomer
+			LEFT JOIN DeliveryBackOffice.dbo.Account acc WITH (NOLOCK)
+				ON acc.IdCustomer = ctm.IdCustomer
+			LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rbu WITH (NOLOCK)
+				ON rbu.RuaIdAccount = acc.AccIdAccount
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser rgu WITH (NOLOCK)
+				ON rgu.UsrIdUser = rbu.RuaIdUser
+			LEFT JOIN DeliveryBackOffice.dbo.Person prs WITH (NOLOCK)
+				ON prs.PerIdPerson = rgu.UsrIdPerson
+			LEFT JOIN DeliveryBackOffice.dbo.Township tws WITH (NOLOCK)
+				ON tws.IdTownship = dev.SenderIdTownship
+			LEFT JOIN DeliveryBackOffice.dbo.Township tws2 WITH (NOLOCK)
+				ON tws2.IdTownship = dev.ReceiverIdTownship
+			LEFT JOIN DeliveryBackOffice.dbo.Province p WITH (NOLOCK)
+				ON p.IdProvince = tws.IdProvince
+			LEFT JOIN DeliveryBackOffice.dbo.Province p2 WITH (NOLOCK)
+				ON p2.IdProvince = tws2.IdProvince
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH (NOLOCK)
+				ON dcba.DCBA_Id = dev.DCBA_ID
+			LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)
+				ON dev.IdDeliveryOption = cdo.IdDeliveryOption
+			LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage cov WITH (NOLOCK)
+				ON cov.HeaderCode = tws2.HeaderCode
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
+				ON DOPD.GuideNumber = dev.Guide_Number
+			LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime CPT WITH (NOLOCK)
+				ON DOPD.TimePlaId = CPT.TimePlaId
+					AND cov.RowStatus = 1
+			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
+				ON MMBSHP.CustomerId = ctm.IdCustomer
+				AND MMBSHP.CatMembershipStatusId = @StatusPackage
+				AND MMBSHP.ExpirationDate >= GETDATE()
+				AND MMBSHP.RowStatus = 1
+			LEFT JOIN [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL  WITH(NOLOCK) 
+				ON [MSL].[LogGuideSerie] = [dev].[Guide_Serie] 
+				AND [MSL].[LogGuideNumber] = [dev].[Guide_Number]
+				AND [MSL].[RowStatus] = 1
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatMembership] CMSL  WITH(NOLOCK) 
+				ON MMBSHP.CatMembershipId = CMSL.IdCatMembership
+				AND CMSL.RowStatus = 1
+			LEFT JOIN [DeliveryBackOffice].[dbo].[Subscription] SBT  WITH(NOLOCK) 
+				ON MSL.SubscriptionId = SBT.IdSubscription
+				AND SBT.RowStatus = 1
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CSBT  WITH(NOLOCK) 
+				ON SBT.CatSubscriptionId = CSBT.IdCatSubscription
+				AND CSBT.RowStatus = 1
+			LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
+				ON DSC.IdSettlement = dev.ReceiverIdSettlement
+			WHERE dev.Guide_Number = @Guide_Number
+					AND dev.Guide_Serie = @Serie_Number
 
-															THEN
-															   'D'
-														   ELSE
-															   ''
-													   END
-													  ) + '"'
-									 + '} }'
-                                     + ''
-                              FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
-                                  INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
-                                      ON vp.CodeOfReference = dev.Sender_ID
-								  LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
-									  ON [vpori].[CodeOfReference] = [dev].[OriginSenderId]
-                                  LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
-                                      ON ctm.IdCustomer = dev.IdCustomer
-                                  LEFT JOIN DeliveryBackOffice.dbo.Account acc WITH (NOLOCK)
-                                      ON acc.IdCustomer = ctm.IdCustomer
-                                  LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rbu WITH (NOLOCK)
-                                      ON rbu.RuaIdAccount = acc.AccIdAccount
-                                  LEFT JOIN DeliveryBackOffice.dbo.RegisterUser rgu WITH (NOLOCK)
-                                      ON rgu.UsrIdUser = rbu.RuaIdUser
-                                  LEFT JOIN DeliveryBackOffice.dbo.Person prs WITH (NOLOCK)
-                                      ON prs.PerIdPerson = rgu.UsrIdPerson
-                                  LEFT JOIN DeliveryBackOffice.dbo.Township tws WITH (NOLOCK)
-                                      ON tws.IdTownship = dev.SenderIdTownship
-                                  LEFT JOIN DeliveryBackOffice.dbo.Township tws2 WITH (NOLOCK)
-                                      ON tws2.IdTownship = dev.ReceiverIdTownship
-                                  LEFT JOIN DeliveryBackOffice.dbo.Province p WITH (NOLOCK)
-                                      ON p.IdProvince = tws.IdProvince
-                                  LEFT JOIN DeliveryBackOffice.dbo.Province p2 WITH (NOLOCK)
-                                      ON p2.IdProvince = tws2.IdProvince
-                                  LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH (NOLOCK)
-                                      ON dcba.DCBA_Id = dev.DCBA_ID
-                                  LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)
-                                      ON dev.IdDeliveryOption = cdo.IdDeliveryOption
-                                  LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage cov WITH (NOLOCK)
-                                      ON cov.HeaderCode = tws2.HeaderCode
-                                  LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
-                                      ON DOPD.GuideNumber = dev.Guide_Number
-                                  LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime CPT WITH (NOLOCK)
-                                      ON DOPD.TimePlaId = CPT.TimePlaId
-                                         AND cov.RowStatus = 1
-								  LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
-									    ON MMBSHP.CustomerId = ctm.IdCustomer
-										AND MMBSHP.CatMembershipStatusId = @StatusPackage
-										AND MMBSHP.ExpirationDate >= GETDATE()
-										AND MMBSHP.RowStatus = 1
-								  LEFT JOIN [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL  WITH(NOLOCK) 
-									  ON [MSL].[LogGuideSerie] = [dev].[Guide_Serie] 
-									  AND [MSL].[LogGuideNumber] = [dev].[Guide_Number]
-									  AND [MSL].[RowStatus] = 1
-								  LEFT JOIN [DeliveryBackOffice].[dbo].[CatMembership] CMSL  WITH(NOLOCK) 
-									  ON MMBSHP.CatMembershipId = CMSL.IdCatMembership
-									  AND CMSL.RowStatus = 1
-								  LEFT JOIN [DeliveryBackOffice].[dbo].[Subscription] SBT  WITH(NOLOCK) 
-									  ON MSL.SubscriptionId = SBT.IdSubscription
-									  AND SBT.RowStatus = 1
-								  LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CSBT  WITH(NOLOCK) 
-								      ON SBT.CatSubscriptionId = CSBT.IdCatSubscription
-									  AND CSBT.RowStatus = 1
-                                LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
-			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
-                              WHERE dev.Guide_Number = @Guide_Number
-                              FOR XML PATH(''), TYPE
-                          ).value('.', 'varchar(max)'),
-                          1,
-                          1,
-                          ''
-                      ) + ''
-    );
 
-    PRINT @jsonOutput;
+			SELECT TOP 1 COALESCE(tws.HeaderCode, '') AS HeaderCodeTownship,
+					CASE
+						WHEN @Impersonate = 'TRUE' THEN
+							--IMPERSONADO
+							CASE
+								WHEN (dev.IsReturn = 1) THEN
+									--SI DEVOLUCION
+									CASE
+										WHEN (@customerType = 1) THEN
+											--CORPORATIVO
+											COALESCE(
+														dev.Sender_FirstName,
+														''
+													)
+										ELSE
+											--INDIVIDUAL
+											COALESCE(
+														dev.Sender_FirstName,
+														''
+													)
+									END
+								ELSE
+									-- NO DEVOLUCION
+									CASE
+										WHEN (@customerType = 1) THEN
+											--CORPORATIVO
+											COALESCE(
+														vp.DescriptionOfClient,
+														''
+													)
+										ELSE
+											--INDIVIDUAL
+											COALESCE(
+														dev.Sender_FirstName,
+														''
+													)
+									END
+							END
+						ELSE
+							--NO IMPERSONADO
+							COALESCE(dev.Sender_FirstName,'') + COALESCE(dev.Sender_LastName,'')
+					END AS [name],
+					COALESCE(dev.Sender_Phone, '') AS phone,
+					COALESCE(rgu.UsrEmail, '') AS email,
+					REPLACE(COALESCE(dev.Sender_Address, ''),'"','\"') AS address1,
+					REPLACE(COALESCE(dev.TypeService, 'EXP'), '"', ' ') AS address2,
+					CASE WHEN dev.IsLastMileReturn=1 THEN 
+							'to_address'
+						ELSE
+							'from_address'
+					END AS Adress,
+					COALESCE(ctm.Abbreviation, '') AS city, 
+					COALESCE(ctm.IdCustomer, vp.CustomerID, '0') AS IdMerchant,
+					dev.IsLastMileReturn AS ReceiverIdSettlement, 
+					CASE
+						WHEN dev.[IsLastMileReturn] = 1 THEN ''
+						WHEN @Impersonate = 'TRUE' THEN
+							--IMPERSONADO
+							CASE
+								WHEN (dev.IsReturn = 1) THEN
+									--SI DEVOLUCION
+									CASE
+										WHEN (@customerType = 1) THEN
+											--CORPORATIVO
+											COALESCE(@ExpressName, '')
+										ELSE
+											--INDIVIDUAL
+											COALESCE(@ExpressName, '')
+									END
+								ELSE
+									-- NO DEVOLUCION
+									CASE
+										WHEN (@customerType = 1) THEN
+											--CORPORATIVO
+											COALESCE(dev.Sender_FirstName, '')
+										ELSE
+											--INDIVIDUAL
+											COALESCE(@ExpressName, '')
+									END
+							END
+						ELSE
+							--NO IMPERSONADO
+							COALESCE(dev.Sender_FirstName, '') + ' '+ COALESCE(dev.Sender_LastName, '')
+					END AS contact
+			FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
+				ON vp.CodeOfReference = dev.Sender_ID
+			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
+				ON ctm.IdCustomer = dev.IdCustomer
+			LEFT JOIN DeliveryBackOffice.dbo.Account acc WITH (NOLOCK)
+				ON acc.IdCustomer = ctm.IdCustomer
+			LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rbu WITH (NOLOCK)
+				ON rbu.RuaIdAccount = acc.AccIdAccount
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser rgu WITH (NOLOCK)
+				ON rgu.UsrIdUser = rbu.RuaIdUser
+			LEFT JOIN DeliveryBackOffice.dbo.Township tws WITH (NOLOCK)
+				ON tws.IdTownship = dev.SenderIdTownship
+			WHERE dev.Guide_Number = @Guide_Number
+					AND dev.Guide_Serie = @Serie_Number
+			UNION ALL
+			SELECT TOP 1
+				COALESCE(tws2.HeaderCode, '') AS HeaderCodeTownship,
+				COALESCE(dev.Receiver_FirstName, '') + ' ' + COALESCE(dev.Receiver_LastName, '') AS [name],
+				COALESCE(dev.Receiver_Phone, '') AS phone,
+				COALESCE(dev.Receiver_Email, '') AS email,
+				COALESCE(dev.Receiver_Address, '') AS address1,
+				COALESCE(LOWER(dev.IndicationsToSendDestination), '') AS address2,
+				CASE
+					WHEN dev.IsLastMileReturn = 1 THEN
+						'from_address'
+					ELSE
+						'to_address'
+				END AS Adress,
+				'' AS city,
+				vp.CustomerID AS IdMerchant,
+				COALESCE(dev.ReceiverIdSettlement, 0) AS ReceiverIdSettlement,
+				COALESCE(dev.Receiver_Alternant_FullName, '') AS contact
+			FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
+					ON vp.CodeOfReference = dev.Sender_ID
+				LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori WITH (NOLOCK)
+					ON [vpori].[CodeOfReference] = [dev].[OriginSenderId]
+				LEFT JOIN DeliveryBackOffice.dbo.Township tws2 WITH (NOLOCK)
+					ON tws2.IdTownship = dev.ReceiverIdTownship
+			WHERE dev.Guide_Number = @Guide_Number
+					AND dev.Guide_Serie = @Serie_Number
 
-    SELECT @jsonOutput FormatJson;
+			SELECT [length],
+				   width,
+				   height,
+				   amount,
+				   currency,
+				   ParcelCode,
+				   fragil,
+				   descripcion
+			FROM @Temp
 
+			SELECT TOP 1 CASE
+					WHEN dev.Collect_OnDelivery > 0 THEN
+						'true'
+					ELSE
+						'false'
+				END AS CashOnDelivery,
+				COALESCE(dev.Order_Number, 0) AS CreditNumber,
+				dev.Collect_OnDelivery AS AmmountCashOnDelivery,
+				CASE 
+					WHEN dev.SenderCountryId = 'GT' THEN 'GTQ'
+					WHEN dev.SenderCountryId = 'HN' THEN 'HNL'
+					ELSE 'HNL'
+				END AS CashOnDeliveryCurrency,
+				'AccountName' AS BankAccountName,
+				dcba.DCBA_Bank_Id AS BankId,
+				dcba.DCBA_BankAccountType AS BankAccountType,
+				dcba.DCBA_Num_account AS BankAccountId,
+				COALESCE(dcba.DCBA_Identification,'') AS Identification
+			FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
+				ON vp.CodeOfReference = dev.Sender_ID
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH (NOLOCK)
+				ON dcba.DCBA_Id = dev.DCBA_ID
+			WHERE dev.Guide_Number = @Guide_Number
+					AND dev.Guide_Serie = @Serie_Number
+
+			SELECT Currency,
+				   [Description],
+				   Price
+			FROM @Integration
 
 END; 
