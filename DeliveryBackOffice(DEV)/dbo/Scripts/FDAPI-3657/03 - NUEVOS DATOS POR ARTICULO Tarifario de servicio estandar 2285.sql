@@ -1,3 +1,4 @@
+USE [DeliveryBackOffice];
 DECLARE @IdSegmentMetro		INT	= (SELECT CrsId FROM CatRateSegment WITH(NOLOCK) WHERE CrsShortName = 'MEG'),
 		@IdSegmentLocal		INT = (SELECT CrsId FROM CatRateSegment WITH(NOLOCK) WHERE CrsShortName = 'LOC'),
 		@IdSegmentDepart	INT = (SELECT CrsId FROM CatRateSegment WITH(NOLOCK) WHERE CrsShortName = 'FOR'),

@@ -1,4 +1,4 @@
-
+USE [DeliveryBackOffice];
 -- NACIONAL
 UPDATE rt
 SET rt.SegmentTypeId =
