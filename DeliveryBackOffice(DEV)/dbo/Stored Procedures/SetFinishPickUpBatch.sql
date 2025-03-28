@@ -97,23 +97,38 @@ BEGIN
             DECLARE @TargetPoint GEOMETRY;
             DECLARE @TargetPointAsText NVARCHAR(MAX) = CONCAT('POINT (', @PickupLongitude, ' ', @PickupLatitude, ')');
 
-            SET @TargetGeofenceAsText = 
-				'POLYGON ((' + 
-				(
-					SELECT STRING_AGG(
-						CAST(CONCAT(CAST(P.PointLongitude AS DECIMAL(9, 6)), ' ', CAST(P.PointLatitude AS DECIMAL(9, 6))) AS NVARCHAR(MAX)), ', '
-					) 
-					FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
-					INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
-						ON G.IdGeofence = GP.IdGeofence             
-					INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
-						ON GP.IdPoint = P.IdPoint                  
-					WHERE G.RowStatus = 1
-						AND GP.RowStatus = 1
-						AND P.RowStatus = 1
-						AND G.IdGeofence = 1 -- Geocerca de GT
-				) 
-				+ '))';
+            SET @TargetGeofenceAsText
+                = (CONCAT(
+                             'POLYGON ((',
+                   (
+                       SELECT STUFF(
+                                       (
+                                           SELECT ', '
+                                                  + CONCAT(
+                                                              CAST(P.PointLongitude AS DECIMAL(9, 6)),
+                                                              ' ',
+                                                              CAST(P.PointLatitude AS DECIMAL(9, 6))
+                                                          )
+                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
+                                                   ON G.IdGeofence = GP.IdGeofence             
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
+                                                   ON GP.IdPoint = P.IdPoint                  
+                                           WHERE G.RowStatus = 1
+                                                 AND GP.RowStatus = 1
+                                                 AND P.RowStatus = 1
+                                                 AND G.IdGeofence = 1 -- Geocerca de GT
+                                           ORDER BY GP.GeofencePointOrder ASC
+                                           FOR XML PATH(''), TYPE
+                                       ).value('.', 'varchar(max)'),
+                                       1,
+                                       1,
+                                       ''
+                                   )
+                   ),
+                             '))'
+                         )
+                  );
 
             SET @TargetGeofence = geometry::STGeomFromText(@TargetGeofenceAsText, 0);
 

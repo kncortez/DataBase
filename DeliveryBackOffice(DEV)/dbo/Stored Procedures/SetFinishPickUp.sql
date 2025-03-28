@@ -258,7 +258,7 @@ BEGIN
                 FROM ServiceManagement
                 WHERE IdSchedulePickup = @IdPickup;
 
-
+                
                 SELECT 200 as IdResult,
 					  'Cambios realizados exitosamente' AS [Message]
 
@@ -271,9 +271,8 @@ BEGIN
         ELSE IF (@test > 0)
         BEGIN
 
-			SELECT 412 AS IdResult
-
-            SELECT Guide AS Guides,
+            SELECT 412 AS IdResult,
+			       Guide AS Guides,
 					[Message]
                 FROM #Temp
             WHERE Guide IN
@@ -285,8 +284,7 @@ BEGIN
         ELSE IF (@ValIdPickup IS NOT NULL)
         BEGIN
 
-			SELECT 412 AS IdResult
-            SELECT  
+            SELECT  413 AS IdResult,
 					@IdPickup AS Error,
 					'El id de servicio de recolección ya ha sido procesado anteriormente' AS [Message]
   
