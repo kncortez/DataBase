@@ -4,6 +4,11 @@
 -- Create date: <2021-02-06>
 -- Description:	<Recotizacion>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian,Suazo>
+-- Create date: <2025-03-28>
+-- Description:	<Se pasa a entidades el Json>
+-- =============================================
 
 
 CREATE PROCEDURE [dbo].[GetServiceRecolectUpdateStatus]
@@ -108,92 +113,60 @@ BEGIN
                    AND DOD.RowStatus = 1
         WHERE DOD.DateCreated IS NULL;
 
-        DECLARE @jsonResult1 NVARCHAR(MAX);
 
-        SET @jsonResult1 =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT ',{"Guide":"' + ISNULL(CONCAT(Guide_Serie, Guide_Number), 'N/A') + '",'
-                                       + '"Status":"' + ISNULL(CONVERT(VARCHAR, StatusOrderId), 'N/A') + '",'
-                                       + '"ShipmentCompleted":"' + ISNULL(CONVERT(VARCHAR, ShipmentCompleted), 'N/A')
-                                       + --'",' +
-                                    +'"}'
-                                FROM DeliveryOrder                        ord WITH (NOLOCK)
-                                    INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
-                                        ON (
-                                               dopd.GuideNumber = ord.Guide_Number
-                                               AND dopd.GuideSerie = ord.Guide_Serie
-                                           )
-                                WHERE ord.Guide_Number IN
-                                      (
-                                          SELECT ItemNumber FROM #listGuides
-                                      )
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)')
-                          , 1
-                          , 1
-                          , ''
-                        )
-        );
-        PRINT 'ingresa2';
-        PRINT @jsonResult;
+		IF EXISTS
+		(
+			SELECT TOP 1
+				1
+			FROM DeliveryOrder ord WITH (NOLOCK)
+				INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+					ON (
+						   dopd.GuideNumber = ord.Guide_Number
+						   AND dopd.GuideSerie = ord.Guide_Serie
+					   )
+			WHERE ord.Guide_Number IN (
+										  SELECT ItemNumber FROM #listGuides
+									  )
+		)
+		BEGIN
+			SELECT IdResult AS IdResult,
+				   [Message]
+			FROM #responsemessage
+			WHERE Id = 'OK'
 
-        -- retornar resultado en formato json
-        IF @jsonResult1 IS NULL
-        BEGIN
+			SELECT ISNULL(CONCAT(Guide_Serie, Guide_Number), 'N/A') AS Guide,
+				   ISNULL(StatusOrderId, 'N/A') AS [Status],
+				   ShipmentCompleted AS ShipmentCompleted
+			FROM DeliveryOrder ord WITH (NOLOCK)
+				INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+					ON (
+						   dopd.GuideNumber = ord.Guide_Number
+						   AND dopd.GuideSerie = ord.Guide_Serie
+					   )
+			WHERE ord.Guide_Number IN (
+										  SELECT ItemNumber FROM #listGuides
+									  )
 
-            SET @jsonResult1 =
-            (
-                SELECT STUFF((
-                                 SELECT '{{"IdResult":500,' + '"Message":" No se encontraron registros"}'
-                                 FOR XML PATH(''), TYPE
-                             ).value('.', 'varchar(max)')
-                           , 1
-                           , 1
-                           , ''
-                            )
-            );
-        END;
+		END
+		ELSE
+		BEGIN
 
-        SELECT ('[' + @jsonResult1 + ']') jsonResult1;
+			SELECT '500' AS IdResult,
+				   'No se encontraron registros' AS [Message]
 
-
-
-        SET @jsonResult =
-        (
-            SELECT STUFF((
-                             SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '"}'
-                             FROM #responsemessage
-                             WHERE Id = 'OK'
-                             FOR XML PATH(''), TYPE
-                         ).value('.', 'varchar(max)')
-                       , 1
-                       , 1
-                       , ''
-                        )
-        );
+		END
 
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
         SELECT ERROR_MESSAGE();
         -- retornar mensaje de error
-        SET @jsonResult =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
-                                       + CONVERT(NVARCHAR(MAX), ERROR_MESSAGE()) + '"}'
-                                FROM #responsemessage
-                                WHERE Id = 'Invalid'
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)')
-                          , 1
-                          , 1
-                          , ''
-                        )
-        );
+
+        SELECT IdResult,
+                ERROR_MESSAGE() AS [Message] 
+        FROM #responsemessage
+        WHERE Id = 'Invalid'
+
     END CATCH;
     IF @@TRANCOUNT > 0
     BEGIN
@@ -208,11 +181,4 @@ BEGIN
     IF OBJECT_ID('tempdb.dbo.#responsemessage', 'U') IS NOT NULL
         DROP TABLE #responsemessage;
 
-    -- retornar resultado en formato json
-
-    SELECT ('[{' + @jsonResult + ']') jsonResult;
-
 END;
-
-
-
