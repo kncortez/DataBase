@@ -42,9 +42,9 @@ BEGIN
                                SELECT DISTINCT
                                       ',' + CONCAT(GuideSerie, GuideNumber)
                                FROM (
-                                SELECT DOP.GuideSerie,DOP.GuideNumber,DOP.TimePlaId,ISNULL(SM.Amount,0)Amount FROM DBO.SchedulePickup SCP 
-                                    LEFT JOIN DBO.DeliveryOrderPaymentDetail DOP ON SCP.SchedulePickupId=DOP.IdHeaderRecolection
-                                    LEFT JOIN DBO.ServiceManagement SM ON SM.IdSchedulePickup=SCP.SchedulePickupId
+                                SELECT DOP.GuideSerie,DOP.GuideNumber,DOP.TimePlaId,ISNULL(SM.Amount,0)Amount FROM DBO.SchedulePickup SCP WITH(NOLOCK)
+                                    LEFT JOIN DBO.DeliveryOrderPaymentDetail DOP WITH(NOLOCK) ON SCP.SchedulePickupId=DOP.IdHeaderRecolection
+                                    LEFT JOIN DBO.ServiceManagement SM WITH(NOLOCK) ON SM.IdSchedulePickup=SCP.SchedulePickupId
                                     WHERE SchedulePickupId=@idSchedulePickup
                                     AND     (
                                                 --CONVERSION DE OR A AND : X OR Y = NOT(NOT X AND NOT Y )
@@ -155,7 +155,7 @@ BEGIN
         IF EXISTS
         (
             SELECT IdRouteAssigment
-            FROM DeliveryBackOffice.dbo.RouteAssigment
+            FROM DeliveryBackOffice.dbo.RouteAssigment WITH(NOLOCK)
             WHERE IdRoute = @idRoute
                   AND DateOfRoute = @dateRoute
         )
@@ -164,7 +164,7 @@ BEGIN
             SET @idCourrier =
             (
                 SELECT IdCurrierMan
-                FROM DeliveryBackOffice.dbo.RouteAssigment
+                FROM DeliveryBackOffice.dbo.RouteAssigment WITH(NOLOCK)
                 WHERE IdRoute = @idRoute
                       AND DateOfRoute = @dateRoute
             );
@@ -172,7 +172,7 @@ BEGIN
             SET @idRouteAssigment =
             (
                 SELECT IdRouteAssigment
-                FROM [DeliveryBackOffice].[dbo].[RouteAssigment]
+                FROM [DeliveryBackOffice].[dbo].[RouteAssigment] WITH(NOLOCK)
                 WHERE IdRoute = @idRoute
                       AND DateOfRoute = @dateRoute
             );
@@ -180,15 +180,15 @@ BEGIN
             IF EXISTS
             (
                 SELECT IdServiceManagement
-                FROM DeliveryBackOffice.dbo.ServiceManagement
+                FROM DeliveryBackOffice.dbo.ServiceManagement WITH(NOLOCK)
                 WHERE IdSchedulePickup = @idSchedulePickup
             )
             BEGIN
                 SELECT @idSchedule = IdServiceManagement
-                FROM DeliveryBackOffice.dbo.ServiceManagement
+                FROM DeliveryBackOffice.dbo.ServiceManagement WITH(NOLOCK)
                 WHERE IdSchedulePickup = @idSchedulePickup;
 
-                UPDATE DeliveryBackOffice.dbo.ServiceManagement
+                UPDATE DeliveryBackOffice.dbo.ServiceManagement 
                 SET IdPuCourrier = @idCourrier,
                     IdPuRouteAssigment = @idRouteAssigment,
                     ServiceStatusId = 2,
@@ -332,7 +332,7 @@ BEGIN
             SET @idRouteAssigment =
             (
                 SELECT IdRouteAssigment
-                FROM [DeliveryBackOffice].[dbo].[RouteAssigment]
+                FROM [DeliveryBackOffice].[dbo].[RouteAssigment] WITH(NOLOCK)
                 WHERE IdRoute = @idRoute
                       AND DateOfRoute = @dateRoute
             );
@@ -340,12 +340,12 @@ BEGIN
             IF EXISTS
             (
                 SELECT IdServiceManagement
-                FROM [DeliveryBackOffice].[dbo].[ServiceManagement]
+                FROM [DeliveryBackOffice].[dbo].[ServiceManagement] WITH(NOLOCK)
                 WHERE IdSchedulePickup = @idSchedulePickup
             )
             BEGIN
                 SELECT @idSchedule = IdServiceManagement
-                FROM [DeliveryBackOffice].[dbo].[ServiceManagement]
+                FROM [DeliveryBackOffice].[dbo].[ServiceManagement] WITH(NOLOCK)
                 WHERE IdSchedulePickup = @idSchedulePickup;
 
                 UPDATE [DeliveryBackOffice].[dbo].[ServiceManagement]
@@ -414,17 +414,17 @@ BEGIN
                    @token,
                    GETDATE(),
                    GETDATE()
-            FROM ServiceManagement sm
-                INNER JOIN SchedulePickup sp
+            FROM ServiceManagement sm WITH(NOLOCK)
+                INNER JOIN SchedulePickup sp WITH(NOLOCK)
                     ON (sm.IdSchedulePickup = sp.SchedulePickupId)
-                INNER JOIN DeliveryOrderPaymentDetail dopd
+                INNER JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
-                INNER JOIN DeliveryOrder ord
+                INNER JOIN DeliveryOrder ord WITH(NOLOCK)
                     ON (
                            ord.Guide_Number = dopd.GuideNumber
                            AND ord.Guide_Serie = dopd.GuideSerie
                        )
-                INNER JOIN DeliveryOrderPiece ordp
+                INNER JOIN DeliveryOrderPiece ordp WITH(NOLOCK)
                     ON (
                            ordp.GuideNumber = ord.Guide_Number
                            AND ordp.GuideSerie = ord.Guide_Serie
@@ -436,7 +436,7 @@ BEGIN
             SET StatusOrderId = @status,
                 TokenUpdated = @token,
                 DateUpdated = GETDATE()
-            FROM ServiceManagement sm
+            FROM ServiceManagement sm WITH (NOLOCK)
                 INNER JOIN SchedulePickup sp WITH (NOLOCK)
                     ON (sm.IdSchedulePickup = sp.SchedulePickupId)
                 INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
@@ -483,7 +483,7 @@ BEGIN
             SET @SettlementPickupStationId =
             (
                 SELECT IdSettlementPickupStation
-                FROM SettlementPickupStation
+                FROM SettlementPickupStation WITH(NOLOCK)
                 WHERE RouteId = @idRoute
                       AND TransactionDate = @dateRoute
                       AND RowStatus = 'TRUE'
@@ -514,7 +514,7 @@ BEGIN
             SET @SettlementPickupStationDetailId =
             (
                 SELECT IdSettlementPickupStationDetail
-                FROM SettlementPickupStationDetail
+                FROM SettlementPickupStationDetail WITH(NOLOCK)
                 WHERE SettlementPickupStationId = @SettlementPickupStationId
                       AND ServiceManagementId = @idSchedule
                       AND RowStatus = 'TRUE'

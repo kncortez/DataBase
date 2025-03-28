@@ -28,14 +28,14 @@ BEGIN
 	   ,ctr.DateUpdated
 	   ,(SELECT TOP 1
 				CONCAT(snr.First_Name, ' ', snr.Last_Name) NameCourier
-			FROM [DeliveryBackOffice].[dbo].[RouteAssigment] rta
+			FROM [DeliveryBackOffice].[dbo].[RouteAssigment] rta WITH(NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] snr
 				ON snr.ID = rta.IdCurrierMan
 			WHERE rta.DateOfRoute = @dateRoute
 			AND rta.IdRoute = ctr.IdRoute)
 		NameCourier
 	   ,(SELECT TOP 1 snr.Phone
-			FROM [DeliveryBackOffice].[dbo].[RouteAssigment] rta
+			FROM [DeliveryBackOffice].[dbo].[RouteAssigment] rta WITH(NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] snr
 				ON snr.ID = rta.IdCurrierMan
 			WHERE rta.DateOfRoute = @dateRoute
@@ -43,7 +43,7 @@ BEGIN
 		PhoneCourrier
 	   ,(SELECT TOP 1
 				cv.UnitNumber
-			FROM [DeliveryBackOffice].[dbo].[RouteAssigment] rta
+			FROM [DeliveryBackOffice].[dbo].[RouteAssigment] rta WITH(NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[CatVehicle] cv
 				ON cv.IdVehicle = rta.IdVehicle
 			WHERE rta.DateOfRoute = @dateRoute

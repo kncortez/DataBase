@@ -23,7 +23,7 @@ BEGIN
         DECLARE @ServiceManagementId INT =
                 (
                     SELECT IdServiceManagement
-                    FROM ServiceManagement
+                    FROM ServiceManagement WITH(NOLOCK)
                     WHERE IdSchedulePickup = @idSchedulePickup
                 );
 
@@ -61,8 +61,8 @@ BEGIN
                 SET spsd.RowStatus = 'FALSE',
                     spsd.TokenUpdated = @token,
                     spsd.DateUpdated = GETDATE()
-                FROM SettlementPickupStationDetail spsd
-                    JOIN SettlementPickupStation sps
+                FROM SettlementPickupStationDetail spsd WITH(NOLOCK)
+                    INNER JOIN SettlementPickupStation sps WITH(NOLOCK)
                         ON sps.IdSettlementPickupStation = spsd.SettlementPickupStationId
                 WHERE sps.RouteId = @IdRoute
                       AND sps.TransactionDate = @DateRoute
@@ -143,8 +143,8 @@ BEGIN
                        drosub.Sender_Department,
                        drosub.TypeService,
                        drosub.Sender_Zone
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] dopsub
-                    LEFT JOIN dbo.DeliveryOrder drosub
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] dopsub WITH(NOLOCK)
+                    LEFT JOIN dbo.DeliveryOrder drosub WITH(NOLOCK)
                         ON drosub.Guide_Number = dopsub.GuideNumber
                 WHERE IdHeaderRecolection = @idSchedulePickup
                 GROUP BY TimePlaId,

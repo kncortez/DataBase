@@ -13,20 +13,20 @@ AS
 BEGIN
     DECLARE @IdCurrierMan INT
     IF EXISTS (SELECT IdCurrierMan
-                 FROM [DeliveryBackOffice].[dbo].[RouteAssigment]
+                 FROM [DeliveryBackOffice].[dbo].[RouteAssigment] WITH(NOLOCK)
                 WHERE IdRoute = @idRoute
                   AND DateOfRoute = @dateRoute
                   AND IdCurrierMan IS NOT NULL 
                 )
     BEGIN
          SELECT @IdCurrierMan = IdCurrierMan
-           FROM [DeliveryBackOffice].[dbo].[RouteAssigment]
+           FROM [DeliveryBackOffice].[dbo].[RouteAssigment] WITH(NOLOCK)
           WHERE IdRoute = @idRoute
             AND DateOfRoute = @dateRoute
             AND IdCurrierMan IS NOT NULL 
 
          SELECT Phone AS [Phone]
-           FROM SenderReceiver
+           FROM SenderReceiver WITH(NOLOCK)
           WHERE id = @IdCurrierMan
             AND Phone <> 0
             AND Phone IS NOT NULL

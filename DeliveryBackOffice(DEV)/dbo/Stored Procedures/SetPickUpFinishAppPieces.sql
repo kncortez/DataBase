@@ -42,12 +42,15 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#NowInsert', 'U') IS NOT NULL
             DROP TABLE #NowInsert;
 
-        SELECT TOP 1
-            @TokenAct = RowStatus,
-            @hourtoken = DATEDIFF(HOUR, DateCreated, GETDATE())
-        FROM LogTokenPOD
-        WHERE LogTokenPOD = @Token
-        ORDER BY DateCreated DESC
+		IF OBJECT_ID('tempdb.dbo.#Delivery', 'U') IS NOT NULL 
+			DROP TABLE #Delivery;
+
+		SELECT TOP 1
+			   @TokenAct = RowStatus,
+			   @hourtoken = DATEDIFF(HOUR, DateCreated, GETDATE()) 
+		FROM LogTokenPOD WITH(NOLOCK)
+		WHERE LogTokenPOD = @Token 
+		ORDER BY DateCreated DESC
 
 
         -- Variables para verificar ubicación en geocerca
