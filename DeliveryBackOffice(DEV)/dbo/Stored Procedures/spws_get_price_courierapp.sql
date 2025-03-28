@@ -3,6 +3,10 @@
 -- Create date: <2021-01-08>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
 -- =============================================
+-- Author:      <Juan Ramirez>
+-- Create date: <2025-03-28>
+-- Description: <Ajustes de optimización>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_price_courierapp]
     -- Add the parameters for the stored procedure here
     -- Add the parameters for the stored procedure here
@@ -141,9 +145,6 @@ BEGIN
                                 ''
                             )
             );
-
-
-
 
             -- retornar resultado en formato json
             IF @jsonResult IS NULL

@@ -3,6 +3,10 @@
 -- Create date: <2021-05-21>
 -- Description:	<Devuleve el monto a cobrar >
 -- =============================================
+-- Author:      <Juan Ramirez>
+-- Create date: <2025-03-28>
+-- Description: <Ajustes de optimización>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment]
     @InGuides VARCHAR(MAX),
     @InTime INT,
