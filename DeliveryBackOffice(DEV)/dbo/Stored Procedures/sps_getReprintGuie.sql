@@ -7,11 +7,16 @@
 -- Create date: <2024-07-24>
 -- Description: <Se retiro el parametro de pais, y se toma el pais desde la guia>
 -- =============================================
+-- =============================================
+-- Modified:    <Edelman>
+-- Create date: <2025-27-03>
+-- Description: <Trasladar Json a nivel de código de API>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
 as
-begin
+BEGIN
     DECLARE @CountryThatConsults VARCHAR(2) = 'GT'
 
 	DECLARE @Integration TABLE
@@ -154,7 +159,8 @@ begin
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Express Center'  
-		AND ISNULL(IdCountry,'GT')=@CountryThatConsults
+		--AND ISNULL(IdCountry,'GT')=@CountryThatConsults
+		 AND (IdCountry = @CountryThatConsults OR (IdCountry IS NULL AND @CountryThatConsults = 'GT'))
 	);
 
     DECLARE @DaysToExpiration INT =
@@ -198,7 +204,9 @@ begin
                                        END;
     DECLARE @ExpressName VARCHAR(50) = '';
 
-	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B'AND ISNULL(IdCountry,'GT')=@CountryThatConsults);
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B'AND
+ (IdCountry = @CountryThatConsults OR (IdCountry IS NULL AND @CountryThatConsults = 'GT')));
+
 
     IF (@Impersonate = 'TRUE')
     BEGIN
@@ -236,7 +244,7 @@ begin
         SELECT PieceLength AS [length], 
                PieceWidth AS width, 
 			   PieceHeight AS height,
-               PieceWeight AS [weight], 
+               PieceWeight AS weight, 
                Amount AS amount,
 			   COALESCE(Currency, '') AS currency, 
 			   COALESCE(ParcelCode,'') AS ParcelCode,
@@ -334,6 +342,9 @@ begin
 
     /*end integration cost*/
 
+			SELECT 200 AS StatusCode,
+				   'Información encontrado con exito' AS [Message]
+
 			SELECT DISTINCT TOP 1 --Price
 					CONVERT(VARCHAR, ISNULL(dev.Preparation_Date, GETDATE()), 121) AS DateOfSale,
 					dev.Package_Description AS ContentDescription, 
@@ -366,8 +377,12 @@ begin
 				COALESCE([dev].[Order_Number], '') AS IdInternalOrderRef2,
 				COALESCE(LOWER(dev.IndicationsToSendDestination),'') AS Service_Ref1,
 				COALESCE(dev.OrderUserCreated, '') AS Username,
-				COALESCE(DATEADD(DAY, @DaysToExpiration, dev.DateCreated), '') AS ExpirationDate,
-				'' AS [Route],
+				--COALESCE(DATEADD(DAY, @DaysToExpiration, dev.DateCreated), '') AS ExpirationDate,
+				CONVERT(
+                                                  VARCHAR,
+                                                  COALESCE(DATEADD(DAY, @DaysToExpiration, dev.DateCreated), ''),
+                                                  103
+                                              )AS ExpirationDate,
 				COALESCE(dev.TypeService, 'EXP') AS TypeService,
 				COALESCE(CPT.TimePlaName, '') AS Service_Payment,
 				CASE
@@ -623,7 +638,6 @@ begin
 			SELECT [length],
 				   width,
 				   height,
-				   [weight],
 				   amount,
 				   currency,
 				   ParcelCode,
