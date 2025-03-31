@@ -1,3 +1,4 @@
+USE [DeliveryBackOffice];
 	     -- NACIONAL
 IF NOT EXISTS(
 		SELECT CrsId FROM dbo.CatRateSegment WHERE CrsShortName = 'NAG'
