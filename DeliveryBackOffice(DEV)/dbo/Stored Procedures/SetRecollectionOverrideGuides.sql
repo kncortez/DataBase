@@ -10,6 +10,10 @@
 -- Update date: <07/06/2022>
 -- Description:	<Control de Anulación de guías y cupones>
 -- =============================================
+-- Author:		<Cristian Suazo>
+-- Update date: <01/06/2025>
+-- Description:	<CSe pasa a Json el resultado>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SetRecollectionOverrideGuides]
  @System						as int					= 1 
@@ -25,6 +29,8 @@ SET NOCOUNT ON;
 	DECLARE @COUNTGUIDES INT = 0, @IDENTYGUIDES INT = 1, @TOTAL INT = 0;
 	DECLARE @TBGUIDES TABLE (ITERATOR int Identity(1,1), GuideNumber INT , SerieGuide VARCHAR(2));
 	DECLARE @STATUSGUIDE VARCHAR(50);
+	BEGIN TRY 
+	BEGIN TRANSACTION
 		;WITH CTE
 			AS (
 			SELECT Split.a.value('.', 'NVARCHAR(MAX)') GuideNumber,
@@ -76,25 +82,29 @@ SET NOCOUNT ON;
 				ON T.GuideNumber = O.GuideNumber AND RTRIM(LTRIM(O.GuideSerie)) = RTRIM(LTRIM(T.SerieGuide))
 				WHERE T.ITERATOR = @IDENTYGUIDES
 				*/
-				SELECT @ESTADO = CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END  FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-				WHERE OrderNumber = (SELECT (RTRIM(LTRIM(SerieGuide))+ CONVERT(varchar,T.GuideNumber)) AS OrderNumber FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES)
+				SELECT @ESTADO = CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END  FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
+				WHERE OrderNumber = (SELECT (SerieGuide + CONVERT(varchar,T.GuideNumber)) AS OrderNumber FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES)
 
 				
 				IF (@ESTADO = 0)
 				BEGIN
 					--NO PAGADO CON TARJETA INDIVIDUAL
-					SELECT @ESTADO = CASE WHEN COUNT(1) > 0 THEN 2 ELSE 0 END FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail D
+					SELECT @ESTADO = CASE WHEN COUNT(1) > 0 THEN 2 ELSE 0 END 
+					FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail D WITH(NOLOCK)
 						INNER JOIN @TBGUIDES T
-						ON T.GuideNumber = D.ProductNumber AND RTRIM(LTRIM(D.SerieNumber)) = RTRIM(LTRIM(T.SerieGuide))
+						ON T.GuideNumber = D.ProductNumber AND D.SerieNumber = T.SerieGuide
 						WHERE T.ITERATOR = @IDENTYGUIDES
 
 				   --SELECT @ESTADO						
 					IF (@ESTADO = 0)
 						BEGIN--SI ES PARTE DE UN LOTTE DE PAGADO CON TARJETA
-							SELECT @ESTADO = CASE WHEN COUNT(1)  > 0 THEN 3 ELSE 0 END FROM DeliveryBackOffice.dbo.DeliveryOrder O
+							SELECT @ESTADO = CASE WHEN COUNT(1)  > 0 THEN 3 ELSE 0 END 
+							FROM DeliveryBackOffice.dbo.DeliveryOrder O WITH (NOLOCK)
 							INNER JOIN @TBGUIDES T
-							ON T.GuideNumber = O.Guide_Number AND RTRIM(LTRIM(O.Guide_Serie)) = RTRIM(LTRIM(T.SerieGuide)) AND O.StatusOrderId  = 15 OR O.StatusOrderId  = 1
+								ON T.GuideNumber = O.Guide_Number 
+									AND O.Guide_Serie = T.SerieGuide 
 							WHERE T.ITERATOR = @IDENTYGUIDES
+							AND O.StatusOrderId  = 15 OR O.StatusOrderId  = 1
 				
 						END
 				END
@@ -129,7 +139,7 @@ SET NOCOUNT ON;
 									 [DeliveryBackOffice].[dbo].StatusOrder SO WITH (NOLOCK)
 								ON   DO.StatusOrderId = SO.StatusOrderId
 							WHERE	
-									DO.Guide_Number = CAST(@NumberGuides AS INT)   AND
+									DO.Guide_Number = CAST(@NumberGuides AS INT)   AND  --Logica actual maneja unicamente una guía
 									DO.Guide_Serie  = @SerieGuides 
 					     )
 				
@@ -192,7 +202,7 @@ SET NOCOUNT ON;
 								@MembershipSubscriptionLogId = msl.IdMembershipSubscriptionLog
 							   ,@MembershipId = msl.MembershipId
 							   ,@SubscriptionId = msl.SubscriptionId
-							FROM MembershipSubscriptionLog msl
+							FROM MembershipSubscriptionLog msl WITH(NOLOCK)
 							INNER JOIN @TBGUIDES tb
 								ON tb.SerieGuide = msl.LogGuideSerie
 								AND tb.GuideNumber = msl.LogGuideNumber
@@ -242,11 +252,11 @@ SET NOCOUNT ON;
 									[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
 									INNER JOIN @TBGUIDES TB
 									ON TB.SerieGuide = PBSL.GuideSerie
-									AND TB.GuideNumber = PBSL.GuideNumber
-									AND ISNULL(PBSL.PointsConsumed, 0) > 0
+									AND TB.GuideNumber = PBSL.GuideNumber									
 								WHERE
 									TB.ITERATOR = @IDENTYGUIDES
 									AND PBSL.RowStatus = 1
+									AND ISNULL(PBSL.PointsConsumed, 0) > 0
 
 								IF(@PointsByServiceLogId IS NOT NULL)
 								BEGIN
@@ -336,7 +346,7 @@ SET NOCOUNT ON;
 									@MembershipSubscriptionLogId = msl.IdMembershipSubscriptionLog
 								   ,@MembershipId = msl.MembershipId
 								   ,@SubscriptionId = msl.SubscriptionId
-								FROM MembershipSubscriptionLog msl
+								FROM MembershipSubscriptionLog msl WITH(NOLOCK)
 								INNER JOIN @TBGUIDES tb
 									ON tb.SerieGuide = msl.LogGuideSerie
 									AND tb.GuideNumber = msl.LogGuideNumber
@@ -456,7 +466,7 @@ SET NOCOUNT ON;
 									@MembershipSubscriptionLogId = msl.IdMembershipSubscriptionLog
 								   ,@MembershipId = msl.MembershipId
 								   ,@SubscriptionId = msl.SubscriptionId
-								FROM MembershipSubscriptionLog msl
+								FROM MembershipSubscriptionLog msl WITH(NOLOCK)
 								INNER JOIN @TBGUIDES tb
 									ON tb.SerieGuide = msl.LogGuideSerie
 									AND tb.GuideNumber = msl.LogGuideNumber
@@ -506,11 +516,11 @@ SET NOCOUNT ON;
 									[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
 									INNER JOIN @TBGUIDES TB
 									ON TB.SerieGuide = PBSL.GuideSerie
-									AND TB.GuideNumber = PBSL.GuideNumber
-									AND ISNULL(PBSL.PointsConsumed, 0) > 0
+									AND TB.GuideNumber = PBSL.GuideNumber							
 								WHERE
 									TB.ITERATOR = @IDENTYGUIDES
 									AND PBSL.RowStatus = 1
+									AND ISNULL(PBSL.PointsConsumed, 0) > 0
 
 								IF(@PointsByServiceLogId IS NOT NULL)
 								BEGIN
@@ -577,7 +587,7 @@ SET NOCOUNT ON;
 									@MembershipSubscriptionLogId = msl.IdMembershipSubscriptionLog
 								   ,@MembershipId = msl.MembershipId
 								   ,@SubscriptionId = msl.SubscriptionId
-								FROM MembershipSubscriptionLog msl
+								FROM MembershipSubscriptionLog msl WITH (NOLOCK)
 								INNER JOIN @TBGUIDES tb
 									ON tb.SerieGuide = msl.LogGuideSerie
 									AND tb.GuideNumber = msl.LogGuideNumber
@@ -688,12 +698,18 @@ SET NOCOUNT ON;
 					WHERE GuideNumber=@TempGuide and GuideSeries = @TempSerie
 
           END
-
+		  
 				--finish while for pieces
 				SET @IDENTYGUIDES = @IDENTYGUIDES + 1;
 				SET @COUNTGUIDES = @COUNTGUIDES  - 1;
 			END 
-
-			SELECT FormatJson = '{ "TOTAL":'+CONVERT(VARCHAR,@TOTAL)+'}'
-
+			COMMIT TRANSACTION
+				SELECT 200 AS StatusCode
+				SELECT @TOTAL AS Total
+			END TRY 
+			BEGIN CATCH
+			ROLLBACK TRANSACTION
+				SELECT 412 AS StatusCode
+				SELECT ERROR_MESSAGE() AS Total
+			END CATCH			
 END
