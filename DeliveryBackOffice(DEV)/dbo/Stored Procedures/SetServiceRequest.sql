@@ -45,8 +45,9 @@ BEGIN
     /*********************************************************************************************/
     DECLARE @CorrelativeTable AS TABLE
     (
-        [Row_Number] [INT] IDENTITY(1, 1), -- no de fila
-        [Guide_Number] [INT] NULL          -- correlativo autogenerado
+        Row_Number INT IDENTITY(1, 1), -- no de fila
+        Guide_Number INT NULL,          -- correlativo autogenerado
+        Guide_Serie VARCHAR(2) NULL
     );
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
     BEGIN TRANSACTION;
@@ -72,9 +73,9 @@ BEGIN
             WHERE num + 1 <= @endnum)
         INSERT INTO @CorrelativeTable
         (
-            Guide_Number
+            Guide_Number, Guide_Serie
         )
-        SELECT NEXT VALUE FOR [dbo].[NewGuideNumberSequence]
+        SELECT NEXT VALUE FOR [dbo].[NewGuideNumberSequence], @GuideSerie
         FROM gen
         OPTION (MAXRECURSION 10000);
 
@@ -252,7 +253,7 @@ BEGIN
             IdCustomer =
             (
                 SELECT CustomerID
-                FROM DeliveryBackOffice.dbo.VisitPointClient
+                FROM DeliveryBackOffice.dbo.VisitPointClient WITH (NOLOCK)
                 WHERE CodeOfReference = t.Sender_ID
             ),
             SalePipeLineId =
@@ -499,19 +500,31 @@ BEGIN
 			   ,NULL
 			   ,NULL
 			FROM #GuideTable GT
-			INNER JOIN RateByCustomer rc WITH (NOLOCK)
-				ON rc.RbcId = (SELECT TOP 1
-							rbc.RbcId
-						FROM RatebyCustomer rbc WITH (NOLOCK)
-						INNER JOIN VisitPointClient vpc WITH (NOLOCK)
-							ON GT.Sender_ID = vpc.CodeOfReference
-                            AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
-						    OR rbc.RbcCodeOfReference IS NULL)
-						WHERE ISNULL(GT.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
-						AND rbc.RbcRowStatus = 1						
-						ORDER BY rbc.RbcCodeOfReference DESC)
-			INNER JOIN RateHeader rh WITH (NOLOCK)
-				ON rc.RbcIdRate = rh.RheId
+            CROSS APPLY (
+                SELECT TOP 1 RbcId FROM (
+                    SELECT TOP 1 rbc.RbcId, 1 AS Priority
+                    FROM RatebyCustomer rbc WITH (NOLOCK)
+                    INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+                        ON GT.Sender_ID = vpc.CodeOfReference
+                    WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
+                        AND rbc.RbcRowStatus = 1
+                        AND rbc.RbcCodeOfReference = vpc.CodeOfReference        
+                    UNION ALL        
+                    SELECT TOP 1 rbc.RbcId, 2 AS Priority
+                    FROM RatebyCustomer rbc WITH (NOLOCK)
+                    INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+                        ON GT.Sender_ID = vpc.CodeOfReference
+                    WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
+                        AND rbc.RbcRowStatus = 1
+                        AND rbc.RbcCodeOfReference IS NULL
+                    ORDER BY rbc.RbcCodeOfReference DESC                           
+                ) AS CombinedResults
+                ORDER BY Priority
+            ) AS BestRate
+            INNER JOIN RateByCustomer rc WITH (NOLOCK)
+                ON rc.RbcId = BestRate.RbcId
+            INNER JOIN RateHeader rh WITH (NOLOCK)
+                ON rc.RbcIdRate = rh.RheId;
         -- Fin FDAPI-1418 Oscar Morales 2023-02-23
 
         -- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
@@ -680,7 +693,7 @@ BEGIN
                     SELECT TOP 1
                            CustomerID
                     FROM #GuideTable
-                        INNER JOIN dbo.VisitPointClient
+                        INNER JOIN dbo.VisitPointClient WITH (NOLOCK)
                             ON CodeOfReference = Sender_ID
                 );
 
@@ -781,14 +794,17 @@ BEGIN
 					[DO].[Sender_ID] = [VPC].[CodeOfReference]
 		------------------------------------------------------
 
-		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
-		INNER JOIN @CorrelativeTable ct
-		ON do.Guide_Number = ct.Guide_Number
-		INNER JOIN Membership mb
-		ON do.IdCustomer = mb.CustomerId
-		WHERE mb.CatMembershipStatusId = 3
-		AND mb.ExpirationDate >= GETDATE()
-		AND mb.RowStatus = 1)
+		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) 
+                                FROM DeliveryOrder do WITH (NOLOCK)
+		                            INNER JOIN @CorrelativeTable ct
+		                                ON do.Guide_Number = ct.Guide_Number
+                                        AND do.Guide_Serie = ct.Guide_Serie
+		                            INNER JOIN Membership mb
+		                                ON do.IdCustomer = mb.CustomerId
+		                        WHERE mb.CatMembershipStatusId = 3
+		                            AND mb.ExpirationDate >= GETDATE()
+		                            AND mb.RowStatus = 1
+                             )
 
         DROP TABLE #GuideTable;
 
@@ -984,7 +1000,7 @@ BEGIN
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
-				AND D.Guide_Serie = @GuideSerie
+				AND C.Guide_Serie = D.Guide_Serie
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
