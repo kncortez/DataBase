@@ -14,6 +14,11 @@
 -- Create date: <2024-08-29>
 -- Description:	<Se modifica condicion en join y agrega row status>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-08-29>
+-- Description:	<Se agrega para SV>
+-- =============================================
 AS
 BEGIN
     SELECT DISTINCT
@@ -22,6 +27,8 @@ BEGIN
          , CASE C.IdCountry
                WHEN 'HN' THEN
                    '-2'
+               WHEN 'SV' THEN
+                   '127'
                ELSE
                    '-1'
            END                                  AS [Station]

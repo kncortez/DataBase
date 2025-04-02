@@ -60,7 +60,7 @@ BEGIN
              , emp.Sex
              , CONVERT(DATE, emp.DateBrith)
              , ISNULL(emp.DPI, '')
-             , IIF(@IdCountry = 'HN','Hondureño','Guatemalteco')
+             , IIF(@IdCountry = 'HN','Hondureño',IIF(@IdCountry = 'SV','Salvadoreño','Guatemalteco'))
              , 1
              , @Token
              , GETDATE()
@@ -117,7 +117,7 @@ BEGIN
              , GETDATE()
              , NULL
              , NULL
-             , IIF(@IdCountry='GT','+502','+504')
+             , IIF(@IdCountry='GT','+502',IIF(@IdCountry='SV','+503','+504'))
              , ''
              , NULL --UrlFacebook
              , NULL --UrlInstagram
@@ -128,7 +128,7 @@ BEGIN
              , NULL --VerifiedPhone
              , NULL --ChangePassword
         FROM DenariusUser_Dev.dbo.LGN_User usr
-       WHERE usr.USR_IdUser = @Code
+       WHERE usr.USR_IdUser = CONVERT(NVARCHAR(20), @Code)
          AND usr.USR_Username = @User;
 
          SET @IdRegisterUser = SCOPE_IDENTITY();
@@ -155,7 +155,7 @@ BEGIN
              , NULL
              , NULL
         FROM DenariusUser_Dev.dbo.LGN_User usr
-       WHERE usr.USR_IdUser = @Code
+       WHERE usr.USR_IdUser = CONVERT(NVARCHAR(20), @Code)
          AND usr.USR_Username = @User;
 
       INSERT INTO DeliveryBackOffice.dbo.UserSystemRestriction
