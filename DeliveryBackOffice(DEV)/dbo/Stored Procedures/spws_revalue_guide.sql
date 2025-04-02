@@ -1340,7 +1340,8 @@ BEGIN
 				  @ExchangeSender = CE.ExchangeRate
 			FROM CurrencyExchangeRates CE 
 			INNER JOIN CatCurrencyCOD C  ON C.IdCatCurrencyCOD = CE.SourceCurrency
-			WHERE CodeISO LIKE ''+ @SenderCountryId +'%'
+			INNER JOIN DeliveryCurrency DC ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
+			WHERE DC.Currency_IdCountry = @SenderCountryId AND DC.DefaultPerCountry = 1 --CodeISO LIKE ''+ @SenderCountryId +'%'
 			ORDER BY CE.ExchangeDate DESC
 			
             PRINT 'registro no existe , hay que crearlo';
