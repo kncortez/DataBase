@@ -236,7 +236,7 @@ BEGIN
                 DECLARE @AmountPickup DECIMAL(14, 2) =
                         (
                             SELECT CONVERT(DECIMAL(14, 2), Value)
-                            FROM CatToCharge
+                            FROM CatToCharge WITH (NOLOCK)
                             WHERE IdToCharge = 1
                         );
 
@@ -374,7 +374,7 @@ BEGIN
                             SELECT TOP 1
                                    ord.Sender_ID
                             FROM #listGuides ls
-                                INNER JOIN DeliveryOrder ord
+                                INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
                                            ord.Guide_Number = ls.ItemNumber
                                            AND ord.Guide_Serie = ls.ItemSerie
@@ -531,8 +531,8 @@ BEGIN
                    SET IdHeaderRecolection = @IdPickup,
                        TokenUpdated = @Token,
                        DateUpdated  = GETDATE()
-                  FROM DeliveryOrderPaymentDetail dop
-                       INNER JOIN DeliveryOrder ord
+                  FROM DeliveryOrderPaymentDetail dop WITH (NOLOCK)
+                       INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                            ON (
                                   ord.Guide_Number = dop.GuideNumber
                                   AND ord.Guide_Serie = dop.GuideSerie
@@ -552,7 +552,7 @@ BEGIN
                 -- Quitar guías no recolectadas asociadas al servicio
                 UPDATE DeliveryOrderPaymentDetail
                 SET IdHeaderRecolection = NULL
-                FROM DeliveryOrderPaymentDetail dop
+                FROM DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                     LEFT JOIN #listGuides LG
                         ON dop.GuideNumber = LG.ItemNumber
                            AND dop.GuideSerie = LG.ItemSerie
@@ -564,7 +564,7 @@ BEGIN
 
                 UPDATE DeliveryOrder
                    SET StatusOrderId = 2
-                  FROM DeliveryOrder
+                  FROM DeliveryOrder WITH (NOLOCK)
                  WHERE Guide_Number IN
                        (
                         SELECT ItemNumber 
@@ -593,7 +593,7 @@ BEGIN
 
                 UPDATE DOPD
                 SET DOPD.ShipmentCompleted = 1
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                     INNER JOIN @CartGuides CG
                         ON DOPD.GuideSerie = CG.GuideSerie
                            AND DOPD.GuideNumber = CG.GuideNumber;
@@ -679,7 +679,7 @@ BEGIN
                             ON WCT.CustomerId = WRBU.CustomerId
                                AND WCT.GuideStatusId = WRBU.StatusOrderId
                                AND WCT.WebhookType = WRBU.WebhookTypeId
-                        INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE
+                        INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE WITH (NOLOCK)
                             ON WRBU.CustomerId = WHE.CustomerId
                         LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
                             ON WCT.GuideSerie = WTQ.GuideSerie
@@ -814,7 +814,7 @@ BEGIN
                 ---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
                 UPDATE DeliveryOrderPiece
                    SET IsPickup = 1
-                  FROM DeliveryOrderPiece
+                  FROM DeliveryOrderPiece WITH (NOLOCK)
                  WHERE GuideNumber IN
                        (
                            SELECT ItemNumber FROM #listGuides
@@ -828,7 +828,7 @@ BEGIN
 
                 DECLARE @Status INT =
                         (
-                            SELECT IdServiceStatus FROM CatServiceStatus WHERE IdServiceStatus = 3
+                            SELECT IdServiceStatus FROM CatServiceStatus WITH (NOLOCK) WHERE IdServiceStatus = 3
                         );
 
                 UPDATE ServiceManagement
@@ -838,14 +838,14 @@ BEGIN
                     CoPuDate = @EndDate,
                     TokenUpdated = @Token,
                     DateUpdated = GETDATE()
-                FROM ServiceManagement
+                FROM ServiceManagement WITH (NOLOCK)
                 WHERE IdSchedulePickup = @IdPickup;
 
                 DECLARE @transac INT =
                         (
                             SELECT TOP 1
                                    IdServiceManagement
-                              FROM ServiceManagement
+                              FROM ServiceManagement WITH (NOLOCK)
                              WHERE IdSchedulePickup = @IdPickup
                         );
 
@@ -957,7 +957,7 @@ BEGIN
                         (
                             SELECT TOP 1
                                    RegexEmail
-                            FROM Customer ct
+                            FROM Customer ct WITH (NOLOCK)
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (ord.IdCustomer = ct.IdCustomer)
                             WHERE ord.Guide_Number IN
@@ -978,7 +978,7 @@ BEGIN
                 (
                     SELECT TOP 1
                            sr.ID
-                    FROM DeliveryBackOffice.dbo.SenderReceiver sr
+                    FROM DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                         INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp WITH (NOLOCK)
                             ON  ltp.IdCourierman = sr.ID
                                --AND ltp.RowStatus = 1
@@ -1030,7 +1030,7 @@ BEGIN
                 (
                     SELECT TOP 1
                            schp.SenderId
-                    FROM DeliveryBackOffice.dbo.SchedulePickup schp
+                    FROM DeliveryBackOffice.dbo.SchedulePickup schp WITH (NOLOCK)
                     WHERE schp.SchedulePickupId = @IdPickup
                           AND schp.RowStatus = 1
                     ORDER BY schp.DateCreated ASC
@@ -1171,7 +1171,7 @@ BEGIN
                        (
                          SELECT TOP 1
                                 IdCourierman
-                           FROM DeliveryBackOffice.dbo.LogTokenPOD
+                           FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
                           WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
                        @DataOriginId AS 'DataOriginId',
