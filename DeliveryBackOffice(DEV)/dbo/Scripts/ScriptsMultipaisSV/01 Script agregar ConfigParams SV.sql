@@ -73,6 +73,42 @@ BEGIN TRY
 		,'SV'
 		,NULL)
 
+	--SCRIPT PARA INSERTAR EL VALOR DE URLLinkdeEntrega DE SV EN ConfigParams
+	INSERT INTO [dbo].[ConfigParams]
+		([Name]
+		,[Description]
+		,[Value]
+		,[Status]
+		,[CreateDate]
+		,[IdCountry]
+		,[IdCurrencyCOD])
+	VALUES
+		('URLLinkdeEntrega'
+		,'URL de confirmación de datos'
+		,'https://portal.forzadelivery.com/design/individual/mis-links/'
+		,1
+		,GETDATE()
+		,'SV'
+		,NULL)
+
+	--SCRIPT PARA INSERTAR EL VALOR DE PBX DE SV EN ConfigParams
+	INSERT INTO [dbo].[ConfigParams]
+		([Name]
+		,[Description]
+		,[Value]
+		,[Status]
+		,[CreateDate]
+		,[IdCountry]
+		,[IdCurrencyCOD])
+	VALUES
+		('PBX'
+		,'Numero de telefono'
+		,'2276-1919'
+		,1
+		,GETDATE()
+		,'SV'
+		,NULL)
+
 	COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH

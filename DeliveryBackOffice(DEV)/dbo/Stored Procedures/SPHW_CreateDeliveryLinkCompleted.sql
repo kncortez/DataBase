@@ -7,6 +7,11 @@
 -- Create date: <2024-10-15>
 -- Description:	<Se coloca CodeOfReference de origen basado en direcccion origen de Product>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-04>
+-- Description:	<Cambios para mejoras de multipais y SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_CreateDeliveryLinkCompleted]
   @AccountId INT=NULL,
   @CodeOfReference INT=NULL,
@@ -86,7 +91,7 @@ BEGIN
 
    SET @AccountId = (SELECT TOP 1  AccountId FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
    SET @Price = (SELECT TOP 1  Price FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
-   DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX' AND IdCountry='GT')
+   DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX')
    DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId)
 
    --CodeOfReference basado en la direccion de origen del producto
@@ -225,13 +230,12 @@ BEGIN
 						DATEADD(DAY, 1, GETDATE()) AS 'ExpirationDate',
 						2 AS 'DeliveryLinkStatusId',
 						@PBX AS 'PBX',
-						CASE 
-						     WHEN @CountryId ='GT' THEN 'Guatemala'
-							 ELSE 'Honduras' END
-							 AS 'Country',
+						C.CountryNameES AS 'Country',
 					    @SenderPhone  AS SenderPhone,
                         @URL+@hashResultado AS [URL], 
                         @SenderEmail  AS [SenderEmail]
+						FROM DeliveryBackOffice.dbo.CatCountry C WITH(NOLOCK)
+						WHERE IdCountry = @CountryId
 	END TRY
 	BEGIN CATCH
 		ROLLBACK TRANSACTION
