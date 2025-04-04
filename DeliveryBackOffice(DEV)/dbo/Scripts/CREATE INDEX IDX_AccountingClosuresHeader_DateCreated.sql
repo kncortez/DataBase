@@ -1,0 +1,2 @@
+CREATE INDEX IDX_AccountingClosuresHeader_DateCreated
+ON AccountingClosuresHeader (DateCreated);
