@@ -908,7 +908,36 @@ BEGIN
 		WHERE
 			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI 
 	)
-
+     DECLARE @Onestopshot  INT =  
+    (  
+    SELECT   
+    TOP 1  
+        [CS].[SysIdSystem]  
+    FROM  
+    [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)   
+    WHERE  
+    [CS].[SysNameSystem] = 'One stop shot'  COLLATE Latin1_General_CI_AI   
+    )
+    DECLARE @OnestopLink  INT =  
+    (  
+    SELECT   
+    TOP 1  
+        [CS].[SysIdSystem]  
+    FROM  
+    [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)   
+    WHERE  
+    [CS].[SysNameSystem] = 'One stop Link'  COLLATE Latin1_General_CI_AI   
+    ) 
+    DECLARE @Portalwebconlink  INT =  
+    (  
+    SELECT   
+    TOP 1  
+        [CS].[SysIdSystem]  
+    FROM  
+    [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)   
+    WHERE  
+    [CS].[SysNameSystem] = 'Portal web con Link'  COLLATE Latin1_General_CI_AI   
+    ) 
 
   --Fin Nuevos datos para consumir nuevo formato guía
 
@@ -981,6 +1010,9 @@ BEGIN
 						WHEN D.[CatSystemId] = @ExpressWebSys THEN 'EXC'
 						WHEN D.[CatSystemId] = @CorporateWebSys THEN 'COR'
 						WHEN D.[CatSystemId] = @ParserSys THEN 'PAR'
+                        WHEN D.[CatSystemId] = @Onestopshot THEN 'OSS'
+	                    WHEN D.[CatSystemId] = @OnestopLink THEN 'OSL'
+	                    WHEN D.[CatSystemId] = @Portalwebconlink THEN 'INL'
 						WHEN D.[CatSystemId] IS NULL THEN 'API'
 						ELSE 'API'
 					END
