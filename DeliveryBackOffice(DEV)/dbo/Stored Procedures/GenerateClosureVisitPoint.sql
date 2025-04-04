@@ -4,6 +4,11 @@
 -- Create date: <2022-03-28>
 -- Description:	<SP para generar el cierre de los express center por punto de visita>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2025-04-03>
+-- Description:	<Agregar With(Nolock) a las tablas en consulta y quitar filtros externos en Inner Join >
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
     @VisitPointId INT = 4246,
@@ -38,16 +43,16 @@ BEGIN
 		(
 			SELECT TOP 1
 				   vp.RegisterUserID
-			FROM [dbo].RegisterUser usr
-				LEFT JOIN [dbo].[RolByUserByAccount] rua
+			FROM [dbo].RegisterUser usr WITH(NOLOCK)
+				LEFT JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
 					ON rua.RuaIdUser = usr.UsrIdUser
 					   AND rua.RuaRowStatus = 1
-				INNER JOIN [dbo].Account ac
+				INNER JOIN [dbo].Account ac WITH(NOLOCK)
 					ON ac.AccIdAccount = rua.RuaIdAccount
-					   AND ac.AccRowStatus = 1
-				INNER JOIN VisitPointByUser vp
+				INNER JOIN VisitPointByUser vp WITH(NOLOCK)
 					ON vp.RegisterUserID = usr.UsrIdUser
 			WHERE ac.AccIdAccount = @UserId
+			     AND ac.AccRowStatus = 1
 		);
 
 	SELECT	@TotalAmountCash =ISNULL(SUM(TotalAmountCash), 0),
@@ -60,7 +65,7 @@ BEGIN
 		@InvoiceAmountFacturaCash = ISNULL(SUM(InvoiceAmountFacturaCash), 0),
 		@InvoiceAmountFacturaCard = ISNULL(SUM(InvoiceAmountFacturaCard), 0),
 		@InvoiceAmountCOD = ISNULL(SUM(InvoiceAmountCOD), 0)
-	FROM AccountingClosuresHeader ACH
+	FROM AccountingClosuresHeader ACH WITH(NOLOCK)
 	WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 		AND ACH.VisitPoint = @VisitPointId
 		AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
