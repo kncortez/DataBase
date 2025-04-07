@@ -199,16 +199,18 @@ BEGIN
                     DECLARE @VistitPointUser INT =
                             (
                                 SELECT CodeOfReference
-                                FROM DeliveryBackOffice.dbo.VisitPointClient VPC
+                                FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                                     INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
                                         ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-                                           AND VPU.RowStatus = 1
+                                           --AND VPU.RowStatus = 1
                                     INNER JOIN RegisterUser ru WITH (NOLOCK)
                                         ON VPU.RegisterUserID = ru.UsrIdUser
-                                           AND ru.UsrRowStatus = 1
-                                    INNER JOIN [dbo].[RolByUserByAccount] rua
+                                           --AND ru.UsrRowStatus = 1
+                                    INNER JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                                         ON rua.RuaIdUser = ru.UsrIdUser
                                 WHERE rua.RuaIdAccount = @IdAccount
+								AND VPU.RowStatus = 1
+								AND ru.UsrRowStatus = 1
                             );
 
                     INSERT INTO dbo.DeliveryOrderPaymentTransaction
@@ -571,7 +573,7 @@ BEGIN
             --ACTUALIZANDO VEHÍCULO
             UPDATE sp
             SET sp.TypeVehicleId = @TypeVehicleId
-            FROM SchedulePickup sp
+            FROM SchedulePickup sp WITH (NOLOCK)
             WHERE sp.SenderId IN
                   (
                       SELECT Sender_ID
@@ -697,7 +699,7 @@ BEGIN
             UPDATE SMT
             SET Amount = SUB.NewTotal,
                 CatPaymentTimeId = SUB.TimePlaId
-            FROM dbo.ServiceManagement SMT
+            FROM dbo.ServiceManagement SMT WITH (NOLOCK)
                 INNER JOIN
                 (
                     SELECT SM.IdServiceManagement,
@@ -735,9 +737,9 @@ BEGIN
                 INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                     ON dopd.GuideSerie = sd.Serie
                        AND dopd.GuideNumber = sd.Number
-                INNER JOIN SchedulePickup sp
+                INNER JOIN SchedulePickup sp WITH (NOLOCK)
                     ON sp.SchedulePickupId = dopd.IdHeaderRecolection
-                LEFT JOIN ServiceManagement sm
+                LEFT JOIN ServiceManagement sm WITH (NOLOCK)
                     ON sm.IdSchedulePickup = sp.SchedulePickupId
                 INNER JOIN @TempPrice tp
                     ON tp.GuideSerie = sd.Serie
@@ -780,7 +782,7 @@ BEGIN
                    @Token,
                    GETDATE()
             FROM @TblServiceManagement tsm
-                INNER JOIN ServiceManagement sm
+                INNER JOIN ServiceManagement sm WITH (NOLOCK)
                     ON sm.IdSchedulePickup = tsm.IdSchedulePickup
             WHERE tsm.IdServiceManagement IS NULL;
 
@@ -953,13 +955,13 @@ BEGIN
             BEGIN
                 SET @IdAcc =
                 (
-                    SELECT AccIdAccount
-                    FROM dbo.InternalUser IU
-                        INNER JOIN RegisterUser RU
+                    SELECT AccIdAccount 
+                    FROM dbo.InternalUser IU WITH (NOLOCK)
+                        INNER JOIN RegisterUser RU WITH (NOLOCK)
                             ON RU.UsrIdUser = IU.RegisterUserID
-                        INNER JOIN RolByUserByAccount RB
+                        INNER JOIN RolByUserByAccount RB WITH (NOLOCK)
                             ON RB.RuaIdUser = RU.UsrIdUser
-                        INNER JOIN Account ACC
+                        INNER JOIN Account ACC WITH (NOLOCK)
                             ON RB.RuaIdAccount = ACC.AccIdAccount
                     WHERE IdUser = @IdUser
                 );
@@ -969,12 +971,12 @@ BEGIN
             DECLARE @VistitPointUser1 INT =
                     (
                         SELECT CodeOfReference
-                        FROM DeliveryBackOffice.dbo.VisitPointClient VPC
+                        FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                             INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
                                 ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-                            INNER JOIN RegisterUser ru
+                            INNER JOIN RegisterUser ru WITH (NOLOCK)
                                 ON VPU.RegisterUserID = ru.UsrIdUser
-                            INNER JOIN [dbo].[RolByUserByAccount] rua
+                            INNER JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                                 ON rua.RuaIdUser = ru.UsrIdUser
                         WHERE rua.RuaIdAccount = @IdAccount
                                    AND VPU.RowStatus = 1

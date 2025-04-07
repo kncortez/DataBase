@@ -17,7 +17,7 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
-
+	set arithabort on;
     --- Conteo para verificar cantidad correcta de validaciones
     DECLARE @RModified INT = 0;
 

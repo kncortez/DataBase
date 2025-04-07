@@ -1,13 +1,12 @@
 ﻿
-
-
-
-
-
 -- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-11-25>
 -- Description:	<Registrar transacción de liquidación (cobro) de guías en área de COD>
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2020-12-12>
+-- Description:	<Se agrego actualizacion de estado COBRADO para guias COD Anticipado>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
     @GuideSerie NVARCHAR(2),
@@ -19,7 +18,12 @@ CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
     @Type VARCHAR(10),
     @Value DECIMAL(10, 2),
     @Description NVARCHAR(500),
-    @GuideQuantityCOD INT
+    @GuideQuantityCOD INT,
+	@CountryId NVARCHAR(5) = 'GT',
+	@RouteId INT = 0,
+	@TotalNumberOfPieces INT = 0,
+	@CatManifestSettlementIncidenceTypeId INT = 0
+
 AS
 BEGIN
     -- control transacción
@@ -48,6 +52,17 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#GuidesTemp', 'U') IS NOT NULL
             DROP TABLE #GuidesTemp;
 
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
+
+        CREATE TABLE #TempData
+        (
+         IdProcessedGuideCOD INT,
+         GuideSerie          NVARCHAR(4),
+         GuideNumber         INT
+        );
+        CREATE NONCLUSTERED INDEX INDX_sps_settlement_guide_COD_Temp ON #TempData (GuideSerie, GuideNumber);
+
         -- Convertir la lista de guías separadas por coma en una tabla
         INSERT @GuidesTable
         SELECT CAST(Item AS INT)
@@ -66,7 +81,9 @@ BEGIN
               AND Guide_Settlement = 1; -- guía liquidada previamente en bodega
 
         IF COALESCE(@@rowcount, 0) > 0
+		BEGIN
             SET @ValidateOperation = @ValidateOperation + 1;
+		END
 
         -- insertar guía en la tabla de guías procesadas COD
         -- Se insertar guías en tabla temporal
@@ -118,8 +135,13 @@ BEGIN
                     [DataOriginId],
                     [Notificated],
                     [Token],
-                    CustomerId
+                    CustomerId,
+					IsAnticipatedCOD
                 )
+                OUTPUT inserted.IdProcessedGuideCOD,
+                       inserted.GuideSerie,
+                       inserted.GuideNumber
+                  INTO #TempData
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
                        @CourierId,
@@ -129,7 +151,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
@@ -149,7 +172,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
@@ -169,7 +193,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
@@ -229,9 +254,42 @@ BEGIN
                 VALUES
                 (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
 
-				END;
+			END;
 
             END;
+
+			-- Actualizamos guia liquidada cod anticipado a estado de balance COBRADO
+				IF EXISTS
+				(
+					SELECT 1
+					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+					WHERE	acd.GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie
+				)
+				BEGIN
+					UPDATE DeliveryBackOffice.dbo.AnticipatedCODDetail
+					SET BalanceStatus = 'COBRADO',
+					DateUpdated = GETDATE(),
+					TokenUpdated = @Token
+					WHERE	GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie;
+						
+                    DECLARE @TempData TblAnticipatedCODCustomerBalance;
+
+					INSERT INTO @TempData
+					(
+						CustomerId,
+						PortfolioId
+					)
+					SELECT ach.CustomerId, ach.PortfolioId
+					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+					INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
+						ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
+					WHERE	acd.GuideNumber = @GuideNumber AND ACD.GuideSerie = @GuideSerie
+
+					EXEC spUpdateBalanceByIdClient @TempData
+
+                    DELETE 
+                      FROM @TempData
+				END
 
             -- se elimina la guía de la tabla temporal
             DELETE #GuidesTemp
@@ -248,11 +306,15 @@ BEGIN
               AND Quantity > 0;
 
         IF COALESCE(@@rowcount, 0) > 0
+		BEGIN
             SET @ValidateOperation = @ValidateOperation + 1;
+		END
 
         --Si se presenta una contingencia se registra
         IF @IsIncident = 1
         BEGIN
+
+			SELECT @CourierId = ID_Courier FROM DeliveryOrderBySettlement WHERE ID = @IdDeliveryOrderBySettlement
 
             INSERT INTO [dbo].[Contingency]
             (
@@ -266,8 +328,46 @@ BEGIN
             VALUES
             (@IdDeliveryOrderBySettlement, @Type, @Value, @Description, @Token, GETDATE());
 
+			INSERT INTO [dbo].[ManifestSettlementIncidence]
+			   ([CatRouteId]
+			   ,[CourierId]
+			   ,[ManifestNumber]
+			   ,[TotalAmount]
+			   ,[GuidesQuantity]
+			   ,[TotalNumberOfPieces]
+			   ,[IncidenceApproved]
+			   ,[IdValidator]
+			   ,[CatManifestSettlementIncidenceTypeId]
+			   ,[IncidenceComment]
+			   ,[ResolutionComment]
+			   ,[CountryId]
+			   ,[RowStatus]
+			   ,[DateCreated]
+			   ,[TokenCreated]
+			   ,[isCOD])
+		 VALUES
+			   (@RouteId
+			   ,@CourierId
+			   ,@IdDeliveryOrderBySettlement
+			   ,@Value
+			   ,@GuideQuantityCOD
+			   ,@TotalNumberOfPieces
+			   ,0
+			   ,NULL
+			   ,@CatManifestSettlementIncidenceTypeId
+			   ,@Description
+			   ,NULL
+			   ,@CountryId
+			   ,1
+			   ,GETDATE()
+			   ,@Token
+			   ,1)
+
             IF COALESCE(@@rowcount, 0) > 0
+			BEGIN
                 SET @ValidateOperation = @ValidateOperation + 1;
+			END
+
         END;
         ELSE
         BEGIN
@@ -283,8 +383,9 @@ BEGIN
         WHERE ID = @IdDeliveryOrderBySettlement;
 
         IF COALESCE(@@rowcount, 0) > 0
+		BEGIN
             SET @ValidateOperation = @ValidateOperation + 1;
-
+	    END
 
     END TRY
     BEGIN CATCH
@@ -302,6 +403,17 @@ BEGIN
                    'Registro guardado correctamente' AS 'Description',
                    @@trancount AS 'NumTransferID';
             COMMIT TRANSACTION;
+
+        UPDATE pgd 
+           SET pgd.IsCompleted = 1
+          FROM ProcessedGuideCOD pgd WITH(NOLOCK)
+               INNER JOIN #TempData tmp
+                  ON pgd.GuideSerie   = tmp.GuideSerie
+                 AND pgd.GuideNumber = tmp.GuideNumber
+         WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
         END;
         ELSE
         BEGIN

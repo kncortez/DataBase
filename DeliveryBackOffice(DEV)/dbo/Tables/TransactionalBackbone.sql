@@ -28,3 +28,20 @@
     FOREIGN KEY ([TransactionTypeId]) REFERENCES [dbo].[TransactionType] ([IdTransactionType])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RouteId]
+    ON [dbo].[TransactionalBackbone]([RouteId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber]
+    ON [dbo].[TransactionalBackbone]([GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DateCreated_RowStatus]
+    ON [dbo].[TransactionalBackbone]([DateCreated] ASC, [RowStatus] ASC);
+

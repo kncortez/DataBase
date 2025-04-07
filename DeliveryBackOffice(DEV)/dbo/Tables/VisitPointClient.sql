@@ -54,6 +54,10 @@ CREATE TABLE [dbo].[VisitPointClient] (
 
 
 
+
+
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_customerid]
     ON [dbo].[VisitPointClient]([CustomerID] ASC);
@@ -63,8 +67,7 @@ CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
     ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
 
 GO
-CREATE NONCLUSTERED INDEX [idx_CodeOfReference]
-    ON [dbo].[VisitPointClient]([CodeOfReference] ASC);
+
 
 
 GO
@@ -181,4 +184,32 @@ GO
 CREATE NONCLUSTERED INDEX [idx_VisitPointId_include]
     ON [dbo].[VisitPointClient]([VisitPointId] ASC)
     INCLUDE([CustomerID]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusClient_IdSettlement_Included]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [IdSettlement] ASC)
+    INCLUDE([DescriptionOfClient], [CustomerID], [Address]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusClient_CountryId_IdKindOfVPClient_iNCLUDE]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC, [IdKindOfVPClient] ASC)
+    INCLUDE([DescriptionOfClient], [Address], [Phone], [ContactName], [IdSettlement], [Email]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdKindOfVPClient]
+    ON [dbo].[VisitPointClient]([IdKindOfVPClient] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CountryId_StatusClient]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC, [IdKindOfVPClient] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusClient]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC)
+    INCLUDE([IdVisitPointClient], [DescriptionOfClient], [CountryId], [CustomerID], [Phone]);
 

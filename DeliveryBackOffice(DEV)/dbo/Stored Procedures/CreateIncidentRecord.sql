@@ -120,7 +120,9 @@ BEGIN
                 SELECT TOP 1
                        StatusOrderId
                 FROM dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
-                WHERE DOD.Guide_Number = @GuideNumber
+                WHERE 
+				      DOD.Guide_Serie = @GuideSerie AND --HOTFIX BNHL 14/11/2024 no tenía serie
+					  DOD.Guide_Number = @GuideNumber
                       AND CONVERT(DATE, DOD.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
                 ORDER BY DOD.DateCreatedInSystem DESC
             );
@@ -132,7 +134,8 @@ BEGIN
                 FROM [dbo].[DeliveryOrderDetail]   DOD WITH (NOLOCK)
                     INNER JOIN [dbo].[StatusOrder] SO WITH (NOLOCK)
                         ON DOD.StatusOrderId = SO.StatusOrderId
-                WHERE DOD.Guide_Number = @GuideNumber
+                WHERE DOD.Guide_Serie = @GuideSerie AND --HOTFIX BNHL 14/11/2024 no tenía serie
+					   DOD.Guide_Number = @GuideNumber
                       AND CONVERT(DATE, DOD.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
                 ORDER BY DOD.DateCreatedInSystem DESC
             );
@@ -616,7 +619,9 @@ BEGIN
 										INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 										    ON do.IdCustomer = WHE.CustomerId
 										INNER JOIN @GuidePiecesTable gpt
-										    ON dop.GuideNumber = gpt.GuideNumber
+										    ON
+											dop.GuideSerie = gpt.GuideSerie and --HOTFIX BNHL 14/11/2024 no tenía serie
+											dop.GuideNumber = gpt.GuideNumber
 										INNER JOIN @PiecesGuideRelatedTable pgt
 										    ON gpt.GuideNumber = pgt.GuideNumber
 											WHERE gpt.NumberPieces = pgt.NumberRelatedPieces

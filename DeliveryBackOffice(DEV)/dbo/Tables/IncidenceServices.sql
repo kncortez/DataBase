@@ -21,6 +21,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'token de actualziacion', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceServices', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -75,4 +77,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'feha de cre
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'precisión', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceServices', @level2type = N'COLUMN', @level2name = N'Accuracy';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ServiceManagementId]
+    ON [dbo].[IncidenceServices]([ServiceManagementId] ASC);
 

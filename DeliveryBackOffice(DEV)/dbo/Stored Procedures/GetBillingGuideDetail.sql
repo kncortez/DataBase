@@ -83,7 +83,7 @@ BEGIN
     (
         SELECT TOP 1
                Co.IdCost
-        FROM [DeliveryBackOffice].[dbo].[Cost] Co
+        FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
         WHERE Co.ProductNumber = @ProductNumber
         ORDER BY IdCost DESC
     );

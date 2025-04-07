@@ -52,6 +52,10 @@
 
 
 
+
+
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla CatMembership.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CatMembershipId';
 
@@ -190,4 +194,20 @@ CREATE NONCLUSTERED INDEX [IDX_RowStatus_ExpirationDate_INCLUDE]
 GO
 CREATE NONCLUSTERED INDEX [IDX_AccountId_RowStatus_CatMembershipStatusId]
     ON [dbo].[Membership]([AccountId] ASC, [RowStatus] ASC, [CatMembershipStatusId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatMembershipStatusId_RowStatus_ExpirationDate_Included]
+    ON [dbo].[Membership]([CatMembershipStatusId] ASC, [RowStatus] ASC, [ExpirationDate] ASC)
+    INCLUDE([CustomerId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatMembershipStatusId_CustomerId_RowStatus_ExpirationDate]
+    ON [dbo].[Membership]([CatMembershipStatusId] ASC, [CustomerId] ASC, [RowStatus] ASC, [ExpirationDate] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_RowStatus_CatMembershipStatusId_PointsExpirationDate]
+    ON [dbo].[Membership]([CustomerId] ASC, [RowStatus] ASC, [CatMembershipStatusId] ASC, [PointsExpirationDate] ASC);
 

@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[TokenLog] (
+﻿CREATE TABLE [dbo].[TokenLog] (
     [TknIdToken]      NVARCHAR (75) NOT NULL,
     [TknIdUser]       BIGINT        NOT NULL,
     [TknIdSystem]     INT           NOT NULL,
@@ -21,7 +21,27 @@ CREATE TABLE [dbo].[TokenLog] (
 
 
 
+
+
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_TokenLog_TknTokenCreated]
     ON [dbo].[TokenLog]([TknTokenCreated] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_TknRowStatus_TknDateCreated_include]
+    ON [dbo].[TokenLog]([TknRowStatus] ASC, [TknDateCreated] ASC)
+    INCLUDE([TknIdUser]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_TknIdUser_TknRowStatus_TknDateCreated]
+    ON [dbo].[TokenLog]([TknIdUser] ASC, [TknRowStatus] ASC, [TknDateCreated] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_TknIdUser]
+    ON [dbo].[TokenLog]([TknIdUser] ASC);
 

@@ -17,6 +17,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'NotificationQueueDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -63,4 +65,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para guardar detalle de cola de notificaciones', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'NotificationQueueDetail';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_NotificationQueueId_GuideSerie_GuideNumber_RowStatus]
+    ON [dbo].[NotificationQueueDetail]([NotificationQueueId] ASC, [GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
 

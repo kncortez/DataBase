@@ -19,7 +19,7 @@ SELECT
 	ISNULL(REPLACE(pms.Name, '"', ''), '')				[Name]
 	,ISNULL(REPLACE(pms.Description, '"', ''), '')		[Description]
 	,ISNULL(REPLACE(pms.Value, '"', ''), '')			[Value]
-FROM DeliveryBackOffice.dbo.ConfigParams pms
+FROM DeliveryBackOffice.dbo.ConfigParams pms WITH(NOLOCK)
 	WHERE pms.Name = @pName	AND pms.Status = 1
 	AND (pms.IdCountry = @pIdCountry OR (@pIdCountry = 'GT' AND pms.IdCountry IS NULL))
 	AND (pms.IdCurrencyCOD = @pCurrency OR pms.IdCurrencyCOD IS NULL)

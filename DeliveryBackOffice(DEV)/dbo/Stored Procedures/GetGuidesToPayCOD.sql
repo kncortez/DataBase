@@ -65,12 +65,13 @@ SELECT
      , BTD.CommissionDate
      , BTd.RowStatus
      , BTD.CatConceptCODId
-FROM dbo.BatchCOD                 BT
-    INNER JOIN dbo.BatchDetailCOD BTD
+FROM dbo.BatchCOD                 BT WITH(NOLOCK)
+    INNER JOIN dbo.BatchDetailCOD BTD WITH(NOLOCK)
         ON BTD.BatchCODId = BT.IdBatchCOD
 WHERE CONVERT(DATE, BT.Date) = @Date
       AND BTD.CatConceptCODId = 1
-      AND BTd.RowStatus = 1;
+      AND BTd.RowStatus = 1
+      AND BTD.IdCountry = @IdCountry --NEW BNHL;
 
 
 
@@ -147,7 +148,9 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 			WHEN cpt.TimePlaName = 'Post-Venta' THEN 'Crédito'
 			ELSE cpt.TimePlaName
 			END) PaymentType,
-			(IIF(ctiom.tio_pk_name = 'pago con tarjeta' OR ctiom.tio_pk_name = 'Datafono', 'Si','No')) CardPayment
+			(IIF(ctiom.tio_pk_name = 'pago con tarjeta' OR ctiom.tio_pk_name = 'Datafono', 'Si','No')) CardPayment,
+			(IIF(MAX(ISNULL(bt.IsAnticipatedCOD,0)) = 1, 'C.O.D. Anticipado','C.O.D. Inmediato')) BatchTypeCOD,
+			(MAX(ISNULL(btd.ComisionCODAnticipated,0))) AnticipatedCommission
     FROM [dbo].[BatchDetailCOD] btd WITH(NOLOCK)
         LEFT JOIN [dbo].[BatchCOD] bt WITH(NOLOCK)
             ON btd.[BatchCODId] = bt.[IdBatchCOD]
@@ -242,6 +245,8 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 		AND BTD.RowStatus = 1 
 		--AND btc.RowStatus = 1 
 		--AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
+		AND do.SenderCountryId = @IdCountry
+        AND BTD.isCompleted = 1
 ​
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,

@@ -49,6 +49,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_PromoCoupon_GuideSerieOrigin]
     ON [dbo].[PromoCoupon]([GuideSerieOrigin] ASC, [GuideNumberOrigin] ASC);
@@ -185,4 +187,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fec
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PromoCoupon', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_PromoCouponSerie_RedeemedDate_RowStatus_FinalActiveDate]
+    ON [dbo].[PromoCoupon]([PromoCouponSerie] ASC, [RedeemedDate] ASC, [RowStatus] ASC, [FinalActiveDate] ASC);
 

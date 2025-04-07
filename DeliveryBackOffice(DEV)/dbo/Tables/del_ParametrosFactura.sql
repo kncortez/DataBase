@@ -31,10 +31,13 @@
     [dpf_OcrCode2]                   NVARCHAR (50)  NULL,
     [dpf_StatusFACE]                 NVARCHAR (1)   NULL,
     [dpf_WarehouseCode]              INT            NULL,
-    [inv_cmp_name]                   VARCHAR(500)   NULL,
-    [inv_cmp_nameComercial]          VARCHAR(500)   NULL,
+    [inv_cmp_name]                   VARCHAR (500)  NULL,
+    [inv_cmp_nameComercial]          VARCHAR (500)  NULL,
+    [KioskCode]                      INT            NULL,
     CONSTRAINT [PK_del_ParametrosFactura] PRIMARY KEY CLUSTERED ([dpf_VpCodeOfReference] ASC)
 );
+
+
 
 
 
@@ -145,3 +148,12 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla con parametros para facturacion' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'del_ParametrosFactura'
 GO
+
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Codigo de kiosko/buzon utilizado para identificar tiendas',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'del_ParametrosFactura',
+    @level2type = N'COLUMN',
+    @level2name = N'KioskCode'

@@ -55,7 +55,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
   , @CategoryProductId INT = 0
   , @ProductId INT = 0
   , @FetchActivePRoduct BIT = 1
- -- , @FetchActivePRoduct BIT = 1
+-- , @FetchActivePRoduct BIT = 1
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -116,30 +116,49 @@ BEGIN
         EXEC ClientSubscriptionFetcher_Data @IdAccount = @IdAcount;
 
 
-		SELECT Top 1 @TechnicalDescription=TechnicalDescription FROM CatProductCategory
-		WHERE IdCatProductCategory= @CategoryProductId
-		and rowstatus=1
+        SELECT TOP 1
+               @TechnicalDescription = TechnicalDescription
+        FROM CatProductCategory
+        WHERE IdCatProductCategory = @CategoryProductId
+              AND RowStatus = 1;
 
-		declare @NewProductId INT=NULL;
+        DECLARE @NewProductId INT = NULL;
 
-		SELECT Top 1 @NewProductId=ProductId FROM @ActiveProducts 
-		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1 and (IdCountry = @Country OR (IdCountry IS NULL AND @Country = 'GT')))
-	
-		IF(@NewProductId IS NULL)
-		BEGIN
-			SET @ProductId=0;
-			SET  @CategoryProductId=0;
-			--SET @UseMembership=0;
-		END
-		ELSE
-		BEGIN
-			SET @ProductId=@NewProductId
-		END
-	END
+        SELECT TOP 1
+               @NewProductId = ProductId
+        FROM @ActiveProducts
+        WHERE CatProductCategoryId =
+        (
+            SELECT IdCatProductCategory
+            FROM CatProductCategory
+            WHERE TechnicalDescription = @TechnicalDescription
+                  AND RowStatus = 1
+                  AND
+                  (
+                      IdCountry = @Country
+                      OR
+                      (
+                          IdCountry IS NULL
+                          AND @Country = 'GT'
+                      )
+                  )
+        );
+
+        IF (@NewProductId IS NULL)
+        BEGIN
+            SET @ProductId = 0;
+            SET @CategoryProductId = 0;
+        --SET @UseMembership=0;
+        END;
+        ELSE
+        BEGIN
+            SET @ProductId = @NewProductId;
+        END;
+    END;
 
 
-	--FIN FIx 20250603
-	------------------------------------------------------------------------------------------------------------------------------------
+    --FIN FIx 20250603
+    ------------------------------------------------------------------------------------------------------------------------------------
     ------- determinar el Tarifario y tipo de tarifario que se va a aplicar -------------------------------------------------------
 
     DECLARE @NewMainRates INT =
@@ -148,7 +167,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar'
-                AND CountryId = @Country
+                      AND CountryId = @Country
             );
     DECLARE @NewAlternativeRates INT =
             (
@@ -156,7 +175,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario destinos express center'
-                AND CountryId = @Country
+                      AND CountryId = @Country
             );
     DECLARE @NewAutoSalesMainRates INT =
             (
@@ -164,7 +183,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas'
-                AND CountryId = @Country
+                      AND CountryId = @Country
             );
 
     DECLARE @NewRateGeneral INT =
@@ -172,8 +191,8 @@ BEGIN
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Promo Paquetequiero'
-                AND CountryId = @Country
+                WHERE RH.RheName = 'Tarifario de servicio interfer'
+                      AND CountryId = @Country
             );
     DECLARE @NewRateGeneralDiscount INT =
             (
@@ -181,7 +200,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Paquetequiero destinos exc'
-                AND CountryId = @Country
+                      AND CountryId = @Country
             );
 
     --DECLARE @TarifaPlanBasico INT =
@@ -250,11 +269,16 @@ BEGIN
     DECLARE @IdTypeRate AS INT;
     DECLARE @WeigthLimit AS DECIMAL(12, 2) = 0;
     DECLARE @Currency AS VARCHAR(10) = '';
-	DECLARE @CurrencyId as INT;
+    DECLARE @CurrencyId AS INT;
     DECLARE @PiecesIncluded AS DECIMAL(12, 2) = 1;
     DECLARE @PriceWithCreditCard AS INT = 0;
 
-	DECLARE @DefaultCurrency AS INT = (select IdCatCurrencyCOD from DeliveryBackOffice.dbo.CatCurrencyCOD where CodeISO = 'GTQ')
+    DECLARE @DefaultCurrency AS INT =
+            (
+                SELECT IdCatCurrencyCOD
+                FROM DeliveryBackOffice.dbo.CatCurrencyCOD
+                WHERE CodeISO = 'GTQ'
+            );
 
 
     IF EXISTS
@@ -271,9 +295,9 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
-			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
-        FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
-            LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
+             , @CurrencyId     = ISNULL(rh.IdCurrency, @DefaultCurrency)
+        FROM dbo.RatebyCustomer          rc WITH (NOLOCK)
+            LEFT JOIN dbo.RateHeader     rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
                    AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
@@ -289,9 +313,9 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
-			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
-        FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
-            LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
+             , @CurrencyId     = ISNULL(rh.IdCurrency, @DefaultCurrency)
+        FROM dbo.RatebyCustomer          rc WITH (NOLOCK)
+            LEFT JOIN dbo.RateHeader     rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
                    AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
@@ -308,8 +332,8 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
-        FROM dbo.RateBySalePipeLine        sp WITH (NOLOCK)
-            LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
+        FROM dbo.RateBySalePipeLine      sp WITH (NOLOCK)
+            LEFT JOIN dbo.RateHeader     rh WITH (NOLOCK)
                 ON rh.RheId = sp.RateId
                    AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
@@ -326,12 +350,12 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
-        FROM dbo.RateHeader                rh WITH (NOLOCK)
+        FROM dbo.RateHeader              rh WITH (NOLOCK)
             LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rh.RheRowStatus = 'true'
               AND rh.RheDefault = 'true'
-			  AND ISNULL(rh.CountryId,'GT')= @Country;
+              AND ISNULL(rh.CountryId, 'GT') = @Country;
     END;
 
 
@@ -431,24 +455,26 @@ BEGIN
     BEGIN
 
         DECLARE @CustomerHasActiveSubscription INT;
-		
-				SELECT @CustomerHasActiveSubscription = SC.IdSubscription
-				FROM [DeliveryBackOffice].[dbo].[Subscription]                    SC WITH (NOLOCK)
-					INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-						ON CSPS.IdCatSalesPackageStatus = SC.CatSubscriptionStatusId
-					INNER JOIN [DeliveryBackOffice].[dbo].[Membership]            MB WITH (NOLOCK)
-						ON SC.MembershipId = MB.IdMembership
-					INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPSM WITH (NOLOCK)
-						ON CSPSM.IdCatSalesPackageStatus = MB.CatMembershipStatusId
-				WHERE SC.CustomerId = @IdCustomer AND MB.CustomerId = @IdCustomer
-                      AND GETDATE() <= MB.ExpirationDate AND MB.RowStatus = 1
-					  AND GETDATE() <= SC.ExpirationDate
-					  AND SC.RowStatus = 1
-					  AND CSPS.SalesPackageStatusName = 'Activa' 
-					  AND CSPSM.SalesPackageStatusName = 'Activa' 
-					  AND SC.CatTypeSubscriptionId = ISNULL(@TypeSubscriptionId, 2)
-				ORDER BY SC.ExpirationDate ASC;
-	
+
+        SELECT @CustomerHasActiveSubscription = SC.IdSubscription
+        FROM [DeliveryBackOffice].[dbo].[Subscription]                    SC WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
+                ON CSPS.IdCatSalesPackageStatus = SC.CatSubscriptionStatusId
+            INNER JOIN [DeliveryBackOffice].[dbo].[Membership]            MB WITH (NOLOCK)
+                ON SC.MembershipId = MB.IdMembership
+            INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPSM WITH (NOLOCK)
+                ON CSPSM.IdCatSalesPackageStatus = MB.CatMembershipStatusId
+        WHERE SC.CustomerId = @IdCustomer
+              AND MB.CustomerId = @IdCustomer
+              AND GETDATE() <= MB.ExpirationDate
+              AND MB.RowStatus = 1
+              AND GETDATE() <= SC.ExpirationDate
+              AND SC.RowStatus = 1
+              AND CSPS.SalesPackageStatusName = 'Activa'
+              AND CSPSM.SalesPackageStatusName = 'Activa'
+              AND SC.CatTypeSubscriptionId = ISNULL(@TypeSubscriptionId, 2)
+        ORDER BY SC.ExpirationDate ASC;
+
 
 
 
@@ -683,8 +709,8 @@ BEGIN
 
         -- separar en un arrglo la direccion 
 
-		PRINT '+++++++++++++++++++++++@AddressParse++++++++++++++++++++'
-		PRINT @AddressParse
+        PRINT '+++++++++++++++++++++++@AddressParse++++++++++++++++++++';
+        PRINT @AddressParse;
         SELECT Item
         INTO #ItemAddress
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@AddressParse, ' ');
@@ -853,16 +879,35 @@ BEGIN
     -- HeaderCodes Iguales - LOC
     IF (@HeaderCodeSource = @HeaderCodeDestiny)
     BEGIN
-        SELECT TOP 1
-               @IdSegment = sg.CrsId
-        FROM dbo.CatRateSegment sg WITH (NOLOCK)
-        WHERE sg.CrsShortName = 'LOC';
+        IF @Country = 'HN'
+        BEGIN
+            PRINT @Country;
+
+            SELECT TOP 1
+                   @IdSegment = sg.CrsId
+            FROM dbo.CatRateSegment sg WITH (NOLOCK)
+            WHERE sg.CrsShortName = 'LOH';
+
+        END;
+        ELSE
+        BEGIN
+            SELECT TOP 1
+                   @IdSegment = sg.CrsId
+            FROM dbo.CatRateSegment sg WITH (NOLOCK)
+            WHERE sg.CrsShortName = 'LOC';
+        END;
     END;
     -- HeaderCodes diferentes - revisar tabla
     ELSE
     BEGIN
         IF (@CustomerType != 1)
         BEGIN
+
+            PRINT '@HeaderCodeSource';
+            PRINT @HeaderCodeSource;
+
+            PRINT '@HeaderCodeDestiny';
+            PRINT @HeaderCodeDestiny;
             SELECT TOP 1
                    @IdSegment = RTC.SegmentTypeId
             FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
@@ -874,6 +919,9 @@ BEGIN
                   AND (TwnSource.HeaderCode = @HeaderCodeSource)
                   AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
                   AND RTC.RowStatus = 1;
+
+            PRINT 'segment';
+            PRINT @IdSegment;
         END;
         ELSE
         BEGIN
@@ -897,7 +945,7 @@ BEGIN
         SELECT TOP 1
                @IdSegment = sg.CrsId
         FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-        WHERE sg.CrsShortName = 'FOR' 
+        WHERE sg.CrsShortName = 'FOR';
     END;
 
     --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
@@ -977,11 +1025,26 @@ BEGIN
         DECLARE @ParcelCode2 NVARCHAR(40);
         --SET @ParcelCode = N'EXP076';
 
-        SELECT TOP 1 @ParcelCode = Code FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH(NOLOCK)
-		WHERE  AbcIdArticle = (SELECT ArtId FROM DeliveryBackOffice.dbo.CatArticle WITH(NOLOCK)
-		WHERE  ArtName = 'Paquete pequeño' AND (IdCountry = @Country OR (IdCountry IS NULL AND @Country = 'GT')))
+        SELECT TOP 1
+               @ParcelCode = Code
+        FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH (NOLOCK)
+        WHERE AbcIdArticle =
+        (
+            SELECT ArtId
+            FROM DeliveryBackOffice.dbo.CatArticle WITH (NOLOCK)
+            WHERE ArtName = 'Paquete pequeño'
+                  AND
+                  (
+                      IdCountry = @Country
+                      OR
+                      (
+                          IdCountry IS NULL
+                          AND @Country = 'GT'
+                      )
+                  )
+        );
 
-		SET @ParcelCode2 = @ParcelCode;
+        SET @ParcelCode2 = @ParcelCode;
 
         IF (@DataCounter < @CountPiecesParams)
         BEGIN
@@ -1091,22 +1154,34 @@ BEGIN
         SET @CountPiecebyArticle =
         (
             SELECT COUNT(1)
-			FROM #ParceWeigth pw
-			INNER JOIN #ParceCode pc
-				ON pc.ID = pw.ID
-			WHERE pc.Item <> '0'
-			  AND pc.Item <> ''
-			  AND pc.Item NOT IN (
-					SELECT Code 
-					FROM DeliveryBackOffice.dbo.ArticleByCustomer
-					WHERE AbcIdArticle IN (
-						SELECT ArtId 
-						FROM DeliveryBackOffice.dbo.CatArticle
-						WHERE ArtName IN ('Paquete pequeño', 'Paquete mediano', 'Paquete grande', 'Paquete extra grande', 'Paquete sobredimensionado')
-						  AND (IdCountry = @Country OR (IdCountry IS NULL AND @Country = 'GT'))
-					)
-				)
-			  AND pc.Item IS NOT NULL
+            FROM #ParceWeigth         pw
+                INNER JOIN #ParceCode pc
+                    ON pc.ID = pw.ID
+            WHERE pc.Item <> '0'
+                  AND pc.Item <> ''
+                  AND pc.Item NOT IN
+                      (
+                          SELECT Code
+                          FROM DeliveryBackOffice.dbo.ArticleByCustomer
+                          WHERE AbcIdArticle IN
+                                (
+                                    SELECT ArtId
+                                    FROM DeliveryBackOffice.dbo.CatArticle
+                                    WHERE ArtName IN ( 'Paquete pequeño', 'Paquete mediano', 'Paquete grande'
+                                                     , 'Paquete extra grande', 'Paquete sobredimensionado'
+                                                     )
+                                          AND
+                                          (
+                                              IdCountry = @Country
+                                              OR
+                                              (
+                                                  IdCountry IS NULL
+                                                  AND @Country = 'GT'
+                                              )
+                                          )
+                                )
+                      )
+                  AND pc.Item IS NOT NULL
         );
 
         SET @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded) - @CountPiecebyArticle;
@@ -1320,6 +1395,8 @@ BEGIN
     ELSE IF @IdTypeRate = 3 -- tarifas por articulo
     BEGIN
 
+	PRINT 'Tarifas por articulo'
+
         --print 'aqui van las tarifas por articulo'
         -- cantidad de piezas regulares
         SET @CountPiece =
@@ -1363,7 +1440,7 @@ BEGIN
                     SELECT TOP 1
                            @IdSegment = sg.CrsId
                     FROM dbo.CatRateSegment sg WITH (NOLOCK)
-                    WHERE sg.CrsShortName = 'LOC';
+                    WHERE sg.CrsShortName = IIF(@Country ='HN','LOH','LOC');
                 END;
                 -- HeaderCodes diferentes - revisar tabla
                 ELSE
@@ -1503,7 +1580,7 @@ BEGIN
                             SELECT TOP 1
                                    CTS.CtsId
                             FROM [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK)
-                            WHERE CTS.CtsShortName = 'SDD' 
+                            WHERE CTS.CtsShortName = 'SDD'
                         );
                 IF (@IsSDD = 0)
                     UPDATE @RealRateGroup
@@ -1614,7 +1691,7 @@ BEGIN
                 INNER JOIN [#ParceWeigth]                                 PW
                     ON p.[ID] = PW.[ID]
                 INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
-                    ON p.Item = ABC.Code 
+                    ON p.Item = ABC.Code
                 OUTER APPLY
             (
                 SELECT TOP (1)
@@ -2793,7 +2870,7 @@ BEGIN
              , @FechaCompra                                                                  [FechaCompra]
              , @Currency                                                                     [Currency]
              , tr.ReturnRate                                                                 [ReturnRate]
-			 , @CurrencyId [CurrencyId]
+             , @CurrencyId                                                                   [CurrencyId]
         FROM @TempRate tr;
     END;
 

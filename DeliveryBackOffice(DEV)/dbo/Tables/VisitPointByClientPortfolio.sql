@@ -17,8 +17,11 @@
     [InternalCode]                  VARCHAR (50)   NULL,
     [TaxId]                         VARCHAR (50)   NULL,
     [ContactName]                   VARCHAR (50)   NULL,
+    [id_relation]                   BIGINT         NULL,
     CONSTRAINT [PK_VisitPointByClientPortfolio] PRIMARY KEY CLUSTERED ([IdVisitPointByClientPortfolio] ASC)
 );
+
+
 
 
 
