@@ -9,6 +9,11 @@ EXEC GetClosureList
 -- Create date: <2024-07-05>
 -- Description:	<Se agrega la moneda correspondiente al express center>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-07>
+-- Description:	<Mejoras de multipaís para moneda en SV.>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetClosureList] 
     @VisitPointId INT,
@@ -52,15 +57,20 @@ BEGIN
            ACH.TotalAmountFacturaCashDeclared,
            ACH.TotalAmountFacturaCard,
            ACH.TotalAmountFacturaCardDeclared,
-		   CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
+		   ISNULL(CCC.Symbol,'') AS CurrencySymbol
     -- FIN MODIFICACIÓN
     FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
         INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
             ON ACH.VisitPoint = VPC.CodeOfReference
         INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU
             ON REU.UsrIdUser = ACH.UserId
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+			ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
     WHERE CAST(ACH.DateCreated AS DATE)
           BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)
+		  AND DC.DefaultPerCountry = 1
           AND
           (
               @VisitPointId = ACH.VisitPoint
