@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alejandro Rodríguez>
 -- Create date: <2022-03-28>
 -- Description:	<SP para obtener la lista de guías que se procesaron en un express center>
@@ -8,6 +7,11 @@
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-07-04>
 -- Description:	<Se agrega las cuentas y el simbolo de la moneda correspondiente>
+-- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-07>
+-- Description:	<Mejoras de multipaís para moneda en SV.>
 -- =============================================
 
 CREATE PROCEDURE [dbo].[GetDataForClosureVisitPoint]
@@ -52,15 +56,20 @@ BEGIN
 				TotalAmountFacturaCard, TotalAmountFacturaCardDeclared, InvoiceAmountFacturaCard,
 				TotalAmountCODCash, TotalAmountCODCashDeclared, InvoiceAmountCOD,
 				RU.UsrNickName, RU.UsrIdUser, ACH.DateCreated, ACH.IdAccountingClosuresHeader,
-				CASE WHEN VP.CountryId = 'GT' THEN 'Q.' ELSE 'L.' END AS 'CurrencySymbolDetail'
+				ISNULL(CCC.Symbol,'') AS 'CurrencySymbolDetail'
 		FROM AccountingClosuresHeader ACH
 		INNER JOIN RegisterUser RU
 			ON ACH.UserId = RU.UsrIdUser
 		INNER JOIN VisitPointClient VP WITH (NOLOCK)
 			ON ACH.VisitPoint = VP.CodeOfReference
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
 		WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 			AND ACH.VisitPoint = @VisitPointId
 			AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
+			AND DC.DefaultPerCountry = 1
 	) S1
 	GROUP BY UsrIdUser, UsrNickName, DateCreated, IdAccountingClosuresHeader, CurrencySymbolDetail
 
@@ -82,12 +91,17 @@ BEGIN
 		ISNULL(SUM(InvoiceAmountFacturaCash), 0) 'InvoiceAmountFacturaCash',
 		ISNULL(SUM(InvoiceAmountFacturaCard), 0) 'InvoiceAmountFacturaCard',
 		ISNULL(SUM(InvoiceAmountCOD), 0) 'InvoiceAmountCOD',
-		CASE WHEN VP.CountryId = 'GT' THEN 'Q.' ELSE 'L.' END AS 'CurrencySymbol'
+		ISNULL(CCC.Symbol,'') AS 'CurrencySymbol'
 	FROM AccountingClosuresHeader ACH
 	INNER JOIN VisitPointClient VP WITH (NOLOCK)
 		ON ACH.VisitPoint = VP.CodeofReference
+	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
 	WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 		AND ACH.VisitPoint = @VisitPointId
 		AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
-	GROUP BY VP.CountryId
+		AND DC.DefaultPerCountry = 1
+	GROUP BY VP.CountryId, CCC.Symbol
 END;
