@@ -16,6 +16,11 @@ EXEC GetClosureList
 -- Create date: <2024-07-04>
 -- Description:	<Se agrega las cuentas y el simbolo de la moneda correspondiente para la vista de los cierres generales>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-07>
+-- Description:	<Mejoras de multipaís para moneda en SV.>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetClosureListVisitPoint]
 @VisitPointId INT
@@ -58,16 +63,21 @@ BEGIN
 		,ACH.TotalAmountFacturaCashDeclared
 		,ACH.TotalAmountFacturaCard
 		,ACH.TotalAmountFacturaCardDeclared
-		,CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END CunrrencySymbol
+		,ISNULL(CCC.Symbol,'') CunrrencySymbol
 		-- FIN MODIFICACIÓN
 	FROM DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint ACH
 	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 		ON ACH.VisitPoint = VPC.CodeOfReference
 	INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 		ON REU.UsrIdUser = ACH.UserId
+	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+			ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
 	WHERE CAST(ACH.DateCreated AS DATE) 
 		BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)
 		AND (@VisitPointId = ACH.VisitPoint OR @VisitPointId = -1)
+		AND DC.DefaultPerCountry = 1
 
 	select @Account AS AccountExp,
 		   @AccountCOD AS AccountCOD,
