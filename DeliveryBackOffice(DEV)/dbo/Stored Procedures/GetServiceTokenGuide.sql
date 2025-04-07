@@ -14,6 +14,11 @@
 -- Update date: <2023-02-27>
 -- Description:	< Manejo de campos editables y textos dinamicos para landing page de incidencias.>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian, Suazo>
+-- Create date: <2025-04-04>
+-- Description:	<Se pasan todos los Json a entidades>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetServiceTokenGuide]
 	@GuideSerie NVARCHAR(2) = '',
@@ -32,7 +37,6 @@ BEGIN
 	DECLARE @VPLongitude NVARCHAR(50)
 
 	-- Variables de respuesta
-	DECLARE @jsonResult NVARCHAR(MAX);
 	
 	SET @IsDelivery = (
 		SELECT TOP 1 (CASE WHEN SDFG.[IsDelivery] = 1 AND SDFG.IsInRoute = 0 THEN 1 ELSE 0 END) 
@@ -52,192 +56,217 @@ BEGIN
 	BEGIN
 
 		BEGIN TRY
-			set @jsonResult = (SELECT STUFF(( 
-								SELECT  
-								',{"IdResult":200,"receiverAddress":"' +  DO.Receiver_Address + '",' +
-								'"serviceType":"DeliveryInRoute"' + ',' +
-								'"updatedData":' + IIF( SDFG.DateUsed IS NULL, '0', '1') + ',' +
-								'"DeliveryAttempt":' + ISNULL(CAST(DA.ID AS NVARCHAR), 'null') + ',' +
-								'"RoutePreparation":' + ISNULL(CAST(RPD.IdRoutePreparation AS NVARCHAR), 'null') + ',' +
-								'"DeliverySettlement":' + ISNULL(CAST(RPD.DeliveryOrderBySettlementId AS NVARCHAR), 'null') + ',' +
-								'"trackingForza":"https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) + '/",' +
-								'"Province":"'+ DO.Receiver_Department + '",' +
-								'"Township":"'+ DO.Receiver_Town + '",' +
-								'"deliveryType":"'+ ISNULL(DO.TypeService,'STD') + '"' +
-								+ '}'
+			DECLARE @GuideData TABLE
+			(
+				IdResult INT,
+				receiverAddress NVARCHAR(150),
+				serviceType NVARCHAR(25),
+				updatedData BIT,
+				DeliveryAttempt BIGINT,
+				RoutePreparation INT,
+				DeliverySettlement BIGINT,
+				trackingForza NVARCHAR(150),
+				Province NVARCHAR(50),
+				Township NVARCHAR(50),
+				deliveryType NVARCHAR(5)
+			)
+			
+			INSERT INTO @GuideData
+			(
+				IdResult,
+				receiverAddress,
+				serviceType,
+				updatedData,
+				DeliveryAttempt,
+				RoutePreparation,
+				DeliverySettlement,
+				trackingForza,
+				Province,
+				Township,
+				deliveryType
+			)
 
-								FROM [dbo].[DeliveryOrder] DO WITH(NOLOCK)
-								INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
-								ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
-								OUTER APPLY (
-									SELECT
-										TOP 1
-											DAaux.ID
-											,DAaux.Delivered
-											,DAaux.ID_Incident
-											,DAaux.ID_Proof
-									FROM
-										[DeliveryBackOffice].[dbo].[DeliveryAttempt] DAaux WITH(NOLOCK)
-									WHERE
-										DAaux.Guide_Serie = DO.Guide_Serie
-										AND
-										DAaux.Guide_Number = DO.Guide_Number
-										AND
-										DAaux.Date_Created >= CAST(GETDATE() AS DATE)
-									ORDER BY
-										DAaux.Date_Created DESC
-								) DA
-								OUTER APPLY (
-									SELECT
-										TOP 1
-											RP.IdRoutePreparation
-											,DOBS.ID 'DeliveryOrderBySettlementId'
-									FROM
-										[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
-										INNER JOIN
-											[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
-											ON
-												RPD.RoutePreparationId = RP.IdRoutePreparation
-												AND
-												RP.DateRoutePreparation = CAST(GETDATE() AS DATE)
-												AND
-												RP.RowStatus = 1
-										INNER JOIN
-											[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH(NOLOCK)
-											ON
-												RP.DeliveryOrderBySettlementId = DOBS.ID
-									WHERE
-										RPD.Guide_Serie = DO.Guide_Serie
-										AND
-										RPD.Guide_Number = DO.Guide_Number
-										AND
-										RPD.RowStatus = 1
-									ORDER BY
-										RP.DateCreated DESC
-								) RPD
-								WHERE SDFG.GuideToken = @GuideToken
-								AND DO.StatusOrderId IN (4,18) -- En ruta, en ruta para devolución
-								AND SDFG.IsDelivery = 1
-								AND SDFG.IsInRoute = 1
-								AND SDFG.DateUsed IS NULL
-								ORDER BY
-								SDFG.DateCreated DESC
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,''
-								) )
-								
-			-- Guía en estado no modificable
-			IF @jsonResult IS NULL
+			SELECT 200 AS IdResult,
+				   DO.Receiver_Address AS receiverAddress,
+				   'DeliveryInRoute' AS serviceType,
+				   IIF(SDFG.DateUsed IS NULL, 0, 1) AS updatedData,
+				   DA.ID AS DeliveryAttempt,
+				   RPD.IdRoutePreparation AS RoutePreparation,
+				   RPD.DeliveryOrderBySettlementId AS DeliverySettlement,
+				   'https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) + '/' AS trackingForza,
+				   DO.Receiver_Department AS Province,
+				   DO.Receiver_Town AS Township,
+				   ISNULL(DO.TypeService, 'STD') AS deliveryType
+			FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
+				INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+					ON DO.Guide_Serie = SDFG.GuideSerie
+					   AND DO.Guide_Number = SDFG.GuideNumber
+				OUTER APPLY
+			(
+				SELECT TOP 1
+					DAaux.ID,
+					DAaux.Delivered,
+					DAaux.ID_Incident,
+					DAaux.ID_Proof
+				FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DAaux WITH (NOLOCK)
+				WHERE DAaux.Guide_Serie = DO.Guide_Serie
+					  AND DAaux.Guide_Number = DO.Guide_Number
+					  AND DAaux.Date_Created >= CAST(GETDATE() AS DATE)
+				ORDER BY DAaux.Date_Created DESC
+			) DA
+				OUTER APPLY
+			(
+				SELECT TOP 1
+					RP.IdRoutePreparation,
+					DOBS.ID AS 'DeliveryOrderBySettlementId'
+				FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+					INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+						ON RPD.RoutePreparationId = RP.IdRoutePreparation
+						   AND RP.DateRoutePreparation = CAST(GETDATE() AS DATE)
+						   AND RP.RowStatus = 1
+					INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
+						ON RP.DeliveryOrderBySettlementId = DOBS.ID
+				WHERE RPD.Guide_Serie = DO.Guide_Serie
+					  AND RPD.Guide_Number = DO.Guide_Number
+					  AND RPD.RowStatus = 1
+				ORDER BY RP.DateCreated DESC
+			) RPD
+			WHERE SDFG.GuideToken = @GuideToken
+				  AND DO.StatusOrderId IN ( 4, 18 ) -- En ruta, en ruta para devolución
+				  AND SDFG.IsDelivery = 1
+				  AND SDFG.IsInRoute = 1
+				  AND SDFG.DateUsed IS NULL
+			ORDER BY SDFG.DateCreated DESC
+
+			IF EXISTS (SELECT TOP 1 1 FROM @GuideData)
 			BEGIN
+				SELECT IdResult, 
+					   receiverAddress, 
+					   serviceType,
+					   updatedData,
+					   DeliveryAttempt,
+					   RoutePreparation,
+					   DeliverySettlement,
+					   trackingForza,
+					   Province,
+					   Township,
+					   deliveryType
+				FROM @GuideData
+			END
+			-- Guía en estado no modificable
+			ELSE
+			BEGIN
+				SELECT 206 AS IdResult,
+					   'DeliveryInRoute' AS serviceType,
+					   'https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) AS trackingForza
+				FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
+					INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+						ON DO.Guide_Serie = SDFG.GuideSerie
+						   AND DO.Guide_Number = SDFG.GuideNumber
+				WHERE SDFG.GuideToken = @GuideToken
+					  AND SDFG.IsDelivery = 1
+					  AND SDFG.IsInRoute = 1
+				ORDER BY SDFG.DateCreated DESC
 
-				set @jsonResult =(SELECT STUFF(( 
-								SELECT  
-								',{"IdResult":206' + ',' +
-								'"serviceType":"DeliveryInRoute"' + ',' +
-								'"trackingForza":"https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) + '"'
-								+ '}'
-
-								FROM [dbo].[DeliveryOrder] DO WITH(NOLOCK)
-								INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
-								ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
-								WHERE SDFG.GuideToken = @GuideToken
-								AND SDFG.IsDelivery = 1
-								AND SDFG.IsInRoute = 1
-								ORDER BY
-								SDFG.DateCreated DESC
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,''
-								) )
 			END
 			-- Ultimo caso de error
-			IF @jsonResult IS NULL
+			IF NOT EXISTS
+			(
+				SELECT TOP 1
+					1
+				FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
+					INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+						ON DO.Guide_Serie = SDFG.GuideSerie
+						   AND DO.Guide_Number = SDFG.GuideNumber
+				WHERE SDFG.GuideToken = @GuideToken
+					  AND SDFG.IsDelivery = 1
+					  AND SDFG.IsInRoute = 1
+			)
 			BEGIN
+				SELECT 204 AS IdResult,
+					   'No se encontraron registros validos' AS [Message]	
 
-				set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":204,' 
-								+ '"Message":" No se encontraron registros validos."}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
 			END
-			select ('[' + @jsonResult +  ']') jsonResult 
 		END TRY
 		BEGIN CATCH
-			set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":500,' 
-								+ '"Error":"'+ERROR_MESSAGE()+'"}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
-			select ('[' + @jsonResult +  ']') jsonResultError 
+
+				SELECT 500 AS IdResult,
+						ERROR_MESSAGE() AS Error 
+
 		END CATCH
 
 	END
 	ELSE IF (@IsDelivery = 1) -- Servicio es de entrega
 	BEGIN
 		BEGIN TRY
-			set @jsonResult = (SELECT STUFF(( 
-								SELECT  
-								',{"IdResult":200,"receiverAddress":"' +  DO.Receiver_Address + '",' +
-								'"serviceType":"Delivery"' + ',' +
-								'"updatedData":' + IIF( SDFG.DateUsed IS NULL, '0', '1') + ',' +
-								'"trackingForza":"https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) + '/",' +
-								'"Province":"'+ DO.Receiver_Department + '",' +
-								'"Township":"'+ DO.Receiver_Town + '",' +
-								'"deliveryType":"'+ ISNULL(DO.TypeService,'TDA') + '"' +
-								+ '}'
 
-								FROM [dbo].[DeliveryOrder] DO WITH(NOLOCK)
-								INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
-								ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
-								WHERE SDFG.GuideToken = @GuideToken
-								AND DO.StatusOrderId IN (1,2,10,11,15,21) -- Solicitado, Recolectado, En Inventario, Arribó a las instalaciones, Generado, Recibido en EXC
-								AND SDFG.IsDelivery = 1
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,''
-								) )
+		IF EXISTS
+		(
+			SELECT TOP 1
+				1
+			FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
+				INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+					ON DO.Guide_Serie = SDFG.GuideSerie
+					   AND DO.Guide_Number = SDFG.GuideNumber
+			WHERE SDFG.GuideToken = @GuideToken
+				  AND DO.StatusOrderId IN ( 1, 2, 10, 11, 15, 21 ) -- Solicitado, Recolectado, En Inventario, Arribó a las instalaciones, Generado, Recibido en EXC
+				  AND SDFG.IsDelivery = 1
+		)
+		BEGIN
+			SELECT 201 AS IdResult,
+				   DO.Receiver_Address AS receiverAddress,
+				   'Delivery' AS serviceType,
+				   IIF(SDFG.DateUsed IS NULL, 0, 1) AS updatedData,
+				   'https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) + '/' AS trackingForza,
+				   DO.Receiver_Department AS Province,
+				   DO.Receiver_Town AS Township,
+				   ISNULL(DO.TypeService, 'TDA') AS deliveryType
+			FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
+				INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+					ON DO.Guide_Serie = SDFG.GuideSerie
+					   AND DO.Guide_Number = SDFG.GuideNumber
+			WHERE SDFG.GuideToken = @GuideToken
+				  AND DO.StatusOrderId IN ( 1, 2, 10, 11, 15, 21 ) -- Solicitado, Recolectado, En Inventario, Arribó a las instalaciones, Generado, Recibido en EXC
+				  AND SDFG.IsDelivery = 1
+		END
+		-- Guía en estado no modificable
+		ELSE
+		BEGIN
+			SELECT 206 AS IdResult,
+				   'Delivery' AS serviceType,
+				   'https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) AS trackingForza
+			FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
+				INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+					ON DO.Guide_Serie = SDFG.GuideSerie
+					   AND DO.Guide_Number = SDFG.GuideNumber
+			WHERE SDFG.GuideToken = @GuideToken
+				  AND SDFG.IsDelivery = 1
 
-			-- Guía en estado no modificable
-			IF @jsonResult IS NULL
-			BEGIN
+		END
+		-- Ultimo caso de error
+		IF NOT EXISTS
+		(
+			SELECT TOP 1
+				1
+			FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
+				INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+					ON DO.Guide_Serie = SDFG.GuideSerie
+					   AND DO.Guide_Number = SDFG.GuideNumber
+			WHERE SDFG.GuideToken = @GuideToken
+				  AND SDFG.IsDelivery = 1
+		)
+		BEGIN
 
-				set @jsonResult =(SELECT STUFF(( 
-								SELECT  
-								',{"IdResult":206' + ',' +
-								'"serviceType":"Delivery"' + ',' +
-								'"trackingForza":"https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) + '"'
-								+ '}'
+			SELECT 204 AS IdResult,
+				   'No se encontraron registros validos.' AS [Message]
 
-								FROM [dbo].[DeliveryOrder] DO WITH(NOLOCK)
-								INNER JOIN [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
-								ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
-								WHERE SDFG.GuideToken = @GuideToken
-								AND SDFG.IsDelivery = 1
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,''
-								) )
-			END
-			-- Ultimo caso de error
-			IF @jsonResult IS NULL
-			BEGIN
-
-				set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":204,' 
-								+ '"Message":" No se encontraron registros validos."}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
-			END
-			select ('[' + @jsonResult +  ']') jsonResult 
+		END
 		END TRY
 		BEGIN CATCH
-			set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":500,' 
-								+ '"Error":"'+ERROR_MESSAGE()+'"}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
-			select ('[' + @jsonResult +  ']') jsonResultError 
+
+			SELECT 500 AS IdResult,
+					ERROR_MESSAGE() AS Error
+
 		END CATCH
 	END
 	-- Si es token de incidencias
@@ -247,7 +276,6 @@ BEGIN
 
 			IF ( EXISTS ( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK) WHERE [COI].[ConfirmationOfIncidentToken] = @GuideToken AND [COI].[RowStatus] = 1 AND [COI].[IsConfirmed] = 0 AND [COI].[ConfirmationOfIncidentToken] NOT LIKE '%TIMEOUT' ) )
 			BEGIN
-			    
 				-- Buscar ubicación del VP
 				SELECT		@VPLatitude = ISNULL([VPC].[Latitude], ''),
 							@VPLongitude = ISNULL([VPC].[Longitude], '')
@@ -262,127 +290,153 @@ BEGIN
 					AND		[COI].[RowStatus] = 1
 					AND		[COI].[IsConfirmed] <> 1;
 
-				set @jsonResult = (SELECT STUFF(( 
-								SELECT  
-								',{"IdResult":200,"receiverAddress":"' +  (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Address ELSE do.Receiver_Address END) + '",' +
-								'"receiverPhone":"'+ (CASE WHEN do.IsLastMileReturn = 1 THEN  do.[Sender_Phone] ELSE do.[Receiver_Phone] END) + '",' +
-								'"serviceType":"Incidence"' + ',' +
-								'"trackingForza":"https://forzadelivery.com/rastreo/' + do.Guide_Serie + CAST(do.Guide_Number AS NVARCHAR) + '/",' +
-								'"Province":"'+ (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Department ELSE do.Receiver_Department END) + '",' +
-								'"Township":"'+ (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Town ELSE do.Receiver_Town END) + '",' +
-								'"GuideSerie":"'+ CAST(DO.Guide_Serie AS NVARCHAR) + '",' +
-								'"GuideNumber":"'+ CAST(DO.Guide_Number AS NVARCHAR) + '",' +
-								'"IsLastMileReturn":'+ CAST(ISNULL(DO.[IsLastMileReturn], 0) AS NVARCHAR) + ',' +
-								'"confirmationOfIncidenceId":"'+ CAST(coi.IdConfirmationOfIncidence AS VARCHAR) + '",' +
-								IIF((ISNULL([DA].[Longitude], '') <> '' AND ISNULL([DA].[Latitude], '') <> '' AND @VPLongitude <> '' AND @VPLatitude <> ''), 
-									IIF(((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', ISNULL([DA].[Longitude], '0'), ' ', ISNULL([DA].[Latitude], '0'), ')'), 4326)) ) <= @MaxDistance), 
-									('"courierLatitude":"'+ ISNULL(da.Latitude, '') + '",' +
-									 '"courierLongitude":"'+ ISNULL(da.Longitude, '') + '",'), '') , '') +
-								'"incidenceDescription":"'+ ISNULL(cti.DescriptionIncidence, '') + '",' +
-								'"dynamicFields": ['+ 
-								ISNULL((
-									SELECT STUFF(
-										(
-											SELECT ',{' +	'"FieldName":"' + CAST([IDI].[FieldName] AS VARCHAR) +'"'+ ',' +
-															'"FieldType":"' + [IDI].[FieldType] +'"'+ ',' +
-															'"IsEditable":"' + CAST(CAST([IDI].[IsEditable] AS INT) AS VARCHAR) +'"'+ '}'
-											FROM	[dbo].[IncidenceDynamicInput] IDI
-											WHERE	[IDI].[CatTypeIncidenceId] = [CTI].[IdIncidenceType]
-												AND [IDI].[RowStatus] = 1
-											ORDER BY [IDI].[IdIncidenceDynamicInput]
-											FOR XML PATH(''), TYPE
-										).value('.', 'varchar(max)'),1,1,''
-									)
-								), '') + '],' +
-								'"dynamicTexts": ['+ 
-								ISNULL((
-									SELECT STUFF(
-										(
-											SELECT TOP 1 ',{' +	'"QuestionTrue":"' +	[IDQ].[QuestionTrue] +'"'+ ',' +
-																'"QuestionFalse":"' + [IDQ].[QuestionFalse] +'"'+ ',' +
-																'"SpecialInstructions":"' + [IDQ].[SpecialInstructions] +'"'+ '}'
-											FROM	[dbo].[IncidenceDynamicQuestion] IDQ
-											WHERE	[IDQ].[CatTypeIncidenceId] = [CTI].[IdIncidenceType]
-												AND [IDQ].[RowStatus] = 1
-											ORDER BY [IDQ].[IdIncidenceDynamicQuestion]
-											FOR XML PATH(''), TYPE
-										).value('.', 'varchar(max)'),1,1,''
-									)
-								), '') + ']'
-								+ '}'
 
-								FROM ConfirmationOfIncidence coi WITH(NOLOCK)
-								INNER JOIN DeliveryAttempt da WITH(NOLOCK)
-									ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-								INNER JOIN DeliveryOrder do WITH(NOLOCK)
-									ON do.Guide_Serie = da.Guide_Serie AND do.Guide_Number = da.Guide_Number
-								LEFT JOIN CatTypeIncidence cti WITH(NOLOCK)
-									ON da.ID_Incident = cti.IdIncidenceType
-								WHERE coi.ConfirmationOfIncidentToken = @GuideToken
-								AND coi.RowStatus = 1
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,''
-								) )
+				SELECT 202 AS IdResult,
+				   CASE
+						WHEN do.IsLastMileReturn = 1 THEN
+							do.Sender_Address
+						ELSE
+							do.Receiver_Address
+					END AS receiverAddress,
+				   CASE
+						WHEN do.IsLastMileReturn = 1 THEN
+							do.[Sender_Phone]
+						ELSE
+							do.[Receiver_Phone]
+					END AS receiverPhone,
+				   'Incidence' AS serviceType,
+				   'https://forzadelivery.com/rastreo/' + do.Guide_Serie + CAST(do.Guide_Number AS NVARCHAR) + '/' AS trackingForza,
+				    CASE
+						  WHEN do.IsLastMileReturn = 1 THEN
+							  do.Sender_Department
+						  ELSE
+							  do.Receiver_Department
+					END AS Province,
+				    CASE
+						WHEN do.IsLastMileReturn = 1 THEN
+							do.Sender_Town
+						ELSE
+							do.Receiver_Town
+					END AS Township,
+				   CAST(DO.Guide_Serie AS NVARCHAR) AS GuideSerie,
+				   CAST(DO.Guide_Number AS NVARCHAR) AS GuideNumber,
+				   ISNULL(DO.[IsLastMileReturn], 0) AS IsLastMileReturn,
+				   coi.IdConfirmationOfIncidence AS confirmationOfIncidenceId,
+				   CASE
+					   WHEN DA.Longitude IS NOT NULL
+							AND DA.Latitude IS NOT NULL
+							AND @VPLongitude <> ''
+							AND @VPLatitude <> ''
+							AND GEOGRAPHY::STPointFromText(CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326)
+								.STDistance(GEOGRAPHY::STPointFromText(CONCAT('POINT (', DA.Longitude, ' ', DA.Latitude, ')'), 4326)) <= @MaxDistance
+					   THEN
+						   1
+					   ELSE
+						   0
+				   END AS FlagLogitudes,
+				   ISNULL(da.Latitude, '') AS courierLatitude,
+				   ISNULL(da.Longitude, '') AS courierLongitude,
+				   ISNULL(cti.DescriptionIncidence, '') AS incidenceDescription
+			FROM ConfirmationOfIncidence coi WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+					ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+				INNER JOIN DeliveryOrder do WITH (NOLOCK)
+					ON do.Guide_Serie = da.Guide_Serie
+					   AND do.Guide_Number = da.Guide_Number
+				LEFT JOIN CatTypeIncidence cti WITH (NOLOCK)
+					ON da.ID_Incident = cti.IdIncidenceType
+			WHERE coi.ConfirmationOfIncidentToken = @GuideToken
+				  AND coi.RowStatus = 1;
+
+			WITH DynamicFields
+			AS (SELECT IDI.CatTypeIncidenceId,
+					   IDI.FieldName,
+					   IDI.FieldType,
+					   IDI.IsEditable
+				FROM dbo.IncidenceDynamicInput IDI WITH (NOLOCK)
+				WHERE IDI.RowStatus = 1
+			   ),
+				 QuestionData
+			AS (SELECT IDQ.CatTypeIncidenceId,
+					   IDQ.QuestionTrue,
+					   IDQ.QuestionFalse,
+					   IDQ.SpecialInstructions
+				FROM dbo.IncidenceDynamicQuestion IDQ WITH (NOLOCK)
+				WHERE IDQ.RowStatus = 1
+			   )
+
+			SELECT DF.FieldName,
+				   DF.FieldType,
+				   DF.IsEditable,
+				   QD.QuestionTrue,
+				   QD.QuestionFalse,
+				   QD.SpecialInstructions
+			FROM ConfirmationOfIncidence COI WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt DA WITH (NOLOCK)
+					ON COI.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
+				INNER JOIN DeliveryOrder DO WITH (NOLOCK)
+					ON DO.Guide_Serie = DA.Guide_Serie
+					   AND DO.Guide_Number = DA.Guide_Number
+				LEFT JOIN CatTypeIncidence CTI WITH (NOLOCK)
+					ON DA.ID_Incident = CTI.IdIncidenceType
+				LEFT JOIN DynamicFields DF WITH (NOLOCK)
+					ON CTI.IdIncidenceType = DF.CatTypeIncidenceId
+				LEFT JOIN QuestionData QD WITH (NOLOCK)
+					ON CTI.IdIncidenceType = QD.CatTypeIncidenceId
+			WHERE COI.ConfirmationOfIncidentToken = @GuideToken
+				  AND COI.RowStatus = 1;
 
 			END
 			ELSE 
 			BEGIN
 			         
-				set @jsonResult = (SELECT STUFF(( 
-								SELECT  
-								',{"IdResult":206,' +
-								'"serviceType":"DeliveryInRoute"' + ',' +
-								'"trackingForza":"https://forzadelivery.com/rastreo/' + do.Guide_Serie + CAST(do.Guide_Number AS NVARCHAR) + '/"' +
-								+ '}'
-
-								FROM ConfirmationOfIncidence coi WITH(NOLOCK)
-								INNER JOIN DeliveryAttempt da WITH(NOLOCK)
-									ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-								INNER JOIN DeliveryOrder do WITH(NOLOCK)
-									ON do.Guide_Serie = da.Guide_Serie AND do.Guide_Number = da.Guide_Number
-								LEFT JOIN CatTypeIncidence cti WITH(NOLOCK)
-									ON da.ID_Incident = cti.IdIncidenceType
-								WHERE coi.ConfirmationOfIncidentToken = @GuideToken
-								AND coi.RowStatus = 1
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,''
-								) )
+				SELECT 206 AS IdResult,
+					   'DeliveryInRoute' AS serviceType,
+					   'https://forzadelivery.com/rastreo/' + do.Guide_Serie + CAST(do.Guide_Number AS NVARCHAR) + '/' AS trackingForza
+				FROM ConfirmationOfIncidence coi WITH (NOLOCK)
+					INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+						ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+					INNER JOIN DeliveryOrder do WITH (NOLOCK)
+						ON do.Guide_Serie = da.Guide_Serie
+						   AND do.Guide_Number = da.Guide_Number
+					LEFT JOIN CatTypeIncidence cti WITH (NOLOCK)
+						ON da.ID_Incident = cti.IdIncidenceType
+				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
+					  AND coi.RowStatus = 1
 
 		    END
 
-			IF @jsonResult IS NULL
+			IF NOT EXISTS
+			(
+				SELECT TOP 1
+					1
+				FROM ConfirmationOfIncidence coi WITH (NOLOCK)
+					INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+						ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+					INNER JOIN DeliveryOrder do WITH (NOLOCK)
+						ON do.Guide_Serie = da.Guide_Serie
+						   AND do.Guide_Number = da.Guide_Number
+					LEFT JOIN CatTypeIncidence cti WITH (NOLOCK)
+						ON da.ID_Incident = cti.IdIncidenceType
+				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
+					  AND coi.RowStatus = 1
+			)
 			BEGIN
-
-				set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":204,' 
-								+ '"Message":" No se encontraron registros validos."}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
+				SELECT 204 AS IdResult,
+					   'No se encontraron registros validos.' AS [Message]
 			END
-
-			select ('[' + @jsonResult +  ']') jsonResult 
 		END TRY
 		BEGIN CATCH
-			set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":500,' 
-								+ '"Error":"'+ERROR_MESSAGE()+'"}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
-			select ('[' + @jsonResult +  ']') jsonResultError 
+
+				SELECT 500 AS IdResult,
+					ERROR_MESSAGE() AS Error
 		END CATCH
 	END	
 	ELSE -- Otro tipo de token
 	BEGIN
 		/* OTROS FLUJOS - POR IMPLEMENTAR */
 
-		SET @jsonResult =(
-						SELECT STUFF(( 
-						SELECT '{{"IdResult":204,' 
-						+ '"Message":" No se encontraron registros validos."}' 
-						FOR XML PATH(''), TYPE
-						).value('.', 'varchar(max)'),1,1,'') )
-		SELECT ('[' + @jsonResult +  ']') jsonResult 
+		SELECT 204 AS IdResult,
+				'No se encontraron registros validos.' AS [Message]
 	END
 END
