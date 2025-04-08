@@ -9,7 +9,11 @@
 -- Create date: <2024-07-04>
 -- Description:	<Se agrega las cuentas y el simbolo de la moneda correspondiente>
 -- =============================================
-
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2024-07-04>
+-- Description:	<Agregar With(Nolock) y modificar filtro para no usar ISNULL>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDataForClosureVisitPoint]
 @VisitPointId int = 4246,
 @IdAccount int = 0
@@ -21,16 +25,17 @@ BEGIN
 			@AccountCOD NVARCHAR(30);
 
 	SELECT @IdCountry = CountryId 
-	FROM VisitPointClient 
+	FROM VisitPointClient WITH(NOLOCK)
 	WHERE CodeOfReference = @VisitPointId
 
 	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
-	
+	FROM dbo.ClosureAccount WITH(NOLOCK)
+	WHERE Description = 'Cuenta Express Center' 
+	AND (IdCountry = @IdCountry OR (IdCountry IS NULL AND @IdCountry = 'GT'))
+
 	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+	FROM dbo.ClosureAccount WITH(NOLOCK)
+	WHERE Description = 'Cuenta Área COD' AND (IdCountry = @IdCountry OR (IdCountry IS NULL AND @IdCountry = 'GT'))
 
 	SELECT	UsrIdUser 'UserId', UsrNickName 'UserNickName', DateCreated, IdAccountingClosuresHeader 'IdCierre',
 		ISNULL(SUM(S1.TotalAmountCash), 0) 'TotalAmountCash',
