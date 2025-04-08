@@ -4,6 +4,11 @@
 -- Create date: <2021-01-08>
 -- Description:	<Administracion de perfiles de facturación >
 -- ===========================================
+-- =============================================
+-- Author:		<Cristian,Suazo>
+-- Create date: <2025-04-08>
+-- Description:	<Se pasa a entidades el Json >
+-- ===========================================
 
 --	Cambiar tabla temporal messagelist a variable tipo tabla @TblMessageList
 --	Author: Jerson Ochoa - <05-01-2023>
@@ -30,7 +35,7 @@ BEGIN
                 SELECT TOP 1
                        CR.RolIdRol
                 FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH (NOLOCK)
-                WHERE CR.RolName = 'Ventas telemercadeo' COLLATE Latin1_General_CI_AI
+                WHERE CR.RolName = 'Ventas telemercadeo' 
             );
 
     DECLARE @jsonResult NVARCHAR(MAX);
@@ -89,7 +94,7 @@ BEGIN
 
         DECLARE @IdUser BIGINT =
                 (
-                    SELECT TOP 1 t.TknIdUser FROM TokenLog t WHERE t.TknIdToken = @Token
+                    SELECT TOP 1 t.TknIdUser FROM TokenLog t WITH(NOLOCK)  WHERE t.TknIdToken = @Token
                 );
         DECLARE @IdUserTokenIsTelemarketing BIT =
                 (
@@ -106,7 +111,7 @@ BEGIN
         (
             SELECT TOP 1
                    1
-            FROM RolByUserByAccount
+            FROM RolByUserByAccount WITH (NOLOCK)
             WHERE RuaIdAccount = @IdAccount
                   AND RuaIdUser = @IdUser
                   AND RuaRowStatus = 1
@@ -119,7 +124,7 @@ BEGIN
             SELECT TOP 1
                    blp.BlpIdBilling
             INTO #Billing
-            FROM dbo.BillingProfile blp
+            FROM dbo.BillingProfile blp WITH (NOLOCK)
             WHERE blp.BlpIdBilling = @IdBilling
                   AND blp.BlpIdAccount = @IdAccount;
 
@@ -139,22 +144,13 @@ BEGIN
                         [IsDefault] = 0
                     WHERE [BlpIdBilling] = @IdBilling;
 
-                    SET @jsonResult =
-                    (
-                        SELECT STUFF(
-                                        (
-                                            SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"IdBilling":'
-                                                   + CONVERT(VARCHAR, @IdBilling) + ',' + '"Message":"' + Message
-                                                   + '"}'
-                                            FROM @TblMessageList
-                                            WHERE Id = 'Delete'
-                                            FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'),
-                                        1,
-                                        1,
-                                        ''
-                                    )
-                    );
+
+                    SELECT IdResult AS IdResult, 
+                            @IdBilling AS IdBilling,
+							[Message]
+                    FROM @TblMessageList
+                    WHERE Id = 'Delete'
+
 
                 END;
                 ELSE -- se va a actualizar el registro
@@ -180,23 +176,14 @@ BEGIN
                         [IsDefault] = @IsDefault
                     WHERE [BlpIdBilling] = @IdBilling;
 
-                    SET @jsonResult =
-                    (
-                        SELECT STUFF(
-                                        (
-                                            SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"IdBilling":'
-                                                   + CONVERT(VARCHAR, @IdBilling) + ',' + '"Message":"' + Message
-                                                   + '"}'
-                                            FROM @TblMessageList
-                                            WHERE Id = 'Update'
-                                            FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'),
-                                        1,
-                                        1,
-                                        ''
-                                    )
-                    );
-                END;
+
+					SELECT IdResult AS IdResult, 
+							@IdBilling AS IdBilling, 
+							[Message]
+					FROM @TblMessageList
+					WHERE Id = 'Update'
+
+                END;	
             END;
             ELSE -- la cuenta no existe, entonces se crea
             BEGIN
@@ -212,7 +199,7 @@ BEGIN
                      (
                          SELECT TOP 1
                                 1
-                         FROM BillingProfile
+                         FROM BillingProfile WITH (NOLOCK)
                          WHERE BlpIdAccount = @IdAccount
                                AND BlpRowStatus = 1
                      )
@@ -240,40 +227,24 @@ BEGIN
                     @Token, GETDATE(), NULL, NULL, @IsDefault);
 
                 SET @IdBilling = SCOPE_IDENTITY();
-                SET @jsonResult =
-                (
-                    SELECT STUFF(
-                                    (
-                                        SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"IdBilling":'
-                                               + CONVERT(VARCHAR, @IdBilling) + ',' + '"Message":"' + Message + '"}'
-                                        FROM @TblMessageList
-                                        WHERE Id = 'Insert'
-                                        FOR XML PATH(''), TYPE
-                                    ).value('.', 'varchar(max)'),
-                                    1,
-                                    1,
-                                    ''
-                                )
-                );
+
+                SELECT IdResult AS IdResult,
+                        @IdBilling AS IdBilling,
+						[Message]
+                FROM @TblMessageList
+                WHERE Id = 'Insert'
+
             END;
         END;
         ELSE
         BEGIN
-            SET @jsonResult =
-            (
-                SELECT STUFF(
-                                (
-                                    SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"IdBilling":'
-                                           + CONVERT(VARCHAR, @IdBilling) + ',' + '"Message":"' + Message + '"}'
-                                    FROM @TblMessageList
-                                    WHERE Id = 'Access'
-                                    FOR XML PATH(''), TYPE
-                                ).value('.', 'varchar(max)'),
-                                1,
-                                1,
-                                ''
-                            )
-            );
+
+            SELECT IdResult AS IdResult, 
+                    @IdBilling AS IdBilling, 
+					[Message] 
+            FROM @TblMessageList
+            WHERE Id = 'Access'
+
         END;
 
         IF @@TRANCOUNT > 0
@@ -283,21 +254,12 @@ BEGIN
     BEGIN CATCH
         ROLLBACK TRANSACTION;
 
-        SET @jsonResult =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"IdBilling":'
-                                       + CONVERT(VARCHAR, @IdBilling) + ',' + '"Message":"' + Message + '"}'
-                                FROM @TblMessageList
-                                WHERE Id = 'Exception'
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)'),
-                            1,
-                            1,
-                            ''
-                        )
-        );
+        SELECT IdResult,
+                @IdBilling AS IdBilling, 
+				[Message] 
+        FROM @TblMessageList
+        WHERE Id = 'Exception'
+
 
     END CATCH;
 
@@ -307,8 +269,6 @@ BEGIN
         DROP TABLE #Billing;
 
     -- retornar resultado en formato json
-
-    SELECT ('[{' + @jsonResult + ']') jsonResult;
 END;
 
 
