@@ -13,6 +13,11 @@
 -- Create date: <22/07/2024>
 -- Description:	<Se optimiza la consulta en la segunda validacion, para la generacion de los cierres>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <08/04/2025>
+-- Description:	<Mejoras de multipaís para moneda en SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosure]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -64,7 +69,7 @@ begin
 		,STO.OrderDescription 'Status'
 		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
 		,isnull(costd.Voucher,'') 'Voucher'
-		,CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
+		,isnull(CCC.CodeISO,'') AS CurrencySymbol
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
@@ -122,6 +127,8 @@ begin
 			on costd.IdCost = cost.IdCost 
 			AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
 	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) 
 		AND CONVERT(DATE, @EndDate)
 		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId)
@@ -203,7 +210,7 @@ begin
 			,STO.OrderDescription 'Status'
 			,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
 			,isnull(CD.Voucher,'') 'Voucher'
-			,CASE WHEN ISNULL(DOR.SenderCountryId, 'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol 
+			,isnull(CCC.CodeISO,'') AS CurrencySymbol 
 			,isnull(DTP.amount, 0)'PriceShippment'
 			,isnull(DTP.CODAmountProcess,0) 'COD'
 			, case 
@@ -246,6 +253,8 @@ begin
 				AND CO.GuideNumber = dor.Guide_Number
 			INNER JOIN CostDetail CD WITH (NOLOCK)
 				ON CD.IdCost = CO.IdCost
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON CO.ShippingCurrency = CCC.IdCatCurrencyCOD
 	WHERE CONVERT(DATE, DTP.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 	AND (DTP.AccountId = @IdAccount OR DTP.VisitPoint = @VisitPointId) AND DTP.ShipmentCompleted = 1
 	AND DTP.AccountId > 0 AND DOR.StatusOrderId != 7 AND DTP.TypeofInOutMoneyId != 8 AND ACD.RowStatus = 1
@@ -328,7 +337,7 @@ begin
 		,STO.OrderDescription 'Status'
 		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
 		,isnull(costd.Voucher,'') 'Voucher'
-		,CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
+		,isnull(CCC.CodeISO,'') AS CurrencySymbol
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
@@ -387,6 +396,8 @@ begin
 		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)  
 			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 
 --ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
