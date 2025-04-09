@@ -31,9 +31,9 @@ BEGIN
 	  
 	END
 
-		if @CodeOfReference <= 0 -- no enviaron visit point, intentea deducirlo
-		begin
-			select top 1
+		IF @CodeOfReference <= 0 -- no enviaron visit point, intentea deducirlo
+		BEGIN
+			SELECT TOP 1
 				0 IdSettlementSource, 
 				'' SettlementSource,
 				Cast(mun.IdTownship as varchar) IdTownShipSource, 
@@ -50,7 +50,7 @@ BEGIN
 				'' AbbrvCustomerName,
 				'' SourceVPCVisitPointId,
 				'' DepotAddress
-			from DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
+			FROM DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
 				LEFT JOIN DeliveryBackOffice.dbo.Settlement pob WITH(NOLOCK)
 					ON
 					mun.IdTownship = pob.IdTownship
@@ -62,13 +62,13 @@ BEGIN
 					ON
 					pob.IdSettlement = DSC3.IdSettlement 
 				INNER JOIN DeliveryBackOffice.dbo.Province dep  WITH(NOLOCK) ON	mun.IdProvince = dep.IdProvince 
-				LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK)on RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
-			where mun.HeaderCode = @HeaderCodeSource and mun.TownshipStatus = 'TRUE'
-			and dep.ProvinceStatus = 'TRUE'
-		end
-		else
-		begin
-			select top 1
+				LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK) ON RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
+			WHERE mun.HeaderCode = @HeaderCodeSource and mun.TownshipStatus = 'TRUE'
+			AND dep.ProvinceStatus = 'TRUE'
+		END
+		ELSE
+		BEGIN
+			SELECT TOP 1 1
 				0 IdSettlementSource, 
 				'' SettlementSource,
 				Cast(mun.IdTownship as varchar) IdTownShipSource, 
@@ -85,7 +85,7 @@ BEGIN
 				iif(@CodeOfReference > 0, ISNULL(UPPER(CASE WHEN  client.Abbreviation <> ' '  THEN client.Abbreviation ELSE client.Name END ), ' '), (select Abbreviation  from dbo.Customer where IdCustomer = @IdCustomer)) AbbrvCustomerName,
 				ISNULL(Cast(vpc.VisitPointId as varchar), '') SourceVPCVisitPointId,
 				'' DepotAddress
-			from DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
+			FROM DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
 				LEFT JOIN DeliveryBackOffice.dbo.Settlement pob WITH(NOLOCK)
 					ON
 					mun.IdTownship = pob.IdTownship
@@ -96,20 +96,20 @@ BEGIN
 				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK) WHERE RowStatus = 1) DSC3
 					ON
 					pob.IdSettlement = DSC3.IdSettlement
-				INNER JOIN DeliveryBackOffice.dbo.Province dep WITH(NOLOCK) on	mun.IdProvince = dep.IdProvince 
-				LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK) on RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
-				LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) on vpc.CodeOfReference =  @CodeOfReference --and vpc.IdKindOfVPClient = 6
-				LEFT JOIN DeliveryBackOffice.dbo.Customer client WITH(NOLOCK) on vpc.CustomerID = client.IdCustomer
-			where mun.HeaderCode = @HeaderCodeSource and mun.TownshipStatus = 'TRUE' 
-			and dep.ProvinceStatus = 'TRUE'
-		end
+				INNER JOIN DeliveryBackOffice.dbo.Province dep WITH(NOLOCK) ON	mun.IdProvince = dep.IdProvince 
+				LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK) ON RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
+				LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) ON vpc.CodeOfReference =  @CodeOfReference --and vpc.IdKindOfVPClient = 6
+				LEFT JOIN DeliveryBackOffice.dbo.Customer client WITH(NOLOCK) ON vpc.CustomerID = client.IdCustomer
+			WHERE mun.HeaderCode = @HeaderCodeSource and mun.TownshipStatus = 'TRUE' 
+			AND dep.ProvinceStatus = 'TRUE'
+		END
 				
 			
 		IF @ReceiverIdSettlement IS  NULL OR @ReceiverIdSettlement =0
 		BEGIN 
 		PRINT 'entraaaa'
 			--Devuelve en un cuarto select datos para el destino
-			select  top 1
+			SELECT  TOP 1
 					0 IdSettlementDestiny, 
 					'' SettlementDestiny,
 					Cast(mun.IdTownship as varchar) IdTownShipDestiny, 
@@ -123,7 +123,7 @@ BEGIN
 					ISNULL(vpc.ContactName,'')  DestinyVPCName,
 					ISNULL(Cast(vpc.CustomerID as varchar), '')  DestinyVPCustomerID,
 					ISNULL(Cast(vpc.VisitPointId as varchar), '') DestinyVPCVisitPointId
-			from DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
+			FROM DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
 				LEFT JOIN DeliveryBackOffice.dbo.Settlement pob WITH(NOLOCK)
 					ON
 					mun.IdTownship = pob.IdTownship
@@ -135,12 +135,12 @@ BEGIN
 					ON
 					pob.IdSettlement = DSC3.IdSettlement
 			INNER JOIN DeliveryBackOffice.dbo.Province dep WITH(NOLOCK)  on	mun.IdProvince = dep.IdProvince 
-				LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK)  ON RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
+			LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK)  ON RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
 			left join DeliveryBackOffice.dbo.VisitPointClientByHubLogistics vhub WITH(NOLOCK) on vhub.IdHublogistic =  hub.IdHubLogistic 
 			LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) on vpc.CodeOfReference =  vhub.IdVisitPointClient and vpc.IdKindOfVPClient = 6
 			LEFT JOIN DeliveryBackOffice.dbo.Customer client  WITH(NOLOCK) ON vpc.CustomerID = client.IdCustomer
-			where mun.HeaderCode = @HeaderCodeDestiny and mun.TownshipStatus = 'TRUE'
-			and dep.ProvinceStatus = 'TRUE'
+			WHERE mun.HeaderCode = @HeaderCodeDestiny and mun.TownshipStatus = 'TRUE'
+			AND dep.ProvinceStatus = 'TRUE'
 						
 		END 
 		ELSE
@@ -160,7 +160,7 @@ BEGIN
 						ISNULL(vpc.ContactName,'')  DestinyVPCName,
 						ISNULL(Cast(vpc.CustomerID as varchar), '')  DestinyVPCustomerID,
 						ISNULL(Cast(vpc.VisitPointId as varchar), '') DestinyVPCVisitPointId
-				from DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
+				FROM DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
 					--INNER JOIN DeliveryBackOffice.dbo.Settlement pob WITH(NOLOCK)
 					--	--ON
 					--	--mun.IdTownship = pob.IdTownship
@@ -180,12 +180,12 @@ BEGIN
 						AND pob.IdTownship = mun.IdTownship
 						AND pob.SettlementSatus = 1
 				INNER JOIN DeliveryBackOffice.dbo.Province dep WITH(NOLOCK)  on	mun.IdProvince = dep.IdProvince 
-					LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK)  ON RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
-				left join DeliveryBackOffice.dbo.VisitPointClientByHubLogistics vhub WITH(NOLOCK) on vhub.IdHublogistic =  hub.IdHubLogistic 
+				LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK)  ON RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
+				LEFT JOIN DeliveryBackOffice.dbo.VisitPointClientByHubLogistics vhub WITH(NOLOCK) on vhub.IdHublogistic =  hub.IdHubLogistic 
 				LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) on vpc.CodeOfReference =  vhub.IdVisitPointClient and vpc.IdKindOfVPClient = 6
 				LEFT JOIN DeliveryBackOffice.dbo.Customer client  WITH(NOLOCK) ON vpc.CustomerID = client.IdCustomer
-				where mun.HeaderCode = @HeaderCodeDestiny and mun.TownshipStatus = 'TRUE'
-				and dep.ProvinceStatus = 'TRUE'
+				WHERE mun.HeaderCode = @HeaderCodeDestiny AND mun.TownshipStatus = 'TRUE'
+				AND dep.ProvinceStatus = 'TRUE'
 							
 		END
 
