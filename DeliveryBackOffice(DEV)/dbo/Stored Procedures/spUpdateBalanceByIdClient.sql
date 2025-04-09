@@ -84,9 +84,9 @@ BEGIN
                  AND ach.RowStatus = 1
                INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
                   ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
-                 AND acd.RowStatus = 1
          WHERE td.PortfolioId = 0
            AND ach.CustomerId IS NOT NULL
+           AND acd.RowStatus = 1
 
         INSERT INTO #CustomerAnticipatedCOD
         SELECT ach.CustomerId, 
@@ -102,9 +102,9 @@ BEGIN
                  AND ach.RowStatus = 1
                INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
                   ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
-                 AND acd.RowStatus = 1
          WHERE td.PortfolioId != 0
            AND ach.CustomerId IS NOT NULL
+           AND acd.RowStatus = 1
 
         INSERT INTO #AnticipatedCODSummary
         SELECT achs.IdAnticipatedCODHeader,
