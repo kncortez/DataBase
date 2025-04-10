@@ -15,6 +15,10 @@
 -- Update date: <2023-03-21>
 -- Description:	< Actualizar campos para denegación de incidencias >
 -- =============================================
+-- Author:		<Cristian, Suazo>
+-- Create date: <2025-04-10>
+-- Description:	< Se pasa el Json a entidades>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@GuideSerie NVARCHAR(2) = '',
 	@GuideNumber INT = -1,
@@ -106,9 +110,9 @@ BEGIN
 	);
 
 	SET @FailedVisitStatusId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
-	SET @CatTypeCOIFailedVisitStatusId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida');
+	SET @CatTypeCOIFailedVisitStatusId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WITH(NOLOCK) WHERE [Name] = 'Visita Fallida');
 	SET @IncidenceStatusId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta');
-	SET @CatTypeCOIIncidenceStatusId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta');
+	SET @CatTypeCOIIncidenceStatusId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WITH(NOLOCK) WHERE [Name] = 'Incidencia en Ruta');
 
 	IF (@IsDeliveryOnRoute = 1)
 	BEGIN
@@ -287,15 +291,15 @@ BEGIN
 										INNER JOIN
 											[DeliveryBackOffice].[dbo].RoutePreparation RP WITH(NOLOCK)
 											ON
-												RPD.RoutePreparationId = RP.IdRoutePreparation
-												AND
-												RP.DateRoutePreparation = @RescheduleDate
+												RPD.RoutePreparationId = RP.IdRoutePreparation												
 									WHERE 
 										RPD.Guide_Serie = @TokenGuideSerie 
 										AND 
 										RPD.Guide_Number = @TokenGuideNumber 
 										AND
 										RPD.RowStatus = 1
+										AND
+										RP.DateRoutePreparation = @RescheduleDate
 								)
 							)
 						BEGIN
@@ -347,13 +351,13 @@ BEGIN
 						INNER JOIN
 							[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH(NOLOCK)
 							ON
-								DOBS.ID = DSD.ID_DeliveryOrderBySettlement
-								AND
-								DSD.Guide_Serie = @TokenGuideSerie
-								AND
-								DSD.Guide_Number = @TokenGuideNumber
+								DOBS.ID = DSD.ID_DeliveryOrderBySettlement								
 					WHERE
 						DOBS.ID = @DeliverySettlementId
+						AND
+						DSD.Guide_Serie = @TokenGuideSerie
+						AND
+						DSD.Guide_Number = @TokenGuideNumber
 
 					-- Extraer guía de la ruta de despacho actual
 					UPDATE
@@ -368,12 +372,12 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 							ON
 								RP.IdRoutePreparation = RPD.RoutePreparationId
-								AND
-								RPD.Guide_Serie = @TokenGuideSerie
-								AND
-								RPD.Guide_Number = @TokenGuideNumber
 					WHERE
 						RP.IdRoutePreparation = @RoutePreparationId
+						AND
+						RPD.Guide_Serie = @TokenGuideSerie
+						AND
+						RPD.Guide_Number = @TokenGuideNumber
 
 					-- Extraer piezas de guía de la ruta de despacho actual
 					UPDATE
@@ -388,16 +392,16 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 							ON
 								RP.IdRoutePreparation = RPD.RoutePreparationId
-								AND
-								RPD.Guide_Serie = @TokenGuideSerie
-								AND
-								RPD.Guide_Number = @TokenGuideNumber
 						INNER JOIN
 							[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
 							ON
 								RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
 					WHERE
 						RP.IdRoutePreparation = @RoutePreparationId
+						AND
+						RPD.Guide_Serie = @TokenGuideSerie
+						AND
+						RPD.Guide_Number = @TokenGuideNumber
 
 				END
 
@@ -406,35 +410,26 @@ BEGIN
 			IF ((@UpdatedSDFG = 1 AND ISNULL(@SetIncidence, 0) = 0 AND ISNULL(@SetReschedule,0) = 0) OR (@UpdatedDA = 1 AND ISNULL(@SetIncidence, 0) = 1 AND ISNULL(@SetReschedule,0) = 0) OR ( @UpdatedDA = 1 aND ISNULL(@SetIncidence, 0) = 1 AND @UpdatedRP = 1 AND ISNULL(@SetReschedule,0) = 1) )
 			BEGIN
 				COMMIT TRANSACTION;
-				set @jsonResult =(
-									SELECT STUFF(( 
-									SELECT ',{"IdResult":200,' 
-									+ '"Success":"Exito ingresando datos de entrega."}' 
-									FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,'') )
-				select ('[' + @jsonResult +  ']') jsonResult 
+
+				SELECT 200 AS IdResult,
+						'Exito ingresando datos de entrega.' AS Success
+
 			END
 			ELSE
 			BEGIN
-				set @jsonResult =(
-									SELECT STUFF(( 
-									SELECT '{{"IdResult":500,' 
-									+ '"Error":"No se actualizaron los datos"}' 
-									FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,'') )
-				select ('[' + @jsonResult +  ']') jsonResultError 
+
+				SELECT 500 AS IdResult,
+						'No se actualizaron los datos' AS Error
+
 				ROLLBACK TRANSACTION;
 			END
 
 		END TRY
 		BEGIN CATCH
-			set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":500,' 
-								+ '"Error":"'+ERROR_MESSAGE()+'"}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
-			select ('[' + @jsonResult +  ']') jsonResultError 
+
+				SELECT 500 AS IdResult,
+						ERROR_MESSAGE() AS Error
+
 			ROLLBACK TRANSACTION;
 		END CATCH
 	END
@@ -447,7 +442,7 @@ BEGIN
 				DateUsed = GETDATE(),
 				Latitude = @Latitude,
 				Longitude = @Longitude,
-				ProviderModule = (SELECT [ModIdModule] FROM [CatModule] WHERE [ModName]LIKE'%Landing Delivery Page%'),
+				ProviderModule = (SELECT [ModIdModule] FROM [CatModule] WITH(NOLOCK) WHERE [ModName]LIKE'%Landing Delivery Page%'),
 				TokenUpdated = 'SYS-HERMESROUTESLanding',
 				DateUpdated = GETDATE()
 			FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
@@ -483,35 +478,26 @@ BEGIN
 			IF (@@TRANCOUNT > 0 AND @UpdatedSDFG = 1)
 			BEGIN
 				COMMIT TRANSACTION;
-				set @jsonResult =(
-									SELECT STUFF(( 
-									SELECT ',{"IdResult":200,' 
-									+ '"Success":"Exito ingresando datos de entrega."}' 
-									FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,'') )
-				select ('[' + @jsonResult +  ']') jsonResult 
+
+				SELECT 200 AS IdResult,
+						'Exito ingresando datos de entrega.' AS Success
+
 			END
 			ELSE
 			BEGIN
-				set @jsonResult =(
-									SELECT STUFF(( 
-									SELECT '{{"IdResult":500,' 
-									+ '"Error":"No se actualizaron los datos"}' 
-									FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,'') )
-				select ('[' + @jsonResult +  ']') jsonResultError 
-				ROLLBACK TRANSACTION;
+
+				SELECT 500 AS IdResult,
+						'No se actualizaron los datos' AS Error
+
+				ROLLBACK TRANSACTION; 
 			END
 
 		END TRY
 		BEGIN CATCH
-			set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":500,' 
-								+ '"Error":"'+ERROR_MESSAGE()+'"}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
-			select ('[' + @jsonResult +  ']') jsonResultError 
+
+			SELECT 500 AS IdResult,
+					ERROR_MESSAGE() AS Error
+
 			ROLLBACK TRANSACTION;
 		END CATCH
 	END
@@ -753,15 +739,15 @@ BEGIN
 										INNER JOIN
 											[DeliveryBackOffice].[dbo].RoutePreparation RP WITH(NOLOCK)
 											ON
-												RPD.RoutePreparationId = RP.IdRoutePreparation
-												AND
-												RP.DateRoutePreparation = @RescheduleDate
+												RPD.RoutePreparationId = RP.IdRoutePreparation												
 									WHERE 
 										RPD.Guide_Serie = @TokenGuideSerie 
 										AND 
 										RPD.Guide_Number = @TokenGuideNumber 
 										AND
 										RPD.RowStatus = 1
+										AND
+										RP.DateRoutePreparation = @RescheduleDate
 								)
 							)
 						BEGIN
@@ -814,12 +800,12 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH(NOLOCK)
 							ON
 								DOBS.ID = DSD.ID_DeliveryOrderBySettlement
-								AND
-								DSD.Guide_Serie = @TokenGuideSerie
-								AND
-								DSD.Guide_Number = @TokenGuideNumber
 					WHERE
 						DOBS.ID = @DeliverySettlementId
+						AND
+						DSD.Guide_Serie = @TokenGuideSerie
+						AND
+						DSD.Guide_Number = @TokenGuideNumber
 
 					-- Extraer guía de la ruta de despacho actual
 					UPDATE
@@ -834,12 +820,12 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 							ON
 								RP.IdRoutePreparation = RPD.RoutePreparationId
-								AND
-								RPD.Guide_Serie = @TokenGuideSerie
-								AND
-								RPD.Guide_Number = @TokenGuideNumber
 					WHERE
 						RP.IdRoutePreparation = @RoutePreparationId
+						AND
+						RPD.Guide_Serie = @TokenGuideSerie
+						AND
+						RPD.Guide_Number = @TokenGuideNumber
 
 					-- Extraer piezas de guía de la ruta de despacho actual
 					UPDATE
@@ -854,50 +840,38 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 							ON
 								RP.IdRoutePreparation = RPD.RoutePreparationId
-								AND
-								RPD.Guide_Serie = @TokenGuideSerie
-								AND
-								RPD.Guide_Number = @TokenGuideNumber
 						INNER JOIN
 							[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
 							ON
 								RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
 					WHERE
 						RP.IdRoutePreparation = @RoutePreparationId
+						AND
+						RPD.Guide_Serie = @TokenGuideSerie
+						AND
+						RPD.Guide_Number = @TokenGuideNumber
 
 				END
 
 			COMMIT TRANSACTION
-			set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT ',{"IdResult":200,' 
-								+ '"Success":"Exito ingresando datos de incidencia."}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
-			select ('[' + @jsonResult +  ']') jsonResult 
+
+			SELECT 200 AS IdResult,
+					'Exito ingresando datos de incidencia.' AS Success
+
+
 		END TRY
 		BEGIN CATCH
 			ROLLBACK TRANSACTION
-			set @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":500,' 
-								+ '"Error":"'+ERROR_MESSAGE()+'"}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
-			select ('[' + @jsonResult +  ']') jsonResultError 
+
+			SELECT 500 AS IdResult,
+					ERROR_MESSAGE() AS Error
+
 		END CATCH
 	END
 	ELSE
 	BEGIN
-
 		/* OTROS FLUJOS - POR IMPLEMENTAR */
-		set @jsonResult =(
-							SELECT STUFF(( 
-							SELECT '{{"IdResult":500,' 
-							+ '"Error":"No se actualizaron los datos"}' 
-							FOR XML PATH(''), TYPE
-							).value('.', 'varchar(max)'),1,1,'') )
-		select ('[' + @jsonResult +  ']') jsonResultError 
-
+		SELECT 500 AS IdResult,
+				'No se actualizaron los datos' AS Error
 	END
 END
