@@ -41,7 +41,7 @@ BEGIN
 	END	 
 	--FIN
 	----------------------------------------------------------------------------
-	DECLARE @ServicePickupStatus INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.Name LIKE 'Recolectado' COLLATE Latin1_General_CI_AI)
+	DECLARE @ServicePickupStatus INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.Name LIKE 'Recolectado')
 
 
 	IF (@accountId IS NOT NULL AND ISNULL(@userId,0) = 0)
@@ -56,12 +56,12 @@ BEGIN
 			   IIF(RA.IdCurrierMan IS NULL, '', CAST(RA.IdCurrierMan AS NVARCHAR))  'courier',
 			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = @ServicePickupStatus AND ES.RowStauts = 1 ORDER BY ES.DateCreated DESC), 103) 'datePickUp',
 			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = @ServicePickupStatus AND ES.RowStauts = 1 ORDER BY ES.DateCreated DESC), 108) 'hourPickUp',
-			   ISNULL(ctv.Name, '') 'ServiceVehicle',
+			   COALESCE(ctv.Name, '') 'ServiceVehicle',
 			   shp.IsScheduled 'IsScheduled',
-			   ISNULL(QuantityRegularPackages,0) 'QuantityRegularPackages',
-			   ISNULL(QuantityOverDimensionedPackage,0)'QuantityOverDimensionedPackage',
+			   COALESCE(QuantityRegularPackages,0) 'QuantityRegularPackages',
+			   COALESCE(QuantityOverDimensionedPackage,0)'QuantityOverDimensionedPackage',
 			   css.[Name] StatusName,
-			   ISNULL(vpc.Address, shp.AddressPickup) 'OriginAddress',
+			   COALESCE(vpc.Address, shp.AddressPickup) 'OriginAddress',
 			   vpc.DescriptionOfClient 'OriginAddressName',		   
 			   vpc.Department 'OriginAddressProvince',
 			   vpc.Town 'OriginAddressTown',           
@@ -110,12 +110,12 @@ BEGIN
 			   RTRIM(LTRIM(CONCAT(sr.First_Name,' ', sr.Last_Name))) 'courier',
 			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = @ServicePickupStatus AND ES.RowStauts = 1 ORDER BY ES.DateCreated DESC), 103) 'datePickUp',
 			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = @ServicePickupStatus AND ES.RowStauts = 1 ORDER BY ES.DateCreated DESC), 108) 'hourPickUp',
-			   ISNULL(ctv.Name, '') 'ServiceVehicle',
+			   COALESCE(ctv.Name, '') 'ServiceVehicle',
 			   shp.IsScheduled 'IsScheduled',
-			   ISNULL(QuantityRegularPackages,0) 'QuantityRegularPackages',
-			   ISNULL(QuantityOverDimensionedPackage,0)'QuantityOverDimensionedPackage',
+			   COALESCE(QuantityRegularPackages,0) 'QuantityRegularPackages',
+			   COALESCE(QuantityOverDimensionedPackage,0)'QuantityOverDimensionedPackage',
 			   css.[Name] StatusName,
-			   ISNULL(vpc.Address, shp.AddressPickup) 'OriginAddress',
+			   COALESCE(vpc.Address, shp.AddressPickup) 'OriginAddress',
 			   vpc.DescriptionOfClient 'OriginAddressName',		   
 			   vpc.Department 'OriginAddressProvince',
 			   vpc.Town 'OriginAddressTown',           
@@ -142,10 +142,10 @@ BEGIN
 			) AS dsc
 				ON TwnTvpc.HeaderCode = dsc.HeaderCode
 			LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] as hl WITH (NOLOCK)
-				ON hl.HubAbbreviation = dsc.hub COLLATE Latin1_General_CI_AI
+				ON hl.HubAbbreviation = dsc.hub 
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
 				ON shp.TypeVehicleId = ctv.IdTypeVehicle
-			LEFT JOIN dbo.ServiceManagement srv
+			LEFT JOIN dbo.ServiceManagement srv WITH (NOLOCK)
 				ON srv.IdSchedulePickup = shp.SchedulePickupId
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
 				ON css.IdServiceStatus = srv.ServiceStatusId
