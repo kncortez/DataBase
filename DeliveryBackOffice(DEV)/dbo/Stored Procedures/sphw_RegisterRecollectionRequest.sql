@@ -93,7 +93,7 @@ BEGIN
                         LEFT JOIN dbo.ServiceManagement SM with(nolock)
                             ON SM.IdSchedulePickup = SP.SchedulePickupId
                     WHERE (
-								SM.ServiceStatusId IN ( select IdServiceStatus from dbo.CatServiceStatus where Name in ('Creado','Asignado a Ruta','Reprogramado'))
+								SM.ServiceStatusId IN ( select IdServiceStatus from dbo.CatServiceStatus WITH(NOLOCK) where Name in ('Creado','Asignado a Ruta','Reprogramado'))
 								AND SM.RowStatus = 1
                           )
                           AND
@@ -157,10 +157,13 @@ BEGIN
 					   [vp].[IdTownship],
 					   @TypeVehicleId,
 					   0--@Scheduled --Tolas las recolecciones desde portal son a Demanda
-				FROM VisitPointClient VP
-					INNER JOIN UserAddress UA ON UA.CodeOfReference =VP.CodeOfReference
-					INNER JOIN Customer CU ON VP.CustomerID =CU.IdCustomer					
-					INNER JOIN Township Twn ON Twn.IdTownship=VP.IdTownship
+				FROM VisitPointClient VP WITH(NOLOCK)
+					INNER JOIN UserAddress UA WITH(NOLOCK) 
+						ON UA.CodeOfReference = VP.CodeOfReference
+					INNER JOIN Customer CU WITH(NOLOCK) 
+						ON VP.CustomerID =CU.IdCustomer					
+					INNER JOIN Township Twn WITH(NOLOCK) 
+						ON Twn.IdTownship=VP.IdTownship
                     INNER JOIN (
 						SELECT
 							DSC.HeaderCode
@@ -195,7 +198,7 @@ BEGIN
 				INSERT INTO [DeliveryBackOffice].[dbo].[EventService] (ServiceManagementId,ServiceStatusId,RowStauts,TokenCreated,DateCreated)
 					VALUES(
 						@IDSERVICEMANAGEMENT
-					   ,(SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name='Creado')
+					   ,(SELECT IdServiceStatus FROM DBO.CatServiceStatus WITH(NOLOCK) WHERE Name='Creado')
 					   ,1
 					   ,@token
 					   ,GETDATE())
@@ -220,7 +223,7 @@ BEGIN
 						GETDATE(),
 						NULL,
 						NULL
-				 FROM DBO.TermsAndConditions 				 
+				 FROM DBO.TermsAndConditions WITH(NOLOCK)				 
 				 WHERE NAME IN ('Collection Services Terms and Conditions','Declaration no content of illegal products', 'Insurance acknowledgement');
 			---------------------
 			
@@ -237,7 +240,7 @@ BEGIN
             SET sp.TypeVehicleId = @TypeVehicleId,
 			sp.DateUpdated=GETDATE(),
 			SP.TokenUpdated=@Token
-            FROM SchedulePickup sp
+            FROM SchedulePickup sp WITH(NOLOCK) 
             WHERE SP.SchedulePickupId=@IDSCHEDULEPICKUP;	
 
 			--ACTUALIZANDO COORDENADAS
