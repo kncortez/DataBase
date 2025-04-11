@@ -7,6 +7,11 @@
 -- Create date:   <2024-08-14>
 -- Description:   <Se agrega validacion para usuarios de telemercadeo>
 -- =============================================
+-- =============================================
+-- Author:        <Walter Orozco>
+-- Create date:   <2025-04-11>
+-- Description:   <Se realizan mejoras para multipaís.>
+-- =============================================
 CREATE PROCEDURE [dbo].[SupportCreateNewInternalUserWeb]
   @Code INT
  ,@User NVARCHAR(50)
@@ -38,7 +43,7 @@ BEGIN
         SELECT TOP 1 
 				@IdRolTelemercadeo = RolIdRol 
 				FROM CatRol WHERE RolName = 'Ventas telemercadeo'
-
+				
         INSERT INTO DeliveryBackOffice.dbo.Person
         (
            PerFirstName
@@ -60,7 +65,7 @@ BEGIN
              , emp.Sex
              , CONVERT(DATE, emp.DateBrith)
              , ISNULL(emp.DPI, '')
-             , IIF(@IdCountry = 'HN','Hondureño',IIF(@IdCountry = 'SV','Salvadoreño','Guatemalteco'))
+             , @IdCountry
              , 1
              , @Token
              , GETDATE()
@@ -117,7 +122,7 @@ BEGIN
              , GETDATE()
              , NULL
              , NULL
-             , IIF(@IdCountry='GT','+502',IIF(@IdCountry='SV','+503','+504'))
+             , '+' + cp.[Value]
              , ''
              , NULL --UrlFacebook
              , NULL --UrlInstagram
@@ -128,7 +133,10 @@ BEGIN
              , NULL --VerifiedPhone
              , NULL --ChangePassword
         FROM DenariusUser_Dev.dbo.LGN_User usr
-       WHERE usr.USR_IdUser = CONVERT(NVARCHAR(20), @Code)
+		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams cp
+			ON cp.[Name] = 'AreaCode'
+		WHERE usr.USR_IdUser = CONVERT(NVARCHAR(20), @Code)
+		 AND cp.IdCountry = @IdCountry
          AND usr.USR_Username = @User;
 
          SET @IdRegisterUser = SCOPE_IDENTITY();
