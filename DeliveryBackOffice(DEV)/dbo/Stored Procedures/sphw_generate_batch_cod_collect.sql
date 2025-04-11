@@ -182,7 +182,7 @@ BEGIN
                            LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                                ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerId)	   
 						   OUTER APPLY (
-						       SELECT TOP 1 cd.Voucher, C.TotalAmount, C.TotalAmountPaid, dopd.TransaccionFAC, A1.ReasonCode
+						       SELECT TOP 1 dopd.TransaccionFAC, A1.ReasonCode
 							   FROM  DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
 							   INNER JOIN DeliveryBackOffice.dbo.CostDetail cd WITH (NOLOCK)
 							        ON cd.IdCost = C.IdCost
@@ -190,7 +190,7 @@ BEGIN
 								    ON dopd.GuideSerie = do.Guide_Serie
 									    AND dopd.GuideNumber = do.Guide_Number
 								INNER JOIN DeliveryBackOffice.dbo.CreditCardTransactionByCustomer A1 WITH(NOLOCK)
-								    ON A1.OrderNumber = CONCAT('FD',CONVERT(NVARCHAR(100),DO.Guide_Number)) 
+								    ON A1.OrderNumber = CONCAT(do.Guide_Serie,CONVERT(NVARCHAR(100),DO.Guide_Number)) 
 								WHERE C.GuideSerie = do.Guide_Serie
 								    AND C.GuideNumber = do.Guide_Number
 							)tbl
