@@ -36,14 +36,13 @@ BEGIN
     DECLARE @CODPercentage NVARCHAR(10);
 
     
-     DECLARE @CountryIdOrigin NVARCHAR(3)=(SELECT TOP 1  
-	                                            CASE 
-												    WHEN LEFT(UsrCurrency,2)='HN' 
-									                    THEN 'HN' 
-                                                    WHEN UsrCurrency = 'USD'
-								                        THEN 'SV'
-                                                    ELSE 'GT' END  
-						                     FROM dbo.RegisterUser WITH(NOLOCK) WHERE UsrEmail=@Username);
+     DECLARE @CountryIdOrigin NVARCHAR(3) = ( SELECT TOP 1 DC.Currency_IdCountry
+											FROM dbo.RegisterUser R WITH(NOLOCK)
+											INNER JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON ISNULL(R.UsrCurrency,'GTQ') = CCC.CodeISO
+											INNER JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+												ON CCC.IdCatCurrencyCOD = DC.IdCurrencyCOD
+											WHERE UsrEmail = @Username AND DC.DefaultPerCountry = 1);
 
 
 				
