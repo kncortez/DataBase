@@ -44,16 +44,16 @@ BEGIN
     (
         SELECT TOP 1
                vp.RegisterUserID
-        FROM [dbo].RegisterUser usr
-            LEFT JOIN [dbo].[RolByUserByAccount] rua
+        FROM [dbo].RegisterUser usr WITH (NOLOCK)
+            LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                 ON rua.RuaIdUser = usr.UsrIdUser
                    AND rua.RuaRowStatus = 1
-            INNER JOIN [dbo].Account ac
+            INNER JOIN [dbo].Account ac WITH (NOLOCK)
                 ON ac.AccIdAccount = rua.RuaIdAccount
-                   AND ac.AccRowStatus = 1
-            INNER JOIN VisitPointByUser vp
+            INNER JOIN VisitPointByUser vp WITH (NOLOCK)
                 ON vp.RegisterUserID = usr.UsrIdUser
         WHERE ac.AccIdAccount = @UserId
+           AND ac.AccRowStatus = 1
     );
 
 
@@ -93,14 +93,14 @@ BEGIN
 
     INTO #TempClosureDetail
     FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
-        JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
             ON DOR.Sender_ID = VPC.CodeOfReference
         LEFT JOIN @TEMPLATEDETAIL IND
             ON IND.guideserie = DOR.Guide_Serie
                AND IND.guidenumber = DOR.Guide_Number
         LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
             ON INH.inv_pk_id = IND.header
-        JOIN DeliveryBackOffice.dbo.StatusOrder STO
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
             ON STO.StatusOrderId = DOR.StatusOrderId
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
             ON DOPD.guideserie = DOR.Guide_Serie
@@ -113,7 +113,7 @@ BEGIN
           AND NOT EXISTS
     (
         SELECT 1
-        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
         WHERE ACD.GuideSerie = DOR.Guide_Serie
               AND ACD.GuideNumber = DOR.Guide_Number
 
@@ -129,15 +129,14 @@ BEGIN
 		   ,DOPD.DopId
 			-- FIN MODIFICACIÓN
 
-    FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+    FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD  WITH (NOLOCK)
          
-        JOIN CatTypeServiceClosure CTS
+       INNER JOIN CatTypeServiceClosure CTS
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		JOIN invoiceHeader INH WITH (NOLOCK)
+		INNER JOIN invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
-        
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND DOPD.AccountId = @UserId
           AND DOPD.GuideSerie is null
@@ -175,17 +174,17 @@ BEGIN
     SELECT @TotalAmountCODCash = ISNULL(SUM(dpd.CODAmountProcess), 0),
            @TotalCOD = COUNT(dpd.CODAmountProcess)
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
-        JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
+       INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Number = dpd.GuideNumber
                AND DOR.Guide_Serie = dpd.GuideSerie
-               AND dpd.CODAmountProcess > 0
-               AND DOR.StatusOrderId != 7
     WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND AccountId = @UserId
+          AND dpd.CODAmountProcess > 0
+          AND DOR.StatusOrderId != 7
           AND NOT EXISTS
     (
         SELECT 1
-        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
         WHERE ACD.GuideSerie = DOR.Guide_Serie
               AND ACD.GuideNumber = DOR.Guide_Number
 
@@ -293,14 +292,14 @@ BEGIN
                            0
                    END 'CountFacturaCard'
         FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
-            JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+           INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
                 ON DOR.Sender_ID = VPC.CodeOfReference
             LEFT JOIN @TEMPLATEDETAIL IND
                 ON IND.guideserie = DOR.Guide_Serie
                    AND IND.guidenumber = DOR.Guide_Number
             LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
                 ON INH.inv_pk_id = IND.header
-            JOIN DeliveryBackOffice.dbo.StatusOrder STO
+           INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO
                 ON STO.StatusOrderId = DOR.StatusOrderId
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
                 ON DOPD.guideserie = DOR.Guide_Serie
@@ -313,7 +312,7 @@ BEGIN
               AND NOT EXISTS
         (
             SELECT 1
-            FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+            FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
             WHERE ACD.GuideSerie = DOR.Guide_Serie
                   AND ACD.GuideNumber = DOR.Guide_Number
 
@@ -364,9 +363,9 @@ BEGIN
 			   0 'CountFacturaCash',
 			   0 'TotalFacturaCard',
 			   0 'CountFacturaCard'
-			FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+			FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
          
-        JOIN CatTypeServiceClosure CTS
+        INNER JOIN CatTypeServiceClosure CTS
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
@@ -377,7 +376,7 @@ BEGIN
 		  AND NOT EXISTS
 		  (
 			SELECT 1
-			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
 			WHERE ACD.Fel =(SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
 				  AND ACD.RowStatus = 1
 		  )
@@ -469,7 +468,7 @@ BEGIN
                    'Cierre generado exitosamente' Message,
                    Value 'URL',
                    @HeaderClosures 'IdCierre'
-            FROM ConfigParams
+            FROM ConfigParams WITH (NOLOCK)
             WHERE Name = 'ClosureExpressCenter';
 
 			select * from #TempClosureDetail;
