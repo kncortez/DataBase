@@ -245,6 +245,14 @@ BEGIN
                 FROM #Pieces
             );
 
+    SELECT @PiecesCount = 
+        CASE 
+            WHEN COUNT(*) = 0 THEN @PiecesInOrder 
+            ELSE COUNT(*) 
+        END
+    FROM #Pieces;
+
+
     DECLARE @Pesos AS NVARCHAR(MAX) = NULL;
     DECLARE @Parcel AS NVARCHAR(MAX) = NULL;
 
@@ -1440,163 +1448,7 @@ BEGIN
     END;
     PRINT 'format';
     PRINT @Format;
-    IF @Format = 'json'
-    BEGIN
-        DECLARE @jsonResult AS NVARCHAR(MAX);
-
-        SET @jsonResult =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT ',{"Title":"' + ISNULL(tr.Service, '') + '",' + '"Title":"'
-                                       + ISNULL(tr.Service, '') + '",' + '"Service":"' + ISNULL(tr.Segment, '') + '",'
-                                       + '"ServiceDescription":"' + ISNULL(tr.Service, '') + '",'
-                                       + '"ServiceShortName":"' + ISNULL(tr.Service, '') + '",' + '"DeliveryDate":"'
-                                       + CONVERT(VARCHAR(24), tr.FechaCompra, 120) + '",' + '"Price":"'
-                                       + CONVERT(
-                                                    VARCHAR(20)
-                                                  , CONVERT(
-                                                               DECIMAL(12, 2)
-                                                             , (tr.BaseRate + tr.Discount + tr.FragilRate
-                                                                + tr.CollectedRate + tr.InsuranceRate
-                                                                + tr.CreditCardRate + tr.OverWeightRate
-                                                                + tr.IrregularPieceRate
-                                                               )
-                                                           )
-                                                ) + '",' + '"Currency":"' + tr.Currency + '",' + '"OldPrice":"'
-                                       + CONVERT(VARCHAR(20), @OldPrice) + '",' + '"Integration":[{"Description":"'
-                                       + 'Servicio' + '",' + '"Price":"'
-                                       + CONVERT(
-                                                    VARCHAR(20)
-                                                  , CONVERT(
-                                                               DECIMAL(12, 2)
-                                                             , dbo.fnt_Iva_Calculator(
-                                                                                         @CalculateTaxes
-                                                                                       , 'GT'
-                                                                                       , tr.BaseRate
-                                                                                         + tr.IrregularPieceRate
-                                                                                       , 'false'
-                                                                                     )
-                                                           )
-                                                ) + '",' + '"Currency":"' + tr.Currency + '"' + '}'
-                                       + IIF(tr.FragilRate > 0
-                                           , ',{"Description":"' + 'Frágil' + '",' + '"Price":"'
-                                             + CONVERT(
-                                                          VARCHAR(20)
-                                                        , CONVERT(
-                                                                     DECIMAL(12, 2)
-                                                                   , dbo.fnt_Iva_Calculator(
-                                                                                               @CalculateTaxes
-                                                                                             , 'GT'
-                                                                                             , tr.FragilRate
-                                                                                             , 'false'
-                                                                                           )
-                                                                 )
-                                                      ) + '",' + '"Currency":"' + tr.Currency + '"' + '}'
-                                           , ' ')
-                                       + IIF(tr.InsuranceRate > 0
-                                           , ',{"Description":"' + 'Seguro' + '",' + '"Price":"'
-                                             + CONVERT(
-                                                          VARCHAR(20)
-                                                        , CONVERT(
-                                                                     DECIMAL(12, 2)
-                                                                   , dbo.fnt_Iva_Calculator(
-                                                                                               @CalculateTaxes
-                                                                                             , 'GT'
-                                                                                             , tr.InsuranceRate
-                                                                                             , 'false'
-                                                                                           )
-                                                                 )
-                                                      ) + '",' + '"Currency":"' + tr.Currency + '"' + '}'
-                                           , ' ')
-                                       + IIF(tr.CollectedRate > 0
-                                           , ',{"Description":"' + 'Pago en Destino' + '",' + '"Price":"'
-                                             + CONVERT(
-                                                          VARCHAR(20)
-                                                        , CONVERT(
-                                                                     DECIMAL(12, 2)
-                                                                   , dbo.fnt_Iva_Calculator(
-                                                                                               @CalculateTaxes
-                                                                                             , 'GT'
-                                                                                             , tr.CollectedRate
-                                                                                             , 'false'
-                                                                                           )
-                                                                 )
-                                                      ) + '",' + '"Currency":"' + tr.Currency + '"' + '}'
-                                           , ' ')
-                                       + IIF((tr.OverWeightRate) > 0
-                                           , ',{"Description":"' + 'Recargo por Peso' + '",' + '"Price":"'
-                                             + CONVERT(
-                                                          VARCHAR(20)
-                                                        , CONVERT(
-                                                                     DECIMAL(12, 2)
-                                                                   , dbo.fnt_Iva_Calculator(
-                                                                                               @CalculateTaxes
-                                                                                             , 'GT'
-                                                                                             , tr.OverWeightRate
-                                                                                             , 'false'
-                                                                                           )
-                                                                 )
-                                                      ) + '",' + '"Currency":"' + tr.Currency + '"' + '}'
-                                           , ' ')
-                                       + IIF((tr.CreditCardRate) > 0
-                                           , ',{"Description":"' + 'Otros cargos' + '",' + '"Price":"'
-                                             + CONVERT(
-                                                          VARCHAR(20)
-                                                        , dbo.fnt_Iva_Calculator(
-                                                                                    @CalculateTaxes
-                                                                                  , 'GT'
-                                                                                  , tr.CreditCardRate
-                                                                                  , 'false'
-                                                                                )
-                                                      ) + '",' + '"Currency":"' + COALESCE(tr.Currency, '') + '"' + '}'
-                                           , ' ')
-                                       + IIF((ABS(ISNULL(tr.Discount, 0))) > 0
-                                           , ',{"Description":"' + ISNULL(tr.DiscountName, '') + '",' + '"Price":"'
-                                             + CONVERT(
-                                                          VARCHAR
-                                                        , CAST((dbo.fnt_Iva_Calculator(
-                                                                                          @CalculateTaxes
-                                                                                        , 'GT'
-                                                                                        , (tr.Discount)
-                                                                                        , 'false'
-                                                                                      )
-                                                               ) AS DECIMAL(18, 2))
-                                                      ) + '",' + '"Currency":"' + COALESCE(tr.Currency, '') + '"' + '}'
-                                           , ' ') + ',{"Description":"' + 'IVA' + '",' + '"Price":"'
-                                       + CONVERT(
-                                                    VARCHAR(20)
-                                                  , CONVERT(
-                                                               DECIMAL(12, 2)
-                                                             , dbo.fnt_Iva_Calculator(
-                                                                                         @CalculateTaxes
-                                                                                       , 'GT'
-                                                                                       , (tr.BaseRate - tr.Discount
-                                                                                          + tr.FragilRate
-                                                                                          + tr.CollectedRate
-                                                                                          + tr.InsuranceRate
-                                                                                          + tr.CreditCardRate
-                                                                                          + tr.OverWeightRate
-                                                                                          + tr.IrregularPieceRate
-                                                                                         )
-                                                                                       , 'true'
-                                                                                     )
-                                                           )
-                                                ) + '",' + '"Currency":"' + tr.Currency + '"' + '}' + ' ]}'
-                                FROM @TempRate tr
-                                WHERE tr.Service = ISNULL(@ServiceShortName, 'NDD')
-                                      OR @ServiceShortName = 'EXP'
-                                --	where us.UsrEmail = @UserName and us.UsrRowStatus = 1 
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)')
-                          , 1
-                          , 1
-                          , ''
-                        )
-        );
-
-        SELECT '[' + @jsonResult + ']';
-    END;
+   
     IF @Format = 'datatable'
     BEGIN
 
