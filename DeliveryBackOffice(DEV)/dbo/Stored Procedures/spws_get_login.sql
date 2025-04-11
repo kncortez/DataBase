@@ -150,6 +150,10 @@ BEGIN
              , 'Usuario inactivo' AS Message
              , 'Inactive'         AS Id
         UNION
+        SELECT 500                AS IdResult
+             , 'Usuario Individual Inactivo' AS Message
+             , 'InactiveUserIndividual'      AS Id
+        UNION
         SELECT 500                   AS IdResult
              , 'Contraseña expirada' AS Message
              , 'PasswordExpired'     AS Id
@@ -878,7 +882,7 @@ BEGIN
     END;
 
 
-    	IF (@UserValidate=0)
+    	IF (@VERIFYUSER =0)
         BEGIN
                 IF(@IdSystemIndividualUserWeb = @IdSystem)
                 BEGIN

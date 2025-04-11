@@ -142,6 +142,10 @@ BEGIN
              , 'Usuario inactivo' AS Message
              , 'Inactive'         AS Id
         UNION
+        SELECT 500                AS IdResult
+             , 'Usuario Corporativo Inactivo' AS Message
+             , 'InactiveUserCorporate'         AS Id
+        UNION
         SELECT 400                                                                                                                            AS IdResult
              , 'Cuenta pendiente de confirmación, se envió un nuevo link a su correo electrónico registrado, para poder confirmar su cuenta.' AS Message
              , 'Confirmation'                                                                                                                 AS Id
@@ -850,7 +854,7 @@ BEGIN
     END;
 
 
-       	IF (@UserValidate=0 OR @VisitPointClientStatus=0)
+       	IF (@VERIFYUSER =0 OR @VisitPointClientStatus=0)
             BEGIN
                 
                             SET @jsonResult =  
