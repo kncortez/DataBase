@@ -199,7 +199,7 @@ BEGIN
 					(
 						SELECT PayingBank
 						FROM DeliveryBackOffice.dbo.DeliveryBank WITH (NOLOCK)
-						WHERE COALESCE(Id_country,'GT') = @IdCountrySender
+						WHERE Id_country = @IdCountrySender
 								AND Id_status = 1
 								AND PayingBank <> @BankBAC
 						GROUP BY PayingBank
@@ -229,7 +229,7 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#TableForzaPaymentTemp', 'U') IS NOT NULL
             DROP TABLE #TableForzaPaymentTemp;
 
-		IF EXISTS (SELECT 1 FROM #listGuidesToProcces)
+		IF EXISTS (SELECT TOP 1 1 FROM #listGuidesToProcces)
         BEGIN
             -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
