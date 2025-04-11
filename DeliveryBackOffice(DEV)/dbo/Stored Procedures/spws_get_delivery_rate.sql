@@ -26,6 +26,8 @@
 -- Author:		<Walter Orozco>
 -- Create date: <2024-06-21>
 -- Description:	<Se agrega configuracion para multipais y multimoneda en EXC>
+-- Create date: <2025-04-10>
+-- Description:	<Mejoras para multipais.>
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @CodApp AS NVARCHAR(50) = ''
@@ -275,9 +277,10 @@ BEGIN
 
     DECLARE @DefaultCurrency AS INT =
             (
-                SELECT IdCatCurrencyCOD
-                FROM DeliveryBackOffice.dbo.CatCurrencyCOD
-                WHERE CodeISO = 'GTQ'
+                SELECT CCC.IdCatCurrencyCOD FROM DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
+				WHERE DC.Currency_IdCountry = @Country AND DC.DefaultPerCountry = 1
             );
 
 
