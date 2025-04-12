@@ -21,16 +21,17 @@ BEGIN
 			@AccountCOD NVARCHAR(30);
 
 	SELECT @IdCountry = CountryId 
-	FROM VisitPointClient 
+	FROM VisitPointClient  WITH(NOLOCK)
 	WHERE CodeOfReference = @VisitPointId
 
 	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+	FROM dbo.ClosureAccount   WITH(NOLOCK)
+	WHERE Description = 'Cuenta Express Center'  AND (IdCountry = @IdCountry OR (IdCountry IS NULL AND @IdCountry = 'GT')) 
 	
 	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+	FROM dbo.ClosureAccount  WITH(NOLOCK)
+	WHERE Description = 'Cuenta Área COD' AND (IdCountry = @IdCountry OR (IdCountry IS NULL AND @IdCountry = 'GT'))
+
     SELECT ACH.IdAccountingClosuresHeader 'ClosureId',
            ACH.VisitPoint 'VisitPointId',
            VPC.DescriptionOfClient 'VisitPoinDescription',
@@ -54,10 +55,10 @@ BEGIN
            ACH.TotalAmountFacturaCardDeclared,
 		   CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
     -- FIN MODIFICACIÓN
-    FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
-        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+    FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH  WITH(NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC  WITH(NOLOCK)
             ON ACH.VisitPoint = VPC.CodeOfReference
-        INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU
+        INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU  WITH(NOLOCK)
             ON REU.UsrIdUser = ACH.UserId
     WHERE CAST(ACH.DateCreated AS DATE)
           BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)
@@ -70,7 +71,7 @@ BEGIN
     SELECT @Account AS AccounExp,
 		   @AccountCOD AS AccountCOD,
 		  Value 'URL'
-    FROM ConfigParams
+    FROM ConfigParams  WITH(NOLOCK)
     WHERE Name = 'ClosureExpressCenter';
 
 END;
