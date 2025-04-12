@@ -11,6 +11,9 @@
     [PaidAmount] 		DECIMAL(10, 2),
 	[CollectValue] 		DECIMAL(10, 2),
 	[CODValue] 			DECIMAL(10, 2),
+	[PaymentId]			NVARCHAR(100),
+	[DateTimeStamp]		DATETIME,
+	[RowStatus]			BIT	CONSTRAINT [DF_PaymentZigi_RowStatus] DEFAULT ((1)) NOT NULL,
 	[DateCreated] 		DATETIME not null,
 	[TokenCreated] 		NVARCHAR(50) not null,
 	[DateUpdated]		DATETIME null,
@@ -80,7 +83,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
- @value = N'ID de la transacción proporcionado por Zigi',
+ @value = N'ID de la transacción proporcionado por Zigi(AuthorizationCode)',
  @level0type = N'SCHEMA',
  @level0name = N'dbo',
  @level1type = N'TABLE',
@@ -140,6 +143,16 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
+ @value = N'Estado (1 Activo, 0 inactivo)',
+ @level0type = N'SCHEMA',
+ @level0name = N'dbo',
+ @level1type = N'TABLE',
+ @level1name = N'PaymentZigi',
+ @level2type = N'COLUMN',
+ @level2name = N'RowStatus';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
  @value = N'Fecha de creación del registro.',
  @level0type = N'SCHEMA',
  @level0name = N'dbo',
@@ -177,3 +190,23 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
  @level1name = N'PaymentZigi',
  @level2type = N'COLUMN',
  @level2name = N'TokenUpdated';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+ @value = N'Identificador de pago realizado con link',
+ @level0type = N'SCHEMA',
+ @level0name = N'dbo',
+ @level1type = N'TABLE',
+ @level1name = N'PaymentZigi',
+ @level2type = N'COLUMN',
+ @level2name = N'PaymentId';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+ @value = N'Fecha en la que cambio el estado del link',
+ @level0type = N'SCHEMA',
+ @level0name = N'dbo',
+ @level1type = N'TABLE',
+ @level1name = N'PaymentZigi',
+ @level2type = N'COLUMN',
+ @level2name = N'DateTimeStamp';
