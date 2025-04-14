@@ -34,8 +34,7 @@ BEGIN
     DECLARE @UserValidate INT = (SELECT COUNT(1)
 										FROM [dbo].RegisterUser                   usr WITH (NOLOCK)  
 													INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)  
-														ON rus.RusIdUser = usr.UsrIdUser  
-														   AND rus.RusIdSystem = 1  
+														ON rus.RusIdUser = usr.UsrIdUser    
 													LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)  
 														ON res.UstIdUser = rus.RusIdUser  
 														   AND res.UstIdSystem = rus.RusIdSystem  
@@ -46,7 +45,9 @@ BEGIN
 										WHERE usr.UsrEmail = @Username  
 											  AND usr.UsrLastPassword = @Password  
 											  AND rua.RuaRowStatus = 1  
-											  AND ac.AccRowStatus = 1 );
+											  AND ac.AccRowStatus = 1
+											  AND rus.RusIdSystem = 1
+											  AND usr.UsrRowStatus = 1);
 
     
      DECLARE @CountryIdOrigin NVARCHAR(3)=(SELECT TOP 1  
@@ -65,10 +66,12 @@ BEGIN
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
-    SET @VERIFYUSER =
+       SET @VERIFYUSER =
     (
         SELECT COUNT(1)
         FROM RegisterUser           ru WITH (NOLOCK)
+            INNER JOIN InternalUser iu WITH (NOLOCK)
+                ON ru.UsrIdUser = iu.RegisterUserID
         WHERE ru.UsrEmail = @Username
               AND ru.UsrRowStatus = 1
     );
@@ -831,7 +834,7 @@ BEGIN
     END;
 
 
-    	IF (@VERIFYUSER =0)
+    	IF (@UserValidate = 0)
         BEGIN
                 IF(@IdSystemIndividualUserWeb = @IdSystem)
                 BEGIN
