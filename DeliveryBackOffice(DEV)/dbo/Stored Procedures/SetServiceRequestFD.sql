@@ -13,6 +13,11 @@
 -- Modified:	<30-09-2024>
 -- Description:	<Se agrega la relación de una guía con un DeliveryLink.>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Modified:	<03-01-2025>
+-- Description:	<Validar usuarios activo: Individual, Corporativo y en flujo de Ex C >
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -29,9 +34,41 @@ BEGIN
 	DECLARE @ManifestSerie VARCHAR(2) = 'FM'
 	DECLARE @GuideSerie VARCHAR(2) = 'FD'
 	DECLARE @IdCountryByCustomer NVARCHAR(2) = 'GT'
+	DECLARE @InactiveUser INT = 1;
+
 
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
+	DECLARE @CustomerID      INT = (SELECT [CustomerID] FROM @TblServiceRequestFD)
+	DECLARE @CodeOfReference INT = (SELECT [Sender_ID] From @TblDeliveryOrdersFD);
+	DECLARE @IdCustomerType  INT = (select top 1 IdCustomerType from dbo.Customer Where IdCustomer = @CustomerID)
+	DECLARE @IdRegisterUser  INT = (Select Top 1 RuaIdUser 
+	                                    From [dbo].[RolByUserByAccount]
+		                                       Where  RuaIdAccount = (Select Top 1  AccIdAccount 
+											                                     From [dbo].[Account] 
+																				       Where IdCustomer= @CustomerID));
+	DECLARE @RowstatusRegisterUser INT = (Select top 1  Case When UsrRowStatus =  0 THEN 0 ELSE 1 END
+	                                               From [dbo].[RegisterUser]
+												      WHERE UsrIdUser = @IdRegisterUser
+	                                                   );
+	
+
+		IF (@IdCustomerType != 1) --- Flujo de usuario Individual
+		BEGIN
+	         SET @InactiveUser = @RowstatusRegisterUser
+			END 
+			  ELSE
+			  BEGIN 
+			         IF (@RowstatusRegisterUser=1) --- Flujo Corporativo cuando el Socio de Negocio esta activo
+					 BEGIN
+			              SET @InactiveUser = (SELECT CASE WHEN [StatusClient] = 0 THEN 0 ELSE 1 END --- Flujo para validar usuario inactivo para un socio de negocio
+						                           FROM [dbo].[VisitPointClient] WHERE CodeOfReference = @CodeOfReference);
+					END 
+					 ELSE
+					    BEGIN
+						       SET @InactiveUser = 0;
+						END
+			   END 
+			   
 	--FIN MODIFICACIÓN
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
 	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WITH(NOLOCK) WHERE CustomerID = @CustomerID )
@@ -78,6 +115,10 @@ BEGIN
 		/*********************************************************************************************/
 		/******** AUTO GENERACIÓN DE CORRELATIVOS BASADOS EN LA CANTIDAD DE REGISTOS RECIBIDOS *******/
 		/*********************************************************************************************/
+
+	 IF (@InactiveUser=1)
+      BEGIN
+
 		DECLARE @noRecords INT = (SELECT COUNT(RowNumber) FROM @TblDeliveryOrdersFD)
 		DECLARE @startnum INT = (SELECT MAX([Guide_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH(NOLOCK))
 		DECLARE @endnum INT = (@startnum - 1) + @noRecords
@@ -665,6 +706,7 @@ BEGIN
 		--Termina proceso para DeliveryLink
 
 		DROP TABLE #GuideTable
+ END
 	END TRY
 	BEGIN CATCH
 		SELECT 
@@ -696,7 +738,7 @@ BEGIN
 					   ,GETDATE())
 
 	END CATCH;
-	IF @@TRANCOUNT > 0
+	IF @@TRANCOUNT > 0 AND @InactiveUser =  1
 	BEGIN
 		COMMIT TRANSACTION;
 
@@ -875,4 +917,13 @@ BEGIN
               ON RC.RbcIdRate= RH.RheId
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
+	  ELSE
+	   BEGIN
+	          SELECT 
+					201 AS 'StatusCode', 
+					'INACTIVE USER' AS 'Description', 
+					CONVERT(BIGINT, 0) AS 'NumTransferID'
+
+					COMMIT TRANSACTION;
+	       END
 END
