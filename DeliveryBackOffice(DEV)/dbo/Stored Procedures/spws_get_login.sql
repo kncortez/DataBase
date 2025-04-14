@@ -67,10 +67,8 @@ BEGIN
     DECLARE @VERIFYUSER AS INT = 0;
     SET @VERIFYUSER =
     (
-        SELECT COUNT(iu.IdEmployee)
+        SELECT COUNT(1)
         FROM RegisterUser           ru WITH (NOLOCK)
-            INNER JOIN InternalUser iu WITH (NOLOCK)
-                ON ru.UsrIdUser = iu.RegisterUserID
         WHERE ru.UsrEmail = @Username
               AND ru.UsrRowStatus = 1
     );
