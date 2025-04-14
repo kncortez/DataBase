@@ -45,12 +45,12 @@ BEGIN
     DECLARE @VERIFYUSER AS INT = 0;
     SET @VERIFYUSER =
     (
-        SELECT COUNT(iu.Username)
+        SELECT COUNT(1)
         FROM DeliveryBackOffice.[dbo].RegisterUser           ru
             INNER JOIN DeliveryBackOffice.[dbo].InternalUser iu
                 ON ru.UsrIdUser = iu.RegisterUserID
         WHERE iu.Username = @UserName
-              AND ru.UsrRowStatus = 1
+              AND iu.RowStatus = 1
     );
 
     SELECT TOP 1 
