@@ -8,6 +8,11 @@
 -- Updated date:<2023-08-10>
 -- Description:	<Optimización de SP, en update de actualziación en tabla dbo.Cost >
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Updated date:<2025-04-14>
+-- Description:	<Optimización de SP, en update de actualziación en tabla dbo.Cost >
+-- =============================================
 CREATE PROCEDURE [dbo].[GetInfoFAC] 
 	@Type VARCHAR(100) = 'GetResponseFAC',
 	@OrderNumber VARCHAR(100) = NULL, --Guide
@@ -236,7 +241,7 @@ BEGIN
                         WHERE vpc.CodeOfReference = do.Sender_ID
                     )
 				LEFT JOIN 
-				[dbo].[DeliveryOrderPaymentDetail] dopd 
+				[dbo].[DeliveryOrderPaymentDetail] dopd WITH(NOLOCK)
 				ON CG.Guide_Serie = dopd.GuideSerie AND 
 				   CG.Guide_Number = dopd.GuideNumber
             WHERE DopId IS NULL
@@ -247,7 +252,7 @@ BEGIN
 			-- Garantizar que si se registro la transacción del cobro a la tarjeta (¿?)
 			SET @CountRows = (SELECT
 					COUNT(1)
-				FROM CreditCardTransactionByCustomer
+				FROM CreditCardTransactionByCustomer WITH(NOLOCK)
 				WHERE OrderNumber = @OrderNumber
 				AND [ReasonCode] = '00'
 				AND RowStatus = 1);
@@ -503,7 +508,7 @@ BEGIN
 							, StatusOrderId = 15
 							, IsCollect = t.IsCollect
 						FROM 
-							dbo.DeliveryOrder ord
+							dbo.DeliveryOrder ord WITH(NOLOCK)
 							INNER JOIN 
 								@TblDeliveryOrdersList t 
 								ON 
@@ -518,12 +523,12 @@ BEGIN
 						END
 			
 
-						update  dbo.DeliveryOrderPaymentDetail 
-						set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
+						UPDATE  dbo.DeliveryOrderPaymentDetail 
+						SET ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 						, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-						from dbo.DeliveryOrderPaymentDetail pay
-								inner join @TblDeliveryOrdersList t 
-								on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+						FROM dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
+								INNER JOIN @TblDeliveryOrdersList t 
+								ON (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
 						IF(@@ROWCOUNT > 0)
 						BEGIN
@@ -599,11 +604,11 @@ BEGIN
 							EXISTS( 
 								SELECT TOP 1 1 
 								FROM 
-									[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP 
+									[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP WITH(NOLOCK)
 								WHERE 
 									BOP.IdCost = @CostId 
 									AND 
-									BOP.Description = @PromoName COLLATE Latin1_General_CI_AI AND BOP.RowStatus = 1)
+									BOP.Description = @PromoName AND BOP.RowStatus = 1)
 						)
 						BEGIN
 
@@ -614,11 +619,11 @@ BEGIN
 								Amount = IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)),
 								DateUpdated = GETDATE(),
 								TokenUpdated = @Token,
-								PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie)
+								PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) WHERE PC.PromoCouponSerie = @CouponSerie)
 							WHERE
 								IdCost = @CostId
 								AND
-								Description = @PromoName COLLATE Latin1_General_CI_AI
+								Description = @PromoName 
 
 							IF(SCOPE_IDENTITY() > 0)
 								SET @CoUpdated = 1;
@@ -631,7 +636,7 @@ BEGIN
 								[DeliveryBackOffice].[dbo].[BreakdownOfPayment]
 								(IdCost, Description, Amount, RowStatus, DateCreated, TokenCreated, PromoCouponId)
 							VALUES
-								(@CostId, @PromoName, IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)), 1, GETDATE(), @Token, (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie))
+								(@CostId, @PromoName, IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)), 1, GETDATE(), @Token, (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) WHERE PC.PromoCouponSerie = @CouponSerie))
 
 							IF(@@ROWCOUNT > 0)
 								SET @CoUpdated = 1;
@@ -648,7 +653,7 @@ BEGIN
 						SELECT 
 							DopId 
 						FROM 
-							[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
+							[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do WITH(NOLOCK)
 							INNER JOIN @TblDeliveryOrdersList tpo
 								ON do.GuideNumber = tpo.Guide_Number
 									AND do.GuideSerie = tpo.Guide_Serie
@@ -661,17 +666,17 @@ BEGIN
 							IF(@DOAlreadyUpdated = 0)
 							BEGIN
 
-								update 
+								UPDATE 
 									dbo.DeliveryOrder 
-								set 
+								SET 
 									PriceShippment = IIF(t.PriceShippment <= 0, 0, t.PriceShippment)
 									, StatusOrderId = 15
 									, IsCollect = t.IsCollect
-								from 
-									dbo.DeliveryOrder ord
-								inner join 
+								FROM 
+									dbo.DeliveryOrder ord WITH(NOLOCK)
+								INNER JOIN 
 									@TblDeliveryOrdersList t 
-									on 
+									ON 
 										t.Guide_Number = ord.Guide_Number 
 										and 
 										t.Guide_Serie = ord.Guide_Serie
@@ -684,8 +689,8 @@ BEGIN
 								update  dbo.DeliveryOrderPaymentDetail 
 								set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 								, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-								from dbo.DeliveryOrderPaymentDetail pay
-									 inner join @TblDeliveryOrdersList t 
+								FROM dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
+									 INNER JOIN @TblDeliveryOrdersList t 
 									 on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
 							END
@@ -765,36 +770,24 @@ BEGIN
 				END
 
 				-- Flujo normal de GetInfoFac
-				SET @jsonResult = (SELECT
-						STUFF((SELECT
-								',{' + 
-								'"CustomerReference":"' + CONVERT(VARCHAR, CustomerReference) + '",' +
-								'"ReferenceNumber":"' + CONVERT(VARCHAR, ReferenceNumber) + '",' +
-								'"ReasonCode":"' + CONVERT(VARCHAR, ReasonCode) + '",' +
-								'"ReasonDescription":"' + CONVERT(VARCHAR, ReasonDescription) + '",' +
-								'"StatusSend":"' + CONVERT(VARCHAR, StatusSend) + '",' +
-									IIF(EXISTS(SELECT TOP 1 1 FROM @CouponDataReponse), 
-										(
-											SELECT TOP 1
-												'"Coupon":{' +
-													'"CouponSerie":"' + CDR.CouponSerie + '",' +
-													'"FinalDate":"' + CONVERT(NVARCHAR, CDR.CouponFinalDate ,103) + '",' +
-													'"Promo":"' + CDR.CouponPromo + '"}'
-											FROM
-												@CouponDataReponse CDR
-										)
-									,'"Coupon":{}') +
-								+ '}'
-							FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-							WHERE
-							--StatusSend = 1
-							--and 
-							OrderNumber = @OrderNumber
-							--and CustomerReference = @AccountId
-							AND RowStatus = 1
-							FOR XML PATH (''), TYPE)
-						.value('.', 'varchar(max)'), 1, 1, ''
-						))
+					SELECT 200 AS IdResult, 
+						CustomerReference AS CustomerReference,
+						ReferenceNumber AS ReferenceNumber,
+						ReasonCode AS ReasonCode, 
+						ReasonDescription AS ReasonDescription, 
+						StatusSend AS StatusSend
+					FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
+					WHERE
+					OrderNumber = @OrderNumber
+					AND RowStatus = 1
+
+
+				SELECT TOP 1
+						CDR.CouponSerie AS CouponSerie, 
+						CDR.CouponFinalDate AS FinalDate, 
+						CDR.CouponPromo AS Promo
+				FROM
+					@CouponDataReponse CDR
 
 				--=====================DETALLE_PAGOS.INI======================
 
@@ -802,7 +795,7 @@ BEGIN
 					@TransactionAmount = Ammount
 				   ,@TransactionTokenUpdated = TokenUpdated
 				   ,@TransactionTokeCreated = TokenCreated
-				FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+				FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
 				WHERE OrderNumber = @OrderNumber
 				
 				IF (SUBSTRING(@OrderNumber, 1, 2) = 'HR')
@@ -1097,7 +1090,7 @@ BEGIN
 				BEGIN
 					SET @IdHeaderRecolection = (SELECT top 1
 							do.IdHeaderRecolection
-						FROM DeliveryOrderPaymentDetail do
+						FROM DeliveryOrderPaymentDetail do WITH(NOLOCK)
 						WHERE do.GuideNumber = CAST(STUFF(@Guia, 1, PATINDEX('%[0-9]%', @Guia) - 1, '')
 						AS INT)
 						AND GuideSerie = SUBSTRING(@Guia, 1, 2))
@@ -1122,9 +1115,6 @@ BEGIN
 		IF(@@TRANCOUNT > 0)
 			COMMIT TRANSACTION;
 
-		SELECT
-			'' + @jsonResult + '' FormatJson
-
 	END TRY
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
@@ -1134,23 +1124,11 @@ BEGIN
 		VALUES
 			(GETDATE(), ERROR_PROCEDURE(), ERROR_LINE(), ERROR_PROCEDURE(), ERROR_MESSAGE())
 
-		SET @jsonResult =  
-		( 
-			SELECT STUFF(( 
-				SELECT 
-					',{' + 
-						'"IdResult":401' + ',' +
-						'"messageError":"' + ERROR_MESSAGE() + '"' + ',' +
-						'"lineError":"' + ERROR_LINE() + '"' + ',' +
-						'"Coupon": { } ' + ',' +
-					'}'
-				FOR XML PATH(''), TYPE 
-			) 
-			.value('.', 'varchar(max)'),1,1,'' 
-			)
-		) 
-			 
-		select ('[' + @jsonResult +  ']') JsonOutput 
+		SELECT 
+				401 AS IdResult, 
+				ERROR_MESSAGE() AS messageError, 
+				ERROR_LINE() AS lineError
+
 
 	END CATCH
 	
