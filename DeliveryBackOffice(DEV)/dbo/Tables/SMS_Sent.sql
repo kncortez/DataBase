@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SMS_Sent] (
-    [Sent_Id]           INT           IDENTITY (1, 1) NOT NULL,
+    [Sent_Id]           INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Sent_Guide_Series] NVARCHAR (50) NOT NULL,
     [Sent_Guide_Number] INT           NOT NULL,
     [Sent]              BIT           CONSTRAINT [DF_SMS_Sent_Sent] DEFAULT ((0)) NOT NULL,
@@ -10,9 +10,11 @@
     [TokenUpdate]       NVARCHAR (50) NULL,
     [UpdatedDatetime]   DATETIME      NULL,
     [SentTypeStatus]    INT           NULL,
-    [StatusOrderId]     INT           NULL
+    [StatusOrderId]     INT           NULL,
     CONSTRAINT [PK_SMS_Sent] PRIMARY KEY CLUSTERED ([Sent_Id] ASC)
 );
+
+
 
 
 

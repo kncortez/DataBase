@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ClosureAccount] (
-    [IdClosureAccount] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdClosureAccount] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountNumber]    VARCHAR (100) NOT NULL,
     [Name]             VARCHAR (100) NOT NULL,
     [Description]      VARCHAR (250) NOT NULL,
@@ -8,10 +8,12 @@
     [DateCreated]      DATETIME      NOT NULL,
     [TokenUpdated]     VARCHAR (50)  NULL,
     [DateUpdated]      DATETIME      NULL,
-    [IdCountry]        VARCHAR(2)   NULL,
+    [IdCountry]        VARCHAR (2)   NULL,
     PRIMARY KEY CLUSTERED ([IdClosureAccount] ASC),
-    CONSTRAINT [FK_ClosureAccount_CatCountry] FOREIGN KEY([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    CONSTRAINT [FK_ClosureAccount_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO

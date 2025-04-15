@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[MembershipSubscriptionLog] (
-    [IdMembershipSubscriptionLog] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdMembershipSubscriptionLog] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SystemId]                    INT             NOT NULL,
     [ModuleId]                    INT             NOT NULL,
     [MembershipId]                INT             NULL,
@@ -35,6 +35,8 @@
     CONSTRAINT [FK_MembershipSubscriptionLog_System] FOREIGN KEY ([SystemId]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     CONSTRAINT [FK_MembershipSubscriptionLog_VisitPointClient] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

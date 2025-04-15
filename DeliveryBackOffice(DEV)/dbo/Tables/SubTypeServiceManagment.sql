@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SubTypeServiceManagment] (
-    [IdSubTypeServiceManagment] BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdSubTypeServiceManagment] BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TypeServiceManagmentId]    BIGINT         NOT NULL,
     [Name]                      NVARCHAR (200) NULL,
     [RowStatus]                 BIT            NOT NULL,
@@ -10,6 +10,8 @@
     PRIMARY KEY CLUSTERED ([IdSubTypeServiceManagment] ASC),
     CONSTRAINT [FK_SubTypeServiceManagment_TypeServiceManagmentId] FOREIGN KEY ([TypeServiceManagmentId]) REFERENCES [dbo].[TypeServiceManagment] ([IdTypeServiceManagment])
 );
+
+
 
 
 GO

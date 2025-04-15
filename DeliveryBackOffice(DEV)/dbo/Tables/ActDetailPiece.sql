@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ActDetailPiece] (
-    [IdActDetailPiece] INT           IDENTITY (1, 1) NOT NULL,
+    [IdActDetailPiece] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ActDetailId]      INT           NOT NULL,
     [PieceNumber]      INT           NOT NULL,
     [IsDryPiece]       BIT           CONSTRAINT [DF__ActDetail__IsDry__4DD54A14] DEFAULT ((1)) NOT NULL,
@@ -14,6 +14,8 @@
     CONSTRAINT [FK_ActDetailPiece_Guide] FOREIGN KEY ([ActDetailId]) REFERENCES [dbo].[ActDetail] ([IdActDetail]),
     CONSTRAINT [UQ_ActDetailPiece_GuidePiece] UNIQUE NONCLUSTERED ([ActDetailId] ASC, [PieceNumber] ASC)
 );
+
+
 
 
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SenderReceiverLoginToken] (
-    [IdSenderRecieverLoginToken] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdSenderRecieverLoginToken] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LoginToken]                 NVARCHAR (6)  NOT NULL,
     [SenderReceiverId]           INT           NOT NULL,
     [RowStatus]                  BIT           CONSTRAINT [DF_SenderReceiverLoginToken_RowStatus] DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]                DATETIME      NULL,
     CONSTRAINT [PK_SenderReceiverLoginToken] PRIMARY KEY CLUSTERED ([IdSenderRecieverLoginToken] ASC)
 );
+
+
 
 
 

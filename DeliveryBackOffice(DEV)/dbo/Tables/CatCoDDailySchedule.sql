@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatCoDDailySchedule] (
-    [IdCatCoDDailySchedule] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatCoDDailySchedule] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CoDProcessName]        NVARCHAR (100) NOT NULL,
     [DeliveryBankId]        INT            NOT NULL,
     [ExecutionTime]         TIME (7)       NOT NULL,
@@ -13,6 +13,8 @@
     PRIMARY KEY CLUSTERED ([IdCatCoDDailySchedule] ASC),
     CONSTRAINT [FK_CatCoDDailySchedule_DeliveryBank] FOREIGN KEY ([DeliveryBankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[HistoricalSAPInvoice] (
-    [HistoricalSAPInvoiceId] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [HistoricalSAPInvoiceId] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [inv_pk_id]              BIGINT        NOT NULL,
     [inv_certificationFEL]   VARCHAR (200) NULL,
     [inv_serieFEL]           VARCHAR (200) NULL,
@@ -11,6 +11,8 @@
     PRIMARY KEY CLUSTERED ([HistoricalSAPInvoiceId] ASC),
     CONSTRAINT [FK_Historical_inv_pk_id] FOREIGN KEY ([inv_pk_id]) REFERENCES [dbo].[invoiceHeader] ([inv_pk_id])
 );
+
+
 
 
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[IncidenceServices] (
-    [IdIncidence]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdIncidence]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ServiceManagementId]  INT            NULL,
     [IncidenceTypeId]      INT            NULL,
     [DescriptionIncidence] VARCHAR (300)  NULL,
@@ -17,6 +17,8 @@
     CONSTRAINT [FKIncidentRecolection] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement]),
     CONSTRAINT [FKIncidenTypProduct] FOREIGN KEY ([IncidenceTypeId]) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType])
 );
+
+
 
 
 

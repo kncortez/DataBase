@@ -1,6 +1,6 @@
 ﻿
 CREATE TABLE [dbo].[MarketplaceProductTags] (
-    [IdMarketplaceProductTags]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdMarketplaceProductTags]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [MarketplaceProductTagsName]        NVARCHAR (50)  NULL,
     [MarketplaceProductTagsDescription] NVARCHAR (100) NOT NULL,
     [MarketplaceProductTagsOrder]       INT            NOT NULL,
@@ -13,6 +13,8 @@ CREATE TABLE [dbo].[MarketplaceProductTags] (
     CONSTRAINT [PK_MarketplaceProductTags] PRIMARY KEY CLUSTERED ([IdMarketplaceProductTags] ASC),
     CONSTRAINT [FK_MarketplaceProductTags_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO

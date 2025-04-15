@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[WebhookTrackingQueue] (
-    [IdWebhookTrackingQueue] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdWebhookTrackingQueue] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [WebhookEndpointId]      BIGINT        NOT NULL,
     [CustomerId]             INT           NULL,
     [GuideSerie]             NVARCHAR (2)  NULL,
@@ -18,6 +18,8 @@
     CONSTRAINT [FK_WebhookTrackingQueue_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_WebhookTrackingQueue_Status] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
+
+
 
 
 

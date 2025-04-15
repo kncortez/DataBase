@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AnticipatedCODHeader] (
-    [IdAnticipatedCODHeader] INT             IDENTITY (1, 1) NOT NULL,
+    [IdAnticipatedCODHeader] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CustomerId]             INT             NOT NULL,
     [PortfolioId]            BIGINT          NULL,
     [DailyDate]              DATE            NOT NULL,
@@ -19,6 +19,8 @@
     CONSTRAINT [FKCustomerId_AnticipatedCODHeader] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FKPortfolioId_AnticipatedCODHeader] FOREIGN KEY ([PortfolioId]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio])
 );
+
+
 
 
 GO

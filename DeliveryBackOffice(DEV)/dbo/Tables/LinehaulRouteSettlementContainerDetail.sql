@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRouteSettlementContainerDetail] (
-    [IdLinehaulRouteSettlementContainerDetail] INT           IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRouteSettlementContainerDetail] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRouteSettlementContainerId]       INT           NOT NULL,
     [GuideSerie]                               NVARCHAR (2)  NOT NULL,
     [GuideNumber]                              INT           NOT NULL,
@@ -17,6 +17,8 @@
     PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlementContainerDetail] ASC),
     CONSTRAINT [FK_LinehaulRouteSettlementContainerDetail_RouteSettlementContainer] FOREIGN KEY ([LinehaulRouteSettlementContainerId]) REFERENCES [dbo].[LinehaulRouteSettlementContainer] ([IdLinehaulRouteSettlementContainer])
 );
+
+
 
 
 

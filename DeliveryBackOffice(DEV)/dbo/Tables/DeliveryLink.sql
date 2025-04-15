@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryLink] (
-    [IdDeliveryLink]                INT             IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryLink]                INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Token]                         NVARCHAR (200)  NOT NULL,
     [AccountId]                     BIGINT          NOT NULL,
     [OriginCodeOfReference]         INT             NOT NULL,
@@ -46,6 +46,8 @@
     CONSTRAINT [FK_DeliveryLink_Settlement] FOREIGN KEY ([ReceiverSettlementId]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
     CONSTRAINT [FK_DeliveryLink_SubscriptionId] FOREIGN KEY ([SubscriptionId]) REFERENCES [dbo].[Subscription] ([IdSubscription])
 );
+
+
 
 
 

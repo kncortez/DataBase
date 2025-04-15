@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderBySettlement] (
-    [ID]                     BIGINT        IDENTITY (1, 1) NOT NULL,
+    [ID]                     BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Date_Printed]           DATETIME      NULL,
     [User_Dispatched]        NVARCHAR (50) NULL,
     [Date_Dispatched]        DATETIME      NULL,
@@ -30,6 +30,8 @@
     CONSTRAINT [FK_DeliveryOrderBySettlement_CatVehicleId] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle]),
     CONSTRAINT [FK_DeliveryOrderSettlement_SenderReceiver] FOREIGN KEY ([ID_Courier]) REFERENCES [dbo].[SenderReceiver] ([ID])
 );
+
+
 
 
 

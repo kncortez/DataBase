@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServicesConfig] (
-    [IdServicesConfig] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdServicesConfig] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ServiceName]      VARCHAR (500)   NOT NULL,
     [ServiceProcess]   VARCHAR (500)   NOT NULL,
     [TimeSchedule]     VARCHAR (4000)  NOT NULL,
@@ -11,6 +11,8 @@
     [DateUpdated]      DATETIME        NULL,
     PRIMARY KEY CLUSTERED ([IdServicesConfig] ASC)
 );
+
+
 
 
 GO

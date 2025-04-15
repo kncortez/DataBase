@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ConflictManifestDetail] (
-    [IdConflictManifestDetail] INT             IDENTITY (1, 1) NOT NULL,
+    [IdConflictManifestDetail] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ConflictManifestId]       BIGINT          NOT NULL,
     [GuideSerie]               NVARCHAR (2)    NOT NULL,
     [GuideNumber]              INT             NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [DF_ConflictManifestDetail_ConflictManifestId] FOREIGN KEY ([ConflictManifestId]) REFERENCES [dbo].[ConflictManifest] ([IdConflictManifest]),
     CONSTRAINT [FK_ConflictManifestDetail_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO

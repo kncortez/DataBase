@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[HubByRegion] (
-    [IdHubByRegion] INT           IDENTITY (1, 1) NOT NULL,
+    [IdHubByRegion] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [HubLogisticId] INT           NOT NULL,
     [RegionId]      INT           NOT NULL,
     [RowStatus]     BIT           NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_HubByRegion_HubLogistic] FOREIGN KEY ([HubLogisticId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [UK_HubLogisticId] UNIQUE NONCLUSTERED ([HubLogisticId] ASC)
 );
+
+
 
 
 GO

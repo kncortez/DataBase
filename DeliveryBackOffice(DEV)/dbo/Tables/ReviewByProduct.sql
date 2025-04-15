@@ -1,17 +1,19 @@
-﻿CREATE TABLE [dbo].[ReviewByProduct]
-(
-	[Id] INT IDENTITY (1, 1) NOT NULL,    
-    [ProductId] INT NOT NULL, 
-    [Rating] TINYINT CHECK (Rating >= 1 AND Rating <= 5) NOT NULL, 
-    [Comment] NVARCHAR(500) NULL, 
-    [RowStatus] BIT NOT NULL, 
-    [UserCreated] NVARCHAR(50) NOT NULL, 
-    [DateCreated] DATETIME NOT NULL, 
-    [UserUpdated] NVARCHAR(50) NULL, 
-    [DateUpdated] DATETIME NULL, 
-	PRIMARY KEY CLUSTERED ([Id] ASC),
-    CONSTRAINT FK_ReviewByProduct_ProductId FOREIGN KEY (ProductId) REFERENCES Product(IdProduct)
-)
+﻿CREATE TABLE [dbo].[ReviewByProduct] (
+    [Id]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [ProductId]   INT            NOT NULL,
+    [Rating]      TINYINT        NOT NULL,
+    [Comment]     NVARCHAR (500) NULL,
+    [RowStatus]   BIT            NOT NULL,
+    [UserCreated] NVARCHAR (50)  NOT NULL,
+    [DateCreated] DATETIME       NOT NULL,
+    [UserUpdated] NVARCHAR (50)  NULL,
+    [DateUpdated] DATETIME       NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC),
+    CHECK ([Rating]>=(1) AND [Rating]<=(5)),
+    CONSTRAINT [FK_ReviewByProduct_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Product] ([IdProduct])
+);
+
+
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',

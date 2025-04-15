@@ -1,5 +1,5 @@
-CREATE TABLE [dbo].[RateHeader] (
-    [RheId]                INT             IDENTITY (1, 1) NOT NULL,
+﻿CREATE TABLE [dbo].[RateHeader] (
+    [RheId]                INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RheName]              VARCHAR (200)   NOT NULL,
     [RheShortName]         VARCHAR (3)     NOT NULL,
     [RheDescription]       VARCHAR (200)   NULL,
@@ -30,8 +30,8 @@ CREATE TABLE [dbo].[RateHeader] (
     [CatBusinessSegmentId] INT             NULL,
     [PackagesRangeId]      INT             NULL,
     [IdCurrency]           INT             NULL,
-    [GuideAmountCOD]       DECIMAL(18,2)   NULL,
-    [ReturnPercent]        DECIMAL(18,2)   NULL,
+    [GuideAmountCOD]       DECIMAL (18, 2) NULL,
+    [ReturnPercent]        DECIMAL (18, 2) NULL,
     [IsOldest]             INT             NULL,
     [MinGuidesPerMonth]    INT             NULL,
     PRIMARY KEY CLUSTERED ([RheId] ASC),
@@ -40,6 +40,8 @@ CREATE TABLE [dbo].[RateHeader] (
     CONSTRAINT [FK_RateHeader_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_RateHeader_CatTypeRate] FOREIGN KEY ([RateTypeId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
 );
+
+
 
 
 

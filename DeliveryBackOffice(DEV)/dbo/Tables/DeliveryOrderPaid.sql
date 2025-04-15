@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderPaid] (
-    [IdDeliveryOrderPaid]       BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryOrderPaid]       BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Guide_Serie]               NVARCHAR (2)  NULL,
     [Guide_Number]              INT           NULL,
     [Deposit_Number]            NVARCHAR (50) NULL,
@@ -14,6 +14,8 @@
     CONSTRAINT [PK_DeliveryOrderPaid] PRIMARY KEY CLUSTERED ([IdDeliveryOrderPaid] ASC),
     CONSTRAINT [FK_DeliveryOrderPaid_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 

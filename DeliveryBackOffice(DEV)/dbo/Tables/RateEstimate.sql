@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateEstimate] (
-    [IdRateEstimated]       BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdRateEstimated]       BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdSource]              BIGINT          NULL,
     [IdDestiny]             BIGINT          NULL,
     [ObjectType]            NVARCHAR (50)   NULL,
@@ -38,6 +38,8 @@
     CONSTRAINT [FKRateTwonshipDestiny] FOREIGN KEY ([IdTownshipDestiny]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FKRateTwonshipSource] FOREIGN KEY ([IdTownshipSource]) REFERENCES [dbo].[Township] ([IdTownship])
 );
+
+
 
 
 

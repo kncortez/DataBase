@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderAlertDetail] (
-    [idDeliveryOrderAlertDetail] INT            IDENTITY (1, 1) NOT NULL,
+    [idDeliveryOrderAlertDetail] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [author]                     BIGINT         NOT NULL,
     [username]                   NVARCHAR (50)  NOT NULL,
     [comment]                    NVARCHAR (200) NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FKDeliveryOrderAlertDetail_DeliveryOrderAlert] FOREIGN KEY ([DeliveryOrderAlertId]) REFERENCES [dbo].[DeliveryOrderAlert] ([IdDeliveryOrderAlert]),
     CONSTRAINT [FKDeliveryOrderAlertDetail_InternalUser] FOREIGN KEY ([author], [username]) REFERENCES [dbo].[InternalUser] ([IdUser], [Username])
 );
+
+
 
 
 

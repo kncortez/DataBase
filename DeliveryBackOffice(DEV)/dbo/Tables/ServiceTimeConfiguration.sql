@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServiceTimeConfiguration] (
-    [IdServiceTimeConfiguration] INT           IDENTITY (1, 1) NOT NULL,
+    [IdServiceTimeConfiguration] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatConfigurableServiceId]   INT           NOT NULL,
     [StartingTime]               TIME (7)      NOT NULL,
     [FinishingTime]              TIME (7)      NOT NULL,
@@ -12,6 +12,8 @@
     PRIMARY KEY CLUSTERED ([IdServiceTimeConfiguration] ASC),
     CONSTRAINT [FK_ServiceTimeConfiguration_CatConfigurableService] FOREIGN KEY ([CatConfigurableServiceId]) REFERENCES [dbo].[CatConfigurableService] ([IdCatConfigurableService])
 );
+
+
 
 
 GO

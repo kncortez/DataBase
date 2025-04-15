@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatDataLinkStatus] (
-    [IdCatDataLinkStatus]       INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatDataLinkStatus]       INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [DataLinkStatusName]        NVARCHAR (50)  NOT NULL,
     [DataLinkStatusDescription] NVARCHAR (200) NULL,
     [RowStatus]                 BIT            CONSTRAINT [DF__CatDataLi__RowSt__3CD4DB44] DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]               DATETIME       NULL,
     CONSTRAINT [PK_CatDataLinkStatus] PRIMARY KEY CLUSTERED ([IdCatDataLinkStatus] ASC)
 );
+
+
 
 
 GO

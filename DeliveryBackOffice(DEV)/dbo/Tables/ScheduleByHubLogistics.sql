@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ScheduleByHubLogistics] (
-    [SbhId]                  BIGINT       IDENTITY (1, 1) NOT NULL,
+    [SbhId]                  BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SbhIdCatService]        INT          NOT NULL,
     [SbhIdRateSegment]       INT          NOT NULL,
     [SbhIdIdHubLogistics]    INT          NOT NULL,

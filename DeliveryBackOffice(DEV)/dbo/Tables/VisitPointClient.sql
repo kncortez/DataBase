@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointClient] (
-    [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT NULL,
+    [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CodeOfReference]         INT            NOT NULL,
     [DescriptionOfClient]     NVARCHAR (100) NULL,
     [StatusClient]            BIT            NOT NULL,
@@ -43,6 +43,8 @@
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
 
 
 

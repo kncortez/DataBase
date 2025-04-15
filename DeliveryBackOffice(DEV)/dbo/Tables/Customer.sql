@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Customer] (
-    [IdCustomer]              INT            IDENTITY (1, 1) NOT NULL,
+    [IdCustomer]              INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]                    NVARCHAR (100) NOT NULL,
     [Description]             NVARCHAR (100) NULL,
     [Domain]                  NVARCHAR (50)  NOT NULL,
@@ -84,6 +84,8 @@
     CONSTRAINT [FK_Customer_DeliveryBank] FOREIGN KEY ([CODAccountBankID]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_Customer_DeliveryCurrency] FOREIGN KEY ([CODCurrencyID]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id])
 );
+
+
 
 
 

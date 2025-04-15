@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[UnifiedRouteSettlementDetailPiece] (
-    [IdUnifiedRouteSettlementDetailPiece] INT           IDENTITY (1, 1) NOT NULL,
+    [IdUnifiedRouteSettlementDetailPiece] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UnifiedRouteSettlementDetailId]      INT           NOT NULL,
     [PieceNumber]                         INT           NOT NULL,
     [IsDryPiece]                          BIT           DEFAULT ((1)) NOT NULL,
@@ -12,6 +12,8 @@
     PRIMARY KEY CLUSTERED ([IdUnifiedRouteSettlementDetailPiece] ASC),
     CONSTRAINT [FK_UnifiedRouteSettlementDetailPiece_Act] FOREIGN KEY ([ActCode]) REFERENCES [dbo].[Act] ([IdAct])
 );
+
+
 
 
 GO

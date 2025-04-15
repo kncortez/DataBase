@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRoutePreparationContainerDetail] (
-    [IdLinehaulRoutePreparationContainerDetail] INT           IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRoutePreparationContainerDetail] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRoutePreparationContainerId]       INT           NOT NULL,
     [GuideSerie]                                NVARCHAR (2)  NOT NULL,
     [GuideNumber]                               INT           NOT NULL,
@@ -20,6 +20,8 @@
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [UQ_LinehaulRoutePreparation_ContainerGuide] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationContainerId] ASC, [GuideSerie] ASC, [GuideNumber] ASC)
 );
+
+
 
 
 

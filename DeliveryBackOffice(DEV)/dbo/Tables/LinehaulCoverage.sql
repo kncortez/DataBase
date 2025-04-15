@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulCoverage] (
-    [IdLinehaulCoverage] INT            IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulCoverage] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatRouteId]         INT            NOT NULL,
     [HubOriginId]        INT            NOT NULL,
     [HubDestinyId]       INT            NOT NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_LinehaulCoverage_OriginHubOrigin] FOREIGN KEY ([HubOriginId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_LinehaulCoverage_Route] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute])
 );
+
+
 
 
 

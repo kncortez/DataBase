@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LogTokenPOD] (
-    [IdLogToken]   INT           IDENTITY (1, 1) NOT NULL,
+    [IdLogToken]   INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LogTokenPOD]  VARCHAR (200) NULL,
     [IdCourierman] INT           NULL,
     [RowStatus]    BIT           NULL,
@@ -7,6 +7,8 @@
     [DateUpdate]   DATETIME      NULL,
     CONSTRAINT [PK_IdLogToken] PRIMARY KEY CLUSTERED ([IdLogToken] ASC)
 );
+
+
 
 
 

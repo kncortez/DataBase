@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[WebhookRestrinctionByUser] (
-    [IdWebhookRestrinctionByUser] BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdWebhookRestrinctionByUser] BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CustomerId]                  INT            NOT NULL,
     [WebhookTypeId]               INT            NOT NULL,
     [StatusOrderId]               TINYINT        NOT NULL,
@@ -14,6 +14,8 @@
     CONSTRAINT [FK_WebhookRestrinctionByUser_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId]),
     CONSTRAINT [FK_WebhookRestrinctionByUser_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType])
 );
+
+
 
 
 GO

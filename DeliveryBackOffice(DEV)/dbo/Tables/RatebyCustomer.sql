@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RatebyCustomer] (
-    [RbcId]              BIGINT       IDENTITY (1, 1) NOT NULL,
+    [RbcId]              BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RbcIdRate]          INT          NOT NULL,
     [RbcIdCustomer]      INT          NOT NULL,
     [RbcRowStatus]       BIT          NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FKRbcCustomer] FOREIGN KEY ([RbcIdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FKRbcRate] FOREIGN KEY ([RbcIdRate]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
+
+
 
 
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[WebhookType] (
-    [IdWebhookType]      INT            IDENTITY (1, 1) NOT NULL,
+    [IdWebhookType]      INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [WebhookName]        NVARCHAR (50)  NOT NULL,
     [WebhookDescription] NVARCHAR (500) NOT NULL,
     [RowStatus]          BIT            DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [TokenUpdated]       NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdWebhookType] ASC)
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SettlementPickupStation] (
-    [IdSettlementPickupStation] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdSettlementPickupStation] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CouriermanId]              VARCHAR (50)  NULL,
     [RouteId]                   VARCHAR (250) NOT NULL,
     [TransactionDate]           DATE          NOT NULL,
@@ -10,6 +10,8 @@
     [DateUpdated]               DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdSettlementPickupStation] ASC)
 );
+
+
 
 
 

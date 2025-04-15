@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatArticle] (
-    [ArtId]            INT             IDENTITY (1, 1) NOT NULL,
+    [ArtId]            INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ArtIdTypeArticle] INT             NOT NULL,
     [ArtName]          VARCHAR (50)    NOT NULL,
     [ArtShowDefault]   BIT             NOT NULL,
@@ -12,11 +12,13 @@
     [ArtWidth]         DECIMAL (18, 2) NULL,
     [ArtLength]        DECIMAL (18, 2) NULL,
     [ArtMassWeight]    DECIMAL (18, 2) NULL,
-    [IdCountry]        VARCHAR(2)      NULL, 
+    [IdCountry]        VARCHAR (2)     NULL,
     PRIMARY KEY CLUSTERED ([ArtId] ASC),
     FOREIGN KEY ([ArtIdTypeArticle]) REFERENCES [dbo].[CatTypeArticle] ([TarId]),
-    CONSTRAINT [FK_CatArticle_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    CONSTRAINT [FK_CatArticle_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO

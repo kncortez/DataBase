@@ -1,5 +1,5 @@
-CREATE TABLE [dbo].[InvoiceBatchDetailLinehaul] (
-    [IdInvoiceBatchDetailLinehaul] INT           IDENTITY (1, 1) NOT NULL,
+﻿CREATE TABLE [dbo].[InvoiceBatchDetailLinehaul] (
+    [IdInvoiceBatchDetailLinehaul] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdBatch]                      INT           NOT NULL,
     [ProcessedCorrelative]         VARCHAR (50)  NOT NULL,
     [LinehaulRoutePreparationId]   INT           NOT NULL,
@@ -13,3 +13,4 @@ CREATE TABLE [dbo].[InvoiceBatchDetailLinehaul] (
     CONSTRAINT [FK_InvoiceBathcDetailLH_InvoiceBatchHeader] FOREIGN KEY ([IdBatch]) REFERENCES [dbo].[InvoiceBatchHeader] ([Id_Lote]),
     CONSTRAINT [FK_InvoiceBathcDetailLH_LinehaulRoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation])
 );
+

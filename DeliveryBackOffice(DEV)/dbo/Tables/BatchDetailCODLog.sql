@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[BatchDetailCODLog] (
-    [IdBatchDetailCODLog] INT           IDENTITY (1, 1) NOT NULL,
+    [IdBatchDetailCODLog] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [BatchCODId]          INT           NULL,
     [GuideSerie]          NVARCHAR (2)  NOT NULL,
     [GuideNumber]         INT           NOT NULL,
@@ -11,6 +11,8 @@
     [DateUpdated]         DATETIME      NOT NULL,
     CONSTRAINT [PK_BatchDetailCODLog] PRIMARY KEY CLUSTERED ([IdBatchDetailCODLog] ASC)
 );
+
+
 
 
 

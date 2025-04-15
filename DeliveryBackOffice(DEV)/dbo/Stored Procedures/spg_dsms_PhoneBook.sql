@@ -150,7 +150,9 @@ BEGIN
            ELSE
                IIF(DO.DeliveryETA IS NULL, CAST (GETDATE() AS DATE), CAST(DO.DeliveryETA AS DATE))
        END AS DeliveryETA,
-	   CS.Name AS CustomerName,
+	   --CS.Name AS CustomerName,
+	    CASE WHEN CS.IdCustomerType = 1 THEN COALESCE(A3.UsrNickName,'')
+	   ELSE COALESCE(VPC.DescriptionOfClient,'') END CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
 	   CASE
@@ -208,6 +210,12 @@ BEGIN
 	LEFT JOIN Cost CO WITH(NOLOCK)
 		ON DO.Guide_Serie = CO.GuideSerie
 			AND DO.Guide_Number = CO.GuideNumber
+	LEFT JOIN DeliveryBackOffice.dbo.Account A1 WITH(NOLOCK)
+	ON A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1
+	LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A2 WITH(NOLOCK)
+	ON A1.AccIdAccount = A2.RuaIdAccount AND A2.RuaRowStatus = 1
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A3 WITH(NOLOCK)
+	ON A3.UsrIdUser = A2.RuaIdUser AND A3.UsrRowStatus = 1
 	where not tu._Number is null
 	and not tu._Series is null
 	AND DOD.StatusOrderId = 11
@@ -259,7 +267,9 @@ BEGIN
            ELSE
                IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
        END AS DeliveryETA,
-	   CS.Name AS CustomerName,
+	   --CS.Name AS CustomerName,
+	   CASE WHEN CS.IdCustomerType = 1 THEN COALESCE(A3.UsrNickName,'')
+	   ELSE COALESCE(VPC.DescriptionOfClient,'') END CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
 	   CASE
@@ -316,6 +326,12 @@ BEGIN
 	LEFT JOIN Cost CO WITH(NOLOCK)
 		ON DO.Guide_Serie = CO.GuideSerie
 			AND DO.Guide_Number = CO.GuideNumber
+	LEFT JOIN DeliveryBackOffice.dbo.Account A1 WITH(NOLOCK)
+	ON A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1
+	LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A2 WITH(NOLOCK)
+	ON A1.AccIdAccount = A2.RuaIdAccount AND A2.RuaRowStatus = 1
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A3 WITH(NOLOCK)
+	ON A3.UsrIdUser = A2.RuaIdUser AND A3.UsrRowStatus = 1
 	where not tu._Number is null
 	and not tu._Series is null
 	AND DOD.StatusOrderId = 4

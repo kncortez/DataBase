@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ExternalPlatformServiceLog] (
-    [IdExternalPlatformServiceLog] INT           IDENTITY (1, 1) NOT NULL,
+    [IdExternalPlatformServiceLog] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ExternalPlatformId]           INT           NOT NULL,
     [GuideSerie]                   NVARCHAR (2)  NOT NULL,
     [GuideNumber]                  INT           NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_ExternalPlatformServiceLog_CatExternalPlatform] FOREIGN KEY ([ExternalPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform]),
     CONSTRAINT [FK_ExtPlatServiceLog_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
-CREATE TABLE [dbo].[invoiceHeader] (
-    [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT NULL,
+﻿CREATE TABLE [dbo].[invoiceHeader] (
+    [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [inv_vpCodeOfReferences]  INT            NOT NULL,
     [inv_cmp_name]            VARCHAR (500)  NULL,
     [inv_cmp_nameComercial]   VARCHAR (500)  NULL,
@@ -56,6 +56,8 @@ CREATE TABLE [dbo].[invoiceHeader] (
     CONSTRAINT [FK_IdCountryInvH_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     CONSTRAINT [FK_IdCurrencyInvH_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
+
+
 
 
 

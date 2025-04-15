@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SMS_UpdatedAddressLog] (
-    [UpdatedAddressId] INT            IDENTITY (1, 1) NOT NULL,
+    [UpdatedAddressId] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]       NVARCHAR (2)   NOT NULL,
     [GuideNumber]      INT            NOT NULL,
     [OriginalAddress]  NVARCHAR (200) NULL,

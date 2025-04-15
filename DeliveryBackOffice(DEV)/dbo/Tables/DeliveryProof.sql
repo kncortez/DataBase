@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryProof] (
-    [ID]             INT             IDENTITY (1, 1) NOT NULL,
+    [ID]             INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Guide_Serie]    NVARCHAR (2)    NOT NULL,
     [Guide_Number]   INT             NOT NULL,
     [Date_Photo]     DATETIME        NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [PK_DeliveryProof] PRIMARY KEY CLUSTERED ([ID] ASC),
     CONSTRAINT [FK_DeliveryOrder_DeliveryProof] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Person] (
-    [PerIdPerson]       BIGINT        IDENTITY (1, 1) NOT NULL,
+    [PerIdPerson]       BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [PerFirstName]      VARCHAR (100) NOT NULL,
     [PerLastName]       VARCHAR (100) NOT NULL,
     [PerGender]         VARCHAR (2)   NULL,
@@ -13,8 +13,10 @@
     [PerDateUpdated]    DATE          NULL,
     [PerCountryOrigin]  VARCHAR (2)   NULL,
     PRIMARY KEY CLUSTERED ([PerIdPerson] ASC),
-    CONSTRAINT [FK_Person_CatCountry] FOREIGN KEY([PerCountryOrigin]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    CONSTRAINT [FK_Person_CatCountry] FOREIGN KEY ([PerCountryOrigin]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO
