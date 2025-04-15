@@ -30,6 +30,7 @@ BEGIN
     DECLARE @PasswordExpired BIT;
     DECLARE @VisitPointValid BIT = 0;
     DECLARE @CODPercentage NVARCHAR(10);
+    DECLARE @InvalidPassword INT=0;
     DECLARE @IdSystemIndividualUserWeb INT= (SELECT SysIdSystem FROM [dbo].[CatSystem] WHERE SysNameSystem='Hermes Web')
     DECLARE @UserValidate INT = (SELECT COUNT(1)
 										FROM [dbo].RegisterUser                   usr WITH (NOLOCK)  
@@ -808,6 +809,8 @@ BEGIN
 
         -- incrementar en 1 los intentos fallidos de inicio de sesion 
 
+        SET @InvalidPassword=1;
+
         UPDATE [dbo].UserSystemRestriction
         SET UstRetries = (UstRetries + 1)
           , UstStatus = (IIF(UstRetries + 1 >= UstAccessRetries, 'BLOCKED', 'ACTIVE'))
@@ -834,9 +837,9 @@ BEGIN
     END;
 
 
-    	IF (@UserValidate = 0)
+    	IF (@UserValidate = 0 AND @InvalidPassword = 0)
         BEGIN
-                IF(@IdSystemIndividualUserWeb = @IdSystem)
+                IF(@IdSystemIndividualUserWeb = @IdSystem )
                 BEGIN
                     SET @jsonResult =  
                             (  
