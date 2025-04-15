@@ -73,7 +73,7 @@ BEGIN
 	BEGIN
 		SELECT 1 AS [IdResult],
 			'Link HA SIDO DESHABILITADO'	AS [Message],
-			0				AS [PaidZigi],
+			1				AS [PaidZigi],
 			@GuideNumber	AS GuideNumber,
 			@GuideSerie		AS GuideSerie,
 			1				AS [LinkCreated],
@@ -83,6 +83,22 @@ BEGIN
 			WHERE GuideNumber = @GuideNumber 
 			AND GuideSerie = @GuideSerie 
 			AND ZigiLinkStatus = 'CANCELED'
+		RETURN;
+	END
+	IF EXISTS (SELECT 1 FROM PaymentZigi WITH(NOLOCK) WHERE GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie AND ZigiLinkStatus = 'FAILED')
+	BEGIN
+		SELECT 1 AS [IdResult],
+			'Link ha fallado'	AS [Message],
+			1				AS [PaidZigi],
+			@GuideNumber	AS GuideNumber,
+			@GuideSerie		AS GuideSerie,
+			0				AS [LinkCreated],
+			0				AS [IsPay],
+			ZigiLink		AS [LinkZigi]
+			FROM PaymentZigi WITH(NOLOCK) 
+			WHERE GuideNumber = @GuideNumber 
+			AND GuideSerie = @GuideSerie 
+			AND ZigiLinkStatus = 'FAILED'
 		RETURN;
 	END
 	ELSE
