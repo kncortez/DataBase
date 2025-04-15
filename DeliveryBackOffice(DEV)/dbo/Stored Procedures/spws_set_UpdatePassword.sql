@@ -8,6 +8,11 @@
 -- Update date: <2023-01-25>
 -- Description: <Set changePassword field to 0 when it is a successfull update>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Update date: <2025-04-15>
+-- Description: <Se pasa a tablas el Json>
+-- =============================================
 
 CREATE procedure [dbo].[spws_set_UpdatePassword]
 -- Add the parameters for the stored procedure here	
@@ -19,7 +24,7 @@ CREATE procedure [dbo].[spws_set_UpdatePassword]
 @ChangeType   varchar(1)    -- R = Reset  |  U = Update
 as
     begin
-        declare @jsonResult nvarchar(max); 	
+        declare @Message nvarchar(max); 	
         -- 90 dias para cambio de contraseña
         DECLARE @ExpirationDate AS DATE=
         (
@@ -28,7 +33,6 @@ as
         DECLARE @IdUser					AS BIGINT;
         DECLARE @Email					AS VARCHAR(200);
 		DECLARE @UserName				AS VARCHAR(200);
-        DECLARE @PasswordVerification	AS NVARCHAR(MAX);
         DECLARE @IdUserUPDATE			AS BIGINT;
         DECLARE @IdResult				AS INT;
         DECLARE @ValToken				AS INT;
@@ -36,7 +40,7 @@ as
         SET @ValToken =
         (
             SELECT COUNT(1)
-            FROM GeneratedTokens rp
+            FROM GeneratedTokens rp WITH(NOLOCK)
             WHERE GeneratedToken = @Token
                   AND ([Status] = 1
                        OR VerificationStatus = 1)
@@ -47,29 +51,23 @@ as
                 --Obtener info de usuarios
                 SELECT @IdUser = rp.UserId, 
                        @Email = rp.UserName
-                FROM GeneratedTokens rp
+                FROM GeneratedTokens rp WITH(NOLOCK)
                 WHERE GeneratedToken = @Token;
 
                 --Validar historia de contraseña
-                SET @PasswordVerification =
-                (
-                    SELECT COUNT(1) AS PasswordVerification
-                    FROM dbo.PasswordLog pl
-                    WHERE pl.PslPassword = @Password
-					AND pl.PslIdUser = @IdUser
-
-                );
-                IF @PasswordVerification > 0
-                    BEGIN
-                        SET @IdResult = 500;
-                        SET @jsonResult =
-                        (
-                            SELECT STUFF(
-                        (
-                            SELECT '{"IdResult":' + CAST(@IdResult AS VARCHAR(3)) + ',' + '"Message":"Contraseña ya usada anteriormente, Para proteger su cuenta, debe elegir una nueva contraseña cada vez que la restablezca."}' FOR XML PATH(''), TYPE
-                        ).value('.', 'varchar(max)'), 1, 1, '')
-                        );
-                    END;
+					IF EXISTS
+					(
+						SELECT TOP 1
+							1 AS PasswordVerification
+						FROM dbo.PasswordLog pl WITH (NOLOCK)
+						WHERE pl.PslPassword = @Password
+							  AND pl.PslIdUser = @IdUser
+					)
+					BEGIN
+						SET @IdResult = 500;
+						SET @Message
+							= 'Contraseña ya usada anteriormente, Para proteger su cuenta, debe elegir una nueva contraseña cada vez que la restablezca.'
+					END;
                     ELSE
                     BEGIN
                         IF @ChangeType = 'R'
@@ -112,39 +110,29 @@ as
                                  GETDATE()
                                 );
                                 SET @IdResult = 200;
-                                SET @jsonResult =
-                                (
-                                    SELECT STUFF(
-                                (
-                                    SELECT '{"IdResult":' + CAST(@IdResult AS VARCHAR(3)) + ',' + '"Message":"Se actualizó la contraseña correctamente."}' FOR XML PATH(''), TYPE
-                                ).value('.', 'varchar(max)'), 1, 1, '')
-                                );
+                                SET @Message = 'Se actualizó la contraseña correctamente.'
                             END;
                             ELSE
                             IF @ChangeType = 'U'
                                 BEGIN
-								SET @IdAccount_ = (SELECT COUNT(1) FROM Account ac WHERE ac.AccIdAccount =  @IdAccount );
+								SET @IdAccount_ = (SELECT COUNT(1) FROM Account ac WITH(NOLOCK) WHERE ac.AccIdAccount =  @IdAccount );
                                     IF @IdAccount_ > 0 
 									BEGIN
 									IF @OldPassword !=
                                     (
                                         SELECT us.UsrLastPassword
-                                        FROM RegisterUser us
-                                             INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
-                                                                                          AND rua.RuaRowStatus = 1
-                                             INNER JOIN [dbo].Account ac ON ac.AccIdAccount = rua.RuaIdAccount
-                                                                            AND ac.AccRowStatus = 1
-                                        WHERE ac.AccIdAccount = @IdAccount
+                                        FROM RegisterUser us WITH(NOLOCK)
+                                             INNER JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK) 
+												ON rua.RuaIdUser = us.UsrIdUser                                                  
+                                             INNER JOIN [dbo].Account ac WITH(NOLOCK) 
+												ON ac.AccIdAccount = rua.RuaIdAccount                                                   
+                                        WHERE ac.AccIdAccount = @IdAccount 
+										AND rua.RuaRowStatus = 1 
+										AND ac.AccRowStatus = 1
                                     )
                                         BEGIN
                                             SET @IdResult = 500;
-                                            SET @jsonResult =
-                                            (
-                                                SELECT STUFF(
-                                            (
-                                                SELECT '{"IdResult":' + CAST(@IdResult AS VARCHAR(3)) + ',' + '"Message":"Contraseña anterior no coincide con la contraseña almacenada."}' FOR XML PATH(''), TYPE
-                                            ).value('.', 'varchar(max)'), 1, 1, '')
-                                            );
+                                            SET @Message = 'Contraseña anterior no coincide con la contraseña almacenada.'
                                         END;
                                         ELSE
                                         BEGIN
@@ -161,14 +149,18 @@ as
 												@IdUserUPDATE = us.UsrIdUser,
 												@UserName = prs.PerFirstName,
 												@Email = us.UsrEmail
-                                            FROM RegisterUser us
-												INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
-													AND rua.RuaRowStatus = 1
-												INNER JOIN [dbo].Account ac ON ac.AccIdAccount = rua.RuaIdAccount
-													AND ac.AccRowStatus = 1
-												LEFT JOIN [dbo].Person prs ON us.UsrIdPerson= prs.PerIdPerson
+                                            FROM RegisterUser us WITH(NOLOCK)
+												INNER JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
+													ON rua.RuaIdUser = us.UsrIdUser													
+												INNER JOIN [dbo].Account ac WITH(NOLOCK)
+													ON ac.AccIdAccount = rua.RuaIdAccount													
+												LEFT JOIN [dbo].Person prs WITH(NOLOCK)
+													ON us.UsrIdPerson= prs.PerIdPerson
                                                                                     
-                                            WHERE ac.AccIdAccount = @IdAccount
+                                            WHERE ac.AccIdAccount = @IdAccount 
+											AND rua.RuaRowStatus = 1 
+											AND ac.AccRowStatus = 1
+
                                             UPDATE RegisterUser
                                               SET 
                                                   UsrLastPassword = @Password, 
@@ -191,25 +183,14 @@ as
                                              GETDATE()
                                             );
                                             SET @IdResult = 200;
-                                            SET @jsonResult =
-                                            (
-                                                SELECT STUFF(
-                                            (
-                                                SELECT '{"IdResult":' + CAST(@IdResult AS VARCHAR(3)) + ',' + '"Message":"Se actualizó la contraseña correctamente."}' FOR XML PATH(''), TYPE
-                                            ).value('.', 'varchar(max)'), 1, 1, '')
-                                            );
+                                            SET @Message = 'Se actualizó la contraseña correctamente.'
                                         END;
 									END;
 									ELSE
 									BEGIN
 									SET @IdResult = 500;
-                        SET @jsonResult =
-                        (
-                            SELECT STUFF(
-                        (
-                            SELECT '{"IdResult":' + CAST(@IdResult AS VARCHAR(3)) + ',' + '"Message":"Cuenta no existe"}' FOR XML PATH(''), TYPE
-                        ).value('.', 'varchar(max)'), 1, 1, '')
-                        );
+									SET @Message = 'Cuenta no existe'
+
 									END;
                                 END;
                     END;
@@ -217,17 +198,12 @@ as
             ELSE
             BEGIN
                 SET @IdResult = 500;
-                SET @jsonResult =
-                (
-                    SELECT STUFF(
-                (
-                    SELECT '{"IdResult":' + CAST(@IdResult AS VARCHAR(3)) + ',' + '"Message":"Su token no existe."}' FOR XML PATH(''), TYPE
-                ).value('.', 'varchar(max)'), 1, 1, '')
-                );
+                SET @Message = 'Su token no existe.'
             END;
-        -- retornar resultado en formato json
+        -- retornar resultado 
 
         SELECT @IdResult AS IdResult, 
-               ('[{' + @jsonResult + ']') jsonResult,
-			   @Email email, @UserName username;
+               @Message AS [Message],
+			   @Email AS email, 
+			   @UserName AS username;
     END;
