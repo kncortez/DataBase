@@ -436,7 +436,7 @@ BEGIN
 			   GT.ReceiverCountryId,
                CASE WHEN GT.IdCountrySender = ReceiverCountryId THEN 'DOM' ELSE 'INT' END,
         -- FIN MODIFICACION
-               GT.ReceiverIdSettlement
+               NULLIF(GT.ReceiverIdSettlement,0)
         FROM #GuideTable GT;
 
 		SELECT @IdCountry = IdCountrySender  FROM #GuideTable
