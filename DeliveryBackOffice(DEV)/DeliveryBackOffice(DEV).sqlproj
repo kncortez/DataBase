@@ -1850,6 +1850,7 @@
     <Build Include="dbo\Stored Procedures\SPHWGetInfoZigiPaymentLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHWInsertPaymentZigi.sql" />
     <Build Include="dbo\Stored Procedures\UpdatePaymentZigiByGuide.sql" />
+    <Build Include="dbo\Stored Procedures\SPHWInsertAuthorizationNumberByUser.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
