@@ -18,7 +18,8 @@
 	[TokenCreated] 		NVARCHAR(50) not null,
 	[DateUpdated]		DATETIME null,
 	[TokenUpdated] 		NVARCHAR(50) null,
-	CONSTRAINT [PK_PaymentZigi] PRIMARY KEY CLUSTERED ([ZigiPaymentId] ASC),
+	[AuthorizationNumberByUser] NVARCHAR(100) NULL, 
+    CONSTRAINT [PK_PaymentZigi] PRIMARY KEY CLUSTERED ([ZigiPaymentId] ASC),
     CONSTRAINT [FK_PaymentZigi_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 )
 
@@ -210,3 +211,13 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
  @level1name = N'PaymentZigi',
  @level2type = N'COLUMN',
  @level2name = N'DateTimeStamp';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+ @value = N'Numero de autorizacion de pago brindado por cliente',
+ @level0type = N'SCHEMA',
+ @level0name = N'dbo',
+ @level1type = N'TABLE',
+ @level1name = N'PaymentZigi',
+ @level2type = N'COLUMN',
+ @level2name = N'AuthorizationNumberByUser';
