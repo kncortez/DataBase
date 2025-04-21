@@ -38,20 +38,12 @@ BEGIN
     DECLARE @VisitPointValid BIT = 0;
     DECLARE @PasswordResetFlag BIT = 0;
     DECLARE @CODPercentage NVARCHAR(10);
-    DECLARE @IdAccount INT;
-
-        
-     SELECT  @CountryId = ISNULL(pe.PerNationality, 'GT')
-        FROM RegisterUser   us WITH (NOLOCK)  
-			INNER JOIN [dbo].Person               pe WITH (NOLOCK)  
-				ON pe.PerIdPerson = us.UsrIdPerson  
-        WHERE UsrEmail = @Username   
+    DECLARE @InvalidPassword INT=0;
     DECLARE @IdSystemIndividualUserWeb INT= (SELECT SysIdSystem FROM [dbo].[CatSystem] WHERE SysNameSystem='Hermes Web')
     DECLARE @UserValidate INT = (SELECT COUNT(1)
 										FROM [dbo].RegisterUser                   usr WITH (NOLOCK)  
 													INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)  
-														ON rus.RusIdUser = usr.UsrIdUser  
-														   AND rus.RusIdSystem = 1  
+														ON rus.RusIdUser = usr.UsrIdUser    
 													LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)  
 														ON res.UstIdUser = rus.RusIdUser  
 														   AND res.UstIdSystem = rus.RusIdSystem  
@@ -62,7 +54,9 @@ BEGIN
 										WHERE usr.UsrEmail = @Username  
 											  AND usr.UsrLastPassword = @Password  
 											  AND rua.RuaRowStatus = 1  
-											  AND ac.AccRowStatus = 1 );
+											  AND ac.AccRowStatus = 1
+											  AND rus.RusIdSystem = 1
+											  AND usr.UsrRowStatus = 1);
 
      DECLARE @CountryIdOrigin NVARCHAR(3)=(SELECT TOP 1  
 	                                            CASE 
@@ -83,10 +77,12 @@ BEGIN
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
-    SET @VERIFYUSER =
+       SET @VERIFYUSER =
     (
         SELECT COUNT(1)
         FROM RegisterUser           ru WITH (NOLOCK)
+            INNER JOIN InternalUser iu WITH (NOLOCK)
+                ON ru.UsrIdUser = iu.RegisterUserID
         WHERE ru.UsrEmail = @Username
               AND ru.UsrRowStatus = 1
     );
@@ -841,6 +837,9 @@ BEGIN
     BEGIN
 
         -- incrementar en 1 los intentos fallidos de inicio de sesion 
+
+        SET @InvalidPassword=1;
+
         UPDATE [dbo].UserSystemRestriction
         SET UstRetries = (UstRetries + 1)
           , UstStatus = (IIF(UstRetries + 1 >= UstAccessRetries, 'BLOCKED', 'ACTIVE'))
@@ -880,9 +879,9 @@ BEGIN
     END;
 
 
-    	IF (@VERIFYUSER =0)
+    	IF (@UserValidate = 0 AND @InvalidPassword = 0)
         BEGIN
-                IF(@IdSystemIndividualUserWeb = @IdSystem)
+                IF(@IdSystemIndividualUserWeb = @IdSystem )
                 BEGIN
                     SET @jsonResult =  
                             (  

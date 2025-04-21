@@ -35,6 +35,7 @@ BEGIN
     DECLARE @IdUser BIGINT;
     DECLARE @StatusAccount CHAR(1);
     DECLARE @CountryByNacionality VARCHAR(2);
+    DECLARE @InvalidPassword INT=0;
     --	declare @Username as nvarchar(100)='a.cesarene@gmail.com'
     --	declare	@Password as nvarchar(100)='7hFMXRrKI3G0addPtjwAHA=='
     --	declare @IdSystem as int = 1 
@@ -45,12 +46,12 @@ BEGIN
     DECLARE @VERIFYUSER AS INT = 0;
     SET @VERIFYUSER =
     (
-        SELECT COUNT(iu.Username)
+        SELECT COUNT(1)
         FROM DeliveryBackOffice.[dbo].RegisterUser           ru
             INNER JOIN DeliveryBackOffice.[dbo].InternalUser iu
                 ON ru.UsrIdUser = iu.RegisterUserID
         WHERE iu.Username = @UserName
-              AND ru.UsrRowStatus = 1
+              AND iu.RowStatus = 1
     );
 
     SELECT TOP 1 
@@ -827,7 +828,7 @@ BEGIN
     BEGIN
 
         -- incrementar en 1 los intentos fallidos de inicio de sesion 
-
+        SET @InvalidPassword=1;
         UPDATE [dbo].UserSystemRestriction
         SET UstRetries = (UstRetries + 1)
           , UstStatus = (IIF(UstRetries + 1 >= UstAccessRetries, 'BLOCKED', 'ACTIVE'))
@@ -854,7 +855,7 @@ BEGIN
     END;
 
 
-       	IF (@VERIFYUSER =0 OR @VisitPointClientStatus=0)
+       	IF ((@VERIFYUSER = 0 OR @VisitPointClientStatus = 0) AND @InvalidPassword = 0 )
             BEGIN
                 
                             SET @jsonResult =  
