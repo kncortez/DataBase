@@ -293,7 +293,6 @@ BEGIN
                                 ON do.Sender_ID = vpc.CodeOfReference
                             INNER JOIN RatebyCustomer         rbc WITH (NOLOCK)
                                 ON ISNULL(do.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
-                                   AND rbc.RbcRowStatus = 1
                                    AND
                                    (
                                        rbc.RbcCodeOfReference = vpc.CodeOfReference
@@ -310,6 +309,7 @@ BEGIN
                                 ON coi.StatusOrderId = so.StatusOrderId
                         WHERE do.Guide_Serie = @GuideSerie
                               AND do.Guide_Number = @GuideNumber
+                              AND rbc.RbcRowStatus = 1
                         ORDER BY rbc.RbcCodeOfReference DESC;
                     END;
                     ELSE
@@ -433,7 +433,7 @@ BEGIN
                                         SELECT TOP 1
                                                WT.IdWebhookType
                                         FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                        WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                        WHERE WT.WebhookName = 'GuideStatusChange' 
                                               AND WT.RowStatus = 1
                                     );
 
@@ -691,9 +691,9 @@ BEGIN
                     INNER JOIN DeliveryBackOffice.dbo.RoutePreparationDetail RPD WITH (NOLOCK)
                         ON RPD.Guide_Serie = @GuideSerie
                            AND RPD.Guide_Number = @GuideNumber
-                           AND RPD.RowStatus = 1
                            AND RP.IdRoutePreparation = RPD.RoutePreparationId
                 WHERE RP.RowStatus = 1
+                   AND RPD.RowStatus = 1
                 ORDER BY RP.DateRoutePreparation DESC;
 
                 -------- Obtener  Id de ruta de preparación del encabezado, esto si ya existe solo se inserta detalle
@@ -833,7 +833,7 @@ BEGIN
                             SELECT TOP 1
                                    CDO.IdDeliveryOption
                             FROM [DeliveryBackOffice].[dbo].[CatDeliveryOptions] CDO WITH (NOLOCK)
-                            WHERE CDO.[Name] = 'Express Center' COLLATE Latin1_General_CI_AI
+                            WHERE CDO.[Name] = 'Express Center'
                               AND IdCountry = @IdCountrySender
                         );
 
