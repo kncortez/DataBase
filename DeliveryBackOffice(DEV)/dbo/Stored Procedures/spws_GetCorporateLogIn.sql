@@ -110,7 +110,6 @@ BEGIN
             ON iu.RegisterUserID = usr.UsrIdUser
         INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus
             ON rus.RusIdUser = usr.UsrIdUser
-               AND rus.RusIdSystem = @IdSystem
         LEFT JOIN DeliveryBackOffice.[dbo].UserSystemRestriction res
             ON res.UstIdUser = rus.RusIdUser
                AND res.UstIdSystem = rus.RusIdSystem
@@ -122,7 +121,8 @@ BEGIN
     WHERE iu.IdUser = @UserCode
           AND iu.Username = @UserName
           AND usr.UsrLastPassword = @Password
-          AND ac.AccRowStatus = 1;
+          AND ac.AccRowStatus = 1
+          AND rus.RusIdSystem = @IdSystem;
     -- insertar en tabla temporal posbibles mensajes de error
 
     IF OBJECT_ID('tempdb.dbo.#errormessage', 'U') IS NOT NULL
@@ -658,7 +658,9 @@ BEGIN
                                                         ON ac.AccIdAccount = rua.RuaIdAccount
                                                     INNER JOIN DeliveryBackOffice.dbo.VisitPointClient             vpc
                                                         ON vpc.CustomerID = ac.IdCustomer
-													INNER JOIN DeliveryBackOffice.dbo.VisitPointByUser vup WITH(NOLOCK) ON vup.IdVisitPointClient = vpc.IdVisitPointClient AND vup.RegisterUserID = ru.UsrIdUser
+													INNER JOIN DeliveryBackOffice.dbo.VisitPointByUser vup WITH(NOLOCK) 
+                                                        ON vup.IdVisitPointClient = vpc.IdVisitPointClient 
+                                                        AND vup.RegisterUserID = ru.UsrIdUser
                                                     LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
                                                         ON vpc.CustomerID = RC.RbcIdCustomer
                                                         AND rc.RbcRowStatus = 1

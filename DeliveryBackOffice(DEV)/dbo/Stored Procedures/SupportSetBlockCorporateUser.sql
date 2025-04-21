@@ -34,7 +34,7 @@ BEGIN
         SET rg.UsrRowStatus = 0
 		, rg.UsrTokenUpdated =@Token
 		, rg.UsrDateUpdated = GETDATE()
-        FROM dbo.InternalUser           it
+        FROM dbo.InternalUser           it 
             INNER JOIN dbo.RegisterUser rg
                 ON rg.UsrIdUser = it.RegisterUserID
         WHERE it.IdUser = @Code
@@ -47,8 +47,9 @@ BEGIN
 			, per.PerDateUpdated = GETDATE()
         FROM dbo.InternalUser           it
             INNER JOIN dbo.RegisterUser rg
-			INNER JOIN dbo.Person per ON per.PerIdPerson = rg.UsrIdPerson
-                ON rg.UsrIdUser = it.RegisterUserID
+              ON rg.UsrIdUser = it.RegisterUserID
+			INNER JOIN dbo.Person per 
+             ON per.PerIdPerson = rg.UsrIdPerson
         WHERE it.IdUser = @Code
               AND it.Username = @UserName;
 
@@ -70,7 +71,8 @@ BEGIN
         FROM dbo.InternalUser           it
             INNER JOIN dbo.RegisterUser rg
                 ON rg.UsrIdUser = it.RegisterUserID
-			INNER JOIN dbo.UserSystemRestriction res ON res.UstIdUser = rg.UsrIdUser
+			INNER JOIN dbo.UserSystemRestriction res
+               ON res.UstIdUser = rg.UsrIdUser
         WHERE it.IdUser = @Code
               AND it.Username = @UserName;
 		
@@ -146,8 +148,10 @@ BEGIN
 			, per.PerDateUpdated = GETDATE()
         FROM dbo.InternalUser           it
             INNER JOIN dbo.RegisterUser rg
-			INNER JOIN dbo.Person per ON per.PerIdPerson = rg.UsrIdPerson
-                ON rg.UsrIdUser = it.RegisterUserID
+                  ON rg.UsrIdUser = it.RegisterUserID
+			INNER JOIN dbo.Person per 
+                  ON per.PerIdPerson = rg.UsrIdPerson
+                
         WHERE it.IdUser = @Code
               AND it.Username = @UserName;
 

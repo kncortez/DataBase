@@ -40,14 +40,14 @@ BEGIN
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	DECLARE @CustomerID      INT = (SELECT [CustomerID] FROM @TblServiceRequestFD)
 	DECLARE @CodeOfReference INT = (SELECT [Sender_ID] From @TblDeliveryOrdersFD);
-	DECLARE @IdCustomerType  INT = (select top 1 IdCustomerType from dbo.Customer Where IdCustomer = @CustomerID)
+	DECLARE @IdCustomerType  INT = (select top 1 IdCustomerType from [dbo].[Customer] WITH(NOLOCK) Where IdCustomer = @CustomerID)
 	DECLARE @IdRegisterUser  INT = (Select Top 1 RuaIdUser 
 	                                    From [dbo].[RolByUserByAccount]
 		                                       Where  RuaIdAccount = (Select Top 1  AccIdAccount 
-											                                     From [dbo].[Account] 
+											                                     From [dbo].[Account] WITH(NOLOCK)
 																				       Where IdCustomer= @CustomerID));
 	DECLARE @RowstatusRegisterUser INT = (Select top 1  Case When UsrRowStatus =  0 THEN 0 ELSE 1 END
-	                                               From [dbo].[RegisterUser]
+	                                               From [dbo].[RegisterUser] WITH(NOLOCK)
 												      WHERE UsrIdUser = @IdRegisterUser
 	                                                   );
 	
@@ -61,7 +61,7 @@ BEGIN
 			         IF (@RowstatusRegisterUser=1) --- Flujo Corporativo cuando el Socio de Negocio esta activo
 					 BEGIN
 			              SET @InactiveUser = (SELECT CASE WHEN [StatusClient] = 0 THEN 0 ELSE 1 END --- Flujo para validar usuario inactivo para un socio de negocio
-						                           FROM [dbo].[VisitPointClient] WHERE CodeOfReference = @CodeOfReference);
+						                           FROM [dbo].[VisitPointClient] WITH(NOLOCK) WHERE CodeOfReference = @CodeOfReference);
 					END 
 					 ELSE
 					    BEGIN
@@ -70,8 +70,8 @@ BEGIN
 			   END 
 			   
 	--FIN MODIFICACIÓN
-	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
-	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WHERE CustomerID = @CustomerID )
+	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WITH(NOLOCK) WHERE SalesPackageStatusName = 'Activa')
+	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WITH(NOLOCK) WHERE CustomerID = @CustomerID )
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -751,7 +751,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario' --COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario' 
 			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
@@ -762,7 +762,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center' --COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center' 
 			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 
@@ -774,7 +774,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web'  
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -784,7 +784,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'   
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -794,7 +794,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -804,7 +804,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Parser'  
 	)
 
 
@@ -890,8 +890,8 @@ BEGIN
 	    	ISNULL(DSC.RouteCode,'') AS 'RouteCode',
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
 		FROM DeliveryOrder D WITH(NOLOCK)
-		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
-										AND D.Guide_Serie = @GuideSerie
+		INNER JOIN @CorrelativeTable C 
+		    ON C.Guide_Number = D.Guide_Number
 		LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 			ON ctm.IdCustomer = D.IdCustomer
 		LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)

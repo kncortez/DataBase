@@ -96,7 +96,6 @@ BEGIN
     FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
         INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
             ON rus.RusIdUser = usr.UsrIdUser
-               AND rus.RusIdSystem = @IdSystem
         LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
             ON res.UstIdUser = rus.RusIdUser
                AND res.UstIdSystem = rus.RusIdSystem
@@ -107,7 +106,8 @@ BEGIN
     WHERE usr.UsrEmail = @Username
           AND usr.UsrLastPassword = @Password
           AND rua.RuaRowStatus = 1
-          AND ac.AccRowStatus = 1;
+          AND ac.AccRowStatus = 1
+          AND rus.RusIdSystem = @IdSystem;
     -- insertar en tabla temporal posbibles mensajes de error
 
     IF OBJECT_ID('tempdb.dbo.#errormessage', 'U') IS NOT NULL
@@ -288,7 +288,6 @@ BEGIN
                                     ON rms.RmsIdRol = rua.RuaIdRol
                                 INNER JOIN [dbo].CatModule            cmo WITH (NOLOCK)
                                     ON cmo.ModIdModule = rms.RmsIdModule
-                                    AND cmo.ModIdModuleParent IS NOT NULL
                                 INNER JOIN [dbo].CatRol               rol WITH (NOLOCK)
                                     ON rol.RolIdRol = rms.RmsIdRol
                             WHERE us.UsrEmail = @Username
@@ -296,7 +295,8 @@ BEGIN
                               AND cmo.ModVisible = 1
                               AND rms.RmsRowStatus = 1
                               AND rua.RuaRowStatus = 1
-                              AND us.UsrRowStatus = 1;
+                              AND us.UsrRowStatus = 1
+                              AND cmo.ModIdModuleParent IS NOT NULL;
                             IF (@TOTALSUBMODULES) > 0
                             BEGIN /*PARENT LIST*/
                                 INSERT INTO @TBSUBMODULES
