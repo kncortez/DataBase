@@ -17,7 +17,7 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @TargetSystem INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = @UserSystem COLLATE Latin1_General_CI_AI);
+	DECLARE @TargetSystem INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = @UserSystem );
 
 	DECLARE @AccountData TABLE(
 		RegisterUserId BIGINT,
@@ -59,8 +59,8 @@ BEGIN
 			CT.[Description] AccountTypeName,
 			CT.IdCustomerType AccountTypeId,
 			(CASE WHEN RU.ChangePassword = 1 AND ISNULL(RU.UsrPasswordExpiration, CAST(GETDATE() AS DATE)) <= CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) IsPasswordExpired,
-			(CASE WHEN Acc.AccConfirm != 'C' COLLATE Latin1_General_CI_AI THEN 1 ELSE 0 END) IsAccountInactive,
-			(CASE WHEN USR.UstStatus != 'ACTIVE' COLLATE Latin1_General_CI_AI THEN 1 ELSE 0 END) IsAccountBlocked
+			(CASE WHEN Acc.AccConfirm != 'C'  THEN 1 ELSE 0 END) IsAccountInactive,
+			(CASE WHEN USR.UstStatus != 'ACTIVE'  THEN 1 ELSE 0 END) IsAccountBlocked
 		FROM
 			[DeliveryBackOffice].[dbo].[RegisterUser] RU WITH(NOLOCK)
 			INNER JOIN
@@ -88,7 +88,7 @@ BEGIN
 				ON
 					RU.UsrIdUser = USR.UstIdUser
 		WHERE
-			RU.UsrEmail = @AccountEmail COLLATE Latin1_General_CI_AI
+			RU.UsrEmail = @AccountEmail 
           AND RBUBA.RuaRowStatus = 1
           AND USR.UstIdSystem = @TargetSystem
 
