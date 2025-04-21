@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SpecialSaleDetail] (
-    [IdSpecialSaleDetail] INT             IDENTITY (1, 1) NOT NULL,
+    [IdSpecialSaleDetail] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SpecialSaleId]       INT             NOT NULL,
     [UnitId]              INT             NOT NULL,
     [Value]               DECIMAL (12, 2) NULL,

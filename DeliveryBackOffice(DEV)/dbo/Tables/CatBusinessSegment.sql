@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatBusinessSegment] (
-    [IdBusinessSegment]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdBusinessSegment]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [BusinessSegmentName]        NVARCHAR (75)  NOT NULL,
     [BusinessSegmentDescription] NVARCHAR (200) NOT NULL,
     [RowStatus]                  BIT            NOT NULL,
@@ -7,10 +7,12 @@
     [DateCreated]                DATETIME       NOT NULL,
     [TokenUpdated]               NVARCHAR (50)  NULL,
     [DateUpdated]                DATETIME       NULL,
-    [IdCountry]                  VARCHAR(2)     NULL, 
+    [IdCountry]                  VARCHAR (2)    NULL,
     CONSTRAINT [PK_CatBusinessSegment] PRIMARY KEY CLUSTERED ([IdBusinessSegment] ASC),
-    CONSTRAINT [FK_CatBusinessSegmentCatArticle_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    CONSTRAINT [FK_CatBusinessSegmentCatArticle_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 GO
 

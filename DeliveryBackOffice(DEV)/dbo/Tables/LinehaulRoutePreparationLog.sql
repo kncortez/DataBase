@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRoutePreparationLog] (
-    [IdLinehaulRoutePreparationLog]               INT            IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRoutePreparationLog]               INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [OriginStationLogId]                          INT            NOT NULL,
     [OriginLinehaulRoutePreparationId]            INT            NOT NULL,
     [OriginLinehaulRoutePreparationContainerId]   INT            NULL,
@@ -26,6 +26,8 @@
     CONSTRAINT [FK_LinehaulRoutePreparationLog_LinehaulRoutePreparationTool] FOREIGN KEY ([ToolId]) REFERENCES [dbo].[Tool] ([IdTool]),
     CONSTRAINT [FK_LinehaulRoutePreparationLog_Station] FOREIGN KEY ([OriginStationLogId]) REFERENCES [dbo].[CatStation] ([IdStation])
 );
+
+
 
 
 GO

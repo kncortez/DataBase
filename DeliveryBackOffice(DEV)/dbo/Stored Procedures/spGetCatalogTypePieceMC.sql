@@ -44,6 +44,8 @@ VALUES
 		DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' AND RH.CountryId = @pCountryId COLLATE Latin1_General_CI_AI);
 		DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' AND RH.CountryId = @pCountryId COLLATE Latin1_General_CI_AI);
 		DECLARE @NewAutoSalesMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' AND RH.CountryId = @pCountryId COLLATE Latin1_General_CI_AI);
+		DECLARE @Others INT =(SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio interfer' AND RH.CountryId = @pCountryId)
+
 
 		SELECT
 			CONVERT(NVARCHAR, ISNULL(cd.[AbcId], 0)) AS 'Id',
@@ -81,7 +83,7 @@ VALUES
 				d.Width2,
 				d.Dim,
 				d.IsOversized,
-				IIF(ra.RateId IN (@NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates), IIF(ra.TypeServiceId IS NOT NULL AND ra.TypeSegmentId IS NOT NULL, 1, 0), NULL) AS IsMainPackage
+				IIF(ra.RateId IN (@NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @Others), IIF(ra.TypeServiceId IS NOT NULL AND ra.TypeSegmentId IS NOT NULL, 1, 0), NULL) AS IsMainPackage
 			FROM dbo.CatArticle art WITH(NOLOCK)
 			INNER JOIN dbo.ArticleByCustomer abc WITH(NOLOCK)
 				ON abc.AbcIdArticle = art.ArtId

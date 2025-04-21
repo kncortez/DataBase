@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[WebhookEndpointHeader] (
-    [IdWebhookEndpointHeader] BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdWebhookEndpointHeader] BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [WebhookEndpointId]       BIGINT         NOT NULL,
     [WebhookHeaderName]       NVARCHAR (100) NOT NULL,
     [WebhookHeaderValue]      NVARCHAR (600) NOT NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [PK_WebhookEndpointHeader] PRIMARY KEY CLUSTERED ([IdWebhookEndpointHeader] ASC),
     CONSTRAINT [FK_WebhookEndpointHeader_WebhookEndpoint] FOREIGN KEY ([WebhookEndpointId]) REFERENCES [dbo].[WebhookEndpoint] ([IdWebhookEndpoint])
 );
+
+
 
 
 

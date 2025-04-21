@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TypeImageByArticle] (
-    [IdTypeImageByArticle] INT           IDENTITY (1, 1) NOT NULL,
+    [IdTypeImageByArticle] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ArticleId]            INT           NOT NULL,
     [TypeOfImageId]        INT           NOT NULL,
     [IsRequired]           BIT           NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FK_TypeImageByArticle_TypeOfImage] FOREIGN KEY ([TypeOfImageId]) REFERENCES [dbo].[CatTypeOfImage] ([IdTypeOfImage]),
     CONSTRAINT [Unique_TypeImageByArticle] UNIQUE NONCLUSTERED ([ArticleId] ASC, [TypeOfImageId] ASC)
 );
+
+
 
 
 GO

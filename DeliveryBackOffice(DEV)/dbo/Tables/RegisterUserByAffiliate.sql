@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RegisterUserByAffiliate] (
-    [IdRegisterUserByAffiliate] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdRegisterUserByAffiliate] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AffiliateId]               BIGINT        NOT NULL,
     [RegisterUserId]            BIGINT        NOT NULL,
     [RowStatus]                 BIT           DEFAULT ((1)) NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_RegisterUserByAffiliate_RegisterUserId] FOREIGN KEY ([RegisterUserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser]),
     UNIQUE NONCLUSTERED ([RegisterUserId] ASC)
 );
+
+
 
 
 GO

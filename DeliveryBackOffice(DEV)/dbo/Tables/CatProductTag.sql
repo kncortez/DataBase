@@ -1,14 +1,15 @@
-﻿CREATE TABLE [dbo].[CatProductTag]
-(
-	[IdCatProductTag] INT IDENTITY (1, 1) NOT NULL,  
-    [Description] NVARCHAR(200) NOT NULL, 
-    [RowStatus] BIT NOT NULL, 
-    [UserCreated] NVARCHAR(50) NOT NULL, 
-    [DateCreated] DATETIME NOT NULL, 
-    [UserUpdated] NVARCHAR(50) NULL, 
-    [DateUpdated] DATETIME NULL, 
-	PRIMARY KEY CLUSTERED ([IdCatProductTag] ASC)
-)
+﻿CREATE TABLE [dbo].[CatProductTag] (
+    [IdCatProductTag] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [Description]     NVARCHAR (200) NOT NULL,
+    [RowStatus]       BIT            NOT NULL,
+    [UserCreated]     NVARCHAR (50)  NOT NULL,
+    [DateCreated]     DATETIME       NOT NULL,
+    [UserUpdated]     NVARCHAR (50)  NULL,
+    [DateUpdated]     DATETIME       NULL,
+    PRIMARY KEY CLUSTERED ([IdCatProductTag] ASC)
+);
+
+
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',

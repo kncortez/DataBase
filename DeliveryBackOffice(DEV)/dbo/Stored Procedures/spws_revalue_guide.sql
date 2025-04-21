@@ -24,6 +24,11 @@
 -- Create date: <2024-08-12>
 -- Description:	<Modificación de forma dinamica los códigos para los articulos filtrado por país.>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2025-03-06>
+-- Description:	<Se agrego select para devolver precio de envio de guia para creacion de guias clientes integracion>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @GuideSerie VARCHAR(2) = 'FD'
   , @GuideNumber INT = 200307
@@ -349,12 +354,12 @@ BEGIN
                           cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
                           AND cst.GuideNumber = @GuideNumber
                       )
-                      OR
-                      (
-                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                          AND cst.GuideSerie IS NULL
-                          AND cst.GuideNumber IS NULL
-                      )
+                      --OR
+                      --(
+                      --    cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                      --    AND cst.GuideSerie IS NULL
+                      --    AND cst.GuideNumber IS NULL
+                      --)
                   )
                   AND
                   (
@@ -480,7 +485,7 @@ BEGIN
 	*/
 	IF @UseMembership=1
 	BEGIN 
-		Declare @IdAcount INT=(SELECT TOP 1 AccIdAccount FROM DBO.ACCOUNT where idCustomer=@IdCustomer and AccRowStatus=1)
+		Declare @IdAcount INT=(SELECT TOP 1 AccIdAccount FROM DBO.ACCOUNT WITH(NOLOCK) WHERE idCustomer=@IdCustomer and AccRowStatus=1)
 		Declare @TechnicalDescription NVARCHAR(50);
 
 		DECLARE  @ActiveProducts  TABLE 
@@ -526,7 +531,7 @@ BEGIN
                     WHEN MembershipId IS NOT NULL THEN 1 
                     WHEN SubscriptionId IS NOT NULL THEN 2 
                 END)
-        FROM dbo.MembershipSubscriptionLog
+        FROM dbo.MembershipSubscriptionLog WITH(NOLOCK)
         WHERE LogGuideNumber=@GuideNumber
             AND LogGuideSerie=@GuideSerie
         
@@ -622,7 +627,7 @@ BEGIN
              , @MembershipId                = MembershipId
              , @SubscriptionId              = SubscriptionId
              , @ServiceAppliedCount         = LogServiceNumber
-        FROM MembershipSubscriptionLog
+        FROM MembershipSubscriptionLog WITH(NOLOCK)
         WHERE LogGuideSerie = @GuideSerie
               AND LogGuideNumber = @GuideNumber
               AND RowStatus = 1
@@ -1255,12 +1260,12 @@ BEGIN
                           cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
                           AND cst.GuideNumber = @GuideNumber
                       )
-                      OR
-                      (
-                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                          AND cst.GuideSerie IS NULL
-                          AND cst.GuideNumber IS NULL
-                      )
+                      --OR
+                      --(
+                      --    cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                      --    AND cst.GuideSerie IS NULL
+                      --    AND cst.GuideNumber IS NULL
+                      --)
                   )
                   AND cst.RowStatus = 1
             ORDER BY cst.DateCreated DESC;

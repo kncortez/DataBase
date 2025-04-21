@@ -88,7 +88,6 @@ BEGIN
 			DECLARE @WebhookTrackingQuequeLoteDetailforSFTP AS TABLE (
 					[idWebhookTrackingQuequeLoteDetailforSFTP] INT NOT NULL PRIMARY KEY,
 					[Type] NVARCHAR(8) NOT NULL,
-					[Counter] INT NOT NULL,
 					[Service_Area_Code] NVARCHAR(8) NOT NULL,
 					[Facility_Code] NVARCHAR(8) NOT NULL,
 					[CheckPointDate] NVARCHAR(10) NOT NULL,
@@ -97,8 +96,8 @@ BEGIN
 					[GuideSerie] NVARCHAR(8) NOT NULL,
 					[GuideNumber] NVARCHAR(8) NOT NULL,
 					[GuidePiece] INT NOT NULL,
-					[Waybill] BIGINT NOT NULL,
-					[PieceId] NVARCHAR(32) NOT NULL,
+					[Waybill] NVARCHAR(100) NOT NULL,
+					[PieceId] NVARCHAR(100) NOT NULL,
 					[CheckPointCode] NVARCHAR(4) NOT NULL,
 					[DHL_Checkpoint_Remark] NVARCHAR(32) NOT NULL,
 					[Route_Code] NVARCHAR(4) NOT NULL,
@@ -115,7 +114,6 @@ BEGIN
 
 			INSERT INTO @WebhookTrackingQuequeLoteDetailforSFTP([idWebhookTrackingQuequeLoteDetailforSFTP],
 																[Type],
-																[Counter],
 																[Service_Area_Code],
 																[Facility_Code],
 																[CheckPointDate],
@@ -136,8 +134,6 @@ BEGIN
 																[NewDeliveryDate])
 			SELECT  [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP],
 					'D' [Type], 
-					ROW_NUMBER() OVER(ORDER BY [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] ASC) AS [Counter], 
-					--ROW_NUMBER() OVER(ORDER BY [WTQDFS].[DateCreated] ASC) AS [Counter], 
 					'GTL' [Service_Area_Code], 
 					'GTL' [Facility_Code], 
 					--FORMAT(ISNULL(DOP.DateRegistrationExternalCode,'1900-01-01 00:00:00'),'yyyyMMdd') [CheckPointDate],
@@ -193,24 +189,9 @@ BEGIN
 			--Select * from @WebhookTrackingQuequeLoteStationsforSFTP
 
 			--Detalle del archivo Final
-			SELECT TBL.Type
-			,ROW_NUMBER() OVER(ORDER BY TBL.CheckPointDate ASC,TBL.CheckPointTime ASC) [Counter], 
-					TBL.[Service_Area_Code],
-					TBL.[Facility_Code],
-					TBL.[CheckPointDate],
-					TBL.[CheckPointTime],
-					TBL.[GTM_Offset],
-					TBL.[Waybill],
-					TBL.[PieceId],
-					TBL.[CheckPointCode],
-					TBL. [DHL_Checkpoint_Remark],
-					TBL.[Route_Code],
-					TBL.[Cycle_Code]
-			FROM
-            (
 			SELECT D.[Type], 
 				    --'R' [Type],
-					D.[Counter], 
+					ROW_NUMBER() OVER(ORDER BY D.CheckPointDate ASC,D.CheckPointTime ASC) [Counter],
 					D.[Service_Area_Code],
 					D.[Facility_Code],
 					D.[CheckPointDate],
@@ -226,7 +207,6 @@ BEGIN
 			FROM
 			(
 				SELECT  [D1].[Type],
-						[D1].[Counter],
 						[D1].[Service_Area_Code],
 						[D1].[Facility_Code],
 						[D1].[CheckPointDate],
@@ -274,7 +254,6 @@ BEGIN
 				  --AND [SOE].[CustomerId] = @CUSTOMER_ID
 				UNION ALL
 				SELECT  [D2].[Type],
-						[D2].[Counter],
 						[D2].[Service_Area_Code],
 						[D2].[Facility_Code],
 						[D2].[CheckPointDate],
@@ -309,9 +288,7 @@ BEGIN
 				  AND [ITR].[RowStatus] = 1
 				  --AND [SOE].[CustomerId] = @CUSTOMER_ID
 			)AS D
-			--ORDER BY D.[Counter] ASC;
-			)TBL
-			ORDER BY TBL.CheckPointDate ASC
+			ORDER BY D.CheckPointDate ASC
 
 	    			
 			--Pie de p�gina del archivo

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatPromo] (
-    [IdPromo]           INT            IDENTITY (1, 1) NOT NULL,
+    [IdPromo]           INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [PromoDescription]  NVARCHAR (200) NOT NULL,
     [PromoWeight]       INT            NOT NULL,
     [StartPromoDate]    DATETIME       NOT NULL,
@@ -24,6 +24,8 @@
     CONSTRAINT [FK_CatPromo_CatDiscountType] FOREIGN KEY ([CatDiscountTypeId]) REFERENCES [dbo].[CatTypeDiscount] ([IdCatTypeDiscount]),
     CONSTRAINT [FK_CatPromo_CatValueType] FOREIGN KEY ([CatValueTypeId]) REFERENCES [dbo].[CatValueType] ([IdCatValueType])
 );
+
+
 
 
 

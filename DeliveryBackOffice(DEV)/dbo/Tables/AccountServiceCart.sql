@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AccountServiceCart] (
-    [IdAccountServiceCart] INT           IDENTITY (1, 1) NOT NULL,
+    [IdAccountServiceCart] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountId]            BIGINT        NOT NULL,
     [IsPending]            BIT           CONSTRAINT [DF__AccountSe__IsPen__2A61254E] DEFAULT ((1)) NOT NULL,
     [RowStatus]            BIT           CONSTRAINT [DF__AccountSe__RowSt__2B554987] DEFAULT ((1)) NOT NULL,
@@ -10,6 +10,8 @@
     CONSTRAINT [PK__AccountS__98CDC45FA2464CEA] PRIMARY KEY CLUSTERED ([IdAccountServiceCart] ASC),
     CONSTRAINT [FK_AccountServiceCart_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount])
 );
+
+
 
 
 

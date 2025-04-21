@@ -21,14 +21,12 @@ BEGIN
 		--inv_documentRecieved ='TimeOut' 
 		--)
 		--  AND 
-		  inv_dateRegister >='2024-10-01 00:00:00'
-		 AND inv_dateRegister <='2024-10-31 23:59:59'
+		  inv_dateRegister >=   '2025-03-01 00:00:00'
+		 AND inv_dateRegister <='2025-03-31 23:59:59'
 		 AND 		 
 		 (inv_certificationFEL IS NULL OR inv_certificationFEL = '')
-		 AND inv_pk_id IN
-		 (
-		4580879,4580881,4580883,4580884,4580888,4580891,4580892,4580894
-		 )
+		AND  inv_pk_id IN ( 5465865,5467634
+)
 		
     END TRY
     BEGIN CATCH

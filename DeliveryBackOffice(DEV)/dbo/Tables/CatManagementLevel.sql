@@ -1,16 +1,18 @@
-CREATE TABLE [dbo].[CatManagementLevel] (
-    [IdCatManagementLevel]	INT 			IDENTITY (1, 1) NOT NULL,
-    [ManagementLevelName]   NVARCHAR (50)   NULL,
-    [MinAmount]				DECIMAL(14,2)	NULL,
-    [MaxAmount]				DECIMAL(14,2)	NULL,
-    [RowStatus]             BIT             DEFAULT ((1)) NOT NULL,
-    [DateCreated]           DATETIME        NULL,
-    [TokenCreated]          NVARCHAR (50)   NOT NULL,
-    [DateUpdated]           DATETIME        NULL,
-    [TokenUpdated]          NVARCHAR (50)   NULL,
-    [CountryId] [nvarchar](2) NULL,
+﻿CREATE TABLE [dbo].[CatManagementLevel] (
+    [IdCatManagementLevel] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [ManagementLevelName]  NVARCHAR (50)   NULL,
+    [MinAmount]            DECIMAL (14, 2) NULL,
+    [MaxAmount]            DECIMAL (14, 2) NULL,
+    [RowStatus]            BIT             DEFAULT ((1)) NOT NULL,
+    [DateCreated]          DATETIME        NULL,
+    [TokenCreated]         NVARCHAR (50)   NOT NULL,
+    [DateUpdated]          DATETIME        NULL,
+    [TokenUpdated]         NVARCHAR (50)   NULL,
+    [CountryId]            NVARCHAR (2)    NULL,
     PRIMARY KEY CLUSTERED ([IdCatManagementLevel] ASC)
 );
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre de jerarquías', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatManagementLevel', @level2type = N'COLUMN', @level2name = N'ManagementLevelName';
 GO

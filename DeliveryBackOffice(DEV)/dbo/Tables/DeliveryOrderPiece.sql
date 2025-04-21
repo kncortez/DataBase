@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderPiece] (
-    [GuidePiece]                        BIGINT          IDENTITY (1, 1) NOT NULL,
+    [GuidePiece]                        BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]                        NVARCHAR (2)    NOT NULL,
     [GuideNumber]                       INT             NOT NULL,
     [PiecePhysicalWeight]               DECIMAL (12, 2) NULL,
@@ -33,6 +33,8 @@
     CONSTRAINT [PK_DeliveryOrderPiece] PRIMARY KEY NONCLUSTERED ([GuideSerie] ASC, [GuideNumber] ASC, [GuidePiece] ASC),
     CONSTRAINT [FK_CategoryCheck] FOREIGN KEY ([CategoryCheck]) REFERENCES [dbo].[CatArticle] ([ArtId])
 );
+
+
 
 
 

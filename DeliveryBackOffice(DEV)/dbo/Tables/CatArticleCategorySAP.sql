@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatArticleCategorySAP] (
-    [IdCatCategoryArticleSAP] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatCategoryArticleSAP] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]                    NVARCHAR (100) NOT NULL,
     [Description]             NVARCHAR (100) NULL,
     [RowSatus]                BIT            CONSTRAINT [DF_CatArticleCategorySAP_RowStatus] DEFAULT ('TRUE') NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]             DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdCatCategoryArticleSAP] ASC)
 );
+
+
 
 
 GO

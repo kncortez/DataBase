@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RoutePreparationDetailPiece] (
-    [IdRoutePreparationDetailPiece] INT           IDENTITY (1, 1) NOT NULL,
+    [IdRoutePreparationDetailPiece] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RoutePreparationDetailId]      INT           NOT NULL,
     [PieceNumber]                   INT           NOT NULL,
     [PieceType]                     BIT           NOT NULL,
@@ -11,6 +11,8 @@
     PRIMARY KEY CLUSTERED ([IdRoutePreparationDetailPiece] ASC),
     CONSTRAINT [FK_RoutePreparationDetailPiece_RoutePreparationDetail] FOREIGN KEY ([RoutePreparationDetailId]) REFERENCES [dbo].[RoutePreparationDetail] ([IdRoutePreparationDetail])
 );
+
+
 
 
 

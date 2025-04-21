@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DayForDeliveryCoverage] (
-    [IdDayForDeliveryCoverage] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdDayForDeliveryCoverage] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [HubLogisticsOrigin]       INT           NOT NULL,
     [HubLogisticsDestiny]      INT           NOT NULL,
     [DaysToAdd]                INT           NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FK_DayForDeliveryCoverage_DestinyHub] FOREIGN KEY ([HubLogisticsDestiny]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_DayForDeliveryCoverage_OriginHub] FOREIGN KEY ([HubLogisticsOrigin]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic])
 );
+
+
 
 
 GO

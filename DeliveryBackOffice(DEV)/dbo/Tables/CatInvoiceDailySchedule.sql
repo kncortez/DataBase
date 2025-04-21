@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatInvoiceDailySchedule] (
-    [IdCatInvoiceDailySchedule] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatInvoiceDailySchedule] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [InvoiceProcessName]        NVARCHAR (100) NOT NULL,
     [ExecutionTime]             TIME (7)       NOT NULL,
     [ProcessPriority]           INT            NOT NULL,
@@ -10,6 +10,8 @@
     [DateUpdated]               DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdCatInvoiceDailySchedule] ASC)
 );
+
+
 
 
 GO

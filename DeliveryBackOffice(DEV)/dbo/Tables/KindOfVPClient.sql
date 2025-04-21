@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[KindOfVPClient] (
-    [IdKindOfVPClient] INT           IDENTITY (1, 1) NOT NULL,
+    [IdKindOfVPClient] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [KindOfVPName]     NVARCHAR (50) NULL,
     [KindOfVPStatus]   BIT           NULL,
     [TokenCreated]     NVARCHAR (50) NULL,
@@ -10,6 +10,8 @@
     CONSTRAINT [PK_KindOfVPClient] PRIMARY KEY CLUSTERED ([IdKindOfVPClient] ASC),
     CONSTRAINT [FK_KindOfVPClient_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 

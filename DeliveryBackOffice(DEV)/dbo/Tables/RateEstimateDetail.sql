@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateEstimateDetail] (
-    [IdRateEstimateDetail] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdRateEstimateDetail] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdRateEstimate]       BIGINT          NULL,
     [IdSettlment]          BIGINT          NULL,
     [CountValue]           DECIMAL (18, 2) NULL,

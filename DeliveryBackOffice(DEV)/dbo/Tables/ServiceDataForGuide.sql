@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServiceDataForGuide] (
-    [IdServiceDataForGuide] BIGINT           IDENTITY (1, 1) NOT NULL,
+    [IdServiceDataForGuide] BIGINT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]            NVARCHAR (2)     NOT NULL,
     [GuideNumber]           INT              NOT NULL,
     [GuideToken]            NVARCHAR (50)    NOT NULL,
@@ -23,6 +23,8 @@
     CONSTRAINT [ServiceDataForGuide_Guide_FK] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [ServiceDataForGuide_Module_FK] FOREIGN KEY ([ProviderModule]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
 
 
 

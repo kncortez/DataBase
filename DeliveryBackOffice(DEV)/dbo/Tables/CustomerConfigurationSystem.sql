@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CustomerConfigurationSystem] (
-    [IdCustomerByModuleBySystem] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCustomerByModuleBySystem] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CustomerId]                 INT           NOT NULL,
     [SystemId]                   INT           NOT NULL,
     [RowStatus]                  BIT           DEFAULT ((1)) NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_CustomerBySystem_System] FOREIGN KEY ([SystemId]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     CONSTRAINT [Unique_CustomerSystem] UNIQUE NONCLUSTERED ([CustomerId] ASC, [SystemId] ASC)
 );
+
+
 
 
 GO

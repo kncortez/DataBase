@@ -1,15 +1,17 @@
 ﻿CREATE TABLE [dbo].[CatTypeSenderReceiver] (
-    [IdCatTypeSenderReceiver] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatTypeSenderReceiver] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TypeName]                NVARCHAR (30) NOT NULL,
     [RowStatus]               BIT           NOT NULL,
     [TokenCreated]            NVARCHAR (50) NOT NULL,
     [DateCreated]             DATETIME      NOT NULL,
     [TokenUpdated]            NVARCHAR (50) NULL,
     [DateUpdated]             DATETIME      NULL,
-    [IdCountry]               VARCHAR  (2)  NULL,
+    [IdCountry]               VARCHAR (2)   NULL,
     CONSTRAINT [PK_CatTypeSenderReceiver] PRIMARY KEY CLUSTERED ([IdCatTypeSenderReceiver] ASC),
-    CONSTRAINT [FK_TypeSenderIdCountry_CountryIdCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
+    CONSTRAINT [FK_TypeSenderIdCountry_CountryIdCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 

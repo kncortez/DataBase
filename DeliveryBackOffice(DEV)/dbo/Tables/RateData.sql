@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateData] (
-    [IdRateData]        BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdRateData]        BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RateId]            INT             NOT NULL,
     [TypeServiceId]     INT             NULL,
     [TypeSegmentId]     INT             NULL,
@@ -26,6 +26,8 @@
     CONSTRAINT [FKRateSegmentId] FOREIGN KEY ([TypeSegmentId]) REFERENCES [dbo].[CatRateSegment] ([CrsId]),
     CONSTRAINT [FKRateServiceId] FOREIGN KEY ([TypeServiceId]) REFERENCES [dbo].[CatTypeService] ([CtsId])
 );
+
+
 
 
 

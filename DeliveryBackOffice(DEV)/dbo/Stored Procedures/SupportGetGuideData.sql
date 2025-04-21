@@ -117,6 +117,7 @@ SELECT 'Cuenta Bancaria'
      , dcb.DCBA_Nom_account
      , dcb.DCBA_BankAccountType
      , bk.Name
+	 , dcb.DCBA_Identification
 FROM dbo.DeliveryOrder                         ord
     INNER JOIN dbo.DeliveryCustomerBankAccount dcb  with (nolock)
         ON dcb.DCBA_Id = ord.DCBA_ID

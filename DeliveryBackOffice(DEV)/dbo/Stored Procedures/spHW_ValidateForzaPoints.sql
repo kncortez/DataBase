@@ -220,8 +220,8 @@ BEGIN
 			--SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT COUNT(GuideSerie) FROM @GuidesProcessedList));
 			SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT COUNT(GuideSerie) 
 			FROM @GuidesProcessedList gpl
-			LEFT JOIN DeliveryOrder do
-		    ON gpl.GuideNumber = do.Guide_Number
+			LEFT JOIN DeliveryOrder do WITH(NOLOCK)
+		    ON gpl.GuideSerie = do.Guide_Serie AND  gpl.GuideNumber = do.Guide_Number
 			WHERE gpl.PriceShipment >0));
 		END
 

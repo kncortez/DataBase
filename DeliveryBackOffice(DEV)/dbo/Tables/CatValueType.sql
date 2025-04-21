@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatValueType] (
-    [IdCatValueType]       INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatValueType]       INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ValueTypeName]        NVARCHAR (50)  NOT NULL,
     [ValueTypeDescription] NVARCHAR (200) NULL,
     [RowStatus]            BIT            DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [TokenUpdated]         NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdCatValueType] ASC)
 );
+
+
 
 
 GO

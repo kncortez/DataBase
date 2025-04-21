@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderPaidHeader] (
-    [IdDeliveryOrderPaid] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryOrderPaid] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Manifest_Date]       DATETIME     NULL,
     [Manifest_Serie]      NVARCHAR (5) NULL,
     [Manifest_Number]     BIGINT       NULL,

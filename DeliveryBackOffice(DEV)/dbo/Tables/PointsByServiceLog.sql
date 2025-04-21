@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[PointsByServiceLog] (
-    [IdPointsByServiceLog] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdPointsByServiceLog] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [MembershipId]         INT             NOT NULL,
     [GuideSerie]           NVARCHAR (2)    NOT NULL,
     [GuideNumber]          INT             NOT NULL,
@@ -19,6 +19,8 @@
     CONSTRAINT [FK_PointsByService_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
     CONSTRAINT [FK_PointsByServiceLog_CatPointPromo] FOREIGN KEY ([CatPointPromoId]) REFERENCES [dbo].[CatPointPromo] ([IdPointPromo])
 );
+
+
 
 
 

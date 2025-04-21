@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[PromoCoupon] (
-    [IdPromoCoupon]                        INT             IDENTITY (1, 1) NOT NULL,
+    [IdPromoCoupon]                        INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatPromoId]                           INT             NOT NULL,
     [PromoCouponSerie]                     NVARCHAR (20)   NOT NULL,
     [GuideSerieOrigin]                     NVARCHAR (2)    NULL,
@@ -47,6 +47,8 @@
     CONSTRAINT [FK_PromoCoupon_VisitPointClientPortfolioDestination] FOREIGN KEY ([VisitPointClientPortfolioDestination]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio]),
     CONSTRAINT [FK_PromoCoupon_VisitPointClientPortfolioOrigin] FOREIGN KEY ([VisitPointClientPortfolioOrigin]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio])
 );
+
+
 
 
 

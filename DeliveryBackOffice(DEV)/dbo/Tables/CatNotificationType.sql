@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatNotificationType] (
-    [IdCatNotificationType]       BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdCatNotificationType]       BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ConfigExternalPlatformId]    INT            NULL,
     [EmailTemplateName]           NVARCHAR (50)  NULL,
     [NotificationTypeName]        NVARCHAR (100) NULL,
@@ -14,6 +14,8 @@
     PRIMARY KEY CLUSTERED ([IdCatNotificationType] ASC),
     CONSTRAINT [FK_CatNotificationType_ConfigExternalPlatform] FOREIGN KEY ([ConfigExternalPlatformId]) REFERENCES [dbo].[ConfigExternalPlatform] ([IdConfigExternalPlatform])
 );
+
+
 
 
 GO

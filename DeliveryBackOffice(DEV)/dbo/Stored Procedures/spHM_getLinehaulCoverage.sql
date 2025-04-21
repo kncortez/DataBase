@@ -11,6 +11,7 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+	set arithabort on;
 
 	SELECT		[LC].[IdLinehaulCoverage], 
 				[LC].[CatRouteId], 
@@ -20,14 +21,14 @@ BEGIN
 				[DSC].[HeaderCode],
 				[TS].[IdTownship],
 				[TS].[TownshipName]
-	FROM		[dbo].[LinehaulCoverage] LC
+	FROM		[dbo].[LinehaulCoverage] LC WITH(NOLOCK)
 	INNER JOIN	[dbo].[HubLogistics] HL
 		ON		[LC].[HubDestinyId] = [HL].[IdHubLogistic]
-		AND		[LC].[HubDestinyId] = @IdHub
-		AND		[LC].[CatRouteId] = @CatRouteId
 	INNER JOIN	[dbo].[DumpServiceCoverage] DSC
 		ON		[HL].[HubAbbreviation] = [DSC].[Hub]
 	INNER JOIN	[dbo].[Township] TS
-		ON		[DSC].[HeaderCode] = [TS].[HeaderCode];
+		ON		[DSC].[HeaderCode] = [TS].[HeaderCode]
+	WHERE 		[LC].[HubDestinyId] = @IdHub
+		AND		[LC].[CatRouteId] = @CatRouteId
 	
 END

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointByUser] (
-    [IdVisitPointByUser] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdVisitPointByUser] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdVisitPointClient] INT           NOT NULL,
     [RegisterUserID]     BIGINT        NULL,
     [RowStatus]          BIT           CONSTRAINT [DF_VisitPointByUser_RowStatus] DEFAULT ('TRUE') NULL,
@@ -10,6 +10,8 @@
     PRIMARY KEY CLUSTERED ([IdVisitPointByUser] ASC),
     CONSTRAINT [FK_VisitPointByUser_RegisterUser] FOREIGN KEY ([RegisterUserID]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
+
+
 
 
 

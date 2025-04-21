@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderRoute] (
-    [IdDeliveryOrderRoute] INT           IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryOrderRoute] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]           NVARCHAR (2)  NOT NULL,
     [GuideNumber]          INT           NOT NULL,
     [Route]                NVARCHAR (50) NOT NULL,
@@ -9,8 +9,10 @@
     [DateCreated]          DATETIME      NOT NULL,
     [TokenUpdated]         NVARCHAR (50) NULL,
     [DateUpdated]          DATETIME      NULL,
-    CONSTRAINT [PK_DeliveryOrderRoute] PRIMARY KEY ([IdDeliveryOrderRoute])
+    CONSTRAINT [PK_DeliveryOrderRoute] PRIMARY KEY CLUSTERED ([IdDeliveryOrderRoute] ASC)
 );
+
+
 
 
 GO

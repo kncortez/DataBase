@@ -33,7 +33,7 @@ BEGIN
         (
             SELECT StatusOrderId
             FROM StatusOrder WITH (NOLOCK)
-            WHERE OrderDescription = 'Recepcionado en Express Center'
+            WHERE OrderDescription = 'Recibido En Express Center'
         );
 		SET @StatusOrderSolicitado =
         (

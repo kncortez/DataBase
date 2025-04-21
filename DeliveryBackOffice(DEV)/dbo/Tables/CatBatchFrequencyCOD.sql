@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatBatchFrequencyCOD] (
-    [CatBatchFrequencyCODId] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [CatBatchFrequencyCODId] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]                   VARCHAR (50) NOT NULL,
     [RowStatus]              BIT          NOT NULL,
     [TokenCreated]           VARCHAR (50) NOT NULL,
@@ -8,6 +8,8 @@
     [DateUpdated]            DATETIME     NULL,
     PRIMARY KEY CLUSTERED ([CatBatchFrequencyCODId] ASC)
 );
+
+
 
 
 GO

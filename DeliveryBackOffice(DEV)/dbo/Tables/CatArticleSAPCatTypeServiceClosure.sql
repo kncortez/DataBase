@@ -1,11 +1,13 @@
 ﻿CREATE TABLE [dbo].[CatArticleSAPCatTypeServiceClosure] (
-    [IdCatArticleSAPCatTypeServiceClosure] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatArticleSAPCatTypeServiceClosure] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCatArticleSAP]                      INT           NULL,
     [IdTypeService]                        INT           NULL,
     [SAPCode]                              NVARCHAR (50) NULL,
     CONSTRAINT [PK_CatArticleSAPCatTypeServiceClosure] PRIMARY KEY CLUSTERED ([IdCatArticleSAPCatTypeServiceClosure] ASC),
     CONSTRAINT [FK_CatArticleSAPCatTypeServiceClosure_IdTypeService] FOREIGN KEY ([IdTypeService]) REFERENCES [dbo].[CatTypeServiceClosure] ([IdTypeService]) ON DELETE CASCADE
 );
+
+
 
 
 

@@ -19,6 +19,14 @@
 -- Update date: <2024-06-26>
 -- Description:	<Se agrega validacion para obtener campo isCOD sin valor null>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2024-06-26>
+-- Description:	<Se agrega validacion para obtener campo isCOD sin valor null>
+-- =============================================
+-- Modified:	<Tito Garcia>
+-- Update date: <2024-10-21>
+-- Description:	<Se agrega nuevo campo IsVoucherRequired>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer AS INT = -1
@@ -120,6 +128,7 @@ BEGIN
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
+			 , cst.[IsVoucherRequired]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
@@ -222,6 +231,7 @@ BEGIN
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
+			 , cst.[IsVoucherRequired]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND

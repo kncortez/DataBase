@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[KindOfVPBusiness] (
-    [IdKindOfVPBusiness]     INT            IDENTITY (1, 1) NOT NULL,
+    [IdKindOfVPBusiness]     INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [KindOfVPNameBussiness]  NVARCHAR (100) NULL,
     [Shorthand]              NVARCHAR (15)  NULL,
     [StatusKindOfVPBusiness] BIT            NULL,
@@ -7,10 +7,12 @@
     [DateCreated]            DATETIME       NULL,
     [TokenUpdate]            NVARCHAR (50)  NULL,
     [DateUpdated]            DATETIME       NULL,
-    [IdCountry]              VARCHAR(2)     NULL, 
+    [IdCountry]              VARCHAR (2)    NULL,
     CONSTRAINT [PK_KindOfVPBusiness] PRIMARY KEY CLUSTERED ([IdKindOfVPBusiness] ASC),
-    CONSTRAINT [FK_KindOfVPBusiness_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    CONSTRAINT [FK_KindOfVPBusiness_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO

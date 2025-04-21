@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[UnifiedRouteSettlement] (
-    [IdUnifiedRouteSettlement] INT           IDENTITY (1, 1) NOT NULL,
+    [IdUnifiedRouteSettlement] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RouteAssignmentId]        INT           NOT NULL,
     [TotalGuidesSettled]       INT           CONSTRAINT [DF_UnifiedRouteSettlement_TotalGuidesSettled] DEFAULT ((0)) NOT NULL,
     [TotalPiecesSettled]       INT           DEFAULT ((0)) NOT NULL,

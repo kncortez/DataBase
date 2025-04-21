@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[BillingProfile] (
-    [BlpIdBilling]                  BIGINT        IDENTITY (1, 1) NOT NULL,
+    [BlpIdBilling]                  BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [BlpIdAccount]                  BIGINT        NOT NULL,
     [BlpName]                       VARCHAR (100) NOT NULL,
     [BlpAddress]                    VARCHAR (200) NOT NULL,
@@ -14,6 +14,8 @@
     PRIMARY KEY CLUSTERED ([BlpIdBilling] ASC),
     CONSTRAINT [FKBillingAccount] FOREIGN KEY ([BlpIdAccount]) REFERENCES [dbo].[Account] ([AccIdAccount])
 );
+
+
 
 
 

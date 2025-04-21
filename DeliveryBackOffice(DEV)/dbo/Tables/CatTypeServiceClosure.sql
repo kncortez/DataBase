@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeServiceClosure] (
-    [IdTypeService]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdTypeService]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NameTypeService]        NVARCHAR (55)  NOT NULL,
     [DescriptionTypeService] NVARCHAR (100) NOT NULL,
     [StatusTypeService]      INT            NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdate]             DATETIME       NULL,
     CONSTRAINT [Pk_CatTypeService] PRIMARY KEY CLUSTERED ([IdTypeService] ASC)
 );
+
+
 
 
 GO

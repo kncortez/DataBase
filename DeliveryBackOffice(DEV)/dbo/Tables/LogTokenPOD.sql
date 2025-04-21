@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LogTokenPOD] (
-    [IdLogToken]   INT           IDENTITY (1, 1) NOT NULL,
+    [IdLogToken]   INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LogTokenPOD]  VARCHAR (200) NULL,
     [IdCourierman] INT           NULL,
     [RowStatus]    BIT           NULL,
@@ -7,6 +7,10 @@
     [DateUpdate]   DATETIME      NULL,
     CONSTRAINT [PK_IdLogToken] PRIMARY KEY CLUSTERED ([IdLogToken] ASC)
 );
+
+
+
+
 
 
 
@@ -19,4 +23,10 @@ CREATE NONCLUSTERED INDEX [IDX_LogTokenPOD]
 GO
 CREATE NONCLUSTERED INDEX [IDX_IdCourierman]
     ON [dbo].[LogTokenPOD]([IdCourierman] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCourierman_RowStatus_INCLUDE]
+    ON [dbo].[LogTokenPOD]([IdCourierman] ASC, [RowStatus] ASC)
+    INCLUDE([LogTokenPOD], [DateCreated]);
 

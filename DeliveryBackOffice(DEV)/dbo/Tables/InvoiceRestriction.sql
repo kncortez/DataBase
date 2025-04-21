@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[InvoiceRestriction] (
-    [InvIdRestriction] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [InvIdRestriction] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [inv_pk_id]        BIGINT       NOT NULL,
     [inv_SAPDocEntry]  INT          NOT NULL,
     [invRetries]       INT          NOT NULL,
@@ -10,6 +10,8 @@
     PRIMARY KEY CLUSTERED ([InvIdRestriction] ASC),
     CONSTRAINT [FKInvoiceHeader] FOREIGN KEY ([inv_pk_id]) REFERENCES [dbo].[invoiceHeader] ([inv_pk_id])
 );
+
+
 
 
 

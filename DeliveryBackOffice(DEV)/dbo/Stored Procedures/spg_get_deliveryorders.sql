@@ -68,7 +68,42 @@ BEGIN
 				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
-				ON ((serv.Sender_ID = vpclient.CodeOfReference) OR (serv.IdCustomer = vpclient.CustomerID))
+				ON 
+				serv.Sender_ID = vpclient.CodeOfReference
+				--OR (serv.IdCustomer = vpclient.CustomerID))
+			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
+				ON serv.StatusOrderId = so.StatusOrderId
+            LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
+                ON serv.Guide_Serie = c.GuideSerie
+                AND serv.Guide_Number = c.GuideNumber
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
+                ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+			WHERE vpclient.VisitPointId = @IdVisitPoint
+				AND CONVERT(DATE, serv.DateCreated) BETWEEN @DateIni AND @DateFin
+				AND serv.StatusOrderId <> 7 -- No guías anuladas
+				AND serv.StatusOrderId <> 15 -- No guías generadas
+			UNION
+			SELECT  
+				CAST(serv.Sender_ID AS VARCHAR) + ' - ' + 
+				UPPER(ISNULL(serv.Sender_FirstName,'')) + ' '+ UPPER(ISNULL(serv.Sender_LastName,'')) [NameOfSender],
+				ISNULL(UPPER(ISNULL(serv.Receiver_FirstName,'')) + ' ' + UPPER(ISNULL(serv.Receiver_LastName,'')),'') [NameOfReceiver],
+				ISNULL(UPPER(serv.NameOfReceiver),'') as [ReceiverName],
+				CONVERT(varchar,serv.DateCreated,103) [PickUpDateTime],
+				CONVERT(varchar,serv.Shipping_Date,103) [ScheduledDeliveryDate],
+				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WHERE dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
+				serv.Guide_Serie + Cast(serv.Guide_Number as varchar) [GuideNumber],
+				--serv.OrderStatus [OrderStatus]
+				so.OrderDescription AS OrderStatus,
+				serv.Manifest_Serie + Cast(serv.Manifest_Number as varchar) [ManifestNumber],
+				ISNULL(serv.Ticket_Number,'') [IdOrderReference]
+				,ISNULL(serv.Receiver_Address, '') ReceiverAddress
+				,ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId
+				,ISNULL(serv.Receiver_CUI, '') CUI
+				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
+			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
+				ON 
+				serv.IdCustomer = vpclient.CustomerID
 			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
 				ON serv.StatusOrderId = so.StatusOrderId
             LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
@@ -102,7 +137,41 @@ BEGIN
 				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
-				ON ((serv.Sender_ID = vpclient.CodeOfReference) OR (serv.IdCustomer = vpclient.CustomerID))
+				ON serv.Sender_ID = vpclient.CodeOfReference
+				--OR (serv.IdCustomer = vpclient.CustomerID))
+			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
+				ON serv.StatusOrderId = so.StatusOrderId
+            LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
+                ON serv.Guide_Serie = c.GuideSerie
+                AND serv.Guide_Number = c.GuideNumber
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
+                ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+			WHERE vpclient.VisitPointId = @IdVisitPoint
+				AND serv.Guide_Serie = @GuideSerie
+				AND serv.Guide_Number = @GuideNumber
+				AND serv.StatusOrderId <> 7 -- No guías anuladas
+				AND serv.StatusOrderId <> 15 -- No guías generadas
+			UNION
+			SELECT  
+				CAST(serv.Sender_ID AS VARCHAR) + ' - ' + 
+				UPPER(ISNULL(serv.Sender_FirstName,'')) + ' '+ UPPER(ISNULL(serv.Sender_LastName,'')) [NameOfSender],
+				ISNULL(UPPER(ISNULL(serv.Receiver_FirstName,'')) + ' ' + UPPER(ISNULL(serv.Receiver_LastName,'')),'') [NameOfReceiver],
+				ISNULL(UPPER(serv.NameOfReceiver),'') as [ReceiverName],
+				CONVERT(varchar,serv.DateCreated,103) [PickUpDateTime],
+				CONVERT(varchar,serv.Shipping_Date,103) [ScheduledDeliveryDate],
+				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WHERE dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
+				serv.Guide_Serie + Cast(serv.Guide_Number as varchar) [GuideNumber],
+				--serv.OrderStatus [OrderStatus]
+				so.OrderDescription AS OrderStatus,
+				serv.Manifest_Serie + Cast(serv.Manifest_Number as varchar) [ManifestNumber],
+				ISNULL(serv.Ticket_Number,'') [IdOrderReference]
+				,ISNULL(serv.Receiver_Address, '') ReceiverAddress
+				,ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId
+				,ISNULL(serv.Receiver_CUI, '') CUI
+				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
+			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
+				ON serv.IdCustomer = vpclient.CustomerID
 			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
 				ON serv.StatusOrderId = so.StatusOrderId
             LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)

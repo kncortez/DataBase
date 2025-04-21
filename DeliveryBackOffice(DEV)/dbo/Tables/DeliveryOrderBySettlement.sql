@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderBySettlement] (
-    [ID]                     BIGINT        IDENTITY (1, 1) NOT NULL,
+    [ID]                     BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Date_Printed]           DATETIME      NULL,
     [User_Dispatched]        NVARCHAR (50) NULL,
     [Date_Dispatched]        DATETIME      NULL,
@@ -30,6 +30,10 @@
     CONSTRAINT [FK_DeliveryOrderBySettlement_CatVehicleId] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle]),
     CONSTRAINT [FK_DeliveryOrderSettlement_SenderReceiver] FOREIGN KEY ([ID_Courier]) REFERENCES [dbo].[SenderReceiver] ([ID])
 );
+
+
+
+
 
 
 
@@ -79,4 +83,9 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_Date_Dispatched]
     ON [dbo].[DeliveryOrderBySettlement]([Date_Dispatched] ASC)
     INCLUDE([DispatchedStationId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_User_Received_COD_Date_Received_COD_CatRouteId_Date_Dispatched]
+    ON [dbo].[DeliveryOrderBySettlement]([User_Received_COD] ASC, [Date_Received_COD] ASC, [CatRouteId] ASC, [Date_Dispatched] ASC);
 
