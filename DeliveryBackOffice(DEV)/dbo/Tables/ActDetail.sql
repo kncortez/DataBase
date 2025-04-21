@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ActDetail] (
-    [IdActDetail]         INT           IDENTITY (1, 1) NOT NULL,
+    [IdActDetail]         INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ActId]               INT           NOT NULL,
     [GuideSerie]          NVARCHAR (2)  NOT NULL,
     [GuideNumber]         INT           NOT NULL,
@@ -14,6 +14,8 @@
     [DateUpdated]         DATETIME      NULL,
     CONSTRAINT [PK__ActDetai__97FDCB8BB3BA02E6] PRIMARY KEY CLUSTERED ([IdActDetail] ASC)
 );
+
+
 
 
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[NotificationQueueDetail] (
-    [IdNotificationQueueDetail] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdNotificationQueueDetail] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NotificationQueueId]       BIGINT        NOT NULL,
     [GuideSerie]                NVARCHAR (10) NULL,
     [GuideNumber]               INT           NULL,
@@ -15,6 +15,10 @@
     CONSTRAINT [FK_NotificationQueueDetail_NotificationQueue] FOREIGN KEY ([NotificationQueueId]) REFERENCES [dbo].[NotificationQueue] ([IdNotificationQueue]),
     CONSTRAINT [FK_NotificationQueueDetail_Subscription] FOREIGN KEY ([SubscriptionId]) REFERENCES [dbo].[Subscription] ([IdSubscription])
 );
+
+
+
+
 
 
 GO
@@ -63,4 +67,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para guardar detalle de cola de notificaciones', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'NotificationQueueDetail';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_NotificationQueueId_GuideSerie_GuideNumber_RowStatus]
+    ON [dbo].[NotificationQueueDetail]([NotificationQueueId] ASC, [GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
 

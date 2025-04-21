@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatSaleAdvisor] (
-    [IdSaleAdvisor]          INT           IDENTITY (1, 1) NOT NULL,
+    [IdSaleAdvisor]          INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SaleAdvisorCode]        NVARCHAR (12) NOT NULL,
     [SaleAdvisorDescription] NVARCHAR (50) NOT NULL,
     [EmployeID]              INT           NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [PK_CatSaleAdvisor] PRIMARY KEY CLUSTERED ([IdSaleAdvisor] ASC),
     CONSTRAINT [FK_CatSaleAdvisor_CatCountry] FOREIGN KEY ([CountryID]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 GO
 

@@ -8,6 +8,12 @@ CREATE PROCEDURE [dbo].[GetCodeOfReferenceForStation]
 AS
 BEGIN
 	
+	DECLARE @Country AS NVARCHAR(100) = (SELECT A1.CountryId FROM DeliveryBackOffice.dbo.CatStation A1 WITH(NOLOCK) 
+	                    WHERE A1.IdStation = @IdStation )
+    
+	
+	
+
 	SET NOCOUNT ON;
 
 	DECLARE @CodeOfReferenceStation INT;
@@ -29,8 +35,16 @@ BEGIN
 		IF(ISNULL(@CodeOfReferenceStation,0) = 0)
 		BEGIN
 
-			SELECT
-				CodeOfReference = 999
+				IF (@Country ='GT') --BNHL Solución temporal
+			BEGIN
+			   SELECT CodeOfReference  = 999
+			END
+			ELSE IF (@Country ='HN')
+			BEGIN
+			    SELECT CodeOfReference  = 948850
+			END
+			--SELECT
+			--	CodeOfReference = 999
 
 		END
 		ELSE
@@ -43,8 +57,15 @@ BEGIN
 
 	END TRY
 	BEGIN CATCH
-
-		 SELECT CodeOfReference  = 999
+		IF (@Country ='GT') --BNHL Solución temporal
+		BEGIN
+		   SELECT CodeOfReference  = 999
+		END
+		ELSE IF (@Country ='HN')
+		BEGIN
+		    SELECT CodeOfReference  = 948850
+		END
+		 --SELECT CodeOfReference  = 999
 
 	END CATCH
 END

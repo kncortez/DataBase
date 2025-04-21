@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ExtPlatServiceRelationshipWithGuide] (
-    [IdExtPlatServiceRelationshipWithGuide] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdExtPlatServiceRelationshipWithGuide] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ExtPlatServiceId]                      INT           NOT NULL,
     [GuideSerie]                            NVARCHAR (2)  NOT NULL,
     [GuideNumber]                           INT           NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [ExtPlatServiceRelationshipWithGuide_Guide_FK] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [ExtPlatServiceRelationshipWithGuide_IdService_FK] FOREIGN KEY ([ExtPlatServiceId]) REFERENCES [dbo].[ExtPlatformService] ([IdExtPlatformService])
 );
+
+
 
 
 

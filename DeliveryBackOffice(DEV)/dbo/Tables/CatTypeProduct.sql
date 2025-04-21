@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeProduct] (
-    [IdTypeProduct] INT            IDENTITY (1, 1) NOT NULL,
+    [IdTypeProduct] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]          NVARCHAR (200) NULL,
     [RowStatus]     BIT            NULL,
     [TokenCreated]  VARCHAR (50)   NOT NULL,

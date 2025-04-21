@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DumpServiceCoverage] (
-    [IdDump]       BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdDump]       BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [DumpFileName] NVARCHAR (100) NULL,
     [DumpVersion]  NVARCHAR (50)  NULL,
     [HeaderCode]   VARCHAR (10)   NULL,
@@ -18,6 +18,8 @@
     [DateUpdated]  DATETIME       NULL,
     CONSTRAINT [PK_DumpServiceCoverage] PRIMARY KEY CLUSTERED ([IdDump] ASC)
 );
+
+
 
 
 

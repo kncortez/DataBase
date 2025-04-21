@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderAttemptData] (
-    [IdDeliveryOrderAttemptData]   BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryOrderAttemptData]   BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]                   NVARCHAR (2)  NOT NULL,
     [GuideNumber]                  INT           NOT NULL,
     [GuideDeliveryAttemptCount]    INT           DEFAULT ((0)) NOT NULL,
@@ -14,6 +14,8 @@
     PRIMARY KEY CLUSTERED ([IdDeliveryOrderAttemptData] ASC),
     CONSTRAINT [FK_DeliveryOrderAttemptData_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO

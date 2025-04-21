@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[APIMobileLogs] (
-    [IdAPIMobileLogs]  BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdAPIMobileLogs]  BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [PetitionMethod]   NVARCHAR (10)   NOT NULL,
     [PetitionUrl]      NVARCHAR (4000) NOT NULL,
     [RequestHeader]    NVARCHAR (4000) NULL,
@@ -12,6 +12,8 @@
     [ResponseCode]     INT             NULL,
     PRIMARY KEY CLUSTERED ([IdAPIMobileLogs] ASC)
 );
+
+
 
 
 

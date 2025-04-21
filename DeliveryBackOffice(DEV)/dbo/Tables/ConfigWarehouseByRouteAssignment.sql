@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ConfigWarehouseByRouteAssignment] (
-    [IdConfigWarehouseByRouteAssignment] INT           IDENTITY (1, 1) NOT NULL,
+    [IdConfigWarehouseByRouteAssignment] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RouteAssignmentId]                  INT           NOT NULL,
     [WarehouseLocation]                  NVARCHAR (30) NOT NULL,
     [WarehouseLocationServiceType]       NVARCHAR (50) NOT NULL,
@@ -11,6 +11,8 @@
     PRIMARY KEY CLUSTERED ([IdConfigWarehouseByRouteAssignment] ASC),
     CONSTRAINT [FK_ConfigWarehouseByRouteAssignment_RouteAssignment] FOREIGN KEY ([RouteAssignmentId]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment])
 );
+
+
 
 
 GO

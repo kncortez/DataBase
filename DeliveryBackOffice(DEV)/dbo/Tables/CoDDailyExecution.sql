@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CoDDailyExecution] (
-    [IdCoDDailyExecution] INT             IDENTITY (1, 1) NOT NULL,
+    [IdCoDDailyExecution] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CodDailyScheduleId]  INT             NOT NULL,
     [ExecutionDate]       DATE            NOT NULL,
     [CoDProcessName]      NVARCHAR (100)  NOT NULL,
@@ -21,6 +21,8 @@
     CONSTRAINT [FK_CoDDailyExectuion_CoDDailySchedule] FOREIGN KEY ([CodDailyScheduleId]) REFERENCES [dbo].[CatCoDDailySchedule] ([IdCatCoDDailySchedule]),
     CONSTRAINT [FK_CoDDailyExectuion_DeliveryBank] FOREIGN KEY ([DeliveryBankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank])
 );
+
+
 
 
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeService] (
-    [CtsId]             INT           IDENTITY (1, 1) NOT NULL,
+    [CtsId]             INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CtsName]           VARCHAR (100) NOT NULL,
     [CtsShortName]      VARCHAR (3)   NOT NULL,
     [CtsDescription]    VARCHAR (200) NULL,
@@ -13,6 +13,8 @@
     [LimitHourPickup]   TIME (7)      NULL,
     PRIMARY KEY CLUSTERED ([CtsId] ASC)
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TSERoutePreparationHeader] (
-    [IDTSERoutePreparationHeader] INT           IDENTITY (1, 1) NOT NULL,
+    [IDTSERoutePreparationHeader] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCatRoute]                  INT           NOT NULL,
     [IdCatVehicle]                INT           NOT NULL,
     [IdCatRouteCluster]           INT           NOT NULL,
@@ -24,6 +24,8 @@
     CONSTRAINT [FK_TSERoutePreparationHeader_Supervisor] FOREIGN KEY ([IdRouteSupervisor]) REFERENCES [dbo].[SenderReceiver] ([ID]),
     CONSTRAINT [FK_TSERoutePreparationHeader_Vehicle] FOREIGN KEY ([IdCatVehicle]) REFERENCES [dbo].[CatVehicle] ([IdVehicle])
 );
+
+
 
 
 

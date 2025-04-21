@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateBySalePipeLine] (
-    [IdRatePipeLine] INT          IDENTITY (1, 1) NOT NULL,
+    [IdRatePipeLine] INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RateId]         INT          NOT NULL,
     [SalePipeLineId] INT          NOT NULL,
     [RowStatus]      BIT          NOT NULL,

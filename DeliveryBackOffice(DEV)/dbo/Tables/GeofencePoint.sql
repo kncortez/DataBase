@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[GeofencePoint] (
-    [IdGeofencePoint]    INT           IDENTITY (1, 1) NOT NULL,
+    [IdGeofencePoint]    INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdGeofence]         INT           NOT NULL,
     [IdPoint]            INT           NOT NULL,
     [GeofencePointOrder] INT           NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_GeofencePoint_Geofence] FOREIGN KEY ([IdGeofence]) REFERENCES [dbo].[Geofence] ([IdGeofence]),
     CONSTRAINT [FK_GeofencePoint_Point] FOREIGN KEY ([IdPoint]) REFERENCES [dbo].[Point] ([IdPoint])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[UserAddress] (
-    [UadIdAddress]                  BIGINT         IDENTITY (1, 1) NOT NULL,
+    [UadIdAddress]                  BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UadIdTownship]                 INT            NOT NULL,
     [UadIdAccount]                  BIGINT         NOT NULL,
     [UadIdCountry]                  VARCHAR (2)    NULL,
@@ -26,6 +26,10 @@
     CONSTRAINT [FKAddressAccount] FOREIGN KEY ([UadIdAccount]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FKAddressTownship] FOREIGN KEY ([UadIdTownship]) REFERENCES [dbo].[Township] ([IdTownship])
 );
+
+
+
+
 
 
 
@@ -245,3 +249,12 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'UserAddress',
     @level2type = N'COLUMN',
     @level2name = N'UadFavorite'
+GO
+CREATE NONCLUSTERED INDEX [IDX_UadRowStatus]
+    ON [dbo].[UserAddress]([UadRowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_UadIdAccount]
+    ON [dbo].[UserAddress]([UadIdAccount] ASC);
+

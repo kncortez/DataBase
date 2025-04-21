@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Unit] (
-    [IdUnit]       INT           IDENTITY (1, 1) NOT NULL,
+    [IdUnit]       INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UnitName]     NVARCHAR (50) NULL,
     [Prefix]       NVARCHAR (5)  NULL,
     [TypeUnit]     NVARCHAR (10) NULL,
@@ -10,6 +10,8 @@
     [DateUpdated]  DATETIME      NULL,
     CONSTRAINT [PK_Unit] PRIMARY KEY CLUSTERED ([IdUnit] ASC)
 );
+
+
 
 
 GO

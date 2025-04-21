@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryWizardAccount] (
-    [IdWizAccount]     INT          IDENTITY (1, 1) NOT NULL,
+    [IdWizAccount]     INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccIdAccount]     INT          NULL,
     [IdWiz]            INT          NULL,
     [StatusAccountWiz] INT          NULL,

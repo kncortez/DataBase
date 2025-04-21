@@ -71,7 +71,7 @@ FROM dbo.BatchCOD                 BT WITH(NOLOCK)
 WHERE CONVERT(DATE, BT.Date) = @Date
       AND BTD.CatConceptCODId = 1
       AND BTd.RowStatus = 1
-      AND BTD.isCompleted = 1;
+      AND BTD.IdCountry = @IdCountry --NEW BNHL;
 
 
 
@@ -246,6 +246,7 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 		--AND btc.RowStatus = 1 
 		--AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
 		AND do.SenderCountryId = @IdCountry
+        AND BTD.isCompleted = 1
 ​
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[HttpInterceptorLog] (
-    [IdHttpInterceptorLog] INT             IDENTITY (1, 1) NOT NULL,
+    [IdHttpInterceptorLog] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [PetitionMethod]       NVARCHAR (10)   NOT NULL,
     [PetitionUrl]          NVARCHAR (300)  NOT NULL,
     [PetitionDate]         DATE            NOT NULL,
@@ -14,6 +14,8 @@
     [ResponseTime]         DATETIME        NULL,
     PRIMARY KEY CLUSTERED ([IdHttpInterceptorLog] ASC)
 );
+
+
 
 
 

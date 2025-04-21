@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[MembershipSubscriptionLog] (
-    [IdMembershipSubscriptionLog] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdMembershipSubscriptionLog] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SystemId]                    INT             NOT NULL,
     [ModuleId]                    INT             NOT NULL,
     [MembershipId]                INT             NULL,
@@ -43,6 +43,10 @@
 
 
 
+
+
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_MembershipSubscriptionLog_RowStatus]
     ON [dbo].[MembershipSubscriptionLog]([RowStatus] ASC)
@@ -63,4 +67,9 @@ CREATE NONCLUSTERED INDEX [IDX_SubscriptionId_RowStatus_INCLUDE]
 GO
 CREATE NONCLUSTERED INDEX [IDX_LogGuideNumber]
     ON [dbo].[MembershipSubscriptionLog]([LogGuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_LogGuideNumber_LogGuideSerie]
+    ON [dbo].[MembershipSubscriptionLog]([LogGuideNumber] ASC, [LogGuideSerie] ASC);
 

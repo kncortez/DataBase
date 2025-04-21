@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeRoute] (
-    [IdTypeRoute]  INT           IDENTITY (1, 1) NOT NULL,
+    [IdTypeRoute]  INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]         VARCHAR (100) NOT NULL,
     [Description]  VARCHAR (200) NOT NULL,
     [RowStatus]    BIT           NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]  DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdTypeRoute] ASC)
 );
+
+
 
 
 GO

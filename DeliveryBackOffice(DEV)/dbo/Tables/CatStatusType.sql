@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatStatusType] (
-    [IdCatStatusType] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatStatusType] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [StatusType]      NVARCHAR (25) NOT NULL,
     [RowStatus]       BIT           NOT NULL,
     [TokenCreated]    NVARCHAR (50) NOT NULL,
@@ -8,6 +8,8 @@
     [DateUpdated]     DATETIME      NULL,
     CONSTRAINT [PK_CatStatusType] PRIMARY KEY CLUSTERED ([IdCatStatusType] ASC)
 );
+
+
 
 
 GO

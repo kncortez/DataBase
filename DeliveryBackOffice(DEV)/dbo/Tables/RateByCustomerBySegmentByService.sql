@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateByCustomerBySegmentByService] (
-    [RcdId]                   BIGINT          IDENTITY (1, 1) NOT NULL,
+    [RcdId]                   BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RcdIdCustomer]           INT             NOT NULL,
     [RcdIdCatService]         INT             NOT NULL,
     [RcdIdRateSegment]        INT             NULL,
@@ -22,6 +22,8 @@
     CONSTRAINT [FKRcdCustomer] FOREIGN KEY ([RcdIdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FKRcdRateSegment] FOREIGN KEY ([RcdIdRateSegment]) REFERENCES [dbo].[CatRateSegment] ([CrsId])
 );
+
+
 
 
 
