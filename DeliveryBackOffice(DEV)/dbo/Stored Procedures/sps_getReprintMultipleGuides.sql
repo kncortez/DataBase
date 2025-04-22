@@ -436,6 +436,8 @@ BEGIN
 			                          ON  dev.[OriginSenderId] = DPF.dpf_VpCodeOfReference
 								LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
 			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
+								LEFT JOIN DumpServiceCoverage DSC2 WITH(NOLOCK)
+			                          ON DSC2.IdSettlement = dev.SenderIdSettlement
 								LEFT JOIN  dbo.RatebyCustomer RC WITH(NOLOCK)
 			                          ON dev.IdCustomer = RC.RbcIdCustomer  AND RbcRowStatus = 1 AND (dev.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
                                 LEFT JOIN    dbo.RateHeader RH WITH(NOLOCK)

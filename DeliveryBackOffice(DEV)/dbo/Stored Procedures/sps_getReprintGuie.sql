@@ -752,6 +752,8 @@ begin
 									  AND CSBT.RowStatus = 1
                                 LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
 			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
+                                LEFT JOIN DumpServiceCoverage DSC2 WITH(NOLOCK)
+			                          ON DSC2.IdSettlement = dev.SenderIdSettlement
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),
