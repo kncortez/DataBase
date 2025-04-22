@@ -46,4 +46,6 @@ CREATE TYPE [dbo].[TblDeliveryOrders_v2] AS TABLE (
     [ParcelCode]                           NVARCHAR (1000) NULL,
     [IdCountrySender]                      NVARCHAR (2)    NULL,
 	[ReceiverIdSettlement]				   BIGINT		   NULL,
-	[ReceiverIdTownship]				   INT			   NULL);
+	[ReceiverIdTownship]				   INT			   NULL,
+	[SenderIdSettlement]                   BIGINT          NULL
+);

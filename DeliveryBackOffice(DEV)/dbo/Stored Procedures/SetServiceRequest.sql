@@ -1,4 +1,8 @@
-﻿
+﻿-- =============================================
+-- Author:	<Oscar Rodriguez>
+-- Description: Se regresa informacion de poblado de origen
+-- =============================================
+
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
     @TblServiceRequest AS TblServiceRequest3 READONLY,
@@ -148,7 +152,8 @@ BEGIN
 			   '  ' AS 'ReceiverCountryId',
         -- FIN MODIFICACION
                [ReceiverIdTownship],
-			   [ReceiverIdSettlement]
+			   [ReceiverIdSettlement],
+			   [SenderIdSettlement]
 
         INTO #GuideTable
         FROM @TblDeliveryOrders
@@ -363,7 +368,8 @@ BEGIN
 			[ReceiverCountryId],
             [GuideType],
         -- FIN MODIFICACION
-			[ReceiverIdSettlement]
+			[ReceiverIdSettlement],
+			[SenderIdSettlement]
         )
         SELECT GT.[Ticket_Number],
                GT.[Order_Number],
@@ -436,7 +442,8 @@ BEGIN
 			   GT.ReceiverCountryId,
                CASE WHEN GT.IdCountrySender = ReceiverCountryId THEN 'DOM' ELSE 'INT' END,
         -- FIN MODIFICACION
-               NULLIF(GT.ReceiverIdSettlement,0)
+               NULLIF(GT.ReceiverIdSettlement,0),
+			   GT.SenderIdSettlement
         FROM #GuideTable GT;
 
 		SELECT @IdCountry = IdCountrySender  FROM #GuideTable
