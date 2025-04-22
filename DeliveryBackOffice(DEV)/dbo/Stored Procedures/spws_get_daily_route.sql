@@ -398,7 +398,8 @@ BEGIN
 				 ,0)
 				 [DeliveryOption],
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
-				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id], 
+				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id],
+				 ISNULL(DOR.Ticket_Number, '') [TicketNumber],
 				 0 [ServiceManagementId],
 				 ISNULL(
 					ISNULL(

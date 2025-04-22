@@ -43,6 +43,7 @@ BEGIN
 		   ,do.Receiver_Town 'Town'
 		   ,do.Receiver_Address 'Address'
 		   ,rpd.GuideOrder 'GuideOrder'
+		   ,do.Ticket_Number
 		FROM RoutePreparation rp WITH (NOLOCK)
 		INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation

@@ -3,6 +3,11 @@
 -- Create date: <13-09-2022>
 -- Description:	<Get TOP 20 guides in LinehaulRouteSettlementContainerDetail>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <23-01-2025>
+-- Description:	<Obtiene el ticket number asociado a una guía.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_GetTopGuidesLinehaulRouteSettlement]
 	@LinehaulRouteSettlementId AS INT
 AS
@@ -14,6 +19,7 @@ BEGIN
 	SELECT		TOP 20
 				[LRSCD].[GuideSerie],
 				[LRSCD].[GuideNumber],
+				ISNULL([DO].[Ticket_Number],'') AS 'TicketNumber',
 				[LRSCD].[PiecesReceived],
 				[LRSCD].[PiecesMissing],
 				[CTC].[TypeContainerSerie],
@@ -26,6 +32,8 @@ BEGIN
 		ON		[LRSC].[ContainerId] = [C].[IdContainer]
 	INNER JOIN	[dbo].[CatTypeContainer] CTC WITH (NOLOCK)
 		ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
+	LEFT JOIN	[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+		ON		[LRSCD].[GuideSerie] = [DO].[Guide_Serie] AND [LRSCD].[GuideNumber] = [DO].[Guide_Number]
 	WHERE		[LRSCD].[RowStatus] = 1
 		AND		[LRSCD].[IsOpenProcess] = 0
 	ORDER BY	[LRSCD].[DateCreated] DESC;
