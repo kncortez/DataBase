@@ -13,6 +13,10 @@
 -- Create date: <2024-10-23>
 -- Description:	<Integración nuevo formato 4X4>
 -- =============================================
+-- Modified:    <Oscar, Rodriguez>
+-- Create date: <2025-04-21>
+-- Description: <Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion>
+-- =============================================
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY,
@@ -391,7 +395,11 @@ BEGIN
 									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
 								'WeightLB',
 								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
-	    						ISNULL(DSC.RouteCode,'') AS 'Route_Code',
+	    						(CASE 
+								    WHEN ISNULL(dev.IsLastMileReturn, 0) = 1
+									    THEN ISNULL(DSC2.RouteCode,'') 
+										ELSE ISNULL(DSC.RouteCode,'')
+								    END) AS 'Route_Code',
 								ISNULL(DPF.dpf_SAPcardCode,'') AS 'CardCode'
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
