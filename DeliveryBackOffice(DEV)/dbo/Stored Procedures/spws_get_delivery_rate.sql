@@ -27,6 +27,15 @@
 -- Create date: <2024-06-21>
 -- Description:	<Se agrega configuracion para multipais y multimoneda en EXC>
 -- =============================================
+-- Author:		<Brandon,Pedroza>
+-- Create date: <2025-03-21>
+-- Description:	<Cotizador - Se agrega configuracion para tarifas locales por medio de coberturas>
+-- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2025-03-03>
+-- Description:	<Se pasa a tablas la respuesta del Json>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @CodApp AS NVARCHAR(50) = ''
   , @IdCustomerParams AS INT = 0
@@ -876,30 +885,8 @@ BEGIN
     END;
     DECLARE @IdSegment INT;
 
-    -- HeaderCodes Iguales - LOC
-    IF (@HeaderCodeSource = @HeaderCodeDestiny)
-    BEGIN
-        IF @Country = 'HN'
-        BEGIN
-            PRINT @Country;
+    -- HeaderCodes  - revisar tabla
 
-            SELECT TOP 1
-                   @IdSegment = sg.CrsId
-            FROM dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsShortName = 'LOH';
-
-        END;
-        ELSE
-        BEGIN
-            SELECT TOP 1
-                   @IdSegment = sg.CrsId
-            FROM dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsShortName = 'LOC';
-        END;
-    END;
-    -- HeaderCodes diferentes - revisar tabla
-    ELSE
-    BEGIN
         IF (@CustomerType != 1)
         BEGIN
 
@@ -937,7 +924,7 @@ BEGIN
                   AND CTC.RowStatus = 1;
         END;
 
-    END;
+
 
     IF @IdSegment IS NULL -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
     BEGIN
@@ -1434,17 +1421,7 @@ BEGIN
                )
             BEGIN
                 -- Cálculo de segmento - nuevas tarifas
-                -- HeaderCodes Iguales - LOC
-                IF (@HeaderCodeSource = @HeaderCodeDestiny)
-                BEGIN
-                    SELECT TOP 1
-                           @IdSegment = sg.CrsId
-                    FROM dbo.CatRateSegment sg WITH (NOLOCK)
-                    WHERE sg.CrsShortName = IIF(@Country ='HN','LOH','LOC');
-                END;
-                -- HeaderCodes diferentes - revisar tabla
-                ELSE
-                BEGIN
+                -- HeaderCodes  - revisar tabla
                     SELECT TOP 1
                            @IdSegment = RTC.SegmentTypeId
                     FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
@@ -1457,7 +1434,7 @@ BEGIN
                           AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
                           AND RTC.RowStatus = 1;
 
-                END;
+
 
                 IF (@IdSegment IS NULL) -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
                 BEGIN
@@ -1490,7 +1467,7 @@ BEGIN
                 INTO #ParcelOverweightPerType
                 FROM #ParceCode                                               p
                     INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
-                        ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI
+                        ON p.Item = ABC.Code 
                 WHERE ABC.AbcRowStatus = 1;
 
                 SET @ExpectedWeight =
@@ -2484,53 +2461,97 @@ BEGIN
 
     --print 'Respuesta desde tabla temporal'
 
-    IF @FormatResponse <> 'Json'
-    BEGIN
 
         -- Desplegar valor base sin IVA
-        IF (
-               --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
-               --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
-               --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
-               --)
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral
-                          , @NewRateGeneralDiscount
-                          )
-               AND @IdCustomerParams != 0
-           )
-            SET @CalculateTaxes = 'false';
+    IF (
+            --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+            --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+            --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
+            --)
+            @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral
+                        , @NewRateGeneralDiscount
+                        )
+            AND @IdCustomerParams != 0
+        )
+        SET @CalculateTaxes = 'false';
 
-        SELECT tr.TypeRate
-             , tr.Segment
-             , tr.Service
-             , IIF(@PriceWithCreditCard = 1
-                 , (tr.BaseRate - tr.Discount + tr.IrregularPieceRate + tr.CreditCardRate)
-                 , (tr.BaseRate - tr.Discount + tr.IrregularPieceRate))                      AS Price --  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.BaseRate, 'false')           AS BaseRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', (tr.Discount * -1), 'false')    AS DiscountValue
-             , tr.DiscountName
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.FragilRate, 'false')         AS FragilRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.CollectedRate, 'false')      AS CollectedRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.InsuranceRate, 'false')      AS InsuranceRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.OverWeightRate, 'false')     AS OverWeightRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.IrregularPieceRate, 'false') AS IrregularPieceRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.CreditCardRate, 'false')     AS CreditCardRate
-             , dbo.fnt_Iva_Calculator(
-                                         @CalculateTaxes
-                                       , 'GT'
-                                       , (tr.BaseRate - tr.Discount + tr.FragilRate + tr.CollectedRate
-                                          + tr.InsuranceRate + tr.CreditCardRate + tr.OverWeightRate
-                                          + tr.IrregularPieceRate
-                                         )
-                                       , 'true'
-                                     )                                                       AS Iva
-             , @FechaCompra                                                                  [FechaCompra]
-             , @Currency                                                                     [Currency]
-             , tr.ReturnRate                                                                 [ReturnRate]
-             , @CurrencyId                                                                   [CurrencyId]
-        FROM @TempRate tr;
-    END;
+	SELECT tr.Id,
+			tr.ServiceName AS Title,
+			@CalculateMembership AS UseMembership,
+			tr.Segment,
+			tr.ServiceDescription,
+			tr.[Service],
+			@FechaCompra AS DeliveryDate,
+			IIF(@PriceWithCreditCard = 1,
+				(tr.BaseRate - tr.Discount + tr.IrregularPieceRate + tr.CreditCardRate),
+				(tr.BaseRate - tr.Discount + tr.IrregularPieceRate)) AS Price,
+			tr.TypeRate,
+			tr.Segment,
+			--  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
+			dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.BaseRate, 'false') AS BaseRate,
+			dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', (tr.Discount * -1), 'false') AS DiscountValue,
+			tr.DiscountName,
+			dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.FragilRate, 'false') AS FragilRate,
+			dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.CollectedRate, 'false') AS CollectedRate,
+			dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.InsuranceRate, 'false') AS InsuranceRate,
+			dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.OverWeightRate, 'false') AS OverWeightRate,
+			dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.IrregularPieceRate, 'false') AS IrregularPieceRate,
+			dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.CreditCardRate, 'false') AS CreditCardRate,
+			dbo.fnt_Iva_Calculator(
+										@CalculateTaxes,
+										'GT',
+										(tr.BaseRate - tr.Discount + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
+										+ tr.CreditCardRate + tr.OverWeightRate + tr.IrregularPieceRate
+										),
+										'true'
+									) AS Iva,
+			@FechaCompra [FechaCompra],
+			@Currency [Currency],
+			tr.ReturnRate [ReturnRate],
+			@CurrencyId [CurrencyId]
+	FROM @TempRate tr
 
+
+	SELECT tr.Id,
+			IIF(@PriceWithCreditCard = 1,
+				(tr.BaseRate - tr.Discount + tr.IrregularPieceRate + tr.CreditCardRate),
+				(tr.BaseRate - tr.Discount + tr.IrregularPieceRate)) AS Price,
+			CASE
+				WHEN tr.FragilRate > 0 THEN
+					'Frágil'
+				WHEN tr.InsuranceRate > 0 THEN
+					'Seguro'
+				WHEN tr.CollectedRate > 0 THEN
+					'Pago en Destino'
+				WHEN tr.OverWeightRate > 0 THEN
+					'Recargo por Peso'
+				WHEN tr.CreditCardRate > 0 THEN
+					'Otros recargos'
+				WHEN ISNULL(tr.Discount, 0) > 0 THEN
+					ISNULL(tr.DiscountName, '')
+				WHEN ISNULL(
+								dbo.fnt_Iva_Calculator(
+														@CalculateTaxes,
+														'GT',
+														(CONVERT(DECIMAL(12, 2), tr.BaseRate)
+															- CONVERT(DECIMAL(12, 2), tr.Discount)
+															+ CONVERT(DECIMAL(12, 2), tr.FragilRate)
+															+ CONVERT(DECIMAL(12, 2), tr.CollectedRate)
+															+ CONVERT(DECIMAL(12, 2), tr.InsuranceRate)
+															+ CONVERT(DECIMAL(12, 2), tr.CreditCardRate)
+															+ CONVERT(DECIMAL(12, 2), tr.OverWeightRate)
+															+ CONVERT(DECIMAL(12, 2), tr.IrregularPieceRate)
+														),
+														'true'
+													),
+								0
+							) > 0 THEN
+					'IVA'
+				ELSE
+					'Servicio'
+			END AS [Description],
+			@Currency AS [Currency]
+	FROM @TempRate tr
 
 --PRINT 'precio'
 
