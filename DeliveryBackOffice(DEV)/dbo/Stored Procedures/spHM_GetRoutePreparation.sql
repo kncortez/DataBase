@@ -66,6 +66,7 @@ BEGIN
 				,do.Receiver_Town
 				,do.Receiver_Address
 				,rpd.GuideOrder
+				,do.Ticket_Number
 		ORDER BY COALESCE(rpd.GuideOrder, 999999) ASC 
 	END
 	ELSE
