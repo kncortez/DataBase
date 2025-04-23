@@ -9,6 +9,10 @@
 -- Update date: <2024-12-09>
 -- Description:	<Separacion de flujos para generacion de lotes cod inmediato y cod anticipado>
 -- =============================================
+-- Author:		<Cristian Azurdia>
+-- Update date: <2025-04-23>
+-- Description:	<Configuracion de parametros de Bancos COD Multipais>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_collect]
     @IdBankParam INT,
@@ -85,14 +89,13 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
                     WHERE cm.ModName = @ModuleName
                 );
-        DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
-        --DECLARE @IdCountry NVARCHAR(50) = N'GT';
-        DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
-        DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
-        DECLARE @AccountType NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'MONETARIA', N'CHEQUES');
-        DECLARE @ConceptCustomer NVARCHAR(50) = N'PAGO';
-        DECLARE @CreditAccount NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'903666261', N'730512881');
-        DECLARE @ConceptForza NVARCHAR(50) = N'COLLECT';
+        DECLARE @BankName NVARCHAR(50) = (SELECT [Name] FROM ConfigurationCODByCountry ccc INNER JOIN DeliveryBank db ON ccc.BankId = db.Id_Bank WHERE ccc.CountryId = @IdCountrySender)
+        DECLARE @InAccount NVARCHAR(50) = (SELECT [InAccount] FROM ConfigurationCODByCountry ccc WHERE ccc.CountryId = @IdCountrySender);
+        DECLARE @OutAccount NVARCHAR(50) = (SELECT [OutAccount] FROM ConfigurationCODByCountry ccc WHERE ccc.CountryId = @IdCountrySender);
+        DECLARE @AccountType NVARCHAR(50) = (SELECT [BankAccountType] FROM ConfigurationCODByCountry ccc INNER JOIN CatBankAccountType cbat ON ccc.CatBankAccountTypeId = cbat.IdBankAccountType WHERE ccc.CountryId = @IdCountrySender);
+        DECLARE @ConceptCustomer NVARCHAR(50) = (SELECT [ConceptCustomer] FROM ConfigurationCODByCountry ccc WHERE ccc.CountryId = @IdCountrySender);
+        DECLARE @CreditAccount NVARCHAR(50) = (SELECT [DCBA_Nom_account] FROM ConfigurationCODByCountry ccc INNER JOIN DeliveryCustomerBankAccount dcba ON ccc.DCBAId = dcba.DCBA_id where ccc.CountryId = @IdCountrySender);
+        DECLARE @ConceptForza NVARCHAR(50) = (SELECT [ConceptForza] FROM ConfigurationCODByCountry ccc WHERE ccc.CountryId = @IdCountrySender);
         DECLARE @BankBAC INT =
                 (
                     SELECT db.Id_bank
