@@ -53,7 +53,7 @@ BEGIN TRY
 			, T2.TownshipName + ' , ' + P2.ProvinceName  AS 'Direccion remitente'
 			, VPC.Email AS 'Correo remitente'
 			, VPC.IdSettlement AS 'SenderSettlement'
-			, S2.Settlement AS 'SenderSettlementName'
+			, ISNULL(S2.Settlement,'') AS 'SenderSettlementName'
 			--PARA
 			, DL.ReceiverName AS 'Nombre destinatario'
 			, ISNULL(DL.NirPhone,'') + DL.ReceiverPhone AS 'Telefono destinatario'
