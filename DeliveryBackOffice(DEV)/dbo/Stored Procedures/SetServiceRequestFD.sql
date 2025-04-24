@@ -417,10 +417,10 @@ BEGIN
 						FROM RatebyCustomer rbc WITH (NOLOCK)
 						INNER JOIN VisitPointClient vpc WITH (NOLOCK)
 							ON GT.Sender_ID = vpc.CodeOfReference
-							AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
-							OR rbc.RbcCodeOfReference IS NULL)
 						WHERE ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
 						AND rbc.RbcRowStatus = 1
+					    AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+						OR rbc.RbcCodeOfReference IS NULL)
 						ORDER BY rbc.RbcCodeOfReference DESC)
 			INNER JOIN RateHeader rh WITH (NOLOCK)
 				ON rc.RbcIdRate = rh.RheId

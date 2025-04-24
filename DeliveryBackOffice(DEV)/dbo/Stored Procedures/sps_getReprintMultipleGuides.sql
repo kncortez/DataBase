@@ -636,10 +636,10 @@ BEGIN
 											[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
 											ON
 												[Twn].[IdProvince] = [Prv].[IdProvince]
-												AND
-												[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
 									WHERE
 										[dev].[Sender_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+										AND
+										[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
 								) AlterOrigin
 								OUTER APPLY (
 									SELECT 
@@ -651,10 +651,10 @@ BEGIN
 											[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
 											ON
 												[Twn].[IdProvince] = [Prv].[IdProvince]
-												AND
-												[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
 									WHERE
 										[dev].[Receiver_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+										AND
+										[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
 								) AlterDestiny
 								-- ADICIONES TSE
 								OUTER APPLY (

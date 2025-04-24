@@ -176,7 +176,7 @@ BEGIN
 
 	IF @StationCorrect > 0
 	BEGIN
-		IF ( SELECT COUNT(*)FROM @User) > 0 -- si encuentra registros quiere decir que hay conicidencia en usuario y contraseña
+		IF EXISTS ( SELECT top 1 1 FROM @User) -- si encuentra registros quiere decir que hay conicidencia en usuario y contraseña
 		BEGIN
 			-- Validación de visit point para express center
 			IF (@VERIFYUSER > 0)
@@ -225,7 +225,7 @@ BEGIN
 								HASHBYTES('MD5', CONCAT(@Username, @Password, SYSDATETIME()))
 								, 2 ) AS token );
 
-							IF ( SELECT COUNT(*)FROM [dbo].TokenLog tkn WITH(NOLOCK) WHERE tkn.TknIdToken = @Token ) = 0 --si el token no exite crearlo 
+							IF NOT EXISTS ( SELECT TOP 1 1 FROM [dbo].TokenLog tkn WITH(NOLOCK) WHERE tkn.TknIdToken = @Token ) --si el token no exite crearlo 
 							BEGIN
 								INSERT INTO [dbo].[TokenLog]
 								(
@@ -311,16 +311,17 @@ BEGIN
 								DECLARE @CHILDSMD    VARCHAR(MAX) = ''
 									  , @CHILDSMENU  INT          = 0
 									  , @CHILDSMENU2 INT          = 1;
-								DECLARE @TBSUBMODULES2 TABLE
+								IF OBJECT_ID('tempdb..#TBSUBMODULES2') IS NOT NULL
+                                    DROP TABLE #TBSUBMODULES2;
+
+								CREATE TABLE #TBSUBMODULES2
 								(
-									ITERATOR2 INT
-								  , ModIdModuleDAD INT
-								  , ModIdModuleCHILD INT
+									ITERATOR2 INT,
+									ModIdModuleDAD INT,
+									ModIdModuleCHILD INT
 								);
 
-								DELETE @TBSUBMODULES2
-								WHERE 1 = 1;
-								INSERT INTO @TBSUBMODULES2
+								INSERT INTO #TBSUBMODULES2
 								(
 									ITERATOR2
 								  , ModIdModuleDAD
@@ -356,7 +357,7 @@ BEGIN
 									  );
 
 								SELECT @CHILDSMENU = COUNT(1)
-								FROM @TBSUBMODULES2;
+								FROM #TBSUBMODULES2;
 
 								WHILE @CHILDSMENU > 0
 								BEGIN
@@ -367,7 +368,7 @@ BEGIN
 									WHERE cmo.ModIdModule =
 									(
 										SELECT TMP.ModIdModuleCHILD
-										FROM @TBSUBMODULES2 AS TMP
+										FROM #TBSUBMODULES2 AS TMP
 										WHERE TMP.ITERATOR2 = @CHILDSMENU2
 									);
 
