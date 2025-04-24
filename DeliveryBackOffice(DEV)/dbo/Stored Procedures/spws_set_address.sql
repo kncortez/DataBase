@@ -14,6 +14,11 @@
 -- Create date: <2024-10-24>
 -- Description:	<Se agrega la opcion de editar datos desde un usuario de EXP>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2025-03-05>
+-- Description:	<Se pasa a tablas la respuesta del SP>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_address]
 	-- Add the parameters for the stored procedure here
@@ -192,16 +197,12 @@ BEGIN
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
 
-					 set @jsonResult =(
-						SELECT STUFF(( 
-						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Delete'
-		
-						FOR XML PATH(''), TYPE
-						).value('.', 'varchar(max)'),1,1,''
-							  ) 
-						)
+					SELECT IdResult AS IdResult, 
+							Id AS [Message],
+							@IdAddress AS IdAddress,    
+							[Message]  
+					FROM @ResponseMessages 
+					WHERE Id ='Delete'
 
 				end
 				else -- se va a actualizar el registro
@@ -220,8 +221,7 @@ BEGIN
 						INNER JOIN dbo.Province prv WITH (NOLOCK)
 							ON prv.IdProvince = twn.IdProvince
 						INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
-							ON ua.IdCityPlace = ctp.IdCityPlace
-							   AND ctp.CityPlaceRowStatus = 'true'
+							ON ua.IdCityPlace = ctp.IdCityPlace					   
 						LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 							ON vp.CodeOfReference = ua.CodeOfReference
 						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
@@ -234,6 +234,7 @@ BEGIN
 							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
 							  AND conf.TownshipId = vp.IdTownship
 							  AND conf.[Address] = vp.[Address]
+							  AND ctp.CityPlaceRowStatus = 'true'
 
 						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
 						BEGIN
@@ -292,17 +293,15 @@ BEGIN
 					FROM [dbo].[UserAddress] UADD LEFT JOIN [dbo].[VisitPointClient] VP with(nolock)
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
+ 
 
-					 set @jsonResult =(
-						SELECT STUFF(( 
-						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Update'
+					SELECT IdResult AS IdResult,
+							Id AS [MessageId],
+							@IdAddress AS IdAddress,   
+							Message  
+					FROM @ResponseMessages 
+					WHERE Id ='Update'
 		
-						FOR XML PATH(''), TYPE
-						).value('.', 'varchar(max)'),1,1,''
-							  ) 
-						)
 				end
 			end
 			else -- la cuenta no existe, entonces se crea
@@ -321,8 +320,7 @@ BEGIN
 						INNER JOIN dbo.Province prv WITH (NOLOCK)
 							ON prv.IdProvince = twn.IdProvince
 						INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
-							ON ua.IdCityPlace = ctp.IdCityPlace
-							   AND ctp.CityPlaceRowStatus = 'true'
+							ON ua.IdCityPlace = ctp.IdCityPlace					   
 						LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 							ON vp.CodeOfReference = ua.CodeOfReference
 						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
@@ -335,6 +333,7 @@ BEGIN
 							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
 							  AND conf.TownshipId = vp.IdTownship
 							  AND conf.[Address] = vp.[Address]
+							  AND ctp.CityPlaceRowStatus = 'true'
 
 						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
 						BEGIN
@@ -452,22 +451,20 @@ BEGIN
 
 
 				set @IdAddress = SCOPE_IDENTITY()
-				set @jsonResult =(
-						SELECT STUFF(( 
-						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-						+ '"CodeOfReference":' + convert(varchar,@CodeOfReference)    +',' 
-						+ '"Province":"' + convert(varchar,@Department)    +'",' 
-						+ '"Township":"' + convert(varchar,@TownshipName)    +'",' 
-						+ '"HeaderCode":"' + convert(varchar,@HeaderCode)    +'",' 
-						+ '"CityPlace":"' + convert(varchar,@CityName) +'",' 
-						+ '"IdProvince":"' + convert(varchar,@IdDepartment) +'",' 
-						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Insert'
-		
-						FOR XML PATH(''), TYPE
-						).value('.', 'varchar(max)'),1,1,''
-							  ) 
-						)			
+
+				SELECT IdResult AS IdResult,
+						Id AS [MessageId],
+						@IdAddress AS IdAddress,   
+						@CodeOfReference AS CodeOfReference,     
+						@Department AS Province,   
+						@TownshipName AS Township,   
+						@HeaderCode AS HeaderCode,   
+						@CityName AS CityPlace, 
+						@IdDepartment AS IdProvince, 
+						[Message] 							   
+				FROM @ResponseMessages 
+				WHERE Id ='Insert'
+				
 			end
 			--------INICIO Homologación de campos para OAC (Tabla: ConfirmedAddres)--------
 			if @Status = 0
@@ -596,22 +593,19 @@ BEGIN
 
 			--------FIN Homologación de campos para OAC --------
 		end
-		else
-		begin
+		ELSE
+		BEGIN
 
 			ROLLBACK TRANSACTION;
 
-			set @jsonResult =(
-						SELECT STUFF(( 
-						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Access'
-		
-						FOR XML PATH(''), TYPE
-						).value('.', 'varchar(max)'),1,1,''
-							  ) 
-						)
-		end
+				SELECT IdResult AS IdResult,
+						Id AS [MessageId],
+						@IdAddress AS IdAddress,    
+				Message AS [Message] 
+				FROM @ResponseMessages 
+				WHERE Id ='Access'
+
+		END
 	END TRY
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
@@ -621,16 +615,14 @@ BEGIN
 		VALUES
 			('spws_set_address', ERROR_MESSAGE(), @Token, GETDATE(), ERROR_LINE())
 
-		set @jsonResult =(
-					SELECT STUFF(( 
-					SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-					+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-					+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Error'
+		SELECT IdResult AS IdResult, 
+				Id AS [MessageId],
+				@IdAddress AS IdAddress,     
+				Message AS [Message] 
+		FROM @ResponseMessages 
+		WHERE Id ='Error'
 		
-					FOR XML PATH(''), TYPE
-					).value('.', 'varchar(max)'),1,1,''
-							) 
-					)
+
 	END CATCH
 
 	-- destruir tablas temporales
@@ -638,9 +630,6 @@ BEGIN
 	IF OBJECT_ID('tempdb.dbo.#Address', 'U') IS NOT NULL DROP TABLE #Address;
 	IF OBJECT_ID('tempdb.dbo.#Access', 'U') IS NOT NULL DROP TABLE #Access;
 
-	-- retornar resultado en formato json
-
-	select ('[{' + @jsonResult +  ']') jsonResult
 
 END
 
