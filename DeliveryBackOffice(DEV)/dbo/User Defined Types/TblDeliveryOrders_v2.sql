@@ -1,9 +1,4 @@
-﻿-- =============================================
--- Author:		<Oscar Rodriguez>
--- Create date: <2024-11-19>
--- Description:	<Se agrego nuevo campo SenderIdSettlement para almacenar informacion de poblado de origen>
--- =============================================
-CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE (
+CREATE TYPE [dbo].[TblDeliveryOrders_v2] AS TABLE (
     [RowNumber]                            INT             NOT NULL,
     [Ticket_Number]                        NVARCHAR (150)  NULL,
     [Order_Number]                         INT             NULL,
@@ -21,8 +16,6 @@ CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE (
     [Sender_Town]                          NVARCHAR (100)  NULL,
     [Sender_Department]                    NVARCHAR (100)  NULL,
     [Sender_Phone]                         NVARCHAR (50)   NULL,
-    [Sender_Lat]                           VARCHAR (50)    NULL,
-    [Sender_Lng]                           VARCHAR (50)    NULL,
     [Receiver_ID]                          INT             NULL,
     [Receiver_FirstName]                   NVARCHAR (100)  NULL,
     [Receiver_LastName]                    NVARCHAR (100)  NULL,
@@ -50,13 +43,9 @@ CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE (
     [Sender_Internal_Code]                 NVARCHAR (50)   NULL,
     [Receiver_Alternant_CUI]               NVARCHAR (25)   NULL,
     [Collect_OnDelivery]                   DECIMAL (14, 2) NULL,
-    [IsCollect]                            BIT             NULL,
-    [PriceShippment]                       DECIMAL (14, 2) NULL,
-    [SenderIdTownship]                     INT             NULL,
-    [ReceiverIdTownship]                   INT             NULL,
-    [ReceiverLatitude]                     NVARCHAR (25)   NULL,
-    [ReceiverLongitude]                    NVARCHAR (25)   NULL,
-	[SenderIdSettlement]                   BIGINT          NULL);
-
-
-
+    [ParcelCode]                           NVARCHAR (1000) NULL,
+    [IdCountrySender]                      NVARCHAR (2)    NULL,
+	[ReceiverIdSettlement]				   BIGINT		   NULL,
+	[ReceiverIdTownship]				   INT			   NULL,
+	[SenderIdSettlement]                   BIGINT          NULL
+);
