@@ -56,7 +56,7 @@ BEGIN
 	BEGIN
 		SELECT 400 AS [IdResult],
 			'Link de Guia ha sido pagado'	AS [Message],
-			0				AS [PaidZigi],
+			1				AS [PaidZigi],
 			@GuideNumber	AS GuideNumber,
 			@GuideSerie		AS GuideSerie,
 			1				AS [LinkCreated],
