@@ -1,5 +1,4 @@
-﻿
--- Stored Procedure
+﻿-- Stored Procedure
 
 -- =============================================
 -- Author:		<Edwin,Ramirez>
@@ -10,6 +9,11 @@
 -- Author:		<Edelman Vásquez>
 -- Create date: <2022-01-26>
 -- Description:	<Se Agregaron a las consultas los campos de receptor Alterante>
+-- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-25>
+-- Description:	<Mejoras de multimoneda.>
 -- =============================================
 CREATE PROCEDURE [dbo].[spw_get_geliveryorders_track]
     -- Add the parameters for the stored procedure here
@@ -155,7 +159,7 @@ BEGIN
                         ON serv.Guide_Serie = c.GuideSerie
                            AND serv.Guide_Number = c.GuideNumber
                     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
                 WHERE CONVERT(DATE, serv.DateCreated)
                       BETWEEN @DateIni AND @DateFin
                       AND serv.StatusOrderId <> 7 -- No guías anuladas
@@ -255,7 +259,7 @@ BEGIN
                         ON serv.Guide_Serie = c.GuideSerie
                            AND serv.Guide_Number = c.GuideNumber
                     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
                 WHERE serv.Guide_Serie = @GuideSerie
                       AND serv.Guide_Number = @GuideNumber
                       AND serv.StatusOrderId <> 7 -- No guías anuladas
@@ -358,7 +362,7 @@ BEGIN
                         ON serv.Guide_Serie = c.GuideSerie
                            AND serv.Guide_Number = c.GuideNumber
                     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
                 WHERE (
                           (
                               serv.Sender_ID = 0
@@ -470,7 +474,7 @@ BEGIN
                         ON serv.Guide_Serie = c.GuideSerie
                            AND serv.Guide_Number = c.GuideNumber
                     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
                 WHERE (
                           (
                               serv.Sender_ID = 0
