@@ -15,9 +15,9 @@ BEGIN TRY
         ,IdCountry
     )
     VALUES 
-    ('Camión', 'Camión', 1, 'SYS-JRAMIREZ', GETDATE(), NULL, NULL, 'Paquete grande', 'SV'),
+    ('CamiÃ³n', 'CamiÃ³n', 1, 'SYS-JRAMIREZ', GETDATE(), NULL, NULL, 'Paquete grande', 'SV'),
     ('Panel', 'Panel', 1, 'SYS-JRAMIREZ', GETDATE(), NULL, NULL, 'Paquete mediano', 'SV'),
-    ('Motocicleta', 'Motocicleta', 1, 'SYS-JRAMIREZ', GETDATE(), NULL, NULL, 'Paquete pequeño', 'SV');
+    ('Motocicleta', 'Motocicleta', 1, 'SYS-JRAMIREZ', GETDATE(), NULL, NULL, 'Paquete pequeÃ±o', 'SV');
 
     COMMIT TRANSACTION;
 END TRY

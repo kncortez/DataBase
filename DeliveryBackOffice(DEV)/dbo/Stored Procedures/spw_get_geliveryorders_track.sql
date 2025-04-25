@@ -1,5 +1,4 @@
-﻿
--- Stored Procedure
+﻿-- Stored Procedure
 
 -- =============================================
 -- Author:		<Edwin,Ramirez>
