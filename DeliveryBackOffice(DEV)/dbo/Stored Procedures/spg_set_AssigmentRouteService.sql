@@ -556,7 +556,6 @@ BEGIN
             SPC.SenderName [Name],
             SPC.AddressPickup [Address],
             SPC.SenderPhone [Phone],
-            CONVERT(VARCHAR(10), SPC.StartDate, 105) AS datePickUp,
             CONCAT(CONVERT(varchar(10), SPC.StartDate, 108), '   ', CONVERT(varchar(10), SPC.EndDate, 108)) as rangeHour,
             SPC.QuantityRegularPackages,
             SPC.QuantityOverDimensionedPackage,
@@ -565,17 +564,13 @@ BEGIN
             ISNULL(smt.Amount,0) Amount,
             smt.IdServiceManagement IdServiceManagement,
             smt.[Order] [Order],
-            spc.IsScheduled IsScheduled,
-            vpc.Latitude,
-            vpc.Longitude,
-            vpc.Email
+            spc.IsScheduled IsScheduled
         FROM DBO.SchedulePickup SPC
         LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] dop WITH (NOLOCK) ON dop.IdHeaderRecolection = SPC.SchedulePickupId
         INNER JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] as smt WITH(NOLOCK) on SPC.SchedulePickupId = smt.IdSchedulePickup
         INNER JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] as rat WITH(NOLOCK) on smt.IdPuRouteAssigment = rat.IdRouteAssigment
         LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] as snr WITH(NOLOCK) on rat.IdCurrierMan = snr.ID
         LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] as css WITH(NOLOCK) on css.IdServiceStatus = smt.ServiceStatusId            
-        LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK) ON SPC.SenderId = vpc.CodeOfReference
         WHERE SchedulePickupId=@idSchedulePickup
 
     END TRY
