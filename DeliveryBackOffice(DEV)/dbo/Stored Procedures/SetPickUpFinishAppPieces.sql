@@ -255,20 +255,17 @@ BEGIN
 				WHERE
 					[ItemPiece] = 0;
 
-				-- VALIDAMOS SI HAY ALGUNA GUIA QUE NO EXISTA
 
-				SELECT DISTINCT
-					LS.ItemSerie,
-					LS.ItemNumber,
-					CASE
-						WHEN DO.Guide_Number IS NOT NULL THEN
-							1
-						ELSE
-							0
-					END AS Exist
-				INTO #Delivery
-				FROM #listGuides LS
-					LEFT JOIN DeliveryOrder DO WITH (NOLOCK)
+				SELECT @ValidCountry = MAX(   CASE
+												  WHEN DO.SenderCountryId = @IdCountry THEN
+													  1
+												  ELSE
+													  0
+											  END
+										  )
+				FROM DeliveryOrder DO WITH (NOLOCK)
+					INNER JOIN #listGuides LS
+
 						ON DO.Guide_Serie = LS.ItemSerie
 						   AND DO.Guide_Number = LS.ItemNumber
 
@@ -606,15 +603,13 @@ BEGIN
 								(
 									SELECT IdServiceStatus FROM CatServiceStatus WHERE Name = 'Recolectado'
 								);
-				
-								UPDATE ServiceManagement
-								SET CiPuDate = @StartDate,
-									CoPuDate = @EndDate,
-									Amount = 0,
-									TokenUpdated = @Token,
-									DateUpdated = GETDATE(),
-									CatPaymentTimeId = NULL -- En Dispatch Track no se ven pagos
-								WHERE IdSchedulePickup = @IdPickup;
+
+							UPDATE ServiceManagement
+							SET CiPuDate = @StartDate,
+								CoPuDate = @EndDate,
+								TokenUpdated = @Token,
+								DateUpdated = GETDATE()
+							WHERE IdSchedulePickup = @IdPickup;
 
 
 								DECLARE @transac INT =
@@ -776,37 +771,25 @@ BEGIN
 						END
 					END				
 					ELSE
-					BEGIN
-						SELECT 0 AS StatusCode, 
-							  'La guía pertenece a otro País' AS Message
-					END
-				END
+                    BEGIN
+                        SELECT 0 AS StatusCode, 
+                            'Las piezas ya se encuentran procesadas' AS Message
+                    END
+				END				
 				ELSE
 				BEGIN
-					SELECT 1 AS StatusCode,
-						   'La guía no existe' AS Message
-
-						   SELECT CONCAT(ItemSerie, ItemNumber) AS Guide, 
-								  'La guía no existe' AS Message
-						   FROM #Delivery
-						   WHERE Exist = 0
+					SELECT 0 AS StatusCode, 
+						  'La guia pertenece a otro País' AS Message
 				END
 			END
 			ELSE
 			BEGIN
 			------Guia no valida----------
-					SELECT 1 AS StatusCode,
-					  'Guías no válidas' AS Message
-
-					SELECT Message,
-						   Guide
+					SELECT 0 AS StatusCode,
+						  Guide
+						  Message
 					FROM #Temp
 			END
-		END
-		ELSE
-		BEGIN
-			SELECT 0 AS StatusCode,
-				  'El Token con es válido'
 		END
 	END TRY
 	BEGIN CATCH
