@@ -131,7 +131,6 @@ BEGIN
             SELECT *
             FROM ServiceManagement WITH (NOLOCK)
             WHERE IdServiceManagement = @KeyLocal
-			AND ServiceStatusId != @StatusIncidence
         )
         BEGIN
             BEGIN TRANSACTION
@@ -156,7 +155,7 @@ BEGIN
         ELSE
         BEGIN
             SELECT 0 AS StatusCode,
-                   'Resgistro no encontrado o se encuentra con una incidencia' AS Description
+                   'Resgistro no encontrado' AS Description
         END
     END TRY
     BEGIN CATCH
