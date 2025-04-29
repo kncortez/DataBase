@@ -136,6 +136,7 @@ BEGIN
         ON DSC.IdSettlement = do.ReceiverIdSettlement 
     LEFT JOIN Settlement s WITH(NOLOCK)
         ON DSC.IdSettlement = s.IdSettlement
-	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND s.SettlementSatus = 1;
+		AND s.SettlementSatus = 1
+	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber;
 
 END
