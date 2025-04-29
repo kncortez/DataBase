@@ -7,6 +7,11 @@
 -- Create date: <2020-05-20>
 -- Description:	<Devuelve ordenes de entrega por rango fecha>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-25>
+-- Description:	<Mejoras de multimoneda.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_get_deliveryorders_cod]
 	-- Add the parameters for the stored procedure here
 		@Token AS VARCHAR(50)    = '078c6f38f79816bf9ad01d70181b3101', --Prod '078c6f38f79816bf9ad01d70181b3101'
@@ -78,19 +83,21 @@ BEGIN
 				COALESCE(batch.Commission, 0) CommissionCOD,
 				CAST(ROUND(((COALESCE(batch.Commission, 0))/(Collect_OnDelivery)*100), 0) AS INT) ComissionPercentCOD
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-			LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide
+			LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide WITH (NOLOCK)
 				on paidguide.Guide_Serie = serv.Guide_Serie
 				and paidguide.Guide_Number = serv.Guide_Number
 				and paidguide.Deposit_Number = serv.Deposit_Number
 				and paidguide.IdStatus = 'TRUE'
-			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
+			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
 				ON serv.StatusOrderId = so.StatusOrderId
-			LEFT JOIN DeliveryBackOffice.DBO.BatchDetailCOD batch
+			LEFT JOIN DeliveryBackOffice.DBO.BatchDetailCOD batch WITH (NOLOCK)
 				ON batch.GuideSerie = serv.Guide_Serie
 				AND batch.GuideNumber = serv.Guide_Number
 				AND batch.CatConceptCODId = 2
-			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD
-				ON ccCOD.IdCatCurrencyCOD = IIF(batch.CatCurrencyCODId IS NULL, 1, batch.CatCurrencyCODId)
+			LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+				ON serv.Guide_Serie = C.GuideSerie AND serv.Guide_Number = C.GuideNumber
+			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD WITH (NOLOCK)
+				ON ccCOD.IdCatCurrencyCOD = ISNULL(C.CodCurrency, C.ShippingCurrency)
 			WHERE (serv.DateCreated BETWEEN  @StartDateTime AND @EndDateTime)
 				AND serv.StatusOrderId <> 7 -- No guías anuladas
 				AND serv.StatusOrderId <> 15 -- No guías generadas
@@ -119,19 +126,21 @@ BEGIN
 				COALESCE(batch.Commission, 0) CommissionCOD,
 				CAST(ROUND(((COALESCE(batch.Commission, 0))/(Collect_OnDelivery)*100), 0) AS INT) ComissionPercentCOD
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-			LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide
+			LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide WITH (NOLOCK)
 				on paidguide.Guide_Serie = serv.Guide_Serie
 				and paidguide.Guide_Number = serv.Guide_Number
 				and paidguide.Deposit_Number = serv.Deposit_Number
 				and paidguide.IdStatus = 'TRUE'
-			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
+			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
 				ON serv.StatusOrderId = so.StatusOrderId
-			LEFT JOIN DeliveryBackOffice.DBO.BatchDetailCOD batch
+			LEFT JOIN DeliveryBackOffice.DBO.BatchDetailCOD batch WITH (NOLOCK)
 				ON batch.GuideSerie = serv.Guide_Serie
 				AND batch.GuideNumber = serv.Guide_Number
 				AND batch.CatConceptCODId = 2
-			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD
-				ON ccCOD.IdCatCurrencyCOD = IIF(batch.CatCurrencyCODId IS NULL, 1, batch.CatCurrencyCODId)
+			LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+				ON serv.Guide_Serie = C.GuideSerie AND serv.Guide_Number = C.GuideNumber
+			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD WITH (NOLOCK)
+				ON ccCOD.IdCatCurrencyCOD = ISNULL(C.CodCurrency, C.ShippingCurrency)
 			WHERE serv.Guide_Serie = @GuideSerie 
 				AND serv.Guide_Number = @GuideNumber 
 				AND serv.StatusOrderId <> 7 -- No guías anuladas
