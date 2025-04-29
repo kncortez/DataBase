@@ -18,7 +18,7 @@ BEGIN
    IF @option  = 1 
    BEGIN
         SELECT @IdPuRouteAssigment = IdPuRouteAssigment
-          FROM ServiceManagement WITH(NOLOCK) 
+          FROM ServiceManagement WITH(nolock) 
          WHERE IdServiceManagement = @idServiceManagement
 
          UPDATE [RouteAssigment]
@@ -33,10 +33,10 @@ BEGIN
    BEGIN
         -- Obtener un servicio ya creado
         SELECT @IdPuRouteAssigment = IdPuRouteAssigment
-          FROM ServiceManagement WITH(NOLOCK)
+          FROM ServiceManagement WITH(nolock) 
          WHERE IdServiceManagement = @idServiceManagement
 
-        SELECT ISNULL(IdRouteDispatchTrack,0)
+        SELECT IdRouteDispatchTrack
           FROM [RouteAssigment]
          WHERE idrouteAssigment = @IdPuRouteAssigment
    END
