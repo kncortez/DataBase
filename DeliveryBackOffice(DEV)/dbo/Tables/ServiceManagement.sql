@@ -24,7 +24,6 @@
     [Amount]                    DECIMAL (16, 2) NULL,
     [CatPaymentTimeId]          INT             NULL,
     [IsActiveService]           BIT             NULL,
-    [EmailDispatch]         NVARCHAR(200)       NULL,
     PRIMARY KEY CLUSTERED ([IdServiceManagement] ASC),
     CONSTRAINT [FK_ServiceManagement_CatPaymentTimeId] FOREIGN KEY ([CatPaymentTimeId]) REFERENCES [dbo].[CatPaymentTime] ([TimePlaId]),
     CONSTRAINT [fk_ServiceStatus] FOREIGN KEY ([ServiceStatusId]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus]),
