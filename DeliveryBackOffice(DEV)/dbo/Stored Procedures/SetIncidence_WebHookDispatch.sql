@@ -152,6 +152,41 @@ BEGIN
                 VALUES
                 (@ServiceManagementId, @StatusIncidence, 1, @Token, GETDATE(), @DescriptionIncidence)
 
+                IF (
+                       @IncidenceTypeId = @DuplicateId
+                       OR @IncidenceTypeId = @CanceledId
+                       OR @IncidenceTypeId = @AlreadyPickedId
+                   )
+                BEGIN
+                    UPDATE ServiceManagement
+                    SET ServiceStatusId = @CanceledStatusId,
+                        DateUpdated = GETDATE(),
+                        TokenUpdated = @Token,
+					    CatPaymentTimeId = NULL
+                    WHERE IdServiceManagement = @ServiceManagementId
+
+                    INSERT INTO EventService
+                    (
+                        ServiceManagementId,
+                        ServiceStatusId,
+                        RowStauts,
+                        TokenCreated,
+                        DateCreated,
+                        Observations
+                    )
+                    VALUES
+                    (@ServiceManagementId, @CanceledStatusId, 1, @Token, GETDATE(), @DescriptionIncidence)
+
+                    --Se cancela la solicitud
+                    UPDATE sp
+                    SET sp.SchedulePickupStatus = 0
+                    FROM SchedulePickup sp
+                        INNER JOIN ServiceManagement sm WITH (NOLOCK)
+                            ON sm.IdSchedulePickup = sp.SchedulePickupId
+                    WHERE sm.IdServiceManagement = @ServiceManagementId
+
+                END
+
                 IF @@TRANCOUNT > 0
 				BEGIN
                     COMMIT TRANSACTION;
