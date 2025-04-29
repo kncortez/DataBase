@@ -137,14 +137,13 @@ BEGIN
 				UPDATE ServiceManagement
                 SET ServiceStatusId = CASE WHEN @Status = 1 THEN @StatusRoute
 										   WHEN @Status = 2 THEN @StatusRecolect
-										   WHEN @Status = 4 THEN @StatusRecolect
+										   --WHEN @Status = 4 THEN @StatusDelivered
 									END,
                     PuSignaturePath = @PuSignaturePath,
                     CiPuDate = @StartDate,
                     CoPuDate = @EndDate,
                     TokenUpdated = @Token,
                     DateUpdated = GETDATE(),
-					CatPaymentTimeId = NULL,
 					EmailDispatch = @Email
                 WHERE IdServiceManagement = @KeyLocal;
 			IF @@RowCount > 0
