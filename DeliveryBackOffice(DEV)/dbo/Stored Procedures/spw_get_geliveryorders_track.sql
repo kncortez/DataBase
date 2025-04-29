@@ -121,7 +121,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
+					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
                        CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -221,7 +221,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
+					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
                        CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -324,7 +324,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
+					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
                        CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -436,7 +436,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
+					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
                        CAST(serv.IsCollect AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN

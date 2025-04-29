@@ -65,7 +65,7 @@ BEGIN
 				,ISNULL(serv.Receiver_Address, '') ReceiverAddress
 				,ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId
 				,ISNULL(serv.Receiver_CUI, '') CUI
-				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
+				,IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 				ON 
@@ -99,7 +99,7 @@ BEGIN
 				,ISNULL(serv.Receiver_Address, '') ReceiverAddress
 				,ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId
 				,ISNULL(serv.Receiver_CUI, '') CUI
-				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
+				,IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 				ON 
@@ -134,7 +134,7 @@ BEGIN
 				,ISNULL(serv.Receiver_Address, '') ReceiverAddress
 				,ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId
 				,ISNULL(serv.Receiver_CUI, '') CUI
-				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
+				,IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 				ON serv.Sender_ID = vpclient.CodeOfReference
@@ -168,7 +168,7 @@ BEGIN
 				,ISNULL(serv.Receiver_Address, '') ReceiverAddress
 				,ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId
 				,ISNULL(serv.Receiver_CUI, '') CUI
-				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
+				,IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 				ON serv.IdCustomer = vpclient.CustomerID
