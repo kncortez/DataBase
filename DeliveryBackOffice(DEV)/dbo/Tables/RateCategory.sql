@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateCategory] (
-    [IdRateCategory]     INT            IDENTITY (1, 1) NOT NULL,
+    [IdRateCategory]     INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TitleName]          NVARCHAR (50)  NULL,
     [RateCatDescription] NVARCHAR (200) NULL,
     [RateCatStatus]      BIT            NULL,

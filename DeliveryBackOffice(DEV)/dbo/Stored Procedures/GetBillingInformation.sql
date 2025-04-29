@@ -41,6 +41,7 @@ BEGIN
         WHERE CAST(inv_dateRegister AS DATE) BETWEEN @InitDate AND @EndDate
         AND inv_SAPDocEntry > 0
         AND inv_type = 1
+		AND IdCountry = 'GT' --SAP aún no está disponible en Honduras
         AND ISNULL(inv_certificationFEL, '') != '';
 
         -- Cálculo de Pagos Generados
@@ -50,6 +51,7 @@ BEGIN
         ON A2.inv_pk_id = A1.io_invoice 
         WHERE CAST(A1.io_registryDate AS DATE) BETWEEN @InitDate AND @EndDate
         AND ISNULL(A2.inv_certificationFEL, '') != ''
+		AND A2.IdCountry ='GT' --SAP aún no está disponible en Honduras
         AND A2.inv_type = 1;
 
         -- Cálculo de Pagos Enviados a SAP
@@ -59,7 +61,9 @@ BEGIN
         ON A2.inv_pk_id = A1.io_invoice
         WHERE CAST(A1.io_registryDate AS DATE) BETWEEN @InitDate AND @EndDate
         AND A1.io_SAPDocEntryPaymentDetail > 0
-        AND A2.inv_type = 1;
+        AND A2.inv_type = 1
+		AND A2.IdCountry = 'GT' --SAP aún no está disponible en Honduras
+		;
 
 -- =============================================
 -- LST01: Obtiene el resumen de las facturas y pagos generados, enviadas a SAP y faltantes
@@ -76,6 +80,7 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].[invoiceHeader] WITH(NOLOCK)
             WHERE CAST(inv_dateRegister AS DATE) BETWEEN @InitDate AND @EndDate
             AND inv_type = 1
+			AND IdCountry = 'GT' --SAP aún no está disponible en Honduras
             AND ISNULL(inv_certificationFEL, '') != '';
         END
 -- =============================================
@@ -136,6 +141,7 @@ BEGIN
             WHERE CAST(INH.inv_dateRegister AS DATE) BETWEEN @InitDate AND @EndDate
             AND ISNULL(INH.inv_certificationFEL, '') != ''
             AND (INH.inv_SAPDocEntry IS NULL OR INH.inv_SAPDocEntry <= 0)
+			AND INH.inv_CountryFEL = 'GT' --SAP aún no está disponible en Honduras
             AND INH.inv_type = 1;
         END
 -- =============================================
@@ -150,6 +156,7 @@ BEGIN
             WHERE CAST(A1.io_registryDate AS DATE) BETWEEN @InitDate AND @EndDate
             AND ISNULL(A2.inv_certificationFEL, '') != ''
             AND (A1.io_SAPErrorPaymentDetail IS NULL OR LEN(A1.io_SAPErrorPaymentDetail) > 1)
+			AND A2.IdCountry = 'GT' --SAP aún no está disponible en Honduras
             AND A2.inv_type = 1;
         END
     END TRY

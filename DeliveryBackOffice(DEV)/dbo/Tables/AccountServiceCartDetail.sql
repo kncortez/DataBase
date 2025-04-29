@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AccountServiceCartDetail] (
-    [IdAccountServiceCartDetail] INT           IDENTITY (1, 1) NOT NULL,
+    [IdAccountServiceCartDetail] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountServiceCartId]       INT           NOT NULL,
     [GuideSerie]                 NVARCHAR (2)  NOT NULL,
     [GuideNumber]                INT           NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_AccountServiceCartDetail_AccountServiceCart] FOREIGN KEY ([AccountServiceCartId]) REFERENCES [dbo].[AccountServiceCart] ([IdAccountServiceCart]),
     CONSTRAINT [FK_AccountServiceCartDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 

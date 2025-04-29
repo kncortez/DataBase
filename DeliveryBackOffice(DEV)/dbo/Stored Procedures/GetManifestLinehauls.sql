@@ -195,7 +195,7 @@ BEGIN
 		CONVERT(DATE, LRP.DateCreated) = @DateFilter
 		AND 
 		LRPCD.RowStatus = 1
-		  AND IIF(SR.IdCountry IS NULL, 'GT',SR.IdCountry)= @IdCountry
+		  AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)= @IdCountry
 	GROUP BY
 		LRP.IdLinehaulRoutePreparation, 
 		[LRP].[StationDispatchedId],
@@ -385,7 +385,7 @@ BEGIN
 		CONVERT(DATE, LRP.DateCreated) = @DateFilter
 		AND 
 		LRPCD.RowStatus = 1
-		  AND IIF(SR.IdCountry IS NULL, 'GT',SR.IdCountry)= @IdCountry
+		AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)= @IdCountry
 	GROUP BY
 		LRP.IdLinehaulRoutePreparation, 
 		[LRP].[StationDispatchedId],

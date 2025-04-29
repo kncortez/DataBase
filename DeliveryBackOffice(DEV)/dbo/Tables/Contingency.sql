@@ -1,19 +1,21 @@
-CREATE TABLE [dbo].[Contingency] (
-    [IdContingency]               INT             IDENTITY (1, 1) NOT NULL,
+﻿CREATE TABLE [dbo].[Contingency] (
+    [IdContingency]               INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [DeliveryOrderBySettlementId] BIGINT          NOT NULL,
     [Type]                        VARCHAR (10)    NOT NULL,
     [Value]                       DECIMAL (10, 2) NOT NULL,
     [Description]                 NVARCHAR (500)  NULL,
     [TokenCreated]                NVARCHAR (50)   NOT NULL,
     [DateCreated]                 DATETIME        NOT NULL,
-    [IdCountry]                   VARCHAR(2)      NULL,
+    [IdCountry]                   VARCHAR (2)     NULL,
     [IdCurrency]                  INT             NULL,
     CONSTRAINT [PK_Contingency_IdContingency] PRIMARY KEY CLUSTERED ([IdContingency] ASC),
     CONSTRAINT [FK_Contingency_DeliveryOrderBySettlementId] FOREIGN KEY ([DeliveryOrderBySettlementId]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID]),
-    CONSTRAINT [FK_IdCountryCon_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry),
-    CONSTRAINT [FK_IdCurrencyCon_CatCurrencyCOD] FOREIGN KEY (IdCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
+    CONSTRAINT [FK_IdCountryCon_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
+    CONSTRAINT [FK_IdCurrencyCon_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD]),
     UNIQUE NONCLUSTERED ([DeliveryOrderBySettlementId] ASC)
 );
+
+
 
 
 

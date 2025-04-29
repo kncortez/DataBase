@@ -152,6 +152,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -1018,4 +1020,14 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_DateCreated_Included]
     ON [dbo].[DeliveryOrder]([DateCreated] ASC)
     INCLUDE([Sender_ID], [Sender_FirstName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Town], [Collect_OnDelivery], [IsCollect], [PriceShippment], [ReceiverIdTownship], [IdCustomer], [TypeService]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [NCI_DeliveryOrderIsReturn]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [VisitpointClientPortfolioId] ASC, [DateCreated] ASC, [IsReturn] ASC);
+
+
+GO
+CREATE COLUMNSTORE INDEX [NCI_DeliveryOrder]
+    ON [dbo].[DeliveryOrder]([IdCustomer], [VisitpointClientPortfolioId], [DateCreated]);
 

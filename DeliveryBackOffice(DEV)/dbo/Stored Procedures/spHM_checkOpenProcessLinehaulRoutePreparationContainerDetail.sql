@@ -12,7 +12,7 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-
+	SET ARITHABORT ON;
 	SELECT		[LRPCD].[IdLinehaulRoutePreparationContainerDetail],
 				[LRPCD].[LinehaulRoutePreparationContainerId],
 				[LRPCD].[GuideSerie],
@@ -30,12 +30,12 @@ BEGIN
 				COALESCE([TLB].[TknIdUser], 0) [TknIdUserUpdated] ,
 				COALESCE([IUB].[IdUser], 0) [IdUserUpdated],
 				COALESCE([IUB].[Username], '') [UsernameUpdated]
-	FROM		[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-	INNER JOIN	[dbo].[TokenLog] TL
+	FROM		[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH(NOLOCK)
+	INNER JOIN	[dbo].[TokenLog] TL WITH(NOLOCK)
 		ON		[LRPCD].[TokenCreated] = [TL].[TknIdToken]
 	INNER JOIN	[dbo].[InternalUser] IU
 		ON		[TL].[TknIdUser] = [IU].[RegisterUserID]
-	LEFT JOIN	[dbo].[TokenLog] TLB
+	LEFT JOIN	[dbo].[TokenLog] TLB WITH(NOLOCK)
 		ON		[LRPCD].[TokenUpdated] = [TLB].[TknIdToken]
 	LEFT JOIN	[dbo].[InternalUser] IUB
 		ON		[TLB].[TknIdToken] = [IUB].[RegisterUserID]

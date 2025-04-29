@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatInvoiceType] (
-    [IdCatInvoiceType] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatInvoiceType] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]             NVARCHAR (50)  NOT NULL,
     [Description]      NVARCHAR (100) NULL,
     [RowStatus]        BIT            CONSTRAINT [DF_CatInvoiceType_RowStatus] DEFAULT ('TRUE') NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]      DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdCatInvoiceType] ASC)
 );
+
+
 
 
 GO

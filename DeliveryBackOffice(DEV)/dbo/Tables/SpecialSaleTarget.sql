@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SpecialSaleTarget] (
-    [IdSpecialSaleTarget] INT          IDENTITY (1, 1) NOT NULL,
+    [IdSpecialSaleTarget] INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SpecialSaleId]       INT          NOT NULL,
     [SalesPipeLineId]     INT          NULL,
     [CustomerTypeid]      INT          NULL,
@@ -19,6 +19,4 @@
     CONSTRAINT [FKTargetSale] FOREIGN KEY ([SpecialSaleId]) REFERENCES [dbo].[SpecialSale] ([IdSpecialSale]),
     CONSTRAINT [FKTargetTypeService] FOREIGN KEY ([TypeServiceId]) REFERENCES [dbo].[CatTypeService] ([CtsId])
 );
-
-
 

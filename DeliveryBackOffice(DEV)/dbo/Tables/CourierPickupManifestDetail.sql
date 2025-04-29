@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CourierPickupManifestDetail] (
-    [IdManifestDetail] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [IdManifestDetail] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ManifestId]       BIGINT       NOT NULL,
     [GuideSerie]       NVARCHAR (2) NOT NULL,
     [GuideNumber]      INT          NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FKCourierPickupManifestDetailManifestId] FOREIGN KEY ([ManifestId]) REFERENCES [dbo].[CourierPickupManifest] ([IdManifest]),
     CONSTRAINT [FKPickUpManifestDetailGuideSerie_GuideNumber] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatEmailProcessCOD] (
-    [IdCatEmailProcessCOD]  INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatEmailProcessCOD]  INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatReceiverEmailCODId] INT           NOT NULL,
     [CatProcessCODId]       INT           NOT NULL,
     [RowStatus]             BIT           CONSTRAINT [DF_CatEmailProcessCOD_RowStatus] DEFAULT ('TRUE') NOT NULL,

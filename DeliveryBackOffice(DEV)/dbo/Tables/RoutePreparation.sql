@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RoutePreparation] (
-    [IdRoutePreparation]          INT           IDENTITY (1, 1) NOT NULL,
+    [IdRoutePreparation]          INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatRouteId]                  INT           NULL,
     [DateRoutePreparation]        DATE          NOT NULL,
     [GuidesQuantity]              SMALLINT      NOT NULL,
@@ -18,6 +18,8 @@
     CONSTRAINT [FK_RoutePreparation_CatVehicleId] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle]),
     CONSTRAINT [FK_RoutePreparation_DeliveryOrderBySettlementId] FOREIGN KEY ([DeliveryOrderBySettlementId]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID])
 );
+
+
 
 
 

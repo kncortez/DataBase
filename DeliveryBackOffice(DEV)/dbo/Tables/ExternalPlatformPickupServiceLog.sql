@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ExternalPlatformPickupServiceLog] (
-    [IdExternalPlatformPickupServiceLog] INT           IDENTITY (1, 1) NOT NULL,
+    [IdExternalPlatformPickupServiceLog] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatExternalPlatformId]              INT           NOT NULL,
     [ServiceManagementId]                INT           NOT NULL,
     [IsInExternalPlatform]               BIT           NOT NULL,
@@ -11,6 +11,8 @@
     PRIMARY KEY CLUSTERED ([IdExternalPlatformPickupServiceLog] ASC),
     CONSTRAINT [FK_ExternalPlatformPickupServiceLog_CatExternalPlatformId] FOREIGN KEY ([CatExternalPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 GO

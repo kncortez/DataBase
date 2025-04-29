@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatExternalPlatform] (
-    [IdExternalPlatform]   INT           IDENTITY (1, 1) NOT NULL,
+    [IdExternalPlatform]   INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NameExternalPlatform] NVARCHAR (50) NOT NULL,
     [RowStatus]            BIT           NOT NULL,
     [TokenCreated]         VARCHAR (50)  NOT NULL,
@@ -8,6 +8,8 @@
     [DateUpdated]          DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdExternalPlatform] ASC)
 );
+
+
 
 
 

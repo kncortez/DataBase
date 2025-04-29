@@ -1,17 +1,18 @@
-﻿CREATE TABLE [dbo].[ProductImages]
-(
-	[IdProductImages] INT IDENTITY (1, 1) NOT NULL, 
-    [ProductId] INT NOT NULL, 
-    [Url] NVARCHAR(600) NOT NULL, 
-    [Position] TINYINT NOT NULL, 
-    [RowStatus] BIT NOT NULL, 
-    [UserCreated] NVARCHAR(50) NOT NULL, 
-    [DateCreated] DATETIME NOT NULL, 
-    [UserUpdated] NVARCHAR(50) NULL, 
-    [DateUpdated] DATETIME NULL,
-	PRIMARY KEY CLUSTERED ([IdProductImages] ASC),
-    CONSTRAINT FK_ProductImages_ProductId FOREIGN KEY (ProductId) REFERENCES Product(IdProduct)
-)
+﻿CREATE TABLE [dbo].[ProductImages] (
+    [IdProductImages] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [ProductId]       INT            NOT NULL,
+    [Url]             NVARCHAR (600) NOT NULL,
+    [Position]        TINYINT        NOT NULL,
+    [RowStatus]       BIT            NOT NULL,
+    [UserCreated]     NVARCHAR (50)  NOT NULL,
+    [DateCreated]     DATETIME       NOT NULL,
+    [UserUpdated]     NVARCHAR (50)  NULL,
+    [DateUpdated]     DATETIME       NULL,
+    PRIMARY KEY CLUSTERED ([IdProductImages] ASC),
+    CONSTRAINT [FK_ProductImages_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Product] ([IdProduct])
+);
+
+
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRoutePreparation] (
-    [IdLinehaulRoutePreparation]      INT            IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRoutePreparation]      INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [StationDispatchedId]             INT            NULL,
     [CatLinehaulStatusId]             INT            CONSTRAINT [DF_LinehaulRoutePreparation_CatLinehaulStatusId] DEFAULT ((1)) NOT NULL,
     [CatRouteId]                      INT            NOT NULL,
@@ -23,15 +23,19 @@
     [DateCreated]                     DATETIME       NOT NULL,
     [TokenUpdated]                    NVARCHAR (50)  NULL,
     [DateUpdated]                     DATETIME       NULL,
-    [VehicleKms]                      INT            CONSTRAINT [DF_LinehaulRoutePreparation_VehicleKms] DEFAULT ((0)) NULL,    
+    [VehicleKms]                      INT            CONSTRAINT [DF_LinehaulRoutePreparation_VehicleKms] DEFAULT ((0)) NULL,
     [EndDateLinehaulRoutePreparation] DATETIME       NULL,
-    PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparation] ASC),						
+    PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparation] ASC),
     CONSTRAINT [FK_LinehaulRoutePreparation_Courier] FOREIGN KEY ([SenderReceiverId]) REFERENCES [dbo].[SenderReceiver] ([ID]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Route] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Station] FOREIGN KEY ([StationDispatchedId]) REFERENCES [dbo].[CatStation] ([IdStation]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Status] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdCatLinehaulStatus]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Vehicle] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle])
 );
+
+
+
+
 
 
 
@@ -150,4 +154,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de finalización de despacho', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'EndDateLinehaulRoutePreparation';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdLinehaulRoutePreparation_CatLinehaulStatusId_RowStatus]
+    ON [dbo].[LinehaulRoutePreparation]([IdLinehaulRoutePreparation] ASC, [CatLinehaulStatusId] ASC, [RowStatus] ASC);
 

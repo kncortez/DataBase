@@ -22,7 +22,7 @@ BEGIN
           AND ord.Guide_Number = @GuideNumber;
 
 
-    IF @CurrentStatus IN ( 24 )
+    IF @CurrentStatus IN ( 25 )
     BEGIN
         SELECT 'Estos estados no pueden ser revertidos';
     END;

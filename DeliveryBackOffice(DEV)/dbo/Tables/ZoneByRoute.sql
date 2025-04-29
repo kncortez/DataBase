@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ZoneByRoute] (
-    [IdZoneByRoute] INT            IDENTITY (1, 1) NOT NULL,
+    [IdZoneByRoute] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RouteId]       INT            NOT NULL,
     [TownshipId]    INT            NOT NULL,
     [Zone]          NVARCHAR (50)  NULL,

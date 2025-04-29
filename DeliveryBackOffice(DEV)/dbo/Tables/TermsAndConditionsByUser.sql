@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TermsAndConditionsByUser] (
-    [IdTACByUser]  BIGINT       IDENTITY (1, 1) NOT NULL,
+    [IdTACByUser]  BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TACId]        BIGINT       NOT NULL,
     [IdAccount]    BIGINT       NOT NULL,
     [TAC]          BIT          NOT NULL,
@@ -12,6 +12,8 @@
     FOREIGN KEY ([IdAccount]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     FOREIGN KEY ([TACId]) REFERENCES [dbo].[TermsAndConditions] ([IdTAC])
 );
+
+
 
 
 

@@ -280,8 +280,8 @@ begin
         SET @integrationCost = LEFT(@integrationCost, LEN(@integrationCost) - 1);
     END;
 
-	SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
-		INNER JOIN Membership mb
+	SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do WITH(NOLOCK)
+		INNER JOIN Membership mb WITH(NOLOCK)
 		ON do.IdCustomer = mb.CustomerId
 		WHERE do.Guide_Number = @Guide_Number
 		AND do.Guide_Serie = @Serie_Number
@@ -758,4 +758,4 @@ begin
     SELECT @jsonOutput FormatJson;
 
 
-END; 
+END;

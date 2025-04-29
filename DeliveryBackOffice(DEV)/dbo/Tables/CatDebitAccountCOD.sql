@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatDebitAccountCOD] (
-    [IdCatDebitAccountCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatDebitAccountCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountNumber]        NVARCHAR (50) NOT NULL,
     [BankId]               INT           NOT NULL,
     [RowStatus]            BIT           CONSTRAINT [DF_CatDebitAccountCOD_RowStatus] DEFAULT ('TRUE') NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FK_CatDebitAccountCOD_DeliveryBank] FOREIGN KEY ([BankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [UK_CatDebitAccountCOD_AccountNumber] UNIQUE NONCLUSTERED ([AccountNumber] ASC)
 );
+
+
 
 
 GO

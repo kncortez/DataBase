@@ -34,7 +34,7 @@ BEGIN
 			WHERE
 				(@ExternalPlatformId IS NULL OR CEP.IdExternalPlatform = @ExternalPlatformId)
 				AND
-				(@ExternalPlatformName IS NULL OR CEP.NameExternalPlatform = @ExternalPlatformName COLLATE Latin1_General_CI_AI)
+				(@ExternalPlatformName IS NULL OR CEP.NameExternalPlatform = @ExternalPlatformName) --COLLATE Latin1_General_CI_AI)
 				AND
 				(@ExternalPlatformConfigName IS NULL OR @ExternalPlatformConfigName = ConfEP.ConfigParameterName AND ConfEP.RowStatus = 1)
 			IF (EXISTS(SELECT TOP 1 1 FROM @ConfigData))

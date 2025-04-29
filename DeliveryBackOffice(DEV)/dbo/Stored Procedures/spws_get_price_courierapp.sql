@@ -3,8 +3,11 @@
 -- Create date: <2021-01-08>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
 -- =============================================
-
-ALTER PROCEDURE [dbo].[spws_get_price_courierapp]
+-- Author:      <Juan Ramirez>
+-- Create date: <2025-03-28>
+-- Description: <Ajustes de optimización>
+-- =============================================
+CREATE PROCEDURE [dbo].[spws_get_price_courierapp]
     -- Add the parameters for the stored procedure here
     -- Add the parameters for the stored procedure here
     @Token VARCHAR(200),
@@ -16,26 +19,18 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    DECLARE @jsonSummary NVARCHAR(MAX);
-    DECLARE @jsonDetail NVARCHAR(MAX);
+    DECLARE @jsonSummary NVARCHAR(MAX)
+            ,@jsonDetail NVARCHAR(MAX)
+            ,@jsonResult NVARCHAR(MAX)
+            ,@jsonResult1 NVARCHAR(MAX)
+            ,@jsonResult2 NVARCHAR(MAX)
+            ,@jsonError NVARCHAR(MAX)
+            ,@jsonToken NVARCHAR(MAX);
 
-    DECLARE @jsonResult NVARCHAR(MAX);
-
-
-    DECLARE @jsonResult1 NVARCHAR(MAX);
-    DECLARE @jsonResult2 NVARCHAR(MAX);
-    DECLARE @jsonError NVARCHAR(MAX);
-    DECLARE @jsonToken NVARCHAR(MAX);
-
-
-
- 
+    IF OBJECT_ID('tempdb.dbo.#BrainProcessedGuides', 'U') IS NOT NULL DROP TABLE #BrainProcessedGuides;
 
     DECLARE @TokenAct INT =1;
-           
     DECLARE @hourtoken INT = 8;
-          
-
 
     IF ((@TokenAct = 1 AND @hourtoken <= 8) OR 1 = 1)
     BEGIN
@@ -74,6 +69,8 @@ BEGIN
                 CODAmount DECIMAL(18, 2),
                 ReturnRates DECIMAL(5, 2)
             );
+
+            CREATE NONCLUSTERED INDEX IDX_TEMPBRAINPROCESS ON #BrainProcessedGuides (GuideSerie, GuideNumber, AmountToPay)
 
             INSERT INTO #BrainProcessedGuides
             EXEC [dbo].[spws_get_guide_pending_payment] @InGuides, -- Guías recibidas
@@ -149,9 +146,6 @@ BEGIN
                             )
             );
 
-
-
-
             -- retornar resultado en formato json
             IF @jsonResult IS NULL
             BEGIN
@@ -172,7 +166,7 @@ BEGIN
             --end 18/02/2022
             SELECT ('{' + @jsonResult + '}') jsonResult;
 
-
+            IF OBJECT_ID('tempdb.dbo.#BrainProcessedGuides', 'U') IS NOT NULL DROP TABLE #BrainProcessedGuides;
         END;
 
         ELSE IF (@test > 0)

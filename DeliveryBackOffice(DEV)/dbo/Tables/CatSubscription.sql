@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatSubscription] (
-    [IdCatSubscription]                INT             IDENTITY (1, 1) NOT NULL,
+    [IdCatSubscription]                INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SubscriptionName]                 NVARCHAR (50)   NOT NULL,
     [SubscriptionDescription]          NVARCHAR (300)  NULL,
     [SubscriptionCost]                 DECIMAL (18, 2) NULL,
@@ -29,6 +29,8 @@
     CONSTRAINT [FK_CatSubscription_CatTypeSubscription] FOREIGN KEY ([CatTypeSubscriptionId]) REFERENCES [dbo].[CatTypeSubscription] ([IdCatTypeSubscription]),
     CONSTRAINT [FK_CatSubscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
+
+
 
 
 

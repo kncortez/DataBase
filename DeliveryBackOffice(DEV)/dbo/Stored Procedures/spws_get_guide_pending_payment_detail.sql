@@ -418,6 +418,10 @@ BEGIN
                                                                @IdModule = @IdModuleP,
                                                                @Token = @TokenP;
 
+
+
+
+
     SELECT ROW_NUMBER() OVER (ORDER BY ppt.GuideNumber ASC) AS Id,
            CONCAT(ppt.GuideSerie, CAST(ppt.GuideNumber AS VARCHAR)) Guide,
            ppt.GuideSerie,

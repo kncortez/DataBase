@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Container] (
-    [IdContainer]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdContainer]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatTypeContainerId]   INT            NOT NULL,
     [ContainerNumber]      NVARCHAR (50)  NOT NULL,
     [ContainerDescription] NVARCHAR (200) NULL,
@@ -11,6 +11,8 @@
     PRIMARY KEY CLUSTERED ([IdContainer] ASC),
     CONSTRAINT [FK_Container_TypeContainer] FOREIGN KEY ([CatTypeContainerId]) REFERENCES [dbo].[CatTypeContainer] ([IdCatTypeContainer])
 );
+
+
 
 
 

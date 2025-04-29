@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[GuidesBySMS] (
-    [IdGuidesBySMS] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdGuidesBySMS] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SmsId]         BIGINT        NOT NULL,
     [GuideSerie]    NVARCHAR (2)  NULL,
     [GuideNumber]   INT           NULL,

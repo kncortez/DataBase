@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatDeliveryOptions] (
-    [IdDeliveryOption] INT            IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryOption] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]             NVARCHAR (100) NOT NULL,
     [Description]      NVARCHAR (200) NOT NULL,
     [RowStatus]        BIT            NOT NULL,
@@ -7,10 +7,12 @@
     [DateCreated]      DATETIME       NOT NULL,
     [TokenUpdated]     NVARCHAR (50)  NULL,
     [DateUpdated]      DATETIME       NULL,
-    [IdCountry]        VARCHAR  (2)   NULL,
+    [IdCountry]        VARCHAR (2)    NULL,
     PRIMARY KEY CLUSTERED ([IdDeliveryOption] ASC),
     FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 

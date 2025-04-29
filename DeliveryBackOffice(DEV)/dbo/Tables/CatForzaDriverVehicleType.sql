@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatForzaDriverVehicleType] (
-    [IdCatForzaDriverVehicleType]   INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatForzaDriverVehicleType]   INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ForzaDriverVehicleTypeId]      INT           NOT NULL,
     [ForzaDriverVehicleDescription] NVARCHAR (50) NOT NULL,
     [CatTypeVehicleId]              INT           NULL,
@@ -11,6 +11,8 @@
     PRIMARY KEY CLUSTERED ([IdCatForzaDriverVehicleType] ASC),
     CONSTRAINT [FK_CatForzaDriverVehicleType_CatTypeVehicle] FOREIGN KEY ([IdCatForzaDriverVehicleType]) REFERENCES [dbo].[CatTypeVehicle] ([IdTypeVehicle])
 );
+
+
 
 
 

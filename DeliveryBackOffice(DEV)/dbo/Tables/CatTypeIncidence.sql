@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeIncidence] (
-    [IdIncidenceType]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdIncidenceType]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NameIncidence]            VARCHAR (200)  NULL,
     [DescriptionIncidence]     VARCHAR (200)  NULL,
     [RowStatus]                BIT            NOT NULL,
@@ -18,9 +18,11 @@
     [NameIncidencePublic]      VARCHAR (50)   NULL,
     [EvidenceRequirement]      BIT            NULL,
     [CourierInstructions]      NVARCHAR (100) NULL,
-	[CountryId]                NVARCHAR (2)   NULL,
+    [CountryId]                NVARCHAR (2)   NULL,
     PRIMARY KEY CLUSTERED ([IdIncidenceType] ASC)
 );
+
+
 
 
 

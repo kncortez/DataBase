@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ScheduledVisitSettlement] (
-    [IdSettScheduleVisit]     BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdSettScheduleVisit]     BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdSettlement]            BIGINT        NULL,
     [IdSegmentArea]           INT           NULL,
     [Comment]                 NVARCHAR (50) NULL,
@@ -22,6 +22,4 @@
     CONSTRAINT [FK_ScheduledVisitSettlement_Settlement] FOREIGN KEY ([IdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
     CONSTRAINT [FK_ScheduledVisitSettlement_VisitPointClient] FOREIGN KEY ([IdVisitPointClient]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
-
-
 

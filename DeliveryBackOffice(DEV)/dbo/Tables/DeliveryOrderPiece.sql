@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderPiece] (
-    [GuidePiece]                        BIGINT          IDENTITY (1, 1) NOT NULL,
+    [GuidePiece]                        BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]                        NVARCHAR (2)    NOT NULL,
     [GuideNumber]                       INT             NOT NULL,
     [PiecePhysicalWeight]               DECIMAL (12, 2) NULL,
@@ -36,6 +36,8 @@
     CONSTRAINT [FK_CategoryCheck] FOREIGN KEY ([CategoryCheck]) REFERENCES [dbo].[CatArticle] ([ArtId]),
     CONSTRAINT [FK_DeliveryOrderPiece_CatStatusGuideByContainer] FOREIGN KEY (IdStatusGuideByContainer) REFERENCES [dbo].[CatStatusGuideByContainer] (IdStatus)
 );
+
+
 
 
 

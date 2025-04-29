@@ -32,8 +32,8 @@ DECLARE @hour AS INT =
 		AND ihd.inv_SAPDocEntry <> -1
 		AND ihd.inv_SAPDocEntry IS NOT NULL
 		--AND ihd.inv_pk_id = 2384510
-		AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2024-11-01' AS DATE)
-		--AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2024-10-31' AS DATE)
+		AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2025-04-01' AS DATE)
+		--AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2025-03-31' AS DATE)
 		AND IHD.inv_SAPDocEntry <> 1
 		AND IHD.inv_type <> 2 --no enviar pagos de notas de crédito
 		--AND 1=0

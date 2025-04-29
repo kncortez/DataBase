@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SettlementByPickupDetail] (
-    [IdSettlementByPickupDetail] INT             IDENTITY (1, 1) NOT NULL,
+    [IdSettlementByPickupDetail] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SettlementByPickupId]       INT             NULL,
     [GuideSerie]                 NVARCHAR (2)    NOT NULL,
     [GuideNumber]                INT             NOT NULL,
@@ -19,6 +19,8 @@
     PRIMARY KEY CLUSTERED ([IdSettlementByPickupDetail] ASC),
     CONSTRAINT [FKSettlementByPickupId] FOREIGN KEY ([SettlementByPickupId]) REFERENCES [dbo].[SettlementByPickup] ([Id])
 );
+
+
 
 
 

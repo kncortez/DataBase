@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[WebhookLog] (
-    [IdWebhookLog]           BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdWebhookLog]           BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [WebhookTrackingQueueId] BIGINT         NOT NULL,
     [DataSent]               NVARCHAR (MAX) NULL,
     [DataReceived]           NVARCHAR (MAX) NULL,
@@ -11,6 +11,8 @@
     PRIMARY KEY CLUSTERED ([IdWebhookLog] ASC),
     CONSTRAINT [FK_WebhookLog_WebhookTrackingQueue] FOREIGN KEY ([WebhookTrackingQueueId]) REFERENCES [dbo].[WebhookTrackingQueue] ([IdWebhookTrackingQueue])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SaleAdvisorbyUser] (
-    [idSaleAdvisorbyUser] INT           IDENTITY (1, 1) NOT NULL,
+    [idSaleAdvisorbyUser] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UserId]              BIGINT        NOT NULL,
     [UserName]            NVARCHAR (50) NOT NULL,
     [SaleAdvisorId]       INT           NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FK_SaleAdvisorbyUserUserId] FOREIGN KEY ([UserId], [UserName]) REFERENCES [dbo].[InternalUser] ([IdUser], [Username]),
     CONSTRAINT [UK_SaleAdvisorbyUser] UNIQUE NONCLUSTERED ([UserId] ASC, [SaleAdvisorId] ASC)
 );
+
+
 
 
 

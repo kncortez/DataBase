@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[invoiceDetail] (
+CREATE TABLE [dbo].[invoiceDetail] (
     [dti_fk_header]      BIGINT          NOT NULL,
     [dti_fk_orderSerie]  NVARCHAR (2)    NULL,
     [dti_fk_orderNumber] INT             NULL,
@@ -19,6 +19,8 @@
     CONSTRAINT [FK_invoiceDetail_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
     CONSTRAINT [FK_invoiceDetail_Subscription] FOREIGN KEY ([SubscriptionId]) REFERENCES [dbo].[Subscription] ([IdSubscription])
 );
+
+
 
 
 
@@ -133,3 +135,6 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de modulo de facturación que almacena el cuerpo o detalle de las facturas de su respectiva cabecera con InvoiceHeader' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail'
 GO
+CREATE NONCLUSTERED INDEX [idx_SAPCode]
+    ON [dbo].[invoiceDetail]([SAPCode] ASC);
+

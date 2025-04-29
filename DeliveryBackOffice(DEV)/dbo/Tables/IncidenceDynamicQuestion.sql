@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[IncidenceDynamicQuestion] (
-    [IdIncidenceDynamicQuestion] INT            IDENTITY (1, 1) NOT NULL,
+    [IdIncidenceDynamicQuestion] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [QuestionTrue]               NVARCHAR (150) NOT NULL,
     [QuestionFalse]              NVARCHAR (150) NOT NULL,
     [SpecialInstructions]        NVARCHAR (250) NULL,
@@ -12,6 +12,8 @@
     PRIMARY KEY CLUSTERED ([IdIncidenceDynamicQuestion] ASC),
     CONSTRAINT [FK_IncidenceDynamicQuestion_CatTypeIncidence] FOREIGN KEY ([CatTypeIncidenceId]) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType])
 );
+
+
 
 
 GO

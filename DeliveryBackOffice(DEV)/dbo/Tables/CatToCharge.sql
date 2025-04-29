@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatToCharge] (
-    [IdToCharge]       INT             IDENTITY (1, 1) NOT NULL,
+    [IdToCharge]       INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]             NVARCHAR (50)   NOT NULL,
     [Description]      NVARCHAR (100)  NULL,
     [DescriptionLabel] NVARCHAR (100)  NULL,
@@ -18,6 +18,8 @@
     CONSTRAINT [FK_CatToCharge_DeliveryCurrency] FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
     CONSTRAINT [FK_CatToCharge_Unit] FOREIGN KEY ([UnitId]) REFERENCES [dbo].[Unit] ([IdUnit])
 );
+
+
 
 
 GO

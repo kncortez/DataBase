@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServiceZoneConfiguration] (
-    [IdServiceZoneConfiguration] INT           IDENTITY (1, 1) NOT NULL,
+    [IdServiceZoneConfiguration] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatConfigurableServiceId]   INT           NOT NULL,
     [TownshipId]                 INT           NOT NULL,
     [Zone]                       NVARCHAR (2)  NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_ServiceZoneConfiguration_CatConfigurableService] FOREIGN KEY ([CatConfigurableServiceId]) REFERENCES [dbo].[CatConfigurableService] ([IdCatConfigurableService]),
     CONSTRAINT [FK_ServiceZoneConfiguration_Township] FOREIGN KEY ([TownshipId]) REFERENCES [dbo].[Township] ([IdTownship])
 );
+
+
 
 
 GO
