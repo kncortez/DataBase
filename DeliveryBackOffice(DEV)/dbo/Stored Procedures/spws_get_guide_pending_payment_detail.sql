@@ -13,6 +13,11 @@
 -- Description: <Se agrega filtro para el remitente por pais>
 -- =============================================
 -- =============================================
+-- Author:      <Cristian Suazo>
+-- Create date: <2025-01-07>
+-- Description: <Se agrega procedimiento por ticketnumber>
+-- =============================================
+-- =============================================
 -- Author:      <Walter Orozco>
 -- Create date: <2024-12-02>
 -- Description: <Se agrega parametros para enviar información de COD anticipado.>
@@ -27,7 +32,8 @@ CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @IdModuleP INT,
     @ServiceType VARCHAR(100),
     @TokenP VARCHAR(100),
-    @IdCountry VARCHAR(2) = 'GT'
+    @IdCountry VARCHAR(2) = 'GT',
+	@TicketNumber NVARCHAR(MAX) = NULL
 AS
 BEGIN
     -- Insert statements for procedure here
