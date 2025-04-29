@@ -150,7 +150,7 @@ BEGIN
            ELSE
                IIF(DO.DeliveryETA IS NULL, CAST (GETDATE() AS DATE), CAST(DO.DeliveryETA AS DATE))
        END AS DeliveryETA,
-	   CS.CS.CommercialName AS CustomerName,
+	   COALESCE(CS.CS.CommercialName,'') AS CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
 	   CASE
@@ -259,7 +259,7 @@ BEGIN
            ELSE
                IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
        END AS DeliveryETA,
-	   CS.CS.CommercialName AS CustomerName,
+	   COALESCE(CS.CS.CommercialName,'') AS CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
 	   CASE
