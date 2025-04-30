@@ -790,7 +790,7 @@ BEGIN
 					[DO].[Sender_ID] = [VPC].[CodeOfReference]
 		------------------------------------------------------
 
-		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
+		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable ct
 		ON do.Guide_Number = ct.Guide_Number
 		INNER JOIN Membership mb

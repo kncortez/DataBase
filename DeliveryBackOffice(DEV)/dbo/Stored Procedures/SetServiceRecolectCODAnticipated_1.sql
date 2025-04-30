@@ -79,12 +79,13 @@ BEGIN
                                  ON cus.idCustomer = ach.CustomerId
                               INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VP WITH (NOLOCK)
                                   ON VP.CustomerID = cus.IdCustomer
-                                 AND VP.StatusClient = 1
+                                -- AND VP.StatusClient = 1
                               INNER JOIN DeliveryBackOffice.dbo.VisitPointByClientPortfolio VPP WITH (NOLOCK)
                                   ON ISNULL(VPP.VisitPointId,0) = ISNULL(VP.IdVisitPointClient,0)
                                  AND VPP.RowStatus = 1
                         WHERE cus.IdCustomerType IN (2)
                           AND VPP.IdVisitPointByClientPortfolio = @PortfolioId
+						   AND VP.StatusClient = 1
                        )
          BEGIN 
               SELECT @Code = 0,  

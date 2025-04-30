@@ -24,6 +24,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -90,4 +92,10 @@ CREATE NONCLUSTERED INDEX [IDX_IdUser_RowStatus]
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber]
     ON [dbo].[GuideBatch]([GuideSeries] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdUser_RowStatus_include]
+    ON [dbo].[GuideBatch]([IdUser] ASC, [RowStatus] ASC)
+    INCLUDE([IdBatch], [GuideNumber], [Status]);
 

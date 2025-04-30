@@ -50,7 +50,7 @@ BEGIN
 				
 				UPDATE DeliveryBackOffice.dbo.GuideBatch
 				SET Status = 2 -- 2 stands for status completed, this means the services were requested by customer, so now all these guides will be recollected at some point by a courier men.
-				WHERE GuideNumber = @TempGuide AND RowStatus = 1
+				WHERE GuideSeries = 'FD' and GuideNumber = @TempGuide AND RowStatus = 1
 
 			    SET @IDENTYGUIDES = @IDENTYGUIDES + 1;
 				SET @COUNTGUIDES = @COUNTGUIDES  - 1;

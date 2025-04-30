@@ -102,6 +102,7 @@
     [SenderCountryId]                      VARCHAR (2)     NULL,
     [ReceiverCountryId]                    VARCHAR (2)     NULL,
     [GuideType]                            NVARCHAR (3)    NULL,
+    [SenderIdSettlement]                   BIGINT          NULL,
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
@@ -112,12 +113,15 @@
     CONSTRAINT [FK_DeliveryOrder_ReceiverTownship] FOREIGN KEY ([ReceiverIdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_DeliveryOrder_SenderTownship] FOREIGN KEY ([SenderIdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_DeliveryOrder_ServiceRequest] FOREIGN KEY ([Manifest_Serie], [Manifest_Number]) REFERENCES [dbo].[ServiceRequest] ([Manifest_Serie], [Manifest_Number]),
+    CONSTRAINT [FK_DeliveryOrder_Settlement] FOREIGN KEY ([SenderIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
     CONSTRAINT [FK_DeliveryOrder_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId]),
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient] FOREIGN KEY ([Sender_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient1] FOREIGN KEY ([Receiver_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
 
 
 
@@ -1030,4 +1034,13 @@ CREATE NONCLUSTERED INDEX [NCI_DeliveryOrderIsReturn]
 GO
 CREATE COLUMNSTORE INDEX [NCI_DeliveryOrder]
     ON [dbo].[DeliveryOrder]([IdCustomer], [VisitpointClientPortfolioId], [DateCreated]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Ticket_Number_Customer]
+    ON [dbo].[DeliveryOrder]([Ticket_Number] ASC, [IdCustomer] ASC, [Preparation_Date] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para validar poblado de origen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'SenderIdSettlement';
 

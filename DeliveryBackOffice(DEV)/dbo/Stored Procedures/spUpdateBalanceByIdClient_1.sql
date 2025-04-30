@@ -3,7 +3,7 @@
 -- Create date: <2024-09-12>
 -- Description: < Procedimiento para actualizar balance por cliente para COD anticipado>
 -- =============================================
-CREATE PROCEDURE spUpdateBalanceByIdClient
+CREATE PROCEDURE [dbo].[spUpdateBalanceByIdClient]
 (
  @AnticipatedCODDetail AS TblAnticipatedCODCustomerBalance READONLY
 )
@@ -78,7 +78,7 @@ BEGIN
                acd.CollectOnDelivery, 
                acd.BalanceStatus
           FROM @AnticipatedCODDetail td 
-               LEFT JOIN AnticipatedCODHeader ach
+               LEFT JOIN AnticipatedCODHeader ach WITH(NOLOCK)
                   ON ach.CustomerId = td.CustomerId
                  AND ach.PortfolioId IS NULL
                  AND ach.RowStatus = 1
@@ -96,7 +96,7 @@ BEGIN
                acd.CollectOnDelivery, 
                acd.BalanceStatus
           FROM @AnticipatedCODDetail td 
-               LEFT JOIN AnticipatedCODHeader ach
+               LEFT JOIN AnticipatedCODHeader ach WITH(NOLOCK)
                   ON ach.CustomerId = td.CustomerId
                  AND ach.PortfolioId = td.PortfolioId
                  AND ach.RowStatus = 1

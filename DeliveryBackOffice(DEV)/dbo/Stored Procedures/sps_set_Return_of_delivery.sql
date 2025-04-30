@@ -55,8 +55,14 @@ BEGIN
     (
        IdCustomer INT NOT NULL,
        PortfolioId INT NOT NULL,
-       CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
+       --CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
     );
+
+    CREATE NONCLUSTERED INDEX IDX_PK_TempDataClient
+    ON #TempDataClient (
+                         IdCustomer
+                       , PortfolioId
+                       );
 
     DECLARE @IsLastMileReturn BIT = ISNULL(
                                     (

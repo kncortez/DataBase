@@ -61,6 +61,8 @@ BEGIN
             [Settlement_Date_Received] datetime
         );
 
+
+
         CREATE NONCLUSTERED INDEX IX_TodaysCheckpointsDetail
         ON #TodaysCheckpointsDetail
         (
@@ -278,6 +280,13 @@ BEGIN
 			[ShippmentCurrencySymbol] NVARCHAR(2),
 			[CODCurrencySymbol] NVARCHAR(2)
         )
+
+		
+        CREATE NONCLUSTERED INDEX IX_DetailGetQualityControlData_ConfirmationIncidents
+        ON #DetailGetQualityControlData
+        (
+            UnConfirmationIncidents
+        );
 
         CREATE NONCLUSTERED INDEX IX_ConfirmationIncidents_ControlData
         ON #DetailGetQualityControlData

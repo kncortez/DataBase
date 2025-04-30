@@ -17,3 +17,17 @@
     FOREIGN KEY ([TypeServiceId]) REFERENCES [dbo].[CatTypeService] ([CtsId])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_include]
+    ON [dbo].[RateCOD]([RowStatus] ASC)
+    INCLUDE([RateId], [TypeServiceId], [TypeSegmentId], [CODRate], [CODExempt]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RateId_TypeServiceId_TypeSegmentId_RowStatus_INCLUDE]
+    ON [dbo].[RateCOD]([RateId] ASC, [TypeServiceId] ASC, [TypeSegmentId] ASC, [RowStatus] ASC)
+    INCLUDE([CODRate], [CODExempt]);
+
