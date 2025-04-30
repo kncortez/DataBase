@@ -1,31 +1,23 @@
 --SELECT * FROM CatTypeVehicle
-
 BEGIN TRY
     BEGIN TRANSACTION;
-    
-    INSERT INTO [dbo].[CatTypeVehicle]
-           ([Name]
-           ,[Description]
-           ,[RowStatus]
-           ,[TokenCreated]
-           ,[DateCreated]
-           ,[TokenUpdated]
-           ,[DateUpdated]
-           ,[PackageSize]
-           ,[IdCountry])
-	SELECT 
-		Name
-		,Description
-		,1
-		,'SYS-WOROZCO'
-		, GETDATE()
-		, NULL
-		, NULL
-		, PackageSize
-		, 'SV'
-	FROM DeliveryBackOffice.dbo.CatTypeVehicle
-	WHERE IdCountry = 'HN'
-    
+
+    INSERT INTO CatTypeVehicle (
+        [Name]
+        ,[Description]
+        ,RowStatus
+        ,TokenCreated
+        ,DateCreated
+        ,TokenUpdated
+        ,DateUpdated
+        ,PackageSize
+        ,IdCountry
+    )
+    VALUES 
+    ('Camión', 'Camión', 1, 'SYS-JRAMIREZ', GETDATE(), NULL, NULL, 'Paquete grande', 'SV'),
+    ('Panel', 'Panel', 1, 'SYS-JRAMIREZ', GETDATE(), NULL, NULL, 'Paquete mediano', 'SV'),
+    ('Motocicleta', 'Motocicleta', 1, 'SYS-JRAMIREZ', GETDATE(), NULL, NULL, 'Paquete pequeño', 'SV');
+
     COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH

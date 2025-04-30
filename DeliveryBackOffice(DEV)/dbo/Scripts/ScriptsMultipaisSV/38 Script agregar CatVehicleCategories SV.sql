@@ -1,5 +1,5 @@
 --SELECT * FROM DeliveryBackOffice.dbo.CatVehicleCategories
---WHERE IdCountry = 'HN'
+--WHERE IdCountry = 'GT'
 
 BEGIN TRY
     BEGIN TRANSACTION;
@@ -17,10 +17,10 @@ BEGIN TRY
            ,[UnitType]
            ,[IdCountry])
     SELECT [name], RowStatus, 'SYS-WOROZCO',GETDATE(),NULL,NULL,NULL,NULL, NULL, NULL,'SV'
-	FROM dbo.CatVehicleCategories
-	WHERE RowStatus = 1 AND IdCountry = 'HN'
+      FROM dbo.CatVehicleCategories
+     WHERE RowStatus = 1 
+       AND IdCountry = 'GT'
 
-    
     COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH

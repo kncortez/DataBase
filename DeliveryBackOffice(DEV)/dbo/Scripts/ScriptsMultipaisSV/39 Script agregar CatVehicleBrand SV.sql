@@ -13,9 +13,10 @@ BEGIN TRY
            ,[DateUpdated]
            ,[IdCountry])
     SELECT [name], RowStatus, 'SYS-WOROZCO', GETDATE(), NULL, NULL,'SV'
-	FROM CatVehicleBrand
-	WHERE RowStatus = 1 AND IdCountry = 'HN'
-    
+      FROM CatVehicleBrand
+     WHERE RowStatus = 1 
+       AND IdCountry IS NULL
+
     COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH
