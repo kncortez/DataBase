@@ -191,7 +191,9 @@ BEGIN
                     ,NULL
                     ,NULL
                   )
-
+               
+               IF(@InGuides <>'')
+               BEGIN
                   INSERT INTO FinishPickUpDetail
                   (
                    SchedulePickupId
@@ -214,8 +216,9 @@ BEGIN
                          ,NULL
                          ,NULL
                     FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+                END;
 
-                       IF( EXISTS (SELECT 1 FROM @ReferencesGuide))
+          IF( EXISTS (SELECT 1 FROM @ReferencesGuide))
           BEGIN
           INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpReferenceDetail]
                         (
