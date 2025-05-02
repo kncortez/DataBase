@@ -196,12 +196,22 @@ BEGIN
 					BEGIN
 						IF EXISTS (SELECT 1 FROM #TempContainerGuides)
 							BEGIN						
-								SELECT 
-									200 AS [StatusCode],
-									'Contenedor válido, listo para procesar' AS [Message],
-									1 AS [NoPiece]
-								RETURN
-							END
+								IF(EXISTS(SELECT 1 FROM FinishPickUpContainerDetail WHERE Container = @Container))
+						        BEGIN
+						      
+                                    SELECT 
+                                            2 AS [StatusCode],
+                                            'El contenedor ya esta recolectado' AS [Message]
+                                    RETURN
+
+                                END
+                                        ELSE
+                                        SELECT 
+                                            200 AS [StatusCode],
+                                            'Contenedor válido, listo para procesar' AS [Message],
+                                            1 AS [NoPiece]
+                                        RETURN
+                                    END
 						ELSE
 						BEGIN
 							SELECT 
