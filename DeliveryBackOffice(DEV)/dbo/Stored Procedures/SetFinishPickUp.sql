@@ -135,51 +135,7 @@ BEGIN
            WHERE SchedulePickupId = @IdPickup
         )
 
-        IF( EXISTS (SELECT 1 FROM @ReferencesGuide))
-          BEGIN
-          INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpReferenceDetail]
-                        (
-                        SchedulePickupId
-                        ,Reference
-                        ,RowStatus
-                        ,TokenCreated
-                        ,DateCreated
-                        ,TokenUpdated
-                        ,DateUpdated
-                        )
-                        SELECT @IdPickup
-                              ,ReferenceGuide
-                              ,1
-                              ,@Token
-                              ,GETDATE()
-                              ,NULL
-                              ,NULL
-                          FROM @ReferencesGuide;
-          
-          END
-
-		IF( EXISTS (SELECT 1 FROM @ContainerReferences))
-		BEGIN
-		INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpContainerDetail]
-                  (
-                   SchedulePickupId
-                   ,Container
-                   ,RowStatus
-                   ,TokenCreated
-                   ,DateCreated
-                   ,TokenUpdate
-                   ,DateUpdate
-                  )
-                  SELECT @IdPickup
-                         ,ContainerReference
-                         ,1
-                         ,@Token
-                         ,GETDATE()
-                         ,NULL
-                         ,NULL
-                    FROM @ContainerReferences;
-		
-		END
+     
 
         IF (@test = 0 AND 
             @ValIdPickup IS NULL )
@@ -258,6 +214,52 @@ BEGIN
                          ,NULL
                          ,NULL
                     FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+
+                       IF( EXISTS (SELECT 1 FROM @ReferencesGuide))
+          BEGIN
+          INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpReferenceDetail]
+                        (
+                        SchedulePickupId
+                        ,Reference
+                        ,RowStatus
+                        ,TokenCreated
+                        ,DateCreated
+                        ,TokenUpdated
+                        ,DateUpdated
+                        )
+                        SELECT @IdPickup
+                              ,ReferenceGuide
+                              ,1
+                              ,@Token
+                              ,GETDATE()
+                              ,NULL
+                              ,NULL
+                          FROM @ReferencesGuide;
+          
+          END
+
+		IF( EXISTS (SELECT 1 FROM @ContainerReferences))
+		BEGIN
+		INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpContainerDetail]
+                  (
+                   SchedulePickupId
+                   ,Container
+                   ,RowStatus
+                   ,TokenCreated
+                   ,DateCreated
+                   ,TokenUpdate
+                   ,DateUpdate
+                  )
+                  SELECT @IdPickup
+                         ,ContainerReference
+                         ,1
+                         ,@Token
+                         ,GETDATE()
+                         ,NULL
+                         ,NULL
+                    FROM @ContainerReferences;
+		
+		END
 
             END TRY
             BEGIN CATCH
