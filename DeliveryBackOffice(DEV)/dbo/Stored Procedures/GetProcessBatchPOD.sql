@@ -63,14 +63,16 @@ BEGIN
                       B.Guide_Number = C.GuideNumber
                     WHERE SchedulePickupId = @IdPickup
                     UNION ALL
-                    SELECT        
-                      (CONCAT(C.GuideSerie, C.GuideNumber, '-', C.NoPiece))
+                    SELECT 
+                    (CONCAT(D.GuideSerie, D.GuideNumber, '-', D.NoPiece))
                     FROM    FinishPickUpContainerDetail A
-                    INNER JOIN ShippingContainerDetail B
-                    ON A.Container = B.TicketNumber
-                    INNER JOIN DeliveryOrderPiece C
-                    ON  B.GuideSerie = C.GuideSerie AND
-                      B.GuideNumber = C.GuideNumber
+                    INNER JOIN ShippingContainer B
+                    ON A.Container = B.ReferenceContainer
+                    INNER JOIN ShippingContainerDetail C
+                    ON B.IdContainer = C.IdContainer
+                    INNER JOIN DeliveryOrderPiece D
+                    ON  D.GuideSerie = C.GuideSerie AND
+                        D.GuideNumber = C.GuideNumber
                     WHERE SchedulePickupId = @IdPickup
                    ) [Data]
 
