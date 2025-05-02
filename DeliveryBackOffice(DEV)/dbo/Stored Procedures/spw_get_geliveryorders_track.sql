@@ -11,6 +11,13 @@
 -- Create date: <2022-01-26>
 -- Description:	<Se Agregaron a las consultas los campos de receptor Alterante>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-25>
+-- Description:	<Mejoras de multimoneda.>
+-- Create date: <2025-05-02>
+-- Description:	<Filtrado por país cuando se solicitan las guías de todos los clientes.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spw_get_geliveryorders_track]
     -- Add the parameters for the stored procedure here
     @Token AS VARCHAR(50) = '08cc0ffe737713a57ce17ad4997156a0', --'f16ec23a337713eb710aa07a0c98b9b6',
@@ -19,8 +26,8 @@ CREATE PROCEDURE [dbo].[spw_get_geliveryorders_track]
     @EndDate AS VARCHAR(50) = '23/09/2021',
     @IdCustomer AS INT = -1,
     @GuideSerie AS VARCHAR(2) = 'FD',
-    @GuideNumber AS INT = 0                                     --509517--509508
-
+    @GuideNumber AS INT = 0 ,                                    --509517--509508
+	@IdCountry AS NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -117,7 +124,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
+					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
                        CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -155,9 +162,10 @@ BEGIN
                         ON serv.Guide_Serie = c.GuideSerie
                            AND serv.Guide_Number = c.GuideNumber
                     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
                 WHERE CONVERT(DATE, serv.DateCreated)
                       BETWEEN @DateIni AND @DateFin
+					  AND (serv.SenderCountryId = @IdCountry OR serv.ReceiverCountryId = @IdCountry)
                       AND serv.StatusOrderId <> 7 -- No guías anuladas
                       AND serv.StatusOrderId <> 15; -- No guías generadas
             END;
@@ -217,7 +225,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
+					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
                        CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -255,9 +263,10 @@ BEGIN
                         ON serv.Guide_Serie = c.GuideSerie
                            AND serv.Guide_Number = c.GuideNumber
                     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
                 WHERE serv.Guide_Serie = @GuideSerie
                       AND serv.Guide_Number = @GuideNumber
+					  AND (serv.SenderCountryId = @IdCountry OR serv.ReceiverCountryId = @IdCountry)
                       AND serv.StatusOrderId <> 7 -- No guías anuladas
                       AND serv.StatusOrderId <> 15; -- No guías generadas
             END;
@@ -320,7 +329,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
+					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
                        CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -358,7 +367,7 @@ BEGIN
                         ON serv.Guide_Serie = c.GuideSerie
                            AND serv.Guide_Number = c.GuideNumber
                     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
                 WHERE (
                           (
                               serv.Sender_ID = 0
@@ -373,6 +382,7 @@ BEGIN
                       AND (CONVERT(DATE, serv.DateCreated)
                       BETWEEN @DateIni AND @DateFin
                           )
+					  AND (serv.SenderCountryId = @IdCountry OR serv.ReceiverCountryId = @IdCountry)
                       AND serv.StatusOrderId <> 7 -- No guías anuladas
                       AND serv.StatusOrderId <> 15; -- No guías generadas
             END;
@@ -432,7 +442,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
+					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
                        CAST(serv.IsCollect AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -470,7 +480,7 @@ BEGIN
                         ON serv.Guide_Serie = c.GuideSerie
                            AND serv.Guide_Number = c.GuideNumber
                     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
+                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
                 WHERE (
                           (
                               serv.Sender_ID = 0
@@ -484,6 +494,7 @@ BEGIN
                       )
                       AND serv.Guide_Serie = @GuideSerie
                       AND serv.Guide_Number = @GuideNumber
+					  AND (serv.SenderCountryId = @IdCountry OR serv.ReceiverCountryId = @IdCountry)
                       AND serv.StatusOrderId <> 7 -- No guías anuladas
                       AND serv.StatusOrderId <> 15; -- No guías generadas
             END;
