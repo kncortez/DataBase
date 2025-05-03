@@ -3,9 +3,14 @@
 -- Create date: <2022-11-29>
 -- Description:	<Obtiene listado de guías que no poseen reintentos de entrega y se marcan como devolución.>
 -- =============================================
+-- Author:		<Cristian, Azurdia>
+-- Create date: <2025-05-02>
+-- Description:	<Filtrado de Incidencias par a Devolución inmediata segun el país que genera el manfiesto>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHD_ValidateDeliveryAttemps]
     -- Add the parameters for the stored procedure here
     @DeliveryOrderBySettlementId BIGINT
+   ,@CountryId NVARCHAR(4) = 'GT'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -43,7 +48,8 @@ BEGIN
     FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
     WHERE [CTI].[NameIncidence] = 'Destinatario rechaza paquete' COLLATE Latin1_General_CI_AI
           AND [CTI].[RowStatus] = 1
-          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI;
+          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI
+          AND [CTI].[CountryId] = @CountryId;
 
     INSERT INTO @ReturnIncidence
     (
@@ -53,7 +59,8 @@ BEGIN
     FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
     WHERE [CTI].[NameIncidence] = 'Remitente solicita devolución' COLLATE Latin1_General_CI_AI
           AND [CTI].[RowStatus] = 1
-          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI;
+          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI
+          AND [CTI].[CountryId] = @CountryId;
 
 
     DECLARE @STATUSDECLAREDRETURNED_DO INT =
