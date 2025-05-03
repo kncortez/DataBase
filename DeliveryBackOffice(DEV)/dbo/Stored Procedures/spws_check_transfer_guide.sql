@@ -7,11 +7,16 @@
 -- Create date: <2024-07-04>
 -- Description: <Se agrega filtro por pais para filtrar guias>
 -- =============================================
+-- Author:      <Cristian Suazo>
+-- Create date: <2025-01-28>
+-- Description: <Se agrega parametro de ticketNumber>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_check_transfer_guide]
 	
 	@Guide VARCHAR(MAX), 
 	@Token VARCHAR(100) = '',
-    @IdCountry VARCHAR(2) = 'GT'
+    @IdCountry VARCHAR(2) = 'GT',
+	@Ticket_Number NVARCHAR(300) = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -63,6 +68,13 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE SO.StatusOrderId = 50 --Incidencia validada
 	)
+
+	IF @Ticket_Number != ''
+	BEGIN
+		SELECT @Guide = CONCAT(Guide_Serie, Guide_Number)
+		FROM DeliveryOrder WITH(NOLOCK)
+		WHERE Ticket_Number = @Ticket_Number
+	END
 
 	DECLARE @Series NVARCHAR(50) = SUBSTRING(@Guide, 1, 2);
 	DECLARE @Guide_number NVARCHAR(50) = SUBSTRING(@Guide, 3, LEN(@Guide));

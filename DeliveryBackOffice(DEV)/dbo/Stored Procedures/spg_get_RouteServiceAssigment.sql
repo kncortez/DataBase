@@ -11,7 +11,6 @@
 -- Author:      <Daniel, Ramirez>
 -- Update date: <2024-05-28>
 -- Description: < Adicion de filtros por pais, por defect GT >
--- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteServiceAssigment]
 		@idRoute AS INT,
 		@dateRoute AS DATE,

@@ -52,6 +52,28 @@ BEGIN
                     SELECT (CONCAT(GuideSerie, GuideNumber, '-', GuidePiece)) AS Guide
                       FROM FinishPickUpDetail WITH (NOLOCK)
                      WHERE SchedulePickupId = @IdPickup
+                     UNION ALL
+                    SELECT      
+                      (CONCAT(C.GuideSerie, C.GuideNumber, '-', C.NoPiece))
+                    FROM   FinishPickUpReferenceDetail A
+                    INNER JOIN DeliveryOrder B 
+                    ON A.Reference = B.Ticket_Number
+                    INNER JOIN DeliveryOrderPiece C
+                    ON  B.Guide_Serie = C.GuideSerie AND
+                      B.Guide_Number = C.GuideNumber
+                    WHERE SchedulePickupId = @IdPickup
+                    UNION ALL
+                    SELECT 
+                    (CONCAT(D.GuideSerie, D.GuideNumber, '-', D.NoPiece))
+                    FROM    FinishPickUpContainerDetail A
+                    INNER JOIN ShippingContainer B
+                    ON A.Container = B.ReferenceContainer
+                    INNER JOIN ShippingContainerDetail C
+                    ON B.IdContainer = C.IdContainer
+                    INNER JOIN DeliveryOrderPiece D
+                    ON  D.GuideSerie = C.GuideSerie AND
+                        D.GuideNumber = C.GuideNumber
+                    WHERE SchedulePickupId = @IdPickup
                    ) [Data]
 
             EXEC [dbo].[SetFinishPickUpBatch] @InGuides = @Guides,

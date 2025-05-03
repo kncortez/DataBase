@@ -1260,6 +1260,16 @@ BEGIN
                               DateUpdated = GETDATE()
                        WHERE SchedulePickupId = @IdPickup
 
+                        UPDATE FinishPickUpContainerDetail
+                          SET TokenUpdate = 'SYS-GetProcessBatchPOD',
+                              DateUpdate = GETDATE()
+                       WHERE SchedulePickupId = @IdPickup
+
+                        UPDATE FinishPickUpReferenceDetail
+                          SET TokenUpdated = 'SYS-GetProcessBatchPOD',
+                              DateUpdated = GETDATE()
+                       WHERE SchedulePickupId = @IdPickup
+
                        UPDATE PG
                           SET IsCompleted = 1
                          FROM DeliveryBackOffice.dbo.ProcessedGuideCOD PG  WITH(NOLOCK)

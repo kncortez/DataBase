@@ -1,30 +1,19 @@
--- =============================================
--- Author:		<Brandon, Pedroza>
--- Create date: <024-12-10>
--- Description:	<Liquidacion Rutas Express - Se obtienen guias por numero de ticket>
--- =============================================
+﻿-- =============================================  
 -- Author:		<Brandon, Pedroza>  
--- Create date: <2025-01-13>  
--- Description: <Contenerizacion guias - Obtiene guias por numero de referencia>  
+-- Create date: <2025-02-17>  
+-- Description: <Contenerizacion guias - Obtiene guias por numero de referencia sin restriccion>  
 -- =============================================  
 -- Author:		<Brandon, Pedroza>  
--- Modified:	<2025-02-11>  
--- Description: <Contenerizacion guias - Se agregan mensajes informativos >  
--- =============================================
--- Author:		<Brandon, Pedroza>  
--- Modified:	<2025-02-11>  
--- Description: <Contenerizacion guias - Se agrega estado Recolectado >  
--- =============================================
-CREATE PROCEDURE [dbo].[sphwGetGuidesByTicketNumber]
-    @TicketNumber NVARCHAR(50),
-    @IdCountry NVARCHAR(5),
+-- Create date: <2025-02-19>  
+-- Description: <Contenerizacion guias - Se agrega validacion para aceptar guias que no esten en estado terminal>  
+-- =============================================  
+CREATE PROCEDURE [dbo].[sphdGetGuidesByTicketNumberNoRestriction]
+	@TicketNumber NVARCHAR(50),
+	@IdCountry NVARCHAR(5),
 	@IdCustomer INT=0
 AS
 BEGIN
     SET NOCOUNT ON;
-	DECLARE @IdStatusGenerated INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Solicitado');
-	DECLARE @IdStatusRequest INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Generado');
-	DECLARE @IdStatusRecolleted INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recolectado');
 
 	IF @IdCustomer <> 0
 	BEGIN
@@ -40,7 +29,8 @@ BEGIN
 		WHERE A1.Ticket_Number = @TicketNumber
 		  AND ISNULL(A1.SenderCountryId, 'GT') = @IdCountry
 		  AND A1.IdCustomer = @IdCustomer
-		  AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest,@IdStatusRecolleted)
+		  AND A1.StatusOrderId NOT IN (SELECT StatusOrderId FROM StatusOrder WITH (NOLOCK)
+										WHERE [CatCheckpointTypeId] = 3 )
 	END 
 	ELSE
 	BEGIN 
@@ -55,7 +45,8 @@ BEGIN
 			ON A1.IdCustomer = A2.IdCustomer
 		WHERE A1.Ticket_Number = @TicketNumber
 		  AND ISNULL(A1.SenderCountryId, 'GT') = @IdCountry
-		  AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest,@IdStatusRecolleted)
+			AND A1.StatusOrderId NOT IN (SELECT StatusOrderId FROM StatusOrder WITH (NOLOCK)
+										WHERE [CatCheckpointTypeId] = 3 )
 	END	
 	IF NOT EXISTS(SELECT A1.Guide_Number			
 		FROM DeliveryOrder A1 WITH (NOLOCK)
@@ -85,7 +76,8 @@ BEGIN
 		INNER JOIN Customer A2 WITH (NOLOCK) 
 			ON A1.IdCustomer = A2.IdCustomer
 		WHERE A1.Ticket_Number = @TicketNumber
-		AND A1.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest,@IdStatusRecolleted)
+			AND A1.StatusOrderId NOT IN (SELECT StatusOrderId FROM StatusOrder WITH (NOLOCK)
+										WHERE [CatCheckpointTypeId] = 3 )
 			AND ISNULL(A1.SenderCountryId, 'GT') = @IdCountry
 			)
 	BEGIN

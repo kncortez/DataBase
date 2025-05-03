@@ -18,6 +18,11 @@
 -- Description: <Se agrega parametros para enviar información de COD anticipado.>
 -- =============================================
 -- =============================================
+-- Author:      <Cristian Suazo>
+-- Create date: <2025-01-07>
+-- Description: <Se agrega procedimiento por ticketnumber>
+-- =============================================
+-- =============================================
 -- Author:      <Tito García>
 -- Create date: <2024-12-18>
 -- Description: <Se realizan optimizaciones recomendadas por DBA>
@@ -27,7 +32,8 @@ CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @IdModuleP INT,
     @ServiceType VARCHAR(100),
     @TokenP VARCHAR(100),
-    @IdCountry VARCHAR(2) = 'GT'
+    @IdCountry VARCHAR(2) = 'GT',
+	@TicketNumber NVARCHAR(MAX) = NULL
 AS
 BEGIN
     -- Insert statements for procedure here
@@ -71,14 +77,38 @@ BEGIN
     );
     CREATE NONCLUSTERED INDEX tempGuides ON #listGuides (Guide_Serie, Guide_Number);
 
-    INSERT INTO #listGuides
-    (
-        Guide_Serie,
-        Guide_Number
-    )
-    SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
-           SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+
+	IF @InGuidesP IS NOT NULL AND @InGuidesP != ''
+	BEGIN
+	PRINT ' NORMAL '
+		INSERT INTO #listGuides
+		(
+			Guide_Serie,
+			Guide_Number
+		)
+		SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
+			   SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+	END
+	ELSE
+	BEGIN
+
+		SET @InGuidesP = ''
+		SELECT @InGuidesP = STRING_AGG(CAST(CONCAT(Guide_Serie, Guide_Number) AS VARCHAR(MAX)), ',')
+		FROM DeliveryOrder WITH (NOLOCK)
+		WHERE Ticket_Number IN ( @TicketNumber )
+
+		INSERT INTO #listGuides
+		(
+			Guide_Serie,
+			Guide_Number
+		)
+		SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
+			   SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+
+	END
+	----------------------------------------------------------------------------------------------------
 
     ---- Obtener guias que no existen ------------------------------------
     SELECT lg.Guide_Serie,
@@ -530,7 +560,8 @@ BEGIN
 							),
 					'N/A'
 				)
-				)) AS TypePayment
+				)) AS TypePayment,
+	DO.IdCustomer
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
@@ -588,7 +619,6 @@ BEGIN
 								AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
 					);
 
-PRINT '@CODAnticipatedTable'
 	INSERT INTO @CODAnticipatedTable (GuideSerie, GuideNumber,IdCustomer,IdPortafolio,COD,ComisionCOD,ComisionCODAnticipated)
 	SELECT
 		ppt.GuideSerie,
@@ -636,9 +666,9 @@ PRINT '@CODAnticipatedTable'
 			ON do.Guide_Serie = acd.GuideSerie AND do.Guide_Number = acd.GuideNumber
 		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK)
 			ON do.IdCustomer = ach.CustomerId 
-				AND ISNULL(do.VisitpointClientPortfolioId,0) = ISNULL(ach.PortfolioId,0) 
-			--Tomar en cuenta validar especificamente 
-			--por portafolio cuando el cliente sea redistribuidor 10/02/2025
+            AND ISNULL(do.VisitpointClientPortfolioId, 0) = ISNULL(ach.PortfolioId, 0)
+            --Tomar en cuenta validar especificamente
+            --por portafolio cuando el cliente sea redistribuidor 10/02/2025
 		LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 			ON VPC.CodeOfReference = DO.Sender_ID
 		LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
@@ -694,8 +724,6 @@ PRINT '@CODAnticipatedTable'
                 SELECT COUNT(1)FROM #PendingPaymentTempId
             );
     DECLARE @Index INT = 1;
-
-	PRINT @Output
 
     SET @Output = '[ { ' + '"Total": ' +
                   (
