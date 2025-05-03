@@ -46,4 +46,8 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de actualización del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'FinishPickUpContainerDetail', @level2type=N'COLUMN',@level2name=N'DateUpdate'
 GO
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla para guardar los contenedores de las guías en recolección POD.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'FinishPickUpContainerDetail'
+GO
+
+
 

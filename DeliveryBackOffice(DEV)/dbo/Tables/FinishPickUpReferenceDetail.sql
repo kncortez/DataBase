@@ -28,6 +28,9 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificación de cabecera de recolección por referencia' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'FinishPickUpReferenceDetail', @level2type=N'COLUMN',@level2name=N'SchedulePickupId'
 GO
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Referencia para la guía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'FinishPickUpReferenceDetail', @level2type=N'COLUMN',@level2name=N'Reference'
+GO
+
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Indica que el registro esta activo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'FinishPickUpReferenceDetail', @level2type=N'COLUMN',@level2name=N'RowStatus'
 GO
 
@@ -41,6 +44,9 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de usuar
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'fecha de actualización del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'FinishPickUpReferenceDetail', @level2type=N'COLUMN',@level2name=N'DateUpdated'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla para guardar la referencia de las guías en recolección POD.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'FinishPickUpReferenceDetail'
 GO
 
 
