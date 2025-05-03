@@ -4,7 +4,7 @@ DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE' -- Desc
 , @Address NVARCHAR(600) = N'Colonia Sierra Morena, Soyapango, San Salvador Este,El Salvador'             -- nvarchar(600)
 , @IdTownship INT = 665            -- ID de la tabla Towship, municipio en al que pertenece el exc
 , @zone INT = 0                  -- zona si aplica, sino dejar 0
-, @Phone NVARCHAR(10) = N'55003355'               -- número de telefono XXXXXXXX
+, @Phone NVARCHAR(10) = N'55003355'               -- nÃºmero de telefono XXXXXXXX
 , @ContactName NVARCHAR(100) = N'Ross Maria Gonzales Veliz'         -- nvarchar(100) Contacto
 , @Email NVARCHAR(100) = N'perkasorzo@gufum.com'               -- nvarchar(100) Correo
 , @DescriptionCC NVARCHAR(100) = N'Express Center San Salvador Este Salvador'       -- nvarchar(100) Descripcion Narrada por Contact Center evitar siglas o abreviaturas
@@ -15,7 +15,7 @@ DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE' -- Desc
 		BEGIN TRANSACTION;
             
 	DECLARE @PhoneNumber VARCHAR(50);
-	-- Verificar si el formato es correcto (8 dígitos)
+	-- Verificar si el formato es correcto (8 dÃ­gitos)
 		IF @Phone LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
 		BEGIN
 			

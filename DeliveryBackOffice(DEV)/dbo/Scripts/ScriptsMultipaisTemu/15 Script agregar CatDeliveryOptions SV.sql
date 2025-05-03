@@ -15,7 +15,7 @@ BEGIN TRY
 			   ,[IdCountry])
 		 VALUES
 			   ('Casa'
-			   ,'Opci髇 de entrega casa'
+			   ,'Opci贸n de entrega casa'
 			   ,1
 			   ,'SYS-WOROZCO'
 			   ,GETDATE()
@@ -34,7 +34,7 @@ BEGIN TRY
 			   ,[IdCountry])
 		 VALUES
 			   ('Oficina'
-			   ,'Opci髇 de entrega oficina'
+			   ,'Opci贸n de entrega oficina'
 			   ,1
 			   ,'SYS-WOROZCO'
 			   ,GETDATE()
@@ -53,7 +53,7 @@ BEGIN TRY
 			   ,[IdCountry])
 		 VALUES
 			   ('Express Center'
-			   ,'Opci髇 de entrega Express Center'
+			   ,'Opci贸n de entrega Express Center'
 			   ,1
 			   ,'SYS-WOROZCO'
 			   ,GETDATE()
@@ -72,7 +72,7 @@ BEGIN TRY
 			   ,[IdCountry])
 		 VALUES
 			   ('Smart Locker'
-			   ,'Opci髇 de entrega Smart Locker'
+			   ,'Opci贸n de entrega Smart Locker'
 			   ,1
 			   ,'SYS-WOROZCO'
 			   ,GETDATE()

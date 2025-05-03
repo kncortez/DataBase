@@ -1,6 +1,6 @@
 --SELECT * FROM DeliveryBackOffice.dbo.Container
 
---Ubicar el ultimo número segun tipo de contenedor
+--Ubicar el ultimo nÃºmero segun tipo de contenedor
 --SELECT TOP 1 ContainerNumber FROM DeliveryBackOffice.dbo.Container
 --WHERE CatTypeContainerId = (SELECT IdCatTypeContainer FROM DeliveryBackOffice.dbo.CatTypeContainer
 --WHERE TypeContainerSerie = 'PLT')

@@ -17,7 +17,7 @@ BEGIN TRY
 			   ,[IdCurrencyCOD])
 	VALUES
 		('VoucherEmail'
-		,'Valor de correo electrónico para el comprobante en El Salvador'
+		,'Valor de correo electrÃ³nico para el comprobante en El Salvador'
 		,'infosv@forzadelivery.com' --VALOR
 		,1
 		,GETDATE(),'SV',NULL)
@@ -33,7 +33,7 @@ BEGIN TRY
 			   ,[IdCurrencyCOD])
 	VALUES
 		('VoucherPhone'
-		,'Valor del teléfono para el comprobante en El Salvador'
+		,'Valor del telÃ©fono para el comprobante en El Salvador'
 		,'(+503) 2377-5300' --VALOR
 		,1
 		,GETDATE(),'SV',NULL)
