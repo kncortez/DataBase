@@ -5,13 +5,17 @@
 -- Create date: <2021-04-30>
 -- Description:	<Recupera detalle para generar manifiesto de liquidación (Devolucion)>
 -- =============================================
+-- Author:		<Cristian, Azurdia>
+-- Create date: <2025-05-02>
+-- Description:	<Se agerga simoblo y país de la guias que conforman un manifiesto>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_settlement_Return_guides]
 		@IdManifest INT
 AS
 BEGIN
 	
-
 	declare @manifestsequence int = (select Id from SettlementByPickup where SequenceCode = @IdManifest and SubTypeServiceManagmentId = 3)
+	DECLARE @Currency INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Symbol = 'Q')
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
@@ -30,7 +34,9 @@ BEGIN
 		Max_Date nvarchar(50),
 		Receiver_Phone nvarchar(100),
 		Rack_Position nvarchar(MAX),
-		Collect_on_Delivery decimal(16,2)
+		Collect_on_Delivery decimal(16,2),
+		ReceiverCountryId nvarchar(2),
+		Symbol nvarchar(2)
 	)
 
     -- tablix content
@@ -54,6 +60,8 @@ BEGIN
 	,do.Sender_Phone as Receiver_Phone
 	,(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)) as Rack_Position
 	,Collect_OnDelivery
+	,ISNULL(do.ReceiverCountryId,'GT') AS ReceiverCountryId
+	,CCU.Symbol
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do
 	JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail dsd ON dsd.GuideSerie = do.Guide_Serie AND dsd.GuideNumber = do.Guide_Number AND dsd.SettlementByPickupId = @manifestsequence
 	where do.Guide_Serie = (SELECT DISTINCT TOP 1 GuideSerie FROM [DeliveryBackOffice].[dbo].[SettlementByPickupDetail] WHERE SettlementByPickupId = @manifestsequence)
@@ -74,7 +82,9 @@ BEGIN
 		Max_Date,
 		Receiver_Phone,
 		Rack_Position,
-		Collect_on_Delivery
+		Collect_on_Delivery,
+		ReceiverCountryId,
+		Symbol
 	FROM @temp
 	order by Receiver_Departament asc, Receiver_Town asc, Receiver_Zone asc, Receiver_Address asc
 
