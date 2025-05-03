@@ -320,7 +320,7 @@ BEGIN
                    prov.ProvinceAbbreviation [Asssitant],
                    prov.IdCountry [IdFilter],
                    'Province' [Catalog]
-            FROM dbo.Province prov
+            FROM dbo.Province prov 
             WHERE prov.ProvinceStatus = 'TRUE'
                   AND
                   (
@@ -341,7 +341,9 @@ BEGIN
                    UPPER(twn.TownshipName) [NameValue],
                    twn.IdProvince [IdFilter],
                    'Township' [Catalog]
-            FROM dbo.Township twn
+            FROM dbo.Township twn WITH(NOLOCK)
+				INNER JOIN Province PR WITH(NOLOCK)
+				ON twn.IdProvince = PR.IdProvince
             WHERE twn.TownshipStatus = 'TRUE'
                   AND
                   (
@@ -353,6 +355,7 @@ BEGIN
                       @IdParentFilter = -1
                       OR twn.IdProvince = @IdParentFilter
                   )
+				  AND PR.IdCountry = @IdFilter
             ORDER BY twn.TownshipName;
         END;
 
@@ -374,6 +377,7 @@ BEGIN
                       @IdParentFilter = -1
                       OR setl.IdTownship = @IdParentFilter
                   )
+                  AND setl.IdCountry = @IdFilter
             ORDER BY setl.Settlement;
         END;
 
