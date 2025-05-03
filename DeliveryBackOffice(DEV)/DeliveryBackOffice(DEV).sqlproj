@@ -608,6 +608,7 @@
     <Build Include="dbo\Tables\AccountBankFormatRule.sql" />
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
+    <Build Include="dbo\Tables\DefaultValuesPerCountry.sql" />
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
@@ -1851,6 +1852,7 @@
     <Build Include="dbo\Stored Procedures\GetSalesBook.sql" />
     <Build Include="dbo\Stored Procedures\GetProcessBatchPOD.sql" />
     <Build Include="dbo\Stored Procedures\GetBatchPOD.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetInfoByCountry.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
