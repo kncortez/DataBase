@@ -1719,7 +1719,6 @@
     <Build Include="dbo\Stored Procedures\GenerateClosureVisitPoint.sql" />
     <Build Include="dbo\Stored Procedures\GenerateClosureOperator.sql" />
     <Build Include="dbo\Stored Procedures\GenerateClosure.sql" />
-    <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccount.sql" />
     <Build Include="dbo\Stored Procedures\FilterVisitPointByClientPortfolio.sql" />
     <Build Include="dbo\Stored Procedures\ExpressCenterConfiguration.sql" />
