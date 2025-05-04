@@ -1850,6 +1850,11 @@
     <Build Include="dbo\Stored Procedures\GetSalesBook.sql" />
     <Build Include="dbo\Stored Procedures\GetProcessBatchPOD.sql" />
     <Build Include="dbo\Stored Procedures\GetBatchPOD.sql" />
+    <Build Include="dbo\Stored Procedures\getHeaderCodeByTownshipAndDepartment.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetGuideInfo.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_ReportBiV4.sql" />
+    <Build Include="dbo\Stored Procedures\spws_GetRouteHubBySettlement.sql" />
+    <Build Include="dbo\Stored Procedures\spws_GetSettlementsByHeaderCode.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
