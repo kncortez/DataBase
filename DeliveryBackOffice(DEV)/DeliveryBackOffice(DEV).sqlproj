@@ -1720,7 +1720,6 @@
     <Build Include="dbo\Stored Procedures\GenerateClosureVisitPoint.sql" />
     <Build Include="dbo\Stored Procedures\GenerateClosureOperator.sql" />
     <Build Include="dbo\Stored Procedures\GenerateClosure.sql" />
-    <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccount.sql" />
     <Build Include="dbo\Stored Procedures\FilterVisitPointByClientPortfolio.sql" />
     <Build Include="dbo\Stored Procedures\ExpressCenterConfiguration.sql" />
@@ -1756,8 +1755,8 @@
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromDeliverySettlement.sql" />
     <Build Include="dbo\Stored Procedures\GetValidaReturnGuide.sql" />
-	<Build Include="dbo\Stored Procedures\SetValidPickUpPiece.sql" />
-	<Build Include="dbo\Stored Procedures\SetPickUpFinishAppPieces.sql" />
+    <Build Include="dbo\Stored Procedures\SetValidPickUpPiece.sql" />
+    <Build Include="dbo\Stored Procedures\SetPickUpFinishAppPieces.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1821,7 +1820,6 @@
     <Build Include="dbo\Stored Procedures\spg_get_RouteLastMile_1.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceRecolectCODAnticipated_1.sql" />
     <Build Include="dbo\Stored Procedures\GetVisitPointOfClient_1.sql" />
-    <Build Include="dbo\Stored Procedures\GetUpdateRegisterCODearly_1.sql" />
     <Build Include="dbo\Stored Procedures\supportUpdateHubDestination.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetStatusBarData.sql" />
     <Build Include="dbo\Stored Procedures\SUPPORTLHMANIFEST.sql" />
@@ -1937,9 +1935,6 @@
     <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAPPaymentRecoveryV2.sql" />
     <Build Include="dbo\Stored Procedures\RDL_Info_DensityGMap.sql" />
     <Build Include="dbo\Stored Procedures\CollectRouteReport.sql" />
-    <Build Include="dbo\Tables\InvoiceBatchRelationships_1.sql" />
-    <Build Include="dbo\Tables\InvoiceBatchHeader_1.sql" />
-    <Build Include="dbo\Tables\InvoiceBatchDetail_1.sql" />
     <Build Include="dbo\Stored Procedures\UpadateDeliverySettlementDetail.sql" />
     <Build Include="dbo\Stored Procedures\SupportInsertSalesAdvisorCode.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateTrackingCorporateUser.sql" />
@@ -1948,12 +1943,7 @@
     <Build Include="dbo\Stored Procedures\SupportConfirmAccountexcweb.sql" />
     <Build Include="dbo\Stored Procedures\SupportChangeIdSation.sql" />
     <Build Include="dbo\Stored Procedures\spg_status_order_detail_web_antes.sql" />
-    <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAPPaymentRecoveryHN_1.sql" />
-    <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAPHN_1.sql" />
-    <Build Include="dbo\Stored Procedures\sp_getEmailParser_1.sql" />
-    <Build Include="dbo\Stored Procedures\SetInvoiceHelperExecutionBatch_1.sql" />
     <Build Include="dbo\Stored Procedures\GetCountryOfPickupService.sql" />
-    <Build Include="dbo\Stored Procedures\GetCodeOfReferenceofInvoice_1.sql" />
     <Build Include="dbo\Stored Procedures\corregirmanifiesto.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetInfoByCountry.sql" />
