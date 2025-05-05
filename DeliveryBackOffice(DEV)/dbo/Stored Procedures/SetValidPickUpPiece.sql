@@ -14,6 +14,11 @@
 -- Author:		<Brandon, Pedroza>  
 -- Modifie:		<2025-02-27>  
 -- Description: <Contenerizacion guias - se acepta cualquier paquete si se escanea por guia >  
+-- ============================================= 
+-- =============================================  
+-- Author:  <Edelman> 
+-- Update date: <2025-05-02>  
+-- Description: <Validar si  contenedores y referencias ya fue aplicada la recolección POD con el servicio>  
 -- =============================================  
 CREATE PROCEDURE [dbo].[SetValidPickUpPiece]
     @InGuides NVARCHAR(MAX) = 'FD9559566-1,FD9559566-2',
@@ -196,7 +201,7 @@ BEGIN
 					BEGIN
 						IF EXISTS (SELECT 1 FROM #TempContainerGuides)
 							BEGIN						
-								IF(EXISTS(SELECT 1 FROM FinishPickUpContainerDetail WHERE Container = @Container))
+								IF(EXISTS(SELECT 1 FROM FinishPickUpContainerDetail WITH(NOLOCK) WHERE Container = @Container))
 						        BEGIN
 						      
                                     SELECT 

@@ -3,6 +3,12 @@
 -- Updated date:<21-02-2025>
 -- Description:    <Se crea sp para manejo de recolecciones en servicio PickupProcessingService>
 -- =============================================
+-- =============================================
+-- Author:        <Edelman>
+-- Updated date:<02-05-2025>
+-- Description:    <Actualizar tablas de referencia y contenedores que se hayan procesado en el servicio recolección POD>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[SetFinishPickUpBatch]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX),
