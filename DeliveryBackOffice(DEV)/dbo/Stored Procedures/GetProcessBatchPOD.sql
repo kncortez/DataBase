@@ -70,7 +70,7 @@ BEGIN
                     UNION ALL
                     SELECT 
                     (CONCAT(D.GuideSerie, D.GuideNumber, '-', D.NoPiece))
-                    FROM    FinishPickUpContainerDetail A WITH (NOLOCK)
+                      FROM FinishPickUpContainerDetail A WITH (NOLOCK)
                     INNER JOIN ShippingContainer B WITH (NOLOCK)
                     ON A.Container = B.ReferenceContainer
                     INNER JOIN ShippingContainerDetail C WITH (NOLOCK)
