@@ -3,6 +3,10 @@
 -- Create date: <2022-09-13>
 -- Description:	<Asigna una guía a una preparación entrega (Movil)>
 -- =============================================
+-- Author:      <Edelman, Vasquez>
+-- Create date: <22-04-2025>
+-- Description: #Validar referencias repetidas por cliente
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
     -- Add the parameters for the stored procedure here
     @RouteId INT,

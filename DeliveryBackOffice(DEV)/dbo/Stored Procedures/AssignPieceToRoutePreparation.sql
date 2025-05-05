@@ -462,16 +462,16 @@ SET ARITHABORT ON
 											[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
 											ON
 											RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
-											AND
-											RPD.RowStatus = 1
 										INNER JOIN
 											[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 											ON 
 											RPD.RoutePreparationId = RP.IdRoutePreparation
-											AND
-											RP.RowStatus = 1
 									WHERE 
 										RPDP.RowStatus = 1
+										AND
+										RPD.RowStatus = 1
+										AND
+										RP.RowStatus = 1
 										AND
 										RPD.Guide_Serie = @GuideSerie 
 										AND 

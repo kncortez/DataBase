@@ -15,7 +15,7 @@ BEGIN
     DECLARE @StatusContainer INT; 
     SELECT  @IdContainer = IdContainer,
             @StatusContainer = IdStatusContainer 
-    FROM [dbo].[ShippingContainer] WHERE ReferenceContainer = @ReferenceContainer AND IdCustomer = @IdCustomer;
+    FROM [dbo].[ShippingContainer] WITH(NOLOCK) WHERE ReferenceContainer = @ReferenceContainer AND IdCustomer = @IdCustomer;
     -- Si no existe el contenedor, se crea uno nuevo
     IF (@IdContainer IS NULL)
     BEGIN 
@@ -76,7 +76,7 @@ BEGIN
             ELSE IF EXISTS (SELECT 1 FROM #Guides T
                             WHERE EXISTS (
                                 SELECT 1
-                                FROM ShippingContainerDetail D
+                                FROM ShippingContainerDetail D WITH(NOLOCK)
                                 WHERE T.GuideNumber = D.GuideNumber AND T.GuideSerie = D.GuideSerie AND D.RowStatus = 1
                             )
             )
@@ -97,9 +97,9 @@ BEGIN
                 -- Agrega guías nuevas al contenedor
                 INSERT INTO [dbo].[ShippingContainerDetail] (IdContainer, GuideSerie, GuideNumber, TicketNumber, UserCreated, DateCreated, TokenCreated)
                 SELECT @IdContainer, GuideSerie, GuideNumber, TicketNumber, @User, GETDATE(), @Token FROM #Guides g
-                WHERE NOT EXISTS (SELECT GuideNumber FROM [dbo].[ShippingContainerDetail] scd WHERE scd.GuideSerie = g.GuideSerie AND scd.GuideNumber = g.GuideNumber);
+                WHERE NOT EXISTS (SELECT GuideNumber FROM [dbo].[ShippingContainerDetail] scd WITH(NOLOCK) WHERE scd.GuideSerie = g.GuideSerie AND scd.GuideNumber = g.GuideNumber);
 
-                DECLARE @CountGuides INT = (SELECT COUNT(1) FROM ShippingContainerDetail WHERE IdContainer = @IdContainer AND RowStatus = 1);
+                DECLARE @CountGuides INT = (SELECT COUNT(1) FROM ShippingContainerDetail WITH(NOLOCK) WHERE IdContainer = @IdContainer AND RowStatus = 1);
                 
                 IF @@TRANCOUNT > 0
                 BEGIN
