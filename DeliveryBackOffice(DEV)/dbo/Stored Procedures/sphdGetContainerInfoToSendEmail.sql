@@ -37,12 +37,12 @@ BEGIN
 			ISNULL(DOP.IdStatusGuideByContainer, 1) AS [StatusByContainer],
 			ISNULL(DOP.IsNewInContainer,'0') AS[IsNewInContainer] 	
 	FROM ShippingContainer SP 
-		INNER JOIN ShippingContainerDetail SPD
+		INNER JOIN ShippingContainerDetail SPD WITH(NOLOCK)
 			ON SP.IdContainer = SPD.IdContainer
-		INNER JOIN DeliveryOrder DO
+		INNER JOIN DeliveryOrder DO WITH(NOLOCK)
 			ON DO.Guide_Number = SPD.GuideNumber
 			AND DO.Guide_Serie = SPD.GuideSerie
-		INNER JOIN DeliveryOrderPiece DOP
+		INNER JOIN DeliveryOrderPiece DOP WITH(NOLOCK)
 			ON DO.Guide_Number = DOP.GuideNumber
 			AND DO.Guide_Serie = DOP.GuideSerie
 	WHERE SP.IdCustomer = @IdCustomer

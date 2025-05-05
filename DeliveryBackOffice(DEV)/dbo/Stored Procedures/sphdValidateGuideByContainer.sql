@@ -36,7 +36,7 @@ BEGIN
 	DECLARE @StatusDescription NVARCHAR(2048) = (
 		SELECT SO.OrderDescription
 		FROM dbo.DeliveryOrder DO WITH (NOLOCK)
-		INNER JOIN dbo.StatusOrder SO
+		INNER JOIN dbo.StatusOrder SO WITH (NOLOCK)
 			ON DO.StatusOrderId = SO.StatusOrderId
 		WHERE DO.Guide_Serie = @GuideSerie 
 			AND Guide_Number = @GuideNumber
