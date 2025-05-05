@@ -1773,7 +1773,6 @@
     <Build Include="dbo\Stored Procedures\GetGuideDuplicator.sql" />
     <Build Include="dbo\Stored Procedures\GetGuidesByContainerByReference.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
-    <Build Include="dbo\Stored Procedures\getRouteDispatchTrack.sql" />
     <Build Include="dbo\Stored Procedures\GetRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\HM_GetGuideAtContainer.sql" />
     <Build Include="dbo\Stored Procedures\SetFinishPickUpBatch.sql" />
