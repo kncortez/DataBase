@@ -80,8 +80,8 @@ BEGIN
     -- Variables de control de cambios
     DECLARE @UpdatedRP BIT = 0;
 
-    	--- VALIDAMOS QUE NO VENGA VACIO GUIDE NUMBER Y GUIDE SERIE 
-	IF @GuideNumber IS NULL OR @GuideNumber = 0 AND @GuideSerie IS NULL OR @GuideSerie = ''
+    --- VALIDAMOS QUE NO VENGA VACIO GUIDE NUMBER Y GUIDE SERIE 
+	IF (@GuideNumber IS NULL OR @GuideNumber = 0) AND (@GuideSerie IS NULL OR @GuideSerie = '')
 	BEGIN
 		SELECT @GuideSerie = Guide_Serie,
 			   @GuideNumber = Guide_Number

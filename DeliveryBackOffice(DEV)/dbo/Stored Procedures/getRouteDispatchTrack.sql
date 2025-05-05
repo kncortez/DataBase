@@ -26,7 +26,7 @@ BEGIN
           WHERE IdRouteAssigment = @IdPuRouteAssigment
 
         SELECT IdRouteDispatchTrack
-          FROM [RouteAssigment]
+          FROM [RouteAssigment] WITH(NOLOCK)
          WHERE idrouteAssigment = @IdPuRouteAssigment
    END
    ELSE IF @option  = 2
@@ -37,7 +37,7 @@ BEGIN
          WHERE IdServiceManagement = @idServiceManagement
 
         SELECT IdRouteDispatchTrack
-          FROM [RouteAssigment]
+          FROM [RouteAssigment] WITH(NOLOCK)
          WHERE idrouteAssigment = @IdPuRouteAssigment
    END
 END;

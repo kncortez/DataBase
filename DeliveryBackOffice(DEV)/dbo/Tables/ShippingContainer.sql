@@ -1,4 +1,4 @@
-CREATE TABLE ShippingContainer (
+CREATE TABLE [ShippingContainer] (
 	IdContainer 		BIGINT IDENTITY(1,1) NOT NULL,
 	ReferenceContainer 	NVARCHAR(50) NOT NULL,
 	IdCustomer 			INT NOT NULL,

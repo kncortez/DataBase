@@ -15,7 +15,8 @@ BEGIN
     DECLARE @StatusContainer INT; 
     SELECT  @IdContainer = IdContainer,
             @StatusContainer = IdStatusContainer 
-    FROM [dbo].[ShippingContainer] WHERE ReferenceContainer = @ReferenceContainer AND IdCustomer = @IdCustomer;
+      FROM [dbo].[ShippingContainer] WITH(NOLOCK)
+     WHERE ReferenceContainer = @ReferenceContainer AND IdCustomer = @IdCustomer;
     
     IF (@IdContainer IS NULL)
     BEGIN 
@@ -75,7 +76,7 @@ BEGIN
                 ELSE IF NOT EXISTS (SELECT 1 FROM #Guides T
                                 WHERE EXISTS (
                                     SELECT 1
-                                    FROM ShippingContainerDetail D
+                                    FROM ShippingContainerDetail D WITH(NOLOCK)
                                     WHERE T.GuideNumber = D.GuideNumber AND T.GuideSerie = D.GuideSerie AND D.RowStatus = 1 AND D.IdContainer = @IdContainer
                                 )
                 )
@@ -92,7 +93,7 @@ BEGIN
                     FROM #Guides AS gUP
                     WHERE ShippingContainerDetail.GuideNumber = gUP.GuideNumber AND ShippingContainerDetail.GuideSerie = gUP.GuideSerie;
 
-                    DECLARE @CountGuides INT = (SELECT COUNT(1) FROM ShippingContainerDetail WHERE IdContainer = @IdContainer AND RowStatus = 1);
+                    DECLARE @CountGuides INT = (SELECT COUNT(1) FROM ShippingContainerDetail WITH(NOLOCK) WHERE IdContainer = @IdContainer AND RowStatus = 1);
                     
                     IF @@TRANCOUNT > 0
                     BEGIN
