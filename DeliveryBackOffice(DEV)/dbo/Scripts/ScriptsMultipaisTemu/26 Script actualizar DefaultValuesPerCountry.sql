@@ -50,8 +50,7 @@ SET
 	CultureInfo= 'en-US'
 WHERE IdCountry = 'SV';
 
-
-    ROLLBACK TRANSACTION;
+    COMMIT TRANSACTION;
 
 END TRY
 BEGIN CATCH
