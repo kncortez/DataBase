@@ -14,7 +14,7 @@ BEGIN TRY
     INSERT INTO DefaultValuesPerCountry (IdCountry, UseMultiCountry,RowStatus,TokenCreated,DateCreated)
     VALUES('HN',1,1,'SYS-CAZURDIA',GETDATE())
 
-    ROLLBACK TRANSACTION;
+    COMMIT TRANSACTION;
 
 END TRY
 BEGIN CATCH
