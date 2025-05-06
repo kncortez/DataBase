@@ -11,7 +11,6 @@
 -- Author:      <Daniel, Ramirez>
 -- Update date: <2024-05-28>
 -- Description: < Adicion de filtros por pais, por defect GT >
--- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteServiceAssigment]
 		@idRoute AS INT,
 		@dateRoute AS DATE,
@@ -22,7 +21,6 @@ BEGIN
            spu.SenderName [Name],
            spu.AddressPickup [Address],
            spu.SenderPhone [Phone],
-           CONVERT(VARCHAR(10), spu.StartDate, 105) AS datePickUp,
            CONCAT(CONVERT(VARCHAR(10), spu.StartDate, 108), '   ', CONVERT(VARCHAR(10), spu.EndDate, 108)) AS rangeHour,
            spu.QuantityRegularPackages,
            spu.QuantityOverDimensionedPackage,
@@ -31,10 +29,7 @@ BEGIN
            ISNULL(smt.Amount, 0) Amount,
            smt.IdServiceManagement IdServiceManagement,
 		   smt.[Order] [Order],
-		   spu.IsScheduled IsScheduled,
-           vpc.Latitude,
-           vpc.Longitude,
-           vpc.Email
+		   spu.IsScheduled IsScheduled
     FROM [DeliveryBackOffice].[dbo].[SchedulePickup] AS spu WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] AS smt WITH (NOLOCK)
             ON spu.SchedulePickupId = smt.IdSchedulePickup
@@ -44,8 +39,6 @@ BEGIN
             ON rat.IdCurrierMan = snr.ID
         LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
             ON css.IdServiceStatus = smt.ServiceStatusId
-        LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
-            ON spu.SenderId = vpc.CodeOfReference
     WHERE rat.IdRoute = @idRoute
           AND rat.DateOfRoute = @dateRoute
           AND spu.AssigmentStatus = '1'

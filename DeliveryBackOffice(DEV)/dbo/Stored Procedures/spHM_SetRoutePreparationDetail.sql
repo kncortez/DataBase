@@ -3,21 +3,28 @@
 -- Create date: <2022-09-13>
 -- Description:	<Asigna una guía a una preparación entrega (Movil)>
 -- =============================================
+-- Author:      <Edelman, Vasquez>
+-- Create date: <22-04-2025>
+-- Description: #Validar referencias repetidas por cliente
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
     -- Add the parameters for the stored procedure here
     @RouteId INT,
     @Date DATE,
-    @GuideSerie NVARCHAR(2),
-    @GuideNumber INT,
+    @GuideSerie NVARCHAR(2)='FD',
+    @GuideNumber INT=0,
     @GuidePiece SMALLINT,
     @Token NVARCHAR(50),
-    @CountryId NVARCHAR(2)='GT'
+    @CountryId NVARCHAR(2)='GT',
+	@Reference NVARCHAR(150)='',
+    @IdCustomer INT=0
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
-	set arithabort on;
+    SET ARITHABORT ON;
+
     --- Conteo para verificar cantidad correcta de validaciones
     DECLARE @RModified INT = 0;
 
@@ -60,6 +67,39 @@ BEGIN
     --- Contro procesos abiertos en otras rutas
     DECLARE @CodeOfRoute VARCHAR(100);
 
+ --- Validar referencia unica
+	DECLARE @GuideCount INT = 0;
+		
+		
+		IF(@GuideNumber=0)
+		BEGIN
+			SET @GuideCount 	= ( SELECT
+											  COUNT(1)                   
+												   FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+														WHERE do.Ticket_Number = @Reference AND do.Ticket_Number<>'' AND do.Ticket_Number!='0');
+          END;
+
+    -- Buscar la guía de la referencia
+	      IF (@GuideNumber=0 AND @GuideCount=1 )
+         BEGIN
+			  SELECT TOP 1  @GuideNumber = Guide_Number 
+								FROM [dbo].[DeliveryOrder] WITH (NOLOCK)
+									 WHERE Ticket_Number = @Reference
+										 ORDER BY DateCreated DESC
+	    END
+		   
+		   IF(@GuideNumber=0 AND @GuideCount>1 AND @IdCustomer>0)
+		      BEGIN
+				   SELECT
+							TOP 1  @GuideNumber =	 do.Guide_Number
+						
+							   FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+								  INNER JOIN [dbo].[VisitPointClient] vpc WITH (NOLOCK)
+								  ON  do.Sender_ID = vpc.CodeOfReference
+									WHERE do.Ticket_Number = @Reference  AND vpc.CustomerID = @IdCustomer
+							END;
+	 
+
     BEGIN TRANSACTION;
 
     BEGIN TRY
@@ -81,7 +121,26 @@ BEGIN
               AND dop.NoPiece = @GuidePiece
 			  AND ISNULL(do.ReceiverCountryId,'GT') = @CountryId
 
-        IF @GuidePieceExists = 1
+     IF   (@GuideCount > 1 AND @Reference<>'' AND @IdCustomer=0 ) 
+     BEGIN
+
+
+	    SELECT 11 'StatusCode',
+                   'Referencia duplicada en más de una guía' 'Description';
+	     SELECT
+                         do.Guide_Serie 'GuideSerie',
+                         do.Guide_Number 'GuideNumber',
+						 vpc.CustomerID 'IdCustomer',
+						 vpc.DescriptionOfClient 'CustomerName'
+                       FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+					      INNER JOIN [dbo].[VisitPointClient] vpc WITH (NOLOCK)
+						  ON  do.Sender_ID = vpc.CodeOfReference
+                            WHERE do.Ticket_Number = @Reference;
+
+							COMMIT TRANSACTION;
+
+	 END 
+       ELSE IF @GuidePieceExists = 1
         BEGIN
             --- Verificar si esta en un estado válido 
             SET @StatusOrderId =
@@ -280,6 +339,49 @@ BEGIN
 
                                 IF @IdRoutePreparationDetailPiece IS NULL
                                 BEGIN
+
+                                   IF @Reference !='' 
+								  BEGIN
+						  
+										  ---Asignar todas las piezas de la guía segun la referencia
+													INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]
+														(
+															[RoutePreparationDetailId]
+															,[PieceNumber]
+															,[PieceType]
+															,[RowStatus]
+															,[TokenCreated]
+															,[DateCreated]
+													)
+													SELECT @IdRoutePreparationDetail
+														   ,NoPiece
+														   , @GuidePieceIsDry
+															,1
+															,@Token
+															,GETDATE()
+														 FROM  dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
+														   WHERE DOP.GuideNumber = @GuideNumber
+											
+												SET @IdRoutePreparationDetailPiece = SCOPE_IDENTITY();
+
+											
+
+														--- Actualizar el estado de la pieza
+														UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
+														SET StatusOrderId = @StatusOrderId
+														WHERE GuideSerie = @GuideSerie
+															  AND GuideNumber = @GuideNumber
+
+												--- Actualizar contadores de piezas
+															UPDATE RoutePreparation
+															SET PiecesDry += @GuidePieceIsDry,
+																PiecesCold += IIF(@GuidePieceIsDry = 0, 1, 0)
+															WHERE IdRoutePreparation = @IdRoutePreparation;
+										
+
+
+							 END
+							    ELSE
                                     INSERT INTO RoutePreparationDetailPiece
                                     (
                                         [RoutePreparationDetailId],
@@ -679,6 +781,23 @@ BEGIN
                                              do.Receiver_Town,
                                              do.Receiver_Address,
                                              rpd.GuideOrder;
+
+                         IF (@Reference <> '')
+								  BEGIN
+									  SELECT 
+                                           do.Guide_Serie 'GuideSerie',
+                                           do.Guide_Number 'GuideNumber',
+                                           COUNT(1) 'Pieces',
+                                           COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) 'guidePiecesTotal'
+                                    FROM 
+                                         DeliveryOrder do WITH (NOLOCK)
+                                    WHERE do.Ticket_Number = @Reference
+                                    GROUP BY 
+                                             do.Guide_Serie,
+                                             do.Guide_Number,
+                                             do.Pieces_Dry,
+                                             do.Pieces_Cold
+									END
 
                                     -- Si es proceso abierto, retornar información de las piezas
                                     IF @IsOpenProcess = 1

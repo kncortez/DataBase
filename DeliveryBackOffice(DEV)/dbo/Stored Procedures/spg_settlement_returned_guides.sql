@@ -5,6 +5,10 @@
 -- Create date: <2020-11-24>
 -- Description:	<Recupera detalle para generar manifiesto de liquidación (devoluciones)>
 -- =============================================
+-- Author:		<Cristian, Azurdia>
+-- Create date: <2025-05-02>
+-- Description:	<Se agerga simoblo y país de la guias que conforman un manifiesto>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_settlement_returned_guides]
 		@IdManifest INT
 AS
@@ -123,6 +127,7 @@ BEGIN
         DROP TABLE #GuideReturnService;
 
     --Fin flujo devoluciones
+	DECLARE @Currency INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Symbol = 'Q')
 
 	DECLARE @temp TABLE (
 		Guide_Code	NVARCHAR(MAX),
@@ -138,7 +143,9 @@ BEGIN
 		Max_Date NVARCHAR(50),
 		Receiver_Phone NVARCHAR(100),
 		Rack_Position NVARCHAR(MAX),
-		Collect_on_Delivery DECIMAL(16,2)
+		Collect_on_Delivery DECIMAL(16,2),
+		ReceiverCountryId nvarchar(2),
+		Symbol nvarchar(2)
 	)
 
     -- tablix content
@@ -164,14 +171,19 @@ BEGIN
 	isnull((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END),0) 
 	END
 	) AS  Collect_OnDelivery
+	,ISNULL(do.ReceiverCountryId,'GT') AS ReceiverCountryId
+	,CCU.Symbol
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do  WITH(NOLOCK) 
 	INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK)  ON dsd.Guide_Serie = do.Guide_Serie AND dsd.Guide_Number = do.Guide_Number
 	LEFT JOIN
     @TempReturnPrice TRP
-    ON
-        TRP.[GuideSerie] = do.[Guide_Serie]
-        AND
-        TRP.[GuideNumber] = do.[Guide_Number]
+       ON  TRP.[GuideSerie] = do.[Guide_Serie]
+       AND TRP.[GuideNumber] = do.[Guide_Number]
+    INNER JOIN DeliveryBackOffice.dbo.Cost co WITH(NOLOCK)
+       ON  do.Guide_Number = co.GuideNumber 
+       AND do.Guide_Serie = co.GuideSerie
+    INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
+       ON ISNULL(co.ShippingCurrency,@Currency) = CCU.IdCatCurrencyCOD
 	WHERE do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
 	AND do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest AND RowStatus = 1)
 	AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega

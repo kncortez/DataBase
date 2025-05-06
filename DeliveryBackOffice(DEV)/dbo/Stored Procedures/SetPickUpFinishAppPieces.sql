@@ -3,6 +3,10 @@
 -- Create date: <2024-10-09>
 -- Description:	<Se procesan las piezas escaneadas en la App de escaneo despues de DispatchTrack>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2025-01-21>
+-- Description:	<Contenerizar guias -  se agrega parametro para obtener guias por referencia y contenedores>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetPickUpFinishAppPieces] 
 		@InGuides NVARCHAR(MAX) = 'FD9559566-1,FD9559566-2',
 		@IdPickup INT = 2,
@@ -13,7 +17,9 @@ CREATE PROCEDURE [dbo].[SetPickUpFinishAppPieces]
 		@EndDate DATETIME = NULL,
 		@PickupLatitude NVARCHAR(20) = NULL,
 		@PickupLongitude NVARCHAR(20) = NULL,
-		@IdCountry NVARCHAR(2) = 'GT'
+		@IdCountry NVARCHAR(2) = 'GT',
+		@ListReferencesGuide TblReferencesList READONLY,
+		@ListContainerReferences TblContainerList READONLY
 AS
 BEGIN
 	BEGIN TRY
@@ -48,6 +54,17 @@ BEGIN
 
 		IF OBJECT_ID('tempdb.dbo.#Delivery', 'U') IS NOT NULL 
 			DROP TABLE #Delivery;
+
+		DECLARE @StatusContainerPickUp INT;
+		DECLARE @StatusContainerFinishPickUp INT;
+
+		SET @StatusContainerPickUp = (SELECT IdCatStatus
+											FROM CatShipContainerStatus WITH(NOLOCK)
+											WHERE [Name]= 'Creado');
+
+		SET @StatusContainerFinishPickUp = (SELECT IdCatStatus
+											FROM CatShipContainerStatus WITH(NOLOCK)
+											WHERE [Name]= 'Recolectado');
 
 		SELECT TOP 1
 			   @TokenAct = RowStatus,
@@ -154,7 +171,10 @@ BEGIN
 				-- Add the parameters for the stored procedure here
 				@InGuides = @InGuides,
 				@IdPickup = @IdPickup,
-				@Token = @Token;
+				@Token = @Token,
+				@ReferencesGuide = @ListReferencesGuide,
+				@ContainerReferences = @ListContainerReferences,
+				@IdCountry = @IdCountry;
 
 
 			SET @Valid = (SELECT COUNT(*) FROM #Temp)
@@ -174,13 +194,46 @@ BEGIN
 								  ItemSerie,
 								  ItemNumber
 							   );
-
+			-- BUSCAR GUIAS POR REFERENCIA Y CONTENEDOR  
+				WITH CTE_Ranked AS (
+				SELECT  DOP.GuideSerie, 
+						DOP.GuideNumber, 
+						DOP.NoPiece,
+						DO.Ticket_Number,
+						ROW_NUMBER() OVER (PARTITION BY DO.Ticket_Number ORDER BY DOP.GuideSerie DESC, DOP.GuideNumber DESC) AS RowNum,
+						DO.DateCreated
+				FROM DeliveryOrder DO WITH (NOLOCK)
+				INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
+					ON DO.Guide_Serie = DOP.GuideSerie
+					AND DO.Guide_Number = DOP.GuideNumber
+				WHERE DO.Ticket_Number IN (SELECT ReferenceGuide FROM @ListReferencesGuide WHERE ReferenceGuide NOT IN ('','0'))
+					AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry
+				)
 				INSERT INTO #listGuides
 						(
 							ItemSerie,
 							ItemNumber,
 							ItemPiece
 						)
+				SELECT	GuideSerie, 
+						GuideNumber, 
+						NoPiece
+				FROM CTE_Ranked
+				WHERE RowNum = 1
+				UNION
+				SELECT	DOP.GuideSerie, 
+						DOP.GuideNumber, 
+						DOP.NoPiece
+				FROM ShippingContainer CT WITH (NOLOCK)
+				INNER JOIN ShippingContainerDetail CTD WITH (NOLOCK)
+					ON CT.IdContainer = CTD.IdContainer
+				INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
+					ON CTD.GuideSerie = DOP.GuideSerie
+					AND CTD.GuideNumber = DOP.GuideNumber
+				WHERE CT.IdStatusContainer = @StatusContainerPickUp
+					AND CTD.RowStatus = 1
+					AND CT.ReferenceContainer IN (SELECT ContainerReference FROM  @ListContainerReferences)
+				UNION
 				SELECT SUBSTRING(Item, 1, 2) ItemSerie,
 						SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
 						ISNULL(   (CASE
@@ -192,7 +245,8 @@ BEGIN
 									),
 									0
 								) ItemPiece
-				FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+				FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',')
+				WHERE Item <>'';
 
 				UPDATE
 					[#listGuides]
@@ -632,6 +686,12 @@ BEGIN
 									   NULL,
 									   1
 								FROM #listGuides lg;
+
+								------------ ACTUALIZA ESTADO DE CONTENEDORES-------------
+								UPDATE ShippingContainer 
+								SET IdStatusContainer = @StatusContainerFinishPickUp,
+									RowStatus = 0
+								WHERE ReferenceContainer IN (SELECT ContainerReference FROM  @ListContainerReferences)
 
 								IF @@TRANCOUNT > 0
 									COMMIT TRANSACTION;

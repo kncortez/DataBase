@@ -15,6 +15,11 @@
 -- Modified: <2024-08-14>
 -- Description:	<Se agrega validacion para mostrar guia sin tomar en cuenta filtro del pais>
 -- =============================================
+-- =============================================
+-- Author:	 <Cristian Suazo>
+-- Modified: <2025-01-24>
+-- Description:	<Se agrega el parametro de ticketNumber para el proyecto de temu>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie NVARCHAR(2) = ''
   , @GuideNumber INT
@@ -24,6 +29,7 @@ CREATE PROCEDURE [dbo].[GetQualityControlData]
   , @TblVisitPointClient TblVisitPointClient   READONLY
   , @TblIncidenceType TblIncidenceType  READONLY
   , @IdCountry AS NVARCHAR(2) = 'GT'
+  , @TicketNumber NVARCHAR(300) = NULL
 
 AS
 BEGIN
@@ -91,6 +97,15 @@ BEGIN
         set @Pending_Counter = 0
         set @Delivered_Counter = 0
 		
+
+		IF @TicketNumber != ''  
+		BEGIN
+			SELECT @GuideNumber = Guide_Number,
+				   @GuideSerie = Guide_Serie
+			FROM DeliveryOrder WITH (NOLOCK)
+			WHERE Ticket_Number = @TicketNumber
+		END
+
         select @Pending_Counter = COUNT(   case
                                              when ord.statusorderid NOT IN  (5,24,25,22) then
                                                  ord.guide_Number
@@ -257,6 +272,7 @@ BEGIN
             [User] NVARCHAR(100),
             [GuideSerie] NVARCHAR(2),
             [GuideNumber] int,
+			[Ticket_Number] NVARCHAR(300),
             [SenderName] NVARCHAR(150),
             [ReceiverName] NVARCHAR(150),
             [SenderPhone] NVARCHAR(150),
@@ -357,6 +373,7 @@ BEGIN
                ) [User],
                ord.Guide_Serie [GuideSerie],
                ord.Guide_Number [GuideNumber],
+			   ord.Ticket_Number,
                CONCAT(   CASE
                              WHEN IMP.CODEOFREFERENCE > 0 THEN
                                  imp.DescriptionOfClient + '/'
@@ -528,6 +545,7 @@ BEGIN
             [User] ,
             [GuideSerie] ,
             [GuideNumber],
+			[Ticket_Number],
             [SenderName] ,
             [ReceiverName],
             [SenderPhone] ,
@@ -569,6 +587,7 @@ BEGIN
             [User] ,
             [GuideSerie] ,
             [GuideNumber],
+			[Ticket_Number],
             [SenderName] ,
             [ReceiverName],
             [SenderPhone] ,

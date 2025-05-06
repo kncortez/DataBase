@@ -4,6 +4,10 @@
 -- Create date: <2022-09-06>
 -- Description:	<Obtiene información de la preparación de una ruta de entregas en móvil>
 -- =============================================
+-- Author:      <Edelman, Vasquez>
+-- Create date: <22-04-2025>
+-- Description: #Agregar campo al groupby
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_GetRoutePreparation]
 	-- Add the parameters for the stored procedure here
 	@RouteId INT,
@@ -43,6 +47,7 @@ BEGIN
 		   ,do.Receiver_Town 'Town'
 		   ,do.Receiver_Address 'Address'
 		   ,rpd.GuideOrder 'GuideOrder'
+		   ,do.Ticket_Number
 		FROM RoutePreparation rp WITH (NOLOCK)
 		INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
@@ -65,6 +70,7 @@ BEGIN
 				,do.Receiver_Town
 				,do.Receiver_Address
 				,rpd.GuideOrder
+				,do.Ticket_Number
 		ORDER BY COALESCE(rpd.GuideOrder, 999999) ASC 
 	END
 	ELSE

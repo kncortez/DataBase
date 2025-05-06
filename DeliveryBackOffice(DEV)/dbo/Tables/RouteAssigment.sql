@@ -9,7 +9,6 @@
     [DateCreated]      DATETIME     NOT NULL,
     [TokenUpdated]     VARCHAR (50) NULL,
     [DateUpdated]      DATETIME     NULL,
-    [IdRouteDispatchTrack] INT      NULL,
     PRIMARY KEY CLUSTERED ([IdRouteAssigment] ASC),
     CONSTRAINT [FKRoute_Currierman] FOREIGN KEY ([IdCurrierMan]) REFERENCES [dbo].[SenderReceiver] ([ID]),
     CONSTRAINT [FKRoute_Route] FOREIGN KEY ([IdRoute]) REFERENCES [dbo].[CatRoute] ([IdRoute]),

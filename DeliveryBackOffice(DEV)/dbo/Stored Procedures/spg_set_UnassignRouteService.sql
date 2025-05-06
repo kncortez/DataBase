@@ -124,10 +124,7 @@ BEGIN
                --, ISNULL(srv.Amount,0)
                dop_group.TimePlaId ServiceVehicle,
                --,css.[Name] StatusName
-               srv.IdServiceManagement,
-               vpc.Latitude,
-               vpc.Longitude,
-               vpc.Email
+               srv.IdServiceManagement
         FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
             LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] AS hub WITH (NOLOCK)
                 ON IdHubLogistics = hub.IdHubLogistic
@@ -164,8 +161,6 @@ BEGIN
                 ON srv.IdSchedulePickup = shp.SchedulePickupId
             LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
                 ON css.IdServiceStatus = srv.ServiceStatusId
-            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
-                ON shp.SenderId = vpc.CodeOfReference
         WHERE SchedulePickupId = @idSchedulePickup;
 
     END TRY

@@ -28,6 +28,11 @@
 -- Update date: <2024-10-01>
 -- Description:	<Se filtra para que tome en cuenta unicamente las guias que no han sido despachadas>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2025-01-17>
+-- Description:	<devolución de campo Ticlet_Number como referencia>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetRoutePreparation]
 	@IdRoute INT,
 	@Date DATE
@@ -173,6 +178,7 @@ BEGIN
 		, cu.Abbreviation 'CustomerAbbreviation' 
 		, RPD.ETAGuide 'GuideETA'
 		, cu.IsVoucherRequired
+		,do.Ticket_Number
 	FROM RoutePreparation RP WITH(NOLOCK)
 	LEFT JOIN RoutePreparationDetail RPD WITH(NOLOCK)
 		ON

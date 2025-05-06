@@ -17,6 +17,11 @@
 -- update date: <2024-10-01>
 -- Description:	<Permitir asociar varios manifiestos a una ruta para que sean liquidados en un mismo proceso>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2025-01-17>
+-- Description:	<Proceso de preparación cuando se agrega una referencia>
+-- =============================================
 CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
 	@IdRoute INT,
 	@Date DATE,
@@ -24,7 +29,8 @@ CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
 	@GuideNumber INT,
 	@GuidePiece INT,
 	@GuidePieceType BIT = 1, --- 1 = Pieza seca | 0 = Pieza fría
-	@Token NVARCHAR(50)
+	@Token NVARCHAR(50),
+	@IsReference BIT=0
 AS
 BEGIN
 
@@ -35,7 +41,7 @@ SET ARITHABORT ON
 	--- Variables para manejo de preparación de ruta
 	DECLARE @IdManifest INT;
 	DECLARE @IdRoutePreparation INT;
-	DECLARE @IdRoutePreparationDetail INT;
+	DECLARE @IdRoutePreparationDetail INT; 
 	DECLARE @IdRoutePreparationDetailPiece INT;
 	
 	--- Variables para manejo de piezas
@@ -72,7 +78,8 @@ SET ARITHABORT ON
 		GUidePriceShippment decimal(14,2),
 		GuideCOD decimal(14,2),
 		SenderId INT,
-		ReceiverId INT
+		ReceiverId INT,
+		Ticket_Number NVARCHAR(150)
 	);
 
 	------Variables para proceso de generación de datos de servicio marcados como devolución
@@ -119,6 +126,7 @@ SET ARITHABORT ON
 				   do.Guide_Number = @GuideNumber ;  
 	------FDD-949--proceso de generación de datos de servicio marcados como devolución
 	------------------------------------------------------------------------------------
+	
 
 
 			--- Verificar si existe la preparación de ruta y si ya fue despachada
@@ -133,6 +141,7 @@ SET ARITHABORT ON
 				AND
 				RP.RowStatus = 1
 			ORDER BY IdRoutePreparation DESC 
+
 
 			--- Verificar si existe la preparación de ruta
 			IF(@IdRoutePreparation IS NULL OR @IdRoutePreparation = 0 OR @ForceNewRoutePreparation = 1)
@@ -258,7 +267,6 @@ SET ARITHABORT ON
 						SET @RModified = @RModified + 1
 							
 					SET @IdRoutePreparationDetail = SCOPE_IDENTITY()
-
 				END
 				---ELSE No existe data que actualizar en el detalle de la preparacón de ruta
 				--- Verificar el detalle de la preparación de ruta
@@ -313,244 +321,284 @@ SET ARITHABORT ON
 							RP.DateRoutePreparation = @Date
 							AND
 							RP.RowStatus = 1			
-														
-						--- Verificar si la pieza de la guía ya existe dentro de las piezas registradas en la preparación de ruta
-						IF(@IdRoutePreparationDetailPiece IS NULL OR @IdRoutePreparationDetailPiece = 0)
-						BEGIN
+						
+						
+						
+						     --- Verificar si la pieza de la guía ya existe dentro de las piezas registradas en la preparación de ruta
+								IF(@IdRoutePreparationDetailPiece IS NULL OR @IdRoutePreparationDetailPiece = 0)
+								BEGIN
 
-							--- La pieza de la guía no existe dentro de las piezas registradas en la preparación de ruta
-							INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]
-								(
-									[RoutePreparationDetailId]
-									,[PieceNumber]
-									,[PieceType]
-									,[RowStatus]
-									,[TokenCreated]
-									,[DateCreated]
-							)
-							VALUES (
-									@IdRoutePreparationDetail
-									,@GuidePiece
-									,IIF(@GuidePieceType = 1, 1, 0)
-									,1
-									,@Token
-									,GETDATE()
-							)
 
-							IF COALESCE(@@ROWCOUNT,0) > 0
-								SET @RModified = @RModified + 1
-							--- Ingresar datos a tabla para retornar datos
-							INSERT INTO @ResponseTable
-									(
-										[IdRoutePreparation],
-										[GuideSerie],
-										[GuideNumber],
-										[GuidePiece],
-										[GuidePieceType],
-										[GuidePieces],
-										[GuideDryPieces],
-										[GuideColdPieces],
-										[GuideReceiverDepartment],
-										[GuideReceiverTown],
-										[GuideReceiverAddress],
-										[GuideReceiverIdTownShip],
-										[GuideReceiverPhone],
-										[GuideSenderDepartment],
-										[GuideSenderIdTownship],
-										[GuideSenderPhone],
-										[GuideSenderAddress],
-										[GUidePriceShippment],
-										[GuideCOD],
-										[GuideSenderFirstName],
-										[GuideSenderLastName],
-										[GuideReceiverFirstName],
-										[GuideReceiverLastName],
-										[SenderId],
-										[ReceiverId]
-							)
-							SELECT
-								@IdRoutePreparation
-								,@GuideSerie
-								,@GuideNumber
-								,@GuidePiece
-								,@GuidePieceType
-								,(ISNULL(DO.Pieces_Dry,0) + ISNULL(DO.Pieces_Cold,0))
-								,ISNULL(DO.Pieces_Dry,0)
-								,ISNULL(DO.Pieces_Cold,0)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Department] ELSE DO.Receiver_Department END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Town] ELSE DO.Receiver_Town END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Address] ELSE DO.Receiver_Address END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[SenderIdTownship] ELSE DO.ReceiverIdTownship END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Phone] ELSE DO.Receiver_Phone END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[Receiver_Department] ELSE Do.Sender_Department END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[ReceiverIdTownship] ELSE Do.SenderIdTownship END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[Receiver_Phone] ELSE Do.Sender_Phone END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[Receiver_Address] ELSE Do.Sender_Address END)
-								,DO.PriceShippment
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN 0 ELSE DO.Collect_OnDelivery END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_FirstName ELSE DO.Sender_FirstName END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_LastName ELSE DO.Sender_LastName END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_FirstName ELSE DO.Receiver_FirstName END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_LastName ELSE DO.Receiver_LastName END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_ID ELSE DO.Sender_ID END)
-								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_ID ELSE DO.Receiver_ID END)
-							FROM
-								[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-							WHERE
-								DO.Guide_Serie = @GuideSerie
-								AND
-								DO.Guide_Number = @GuideNumber
+								      IF(@IsReference = 1)
+										BEGIN
+						  
+										  ---Asignar todas las piezas de la guía segun la referencia
+													INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]
+														(
+															[RoutePreparationDetailId]
+															,[PieceNumber]
+															,[PieceType]
+															,[RowStatus]
+															,[TokenCreated]
+															,[DateCreated]
+													)
+													SELECT @IdRoutePreparationDetail
+														   ,NoPiece
+														   ,IIF(@GuidePieceType = 1, 1, 0)
+															,1
+															,@Token
+															,GETDATE()
+														 FROM  dbo.DeliveryOrderPiece WITH (NOLOCK)
+															WHERE GuideNumber = @GuideNumber
 
-							--- Extraer todas las piezas de la guía de las piezas registradas de otras preparaciones
-							UPDATE RPDP
-							SET RPDP.RowStatus = 0,
-								RPDP.TokenUpdated = @Token,
-								RPDP.DateUpdated = GETDATE()
-							FROM
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK) 
-								INNER JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
-									ON
-									RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
-									
-								INNER JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
-									ON 
-									RPD.RoutePreparationId = RP.IdRoutePreparation
-									
-							WHERE 
-								RPDP.RowStatus = 1
-								AND
-								RPD.Guide_Serie = @GuideSerie 
-								AND 
-								RPD.Guide_Number = @GuideNumber
-								AND 
-								RP.IdRoutePreparation <> @IdRoutePreparation
-								AND
-								RP.DateRoutePreparation = @Date
-								AND
-									RPD.RowStatus = 1
-									AND
-									RP.RowStatus = 1
-									
-							--- Extraer de los demas detalles la guía ingresada
-							UPDATE RPD
-							SET RPD.RowStatus = 0,
-								RPD.TokenUpdated = @Token,
-								RPD.DateUpdated = GETDATE()
-							FROM
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
-								INNER JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
-									ON 
-									RPD.RoutePreparationId = RP.IdRoutePreparation
-									
-							WHERE 
-								RPD.RowStatus = 1
-								AND
-								RPD.Guide_Serie = @GuideSerie 
-								AND 
-								RPD.Guide_Number = @GuideNumber
-								AND 
-								RP.IdRoutePreparation <> @IdRoutePreparation
-								AND
-								RP.DateRoutePreparation = @Date
-								AND
-									RP.RowStatus = 1
+												--- Actualziar el estado de las piezas
+														UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
+														SET
+															StatusOrderId = 3 --- Programado para entrega
+														WHERE
+															GuideSerie = @GuideSerie
+															AND
+															GuideNumber = @GuideNumber
+										
 
-							--- Actualizar el estado de la guía
-							UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
-							SET
-								StatusOrderId = 3 --- Programado para entrega
-							WHERE
-								Guide_Serie = @GuideSerie
-								AND
-								Guide_Number = @GuideNumber
 
-							--- Insertar el nuevo estado a bitácora
-							INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
-								[Guide_Serie], 
-								[Guide_Number], 
-								[StatusOrderId], 
-								[UserCreated], 
-								[DateCreated], 
-								[DateCreatedInSystem]
-							)
-							SELECT 
-								@GuideSerie,
-								@GuideNumber,
-								3,
-								@Token,
-								GETDATE(),
-								GETDATE()
-							WHERE NOT EXISTS (
-								SELECT 1
-								FROM RoutePreparationDetail WITH (NOLOCK)
-								WHERE 
-									RoutePreparationId = @IdRoutePreparation
-									AND 
-									Guide_Serie = @GuideSerie 
-									AND
-									Guide_Number = @GuideNumber
-									AND
-									CAST(DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-							)
+										END
+										ELSE
+											BEGIN
+											--- La pieza de la guía no existe dentro de las piezas registradas en la preparación de ruta
+											INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]
+												(
+													[RoutePreparationDetailId]
+													,[PieceNumber]
+													,[PieceType]
+													,[RowStatus]
+													,[TokenCreated]
+													,[DateCreated]
+											)
+											VALUES (
+													@IdRoutePreparationDetail
+													,@GuidePiece
+													,IIF(@GuidePieceType = 1, 1, 0)
+													,1
+													,@Token
+													,GETDATE()
+											)
+										END
+									IF COALESCE(@@ROWCOUNT,0) > 0
+										SET @RModified = @RModified + 1
+									--- Ingresar datos a tabla para retornar datos
+									INSERT INTO @ResponseTable
+											(
+												[IdRoutePreparation],
+												[GuideSerie],
+												[GuideNumber],
+												[GuidePiece],
+												[GuidePieceType],
+												[GuidePieces],
+												[GuideDryPieces],
+												[GuideColdPieces],
+												[GuideReceiverDepartment],
+												[GuideReceiverTown],
+												[GuideReceiverAddress],
+												[GuideReceiverIdTownShip],
+												[GuideReceiverPhone],
+												[GuideSenderDepartment],
+												[GuideSenderIdTownship],
+												[GuideSenderPhone],
+												[GuideSenderAddress],
+												[GUidePriceShippment],
+												[GuideCOD],
+												[GuideSenderFirstName],
+												[GuideSenderLastName],
+												[GuideReceiverFirstName],
+												[GuideReceiverLastName],
+												[SenderId],
+												[ReceiverId],
+												[Ticket_Number]
+									)
+									SELECT
+										@IdRoutePreparation
+										,@GuideSerie
+										,@GuideNumber
+										,@GuidePiece
+										,@GuidePieceType
+										,(ISNULL(DO.Pieces_Dry,0) + ISNULL(DO.Pieces_Cold,0))
+										,ISNULL(DO.Pieces_Dry,0)
+										,ISNULL(DO.Pieces_Cold,0)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Department] ELSE DO.Receiver_Department END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Town] ELSE DO.Receiver_Town END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Address] ELSE DO.Receiver_Address END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[SenderIdTownship] ELSE DO.ReceiverIdTownship END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Phone] ELSE DO.Receiver_Phone END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[Receiver_Department] ELSE Do.Sender_Department END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[ReceiverIdTownship] ELSE Do.SenderIdTownship END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[Receiver_Phone] ELSE Do.Sender_Phone END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[Receiver_Address] ELSE Do.Sender_Address END)
+										,DO.PriceShippment
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN 0 ELSE DO.Collect_OnDelivery END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_FirstName ELSE DO.Sender_FirstName END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_LastName ELSE DO.Sender_LastName END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_FirstName ELSE DO.Receiver_FirstName END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_LastName ELSE DO.Receiver_LastName END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_ID ELSE DO.Sender_ID END)
+										,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_ID ELSE DO.Receiver_ID END)
+										,ISNULL(DO.[Ticket_Number],'0')
+									FROM
+										[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+									WHERE
+										DO.Guide_Serie = @GuideSerie
+										AND
+										DO.Guide_Number = @GuideNumber
 
-							--- Actualziar el estado de la pieza
-							UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
-							SET
-								StatusOrderId = 3 --- Programado para entrega
-							WHERE
-								GuideSerie = @GuideSerie
-								AND
-								GuideNumber = @GuideNumber
-								AND
-								NoPiece = @GuidePiece
 								
-							DECLARE @UpdatedWarehouseByPiece INT = 0
+									--- Extraer todas las piezas de la guía de las piezas registradas de otras preparaciones
+									UPDATE RPDP
+									SET RPDP.RowStatus = 0,
+										RPDP.TokenUpdated = @Token,
+										RPDP.DateUpdated = GETDATE()
+									FROM
+										[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK) 
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
+											ON
+											RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
+											ON 
+											RPD.RoutePreparationId = RP.IdRoutePreparation
+									WHERE 
+										RPDP.RowStatus = 1
+										AND
+										RPD.RowStatus = 1
+										AND
+										RP.RowStatus = 1
+										AND
+										RPD.Guide_Serie = @GuideSerie 
+										AND 
+										RPD.Guide_Number = @GuideNumber
+										AND 
+										RP.IdRoutePreparation <> @IdRoutePreparation
+										AND
+										RP.DateRoutePreparation = @Date
+									
+									--- Extraer de los demas detalles la guía ingresada
+									UPDATE RPD
+									SET RPD.RowStatus = 0,
+										RPD.TokenUpdated = @Token,
+										RPD.DateUpdated = GETDATE()
+									FROM
+										[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
+											ON 
+											RPD.RoutePreparationId = RP.IdRoutePreparation
+											AND
+											RP.RowStatus = 1
+									WHERE 
+										RPD.RowStatus = 1
+										AND
+										RPD.Guide_Serie = @GuideSerie 
+										AND 
+										RPD.Guide_Number = @GuideNumber
+										AND 
+										RP.IdRoutePreparation <> @IdRoutePreparation
+										AND
+										RP.DateRoutePreparation = @Date
 
-							--- Actualizar la posición del inventario
-							UPDATE [DeliveryBackOffice].[dbo].[Warehouse] 
-							SET 
-								Active = 0
-								,UserUpdated = @Token
-								,DateUpdated = Getdate()
-							Where 
-								Guide_Serie = @GuideSerie
-								AND
-								Guide_Number = @GuideNumber
-								AND
-								Guide_Piece = @GuidePiece
+									--- Actualizar el estado de la guía
+									UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
+									SET
+										StatusOrderId = 3 --- Programado para entrega
+									WHERE
+										Guide_Serie = @GuideSerie
+										AND
+										Guide_Number = @GuideNumber
 
-							SET @UpdatedWarehouseByPiece = @@ROWCOUNT
 
-							-- verificar si se actualizo a nivel de pieza
-							IF ( @UpdatedWarehouseByPiece = 0)
-							BEGIN
-								-- No se actualizo a nivel de pieza, no existe registro en warehouse a nivel de pieza
+									--- Insertar el nuevo estado a bitácora
+									INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
+										[Guide_Serie], 
+										[Guide_Number], 
+										[StatusOrderId], 
+										[UserCreated], 
+										[DateCreated], 
+										[DateCreatedInSystem]
+									)
+									SELECT 
+										@GuideSerie,
+										@GuideNumber,
+										3,
+										@Token,
+										GETDATE(),
+										GETDATE()
+									WHERE NOT EXISTS (
+										SELECT 1
+										FROM RoutePreparationDetail WITH (NOLOCK)
+										WHERE 
+											RoutePreparationId = @IdRoutePreparation
+											AND 
+											Guide_Serie = @GuideSerie 
+											AND
+											Guide_Number = @GuideNumber
+											AND
+											CAST(DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+									)
+							
+									--- Actualziar el estado de la pieza
+									UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
+									SET
+										StatusOrderId = 3 --- Programado para entrega
+									WHERE
+										GuideSerie = @GuideSerie
+										AND
+										GuideNumber = @GuideNumber
+										AND
+										NoPiece = @GuidePiece
 								
-								--- Actualizar la posición del inventario a nivel de guía
-								UPDATE [DeliveryBackOffice].[dbo].[Warehouse] 
-								SET 
-									Active = 0
-									,UserUpdated = @Token
-									,DateUpdated = Getdate()
-								Where 
-									Guide_Serie = @GuideSerie
-									AND
-									Guide_Number = @GuideNumber
-									AND
-									Active = 1
-							END
+									DECLARE @UpdatedWarehouseByPiece INT = 0
 
-						END
-						ELSE
-						BEGIN
+									--- Actualizar la posición del inventario
+									UPDATE [DeliveryBackOffice].[dbo].[Warehouse] 
+									SET 
+										Active = 0
+										,UserUpdated = @Token
+										,DateUpdated = Getdate()
+									Where 
+										Guide_Serie = @GuideSerie
+										AND
+										Guide_Number = @GuideNumber
+										AND
+										Guide_Piece = @GuidePiece
+
+									SET @UpdatedWarehouseByPiece = @@ROWCOUNT
+								
+									-- verificar si se actualizo a nivel de pieza
+									IF ( @UpdatedWarehouseByPiece = 0)
+									BEGIN
+										-- No se actualizo a nivel de pieza, no existe registro en warehouse a nivel de pieza
+								
+										--- Actualizar la posición del inventario a nivel de guía
+										UPDATE [DeliveryBackOffice].[dbo].[Warehouse] 
+										SET 
+											Active = 0
+											,UserUpdated = @Token
+											,DateUpdated = Getdate()
+										Where 
+											Guide_Serie = @GuideSerie
+											AND
+											Guide_Number = @GuideNumber
+											AND
+											Active = 1
+									END
+
+								END
+								ELSE
+								BEGIN
 								
 							--- La pieza de la guía ya esta dentro de las piezas registradas
 							SET @GuidePieceAlreadyExists = 1
 						END
-
+						
 					END
 					ELSE
 					BEGIN
@@ -618,7 +666,7 @@ SET ARITHABORT ON
 						CODAmount DECIMAL(18, 2),
 						ReturnRates DECIMAL(5, 2));
 					DECLARE @GUIDECONCAT NVARCHAR(MAX) = CONCAT(@GuideSerie, CONVERT(NVARCHAR(MAX), @GuideNumber));
-					INSERT INTO @BrainProcessedGuides
+					INSERT INTO @BrainProcessedGuides 
 					EXEC [dbo].[spws_get_guide_pending_payment] @GUIDECONCAT, -- Guías recibidas
 																3,            -- Tiempo de pago 2 - En recolección
 																1,            -- No es ret5orno
@@ -951,6 +999,7 @@ SET ARITHABORT ON
 				,RT.GuidePieceType 'Piece_Type'
 				,NULL 'GuideOrder'
 				,@IdRoutePreparation 'NewRoutePreparation'
+				,RT.Ticket_Number
 			FROM
 				@ResponseTable RT
 			COMMIT TRANSACTION;
