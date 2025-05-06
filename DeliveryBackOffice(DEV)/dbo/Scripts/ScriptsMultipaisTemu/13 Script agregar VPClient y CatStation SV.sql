@@ -142,8 +142,7 @@ DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE' -- Desc
                 LogLongitude,
                 DescriptionCC,
                 CatBusinessSegmentId,
-                AllowScheduledPickups,
-				AttentionSchedule
+                AllowScheduledPickups
             )
             VALUES
             (   @CodeOfReference,                        -- CodeOfReference - int
@@ -179,8 +178,7 @@ DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE' -- Desc
                 NULL,                                    -- LogLongitude - nvarchar(20)
                 @DescriptionCC,                          -- DescriptionCC - nvarchar(100)
                 @IdBusinessSegment,                      -- CatBusinessSegmentId - int 10	C2C GT --- int 21 C2C HN
-                DEFAULT,                                 -- AllowScheduledPickups - bit
-				NULL									 -- AttentionSchedule nvarchar(1000)
+                DEFAULT                                 -- AllowScheduledPickups - bit
             );
 
 
