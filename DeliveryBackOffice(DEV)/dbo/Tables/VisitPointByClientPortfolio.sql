@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointByClientPortfolio] (
-    [IdVisitPointByClientPortfolio] BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdVisitPointByClientPortfolio] BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [FirstName]                     NVARCHAR (50)  NULL,
     [SecondName]                    NVARCHAR (50)  NULL,
     [LastName]                      NVARCHAR (50)  NULL,
@@ -17,8 +17,13 @@
     [InternalCode]                  VARCHAR (50)   NULL,
     [TaxId]                         VARCHAR (50)   NULL,
     [ContactName]                   VARCHAR (50)   NULL,
+    [id_relation]                   BIGINT         NULL,
     CONSTRAINT [PK_VisitPointByClientPortfolio] PRIMARY KEY CLUSTERED ([IdVisitPointByClientPortfolio] ASC)
 );
+
+
+
+
 
 
 

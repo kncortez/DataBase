@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[UserSystemRestriction] (
-    [UstIdRestriction] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [UstIdRestriction] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UstIdUser]        BIGINT       NOT NULL,
     [UstIdSystem]      INT          NOT NULL,
     [UstAccessRetries] INT          NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FKSystemRestriction] FOREIGN KEY ([UstIdSystem]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     CONSTRAINT [FKUserRestriction] FOREIGN KEY ([UstIdUser]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
+
+
 
 
 

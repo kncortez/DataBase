@@ -36,7 +36,7 @@ BEGIN
     SELECT TOP 1 @IdBatch = ISNULL(IdBatch,0),  @Status = Status FROM DeliveryBackOffice.dbo.GuideBatch WITH (NOLOCK) WHERE IdUser = @IdUser AND RowStatus=1 ORDER BY GuideNumber DESC;
 	PRINT @IdBatch
     -- Checks if the guide already has an IdBatch associated
-    IF EXISTS (SELECT * FROM DeliveryBackOffice.dbo.GuideBatch WHERE GuideNumber=@GuideNumber)
+    IF EXISTS (SELECT * FROM DeliveryBackOffice.dbo.GuideBatch WHERE GuideSeries = 'FD' and GuideNumber=@GuideNumber)
 
       BEGIN
 

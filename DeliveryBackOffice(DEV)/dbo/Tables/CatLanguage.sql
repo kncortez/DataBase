@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatLanguage] (
-    [IdLanguage]   INT           IDENTITY (1, 1) NOT NULL,
+    [IdLanguage]   INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Language]     NVARCHAR (50) NOT NULL,
     [Abbreviation] NVARCHAR (5)  NOT NULL,
     [RowStatus]    BIGINT        NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]  DATETIME      NULL,
     CONSTRAINT [PK_CatLanguage] PRIMARY KEY CLUSTERED ([IdLanguage] ASC)
 );
+
+
 
 
 GO

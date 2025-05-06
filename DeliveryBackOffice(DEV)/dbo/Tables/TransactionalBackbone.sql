@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TransactionalBackbone] (
-    [IdTransactionalMovement] INT           IDENTITY (1, 1) NOT NULL,
+    [IdTransactionalMovement] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]              NVARCHAR (2)  NOT NULL,
     [GuideNumber]             INT           NOT NULL,
     [GuidePiece]              INT           NOT NULL,
@@ -27,6 +27,8 @@
     FOREIGN KEY ([ServiceManagmentID]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement]),
     FOREIGN KEY ([TransactionTypeId]) REFERENCES [dbo].[TransactionType] ([IdTransactionType])
 );
+
+
 
 
 

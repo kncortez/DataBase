@@ -61,6 +61,8 @@ BEGIN
             [Settlement_Date_Received] datetime
         );
 
+
+
         CREATE NONCLUSTERED INDEX IX_TodaysCheckpointsDetail
         ON #TodaysCheckpointsDetail
         (
@@ -107,7 +109,7 @@ BEGIN
         from [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] dsd WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] ds WITH (NOLOCK)
                 ON dsd.ID_DeliveryORderBYSettlement = ds.ID
-            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] ord
+            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] ord WITH(NOLOCK)
 				on ord.guide_serie=dsd.guide_serie and ord.guide_Number=dsd.guide_number
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township] tw WITH (NOLOCK)
                 ON tw.IdTownship = ord.ReceiverIdTownship
@@ -278,6 +280,13 @@ BEGIN
 			[ShippmentCurrencySymbol] NVARCHAR(2),
 			[CODCurrencySymbol] NVARCHAR(2)
         )
+
+		
+        CREATE NONCLUSTERED INDEX IX_DetailGetQualityControlData_ConfirmationIncidents
+        ON #DetailGetQualityControlData
+        (
+            UnConfirmationIncidents
+        );
 
         CREATE NONCLUSTERED INDEX IX_ConfirmationIncidents_ControlData
         ON #DetailGetQualityControlData

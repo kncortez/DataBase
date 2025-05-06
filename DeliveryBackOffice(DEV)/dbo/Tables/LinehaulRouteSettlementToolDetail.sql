@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRouteSettlementToolDetail] (
-    [IdLinehaulRouteSettlementToolDetail] INT           IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRouteSettlementToolDetail] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRouteSettlementId]           INT           NOT NULL,
     [ToolId]                              INT           NOT NULL,
     [ToolReceived]                        BIT           NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_LinehaulRouteSettlementToolDetail_RouteSettlement] FOREIGN KEY ([LinehaulRouteSettlementId]) REFERENCES [dbo].[LinehaulRouteSettlement] ([IdLinehaulRouteSettlement]),
     CONSTRAINT [FK_LinehaulRouteSettlementToolDetail_Tool] FOREIGN KEY ([ToolId]) REFERENCES [dbo].[Tool] ([IdTool])
 );
+
+
 
 
 GO

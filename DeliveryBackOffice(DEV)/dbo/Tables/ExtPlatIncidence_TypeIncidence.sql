@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ExtPlatIncidence_TypeIncidence] (
-    [IdExtPlatIncidence_TypeIncidence] INT           IDENTITY (1, 1) NOT NULL,
+    [IdExtPlatIncidence_TypeIncidence] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ExtPlatIncidenceId]               INT           NOT NULL,
     [TypeIncidenceId]                  INT           NOT NULL,
     [RowStatus]                        BIT           NOT NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [ExtPlatIncidence_TypeIncidence_ExtPlat_FK] FOREIGN KEY ([ExtPlatIncidenceId]) REFERENCES [dbo].[CatExtPlatformIncidence] ([IdCatExtPlatformIncidence]),
     CONSTRAINT [ExtPlatIncidence_TypeIncidence_TypeInc_FK] FOREIGN KEY ([TypeIncidenceId]) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType])
 );
+
+
 
 
 GO

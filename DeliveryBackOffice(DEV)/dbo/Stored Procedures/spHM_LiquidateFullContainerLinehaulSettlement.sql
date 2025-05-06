@@ -31,40 +31,40 @@ BEGIN
 	DECLARE @SETTLEMENT_STATUS_ORDER_ID AS INT;		-- StatusOrder
 	
 	SET @CONTAINER_SERIE_ID = (SELECT	[CTC].[IdCatTypeContainer]
-								FROM	[dbo].[CatTypeContainer] CTC
+								FROM	[dbo].[CatTypeContainer] CTC WITH(NOLOCK)
 								WHERE	[CTC].[TypeContainerSerie] = @ContainerSerie);
 
 	SET @CONTAINER_ID = (SELECT	[C].[IdContainer]
-						FROM	[DBO].[Container] C
+						FROM	[DBO].[Container] C WITH(NOLOCK)
 						WHERE	[C].[CatTypeContainerId] = @CONTAINER_SERIE_ID
 							AND [C].[ContainerNumber] = @ContainerNumber);
 							
 	SET @STATUS_IN_TRANSIT = (SELECT	[CLS].[IdCatLinehaulStatus]
-								FROM	[dbo].[CatLinehaulStatus] CLS
+								FROM	[dbo].[CatLinehaulStatus] CLS WITH(NOLOCK)
 								WHERE	[CLS].[StatusName] = 'IN TRANSIT');
 
 	SET @EXISTING_CONTAINER_LRPC = (SELECT  [LRPC].[IdLinehaulRoutePreparationContainer]
-									FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
+									FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH(NOLOCK)
 									WHERE	[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 										AND	[LRPC].[ContainerId] = @CONTAINER_ID
 										AND [LRPC].[RowStatus] = 1
 										AND [LRPC].[CatLinehaulStatusId] = @STATUS_IN_TRANSIT);
 
 	SET @LRPC_HUB_ID = (SELECT  [LRPC].[HubDestinyId]
-						FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
+						FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH(NOLOCK)
 						WHERE	[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_CONTAINER_LRPC);
 	
 	SET @EXISTING_CONTAINER_LRSC = (SELECT	COUNT([LRSC].[IdLinehaulRouteSettlementContainer]) AS CONT
-									FROM	[dbo].[LinehaulRouteSettlementContainer] LRSC
+									FROM	[dbo].[LinehaulRouteSettlementContainer] LRSC WITH(NOLOCK)
 									WHERE	[LRSC].[ContainerId] = @CONTAINER_ID
 										AND	[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 	SET @STOPOVER_STATUS_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
-								FROM	[dbo].[CatLinehaulStatus] CLS
+								FROM	[dbo].[CatLinehaulStatus] CLS WITH(NOLOCK)
 								WHERE	[CLS].[StatusName] = 'STOPOVER');
 
 	SET @SETTLEMENT_STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
-										FROM	[dbo].[StatusOrder] SO
+										FROM	[dbo].[StatusOrder] SO WITH(NOLOCK)
 										WHERE	[SO].[OrderDescription] = 'En escala');
 
 	BEGIN TRANSACTION
@@ -143,21 +143,23 @@ BEGIN
 		FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-			AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
+		--	AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
 		INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 			ON		[LRSCD].[GuideSerie] = [LRPCD].[GuideSerie]
 			AND		[LRSCD].[GuideNumber] = [LRPCD].[GuideNumber]
-			AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC;
+			AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC
+			
 
 		-- UPDATE SETTLEMENT CONTAINER COUNTERS
 		SET @COUNT_DRY_QUANTITY = (SELECT		COUNT([LRSCDP].[PieceNumber]) AS CONT
 									FROM		[dbo].[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
 									INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]	
-										AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC
+										--
 									WHERE	[LRSCDP].[IsDryPiece] = 1
 										AND [LRSCDP].[ActCode] IS NULL
-										AND [LRSCDP].[RowStatus] = 1);
+										AND [LRSCDP].[RowStatus] = 1
+										AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC)
 
 		SET @COUNT_COLD_QUANTITY = (SELECT		COUNT([LRSCDP].[PieceNumber]) AS CONT
 									FROM		[dbo].[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
@@ -196,7 +198,8 @@ BEGIN
 										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 											ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-											AND		[LRSC].[RowStatus] = 1
+											WHERE 
+													[LRSC].[RowStatus] = 1
 											AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 		SET @COUNT_PIECES_MISSING = (SELECT		SUM([LRSCD].[PiecesMissing]) AS CONT

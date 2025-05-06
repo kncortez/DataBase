@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Point] (
-    [IdPoint]          INT             IDENTITY (1, 1) NOT NULL,
+    [IdPoint]          INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [PointDescription] NVARCHAR (100)  NULL,
     [PointLatitude]    DECIMAL (10, 8) NOT NULL,
     [PointLongitude]   DECIMAL (10, 8) NOT NULL,
@@ -10,6 +10,8 @@
     [DateUpdated]      DATETIME        NULL,
     PRIMARY KEY CLUSTERED ([IdPoint] ASC)
 );
+
+
 
 
 GO

@@ -10,6 +10,7 @@ AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
+	SET ARITHABORT ON;
 	SET NOCOUNT ON;
 	DECLARE @LIQUIDATED_STATUS_ID AS INT;
 	DECLARE @STOPOVER_STATUS_ID AS INT;

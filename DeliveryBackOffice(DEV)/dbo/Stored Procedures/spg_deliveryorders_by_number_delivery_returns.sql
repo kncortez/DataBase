@@ -1,11 +1,11 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Tito Garcia>
 -- Create date: 01/08/2024
 -- Description:	Devuelve el listado de comprobantes de entregas y devoluciones de guías
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_deliveryorders_by_number_delivery_returns]
-	@_serie nvarchar(2) = 'FD'
-	,@_number nvarchar(max) 
+	@_serie NVARCHAR(2) = 'FD'
+	,@_number NVARCHAR(MAX) 
 AS
 BEGIN
 	SET NOCOUNT ON;

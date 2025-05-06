@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServiceManagementDetail] (
-    [IdServiceManagementDetail]    BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdServiceManagementDetail]    BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ServiceManagement]            INT             NOT NULL,
     [ServiceStartDate]             DATETIME        NOT NULL,
     [ServiceEndDate]               DATETIME        NOT NULL,
@@ -33,6 +33,8 @@
     CONSTRAINT [FK_ServiceManagementDetail_VisitPointByClientPortfolio] FOREIGN KEY ([ServiceVisitPointPortfolioId]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio]),
     CONSTRAINT [FK_ServiceManagementDetail_VisitPointClient] FOREIGN KEY ([ServiceVisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

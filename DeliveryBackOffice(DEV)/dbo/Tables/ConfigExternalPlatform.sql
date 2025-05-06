@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ConfigExternalPlatform] (
-    [IdConfigExternalPlatform] INT            IDENTITY (1, 1) NOT NULL,
+    [IdConfigExternalPlatform] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ExternalPlatformId]       INT            NOT NULL,
     [ConfigParameterName]      NVARCHAR (50)  NOT NULL,
     [ConfigParameterValue]     NVARCHAR (600) NOT NULL,
@@ -12,6 +12,8 @@
     PRIMARY KEY CLUSTERED ([IdConfigExternalPlatform] ASC),
     CONSTRAINT [FK_ConfigExternalPlatform_ExternalPlatform] FOREIGN KEY ([ExternalPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 

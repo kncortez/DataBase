@@ -1,5 +1,5 @@
-CREATE TABLE [dbo].[CatRoute] (
-    [IdRoute]      INT           IDENTITY (1, 1) NOT NULL,
+﻿CREATE TABLE [dbo].[CatRoute] (
+    [IdRoute]      INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CodeRoute]    VARCHAR (100) NOT NULL,
     [Description]  VARCHAR (200) NOT NULL,
     [IdTownship]   INT           NULL,
@@ -15,6 +15,8 @@ CREATE TABLE [dbo].[CatRoute] (
     CONSTRAINT [FKRouteTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FKRouteTypeR] FOREIGN KEY ([IdTypeRoute]) REFERENCES [dbo].[CatTypeRoute] ([IdTypeRoute])
 );
+
+
 
 
 

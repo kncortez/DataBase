@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatPointPromo] (
-    [IdPointPromo]          BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdPointPromo]          BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [PointPromoDescription] NVARCHAR (200) NOT NULL,
     [PointPromoWeight]      INT            NOT NULL,
     [StartPromoDate]        DATETIME       NOT NULL,
@@ -21,6 +21,8 @@
     [TokenUpdated]          NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdPointPromo] ASC)
 );
+
+
 
 
 GO

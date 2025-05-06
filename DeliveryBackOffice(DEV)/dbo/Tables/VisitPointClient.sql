@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointClient] (
-    [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT NULL,
+    [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CodeOfReference]         INT            NOT NULL,
     [DescriptionOfClient]     NVARCHAR (100) NULL,
     [StatusClient]            BIT            NOT NULL,
@@ -50,6 +50,10 @@
 
 
 
+
+
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_customerid]
     ON [dbo].[VisitPointClient]([CustomerID] ASC);
@@ -59,8 +63,7 @@ CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
     ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
 
 GO
-CREATE NONCLUSTERED INDEX [idx_CodeOfReference]
-    ON [dbo].[VisitPointClient]([CodeOfReference] ASC);
+
 
 
 GO
@@ -196,4 +199,10 @@ CREATE NONCLUSTERED INDEX [idx_IdKindOfVPClient]
 GO
 CREATE NONCLUSTERED INDEX [idx_CountryId_StatusClient]
     ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC, [IdKindOfVPClient] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusClient]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC)
+    INCLUDE([IdVisitPointClient], [DescriptionOfClient], [CountryId], [CustomerID], [Phone]);
 

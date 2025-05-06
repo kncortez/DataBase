@@ -13,6 +13,10 @@
 -- Create date: <2024-10-23>
 -- Description:	<Integración nuevo formato 4X4>
 -- =============================================
+-- Modified:    <Oscar, Rodriguez>
+-- Create date: <2025-04-21>
+-- Description: <Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion>
+-- =============================================
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY,
@@ -391,7 +395,11 @@ BEGIN
 									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
 								'WeightLB',
 								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
-	    						ISNULL(DSC.RouteCode,'') AS 'Route_Code',
+	    						(CASE 
+								    WHEN ISNULL(dev.IsLastMileReturn, 0) = 1
+									    THEN ISNULL(DSC2.RouteCode,'') 
+										ELSE ISNULL(DSC.RouteCode,'')
+								    END) AS 'Route_Code',
 								ISNULL(DPF.dpf_SAPcardCode,'') AS 'CardCode'
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
@@ -428,6 +436,8 @@ BEGIN
 			                          ON  dev.[OriginSenderId] = DPF.dpf_VpCodeOfReference
 								LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
 			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
+								LEFT JOIN DumpServiceCoverage DSC2 WITH(NOLOCK)
+			                          ON DSC2.IdSettlement = dev.SenderIdSettlement
 								LEFT JOIN  dbo.RatebyCustomer RC WITH(NOLOCK)
 			                          ON dev.IdCustomer = RC.RbcIdCustomer  AND RbcRowStatus = 1 AND (dev.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
                                 LEFT JOIN    dbo.RateHeader RH WITH(NOLOCK)
@@ -626,10 +636,10 @@ BEGIN
 											[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
 											ON
 												[Twn].[IdProvince] = [Prv].[IdProvince]
-												AND
-												[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
 									WHERE
 										[dev].[Sender_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+										AND
+										[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
 								) AlterOrigin
 								OUTER APPLY (
 									SELECT 
@@ -641,10 +651,10 @@ BEGIN
 											[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
 											ON
 												[Twn].[IdProvince] = [Prv].[IdProvince]
-												AND
-												[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
 									WHERE
 										[dev].[Receiver_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+										AND
+										[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
 								) AlterDestiny
 								-- ADICIONES TSE
 								OUTER APPLY (

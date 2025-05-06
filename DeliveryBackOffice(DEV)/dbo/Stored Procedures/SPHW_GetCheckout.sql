@@ -7,6 +7,10 @@
 -- Create date: <2024-10-31>
 -- Description:	<Link de entregas - Se agrega parametro de token y idAccount>
 -- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego devolucion de poblado de direccion de origen>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetCheckout]
 @Token NVARCHAR(100),
@@ -48,6 +52,8 @@ BEGIN TRY
 			, '+502') + ISNULL(RIGHT(VPC.Phone,8),'') AS 'Telefono remitente'
 			, T2.TownshipName + ' , ' + P2.ProvinceName  AS 'Direccion remitente'
 			, VPC.Email AS 'Correo remitente'
+			, VPC.IdSettlement AS 'SenderSettlement'
+			, ISNULL(S2.Settlement,'') AS 'SenderSettlementName'
 			--PARA
 			, DL.ReceiverName AS 'Nombre destinatario'
 			, ISNULL(DL.NirPhone,'') + DL.ReceiverPhone AS 'Telefono destinatario'
@@ -99,6 +105,8 @@ BEGIN TRY
 			ON VPC.IdTownship = T2.IdTownship
 		LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH(NOLOCK)
 			ON T2.IdProvince = P2.IdProvince
+		LEFT JOIN DeliveryBackOffice.dbo.Settlement S2 WITH (NOLOCK)
+			ON S2.IdSettlement = VPC.IdSettlement
 		INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount RBUBA WITH(NOLOCK)
 			ON DL.AccountId = RBUBA.RuaIdAccount
 		INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH(NOLOCK)

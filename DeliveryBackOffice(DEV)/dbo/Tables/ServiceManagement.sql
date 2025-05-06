@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServiceManagement] (
-    [IdServiceManagement]       INT             IDENTITY (1, 1) NOT NULL,
+    [IdServiceManagement]       INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdPuCourrier]              INT             NULL,
     [IdDlCourrier]              INT             NULL,
     [CiPuDate]                  DATETIME        NULL,
@@ -35,6 +35,8 @@
     CONSTRAINT [FKService_RouteIn] FOREIGN KEY ([IdPuRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment]),
     CONSTRAINT [FKService_RoutOut] FOREIGN KEY ([IdDlRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment])
 );
+
+
 
 
 

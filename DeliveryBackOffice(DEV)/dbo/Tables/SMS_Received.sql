@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SMS_Received] (
-    [SMS_ID]                   BIGINT         IDENTITY (1, 1) NOT NULL,
+    [SMS_ID]                   BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SMS_Message_ID]           BIGINT         NOT NULL,
     [SMS_Message]              NVARCHAR (500) NOT NULL,
     [SMS_MSisdn]               NVARCHAR (50)  NOT NULL,
@@ -14,6 +14,8 @@
     [SMS_TokenUpdateDatetime]  DATETIME       NULL,
     CONSTRAINT [PK_SMS_Received] PRIMARY KEY CLUSTERED ([SMS_ID] ASC)
 );
+
+
 
 
 GO

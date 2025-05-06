@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateLog] (
-    [IdRateLog]            INT            IDENTITY (1, 1) NOT NULL,
+    [IdRateLog]            INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCustomer]           INT            NULL,
     [CodeOfReference]      INT            NULL,
     [TokenCreated]         NVARCHAR (50)  NOT NULL,
@@ -11,6 +11,8 @@
     FOREIGN KEY ([NewRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     FOREIGN KEY ([OriginalRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
+
+
 
 
 

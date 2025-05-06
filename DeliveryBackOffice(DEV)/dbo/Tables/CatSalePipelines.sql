@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatSalePipelines] (
-    [IdSalePipeLine] INT           IDENTITY (1, 1) NOT NULL,
+    [IdSalePipeLine] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]           VARCHAR (50)  NOT NULL,
     [ShortName]      VARCHAR (10)  NOT NULL,
     [Description]    VARCHAR (100) NULL,
@@ -10,6 +10,8 @@
     [DateUpdated]    DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdSalePipeLine] ASC)
 );
+
+
 
 
 GO

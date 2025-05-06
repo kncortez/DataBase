@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[GeneratedTokens] (
-    [TokenId]            BIGINT        IDENTITY (1, 1) NOT NULL,
+    [TokenId]            BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UserId]             BIGINT        NULL,
     [UserName]           VARCHAR (200) NOT NULL,
     [GeneratedToken]     VARCHAR (200) NULL,

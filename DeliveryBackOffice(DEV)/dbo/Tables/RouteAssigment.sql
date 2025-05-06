@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RouteAssigment] (
-    [IdRouteAssigment] INT          IDENTITY (1, 1) NOT NULL,
+    [IdRouteAssigment] INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdRoute]          INT          NULL,
     [IdCurrierMan]     INT          NULL,
     [IdVehicle]        INT          NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FKRoute_Route] FOREIGN KEY ([IdRoute]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
     CONSTRAINT [FKRoute_Vehicle] FOREIGN KEY ([IdVehicle]) REFERENCES [dbo].[CatVehicle] ([IdVehicle])
 );
+
+
 
 
 

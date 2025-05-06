@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CostDetail] (
-    [IdCostDetail]  INT             IDENTITY (1, 1) NOT NULL,
+    [IdCostDetail]  INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCost]        INT             NULL,
     [IdTypeOfMoney] INT             NULL,
     [Amount]        DECIMAL (18, 2) NULL,
@@ -14,6 +14,8 @@
     CONSTRAINT [FKCostDetCost] FOREIGN KEY ([IdCost]) REFERENCES [dbo].[Cost] ([IdCost]),
     CONSTRAINT [FKCostDetTypeMoney] FOREIGN KEY ([IdTypeOfMoney]) REFERENCES [dbo].[ctgTypeOfInOutOfMoney] ([tio_pk_id])
 );
+
+
 
 
 

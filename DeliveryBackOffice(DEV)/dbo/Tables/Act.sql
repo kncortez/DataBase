@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Act] (
-    [IdAct]             INT            IDENTITY (1, 1) NOT NULL,
+    [IdAct]             INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatRouteId]        INT            NOT NULL,
     [DateOfRoute]       DATETIME       NOT NULL,
     [ResponsibleName]   NVARCHAR (100) NULL,
@@ -13,6 +13,8 @@
     [DateUpdated]       DATETIME       NULL,
     CONSTRAINT [PK_Act] PRIMARY KEY CLUSTERED ([IdAct] ASC)
 );
+
+
 
 
 

@@ -1,16 +1,18 @@
-CREATE TABLE [dbo].[ManifestSettlementIncidenceDetail] (
-    [IdManifestSettlementIncidenceDetail]             INT            IDENTITY (1, 1) NOT NULL,
-    [Guide_Serie]		VARCHAR (2)		NULL,
-    [Guide_Number]      INT             NULL,
-	[ManifestSettlementIncidenceId] INT	NULL,
-    [RowStatus]         BIT            NOT NULL,
-    [TokenCreated]      NVARCHAR (50)  NOT NULL,
-    [DateCreated]       DATETIME       NOT NULL,
-    [TokenUpdated]      NVARCHAR (50)  NULL,
-    [DateUpdated]       DATETIME       NULL,
-    CONSTRAINT [PK_ManifestSettlementIncidenceDetail] PRIMARY KEY CLUSTERED ([IdManifestSettlementIncidenceDetail] ASC),	
-    CONSTRAINT [FK_ManifestSettlementIncidenceDetail_ManifestSettlementIncidence] FOREIGN KEY([ManifestSettlementIncidenceId]) REFERENCES [dbo].[ManifestSettlementIncidence] ([IdManifestSettlementIncidence])
+﻿CREATE TABLE [dbo].[ManifestSettlementIncidenceDetail] (
+    [IdManifestSettlementIncidenceDetail] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [Guide_Serie]                         VARCHAR (2)   NULL,
+    [Guide_Number]                        INT           NULL,
+    [ManifestSettlementIncidenceId]       INT           NULL,
+    [RowStatus]                           BIT           NOT NULL,
+    [TokenCreated]                        NVARCHAR (50) NOT NULL,
+    [DateCreated]                         DATETIME      NOT NULL,
+    [TokenUpdated]                        NVARCHAR (50) NULL,
+    [DateUpdated]                         DATETIME      NULL,
+    CONSTRAINT [PK_ManifestSettlementIncidenceDetail] PRIMARY KEY CLUSTERED ([IdManifestSettlementIncidenceDetail] ASC),
+    CONSTRAINT [FK_ManifestSettlementIncidenceDetail_ManifestSettlementIncidence] FOREIGN KEY ([ManifestSettlementIncidenceId]) REFERENCES [dbo].[ManifestSettlementIncidence] ([IdManifestSettlementIncidence])
 );
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Serie de guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ManifestSettlementIncidenceDetail', @level2type = N'COLUMN', @level2name = N'Guide_Serie';
 GO

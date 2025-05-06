@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[invoiceHeader] (
-    [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT NULL,
+    [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [inv_vpCodeOfReferences]  INT            NOT NULL,
     [inv_cmp_name]            VARCHAR (500)  NULL,
     [inv_cmp_nameComercial]   VARCHAR (500)  NULL,
@@ -56,6 +56,12 @@
     CONSTRAINT [FK_IdCountryInvH_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     CONSTRAINT [FK_IdCurrencyInvH_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
+
+
+
+
+
+
 
 
 
@@ -274,3 +280,12 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de cabecera de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader'
 GO
+CREATE NONCLUSTERED INDEX [idx_inv_vpCodeOfReferences]
+    ON [dbo].[invoiceHeader]([inv_vpCodeOfReferences] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_dateRegister_inv_type_inv_SAPDocEntry_include]
+    ON [dbo].[invoiceHeader]([inv_dateRegister] ASC, [inv_type] ASC, [inv_SAPDocEntry] ASC)
+    INCLUDE([inv_vpCodeOfReferences], [inv_date], [inv_status], [inv_invoiceOfCreditNote], [IdCountry]);
+

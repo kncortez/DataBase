@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Tito Garcia>
 -- Created date: <2024-10-11>
 -- Description:	<Valida si la guía ya tiene el comprobante de entrega digitalizado(escaneado)>
@@ -6,6 +6,10 @@
 -- Author:		<Tito Garcia>
 -- Updated date: <2024-11-13>
 -- Description:	<Valida si la guía ya se encuentra en estado entregado o devuelto ref.: FDD-1416>
+-- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date: <2025-03-13>
+-- Description:	<Se comenta la llamada a la funcion que obtiene el comprobante escaneado ya que en el modulo solo se mostraran los comprobantes digitales>
 -- =============================================
 CREATE PROCEDURE [dbo].[sphd_GetVoucherTypeToReprintGuide] 
 	@GuideSerie AS VARCHAR(2),
@@ -18,7 +22,7 @@ BEGIN
 
 	BEGIN TRY
 
-		SET @url = (Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) as VARCHAR(300)));
+		--SET @url = (Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) as VARCHAR(300)));
 		 		 	
 		SELECT CONCAT(DDO.Guide_Serie,DDO.Guide_Number) AS Guide
 			, DDO.Guide_Serie

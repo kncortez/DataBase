@@ -19,6 +19,7 @@ AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
+	set arithabort on;
 	SET NOCOUNT ON;
 	DECLARE @EXISTING_LRP AS INT;					-- LinehaulRoutePreparation
 	DECLARE @EXISTING_LRPCD AS INT;					-- LinehaulRoutePreparationContainerDetail

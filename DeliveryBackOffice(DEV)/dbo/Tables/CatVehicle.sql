@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatVehicle] (
-    [IdVehicle]              INT             IDENTITY (1, 1) NOT NULL,
+    [IdVehicle]              INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UnitNumber]             VARCHAR (10)    NOT NULL,
     [CodeName]               VARCHAR (200)   NOT NULL,
     [IdTypeVehicle]          INT             NULL,
@@ -31,6 +31,8 @@
     CONSTRAINT [FKVehicleType] FOREIGN KEY ([IdTypeVehicle]) REFERENCES [dbo].[CatTypeVehicle] ([IdTypeVehicle]),
     CONSTRAINT [UK] UNIQUE NONCLUSTERED ([UnitNumber] ASC)
 );
+
+
 
 
 

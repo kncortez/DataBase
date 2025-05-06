@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatStatusProcess] (
-    [IdStatusProcess]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdStatusProcess]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NameStatusProcess]        NVARCHAR (50)  NOT NULL,
     [DescriptionStatusProcess] NVARCHAR (200) NULL,
     [RowStatus]                BIT            NOT NULL,
@@ -10,6 +10,8 @@
     [Icon]                     NVARCHAR (200) NULL,
     PRIMARY KEY CLUSTERED ([IdStatusProcess] ASC)
 );
+
+
 
 
 GO

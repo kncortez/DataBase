@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateByHub] (
-    [RbhId]                   INT             IDENTITY (1, 1) NOT NULL,
+    [RbhId]                   INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RbhIdRate]               INT             NOT NULL,
     [RbhIdHubSource]          INT             NOT NULL,
     [RbhIdHubDestiny]         INT             NOT NULL,
@@ -24,6 +24,8 @@
     CONSTRAINT [FKRbhRate] FOREIGN KEY ([RbhIdRate]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FKRbhTypeService] FOREIGN KEY ([RbhIdTypeService]) REFERENCES [dbo].[CatTypeService] ([CtsId])
 );
+
+
 
 
 GO

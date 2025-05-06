@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRoutePreparationContainerDetailPiece] (
-    [IdLinehaulRoutePreparationContainerDetailPiece] INT           IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRoutePreparationContainerDetailPiece] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRoutePreparationContainerDetailId]      INT           NOT NULL,
     [PieceNumber]                                    INT           NOT NULL,
     [IsDryPiece]                                     BIT           DEFAULT ((1)) NOT NULL,
@@ -14,6 +14,8 @@
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetailPiece_Guide] FOREIGN KEY ([LinehaulRoutePreparationContainerDetailId]) REFERENCES [dbo].[LinehaulRoutePreparationContainerDetail] ([IdLinehaulRoutePreparationContainerDetail]),
     CONSTRAINT [UQ_LinehualRoutePreparation_GuidePiece] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationContainerDetailId] ASC, [PieceNumber] ASC)
 );
+
+
 
 
 

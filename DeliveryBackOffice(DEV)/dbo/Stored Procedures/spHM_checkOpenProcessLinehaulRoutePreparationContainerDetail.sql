@@ -12,7 +12,7 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-
+	SET ARITHABORT ON;
 	SELECT		[LRPCD].[IdLinehaulRoutePreparationContainerDetail],
 				[LRPCD].[LinehaulRoutePreparationContainerId],
 				[LRPCD].[GuideSerie],

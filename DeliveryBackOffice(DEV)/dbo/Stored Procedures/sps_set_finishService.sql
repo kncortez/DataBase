@@ -16,6 +16,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishService]
   , @TblExclusions AS TblExclusions READONLY
 AS
 BEGIN
+	SET ARITHABORT OFF
     DECLARE @DateCreated DATETIME = GETDATE();
     DECLARE @Output VARCHAR(MAX);
 
@@ -134,8 +135,14 @@ BEGIN
         (
            IdCustomer INT NOT NULL,
            PortfolioId INT NOT NULL,
-           CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
+           --CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
         );
+
+        CREATE NONCLUSTERED INDEX IDX_PK_TempDataClient
+        ON #TempDataClient (
+                             IdCustomer
+                           , PortfolioId
+                           );
 
         CREATE TABLE #TempData
         (

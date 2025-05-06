@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatMoney] (
-    [IdCatMoney]   INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatMoney]   INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CurrencyId]   INT            NOT NULL,
     [Type]         VARCHAR (10)   NOT NULL,
     [Value]        DECIMAL (8, 2) NOT NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [PK_CatMoney_IdCatMoney] PRIMARY KEY CLUSTERED ([IdCatMoney] ASC),
     CONSTRAINT [FK_CatMoney_CurrencyId] FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id])
 );
+
+
 
 
 

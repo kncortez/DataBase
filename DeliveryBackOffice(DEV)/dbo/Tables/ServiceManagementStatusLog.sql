@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServiceManagementStatusLog] (
-    [IdServiceManagementStatusLog] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdServiceManagementStatusLog] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ServiceManagementId]          INT           NOT NULL,
     [ServiceStatusIdOld]           INT           NOT NULL,
     [ServiceStatusIdNew]           INT           NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FK_ServiceManagementStatusLog_ServiceStatusIdNew] FOREIGN KEY ([ServiceStatusIdNew]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus]),
     CONSTRAINT [FK_ServiceManagementStatusLog_ServiceStatusIdOld] FOREIGN KEY ([ServiceStatusIdOld]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus])
 );
+
+
 
 
 GO

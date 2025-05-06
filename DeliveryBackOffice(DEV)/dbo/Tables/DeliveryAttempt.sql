@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryAttempt] (
-    [ID]                           BIGINT        IDENTITY (1, 1) NOT NULL,
+    [ID]                           BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Guide_Serie]                  NVARCHAR (2)  NOT NULL,
     [Guide_Number]                 INT           NOT NULL,
     [Dry]                          BIT           NOT NULL,
@@ -30,6 +30,8 @@
     CONSTRAINT [FK_DeliveryAttempt_DeliveryProof] FOREIGN KEY ([ID_Proof]) REFERENCES [dbo].[DeliveryProof] ([ID]),
     CONSTRAINT [FK_DeliveryAttempt_IDCourier] FOREIGN KEY ([ID_Courier]) REFERENCES [dbo].[SenderReceiver] ([ID])
 );
+
+
 
 
 

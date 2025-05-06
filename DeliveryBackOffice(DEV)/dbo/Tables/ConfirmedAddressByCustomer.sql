@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ConfirmedAddressByCustomer] (
-    [IdConfirmedAddressByCustomer] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdConfirmedAddressByCustomer] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CustomerId]                   INT           NOT NULL,
     [ConfirmedAddressId]           BIGINT        NOT NULL,
     [RowStatus]                    BIT           CONSTRAINT [DF__Confirmed__RowSt__0C31A3E9] DEFAULT ((1)) NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_ConfirmedAddressByCustomer_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [UK_ConfirmedAddressByCustomer_CustomerAddress] UNIQUE NONCLUSTERED ([CustomerId] ASC, [ConfirmedAddressId] ASC)
 );
+
+
 
 
 GO

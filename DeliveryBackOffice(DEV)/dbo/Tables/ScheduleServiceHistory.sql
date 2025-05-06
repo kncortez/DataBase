@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ScheduleServiceHistory] (
-    [ScheduleServiceHistoryId] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [ScheduleServiceHistoryId] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]                     VARCHAR (200) NOT NULL,
     [Description]              VARCHAR (MAX) NOT NULL,
     [SSHRowStatus]             BIT           NOT NULL,
@@ -12,6 +12,8 @@
     [LogType]                  INT           NULL,
     PRIMARY KEY CLUSTERED ([ScheduleServiceHistoryId] ASC)
 );
+
+
 
 
 

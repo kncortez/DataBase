@@ -50,7 +50,10 @@
     [SenderIdTownship]                     INT             NULL,
     [ReceiverIdTownship]                   INT             NULL,
     [ReceiverLatitude]                     NVARCHAR (25)   NULL,
-    [ReceiverLongitude]                    NVARCHAR (25)   NULL);
+    [ReceiverLongitude]                    NVARCHAR (25)   NULL,
+    [SenderIdSettlement]                   BIGINT          NULL);
+
+
 
 
 

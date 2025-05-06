@@ -286,7 +286,7 @@ BEGIN
 
 		----Obtener bandera de tipo de suscripcion para enviar a sp revalorizador----
 		DECLARE @TypeSubsId INT;
-		SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId 
+		SET @TypeSubsId = (SELECT TOP 1 sb.CatTypeSubscriptionId 
         FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
 		INNER JOIN Subscription sb WITH (NOLOCK)
 		ON sbl.SubscriptionId = sb.IdSubscription
@@ -393,6 +393,10 @@ BEGIN
                                                                @CodeApp = '',
                                                                @IdModule = @IdModuleP,
                                                                @Token = @TokenP;
+
+
+
+
 
     SELECT ROW_NUMBER() OVER (ORDER BY ppt.GuideNumber ASC) AS Id,
            CONCAT(ppt.GuideSerie, CAST(ppt.GuideNumber AS VARCHAR)) Guide,
@@ -584,6 +588,7 @@ BEGIN
 								AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
 					);
 
+PRINT '@CODAnticipatedTable'
 	INSERT INTO @CODAnticipatedTable (GuideSerie, GuideNumber,IdCustomer,IdPortafolio,COD,ComisionCOD,ComisionCODAnticipated)
 	SELECT
 		ppt.GuideSerie,
@@ -631,6 +636,9 @@ BEGIN
 			ON do.Guide_Serie = acd.GuideSerie AND do.Guide_Number = acd.GuideNumber
 		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK)
 			ON do.IdCustomer = ach.CustomerId 
+				AND ISNULL(do.VisitpointClientPortfolioId,0) = ISNULL(ach.PortfolioId,0) 
+			--Tomar en cuenta validar especificamente 
+			--por portafolio cuando el cliente sea redistribuidor 10/02/2025
 		LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 			ON VPC.CodeOfReference = DO.Sender_ID
 		LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
@@ -686,6 +694,8 @@ BEGIN
                 SELECT COUNT(1)FROM #PendingPaymentTempId
             );
     DECLARE @Index INT = 1;
+
+	PRINT @Output
 
     SET @Output = '[ { ' + '"Total": ' +
                   (

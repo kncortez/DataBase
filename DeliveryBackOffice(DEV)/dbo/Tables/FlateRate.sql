@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[FlateRate] (
-    [IdRate]               INT             IDENTITY (1, 1) NOT NULL,
+    [IdRate]               INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdDimensional]        INT             NULL,
     [IdSegmentArea]        INT             NULL,
     [ExceededRate]         BIT             NULL,

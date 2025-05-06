@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Seller] (
-    [IdSeller]        INT            IDENTITY (1, 1) NOT NULL,
+    [IdSeller]        INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCustomer]      INT            NOT NULL,
     [Name]            NVARCHAR (100) NOT NULL,
     [CodeOfReference] NVARCHAR (100) NOT NULL,
@@ -10,6 +10,8 @@
     CONSTRAINT [FK_Seller_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [Seller_UK] UNIQUE NONCLUSTERED ([CodeOfReference] ASC)
 );
+
+
 
 
 
