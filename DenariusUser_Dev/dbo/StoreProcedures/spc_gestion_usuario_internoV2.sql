@@ -4,6 +4,7 @@
 -- Create date: <2025-04-22>
 -- Description: <Actualizacion para manejo de multipais en roles y estaciones>
 -- =============================================
+
 CREATE PROCEDURE [dbo].[spc_gestion_usuario_internoV2] 
      @CODIGO NVARCHAR(100)
     ,@CONTRASEÑA NVARCHAR(MAX)
@@ -26,10 +27,10 @@ DECLARE
     SET @IDEMPLO = (SELECT IdEmployee FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee WHERE CodeEmployee = @CODIGO)
     SET @NOMBRE = (SELECT FirstName FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee WHERE CodeEmployee = @CODIGO)
     SET @APELLIDO = (SELECT LastName1 FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee WHERE CodeEmployee = @CODIGO)
-    SET @IdSysWeb = (SELECT SYS_IdSystem FROM DenariusUser_Dev.dbo.LGN_System WHERE SYS_SystemName = 'Forza Delivery Express' and SYS_Platform = 'Desktop')
-    SET @IdSysDesktop = (SELECT SYS_IdSystem FROM DenariusUser_Dev.dbo.LGN_System WHERE SYS_SystemName = 'Forza Delivery Express' and SYS_Platform = 'Web')
-    SET @IdRolWeb = (SELECT LGN_IdRol FROM DenariusUser_Dev.dbo.LGN_Rol WHERE LGN_Name = 'TRA-RASTREO DE GUIAS' and LGN_IdSystem = @IdSysWeb)
+    SET @IdSysDesktop = (SELECT SYS_IdSystem FROM DenariusUser_Dev.dbo.LGN_System WHERE SYS_SystemName = 'Forza Delivery Express' and SYS_Platform = 'Desktop')
+    SET @IdSysWeb = (SELECT SYS_IdSystem FROM DenariusUser_Dev.dbo.LGN_System WHERE SYS_SystemName = 'Forza Delivery Express' and SYS_Platform = 'Web')
     SET @IdRolDesktop = (SELECT LGN_IdRol FROM DenariusUser_Dev.dbo.LGN_Rol WHERE LGN_Name = 'PREPARADOR DE RUTA FORZA DELIVERY' and LGN_IdSystem = @IdSysDesktop)
+    SET @IdRolWeb = (SELECT LGN_IdRol FROM DenariusUser_Dev.dbo.LGN_Rol WHERE LGN_Name = 'TRA-RASTREO DE GUIAS' and LGN_IdSystem = )
     SET @IDStation = (SELECT STN_IdStation FROM DenariusUser_Dev.dbo.LGN_Station WHERE STN_StationName = 'Todas las estaciones' and STN_IdCountry = @IdCountry)
     SET @AccessRetries = 10 -- Cantidad de intentos
 
@@ -91,14 +92,14 @@ DECLARE
                 VALUES (@IdRolWeb,@CODIGO, @IDStation,@IdCountry ,lower(@NOMBRE)+'.'+lower(@APELLIDO) ,1 )
 
                 INSERT INTO DenariusUser_Dev.dbo.LGN_Restriction 
-                VALUES(@CODIGO,lower(@NOMBRE)+'.'+lower(@APELLIDO),@IdSysWeb,10,CASE WHEN @EXWEB = 1 THEN 'ACTIVE'ELSE 'INACTIVE' END ,0,GETDATE(),NULL,NULL,NULL)
+                VALUES(@CODIGO,lower(@NOMBRE)+'.'+lower(@APELLIDO),@IdSysWeb,@AccessRetries,CASE WHEN @EXWEB = 1 THEN 'ACTIVE'ELSE 'INACTIVE' END ,0,GETDATE(),NULL,NULL,NULL)
 
                 --INGRESO DE SISTEMA DESKTOP (13)
                 INSERT INTO DenariusUser_Dev.dbo.LGN_RolByUserByRegion
                 VALUES (@IdRolDesktop,@CODIGO,@IDStation,@IdCountry ,lower(@NOMBRE)+'.'+lower(@APELLIDO) ,1 )
 
                 INSERT INTO DenariusUser_Dev.dbo.LGN_Restriction 
-                VALUES(@CODIGO,lower(@NOMBRE)+'.'+lower(@APELLIDO),@IdSysDesktop,10,CASE WHEN @EXDESKTOP = 1 THEN 'ACTIVE' ELSE 'INACTIVE' END,0,GETDATE(),NULL,NULL,NULL)
+                VALUES(@CODIGO,lower(@NOMBRE)+'.'+lower(@APELLIDO),@IdSysDesktop,@AccessRetries,CASE WHEN @EXDESKTOP = 1 THEN 'ACTIVE' ELSE 'INACTIVE' END,0,GETDATE(),NULL,NULL,NULL)
             
             END
 
