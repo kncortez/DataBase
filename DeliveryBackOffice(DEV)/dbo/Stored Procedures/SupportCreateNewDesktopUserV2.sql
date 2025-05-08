@@ -1,49 +1,49 @@
-﻿-- =============================================
--- Author:        <Brandon, Pedroza>
--- Create date:   <2024-08-07>
--- Description:   <Crear un nuevo usuario para ingresar a portal interno,debe estar previamente creado en Denarius considerando multipais>
+
 -- =============================================
--- Author:        <Brandon, Pedroza>
--- Create date:   <2024-08-14>
--- Description:   <Se agrega validacion para usuarios de telemercadeo>
+-- Author:        <Bidcar Herrera>
+-- Create date:   <2024-05-15>
+-- Description:   <Crear un nuevo usuario en Hermes Desktop, debe estar previamente creado en Denarius considerando multipais>
 -- =============================================
+-- Author:      <Cristian Azurdia>
+-- Create date: <2025-04-22>
+-- Description: <Actualizacion para manejo de multipais en roles y estaciones>
 -- =============================================
--- Author:        <Walter Orozco>
--- Create date:   <2025-04-11>
--- Description:   <Se realizan mejoras para multipaís.>
--- =============================================
-CREATE PROCEDURE [dbo].[SupportCreateNewInternalUserWeb]
-  @Code INT
+
+CREATE PROCEDURE [dbo].[SupportCreatNewDesktopUserV2]
+(
+  @Code NVARCHAR(20)
  ,@User NVARCHAR(50)
  ,@Token NVARCHAR(50)
- ,@IdStation INT
- ,@IdRol INT
- ,@IdSystem INT
- ,@IdCountry NVARCHAR(2)
+ ,@rol INT
+ ,@idStation INT
+)
 AS
 BEGIN
+    DECLARE @IdCountry NVARCHAR(2) = 'GT',
+            @IDPerson INT = 0,
+            @IdRegisterUser INT = 0,
+            @Demonym NVARCHAR(20),
+            @CodeArea NVARCHAR(4),
+            @Currency NVARCHAR(4);
 
     BEGIN TRY
         BEGIN TRANSACTION;
 
-		DECLARE @IDPerson INT = 0,
-				@CodeISOCurrency NVARCHAR(10),
-				@IdRegisterUser INT = 0,
-				@IdRolTelemercadeo INT = 0,
-				@FirstName NVARCHAR(100),
-				@LastName NVARCHAR(100);
-		SELECT TOP 1
-				@CodeISOCurrency = cuCOD.CodeISO 
-				FROM CatCurrencyCOD cuCOD WITH (NOLOCK)
-				INNER JOIN DeliveryCurrency  cu WITH (NOLOCK)
-					ON cu.IdCurrencyCOD = cuCOD.IdCatCurrencyCOD
-				WHERE cu.DefaultPerCountry = 1
-				AND cu.Currency_IdCountry= @IdCountry
-                
-        SELECT TOP 1 
-				@IdRolTelemercadeo = RolIdRol 
-				FROM CatRol WHERE RolName = 'Ventas telemercadeo'
-				
+        SELECT @IdCountry= CountryId 
+        FROM dbo.CatStation
+        WHERE IdStation = @idStation
+
+        SELECT @Demonym = CountryNationality
+        FROM dbo.CatCountry
+        WHERE IdCountry= @IdCountry
+
+        SELECT @Currency = ccc.CodeISO
+         FROM DeliveryCurrency dc
+        INNER JOIN CatCurrencyCOD ccc
+        ON ccc.IdCatCurrencyCOD = dc.IdCurrencyCOD
+        WHERE Currency_IdCountry = @IdCountry
+          and DefaultPerCountry = 1
+
         INSERT INTO DeliveryBackOffice.dbo.Person
         (
            PerFirstName
@@ -65,7 +65,7 @@ BEGIN
              , emp.Sex
              , CONVERT(DATE, emp.DateBrith)
              , ISNULL(emp.DPI, '')
-             , @IdCountry
+             , @Demonym 
              , 1
              , @Token
              , GETDATE()
@@ -73,7 +73,7 @@ BEGIN
              , NULL
              , @IdCountry
           FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee emp
-         WHERE emp.CodeEmployee =  CONVERT(NVARCHAR(20), @Code);
+         WHERE emp.CodeEmployee =  @Code;
 
         SELECT @IDPerson = SCOPE_IDENTITY();
 
@@ -113,8 +113,8 @@ BEGIN
              , usr.USR_Password
              , GETDATE() + 100
              , 'ES'
-             , 'WEB'
-             , @CodeISOCurrency
+             , 'DESKTOP'
+             , @Currency
              , NULL
              , NULL
              , 1
@@ -122,7 +122,7 @@ BEGIN
              , GETDATE()
              , NULL
              , NULL
-             , '+' + cp.[Value]
+             , @CodeArea
              , ''
              , NULL --UrlFacebook
              , NULL --UrlInstagram
@@ -133,10 +133,7 @@ BEGIN
              , NULL --VerifiedPhone
              , NULL --ChangePassword
         FROM DenariusUser_Dev.dbo.LGN_User usr
-		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams cp
-			ON cp.[Name] = 'AreaCode'
-		WHERE usr.USR_IdUser = CONVERT(NVARCHAR(20), @Code)
-		 AND cp.IdCountry = @IdCountry
+       WHERE usr.USR_IdUser =   @Code
          AND usr.USR_Username = @User;
 
          SET @IdRegisterUser = SCOPE_IDENTITY();
@@ -163,7 +160,7 @@ BEGIN
              , NULL
              , NULL
         FROM DenariusUser_Dev.dbo.LGN_User usr
-       WHERE usr.USR_IdUser = CONVERT(NVARCHAR(20), @Code)
+       WHERE usr.USR_IdUser = @Code
          AND usr.USR_Username = @User;
 
       INSERT INTO DeliveryBackOffice.dbo.UserSystemRestriction
@@ -181,7 +178,7 @@ BEGIN
       VALUES
       (
        @IdRegisterUser -- UstIdUser - bigint
-       , @IdSystem	   -- UstIdSystem - int 13= Hermes web operaciones CatSystem
+       , 2             -- UstIdSystem - int 2= Hermes Desktop CatSystem
        , 10            -- UstAccessRetries - int
        , 0             -- UstRetries - int
        , 'ACTIVE'      -- UstStatus - varchar(10)
@@ -205,8 +202,8 @@ BEGIN
       )
       VALUES
       (
-       @IdRol            -- RusIdRol - int
-       , @IdSystem       -- RusIdSystem - int 13= Hermes web operaciones CatSystem
+       @rol            -- RusIdRol - int
+       , 2               -- RusIdSystem - int 2= Hermes Desktop
        , @IdRegisterUser -- RusIdUser - bigint
        , 1               -- RusRowStatus - bit
        , @Token          -- RusTokenCreated - varchar(50)
@@ -215,40 +212,6 @@ BEGIN
        , NULL            -- RusDateUpdated - datetime
        , @idStation      -- StationId - int
       );
-
-      IF(@IdRol = @IdRolTelemercadeo)
-	  BEGIN
-		SELECT TOP 1
-              @FirstName =  dbo.CapitalizeFirstLetter(ISNULL(emp.FirstName, ''))
-             , @LastName =  dbo.CapitalizeFirstLetter(ISNULL(emp.LastName1, ''))
-			FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee emp
-			WHERE emp.CodeEmployee =  CONVERT(NVARCHAR(20), @Code);
-
-			INSERT INTO [dbo].[CatTMSalesPerson]
-				([Code]
-				,[FirstName]
-				,[LastName]
-				,[Country]
-				,[RegisterUserId]
-				,[RowStatus]
-				,[DateCreated]
-				,[TokenCreated]
-				,[DateUpdated]
-				,[TokenUpdated]
-				,[CatSaleAdvisorId])
-			VALUES
-				(''
-				,@FirstName
-				,@LastName
-				,@IdCountry
-				,@IdRegisterUser
-				,1
-				,GETDATE()
-				,@Token
-				,NULL
-				,NULL
-				,NULL)
-	  END;
 
       COMMIT;
 
