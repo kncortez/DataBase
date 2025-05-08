@@ -29,8 +29,8 @@ DECLARE
     SET @APELLIDO = (SELECT LastName1 FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee WHERE CodeEmployee = @CODIGO)
     SET @IdSysWeb = (SELECT SYS_IdSystem FROM DenariusUser_Dev.dbo.LGN_System WHERE SYS_SystemName = 'Forza Delivery Express' and SYS_Platform = 'Desktop')
     SET @IdSysDesktop = (SELECT SYS_IdSystem FROM DenariusUser_Dev.dbo.LGN_System WHERE SYS_SystemName = 'Forza Delivery Express' and SYS_Platform = 'Web')
-    SET @IdRolWeb =     (SELECT LGN_IdRol FROM DenariusUser_Dev.dbo.LGN_Rol WHERE LGN_Name = 'PREPARADOR DE RUTA FORZA DELIVERY' and LGN_IdSystem = @IdSysWeb)
-    SET @IdRolDesktop = (SELECT LGN_IdRol FROM DenariusUser_Dev.dbo.LGN_Rol WHERE LGN_Name = 'TRA-RASTREO DE GUIAS' and LGN_IdSystem = @IdSysDesktop)
+    SET @IdRolWeb =     (SELECT LGN_IdRol FROM DenariusUser_Dev.dbo.LGN_Rol WHERE LGN_Name = 'TRA-RASTREO DE GUIAS'  and LGN_IdSystem = @IdSysWeb)
+    SET @IdRolDesktop = (SELECT LGN_IdRol FROM DenariusUser_Dev.dbo.LGN_Rol WHERE LGN_Name = 'PREPARADOR DE RUTA FORZA DELIVERY' and LGN_IdSystem = @IdSysDesktop)
     SET @IDStation = (SELECT STN_IdStation FROM DenariusUser_Dev.dbo.LGN_Station WHERE STN_StationName = 'Todas las estaciones' and STN_IdCountry = @IdCountry)
     SET @AccessRetries = 10 -- Cantidad de intentos
 
