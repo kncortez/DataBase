@@ -3,7 +3,12 @@
 -- Create date: <2022-09-13>
 -- Description:	<Asigna una guía a una preparación entrega (Movil)>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2025-05-08>
+-- Description:	<Proceso de guías por referencia>
+-- =============================================
+ALTER PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
     -- Add the parameters for the stored procedure here
     @RouteId INT,
     @Date DATE,
@@ -30,6 +35,7 @@ BEGIN
     DECLARE @IdRoutePreparationDetail INT;
     DECLARE @IdRoutePreparationDetailPiece INT;
     DECLARE @Country NVARCHAR(2)='GT';
+	DECLARE @TimePlaId  INT =0;
 
     --- Tabla para validar estado
     DECLARE @StatusGuide TABLE
@@ -95,9 +101,13 @@ BEGIN
 									WHERE do.Ticket_Number = @Reference  AND vpc.CustomerID = @IdCustomer
 							END;
 	 
+	 IF (@GuideNumber>1)
+	 BEGIN
+	 SET  @TimePlaId = (Select Top 1 TimePlaId  From [dbo].[DeliveryOrderPaymentDetail]
+											  where GuideNumber = @GuideNumber);
+	 END;
 
     BEGIN TRANSACTION;
-
     BEGIN TRY
 
        -- Obtener el país al que pertenece la guía
@@ -136,7 +146,7 @@ BEGIN
 							COMMIT TRANSACTION;
 
 	 END 
-       ELSE IF @GuidePieceExists = 1
+       ELSE IF @GuidePieceExists = 1 AND @TimePlaId > 0
         BEGIN
             --- Verificar si esta en un estado válido 
             SET @StatusOrderId =
@@ -333,11 +343,12 @@ BEGIN
                                           )
                                       );
 
+
                                 IF @IdRoutePreparationDetailPiece IS NULL
                                 BEGIN
 
-                                   IF @Reference !='' 
-								  BEGIN
+                                   IF @Reference != '' 
+								     BEGIN
 						  
 										  ---Asignar todas las piezas de la guía segun la referencia
 													INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]
@@ -548,7 +559,8 @@ BEGIN
                                                 ON dopd.GuideSerie = do.Guide_Serie
                                                    AND dopd.GuideNumber = do.Guide_Number
                                         WHERE do.Guide_Serie = @GuideSerie
-                                              AND do.Guide_Number = @GuideNumber;
+                                              AND do.Guide_Number = @GuideNumber
+											  AND  dopd.TimePlaId > 0;
 
                                         SET @IdServiceManagement = SCOPE_IDENTITY();
 
@@ -757,7 +769,7 @@ BEGIN
                                     SELECT rpd.IdRoutePreparationDetail 'IdRoutePreparationDetail',
                                            rpd.Guide_Serie 'GuideSerie',
                                            rpd.Guide_Number 'GuideNumber',
-                                           COUNT(1) 'Pieces',
+                                          IIF(@Reference <> '', COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0), 1) 'Pieces',
                                            COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) 'PiecesTotal',
                                            do.Receiver_Department 'Department',
                                            do.Receiver_Town 'Town',
@@ -787,7 +799,7 @@ BEGIN
                                            COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) 'guidePiecesTotal'
                                     FROM 
                                          DeliveryOrder do WITH (NOLOCK)
-                                    WHERE do.Ticket_Number = @Reference
+                                    WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber ---do.Ticket_Number = @Reference
                                     GROUP BY 
                                              do.Guide_Serie,
                                              do.Guide_Number,
@@ -908,6 +920,14 @@ BEGIN
 					2 AS StatusCode,
 					'   ¡Lo sentimos! El país de tu cuenta no coincide con el país de destino de la guía seleccionada. Por favor, revisa y selecciona una guía que corresponda a tu país.'   AS Description; 
 			END
+			 ELSE IF (@TimePlaId = 0)
+			 BEGIN
+
+			    SELECT 
+					2 AS StatusCode,
+					'Guía con proceso incompleto para esta operación.'   AS Description; 
+
+			 END
 			   ELSE
 					BEGIN
 						SELECT 2 'StatusCode',
