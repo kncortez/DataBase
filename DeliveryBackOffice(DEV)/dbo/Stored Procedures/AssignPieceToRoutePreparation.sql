@@ -492,8 +492,7 @@ SET ARITHABORT ON
 											[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 											ON 
 											RPD.RoutePreparationId = RP.IdRoutePreparation
-											AND
-											RP.RowStatus = 1
+											
 									WHERE 
 										RPD.RowStatus = 1
 										AND
@@ -504,6 +503,8 @@ SET ARITHABORT ON
 										RP.IdRoutePreparation <> @IdRoutePreparation
 										AND
 										RP.DateRoutePreparation = @Date
+										AND
+										RP.RowStatus = 1
 
 									--- Actualizar el estado de la guía
 									UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
