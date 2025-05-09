@@ -702,10 +702,10 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[RoutePreparation]           RP WITH (NOLOCK)
                     INNER JOIN DeliveryBackOffice.dbo.RoutePreparationDetail RPD WITH (NOLOCK)
                         ON RPD.Guide_Serie = @GuideSerie
-                           AND RPD.Guide_Number = @GuideNumber
-                           AND RPD.RowStatus = 1
+                           AND RPD.Guide_Number = @GuideNumber                          
                            AND RP.IdRoutePreparation = RPD.RoutePreparationId
                 WHERE RP.RowStatus = 1
+                AND RPD.RowStatus = 1
                 ORDER BY RP.DateRoutePreparation DESC;
 
                 -------- Obtener  Id de ruta de preparación del encabezado, esto si ya existe solo se inserta detalle
