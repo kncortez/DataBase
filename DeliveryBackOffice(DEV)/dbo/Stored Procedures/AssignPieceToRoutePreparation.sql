@@ -209,8 +209,6 @@ SET ARITHABORT ON
 						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 						ON
 						RP.IdRoutePreparation = RPD.RoutePreparationId
-						AND
-						RPD.RowStatus = 1
 					OUTER APPLY
 						(
 							SELECT
@@ -233,6 +231,8 @@ SET ARITHABORT ON
 					RP.CatRouteId = @IdRoute
 					AND
 					RP.DateRoutePreparation = @Date
+					AND
+					RPD.RowStatus = 1
 					
 				-- Verificar si existe la guía dentro del detalle de la preparación de la ruta
 				IF(@IdRoutePreparationDetail IS NULL OR @IdRoutePreparationDetail = 0)
