@@ -645,7 +645,15 @@ BEGIN
 		TRPreturns.CurrencyPrice_CODCodeISO [CurrencyPrice_CodeISO],
         TRPreturns.CurrencyPrice_CODSymbol  [CurrencyPrice_CODSymbol],
 		TRPreturns.CurrencyPriceCodeISO		[CurrencyPriceCodeISO],
-		TRPreturns.CurrencyPriceSymbol		[CurrencyPriceSymbol]
+		TRPreturns.CurrencyPriceSymbol		[CurrencyPriceSymbol],
+		CASE
+           WHEN kvp.IdKindOfVPClient = 1 THEN
+               1
+           WHEN kvp.IdKindOfVPClient IS NULL THEN
+               0
+           ELSE
+               0
+       END FlagEXP
 		FROM
 		(
 			SELECT  MAX(ID_DeliveryOrderBySettlement) ID_DeliveryOrderBySettlement,
