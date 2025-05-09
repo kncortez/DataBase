@@ -7,9 +7,9 @@
 -- Create date: <22-04-2025>
 -- Description: #Validar referencias repetidas por cliente
 -- =============================================
--- Author:      <Edelman>
--- Create date: <2025-05-08>
--- Description: <Proceso de guías por referencia>
+-- Author:      <Edelman, Vasquez>
+-- Create date: <22-04-2025>
+-- Description: #Validar referencias repetidas por cliente
 -- =============================================
 CREATE PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
     -- Add the parameters for the stored procedure here
