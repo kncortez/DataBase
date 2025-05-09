@@ -7,6 +7,8 @@
 -- Author:		<Walter Orozco>
 -- Create date: <23-01-2025>
 -- Description:	<Obtiene el ticket number asociado a una guía.>
+-- Create date: <09-05-2025>
+-- Description:	<Traslado de atributos del inner al where en la consulta.>
 -- =============================================
 CREATE PROCEDURE [dbo].[spHM_GetTopGuidesLinehaulRouteSettlement]
 	@LinehaulRouteSettlementId AS INT
@@ -27,7 +29,6 @@ BEGIN
 	FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD WITH (NOLOCK)
 	INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC WITH (NOLOCK)
 		ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-		AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId
 	INNER JOIN	[dbo].[Container] C WITH (NOLOCK)
 		ON		[LRSC].[ContainerId] = [C].[IdContainer]
 	INNER JOIN	[dbo].[CatTypeContainer] CTC WITH (NOLOCK)
@@ -35,6 +36,7 @@ BEGIN
 	LEFT JOIN	[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 		ON		[LRSCD].[GuideSerie] = [DO].[Guide_Serie] AND [LRSCD].[GuideNumber] = [DO].[Guide_Number]
 	WHERE		[LRSCD].[RowStatus] = 1
+		AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId
 		AND		[LRSCD].[IsOpenProcess] = 0
 	ORDER BY	[LRSCD].[DateCreated] DESC;
     

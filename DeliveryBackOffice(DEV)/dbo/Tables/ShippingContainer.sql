@@ -16,6 +16,10 @@ CREATE TABLE [ShippingContainer] (
 	CONSTRAINT [FK_ShippingContainer_CatShipContainerStatus] FOREIGN KEY ([IdStatusContainer]) REFERENCES [dbo].[CatShipContainerStatus] ([IdCatStatus])
 );
 
+CREATE NONCLUSTERED INDEX [IX_ShippingContainer_ReferenceContainer_IdCustomer]
+ON [dbo].[ShippingContainer]([ReferenceContainer] ASC, [IdCustomer] ASC, [RowStatus] ASC);
+GO
+
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador del contenedor', N'SCHEMA', N'dbo', N'TABLE', N'ShippingContainer', N'COLUMN', N'IdContainer'
 GO
 
