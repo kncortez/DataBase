@@ -33,5 +33,6 @@ BEGIN
 	SELECT IconFlag,
 		PrefixNumber
 	FROM DefaultValuesPerCountry WITH(NOLOCK)
+	WHERE RowStatus = 1
 
 END

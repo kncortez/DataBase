@@ -7,6 +7,8 @@
 -- Author:		<Walter Orozco>
 -- Create date: <23-01-2025>
 -- Description:	<Enviar Ticket Number si tiene relación con una guía.>
+-- Create date: <09-05-2025>
+-- Description:	<Traslado de atributos del inner al where en la consulta.>
 -- =============================================
 CREATE PROCEDURE [dbo].[spHM_GetMissingGuidesListInSettlement]
 	@LinehaulRoutePreparationId AS INT
@@ -30,7 +32,6 @@ BEGIN
 		ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 	INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP WITH(NOLOCK)
 		ON		[LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
-		AND		[LRP].[IdLinehaulRoutePreparation] = @LinehaulRoutePreparationId
 	INNER JOIN	[dbo].[Container] C WITH(NOLOCK)
 		ON		[LRPC].[ContainerId] = [C].[IdContainer]
 	INNER JOIN	[dbo].[CatTypeContainer] CTC WITH(NOLOCK)
@@ -41,6 +42,7 @@ BEGIN
 												FROM	[dbo].[CatLinehaulStatus] CLS
 												WHERE	[CLS].[StatusName] = 'IN TRANSIT')
 		AND		[LRPCDP].[ActCode] IS NULL
+		AND		[LRP].[IdLinehaulRoutePreparation] = @LinehaulRoutePreparationId
 		AND		[LRPCDP].[RowStatus] = 1
 	UNION
 	SELECT		[CTC].[TypeContainerSerie],
@@ -57,14 +59,13 @@ BEGIN
 		ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
 	INNER JOIN	[dbo].[LinehaulRouteSettlement] LRS WITH(NOLOCK)
 		ON		[LRSC].[LinehaulRouteSettlementId] = [LRS].[IdLinehaulRouteSettlement]
-		AND		[LRS].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 	INNER JOIN	[dbo].[Container] C WITH(NOLOCK)
 		ON		[LRSC].[ContainerId] = [C].[IdContainer]
 	INNER JOIN	[dbo].[CatTypeContainer] CTC WITH(NOLOCK)
 		ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
 	LEFT JOIN	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 		ON		[LRSCD].[GuideSerie] = [DO].[Guide_Serie] AND [LRSCD].[GuideNumber] = [DO].[Guide_Number]
-	WHERE 		[LRSCDP].[RowStatus] = 0
+	WHERE 		[LRSCDP].[RowStatus] = 0 AND [LRS].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 	ORDER BY	[CTC].[TypeContainerSerie],
 				[C].[ContainerNumber],
 				[GuideNumber],
