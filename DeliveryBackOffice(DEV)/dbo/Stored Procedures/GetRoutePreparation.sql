@@ -64,14 +64,10 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 					ON
 						RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
-						AND
-						RPD.RowStatus = 1
 				inner JOIN
 					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 					ON
 						RPD.RoutePreparationId = RP.IdRoutePreparation
-						AND
-						RP.RowStatus = 1
 				inner JOIN 
 					[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 					ON
@@ -86,6 +82,10 @@ BEGIN
 				RP.DateRoutePreparation = @Date
 				AND
 				RPDP.RowStatus = 1
+				AND
+				RPD.RowStatus = 1
+				AND
+				RP.RowStatus = 1
 
 			--- Actualizar la preparación de ruta en base a los datos almacenados
 			UPDATE RP
