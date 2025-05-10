@@ -46,9 +46,9 @@ BEGIN
     )
     SELECT [CTI].[IdIncidenceType]
     FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
-    WHERE [CTI].[NameIncidence] = 'Destinatario rechaza paquete' COLLATE Latin1_General_CI_AI
+    WHERE [CTI].[NameIncidence] = 'Destinatario rechaza paquete'
           AND [CTI].[RowStatus] = 1
-          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI
+          AND [CTI].[ServiceType] = 'DELIVERY'
           AND [CTI].[CountryId] = @CountryId;
 
     INSERT INTO @ReturnIncidence
@@ -57,9 +57,9 @@ BEGIN
     )
     SELECT [CTI].[IdIncidenceType]
     FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
-    WHERE [CTI].[NameIncidence] = 'Remitente solicita devolución' COLLATE Latin1_General_CI_AI
+    WHERE [CTI].[NameIncidence] = 'Remitente solicita devolución'
           AND [CTI].[RowStatus] = 1
-          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI
+          AND [CTI].[ServiceType] = 'DELIVERY'
           AND [CTI].[CountryId] = @CountryId;
 
 
@@ -104,7 +104,6 @@ BEGIN
             INNER JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
                 ON dsd.Guide_Serie = doad.GuideSerie
                    AND dsd.Guide_Number = doad.GuideNumber
-                   AND doad.RowStatus = 1
             INNER JOIN DeliveryAttempt          da WITH (NOLOCK)
                 ON dsd.Guide_Serie = da.Guide_Serie
                    AND dsd.Guide_Number = da.Guide_Number
@@ -113,7 +112,8 @@ BEGIN
                 ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
         WHERE dsd.ID_DeliveryOrderBySettlement = @DeliveryOrderBySettlementId
               AND dsd.RowStatus = 1
-              AND dsd.Guide_Returned = 1;
+              AND dsd.Guide_Returned = 1
+              AND doad.RowStatus = 1;
 
 
      -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
