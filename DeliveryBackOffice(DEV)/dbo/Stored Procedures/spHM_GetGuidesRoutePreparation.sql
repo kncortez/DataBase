@@ -41,8 +41,9 @@ BEGIN
 		--Verificando registros existentes para parámetro routeid
 		SET @RecordExist= (SELECT TOP 1 1 FROM RoutePreparation RP WHERE RP.IdRoutePreparation=@RoutePreparationId);
 		--Verificando SI LA GUÍA PERTENECE AL ROUTEPREPARATION
-		SELECT TOP 1 @BelongsToRoute=1 FROM DBO.RoutePreparation RP 
-			INNER JOIN DBO.RoutePreparationDetail RPD ON RPD.RoutePreparationId=RP.IdRoutePreparation
+		SELECT TOP 1 @BelongsToRoute=1 FROM DBO.RoutePreparation RP WITH(NOLOCK)
+			INNER JOIN DBO.RoutePreparationDetail RPD RP WITH(NOLOCK)
+			ON RPD.RoutePreparationId=RP.IdRoutePreparation
 		WHERE RP.IdRoutePreparation =@RoutePreparationId
 		AND RPD.Guide_Serie=@Serie AND RPD.Guide_Number=@Number;
 		set @Msg_error='La guía no se encuentra asociada a la preparación indicada'
@@ -54,8 +55,9 @@ BEGIN
 		--Verificando registros existentes para parámetros @RouteId y @Datepreparation
 		SET @RecordExist= (SELECT TOP 1 1 FROM RoutePreparation WHERE CatRouteId = @RouteId AND DateRoutePreparation = @DatePreparation);
 		--Verificando SI LA GUÍA PERTENECE AL ROUTEPREPARATION
-		SELECT TOP 1 @BelongsToRoute=1 FROM DBO.RoutePreparation RP 
-			INNER JOIN DBO.RoutePreparationDetail RPD ON RPD.RoutePreparationId=RP.IdRoutePreparation
+		SELECT TOP 1 @BelongsToRoute=1 FROM DBO.RoutePreparation RP RP WITH(NOLOCK)
+			INNER JOIN DBO.RoutePreparationDetail RPD RP WITH(NOLOCK)
+			ON RPD.RoutePreparationId=RP.IdRoutePreparation
 		WHERE RP.DateRoutePreparation =@DatePreparation and RP.CatRouteId=@RouteId
 		AND RPD.Guide_Serie=@Serie AND RPD.Guide_Number=@Number;
 		set @Msg_error='La guía no se encuentra asociada ruta y la fecha indicada'
@@ -92,11 +94,11 @@ BEGIN
 			,do.Receiver_Town 'Town'
 			,do.Receiver_Address 'Address'
 			,rpd.GuideOrder 'GuideOrder'
-		FROM RoutePreparation rp
-		INNER JOIN RoutePreparationDetail rpd
+		FROM RoutePreparation rp RP WITH(NOLOCK)
+		INNER JOIN RoutePreparationDetail rpd RP WITH(NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
 				AND rpd.RowStatus = 1
-		INNER JOIN RoutePreparationDetailPiece rpdp
+		INNER JOIN RoutePreparationDetailPiece rpdp RP WITH(NOLOCK)
 			ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
 				AND rpdp.RowStatus = 1
 		INNER JOIN DeliveryOrder do WITH(NOLOCK)
@@ -127,11 +129,11 @@ BEGIN
 			,rpdp.PieceNumber 'PieceNumber'
 			,rpdp.PieceType 'IsDry'
 			,ISNULL(AD.ActId,0) 'ActCode'
-		FROM RoutePreparation rp
-		INNER JOIN RoutePreparationDetail rpd
+		FROM RoutePreparation rp RP WITH(NOLOCK)
+		INNER JOIN RoutePreparationDetail rpd RP WITH(NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
 				AND rpd.RowStatus = 1
-		INNER JOIN RoutePreparationDetailPiece rpdp
+		INNER JOIN RoutePreparationDetailPiece rpdp RP WITH(NOLOCK)
 			ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
 				AND rpdp.RowStatus = 1
 		LEFT JOIN DBO.ActDetail AD WITH(NOLOCK)
