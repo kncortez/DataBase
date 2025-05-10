@@ -1,6 +1,6 @@
 
 CREATE TABLE [dbo].[DefaultValuesPerCountry](
-    [IdCountry]             [nvarchar](4)   NOT NULL,
+    [IdCountry]             [varchar](2)   NOT NULL,
     [UseMultiCountry]       [bit]           NOT NULL,
     [RowStatus]             [bit]           NOT NULL,
     [TokenCreated]          [varchar](50)   NOT NULL,
@@ -16,8 +16,10 @@ CREATE TABLE [dbo].[DefaultValuesPerCountry](
 	[DNIMaxLength]          [int]           NULL,
 	[PrefixNumber]          [nvarchar](5)   NULL,
 	[IconFlag]              [nvarchar](50)  NULL,
-	[CultureInfo]           [nvarchar](10)  NULL
-) ON [PRIMARY];
+	[CultureInfo]           [nvarchar](10)  NULL,
+	CONSTRAINT [PK_DefaultValuesPerCountry] PRIMARY KEY CLUSTERED,
+	CONSTRAINT [FK_DefaultValuesPerCountry_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+);
 
 
 GO
