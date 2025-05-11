@@ -1213,7 +1213,7 @@ BEGIN
                 SELECT ERROR_MESSAGE();
                 -- retornar mensaje de error
 
-                    SELECT IdResult AS IdResult, 
+                    SELECT IdResult AS StatusCode, 
                             ERROR_MESSAGE() AS [Message] 
                     FROM @responsemessage
                     WHERE Id = 'Invalid'
@@ -1362,7 +1362,7 @@ BEGIN
                 BEGIN CATCH
                      ROLLBACK TRAN detail
 
-                        SELECT CONVERT(VARCHAR, IdResult) AS IdResult, 
+                        SELECT CONVERT(VARCHAR, IdResult) AS StatusCode, 
                             ERROR_MESSAGE() AS [Message] 
                         FROM @responsemessage
                         WHERE Id = 'Invalid'
@@ -1377,9 +1377,9 @@ BEGIN
         ELSE IF (@test > 0)
         BEGIN
 
-            SELECT 'IdResult' AS IdResult,
-					Guide,
-					Message
+            SELECT 0 AS StatusCode,
+                   Guide,
+                   [Message]
             FROM #Temp
             WHERE Guide IN
                     (
