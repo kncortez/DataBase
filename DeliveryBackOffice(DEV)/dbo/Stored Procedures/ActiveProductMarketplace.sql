@@ -24,18 +24,20 @@ BEGIN
 
 	SELECT TOP 1 @ActivationCode = S.ActivationCode, @RowStatus = S.RowStatus, @IdCountry = ISNULL(CS.IdCountry,'GT') 
 	FROM Subscription S WITH(NOLOCK)
-	INNER JOIN CatSubscription CS ON S.CatSubscriptionId = CS.IdCatSubscription
+	INNER JOIN CatSubscription CS WITH(NOLOCK)
+		ON S.CatSubscriptionId = CS.IdCatSubscription
 	WHERE ActivationCode = @Code
 
-	select @IdAccount=A2.RuaIdAccount,@IdCustomer=A3.IdCustomer, @IdCountryEmail = ISNULL(A4.CountryID,'GT') from RegisterUser A1			
-			INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount A2
-			ON A1.UsrIdUser = A2.RuaIdUser 
-			INNER JOIN DeliveryBackOffice.dbo.Account A3
-			ON A3.AccIdAccount = A2.RuaIdAccount 
-			LEFT JOIN DeliveryBackOffice.dbo.Customer A4
-			ON A3.IdCustomer = A4.IdCustomer
-			where UsrEmail = @Email and UsrRowStatus = 1
-			AND A2.RuaRowStatus = 1 AND A3.AccRowStatus = 1
+	SELECT @IdAccount=A2.RuaIdAccount,@IdCustomer=A3.IdCustomer, @IdCountryEmail = ISNULL(A4.CountryID,'GT') 
+	FROM RegisterUser A1 WITH(NOLOCK)			
+	INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount A2 WITH(NOLOCK)
+		ON A1.UsrIdUser = A2.RuaIdUser 
+	INNER JOIN DeliveryBackOffice.dbo.Account A3 WITH(NOLOCK)
+		ON A3.AccIdAccount = A2.RuaIdAccount 
+	LEFT JOIN DeliveryBackOffice.dbo.Customer A4 WITH(NOLOCK)
+		ON A3.IdCustomer = A4.IdCustomer
+	WHERE UsrEmail = @Email and UsrRowStatus = 1
+	AND A2.RuaRowStatus = 1 AND A3.AccRowStatus = 1
 
 	IF (@IdCountry = @IdCountryEmail)
 	BEGIN 
@@ -58,20 +60,19 @@ BEGIN
 				,S.DateUpdated = GETDATE()	
 				,S.ActivationDAte = GETDATE()
 				,S.ExpirationDate = DATEADD(MONTH, cp.SubscriptionValidity, GETDATE())
-			FROM [Subscription] S
-				INNER JOIN 
-				[CatSubscription] cp
-				ON S.CatSubscriptionId = cp.IdCatSubscription
+			FROM [Subscription] S WITH(NOLOCK)
+				INNER JOIN [CatSubscription] cp WITH(NOLOCK)
+					ON S.CatSubscriptionId = cp.IdCatSubscription
 				WHERE ActivationCode = @Code
 			
 			  SELECT cp.SubscriptionName AS CatProductName,
 			IIF(cp.SubscriptionName = 'Gift Card',('Felicidades..! has activado la '+' '+cp.SubscriptionName), 
 			(IIF(cp.SubscriptionName = 'Club Forza',('Felicidades..! has activado la membresía'+' '+cp.SubscriptionName),('Felicidades..! has activado el'+' '+cp.SubscriptionName)))) AS Message,
 			REPLACE(CONVERT(VARCHAR(10),pt.ExpirationDate,105),'-','/') AS DateExpiration
-			from CatSubscription cp WITH(NOLOCK)
-			  INNER JOIN Subscription pt WITH(NOLOCK)
-			  ON cp.IdCatSubscription = pt.CatSubscriptionId 
-			  WHERE pt.ActivationCode = @Code and pt.RowStatus = 1		 
+			FROM CatSubscription cp WITH(NOLOCK)
+			INNER JOIN Subscription pt WITH(NOLOCK)
+				ON cp.IdCatSubscription = pt.CatSubscriptionId 
+			WHERE pt.ActivationCode = @Code and pt.RowStatus = 1		 
 
 			SELECT  SubscriptionAttributeDescription AS CatProductAttributeDescription FROM CatSubscriptionAtribute cpa WITH(NOLOCK)
 				INNER JOIN CatSubscription ctp WITH(NOLOCK)
@@ -111,20 +112,19 @@ BEGIN
 				,M.DateUpdated = GETDATE()	
 				,M.ActivationDAte = GETDATE()
 				,ExpirationDate = DATEADD(MONTH, CM.MembershipValidity, GETDATE())
-				FROM Membership M
-				INNER JOIN
-				CatMembership CM
-				ON M.CatMembershipId = CM.IdCatMembership
+				FROM Membership M WITH(NOLOCK)
+				INNER JOIN CatMembership CM WITH(NOLOCK)
+					ON M.CatMembershipId = CM.IdCatMembership
 		   		WHERE M.ActivationCode = @Code
 		   
 				 SELECT cp.MembershipName AS CatProductName,
 			   IIF(cp.MembershipName = 'Gift Card',('Felicidades..! has activado la '+' '+cp.MembershipName), 
 			   (IIF(cp.MembershipName = 'Club Forza',('Felicidades..! has activado la membresía'+' '+cp.MembershipName),('Felicidades..! has activado el'+' '+cp.MembershipName)))) AS Message,
 			   REPLACE(CONVERT(VARCHAR(10),pt.ExpirationDate,105),'-','/') AS DateExpiration
-			   from CatMembership cp WITH(NOLOCK)
-				 INNER JOIN Membership pt WITH(NOLOCK)
-				 ON cp.IdCatMembership = pt.CatMembershipId
-				 WHERE pt.ActivationCode = @Code and pt.RowStatus = 1
+			   FROM CatMembership cp WITH(NOLOCK)
+				INNER JOIN Membership pt WITH(NOLOCK)
+				ON cp.IdCatMembership = pt.CatMembershipId
+				WHERE pt.ActivationCode = @Code and pt.RowStatus = 1
 		   
 			   SELECT DISTINCT MembershipAttributeDescription AS CatProductAttributeDescription FROM CatMembershipAttribute cpa WITH(NOLOCK)
 		   		INNER JOIN CatMembership ctp WITH(NOLOCK)
