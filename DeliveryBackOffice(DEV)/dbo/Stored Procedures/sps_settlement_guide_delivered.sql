@@ -270,8 +270,14 @@ BEGIN
 					ORDER BY ExchangeDate DESC
 					
 					/**********************CONVERSION DOLAR A MONEDA LOCAL***********************/
-
-					SET @Currencydestination  =  (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WITH(NOLOCK) WHERE CodeISO LIKE ''+@ReceiverCountry+'%')
+					
+					SET @Currencydestination  =  (SELECT IdCatCurrencyCOD 
+					                              FROM CatCurrencyCOD WITH(NOLOCK)
+                                                  INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
+                                                      ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD 
+											      WHERE DC.Currency_IdCountry = @ReceiverCountry
+												      AND DC.Currency_Status = 1 
+                                                      AND DC.DefaultPerCountry = 1)
 
 					SELECT @ResultDestination = @OriginResult * ExchangeRate,
 							@ExchangeReceiver = ExchangeRate
