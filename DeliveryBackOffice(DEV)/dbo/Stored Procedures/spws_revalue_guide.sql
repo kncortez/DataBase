@@ -1336,12 +1336,17 @@ BEGIN
 					@ExchangeSender DECIMAL(12,6)
 			/******************DATOS DE MONEDA ORIGEN*************************/
 			SELECT TOP 1 
-				  @CurrencySender = C.IdCatCurrencyCOD, 
-				  @ExchangeSender = CE.ExchangeRate
-			FROM CurrencyExchangeRates CE 
-			INNER JOIN CatCurrencyCOD C  ON C.IdCatCurrencyCOD = CE.SourceCurrency
-			WHERE CodeISO LIKE ''+ @SenderCountryId +'%'
-			ORDER BY CE.ExchangeDate DESC
+				   @CurrencySender = C.IdCatCurrencyCOD, 
+				   @ExchangeSender = CE.ExchangeRate
+			  FROM CurrencyExchangeRates CE 
+			       INNER JOIN CatCurrencyCOD C 
+                      ON C.IdCatCurrencyCOD = CE.SourceCurrency
+                   INNER JOIN DeliveryCurrency DC
+                      ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
+			 WHERE DC.Currency_IdCountry = @SenderCountryId
+               AND DC.Currency_Status = 1 
+               AND DC.DefaultPerCountry = 1
+			 ORDER BY CE.ExchangeDate DESC
 			
             PRINT 'registro no existe , hay que crearlo';
 			IF @ServiceShortName = 'COD'
