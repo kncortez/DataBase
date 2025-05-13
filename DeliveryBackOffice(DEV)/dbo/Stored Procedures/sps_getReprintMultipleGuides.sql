@@ -391,7 +391,7 @@ BEGIN
                                      ON cst.GuideSerie = dev.Guide_Serie
                                     AND cst.GuideNumber = dev.Guide_Number
                                   LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccy WITH(NOLOCK)
-                                     ON ccy.ShippingCurrency = ccy.IdCatCurrencyCOD
+                                     ON cst.ShippingCurrency = ccy.IdCatCurrencyCOD
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
                                       ON vp.CodeOfReference = dev.Sender_ID
 								  LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
