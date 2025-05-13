@@ -311,7 +311,7 @@ BEGIN
                                                          , 0
                                                           )[PiecesCold],
 				SUBSTRING(CONVERT(VARCHAR, spk.StartDate, 8), 0, 6) [ScheduleStart],
-				SUBSTRING(CONVERT(VARCHAR, ISNULL(spk.EndDate, DATEADD( HOUR, 19, CAST(CAST(spk.StartDate AS DATE) AS DATETIME) ) ),8 ), 0, 6) [ScheduleEnd'],
+				SUBSTRING(CONVERT(VARCHAR, ISNULL(spk.EndDate, DATEADD( HOUR, 19, CAST(CAST(spk.StartDate AS DATE) AS DATETIME) ) ),8 ), 0, 6) [ScheduleEnd],
 				ISNULL((
                                                     SELECT TOP 1
                                                            vpi.PathImage
