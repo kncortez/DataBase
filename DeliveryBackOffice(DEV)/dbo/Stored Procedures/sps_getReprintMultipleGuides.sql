@@ -157,7 +157,7 @@ BEGIN
     SELECT --TOP 1
            GL.Guide_Serie 'GuideSerie',
            GL.Guide_Number 'GuideNumber',
-           ct.GuideNumber AS 'GuideNumber',
+           cc.CodeISO AS 'Currency',
            CONVERT(VARCHAR, ISNULL(Description, 0)) 'Description',
            CONVERT(VARCHAR, ISNULL(Amount, 0)) 'Price'              
       FROM DeliveryBackOffice.[dbo].[Cost] ct WITH (NOLOCK)
