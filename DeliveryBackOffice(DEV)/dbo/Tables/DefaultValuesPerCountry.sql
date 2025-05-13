@@ -17,7 +17,7 @@ CREATE TABLE [dbo].[DefaultValuesPerCountry](
 	[PrefixNumber]          [nvarchar](5)   NULL,
 	[IconFlag]              [nvarchar](50)  NULL,
 	[CultureInfo]           [nvarchar](10)  NULL,
-	CONSTRAINT [PK_DefaultValuesPerCountry] PRIMARY KEY CLUSTERED,
+	PRIMARY KEY CLUSTERED ([IdCountry] ASC),
 	CONSTRAINT [FK_DefaultValuesPerCountry_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
 
