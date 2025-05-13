@@ -154,33 +154,21 @@ BEGIN
 	ON GL.Guide_Serie= DOP.GuideSerie
 		AND GL.Guide_Number=DOP.GuideNumber
 
- 	
-
-
-
-	SELECT 
-		--TOP 1
-		GL.Guide_Serie 'GuideSerie',
-		GL.Guide_Number 'GuideNumber',
-		'GTQ' 'Currency',
-			CONVERT(VARCHAR, ISNULL(Description, 0)) 'Description',
-			CONVERT(VARCHAR, ISNULL(Amount, 0)) 'Price'              
-    FROM DeliveryBackOffice.[dbo].[Cost] ct WITH (NOLOCK)
-        LEFT JOIN DeliveryBackOffice.dbo.BreakdownOfPayment bdp WITH (NOLOCK)
-            ON bdp.IdCost = ct.IdCost
-		INNER JOIN @GUIDESLIST GL
-		ON ProductNumber=CONCAT(GL.Guide_Serie, GL.Guide_Number)
-		
-	
-
-
-
-	
+    SELECT --TOP 1
+           GL.Guide_Serie 'GuideSerie',
+           GL.Guide_Number 'GuideNumber',
+           ct.GuideNumber AS 'GuideNumber',
+           CONVERT(VARCHAR, ISNULL(Description, 0)) 'Description',
+           CONVERT(VARCHAR, ISNULL(Amount, 0)) 'Price'              
+      FROM DeliveryBackOffice.[dbo].[Cost] ct WITH (NOLOCK)
+           LEFT JOIN DeliveryBackOffice.dbo.BreakdownOfPayment bdp WITH (NOLOCK)
+             ON bdp.IdCost = ct.IdCost
+           LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD cc WITH(NOLOCK)
+             ON cc.IdCatCurrencyCOD = ct.ShippingCurrency
+           INNER JOIN @GUIDESLIST GL
+           ON ProductNumber=CONCAT(GL.Guide_Serie, GL.Guide_Number)
 
     /*end integration cost*/
-
-
-
                           
                               SELECT DISTINCT 
 									TP.GuideSerie 'GuideSerie',
@@ -257,9 +245,9 @@ BEGIN
 								--+ '"' + '},' + '"parcels": [' + COALESCE(@arpieces, '') + ' ] , '
 								CONVERT(VARCHAR, TP.TotalWeight) 'TotalWeight',
 								CONVERT(VARCHAR, TP.TotalValue) 'TotalValue',
-								'GTQ' 'Currency',
+								ISNULL(ccy.CodeISO,'GTQ') 'Currency',
                                  CONVERT(VARCHAR, CAST(ISNULL(dev.InsuranceAmount, 0) AS MONEY)) 'ProductInsuranceAmount',
-								 CONVERT(VARCHAR, 'GT') 'InsuranceCurrency',
+								 CONVERT(VARCHAR, @CountryThatConsults) 'InsuranceCurrency',
 								 CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) 'CodeOfReference',
 								 CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) 'CodeOfReferenceDestiny',
 								 CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, '')) 'IdInternalOrderRef',
@@ -309,14 +297,12 @@ BEGIN
                                 )'COD_CashOnDelivery',
 								CONVERT(VARCHAR, ISNULL(dev.Order_Number, 0)) 'COD_CreditNumber',
 								COALESCE(CONVERT(VARCHAR, dev.Collect_OnDelivery), '0') 'COD_AmmountCashOnDelivery',
-								'GTQ' 'COD_CashOnDeliveryCurrency',
+								ISNULL(ccy.CodeISO,'GTQ') 'COD_CashOnDeliveryCurrency',
 								'AccountName' 'COD_BankAccountName',
 								COALESCE(CONVERT(VARCHAR, dcba.DCBA_Bank_Id), '') 'COD_BankId',
 								COALESCE(CONVERT(VARCHAR, dcba.DCBA_BankAccountType), '') 'COD_BankAccountType',
 								COALESCE(CONVERT(VARCHAR, dcba.DCBA_Num_account), '') 'COD_BankAccountId',
 								COALESCE(CONVERT(VARCHAR, dcba.DCBA_Identification), '') 'COD_Identification',
-
-
 								--COALESCE(@integrationCost, '') 'Integration',
                                 COALESCE(IIF(ISNULL([dev].[IsLastMileReturn],0) = 1,'D',IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E')), '') 'Priority',
 								COALESCE(CONCAT('https://qa.forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') 'QRLink',
@@ -326,7 +312,6 @@ BEGIN
 									WHEN 
 										(dev.IsCollect <> 1 AND dev.Collect_OnDelivery>0 )
 										or ctm.Abbreviation IN ('IGSS','RENAP')
-
 									THEN
 										'D'
 									ELSE
@@ -402,6 +387,11 @@ BEGIN
 								    END) AS 'Route_Code',
 								ISNULL(DPF.dpf_SAPcardCode,'') AS 'CardCode'
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
+                                  LEFT JOIN DeliveryBackOffice.dbo.Cost cst WITH (NOLOCK)
+                                     ON cst.GuideSerie = dev.Guide_Serie
+                                    AND cst.GuideNumber = dev.Guide_Number
+                                  LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccy WITH(NOLOCK)
+                                     ON ccy.ShippingCurrency = ccy.IdCatCurrencyCOD
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
                                       ON vp.CodeOfReference = dev.Sender_ID
 								  LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
