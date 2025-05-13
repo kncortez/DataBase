@@ -12,6 +12,7 @@ BEGIN
 	DECLARE @IdContainerLiquid INT;
 	DECLARE @IdStatusGenerated INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Solicitado');
 	DECLARE @IdStatusRequest INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Generado');
+	DECLARE @IdStatusPickUp INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recolectado');
 
 	SET @IdContainerLiquid = (SELECT IdCatStatus FROM CatShipContainerStatus WITH(NOLOCK) WHERE [Name] = 'Liquidado')
 	IF EXISTS(SELECT 1 FROM ShippingContainer SC WITH (NOLOCK)
@@ -21,17 +22,28 @@ BEGIN
 
 		SELECT 0 AS StatusCode,
 				'El contenedor'+@ReferencesContainer+' ya ha sido liquidado' AS [Description]
+				RETURN
 	END
+	IF NOT EXISTS(SELECT 1 FROM ShippingContainer SC WITH (NOLOCK)  
+			INNER JOIN Customer CU WITH(NOLOCK)  
+			ON SC.IdCustomer = CU.IdCustomer  
+			WHERE SC.ReferenceContainer = @ReferencesContainer)  
+	BEGIN  
+	SELECT 2 AS StatusCode,  
+		'El contenedor '+@ReferencesContainer+' no existe. ' AS [Description]  
+		RETURN
+	END  
 
-	IF NOT EXISTS(SELECT 1 FROM ShippingContainer SC WITH (NOLOCK)
+	IF EXISTS(SELECT 1 FROM ShippingContainer SC WITH (NOLOCK)
 						INNER JOIN Customer CU WITH(NOLOCK)
 						ON SC.IdCustomer = CU.IdCustomer
 				WHERE SC.ReferenceContainer = @ReferencesContainer
-				AND ISNULL(CU.CountryID, 'GT')= @IdCountry)
+				AND ISNULL(CU.CountryID, 'GT')<> @IdCountry)
 	BEGIN
 
 		SELECT 1 AS StatusCode,
-				'El contenedor'+@ReferencesContainer+' pertenece a otro país' AS [Description]
+				'El contenedor '+@ReferencesContainer+' pertenece a otro país' AS [Description]
+		RETURN
 	END
 
 SELECT		200 AS StatusCode,
@@ -61,6 +73,7 @@ FROM DeliveryOrder DO WITH (NOLOCK)
 		ON CAT.IdStatus = DOP.IdStatusGuideByContainer
 WHERE SC.ReferenceContainer = @ReferencesContainer
 	AND SCD.RowStatus = 1 
-	AND DO.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest)
+	AND SC.RowStatus = 1
+	AND DO.StatusOrderId IN (@IdStatusGenerated,@IdStatusRequest,@IdStatusPickUp)
 
 END;
