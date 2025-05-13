@@ -20,6 +20,10 @@
 -- Modified: <2025-01-24>
 -- Description:	<Se agrega el parametro de ticketNumber para el proyecto de temu>
 -- =============================================
+-- Author:	 <Walter Orozco>
+-- Modified: <2025-05-12>
+-- Description:	<Se realizan mejoras de multimoneda para proyecto de SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie NVARCHAR(2) = ''
   , @GuideNumber INT
@@ -461,7 +465,7 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						cur WITH (NOLOCK)
 				ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						curCOD WITH (NOLOCK)
-				ON ISNULL(co.CodCurrency,IIF(ord.SenderCountryId='HN',4,1)) = curCOD.IdCatCurrencyCOD 
+				ON ISNULL(co.CodCurrency,co.ShippingCurrency) = curCOD.IdCatCurrencyCOD 
             LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
                 ON vpc.CodeOfReference = ord.Sender_ID
             LEFT JOIN dbo.VisitPointClient imp WITH (NOLOCK)

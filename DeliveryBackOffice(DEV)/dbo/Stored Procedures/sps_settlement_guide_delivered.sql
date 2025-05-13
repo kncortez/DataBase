@@ -272,7 +272,7 @@ BEGIN
 					/**********************CONVERSION DOLAR A MONEDA LOCAL***********************/
 					
 					SET @Currencydestination  =  (SELECT IdCatCurrencyCOD 
-					                              FROM CatCurrencyCOD WITH(NOLOCK)
+					                              FROM CatCurrencyCOD C WITH(NOLOCK)
                                                   INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
                                                       ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD 
 											      WHERE DC.Currency_IdCountry = @ReceiverCountry
