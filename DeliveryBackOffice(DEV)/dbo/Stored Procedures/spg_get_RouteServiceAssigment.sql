@@ -43,5 +43,5 @@ BEGIN
     WHERE rat.IdRoute = @idRoute
           AND rat.DateOfRoute = @dateRoute
           AND spu.AssigmentStatus = '1'
-          AND IIF(snr.IdCountry IS NULL, 'GT', snr.IdCountry) = @IdCountry;
+          AND (rat.IdCurrierMan is null OR ISNULL(snr.IdCountry, 'GT') = @IdCountry);
 END;
