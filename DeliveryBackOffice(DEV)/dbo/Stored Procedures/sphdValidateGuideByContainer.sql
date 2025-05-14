@@ -20,6 +20,7 @@ BEGIN
 	DECLARE @isNEwRegistGuide INT=0;
 	DECLARE @IdStatusGenerated INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Solicitado');
 	DECLARE @IdStatusRequest INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Generado');
+	DECLARE @IdStatusPickUp INT= (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Recolectado');
 	DECLARE @IdStatusGuide INT=0;
     
 	DECLARE @IsStatusTerminal INT = (
@@ -64,7 +65,7 @@ BEGIN
 	WHERE DO.Guide_Number = @GuideNumber
 		AND DO.Guide_Serie = @GuideSerie;
 
-	IF (@IdStatusGuide <> @IdStatusGenerated OR @IdStatusGuide <> @IdStatusRequest)
+	IF (@IdStatusGuide NOT IN( @IdStatusGenerated, @IdStatusRequest, @IdStatusPickUp))
 	BEGIN
 		SET @Description = '*** No puede agregarser guía : ' + @GuideSerie + CONVERT(NVARCHAR(25), @GuideNumber) + ' en estado : ' + @StatusDescription + ' ***';
 		SELECT 5 AS StatusCode, @Description AS Description, CONCAT(@GuideSerie, @GuideNumber) AS Guide, 0 AS SubStatusCode, 0 AS IsDry, 0 AS IsTerminal;
