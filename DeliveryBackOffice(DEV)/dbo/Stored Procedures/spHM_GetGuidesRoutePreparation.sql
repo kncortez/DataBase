@@ -96,11 +96,9 @@ BEGIN
 			,rpd.GuideOrder 'GuideOrder'
 		FROM RoutePreparation rp  WITH(NOLOCK)
 		INNER JOIN RoutePreparationDetail rpd  WITH(NOLOCK)
-			ON rpd.RoutePreparationId = rp.IdRoutePreparation
-				AND rpd.RowStatus = 1
+			ON rpd.RoutePreparationId = rp.IdRoutePreparation				
 		INNER JOIN RoutePreparationDetailPiece rpdp  WITH(NOLOCK)
-			ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
-				AND rpdp.RowStatus = 1
+			ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail				
 		INNER JOIN DeliveryOrder do WITH(NOLOCK)
 			ON rpd.Guide_Serie = do.Guide_Serie
 				AND rpd.Guide_Number = do.Guide_Number
@@ -112,6 +110,8 @@ BEGIN
 		)
 		AND rpd.Guide_Serie = @Serie AND RPD.Guide_Number=@Number
 		AND rp.RowStatus = 1
+		AND rpd.RowStatus = 1
+		AND rpdp.RowStatus = 1
 		GROUP BY IdRoutePreparationDetail
 				,rpd.Guide_Serie
 				,rpd.Guide_Number
@@ -131,11 +131,9 @@ BEGIN
 			,ISNULL(AD.ActId,0) 'ActCode'
 		FROM RoutePreparation rp  WITH(NOLOCK)
 		INNER JOIN RoutePreparationDetail rpd  WITH(NOLOCK)
-			ON rpd.RoutePreparationId = rp.IdRoutePreparation
-				AND rpd.RowStatus = 1
+			ON rpd.RoutePreparationId = rp.IdRoutePreparation				
 		INNER JOIN RoutePreparationDetailPiece rpdp  WITH(NOLOCK)
-			ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
-				AND rpdp.RowStatus = 1
+			ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail				
 		LEFT JOIN DBO.ActDetail AD WITH(NOLOCK)
 					ON AD.GuideSerie=rpd.Guide_Serie
 					AND AD.GuideNumber=RPD.Guide_Number
@@ -147,6 +145,8 @@ BEGIN
 		)		
 		AND
 		rpd.Guide_Serie = @Serie AND RPD.Guide_Number=@Number
+		AND rpd.RowStatus = 1
+		AND rpdp.RowStatus = 1
 		GROUP BY rpd.Guide_Serie
 				,rpd.Guide_Number
 				,rpdp.PieceNumber
