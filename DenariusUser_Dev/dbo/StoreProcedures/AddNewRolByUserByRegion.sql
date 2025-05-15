@@ -10,6 +10,8 @@ BEGIN
     DECLARE @ErrorMessage NVARCHAR(4000);
     DECLARE @ErrorSeverity INT = 16; 
     DECLARE @ErrorState INT = 1; 
+	DECLARE @IDStation INT;
+
 
     BEGIN TRY
         -- Verificar si el usuario existe
@@ -44,17 +46,15 @@ BEGIN
         FROM [DenariusUser_Dev].[dbo].[LGN_Rol] WITH (NOLOCK)
         WHERE LGN_IdRol = @IdRol;
 
+		SET @IDStation = (SELECT STN_IdStation FROM DenariusUser_Dev.dbo.LGN_Station WHERE STN_StationName = 'Todas las estaciones' and STN_IdCountry = @IdCountry)
+
         -- Insertar en LGN_RolByUserByRegion
         INSERT INTO DenariusUser_Dev.dbo.LGN_RolByUserByRegion
         VALUES
         (
             @IdRol,
             @Codigo,
-            CASE 
-                WHEN @IdCountry = 'GT' THEN '-1'
-                WHEN @IdCountry = 'HN' THEN '-2'
-                ELSE '-1'
-            END,
+            @IDStation,
             @IdCountry,
             @Username,
             1
