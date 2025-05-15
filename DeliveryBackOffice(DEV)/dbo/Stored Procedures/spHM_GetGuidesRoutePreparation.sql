@@ -24,7 +24,7 @@ BEGIN
 		BEGIN
 		
 			SELECT TOP 1 @Number = Guide_Number
-				From [dbo].[DeliveryOrder]
+				From [dbo].[DeliveryOrder] WITH(NOLOCK)
 					WHERE Ticket_Number = @Reference
 		END;
 
@@ -39,7 +39,7 @@ BEGIN
 	ELSE IF @RoutePreparationId IS NOT NULL
 	BEGIN 
 		--Verificando registros existentes para parámetro routeid
-		SET @RecordExist= (SELECT TOP 1 1 FROM RoutePreparation RP WHERE RP.IdRoutePreparation=@RoutePreparationId);
+		SET @RecordExist= (SELECT TOP 1 1 FROM RoutePreparation RP WITH(NOLOCK) WHERE RP.IdRoutePreparation=@RoutePreparationId);
 		--Verificando SI LA GUÍA PERTENECE AL ROUTEPREPARATION
 		SELECT TOP 1 @BelongsToRoute=1 FROM DBO.RoutePreparation RP WITH(NOLOCK)
 			INNER JOIN DBO.RoutePreparationDetail RPD WITH(NOLOCK)
@@ -53,7 +53,7 @@ BEGIN
 	ELSE
 	BEGIN 
 		--Verificando registros existentes para parámetros @RouteId y @Datepreparation
-		SET @RecordExist= (SELECT TOP 1 1 FROM RoutePreparation WHERE CatRouteId = @RouteId AND DateRoutePreparation = @DatePreparation);
+		SET @RecordExist= (SELECT TOP 1 1 FROM RoutePreparation  WITH(NOLOCK) WHERE CatRouteId = @RouteId AND DateRoutePreparation = @DatePreparation);
 		--Verificando SI LA GUÍA PERTENECE AL ROUTEPREPARATION
 		SELECT TOP 1 @BelongsToRoute=1 FROM DBO.RoutePreparation RP WITH(NOLOCK)
 			INNER JOIN DBO.RoutePreparationDetail RPD  WITH(NOLOCK)

@@ -69,7 +69,7 @@ BEGIN
 			            ROW_NUMBER() OVER (PARTITION BY DO.Ticket_Number ORDER BY DOP.GuideSerie DESC, DOP.GuideNumber DESC) AS RowNum,
 			            DO.DateCreated
 		        FROM DeliveryOrder DO WITH (NOLOCK)
-		        INNER JOIN DeliveryOrderPiece DOP
+		        INNER JOIN DeliveryOrderPiece DOP WITH(NOLOCK)
 			        ON DO.Guide_Serie = DOP.GuideSerie
 			        AND DO.Guide_Number = DOP.GuideNumber
 		        WHERE DO.Ticket_Number IN (SELECT ReferenceGuide FROM @ReferencesGuide WHERE ReferenceGuide NOT IN ('','0'))

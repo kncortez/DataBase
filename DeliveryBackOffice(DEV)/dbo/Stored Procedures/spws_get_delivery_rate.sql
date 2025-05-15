@@ -884,92 +884,50 @@ BEGIN
     END;
     DECLARE @IdSegment INT;
 
-    -- HeaderCodes Iguales - LO
-    IF (@HeaderCodeSource = @HeaderCodeDestiny)
+    -- HeaderCodes  - revisar tabla
+    IF (@CustomerType != 1)
     BEGIN
 
-        PRINT @Country;
-        IF @Country = 'GT'
-        BEGIN
+        PRINT '@HeaderCodeSource';
+        PRINT @HeaderCodeSource;
 
-            SELECT TOP 1  @IdSegment = sg.CrsId
-            FROM dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsName = 'LOCAL';
+        PRINT '@HeaderCodeDestiny';
+        PRINT @HeaderCodeDestiny;
+        SELECT TOP 1
+               @IdSegment = RTC.SegmentTypeId
+        FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)
+                ON RTC.TownshipSourceId = TwnSource.IdTownship
+            INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)
+                ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
+        WHERE RTC.RateId = @IdRate
+              AND (TwnSource.HeaderCode = @HeaderCodeSource)
+              AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+              AND RTC.RowStatus = 1;
 
-        END;
-        ELSE
-        BEGIN
-
-            SELECT TOP 1  @IdSegment = sg.CrsId
-            FROM dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsName = ('LOCAL ' + @Country);
-
-        END;
+        PRINT 'segment';
+        PRINT @IdSegment;
     END;
-    -- HeaderCodes diferentes - revisar tabla
     ELSE
     BEGIN
-        IF (@CustomerType != 1)
-        BEGIN
-
-            PRINT '@HeaderCodeSource';
-            PRINT @HeaderCodeSource;
-
-            PRINT '@HeaderCodeDestiny';
-            PRINT @HeaderCodeDestiny;
-            SELECT TOP 1
-                   @IdSegment = RTC.SegmentTypeId
-            FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)
-                    ON RTC.TownshipSourceId = TwnSource.IdTownship
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)
-                    ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
-            WHERE RTC.RateId = @IdRate
-                  AND (TwnSource.HeaderCode = @HeaderCodeSource)
-                  AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
-                  AND RTC.RowStatus = 1;
-
-            PRINT 'segment';
-            PRINT @IdSegment;
-        END;
-        ELSE
-        BEGIN
-            SELECT TOP 1
-                   @IdSegment = CTC.SegmentTypeId
-            FROM [DeliveryBackOffice].[dbo].[CorporateTownshipCoverage] CTC WITH (NOLOCK)
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]        TwnSource WITH (NOLOCK)
-                    ON CTC.TownshipSourceId = TwnSource.IdTownship
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]        TwnDestiny WITH (NOLOCK)
-                    ON CTC.TownshipDestinyId = TwnDestiny.IdTownship
-            WHERE (TwnSource.HeaderCode = @HeaderCodeSource)
-                  AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
-                  AND CTC.RowStatus = 1;
-        END;
-
+        SELECT TOP 1
+               @IdSegment = CTC.SegmentTypeId
+        FROM [DeliveryBackOffice].[dbo].[CorporateTownshipCoverage] CTC WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[Township]        TwnSource WITH (NOLOCK)
+                ON CTC.TownshipSourceId = TwnSource.IdTownship
+            INNER JOIN [DeliveryBackOffice].[dbo].[Township]        TwnDestiny WITH (NOLOCK)
+                ON CTC.TownshipDestinyId = TwnDestiny.IdTownship
+        WHERE (TwnSource.HeaderCode = @HeaderCodeSource)
+              AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+              AND CTC.RowStatus = 1;
     END;
 
     IF @IdSegment IS NULL -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
     BEGIN
-
-        PRINT @Country;
-        IF @Country = 'GT'
-        BEGIN
-
-            SELECT TOP 1
-                   @IdSegment = sg.CrsId
-            FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsShortName = 'FOR';
-
-        END;
-        ELSE
-        BEGIN
-
-            SELECT TOP 1
-                   @IdSegment = sg.CrsId
-            FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsShortName = 'FOR';
-
-        END;
+        SELECT TOP 1
+               @IdSegment = sg.CrsId
+          FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
+         WHERE sg.CrsShortName = 'FOR';
     END;
 
     --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
@@ -1167,12 +1125,6 @@ BEGIN
 
     PRINT '@IdRateGroup';
     PRINT @IdRateGroup;
-
-    PRINT '@IdTypeRate';
-    PRINT @IdTypeRate;
-
-    PRINT '@IdSegment';
-    PRINT @IdSegment;
 
     IF @IdTypeRate = 1 -- tarifas estandar
     BEGIN
@@ -1460,69 +1412,25 @@ BEGIN
                )
             BEGIN
                 -- Cálculo de segmento - nuevas tarifas
-                -- HeaderCodes Iguales - LOC
-                IF (@HeaderCodeSource = @HeaderCodeDestiny)
-                BEGIN
-
-                    PRINT @Country;
-                    IF @Country = 'GT'
-                    BEGIN
-
-                        SELECT TOP 1  @IdSegment = sg.CrsId
-                        FROM dbo.CatRateSegment sg WITH (NOLOCK)
-                        WHERE sg.CrsName = 'LOCAL';
-
-                    END;
-                    ELSE
-                    BEGIN
-
-                        SELECT TOP 1  @IdSegment = sg.CrsId
-                        FROM dbo.CatRateSegment sg WITH (NOLOCK)
-                        WHERE sg.CrsName = ('LOCAL ' + @Country);
-
-                    END;
-
-                END;
-                -- HeaderCodes diferentes - revisar tabla
-                ELSE
-                BEGIN
-                    SELECT TOP 1
-                           @IdSegment = RTC.SegmentTypeId
-                    FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
-                        INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)
-                            ON RTC.TownshipSourceId = TwnSource.IdTownship
-                        INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)
-                            ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
-                    WHERE RTC.RateId = @IdRate
-                          AND (TwnSource.HeaderCode = @HeaderCodeSource)
-                          AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
-                          AND RTC.RowStatus = 1;
-
-                END;
+                -- HeaderCodes  - revisar tabla
+                SELECT TOP 1
+                       @IdSegment = RTC.SegmentTypeId
+                FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)
+                        ON RTC.TownshipSourceId = TwnSource.IdTownship
+                    INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)
+                        ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
+                WHERE RTC.RateId = @IdRate
+                      AND (TwnSource.HeaderCode = @HeaderCodeSource)
+                      AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+                      AND RTC.RowStatus = 1;
 
                 IF (@IdSegment IS NULL) -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
                 BEGIN
-
-                    PRINT @Country;
-                    IF @Country = 'GT'
-                    BEGIN
-
-                        SELECT TOP 1
-                               @IdSegment = sg.CrsId
-                        FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-                        WHERE sg.CrsShortName = 'FOR';
-
-                    END;
-                    ELSE
-                    BEGIN
-
-                        SELECT TOP 1
-                               @IdSegment = sg.CrsId
-                        FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-                        WHERE sg.CrsShortName = 'FOR';
-
-                    END;
-
+                     SELECT TOP 1
+                            @IdSegment = sg.CrsId
+                       FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
+                      WHERE sg.CrsShortName = 'FOR';
                 END;
 
                 -- Cálculo de precios
