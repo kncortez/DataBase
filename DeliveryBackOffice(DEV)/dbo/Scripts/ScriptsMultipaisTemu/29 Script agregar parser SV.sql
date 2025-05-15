@@ -8,9 +8,6 @@ BEGIN TRY
     insert into ConfigParams([Name],[Description],[Value],[Status],[CreateDate],[IdCountry])
     values('EmailByParser','Correo Parser de Salvador','solicitudes.sv@forza.delivery',1,GETDATE(),'SV')
 
-    insert into ConfigParams([Name],[Description],[Value],[Status],[CreateDate],[IdCountry])
-    values('EmailByParser','Correo Parser de Salvador','test.sv@forza.delivery',1,GETDATE(),'SV')
-
     COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH
