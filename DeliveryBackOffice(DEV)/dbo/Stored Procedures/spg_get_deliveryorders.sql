@@ -56,7 +56,7 @@ BEGIN
 				ISNULL(UPPER(serv.NameOfReceiver),'') as [ReceiverName],
 				CONVERT(varchar,serv.DateCreated,103) [PickUpDateTime],
 				CONVERT(varchar,serv.Shipping_Date,103) [ScheduledDeliveryDate],
-				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WHERE dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
+				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK) WHERE dod.Guide_Serie = serv.Guide_Serie and dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
 				serv.Guide_Serie + Cast(serv.Guide_Number as varchar) [GuideNumber],
 				--serv.OrderStatus [OrderStatus]
 				so.OrderDescription AS OrderStatus,
@@ -90,7 +90,7 @@ BEGIN
 				ISNULL(UPPER(serv.NameOfReceiver),'') as [ReceiverName],
 				CONVERT(varchar,serv.DateCreated,103) [PickUpDateTime],
 				CONVERT(varchar,serv.Shipping_Date,103) [ScheduledDeliveryDate],
-				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WHERE dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
+				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK) WHERE dod.Guide_Serie = serv.Guide_Serie and dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
 				serv.Guide_Serie + Cast(serv.Guide_Number as varchar) [GuideNumber],
 				--serv.OrderStatus [OrderStatus]
 				so.OrderDescription AS OrderStatus,
@@ -125,7 +125,7 @@ BEGIN
 				ISNULL(UPPER(serv.NameOfReceiver),'') as [ReceiverName],
 				CONVERT(varchar,serv.DateCreated,103) [PickUpDateTime],
 				CONVERT(varchar,serv.Shipping_Date,103) [ScheduledDeliveryDate],
-				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WHERE dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
+				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK) WHERE dod.Guide_Serie = serv.Guide_Serie and  dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
 				serv.Guide_Serie + Cast(serv.Guide_Number as varchar) [GuideNumber],
 				--serv.OrderStatus [OrderStatus]
 				so.OrderDescription AS OrderStatus,
@@ -159,7 +159,7 @@ BEGIN
 				ISNULL(UPPER(serv.NameOfReceiver),'') as [ReceiverName],
 				CONVERT(varchar,serv.DateCreated,103) [PickUpDateTime],
 				CONVERT(varchar,serv.Shipping_Date,103) [ScheduledDeliveryDate],
-				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WHERE dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
+				ISNULL(CONVERT(varchar,(SELECT TOP 1 dod.DateCreated FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK) WHERE dod.Guide_Serie = serv.Guide_Serie and  dod.Guide_Number = serv.Guide_Number AND dod.StatusOrderId = 5 ),103),'') AS	[RealDeliveryDate],
 				serv.Guide_Serie + Cast(serv.Guide_Number as varchar) [GuideNumber],
 				--serv.OrderStatus [OrderStatus]
 				so.OrderDescription AS OrderStatus,

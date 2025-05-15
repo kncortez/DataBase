@@ -1,19 +1,19 @@
 CREATE TABLE [ShippingContainer] (
-	IdContainer 		BIGINT IDENTITY(1,1) NOT NULL,
-	ReferenceContainer 	NVARCHAR(50) NOT NULL,
-	IdCustomer 			INT NOT NULL,
-	IdStatusContainer 	INT NOT NULL,
-	CountGuides 		INT NULL,
-	RowStatus 			BIT NOT NULL DEFAULT 1,
-    UserCreated 		NVARCHAR(50) NOT NULL,
-	DateCreated 		DATETIME NOT NULL,
-	TokenCreated 		NVARCHAR(50) NOT NULL,
-    UserUpdated 		NVARCHAR(50) NULL,
-	DateUpdated 		DATETIME NULL,
-	TokenUpdated 		NVARCHAR(50) NULL,
-	CONSTRAINT [PK_ShippingContainer] PRIMARY KEY CLUSTERED ([IdContainer] ASC),
-	CONSTRAINT [FK_ShippingContainer_Customer] FOREIGN KEY (IdCustomer) REFERENCES [dbo].[Customer] (IdCustomer),
-	CONSTRAINT [FK_ShippingContainer_CatShipContainerStatus] FOREIGN KEY ([IdStatusContainer]) REFERENCES [dbo].[CatShipContainerStatus] ([IdCatStatus])
+    IdContainer         BIGINT IDENTITY(1,1) NOT NULL,
+    ReferenceContainer  NVARCHAR(50) NOT NULL,
+    IdCustomer          INT NOT NULL,
+    IdStatusContainer   INT NOT NULL,
+    CountGuides         INT NULL,
+    RowStatus           BIT NOT NULL DEFAULT 1,
+    UserCreated         NVARCHAR(50) NOT NULL,
+    DateCreated         DATETIME NOT NULL,
+    TokenCreated        NVARCHAR(50) NOT NULL,
+    UserUpdated         NVARCHAR(50) NULL,
+    DateUpdated         DATETIME NULL,
+    TokenUpdated        NVARCHAR(50) NULL,
+    CONSTRAINT [PK_ShippingContainer] PRIMARY KEY CLUSTERED ([IdContainer] ASC),
+    CONSTRAINT [FK_ShippingContainer_Customer] FOREIGN KEY (IdCustomer) REFERENCES [dbo].[Customer] (IdCustomer),
+    CONSTRAINT [FK_ShippingContainer_CatShipContainerStatus] FOREIGN KEY ([IdStatusContainer]) REFERENCES [dbo].[CatShipContainerStatus] ([IdCatStatus])
 );
 
 CREATE NONCLUSTERED INDEX [IX_ShippingContainer_ReferenceContainer_IdCustomer]
@@ -21,6 +21,9 @@ ON [dbo].[ShippingContainer]([ReferenceContainer] ASC, [IdCustomer] ASC, [RowSta
 GO
 
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador del contenedor', N'SCHEMA', N'dbo', N'TABLE', N'ShippingContainer', N'COLUMN', N'IdContainer'
+GO
+
+EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador de la referencia del contenedor ', N'SCHEMA', N'dbo', N'TABLE', N'ShippingContainer', N'COLUMN', N'ReferenceContainer'
 GO
 
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador del cliente', N'SCHEMA', N'dbo', N'TABLE', N'ShippingContainer', N'COLUMN', N'IdCustomer'

@@ -1,52 +1,56 @@
  
-DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE' -- Descripcion de express center comienza con FD
-, @TokenSupport NVARCHAR(50) = N'SYS-WOROZCO'        -- Token de soporte
-, @Address NVARCHAR(600) = N'Colonia Sierra Morena, Soyapango, San Salvador Este,El Salvador'             -- nvarchar(600)
-, @IdTownship INT = 665            -- ID de la tabla Towship, municipio en al que pertenece el exc
-, @zone INT = 0                  -- zona si aplica, sino dejar 0
-, @Phone NVARCHAR(10) = N'55003355'               -- número de telefono XXXXXXXX
-, @ContactName NVARCHAR(100) = N'Ross Maria Gonzales Veliz'         -- nvarchar(100) Contacto
-, @Email NVARCHAR(100) = N'perkasorzo@gufum.com'               -- nvarchar(100) Correo
-, @DescriptionCC NVARCHAR(100) = N'Express Center San Salvador Este Salvador'       -- nvarchar(100) Descripcion Narrada por Contact Center evitar siglas o abreviaturas
-, @IdCountry NVARCHAR(2) = 'SV'			   -- Codigo de pais al que pertenecera el exc
+DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE'          -- Descripcion de express center comienza con FD
+      , @TokenSupport NVARCHAR(50) = N'SYS-WOROZCO'                                     -- Token de soporte
+      , @Address NVARCHAR(600) = N'Colonia Flor Blanca, Barrio el Calvario Lote 5-A, 45 av sur y Alameda Roosvelt, San Salvador, Distrito San Salvador Centro'             -- nvarchar(600)
+      , @IdTownship INT = 665                                                           -- ID de la tabla Towship, municipio en al que pertenece el exc
+      , @zone INT = 0                                                                   -- zona si aplica, sino dejar 0
+      , @Phone NVARCHAR(10) = N'55003355'                                               -- número de telefono XXXXXXXX
+      , @ContactName NVARCHAR(100) = N'Luis Ernesto Alvarado Alvarado'                  -- nvarchar(100) Contacto
+      , @Email NVARCHAR(100) = N'ernesto.alvarado@forzadelivery.com'                    -- nvarchar(100) Correo
+      , @DescriptionCC NVARCHAR(100) = N'Express Center San Salvador Este Salvador'     -- nvarchar(100) Descripcion Narrada por Contact Center evitar siglas o abreviaturas
+      , @IdCountry NVARCHAR(2) = 'SV'                                                   -- Codigo de pais al que pertenecera el exc
 
     BEGIN TRY
-	
-		BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
+
+        DECLARE @PhoneNumber VARCHAR(50);
+        SELECT @IdTownship = IdTownship
+          FROM Township
+         WHERE TownshipDescription LIKE '%San Salvador Este%'
+
+         -- Verificar si el formato es correcto (8 dígitos)
+        IF @Phone LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+        BEGIN
             
-	DECLARE @PhoneNumber VARCHAR(50);
-	-- Verificar si el formato es correcto (8 dígitos)
-		IF @Phone LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
-		BEGIN
-			
-			DECLARE @AreaCode NVARCHAR(4) = (SELECT ISNULL(Value,'502') FROM DeliveryBackOffice.dbo.ConfigParams 
-			WHERE Name = 'AreaCode' AND IdCountry = @IdCountry)
+            DECLARE @AreaCode NVARCHAR(4) = (SELECT ISNULL([Value],'502') 
+                                               FROM DeliveryBackOffice.dbo.ConfigParams 
+                                              WHERE Name = 'AreaCode' AND IdCountry = @IdCountry)
 
-			-- Formatear la cadena
-			SET @PhoneNumber = '('+@AreaCode+') ' + SUBSTRING(@Phone, 1, 4) + '-' + SUBSTRING(@Phone, 5, 4)
-		END
-		ELSE
-		BEGIN
-			--SELECT 'Formato telefonico incorrecto'
-			RAISERROR('Formato telefonico incorrecto', 16, 1);
-			RETURN;
-		END
+            -- Formatear la cadena
+            SET @PhoneNumber = '('+@AreaCode+') ' + SUBSTRING(@Phone, 1, 4) + '-' + SUBSTRING(@Phone, 5, 4)
+        END
+        ELSE
+        BEGIN
+            --SELECT 'Formato telefonico incorrecto'
+            RAISERROR('Formato telefonico incorrecto', 16, 1);
+            RETURN;
+        END
 
-		IF NOT EXISTS
-		(
-			SELECT pr.IdProvince,
+        IF NOT EXISTS
+        (
+            SELECT pr.IdProvince,
                    pr.ProvinceName,
                    tw.TownshipName
             FROM dbo.Township tw WITH (NOLOCK)
                 INNER JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
             WHERE  tw.IdTownship = @IdTownship
-			AND ISNULL(pr.IdCountry,'GT') = @IdCountry
-		)
-		BEGIN
-			RAISERROR('El municipio no pertene al pais especificado', 16, 1);
-			RETURN;
-		END
+            AND ISNULL(pr.IdCountry,'GT') = @IdCountry
+        )
+        BEGIN
+            RAISERROR('El municipio no pertene al pais especificado', 16, 1);
+            RETURN;
+        END
 
         IF NOT EXISTS -- verifica que el punto de visita no exista
         (
@@ -54,58 +58,55 @@ DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE' -- Desc
             FROM dbo.VisitPointClient vp
             WHERE vp.DescriptionOfClient = @DescriptionOfClient
         )
-        BEGIN		
+        BEGIN        
 
             DECLARE @CodeOfReference INT;
             DECLARE @IdKindOfVPBusiness INT;
             DECLARE @IdKindOfVPClient INT;
             DECLARE @IdBusinessSegment INT;
-			DECLARE @IdCustomer INT;
+            DECLARE @IdCustomer INT;
 
             SELECT @IdKindOfVPBusiness = IdKindOfVPBusiness
-            FROM KindOfVPBusiness WITH(NOLOCK)
-            WHERE Shorthand = 'EXP'
-                  AND ISNULL(IdCountry, 'GT') = @IdCountry
+              FROM KindOfVPBusiness WITH(NOLOCK)
+             WHERE Shorthand = 'EXP'
+               AND ISNULL(IdCountry, 'GT') = @IdCountry
 
             SELECT @IdKindOfVPClient = IdKindOfVPClient
-            FROM KindOfVPClient WITH(NOLOCK)
-            WHERE KindOfVPName = 'Express Center'
-                  AND ISNULL(IdCountry, 'GT') = @IdCountry
+              FROM KindOfVPClient WITH(NOLOCK)
+             WHERE KindOfVPName = 'Express Center'
+               AND ISNULL(IdCountry, 'GT') = @IdCountry
 
             SELECT @IdBusinessSegment = IdBusinessSegment
-            FROM CatBusinessSegment WITH(NOLOCK)
-            WHERE BusinessSegmentName = 'C2C'
-                  AND ISNULL(IdCountry, 'GT') = @IdCountry
+              FROM CatBusinessSegment WITH(NOLOCK)
+             WHERE BusinessSegmentName = 'C2C'
+               AND ISNULL(IdCountry, 'GT') = @IdCountry
 
-			SELECT @IdCustomer = IdCustomer
-            FROM Customer WITH(NOLOCK)
-            WHERE Name like '%FD EXPRESS CENTER%'
-				  AND IdCustomer IN(81, 82113) --gt,sv
-                  AND ISNULL(CountryID, 'GT') = @IdCountry
+            SELECT @IdCustomer = IdCustomer
+              FROM Customer WITH(NOLOCK)
+             WHERE [Name] like '%FD EXPRESS CENTER%'
+               AND ISNULL(CountryID, 'GT') = @IdCountry
 
             SELECT @CodeOfReference = MAX(vp.CodeOfReference) + 1
-            FROM dbo.VisitPointClient vp
+              FROM dbo.VisitPointClient vp
             --WHERE vp.IdKindOfVPBusiness = @IdKindOfVPBusiness;
             -- Obtener departamento y municipio
 
             DECLARE @IdProvice INT;
             DECLARE @ProvinceName NVARCHAR(100);
             DECLARE @TownshipName NVARCHAR(100);
-			DECLARE @IdSettlement INT;
-
+            DECLARE @IdSettlement INT;
 
             SELECT TOP 1
-					@IdProvice = pr.IdProvince,
-					@ProvinceName = pr.ProvinceName,
-					@TownshipName = tw.TownshipName,
-					@IdSettlement = se.IdSettlement
+                   @IdProvice = pr.IdProvince,
+                   @ProvinceName = pr.ProvinceName,
+                   @TownshipName = tw.TownshipName,
+                   @IdSettlement = se.IdSettlement
             FROM dbo.Township tw WITH (NOLOCK)
-                INNER JOIN dbo.Province pr WITH (NOLOCK)
-                    ON pr.IdProvince = tw.IdProvince
-				INNER JOIN dbo.Settlement se WITH (NOLOCK)
-					ON se.IdProvince = pr.IdProvince AND se.IdTownship = tw.IdTownship
-            WHERE tw.IdTownship = @IdTownship;
-	
+                 INNER JOIN dbo.Province pr WITH (NOLOCK)
+                     ON pr.IdProvince = tw.IdProvince
+                 INNER JOIN dbo.Settlement se WITH (NOLOCK)
+                     ON se.IdProvince = pr.IdProvince AND se.IdTownship = tw.IdTownship
+           WHERE tw.IdTownship = @IdTownship;
 
             INSERT INTO dbo.VisitPointClient
             (
@@ -119,8 +120,8 @@ DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE' -- Desc
                 TokenUpdated,
                 DateUpdated,
                 CustomerID,
-                Address,
-                Zone,
+                [Address],
+                [Zone],
                 Town,
                 Department,
                 Phone,
@@ -177,14 +178,14 @@ DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE' -- Desc
                 NULL,                                    -- LogLatitude - nvarchar(20)
                 NULL,                                    -- LogLongitude - nvarchar(20)
                 @DescriptionCC,                          -- DescriptionCC - nvarchar(100)
-                @IdBusinessSegment,                      -- CatBusinessSegmentId - int 10	C2C GT --- int 21 C2C HN
+                @IdBusinessSegment,                      -- CatBusinessSegmentId - int 10    C2C GT --- int 21 C2C HN
                 DEFAULT                                 -- AllowScheduledPickups - bit
             );
 
 
             COMMIT;
 
-			INSERT INTO CatStation VALUES (@DescriptionOfClient, @IdCountry,2,NULL,@CodeOfReference,1,@TokenSupport,GETDATE(),NULL,NULL);
+            INSERT INTO CatStation VALUES (@DescriptionOfClient, @IdCountry,2,NULL,@CodeOfReference,1,@TokenSupport,GETDATE(),NULL,NULL);
 
 
             SELECT vp.CodeOfReference,
@@ -197,9 +198,9 @@ DECLARE @DescriptionOfClient NVARCHAR(100) = N'FD EXC SAN SALVADOR ESTE' -- Desc
             FROM dbo.VisitPointClient vp WITH (NOLOCK)
             WHERE vp.CodeOfReference = @CodeOfReference;
 
-			SELECT *
-			FROM CatStation 
-			WHERE CodeOfReference = @CodeOfReference
+            SELECT *
+            FROM CatStation 
+            WHERE CodeOfReference = @CodeOfReference
 
         END;
         ELSE

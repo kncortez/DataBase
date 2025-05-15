@@ -4,11 +4,11 @@ CREATE TABLE [dbo].[CatShipContainerStatus] (
     [Description]         NVARCHAR (200) NULL,
     [RowStatus]           BIT NOT NULL DEFAULT 1,
     [UserCreated]         NVARCHAR(50) NOT NULL,
-	[DateCreated]         DATETIME NOT NULL,
-	[TokenCreated]        NVARCHAR(50) NOT NULL,
+    [DateCreated]         DATETIME NOT NULL,
+    [TokenCreated]        NVARCHAR(50) NOT NULL,
     [UserUpdated]         NVARCHAR(50) NULL,
-	[DateUpdated]         DATETIME NULL,
-	[TokenUpdated]        NVARCHAR(50) NULL,
+    [DateUpdated]         DATETIME NULL,
+    [TokenUpdated]        NVARCHAR(50) NULL,
     CONSTRAINT [PK_CatShipContainerStatus] PRIMARY KEY CLUSTERED ([IdCatStatus] ASC)
 );
 

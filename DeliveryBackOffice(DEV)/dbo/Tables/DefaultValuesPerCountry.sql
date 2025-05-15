@@ -1,24 +1,24 @@
 
 CREATE TABLE [dbo].[DefaultValuesPerCountry](
-    [IdCountry]             [varchar](2)   NOT NULL,
+    [IdCountry]             [varchar](2)    NOT NULL,
     [UseMultiCountry]       [bit]           NOT NULL,
+    [DNIShortName]          [nvarchar](100) NULL,
+    [DNIDescription]        [nvarchar](255) NULL,
+    [RegxDNI]               [nvarchar](255) NULL,
+    [DNIMaxLength]          [int]           NULL,
+    [TaxShortName]          [nvarchar](100) NULL,
+    [TaxDescription]        [nvarchar](255) NULL,
+    [RegxPayerTaxNumber]    [nvarchar](255) NULL,
+    [PrefixNumber]          [nvarchar](5)   NULL,
+    [IconFlag]              [nvarchar](50)  NULL,
+    [CultureInfo]           [nvarchar](10)  NULL,
     [RowStatus]             [bit]           NOT NULL,
     [TokenCreated]          [varchar](50)   NOT NULL,
     [DateCreated]           [datetime]      NOT NULL,
     [TokenUpdated]          [varchar](50)   NULL,
     [DateUpdated]           [datetime]      NULL,
-    [DNIShortName]          [nvarchar](100) NULL,
-	[DNIDescription]        [nvarchar](255) NULL,
-	[RegxDNI]               [nvarchar](255) NULL,
-	[TaxShortName]          [nvarchar](100) NULL,
-	[TaxDescription]        [nvarchar](255) NULL,
-	[RegxPayerTaxNumber]    [nvarchar](255) NULL,
-	[DNIMaxLength]          [int]           NULL,
-	[PrefixNumber]          [nvarchar](5)   NULL,
-	[IconFlag]              [nvarchar](50)  NULL,
-	[CultureInfo]           [nvarchar](10)  NULL,
-	PRIMARY KEY CLUSTERED ([IdCountry] ASC),
-	CONSTRAINT [FK_DefaultValuesPerCountry_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    PRIMARY KEY CLUSTERED ([IdCountry] ASC),
+    CONSTRAINT [FK_DefaultValuesPerCountry_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
 
 

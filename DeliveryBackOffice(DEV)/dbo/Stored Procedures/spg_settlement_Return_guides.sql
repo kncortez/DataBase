@@ -62,16 +62,19 @@ BEGIN
 	,Collect_OnDelivery
 	,ISNULL(do.ReceiverCountryId,'GT') AS ReceiverCountryId
 	,CCU.Symbol
-	from [DeliveryBackOffice].[dbo].DeliveryOrder do
-	JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail dsd ON dsd.GuideSerie = do.Guide_Serie AND dsd.GuideNumber = do.Guide_Number AND dsd.SettlementByPickupId = @manifestsequence
+	from [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail dsd WITH(NOLOCK) ON 
+	dsd.GuideSerie = do.Guide_Serie 
+	AND dsd.GuideNumber = do.Guide_Number 
 	INNER JOIN DeliveryBackOffice.dbo.Cost co WITH(NOLOCK)
 		ON  do.Guide_Number = co.GuideNumber 
 		AND do.Guide_Serie = co.GuideSerie
 	INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
 		ON ISNULL(co.ShippingCurrency,@Currency) = CCU.IdCatCurrencyCOD
-	where do.Guide_Serie = (SELECT DISTINCT TOP 1 GuideSerie FROM [DeliveryBackOffice].[dbo].[SettlementByPickupDetail] WHERE SettlementByPickupId = @manifestsequence)
+	where do.Guide_Serie = (SELECT DISTINCT TOP 1 GuideSerie FROM [DeliveryBackOffice].[dbo].[SettlementByPickupDetail] WITH(NOLOCK) WHERE SettlementByPickupId = @manifestsequence)
 	and do.Guide_Number IN (SELECT GuideNumber FROM [DeliveryBackOffice].[dbo].[SettlementByPickupDetail] WHERE SettlementByPickupId = @manifestsequence)
 	AND dsd.IsPieceLiquidaded = 1 -- Pieza de la guia liquidada
+	AND dsd.SettlementByPickupId = @manifestsequence
 
 	SELECT 
 		Guide_Code,

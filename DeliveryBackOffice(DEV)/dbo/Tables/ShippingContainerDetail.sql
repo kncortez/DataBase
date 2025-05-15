@@ -1,19 +1,19 @@
 CREATE TABLE [ShippingContainerDetail] (
-	IdContainerDetail 		BIGINT IDENTITY(1,1) NOT NULL,
-	IdContainer 			BIGINT NOT NULL,
-	GuideSerie 				NVARCHAR(2) NOT NULL,
-	GuideNumber 			INT NOT NULL,
-	TicketNumber 			NVARCHAR(150) NULL,
-	RowStatus 				BIT NOT NULL DEFAULT 1,
-    UserCreated 			NVARCHAR(50) NOT NULL,
-	DateCreated 			DATETIME NOT NULL,
-	TokenCreated 			NVARCHAR(50) NOT NULL,
-    UserUpdated 			NVARCHAR(50) NULL,
-	DateUpdated 			DATETIME NULL,
-	TokenUpdated 			NVARCHAR(50) NULL,
-	CONSTRAINT [PK_ShippingContainerDetail] PRIMARY KEY CLUSTERED ([IdContainerDetail] ASC),
-	CONSTRAINT FK_ShippingContainerDetail_Container FOREIGN KEY (IdContainer) REFERENCES [dbo].[ShippingContainer] (IdContainer),
-	CONSTRAINT FK_ShippingContainerDetail_Guide FOREIGN KEY (GuideSerie, GuideNumber) REFERENCES [dbo].[DeliveryOrder] (Guide_Serie, Guide_Number)
+    IdContainerDetail       BIGINT IDENTITY(1,1) NOT NULL,
+    IdContainer             BIGINT NOT NULL,
+    GuideSerie              NVARCHAR(2) NOT NULL,
+    GuideNumber             INT NOT NULL,
+    TicketNumber            NVARCHAR(150) NULL,
+    RowStatus               BIT NOT NULL DEFAULT 1,
+    UserCreated             NVARCHAR(50) NOT NULL,
+    DateCreated             DATETIME NOT NULL,
+    TokenCreated            NVARCHAR(50) NOT NULL,
+    UserUpdated             NVARCHAR(50) NULL,
+    DateUpdated             DATETIME NULL,
+    TokenUpdated            NVARCHAR(50) NULL,
+    CONSTRAINT [PK_ShippingContainerDetail] PRIMARY KEY CLUSTERED ([IdContainerDetail] ASC),
+    CONSTRAINT FK_ShippingContainerDetail_Container FOREIGN KEY (IdContainer) REFERENCES [dbo].[ShippingContainer] (IdContainer),
+    CONSTRAINT FK_ShippingContainerDetail_Guide FOREIGN KEY (GuideSerie, GuideNumber) REFERENCES [dbo].[DeliveryOrder] (Guide_Serie, Guide_Number)
 );
 
 CREATE NONCLUSTERED INDEX [IDX_ShippingContainerDetail_GuideNumber_GuideSerie]
