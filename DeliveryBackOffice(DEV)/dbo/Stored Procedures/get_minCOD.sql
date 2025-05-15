@@ -11,9 +11,8 @@
 CREATE PROCEDURE [dbo].[get_minCOD]
 				 @IdCountry NVARCHAR(2) = 'GT'
 AS
-
-DECLARE @MinCOD INT = 0;
 BEGIN
- SET @MinCOD =  (SELECT [Value] FROM ConfigParams WHERE [Name] = 'MinimumCODAmount' AND ISNULL(IdCountry, 'GT') = @IdCountry)
- SELECT @MinCOD AS MinCOD
+	SELECT [Value] AS MinCOD 
+	FROM ConfigParams WITH (NOLOCK)
+	WHERE [Name] = 'MinimumCODAmount' AND IdCountry = @IdCountry
 END
