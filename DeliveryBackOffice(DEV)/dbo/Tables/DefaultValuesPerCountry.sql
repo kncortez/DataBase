@@ -1,6 +1,6 @@
 
 CREATE TABLE [dbo].[DefaultValuesPerCountry](
-    [IdCountry]             [varchar](2)   NOT NULL,
+    [IdCountry]             [varchar](2)    NOT NULL,
     [UseMultiCountry]       [bit]           NOT NULL,
     [DNIShortName]          [nvarchar](100) NULL,
     [DNIDescription]        [nvarchar](255) NULL,
