@@ -106,7 +106,7 @@ BEGIN
 	 
 	 IF (@GuideNumber>1)
 	 BEGIN
-	 SET  @TimePlaId = (Select Top 1 TimePlaId  From [dbo].[DeliveryOrderPaymentDetail]
+	 SET  @TimePlaId = (Select Top 1 TimePlaId  From [dbo].[DeliveryOrderPaymentDetail] WITH (NOLOCK)
 											  where GuideNumber = @GuideNumber);
 	 END;
 
@@ -174,7 +174,7 @@ BEGIN
                 --- Verificar si existe la preparación de ruta y si ya fue despachada
                 SELECT @IdRoutePreparation = rp.IdRoutePreparation,
                        @IdManifest = rp.DeliveryOrderBySettlementId
-                FROM RoutePreparation rp
+                FROM RoutePreparation rp WITH (NOLOCK)
                 WHERE rp.CatRouteId = @RouteId
                       AND rp.DateRoutePreparation = @Date
                       AND rp.RowStatus = 1;
@@ -213,7 +213,7 @@ BEGIN
 
                         SELECT TOP 1
                                @CodeOfRoute = cr.CodeRoute
-                        FROM RoutePreparationDetail rpd
+                        FROM RoutePreparationDetail rpd WITH (NOLOCK)
                             INNER JOIN RoutePreparation rp
                                 ON rpd.RoutePreparationId = rp.IdRoutePreparation
                             INNER JOIN CatRoute cr WITH (NOLOCK)
@@ -233,7 +233,7 @@ BEGIN
                             SET @IdRouteAssignment =
                             (
                                 SELECT ra.IdRouteAssigment
-                                FROM RouteAssigment ra
+                                FROM RouteAssigment ra WITH (NOLOCK)
                                 WHERE ra.IdRoute = @RouteId
                                       AND ra.DateOfRoute = @Date
                                       AND ra.RowStatus = 1
@@ -257,7 +257,7 @@ BEGIN
 
                             -- Verificar si existe la guía en el detalle de la preparación de ruta
                             SELECT @IdRoutePreparationDetail = rpd.IdRoutePreparationDetail
-                            FROM RoutePreparationDetail rpd
+                            FROM RoutePreparationDetail rpd WITH (NOLOCK)
                             WHERE rpd.RoutePreparationId = @IdRoutePreparation
                                   AND rpd.Guide_Serie = @GuideSerie
                                   AND rpd.Guide_Number = @GuideNumber
@@ -331,7 +331,7 @@ BEGIN
 
                                 --- Verificar si existe la pieza de la guía dentro del detalle de la preparación de la ruta
                                 SELECT @IdRoutePreparationDetailPiece = rpdp.IdRoutePreparationDetailPiece
-                                FROM RoutePreparationDetailPiece rpdp
+                                FROM RoutePreparationDetailPiece rpdp WITH (NOLOCK)
                                     INNER JOIN RoutePreparationDetail rpd
                                         ON rpd.IdRoutePreparationDetail = rpdp.RoutePreparationDetailId
                                 WHERE rpdp.RoutePreparationDetailId = @IdRoutePreparationDetail
@@ -442,7 +442,7 @@ BEGIN
                                     IF EXISTS
                                     (
                                         SELECT 1
-                                        FROM RoutePreparationDetail rpd
+                                        FROM RoutePreparationDetail rpd WITH (NOLOCK)
                                         WHERE rpd.IdRoutePreparationDetail = @IdRoutePreparationDetail
                                               AND
                                               (
@@ -466,7 +466,7 @@ BEGIN
                                         SET @IsValidOpenProcess = 0;
 
                                         SELECT @UserProcess = rpd.UserProcess
-                                        FROM RoutePreparationDetail rpd
+                                        FROM RoutePreparationDetail rpd WITH (NOLOCK)
                                         WHERE rpd.IdRoutePreparationDetail = @IdRoutePreparationDetail;
                                     END;
 
@@ -483,7 +483,7 @@ BEGIN
                                                (
                                                    SELECT DISTINCT
                                                           smd.IdServiceManagementDetail
-                                                   FROM RoutePreparation rp
+                                                   FROM RoutePreparation rp WITH (NOLOCK)
                                                        INNER JOIN RoutePreparationDetail rpd
                                                            ON rpd.RoutePreparationId = rp.IdRoutePreparation
                                                        INNER JOIN ServiceManagementDetail smd
@@ -546,12 +546,12 @@ BEGIN
                                                IIF(do.IsLastMileReturn = 1,
                                                (
                                                    SELECT IdSubTypeServiceManagment
-                                                   FROM SubTypeServiceManagment
+                                                   FROM SubTypeServiceManagment WITH (NOLOCK)
                                                    WHERE Name = 'Devolución'
                                                ),
                                                (
                                                    SELECT IdSubTypeServiceManagment
-                                                   FROM SubTypeServiceManagment
+                                                   FROM SubTypeServiceManagment WITH (NOLOCK)
                                                    WHERE Name = 'Entrega'
                                                )),
                                                do.PriceShippment,
@@ -623,12 +623,12 @@ BEGIN
                                                IIF(do.IsLastMileReturn = 1,
                                                (
                                                    SELECT IdSubTypeServiceManagment
-                                                   FROM SubTypeServiceManagment
+                                                   FROM SubTypeServiceManagment WITH (NOLOCK)
                                                    WHERE Name = 'Devolución'
                                                ),
                                                (
-                                                   SELECT IdSubTypeServiceManagment
-                                                   FROM SubTypeServiceManagment
+                                                   SELECT IdSubTypeServiceManagment 
+                                                   FROM SubTypeServiceManagment WITH (NOLOCK)
                                                    WHERE Name = 'Entrega'
                                                )),
                                                1,
@@ -658,7 +658,7 @@ BEGIN
                                             ServiceExtraAmount += do.Collect_OnDelivery,
                                             TokenUpdated = @Token,
                                             DateUpdated = GETDATE()
-                                        FROM ServiceManagementDetail smd
+                                        FROM ServiceManagementDetail smd WITH (NOLOCK)
                                             INNER JOIN DeliveryOrder do WITH (NOLOCK)
                                                 ON do.Guide_Serie = @GuideSerie
                                                    AND do.Guide_Number = @GuideNumber
@@ -678,8 +678,8 @@ BEGIN
                                     adp.TokenUpdated = @Token,
                                     adp.DateUpdated = GETDATE(),
                                     adp.RowStatus = 0
-                                FROM ActDetailPiece adp
-                                    INNER JOIN ActDetail ad
+                                FROM ActDetailPiece adp WITH (NOLOCK)
+                                    INNER JOIN ActDetail ad WITH (NOLOCK)
                                         ON ad.IdActDetail = adp.ActDetailId
                                 WHERE ad.GuideSerie = @GuideSerie
                                       AND ad.GuideNumber = @GuideNumber
@@ -694,10 +694,10 @@ BEGIN
                                     SET rpdp.RowStatus = 0,
                                         rpdp.TokenUpdated = @Token,
                                         rpdp.DateUpdated = GETDATE()
-                                    FROM RoutePreparationDetailPiece rpdp
-                                        INNER JOIN RoutePreparationDetail rpd
+                                    FROM RoutePreparationDetailPiece rpdp WITH (NOLOCK)
+                                        INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
                                             ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
-                                        INNER JOIN RoutePreparation rp
+                                        INNER JOIN RoutePreparation rp WITH (NOLOCK)
                                             ON rpd.RoutePreparationId = rp.IdRoutePreparation
                                     WHERE rpdp.RowStatus = 1
                                           AND rpd.Guide_Serie = @GuideSerie
@@ -714,7 +714,7 @@ BEGIN
                                         rpd.DateUpdated = GETDATE(),
                                         rpd.IsOpenProcess = 0,
                                         rpd.UserProcess = NULL
-                                    FROM RoutePreparationDetail rpd
+                                    FROM RoutePreparationDetail rpd WITH (NOLOCK)
                                         INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] rp
                                             ON rpd.RoutePreparationId = rp.IdRoutePreparation
                                     WHERE rpd.RowStatus = 1
@@ -778,7 +778,7 @@ BEGIN
                                            do.Receiver_Town 'Town',
                                            do.Receiver_Address 'Address',
                                            rpd.GuideOrder 'GuideOrder'
-                                    FROM RoutePreparationDetail rpd
+                                    FROM RoutePreparationDetail rpd WITH (NOLOCK)
                                         INNER JOIN DeliveryOrder do WITH (NOLOCK)
                                             ON rpd.Guide_Serie = do.Guide_Serie
                                                AND rpd.Guide_Number = do.Guide_Number
