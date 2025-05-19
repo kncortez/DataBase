@@ -7,11 +7,16 @@
 -- Create date: <2024-07-04>
 -- Description: <Se agrega filtro por pais para filtrar guias>
 -- =============================================
+-- Author:      <Cristian Suazo>
+-- Create date: <2025-01-28>
+-- Description: <Se agrega parametro de ticketNumber>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_check_transfer_guide]
 	
 	@Guide VARCHAR(MAX), 
 	@Token VARCHAR(100) = '',
-    @IdCountry VARCHAR(2) = 'GT'
+    @IdCountry VARCHAR(2) = 'GT',
+	@Ticket_Number NVARCHAR(300) = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -25,7 +30,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'En ruta'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'En ruta'  
 	)
 	DECLARE @GuideInReturnRoute INT = (
 		SELECT 
@@ -34,7 +39,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'En ruta para devolución'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'En ruta para devolución'  
 	)
 	DECLARE @IncidenceInRoute INT = (
 		SELECT 
@@ -43,7 +48,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Incidencia en ruta'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'Incidencia en ruta'  
 	)
 	DECLARE @FailedDeliveryAttempt INT = (
 		SELECT 
@@ -52,7 +57,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Incidencia Validada'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'Incidencia Validada'  
 	)
 
 	DECLARE @ValidatedIncident INT = (
@@ -63,6 +68,13 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE SO.StatusOrderId = 50 --Incidencia validada
 	)
+
+	IF @Ticket_Number != ''
+	BEGIN
+		SELECT @Guide = CONCAT(Guide_Serie, Guide_Number)
+		FROM DeliveryOrder WITH(NOLOCK)
+		WHERE Ticket_Number = @Ticket_Number
+	END
 
 	DECLARE @Series NVARCHAR(50) = SUBSTRING(@Guide, 1, 2);
 	DECLARE @Guide_number NVARCHAR(50) = SUBSTRING(@Guide, 3, LEN(@Guide));
@@ -139,11 +151,17 @@ BEGIN
 											'}'
 								+'}'
 				FROM DeliveryBackOffice.dbo.DeliveryOrder dor WITH(NOLOCK)
-				INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = @IdCourier
+				LEFT JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail SD WITH (NOLOCK)
+					ON DOR.Guide_Number = SD.Guide_Number
+					AND DOR.Guide_Serie = SD.Guide_Serie
+				LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOB WITH(NOLOCK)
+					ON SD.ID_DeliveryOrderBySettlement = DOB.ID
+				LEFT JOIN DeliveryBackOffice.dbo.SenderReceiver SR WITH(NOLOCK)
+					ON DOB.ID_Courier = SR.ID
 				WHERE
 				dor.Guide_Number = @Guide_number AND dor.Guide_Serie = @Series
                   AND ISNULL(dor.ReceiverCountryId,'GT') = @IdCountry
-				
+				  AND sr.ID = @IdCourier
 				FOR XML PATH('') 
 			)
 			, 1, 1, '' )

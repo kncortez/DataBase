@@ -32,6 +32,11 @@
 -- Updated date:<20-03-2025>
 -- Description:	<Se pasa a entidades el Json>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Updated date:<20-05-2025>
+-- Description:	<Recolección por referencia y contenerización flujo POD>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetFinishPickUp]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD22221,FD22361,FD22223,FD22359,FD22226',
@@ -47,7 +52,10 @@ CREATE PROCEDURE [dbo].[SetFinishPickUp]
     @EndDate DATETIME = NULL,
     @PickupLatitude NVARCHAR(20) = NULL,
     @PickupLongitude NVARCHAR(20) = NULL,
-    @PickupEmail NVARCHAR(50) = ''
+    @PickupEmail NVARCHAR(50) = '',
+    @ReferencesGuide TblReferencesList READONLY,  
+	  @ContainerReferences TblContainerList READONLY,
+	  @IdCountry NVARCHAR(2)= 'GT'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -106,10 +114,13 @@ BEGIN
           Guide,
           [Message]
         )
-        EXEC [dbo].[spws_get_validate_guides_pickup]
+          EXEC [dbo].[spws_get_validate_guides_pickup]
              @InGuides = @InGuides,
              @IdPickup = @IdPickup,
-             @Token = @Token;
+             @Token = @Token,
+			       @ReferencesGuide=@ReferencesGuide,  
+	           @ContainerReferences=@ContainerReferences,  
+	           @IdCountry=@IdCountry; 
 
         DECLARE @test INT =
                 (
@@ -123,6 +134,8 @@ BEGIN
             FROM FinishPickUpHeader
            WHERE SchedulePickupId = @IdPickup
         )
+
+     
 
         IF (@test = 0 AND 
             @ValIdPickup IS NULL )
@@ -178,7 +191,9 @@ BEGIN
                     ,NULL
                     ,NULL
                   )
-
+               
+               IF(@InGuides <>'')
+               BEGIN
                   INSERT INTO FinishPickUpDetail
                   (
                    SchedulePickupId
@@ -201,6 +216,53 @@ BEGIN
                          ,NULL
                          ,NULL
                     FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+                END;
+
+          IF( EXISTS (SELECT 1 FROM @ReferencesGuide))
+          BEGIN
+          INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpReferenceDetail]
+                        (
+                        SchedulePickupId
+                        ,Reference
+                        ,RowStatus
+                        ,TokenCreated
+                        ,DateCreated
+                        ,TokenUpdated
+                        ,DateUpdated
+                        )
+                        SELECT @IdPickup
+                              ,ReferenceGuide
+                              ,1
+                              ,@Token
+                              ,GETDATE()
+                              ,NULL
+                              ,NULL
+                          FROM @ReferencesGuide;
+          
+          END
+
+		IF( EXISTS (SELECT 1 FROM @ContainerReferences))
+		BEGIN
+		INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpContainerDetail]
+                  (
+                   SchedulePickupId
+                   ,Container
+                   ,RowStatus
+                   ,TokenCreated
+                   ,DateCreated
+                   ,TokenUpdate
+                   ,DateUpdate
+                  )
+                  SELECT @IdPickup
+                         ,ContainerReference
+                         ,1
+                         ,@Token
+                         ,GETDATE()
+                         ,NULL
+                         ,NULL
+                    FROM @ContainerReferences;
+		
+		END
 
             END TRY
             BEGIN CATCH

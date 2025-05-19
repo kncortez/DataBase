@@ -15,6 +15,15 @@
 -- Modified: <2024-08-14>
 -- Description:	<Se agrega validacion para mostrar guia sin tomar en cuenta filtro del pais>
 -- =============================================
+-- =============================================
+-- Author:	 <Cristian Suazo>
+-- Modified: <2025-01-24>
+-- Description:	<Se agrega el parametro de ticketNumber para el proyecto de temu>
+-- =============================================
+-- Author:	 <Walter Orozco>
+-- Modified: <2025-05-12>
+-- Description:	<Se realizan mejoras de multimoneda para proyecto de SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie NVARCHAR(2) = ''
   , @GuideNumber INT
@@ -24,6 +33,7 @@ CREATE PROCEDURE [dbo].[GetQualityControlData]
   , @TblVisitPointClient TblVisitPointClient   READONLY
   , @TblIncidenceType TblIncidenceType  READONLY
   , @IdCountry AS NVARCHAR(2) = 'GT'
+  , @TicketNumber NVARCHAR(300) = NULL
 
 AS
 BEGIN
@@ -91,6 +101,15 @@ BEGIN
         set @Pending_Counter = 0
         set @Delivered_Counter = 0
 		
+
+		IF @TicketNumber != ''  
+		BEGIN
+			SELECT @GuideNumber = Guide_Number,
+				   @GuideSerie = Guide_Serie
+			FROM DeliveryOrder WITH (NOLOCK)
+			WHERE Ticket_Number = @TicketNumber
+		END
+
         select @Pending_Counter = COUNT(   case
                                              when ord.statusorderid NOT IN  (5,24,25,22) then
                                                  ord.guide_Number
@@ -257,6 +276,7 @@ BEGIN
             [User] NVARCHAR(100),
             [GuideSerie] NVARCHAR(2),
             [GuideNumber] int,
+			[Ticket_Number] NVARCHAR(300),
             [SenderName] NVARCHAR(150),
             [ReceiverName] NVARCHAR(150),
             [SenderPhone] NVARCHAR(150),
@@ -357,6 +377,7 @@ BEGIN
                ) [User],
                ord.Guide_Serie [GuideSerie],
                ord.Guide_Number [GuideNumber],
+			   ord.Ticket_Number,
                CONCAT(   CASE
                              WHEN IMP.CODEOFREFERENCE > 0 THEN
                                  imp.DescriptionOfClient + '/'
@@ -444,7 +465,7 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						cur WITH (NOLOCK)
 				ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						curCOD WITH (NOLOCK)
-				ON ISNULL(co.CodCurrency,IIF(ord.SenderCountryId='HN',4,1)) = curCOD.IdCatCurrencyCOD 
+				ON ISNULL(co.CodCurrency,co.ShippingCurrency) = curCOD.IdCatCurrencyCOD 
             LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
                 ON vpc.CodeOfReference = ord.Sender_ID
             LEFT JOIN dbo.VisitPointClient imp WITH (NOLOCK)
@@ -528,6 +549,7 @@ BEGIN
             [User] ,
             [GuideSerie] ,
             [GuideNumber],
+			[Ticket_Number],
             [SenderName] ,
             [ReceiverName],
             [SenderPhone] ,
@@ -569,6 +591,7 @@ BEGIN
             [User] ,
             [GuideSerie] ,
             [GuideNumber],
+			[Ticket_Number],
             [SenderName] ,
             [ReceiverName],
             [SenderPhone] ,

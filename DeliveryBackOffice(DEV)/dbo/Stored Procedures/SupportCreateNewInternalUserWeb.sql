@@ -7,6 +7,11 @@
 -- Create date:   <2024-08-14>
 -- Description:   <Se agrega validacion para usuarios de telemercadeo>
 -- =============================================
+-- =============================================
+-- Author:        <Walter Orozco>
+-- Create date:   <2025-04-11>
+-- Description:   <Se realizan mejoras para multipaís.>
+-- =============================================
 CREATE PROCEDURE [dbo].[SupportCreateNewInternalUserWeb]
   @Code INT
  ,@User NVARCHAR(50)
@@ -21,23 +26,29 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-		DECLARE @IDPerson INT = 0,
-				@CodeISOCurrency NVARCHAR(10),
-				@IdRegisterUser INT = 0,
-				@IdRolTelemercadeo INT = 0,
-				@FirstName NVARCHAR(100),
-				@LastName NVARCHAR(100);
-		SELECT TOP 1
-				@CodeISOCurrency = cuCOD.CodeISO 
-				FROM CatCurrencyCOD cuCOD WITH (NOLOCK)
-				INNER JOIN DeliveryCurrency  cu WITH (NOLOCK)
-					ON cu.IdCurrencyCOD = cuCOD.IdCatCurrencyCOD
-				WHERE cu.DefaultPerCountry = 1
-				AND cu.Currency_IdCountry= @IdCountry
-                
+        DECLARE @IDPerson INT = 0,
+                @CodeISOCurrency NVARCHAR(10),
+                @IdRegisterUser INT = 0,
+                @IdRolTelemercadeo INT = 0,
+                @FirstName NVARCHAR(100),
+                @LastName NVARCHAR(100),
+                @Demonym NVARCHAR(20);
+
+        SELECT @Demonym = CountryNationality
+          FROM dbo.CatCountry
+         WHERE IdCountry= @IdCountry
+
+        SELECT TOP 1
+                @CodeISOCurrency = cuCOD.CodeISO 
+          FROM CatCurrencyCOD cuCOD WITH (NOLOCK)
+               INNER JOIN DeliveryCurrency  cu WITH (NOLOCK)
+                   ON cu.IdCurrencyCOD = cuCOD.IdCatCurrencyCOD
+         WHERE cu.DefaultPerCountry = 1
+           AND cu.Currency_IdCountry= @IdCountry
+
         SELECT TOP 1 
-				@IdRolTelemercadeo = RolIdRol 
-				FROM CatRol WHERE RolName = 'Ventas telemercadeo'
+                @IdRolTelemercadeo = RolIdRol 
+                FROM CatRol WHERE RolName = 'Ventas telemercadeo'
 
         INSERT INTO DeliveryBackOffice.dbo.Person
         (
@@ -60,7 +71,7 @@ BEGIN
              , emp.Sex
              , CONVERT(DATE, emp.DateBrith)
              , ISNULL(emp.DPI, '')
-             , IIF(@IdCountry = 'HN','Hondureño','Guatemalteco')
+             , @Demonym
              , 1
              , @Token
              , GETDATE()
@@ -117,7 +128,7 @@ BEGIN
              , GETDATE()
              , NULL
              , NULL
-             , IIF(@IdCountry='GT','+502','+504')
+             , '+' + cp.[Value]
              , ''
              , NULL --UrlFacebook
              , NULL --UrlInstagram
@@ -128,7 +139,10 @@ BEGIN
              , NULL --VerifiedPhone
              , NULL --ChangePassword
         FROM DenariusUser_Dev.dbo.LGN_User usr
-       WHERE usr.USR_IdUser = @Code
+        LEFT JOIN DeliveryBackOffice.dbo.ConfigParams cp
+            ON cp.[Name] = 'AreaCode'
+        WHERE usr.USR_IdUser = CONVERT(NVARCHAR(20), @Code)
+         AND cp.IdCountry = @IdCountry
          AND usr.USR_Username = @User;
 
          SET @IdRegisterUser = SCOPE_IDENTITY();
@@ -155,7 +169,7 @@ BEGIN
              , NULL
              , NULL
         FROM DenariusUser_Dev.dbo.LGN_User usr
-       WHERE usr.USR_IdUser = @Code
+       WHERE usr.USR_IdUser = CONVERT(NVARCHAR(20), @Code)
          AND usr.USR_Username = @User;
 
       INSERT INTO DeliveryBackOffice.dbo.UserSystemRestriction
@@ -173,7 +187,7 @@ BEGIN
       VALUES
       (
        @IdRegisterUser -- UstIdUser - bigint
-       , @IdSystem	   -- UstIdSystem - int 13= Hermes web operaciones CatSystem
+       , @IdSystem       -- UstIdSystem - int 13= Hermes web operaciones CatSystem
        , 10            -- UstAccessRetries - int
        , 0             -- UstRetries - int
        , 'ACTIVE'      -- UstStatus - varchar(10)
@@ -209,38 +223,38 @@ BEGIN
       );
 
       IF(@IdRol = @IdRolTelemercadeo)
-	  BEGIN
-		SELECT TOP 1
+      BEGIN
+        SELECT TOP 1
               @FirstName =  dbo.CapitalizeFirstLetter(ISNULL(emp.FirstName, ''))
              , @LastName =  dbo.CapitalizeFirstLetter(ISNULL(emp.LastName1, ''))
-			FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee emp
-			WHERE emp.CodeEmployee =  CONVERT(NVARCHAR(20), @Code);
+            FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee emp
+            WHERE emp.CodeEmployee =  CONVERT(NVARCHAR(20), @Code);
 
-			INSERT INTO [dbo].[CatTMSalesPerson]
-				([Code]
-				,[FirstName]
-				,[LastName]
-				,[Country]
-				,[RegisterUserId]
-				,[RowStatus]
-				,[DateCreated]
-				,[TokenCreated]
-				,[DateUpdated]
-				,[TokenUpdated]
-				,[CatSaleAdvisorId])
-			VALUES
-				(''
-				,@FirstName
-				,@LastName
-				,@IdCountry
-				,@IdRegisterUser
-				,1
-				,GETDATE()
-				,@Token
-				,NULL
-				,NULL
-				,NULL)
-	  END;
+            INSERT INTO [dbo].[CatTMSalesPerson]
+                ([Code]
+                ,[FirstName]
+                ,[LastName]
+                ,[Country]
+                ,[RegisterUserId]
+                ,[RowStatus]
+                ,[DateCreated]
+                ,[TokenCreated]
+                ,[DateUpdated]
+                ,[TokenUpdated]
+                ,[CatSaleAdvisorId])
+            VALUES
+                (''
+                ,@FirstName
+                ,@LastName
+                ,@IdCountry
+                ,@IdRegisterUser
+                ,1
+                ,GETDATE()
+                ,@Token
+                ,NULL
+                ,NULL
+                ,NULL)
+      END;
 
       COMMIT;
 

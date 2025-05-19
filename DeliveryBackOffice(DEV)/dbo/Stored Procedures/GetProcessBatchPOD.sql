@@ -3,6 +3,11 @@
 -- Update date: <2025-02-18>  
 -- Description: <Se procesa lote de POD para el servicio>  
 -- ============================================= 
+-- =============================================  
+-- Author:  <Edelman> 
+-- Update date: <2025-05-02>  
+-- Description: <Obtener guías de contenedores y referencias recolección POD>  
+-- ============================================= 
 CREATE PROCEDURE [dbo].[GetProcessBatchPOD] 
 (
  @IdPickup INT
@@ -52,6 +57,28 @@ BEGIN
                     SELECT (CONCAT(GuideSerie, GuideNumber, '-', GuidePiece)) AS Guide
                       FROM FinishPickUpDetail WITH (NOLOCK)
                      WHERE SchedulePickupId = @IdPickup
+                     UNION ALL
+                    SELECT      
+                      (CONCAT(C.GuideSerie, C.GuideNumber, '-', C.NoPiece))
+                    FROM   FinishPickUpReferenceDetail A WITH (NOLOCK)
+                    INNER JOIN DeliveryOrder B  WITH (NOLOCK)
+                    ON A.Reference = B.Ticket_Number
+                    INNER JOIN DeliveryOrderPiece C WITH (NOLOCK)
+                    ON  B.Guide_Serie = C.GuideSerie AND
+                      B.Guide_Number = C.GuideNumber
+                    WHERE SchedulePickupId = @IdPickup
+                    UNION ALL
+                    SELECT 
+                    (CONCAT(D.GuideSerie, D.GuideNumber, '-', D.NoPiece))
+                      FROM FinishPickUpContainerDetail A WITH (NOLOCK)
+                    INNER JOIN ShippingContainer B WITH (NOLOCK)
+                    ON A.Container = B.ReferenceContainer
+                    INNER JOIN ShippingContainerDetail C WITH (NOLOCK)
+                    ON B.IdContainer = C.IdContainer
+                    INNER JOIN DeliveryOrderPiece D WITH (NOLOCK)
+                    ON  D.GuideSerie = C.GuideSerie AND
+                        D.GuideNumber = C.GuideNumber
+                    WHERE SchedulePickupId = @IdPickup
                    ) [Data]
 
             EXEC [dbo].[SetFinishPickUpBatch] @InGuides = @Guides,
