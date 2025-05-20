@@ -3,6 +3,11 @@
 -- Create date: <2024-05-24>
 -- Description: < Se agrega filtro por pais, por defect GT >
 -- =============================================
+-- =============================================
+-- Author:      <Walter, Orozco>
+-- Create date: <2025-05-19>
+-- Description: <Se realizan mejoras en Nirphone para multipaís SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_saveVisitPoint]
     @DescriptionOfClient AS NVARCHAR(100),
     @IdSettlement AS BIGINT,
@@ -11,6 +16,7 @@ CREATE PROCEDURE [dbo].[sphd_saveVisitPoint]
     @Address AS NVARCHAR(600),
     @Town AS NVARCHAR(100),
     @Department AS NVARCHAR(100),
+	@NirPhone NVARCHAR(4) = '502',
     @Phone AS NVARCHAR(50),
     @ContactName AS NVARCHAR(200),
     @Email AS NVARCHAR(200),
@@ -20,14 +26,7 @@ CREATE PROCEDURE [dbo].[sphd_saveVisitPoint]
 AS
 BEGIN
     -- Control de identificador de registro
-    DECLARE @CodeOfReference AS INT = -1,
-            @CodePhone       AS NVARCHAR(5);
-
-    SELECT @CodePhone = CASE
-                            WHEN @IdCountry = 'GT' THEN '502'
-                            WHEN @IdCountry = 'HN' THEN '504'
-                            ELSE '502'
-                        END
+    DECLARE @CodeOfReference AS INT = -1;
 
     SET @CodeOfReference =
     (
@@ -124,7 +123,7 @@ BEGIN
             UadRowStatus
         )
         VALUES
-        (@IdTownship, @IdCountry, @Address, @CodePhone, @Phone, '', @TokenCreated, GETDATE(), @CodeOfReference,
+        (@IdTownship, @IdCountry, @Address, @NirPhone, @Phone, '', @TokenCreated, GETDATE(), @CodeOfReference,
          @IdSettlement, @DescriptionOfClient, @Idplace, @IdAccount, 1);
 
         IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;

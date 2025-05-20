@@ -8,6 +8,11 @@
 -- Create date: <2024-05-24>
 -- Description: <se agrega filtro para pais, por defecto GT>
 -- =============================================
+-- =============================================
+-- Author:      <Walter, Orozco>
+-- Create date: <2025-05-19>
+-- Description: <Se realizan mejoras en Nirphone para multipaís SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[UpdateVisitPoint] 
 	@IdVisitPointClient INT,
 	@DescriptionOfClient NVARCHAR(100),
@@ -15,6 +20,7 @@ CREATE PROCEDURE [dbo].[UpdateVisitPoint]
 	@Address NVARCHAR(600),	
 	@Town NVARCHAR(100),
 	@Department NVARCHAR(100),
+	@NirPhone NVARCHAR(4) = '502',
 	@Phone NVARCHAR(50),
 	@ContactName NVARCHAR(200),
 	@IdSettlement BIGINT,
@@ -59,8 +65,7 @@ SET NOCOUNT ON;
 			UA.UadIdTownship=VPC.IdTownship
 			,UadIdCountry=CC.IdCountry
 			,UadAddress1=VPC.Address,
-			--UadNirPhone=(CASE WHEN CHARINDEX('(',@Phone) >0 THEN SUBSTRING(@Phone,2,3) ELSE '' END),
-			UadNirPhone=IIF(@IdCountry = 'GT','502','504'),
+			UadNirPhone=@NirPhone,
 			UadPhone=@Phone,
 			UadAdditionalInstructions='',
 			UadTokenUpdated=@Token,

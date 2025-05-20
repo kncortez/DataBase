@@ -12,13 +12,17 @@ CREATE TABLE [dbo].[DefaultValuesPerCountry](
     [PrefixNumber]          [nvarchar](5)   NULL,
     [IconFlag]              [nvarchar](50)  NULL,
     [CultureInfo]           [nvarchar](10)  NULL,
+    [Latitude]              [decimal](9,6)  NULL,
+    [Longitude]             [decimal](9,6)  NULL,
     [RowStatus]             [bit]           NOT NULL,
     [TokenCreated]          [varchar](50)   NOT NULL,
     [DateCreated]           [datetime]      NOT NULL,
     [TokenUpdated]          [varchar](50)   NULL,
     [DateUpdated]           [datetime]      NULL,
     PRIMARY KEY CLUSTERED ([IdCountry] ASC),
-    CONSTRAINT [FK_DefaultValuesPerCountry_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    CONSTRAINT [FK_DefaultValuesPerCountry_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
+    CONSTRAINT CHK_DefaultValuesPerCountry_Latitude_ValidRange CHECK (Latitude BETWEEN -90 AND 90),
+    CONSTRAINT CHK_DefaultValuesPerCountry_Longitude_ValidRange CHECK (Longitude BETWEEN -180 AND 180)
 );
 
 
@@ -78,6 +82,12 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description',@value = N'Nombre o rut
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description',@value = N'Código de cultura regional para formateo (ej: es-PE, en-US)',@level0type = N'SCHEMA', @level0name = N'dbo',@level1type = N'TABLE', @level1name = N'DefaultValuesPerCountry',@level2type = N'COLUMN', @level2name = N'CultureInfo';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',@value = N'Coordenada geográfica que especifica la posición norte-sur.',@level0type = N'SCHEMA', @level0name = N'dbo',@level1type = N'TABLE',  @level1name = N'DefaultValuesPerCountry',@level2type = N'COLUMN', @level2name = 'Latitude';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',@value = N'Coordenada geográfica que especifica la posición este-oeste.',@level0type = N'SCHEMA', @level0name = N'dbo',@level1type = N'TABLE',  @level1name = N'DefaultValuesPerCountry',@level2type = N'COLUMN', @level2name = 'Longitude';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Almacena los valores predeterminados y configuraciones por país para funcionalidades multipaís del sistema.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DefaultValuesPerCountry';
