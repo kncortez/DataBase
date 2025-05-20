@@ -15,6 +15,7 @@ CREATE TABLE [ShippingContainerDetail] (
     CONSTRAINT FK_ShippingContainerDetail_Container FOREIGN KEY (IdContainer) REFERENCES [dbo].[ShippingContainer] (IdContainer),
     CONSTRAINT FK_ShippingContainerDetail_Guide FOREIGN KEY (GuideSerie, GuideNumber) REFERENCES [dbo].[DeliveryOrder] (Guide_Serie, Guide_Number)
 );
+GO
 
 CREATE NONCLUSTERED INDEX [IDX_ShippingContainerDetail_GuideNumber_GuideSerie]
     ON [dbo].[ShippingContainerDetail]([GuideNumber] ASC, [GuideSerie] ASC);
