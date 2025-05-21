@@ -5,6 +5,11 @@
 -- Description: <Obtiene la información para el reporte de preparación
 -- de rutas, se manda como parametro la fecha, día y el id de la ruta>
 -- =============================================
+-- =============================================
+-- Author:      <Edelman>
+-- Create date: <2025-05-21>
+-- Description: <Optimizar información y evitar duplicidad, agregar Inner a los Join>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sphd_getPreparationRoutesReportInfo]
 	@dateRoute DATE,
@@ -12,7 +17,8 @@ CREATE PROCEDURE [dbo].[sphd_getPreparationRoutesReportInfo]
 AS
 BEGIN
 
-	SELECT smt.[Order] [OrderSequence],
+	SELECT  DISTINCT
+	        smt.[Order] [OrderSequence],
 			spu.SenderName [Name],
 			vpc.Department,
 			vpc.Town,
@@ -20,11 +26,11 @@ BEGIN
 			CONVERT(VARCHAR(5), spu.StartDate, 108) InitializationTimeOfVisit,
 			CONVERT(VARCHAR(5), spu.EndDate, 108) FinalizationTimeOfVisit
 	FROM [DeliveryBackOffice].[dbo].[SchedulePickup] spu WITH (NOLOCK)
-		JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] smt  WITH (NOLOCK)
+	 INNER JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] smt  WITH (NOLOCK)
 			ON spu.SchedulePickupId = smt.IdSchedulePickup
-		JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] rat  WITH (NOLOCK)
+	 INNER JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] rat  WITH (NOLOCK)
 			ON smt.IdPuRouteAssigment = rat.IdRouteAssigment		
-		JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc  WITH (NOLOCK)
+	 INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc  WITH (NOLOCK)
 			ON spu.SenderId = vpc.CodeOfReference
 	WHERE rat.IdRoute = @idRoute
 			AND rat.DateOfRoute = @dateRoute
