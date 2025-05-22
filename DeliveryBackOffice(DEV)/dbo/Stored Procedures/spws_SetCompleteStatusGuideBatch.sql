@@ -4,6 +4,10 @@
 -- Create date: <2021-09-09>
 -- Description:	<Actualiza el estado de un lote de guias a estado completado>
 -- =============================================
+-- Author:		<Cristian Azurdia>
+-- Create date: <2025-05-22>
+-- Description:	<Eliminación de Json>
+-- =============================================
 */
 
 CREATE PROCEDURE [dbo].[spws_SetCompleteStatusGuideBatch]	  	
@@ -47,10 +51,10 @@ BEGIN
 			BEGIN 
 
 				DECLARE @TempGuide NVARCHAR(MAX) = (select T.GuideNumber from @TBGUIDES T where T.ITERATOR = @IDENTYGUIDES);
-				
+
 				UPDATE DeliveryBackOffice.dbo.GuideBatch
 				SET Status = 2 -- 2 stands for status completed, this means the services were requested by customer, so now all these guides will be recollected at some point by a courier men.
-				WHERE GuideNumber = @TempGuide AND RowStatus = 1
+				WHERE GuideSeries = 'FD' and GuideNumber = @TempGuide AND RowStatus = 1
 
 			    SET @IDENTYGUIDES = @IDENTYGUIDES + 1;
 				SET @COUNTGUIDES = @COUNTGUIDES  - 1;
