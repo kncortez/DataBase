@@ -819,7 +819,8 @@ BEGIN
 
                 ---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
                 UPDATE DeliveryOrderPiece
-                   SET IsPickup = 1
+                   SET IsPickup = 1,
+                       StatusOrderId = 2
                   FROM DeliveryOrderPiece WITH (NOLOCK)
                  WHERE GuideNumber IN
                        (
