@@ -549,10 +549,10 @@ BEGIN
 													WHEN 
 													(SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)
 													INNER JOIN [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH(NOLOCK)
-															ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number)
-																AND CCTBC.ReasonCode = '00'
+															ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number)																
 													where	DOR.Guide_Serie = DAT.Guide_Serie
-															AND	DOR.Guide_Number = DAT.Guide_Number) = 1
+															AND	DOR.Guide_Number = DAT.Guide_Number
+															AND CCTBC.ReasonCode = '00') = 1
 													THEN 0
 													ELSE ISNULL(DOR.PriceShippment, 0)
 												END
@@ -614,7 +614,7 @@ BEGIN
 						) IS NOT NULL , 
 						(
 							SELECT NumImgEvidence AS num
-							FROM Customer
+							FROM Customer WITH (NOLOCK)
 							WHERE IdCustomer = DOR.IdCustomer
 						), 1
 					) [NumImageEvidence],
