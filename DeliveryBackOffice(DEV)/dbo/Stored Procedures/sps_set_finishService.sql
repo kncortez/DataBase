@@ -3,6 +3,10 @@
 -- Update date: <2024-12-18>
 -- Description: <Se realizan optimizaciones recomendadas por DBA>
 -- =============================================
+-- Author:      <Tito Garcia>
+-- Update date: <2025-05-22>
+-- Description: <Se realizan nuevas optimizaciones>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_finishService]
     @InGuidesP VARCHAR(MAX)
   , @TblListGuides AS TblListGuidesWithAnticipatedCOD READONLY
@@ -16,7 +20,9 @@ CREATE PROCEDURE [dbo].[sps_set_finishService]
   , @TblExclusions AS TblExclusions READONLY
 AS
 BEGIN
-	SET ARITHABORT OFF
+	SET ARITHABORT OFF;
+	SET NOCOUNT ON;
+
     DECLARE @DateCreated DATETIME = GETDATE();
     DECLARE @Output VARCHAR(MAX);
 
@@ -57,21 +63,27 @@ BEGIN
       , MaxServiceMembership INT
     );
 
-    SET @ForzaPointsGenerationType =
-    (
-        SELECT [CP].[Value]
-        FROM [dbo].[ConfigParams] CP
-        WHERE [CP].[Name] = 'ForzaPointsGenerationType'
-              AND [CP].[Status] = 1
-    );
+	CREATE TABLE #ConfigParamsTemp (
+		Name  NVARCHAR(100),
+		Value NVARCHAR(MAX)
+	);
 
-    SET @ForzaPointsGenerationValue =
-    (
-        SELECT [CP].[Value]
-        FROM [dbo].[ConfigParams] CP
-        WHERE [CP].[Name] = 'ForzaPointsGenerationValue'
-              AND [CP].[Status] = 1
-    );
+	INSERT INTO #ConfigParamsTemp (Name, Value)
+	SELECT [Name], [Value]
+	FROM [dbo].[ConfigParams]
+	WHERE [Status] = 1;
+
+	SELECT 
+		@ForzaPointsGenerationType = Value
+	FROM #ConfigParamsTemp
+	WHERE Name = 'ForzaPointsGenerationType';
+
+	SELECT 
+		@ForzaPointsGenerationValue = Value
+	FROM #ConfigParamsTemp
+	WHERE Name = 'ForzaPointsGenerationValue';
+
+	DROP TABLE #ConfigParamsTemp;
 
     SET @CatSalesPackageStatusId =
     (
@@ -115,17 +127,12 @@ BEGIN
             DROP TABLE #listGuidesNotExist;
         IF OBJECT_ID('tempdb.dbo.#listGuidesEnabled', 'U') IS NOT NULL
             DROP TABLE #listGuidesEnabled;
-        IF OBJECT_ID('tempdb.dbo.#listGuidesEnabled', 'U') IS NOT NULL
-            DROP TABLE #listGuidesEnabled;
         IF OBJECT_ID('tempdb.dbo.#listGuidesDisabled', 'U') IS NOT NULL
             DROP TABLE #listGuidesDisabled;
         IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
             DROP TABLE #TempData;
         IF OBJECT_ID('tempdb..#TblListGuidesTwo') IS NOT NULL
             DROP TABLE #TblListGuidesTwo;
-        IF OBJECT_ID('tempdb..#TblExclusions2') IS NOT NULL
-            DROP TABLE #TblExclusions2;
-
         IF OBJECT_ID('tempdb..#TempDataClient', 'U') IS NOT NULL
         BEGIN
             DROP TABLE #TempDataClient;
@@ -166,10 +173,6 @@ BEGIN
              , @Voucher       = td.Voucher
              , @Responsible   = td.Responsible
         FROM @TblDetail td;
-
-        SELECT *
-        INTO #TblExclusions2
-        FROM @TblExclusions;
 
         CREATE NONCLUSTERED INDEX IX_TLGT_SERIE ON #TblListGuidesTwo (Guide_Serie, Guide_Number);
         CREATE NONCLUSTERED INDEX IX_TLGT_EXCLUDE ON #TblListGuidesTwo (ExcludeCOD);
@@ -513,15 +516,15 @@ BEGIN
                             FROM #TblListGuidesTwo tlg
                             WHERE tlg.ExcludeCOD = 0;
 
-                            DECLARE @TotalGuidesInclude DECIMAL(18, 2);
-                            SET @TotalGuidesInclude =
-                            (
-                                SELECT SUM(pd.CODAmount)
-                                FROM #PendingPaymentTemp   pd
-                                    INNER JOIN #TblInclude ti
-                                        ON pd.GuideNumber = ti.Guide_Number
-                                        AND pd.GuideSerie = ti.Guide_Serie
-                            );
+                        DECLARE @TotalGuidesInclude DECIMAL(18, 2);
+                        SET @TotalGuidesInclude =
+                        (
+                            SELECT SUM(pd.CODAmount)
+                            FROM #PendingPaymentTemp   pd
+                                INNER JOIN #TblInclude ti
+                                    ON pd.GuideSerie = ti.Guide_Serie
+                                    AND pd.GuideNumber = ti.Guide_Number
+                        );
 
                             IF (@TotalGuidesInclude IS NULL)
                             BEGIN
@@ -542,46 +545,50 @@ BEGIN
                                     SELECT TOP 1 Responsible FROM @TblExclusions
                                 );
 
-                                INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-                                (
-                                    Guide_Serie
-                                    , Guide_Number
-                                    , StatusOrderId
-                                    , UserCreated
-                                    , DateCreated
-                                    , DateCreatedInSystem
-                                    , Observations
-                                )
-                                SELECT lge.Guide_Serie
-                                    , lge.Guide_Number
-                                    , CASE 
-                                            WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
-                                            WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
-                                            WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
-                                        END StatusOrderId
-                                    , @TokenP      UserCreated
-                                    , @DateCreated DateCreated
-                                    , @DateCreated DateCreatedInSystem
-                                    , CASE UPPER(@ServiceType)
-                                        WHEN 'PICKUP' THEN
-                                            'Recibido de ' + @Name
-                                        WHEN 'DELIVERY' THEN
-                                            CONVERT(NVARCHAR(200), CONCAT('Entregado a ', @Name, ' ', ISNULL(@CUI, '')))
-                                        WHEN 'RETURN' THEN
-                                            'Devueldo a ' + @Name
-                                    END          Observations
-                                --@CUI+'-'+@Name
-                                FROM #listGuidesEnabled lge;
 
-                                UPDATE dot
-                                SET dot.Observations = 'Entregado a ' + @Name + ', Entrega sin cobro COD '
-                                                    + @VoucherExclude + ' ' + @ResponsibleExclude
-                                FROM DeliveryOrderDetail          dot WITH (NOLOCK)
-                                    INNER JOIN #listGuidesEnabled lge
-                                        ON lge.Guide_Number = dot.Guide_Number
-                                        AND lge.Guide_Serie = dot.Guide_Serie
-                                WHERE lge.ExcludeCOD = 1
-                                    AND dot.StatusOrderId = 22;
+							DECLARE @statusOrderId INT = 
+								CASE UPPER(@ServiceType)
+									WHEN 'PICKUP' THEN 21
+									WHEN 'DELIVERY' THEN 22
+									WHEN 'RETURN' THEN 23
+								END;
+
+							DECLARE @observations NVARCHAR(200) =
+								CASE UPPER(@ServiceType)
+									WHEN 'PICKUP' THEN 'Recibido de ' + @Name
+									WHEN 'DELIVERY' THEN CONCAT('Entregado a ', @Name, ' ', ISNULL(@CUI, ''))
+									WHEN 'RETURN' THEN 'Devuelto a ' + @Name
+								END;
+
+                            INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
+                            (
+                                Guide_Serie
+                                , Guide_Number
+                                , StatusOrderId
+                                , UserCreated
+                                , DateCreated
+                                , DateCreatedInSystem
+                                , Observations
+                            )
+                            SELECT lge.Guide_Serie
+                                , lge.Guide_Number
+                                , @statusOrderId
+                                , @TokenP      UserCreated
+                                , @DateCreated DateCreated
+                                , @DateCreated DateCreatedInSystem
+                                , @observations
+                            FROM #listGuidesEnabled lge;
+
+                            UPDATE dot
+                            SET dot.Observations = 'Entregado a ' + @Name + ', Entrega sin cobro COD '
+                                                + @VoucherExclude + ' ' + @ResponsibleExclude
+                            FROM DeliveryOrderDetail          dot WITH (NOLOCK)
+                                INNER JOIN #listGuidesEnabled lge
+                                    ON lge.Guide_Serie = dot.Guide_Serie
+                                    AND lge.Guide_Number = dot.Guide_Number
+                            WHERE lge.ExcludeCOD = 1
+                                AND dot.StatusOrderId = 22;
+
 
                               UPDATE acodh
                                  SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0),
@@ -600,13 +607,13 @@ BEGIN
                                         ON bdcod.GuideSerie = lge.Guide_Serie
                                             AND bdcod.GuideNumber = lge.Guide_Number
                                     INNER JOIN DeliveryOrderDetail dot WITH (NOLOCK)
-                                        ON lge.Guide_Number = dot.Guide_Number
-                                            AND lge.Guide_Serie = dot.Guide_Serie
-                                WHERE dot.StatusOrderId = 23
-                                    AND lge.excludeCOd = 0
-                                    AND bdcod.Excluded = 0
-                                    AND bdcod.CatConceptCODId = 2
-                                    AND acodd.RowStatus = 1;
+                                    ON lge.Guide_Serie = dot.Guide_Serie
+                                        AND lge.Guide_Number = dot.Guide_Number
+                            WHERE dot.StatusOrderId = 23
+                                AND lge.excludeCOd = 0
+                                AND bdcod.Excluded = 0
+                                AND bdcod.CatConceptCODId = 2
+                                AND acodd.RowStatus = 1;
 
                                 UPDATE acodh
                                     SET acodh.BalanceStatus = 'DEVOLUCION',
@@ -625,8 +632,8 @@ BEGIN
                                         ON bdcod.GuideSerie = tug.Guide_Serie
                                             AND bdcod.GuideNumber = tug.Guide_Number
                                     INNER JOIN DeliveryOrderDetail dot WITH (NOLOCK)
-                                        ON tug.Guide_Number = dot.Guide_Number
-                                            AND tug.Guide_Serie = dot.Guide_Serie
+                                    ON tug.Guide_Serie = dot.Guide_Serie
+                                        AND tug.Guide_Number = dot.Guide_Number
                                 WHERE bdcod.Excluded = 0        
                                     AND bdcod.CatConceptCODId = 2
                                     AND dot.StatusOrderId = 23
@@ -650,11 +657,11 @@ BEGIN
                                     , do.LastCollectOnDelivery = ppt.CODAmount
                                     FROM DeliveryOrder                 do WITH (NOLOCK)
                                         INNER JOIN #listGuidesEnabled  lge
-                                            ON lge.Guide_Number = do.Guide_Number
-                                                AND lge.Guide_Serie = do.Guide_Serie
+                                        ON lge.Guide_Serie = do.Guide_Serie
+                                            AND lge.Guide_Number = do.Guide_Number
                                         INNER JOIN #PendingPaymentTemp ppt
-                                            ON ppt.GuideNumber = do.Guide_Number
-                                                AND ppt.GuideSerie = do.Guide_Serie
+                                        ON ppt.GuideSerie = do.Guide_Serie
+                                            AND ppt.GuideNumber = do.Guide_Number
                                     WHERE lge.ExcludeCOD = 1;
 
                                     INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
@@ -721,8 +728,8 @@ BEGIN
                                         , 0 AS 'IsAnticipatedCOD'
                                     FROM #listGuidesEnabled                       lge
                                         INNER JOIN DeliveryOrder                  dlo WITH (NOLOCK)
-                                            ON lge.Guide_Number = dlo.Guide_Number
-                                                AND lge.Guide_Serie = dlo.Guide_Serie
+                                        ON lge.Guide_Serie = dlo.Guide_Serie
+                                            AND lge.Guide_Number = dlo.Guide_Number
                                         INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                                             ON dlo.Guide_Serie = DOP.GuideSerie
                                                 AND dlo.Guide_Number = DOP.GuideNumber
@@ -839,29 +846,29 @@ BEGIN
                             
                                 END;
 
-                                UPDATE do
-                                SET do.StatusOrderId = 
-                                                    CASE 
-                                                        WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
-                                                        WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
-                                                        WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
-                                                    END
-                                FROM DeliveryOrder                do WITH (NOLOCK)
-                                    INNER JOIN #listGuidesEnabled lge
-                                        ON lge.Guide_Number = do.Guide_Number
-                                        AND lge.Guide_Serie = do.Guide_Serie;
+							DECLARE @NewStatusOrderId INT;
+							SET @NewStatusOrderId = 
+								CASE 
+									WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
+									WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
+									WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
+									ELSE NULL  -- opcionalmente manejar casos inesperados
+								END;
 
-                                UPDATE dop
-                                SET StatusOrderId =
-                                                CASE 
-                                                    WHEN UPPER(@ServiceType) = 'PICKUP' THEN 21
-                                                    WHEN UPPER(@ServiceType) = 'DELIVERY' THEN 22
-                                                    WHEN UPPER(@ServiceType) = 'RETURN' THEN 23
-                                                END
-                                FROM DeliveryOrderPiece           dop WITH (NOLOCK)
-                                    INNER JOIN #listGuidesEnabled lge
-                                        ON lge.Guide_Number = dop.GuideNumber
-                                        AND lge.Guide_Serie = dop.GuideSerie;
+                            UPDATE do
+                            SET do.StatusOrderId = @NewStatusOrderId
+                            FROM DeliveryOrder                do WITH (NOLOCK)
+                                INNER JOIN #listGuidesEnabled lge
+                                    ON lge.Guide_Serie = do.Guide_Serie
+                                    AND lge.Guide_Number = do.Guide_Number;
+
+                            UPDATE dop
+                            SET StatusOrderId = @NewStatusOrderId
+                            FROM DeliveryOrderPiece           dop WITH (NOLOCK)
+                                INNER JOIN #listGuidesEnabled lge
+                                    ON lge.Guide_Serie = dop.GuideSerie
+                                    AND lge.Guide_Number = dop.GuideNumber;
+
 
                                 DECLARE @CartGuides AS TABLE
                                 (
@@ -925,10 +932,10 @@ BEGIN
                                         , TLG.Guide_Serie
                                         , TLG.Guide_Number
                                         , DO.StatusOrderId
-                                    FROM @TblListGuides                                       TLG
+                                FROM #TblListGuidesTwo TLG
                                         INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                            ON TLG.Guide_Number = DO.Guide_Number
-                                            AND TLG.Guide_Serie = DO.Guide_Serie;
+                                        ON TLG.Guide_Serie = DO.Guide_Serie
+                                        AND TLG.Guide_Number = DO.Guide_Number;
 
                                     -- Ingresar endpoints de cliente
                                     UPDATE @WebhookCustomerTable
@@ -1093,19 +1100,19 @@ BEGIN
                                         , @TokenP   AS TokenCreated
                                     FROM DeliveryOrderPiece                 dop WITH (NOLOCK)
                                         INNER JOIN @WebhookCustomerTable    wct
-                                            ON dop.GuideNumber = wct.GuideNumber
-                                                AND dop.GuideSerie = wct.GuideSerie
+                                        ON dop.GuideSerie = wct.GuideSerie
+                                            AND dop.GuideNumber = wct.GuideNumber
                                         INNER JOIN WebhookEndpoint          WHE WITH (NOLOCK)
                                             ON wct.CustomerId = WHE.CustomerId
                                         INNER JOIN DeliveryOrder            do WITH (NOLOCK)
-                                            ON dop.GuideNumber = do.Guide_Number
-                                                AND dop.GuideSerie = do.Guide_Serie                                    
+                                        ON dop.GuideSerie = do.Guide_Serie
+                                            AND dop.GuideNumber = do.Guide_Number                                     
                                         INNER JOIN @GuidePiecesTable        gpt
-                                            ON wct.GuideNumber = gpt.GuideNumber
-                                                AND wct.GuideSerie = gpt.GuideSerie
-                                        INNER JOIN @PiecesGuideRelatedTable pgt
-                                            ON gpt.GuideNumber = pgt.GuideNumber
-                                                AND gpt.GuideSerie = pgt.GuideSerie
+                                        ON wct.GuideSerie = gpt.GuideSerie
+                                            AND wct.GuideNumber = gpt.GuideNumber
+                                    INNER JOIN @PiecesGuideRelatedTable pgt
+                                        ON gpt.GuideSerie = pgt.GuideSerie
+                                            AND gpt.GuideNumber = pgt.GuideNumber
                                     WHERE do.IdCustomer = wct.CustomerId
                                         AND WHE.TypeConnectionId = 2
                                         AND do.IdCustomer = wct.CustomerId    
@@ -1161,8 +1168,8 @@ BEGIN
                                         , ti.Guide_Number
                                     FROM #TblInclude                   ti
                                         INNER JOIN #PendingPaymentTemp pgt
-                                            ON ti.Guide_Number = pgt.GuideNumber
-                                                AND ti.Guide_Serie = pgt.GuideSerie
+                                        ON ti.Guide_Serie = pgt.GuideSerie
+                                            AND ti.Guide_Number = pgt.GuideNumber
                                     WHERE NOT EXISTS
                                     (
                                         SELECT 1
@@ -1177,7 +1184,7 @@ BEGIN
 
                                 END CATCH;
 
-                                PRINT (CONVERT(VARCHAR(24), GETDATE(), 121));
+                           -- PRINT (CONVERT(VARCHAR(24), GETDATE(), 121));
                                 UPDATE ct
                                 SET ct.[PaymentDate] = GETDATE()
                                 , ct.[TokenUpdated] = @TokenP
@@ -1211,26 +1218,14 @@ BEGIN
                                         AND ct.GuideNumber = ti.Guide_Number
                                     OUTER APPLY
                                 (
-                                    SELECT TOP 1
-                                        Co.IdCost
-                                    FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
-                                    WHERE (
-                                            (
-                                                Co.GuideSerie = ti.Guide_Serie
-                                                AND Co.GuideNumber = ti.Guide_Number
-                                            )
-                                            OR
-                                            (
-                                                Co.GuideSerie = ti.Guide_Serie
-                                                AND Co.GuideNumber = ti.Guide_Number
-                                                AND Co.GuideSerie IS NULL
-                                                AND Co.GuideNumber IS NULL
-                                            )
-                                        )
-                                        AND Co.RowStatus = 1
-                                    ORDER BY Co.DateCreated DESC
-                                )                                  CoAux
-                                WHERE ISNULL(ct.TotalAmountPaid, 0) = 0;
+								SELECT TOP 1 Co.IdCost
+								FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
+								WHERE Co.GuideSerie = ti.Guide_Serie
+								  AND Co.GuideNumber = ti.Guide_Number
+								  AND Co.RowStatus = 1
+								ORDER BY Co.DateCreated DESC
+                            )                                  CoAux
+                            WHERE ISNULL(ct.TotalAmountPaid, 0) = 0;
 
                                 IF (@Amount > 0)
                                 BEGIN
@@ -1311,11 +1306,11 @@ BEGIN
                                         , ISNULL([M].[IdMembership], 0)
                                         , ISNULL([M].[MembershipMaxServiceFixedValue], 0)
                                     FROM #listGuidesEnabled                         LEG
-                                        LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
-                                            ON [LEG].[Guide_Number] = [MSL].[LogGuideNumber]
-                                            AND [LEG].[Guide_Serie] = [MSL].[LogGuideSerie]
+                                    LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
+                                        ON [LEG].[Guide_Serie] = [MSL].[LogGuideSerie]
+                                        AND [LEG].[Guide_Number] = [MSL].[LogGuideNumber]
                                             AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
-                                        LEFT JOIN [dbo].[Membership]                M
+                                    LEFT JOIN [dbo].[Membership]                M WITH(NOLOCK)
                                             ON [LEG].[IdCustomer] = [M].[CustomerId]
                                             AND [M].[ExpirationDate] >= SYSDATETIME()
                                             AND [M].[RowStatus] = 1
@@ -1443,7 +1438,7 @@ BEGIN
                                                                                     ELSE
                                                                                         0
                                                                                 END
-                                                    FROM [dbo].[PointsByServiceLog] PSL
+                                                FROM [dbo].[PointsByServiceLog] PSL WITH(NOLOCK)
                                                     WHERE [PSL].[GuideSerie] = @AuxGuideSerie
                                                         AND [PSL].[GuideNumber] = @AuxGuideNumber;
                                                 END;
@@ -1453,7 +1448,7 @@ BEGIN
                                             SET @PointsGenerated
                                                 = ISNULL((
                                                             SELECT SUM([PSL].[PointsReceived])
-                                                            FROM [dbo].[PointsByServiceLog] PSL
+                                                        FROM [dbo].[PointsByServiceLog] PSL WITH(NOLOCK)
                                                             WHERE [PSL].[GuideSerie] = @AuxGuideSerie
                                                                 AND [PSL].[GuideNumber] = @AuxGuideNumber
                                                         )
@@ -1509,7 +1504,7 @@ BEGIN
 
                                 --PRINT(@OutPrueba);
                                 SET @OutSize2 = LEN(@OutPrueba2) - 1;
-                                PRINT (@OutSize2);
+                            --PRINT (@OutSize2);
                                 DECLARE @FINAL2 VARCHAR(MAX);
                                 SET @FINAL2 =
                                 (
@@ -1655,9 +1650,9 @@ BEGIN
                                             )
                             );
 
-                        PRINT (@OutPrueba);
+                    --PRINT (@OutPrueba);
                         SET @OutSize = LEN(@OutPrueba) - 1;
-                        PRINT (@OutSize);
+                    --PRINT (@OutSize);
                         DECLARE @FINAL VARCHAR(MAX);
                         SET @FINAL =
                         (
@@ -1831,7 +1826,7 @@ BEGIN
                 ,UserUpdated = @TokenP
                 ,DateUpdated = GETDATE()
                 FROM Warehouse wh
-                INNER JOIN @TblListGuides tlg
+            INNER JOIN #TblListGuidesTwo tlg
                     ON wh.Guide_Serie = tlg.Guide_Serie
                     AND wh.Guide_Number = tlg.Guide_Number
                 WHERE wh.Active = 1
@@ -1859,8 +1854,8 @@ BEGIN
                                 0 AS 'IsAnticipatedCOD'
                         FROM #listGuidesEnabled lge
                             INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-                                ON lge.Guide_Number = dlo.Guide_Number
-                                AND lge.Guide_Serie = dlo.Guide_Serie
+                            ON lge.Guide_Serie = dlo.Guide_Serie
+                            AND lge.Guide_Number = dlo.Guide_Number
                             LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                                 ON vp.CodeOfReference = Case when  dlo.IsLastMileReturn = 1 AND  dlo.Sender_ID != 0  Then dlo.Sender_ID Else dlo.Receiver_ID End
                             LEFT JOIN dbo.Customer cus WITH (NOLOCK)
