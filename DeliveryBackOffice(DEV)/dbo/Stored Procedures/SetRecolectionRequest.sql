@@ -39,15 +39,6 @@ BEGIN
 
             DECLARE @jsonResult2 NVARCHAR(MAX);
 
-            --UPDATE dbo.DeliveryOrder
-            --SET PriceShippment = t.PriceShippment,
-            --    StatusOrderId = @IdStatus,
-            --    IsCollect = t.IsCollect
-            --FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-            --    INNER JOIN @TblDeliveryOrdersList t
-            --        ON t.Guide_Number = ord.Guide_Number
-            --           AND t.Guide_Serie = ord.Guide_Serie;
-
             INSERT INTO dbo.DeliveryOrderPaymentDetail
             (
                 [GuideNumber],
@@ -177,8 +168,8 @@ BEGIN
                     IsCollect = t.IsCollect
                 FROM dbo.DeliveryOrder ord WITH (NOLOCK)
                     INNER JOIN @TblDeliveryOrdersList t
-                        ON t.Guide_Number = ord.Guide_Number
-                           AND t.Guide_Serie = ord.Guide_Serie;
+                        ON t.Guide_Serie = ord.Guide_Serie
+                           AND t.Guide_Number = ord.Guide_Number;
                 /*fecha fin 18/02/2020*/
                 UPDATE dbo.DeliveryOrderPaymentDetail
                 SET ShipmentCompleted = t.ShipmentCompleted,
@@ -188,8 +179,8 @@ BEGIN
                 FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                     INNER JOIN @TblDeliveryOrdersList t
                         ON (
-                               t.Guide_Number = pay.GuideNumber
-                               AND t.Guide_Serie = pay.GuideSerie
+                               t.Guide_Serie = pay.GuideSerie
+                               AND t.Guide_Number = pay.GuideNumber
                            );
 
 
@@ -435,13 +426,13 @@ BEGIN
                         ON hubcov.hub = HL.HubAbbreviation 
                     INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                         ON (
-                               dop.GuideNumber = ord.Guide_Number
-                               AND dop.GuideSerie = ord.Guide_Serie
+                               dop.GuideSerie = ord.Guide_Serie
+                               AND dop.GuideNumber = ord.Guide_Number
                            )
                     INNER JOIN @TblDeliveryOrdersList t
                         ON (
-                               t.Guide_Number = dop.GuideNumber
-                               AND t.Guide_Serie = dop.GuideSerie
+                               t.Guide_Serie = dop.GuideSerie
+                               AND t.Guide_Number = dop.GuideNumber
                            )
                 WHERE ord.Guide_Number IN ( t.Guide_Number )
 				AND ord.Guide_Serie IN (t.Guide_Serie)
@@ -470,8 +461,8 @@ BEGIN
                         LEFT JOIN dbo.DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                             ON dop.IdHeaderRecolection = SP.SchedulePickupId
                         LEFT JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
-                            ON DOR.Guide_Number = dop.GuideNumber
-                               AND DOR.Guide_Serie = dop.GuideSerie
+                            ON DOR.Guide_Serie = dop.GuideSerie
+                               AND DOR.Guide_Number = dop.GuideNumber
                     WHERE (
                               SM.IdServiceManagement IS NULL
                               OR
@@ -593,8 +584,8 @@ BEGIN
             FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON (
-                           t.Guide_Number = pay.GuideNumber
-                           AND t.Guide_Serie = pay.GuideSerie
+                           t.Guide_Serie = pay.GuideSerie
+                           AND t.Guide_Number = pay.GuideNumber
                        )
                 LEFT JOIN #Sender sd
                     ON sd.Serie = pay.GuideSerie
@@ -611,8 +602,8 @@ BEGIN
             FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON (
-                           t.Guide_Number = pay.GuideNumber
-                           AND t.Guide_Serie = pay.GuideSerie
+                           t.Guide_Serie = pay.GuideSerie
+                           AND t.Guide_Number = pay.GuideNumber
                        )
                 LEFT JOIN #Sender sd
                     ON sd.Serie = pay.GuideSerie
@@ -888,8 +879,8 @@ BEGIN
             FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON (
-                           t.Guide_Number = pay.GuideNumber
-                           AND t.Guide_Serie = pay.GuideSerie
+                           t.Guide_Serie = pay.GuideSerie
+                           AND t.Guide_Number = pay.GuideNumber
                        );
         END TRY
         BEGIN CATCH
@@ -947,8 +938,8 @@ BEGIN
                 IsCollect = t.IsCollect
             FROM dbo.DeliveryOrder ord WITH (NOLOCK)
                 INNER JOIN @TblDeliveryOrdersList t
-                    ON t.Guide_Number = ord.Guide_Number
-                       AND t.Guide_Serie = ord.Guide_Serie;
+                    ON t.Guide_Serie = ord.Guide_Serie
+                       AND t.Guide_Number = ord.Guide_Number;
 
             DECLARE @IdAcc INT = @IdAccount;
             IF (@IdUser != 0)
