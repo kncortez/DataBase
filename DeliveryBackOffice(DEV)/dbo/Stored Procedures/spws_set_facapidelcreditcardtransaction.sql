@@ -13,6 +13,10 @@
 -- Updated date: <2024-01-08>
 -- Description: <Integración de marketplace a estructura de BD de clubforza>
 -- =============================================
+-- Author: <Tito Garcia>
+-- Updated date: <2025-05-26>
+-- Description: <Se agrega validacion ya que @CustomerReference puede venir NULL>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
     @Type AS INT = -1
   , @System AS INT = 1
@@ -238,7 +242,7 @@ BEGIN
                 VALUES
                 (   @System, @CardNumber, @TypeCardNumber, @Currency, @Ammount, @OrderNumber, @Signature
                   , CASE
-                        WHEN @CustomerReference = '' THEN
+                        WHEN @CustomerReference = '' OR @CustomerReference IS NULL THEN
                             '1'
                         ELSE
                             @CustomerReference
@@ -260,7 +264,7 @@ BEGIN
                   , OrderNumber = @OrderNumber
                   , [Signature] = @Signature
                   , CustomerReference = CASE
-                                            WHEN @CustomerReference = '' THEN
+                                            WHEN @CustomerReference = '' OR @CustomerReference IS NULL THEN
                                                 '1'
                                             ELSE
                                                 @CustomerReference
