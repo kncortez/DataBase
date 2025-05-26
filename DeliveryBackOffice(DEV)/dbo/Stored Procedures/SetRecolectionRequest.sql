@@ -8,6 +8,10 @@
 -- Update date: <2022-07-20>
 -- Description:	< Cambio de agrupaciones para evitar duplicados en servicios de recolección (Falsos positivos) >
 -- =============================================
+-- Author:      <Tito García>
+-- Create date: <2025-05-26>
+-- Description: <Se realizan optimizaciones recomendadas por DBA>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetRecolectionRequest]
     @TblDeliveryOrdersList AS [TblDeliveryOrdersList2] READONLY,
     @Iscollected BIT = true,
