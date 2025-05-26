@@ -2087,6 +2087,12 @@
     <Build Include="dbo\Stored Procedures\sphdGetContainerInfoToSendEmail.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetGuidesByTicketNumberNoRestriction.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTNConfirmation.sql" />
+    <Build Include="dbo\Tables\PaymentZigi.sql" />
+    <Build Include="dbo\Stored Procedures\SPHWValidateZigiUserPayment.sql" />
+    <Build Include="dbo\Stored Procedures\SPHWGetInfoZigiPaymentLink.sql" />
+    <Build Include="dbo\Stored Procedures\SPHWInsertPaymentZigi.sql" />
+    <Build Include="dbo\Stored Procedures\UpdatePaymentZigiByGuide.sql" />
+    <Build Include="dbo\Stored Procedures\SPHWInsertAuthorizationNumberByUser.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\130\SqlSchemas\master.dacpac">

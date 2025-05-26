@@ -3,6 +3,10 @@
 -- Create date: <2024-09-13>
 -- Description:	<Obtiene información para la liquidación de rutas unificadas COD en desktop>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2025-04-25>
+-- Description:	<ZIGI - Se descartan guias pagadas con zigi en liquidacion ultima milla desktop>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetSettlementCODUnifiedRoute] @IdRoute INT
 AS
 BEGIN
@@ -65,8 +69,8 @@ BEGIN
         WHERE CAST(dbs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
               AND dsd.RowStatus = 1
               AND dbs.CatRouteId = @IdRoute
-              AND Guide_Settlement = 1
-              AND Guide_Delivered = 1
+              AND dsd.Guide_Settlement = 1
+              AND dsd.Guide_Delivered = 1
               AND
               (
                   DOR.IsLastMileReturn = 0
@@ -99,8 +103,8 @@ BEGIN
               AND dbs.Date_Received_COD IS NULL
               AND dbs.User_Received_COD IS NULL
               AND CAST(dbs.Date_Dispatched AS DATE) < CAST(GETDATE() AS DATE)
-              AND Guide_Settlement = 1
-              AND Guide_Delivered = 1
+              AND dsd.Guide_Settlement = 1
+              AND dsd.Guide_Delivered = 1
               AND
               (
                   DOR.IsLastMileReturn = 0
@@ -112,6 +116,15 @@ BEGIN
               )
     ) AS s;
 
+	--quitar guias que hayan sido pagadas con zigi
+	DELETE GF
+	FROM @GuidesFound GF
+	LEFT JOIN PaymentZigi PZ
+	ON PZ.GuideNumber = GF.Guide_Number
+		  AND PZ.GuideSerie = GF.Guide_Serie
+		WHERE PZ.GuideNumber = GF.Guide_Number
+		  AND PZ.GuideSerie = GF.Guide_Serie
+		  AND (PZ.ZigiLinkStatus = 'PAID'OR PZ.AuthorizationNumberByUser IS NOT NULL)
 
     SELECT DISTINCT
            dbs.ID,
@@ -222,11 +235,10 @@ BEGIN
                                      END,
                                      0
                                  ),
-                           
-						    IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
-						   --do.PriceShippment
-						   
-						   )
+                           IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
+                    --do.PriceShippment
+
+                    )
                     ),
                     ISNULL(
                               (CASE
@@ -266,7 +278,7 @@ BEGIN
             FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH (NOLOCK)
                 INNER JOIN DeliveryBackOffice.dbo.invoiceHeader invh1 WITH (NOLOCK)
                     ON invh1.inv_pk_id = invd.dti_fk_header
-                       AND invh1.inv_descriptionFEL = 'PROCESO REALIZADO'
+             WHERE  invh1.inv_descriptionFEL = 'PROCESO REALIZADO'
                        AND invh1.inv_invoiceOfCreditNote IS NULL
             GROUP BY invd.dti_fk_orderSerie,
                      invd.dti_fk_orderNumber
@@ -309,14 +321,12 @@ BEGIN
                                     0
                                 ),
                           --do.PriceShippment
-						   IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
-
-						  ) + CASE
-                                                   WHEN do.IsLastMileReturn = 1 THEN
-                                                       0
-                                                   ELSE
-                                                       do.Collect_OnDelivery
-                                               END > 0
+                          IIF(A1.ReasonCode = '00', 0, do.PriceShippment)) + CASE
+                                                                                 WHEN do.IsLastMileReturn = 1 THEN
+                                                                                     0
+                                                                                 ELSE
+                                                                                     do.Collect_OnDelivery
+                                                                             END > 0
               )
           )
           AND
