@@ -15,6 +15,7 @@ CREATE TABLE [ShippingContainer] (
     CONSTRAINT [FK_ShippingContainer_Customer] FOREIGN KEY (IdCustomer) REFERENCES [dbo].[Customer] (IdCustomer),
     CONSTRAINT [FK_ShippingContainer_CatShipContainerStatus] FOREIGN KEY ([IdStatusContainer]) REFERENCES [dbo].[CatShipContainerStatus] ([IdCatStatus])
 );
+GO
 
 CREATE NONCLUSTERED INDEX [IX_ShippingContainer_ReferenceContainer_IdCustomer]
 ON [dbo].[ShippingContainer]([ReferenceContainer] ASC, [IdCustomer] ASC, [RowStatus] ASC);

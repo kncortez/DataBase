@@ -11,6 +11,7 @@ CREATE TABLE [dbo].[CatShipContainerStatus] (
     [TokenUpdated]        NVARCHAR(50) NULL,
     CONSTRAINT [PK_CatShipContainerStatus] PRIMARY KEY CLUSTERED ([IdCatStatus] ASC)
 );
+GO
 
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador del estado del contenedor', N'SCHEMA', N'dbo', N'TABLE', N'CatShipContainerStatus', N'COLUMN', N'IdCatStatus'
 GO
