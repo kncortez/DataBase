@@ -1,4 +1,4 @@
-﻿ -- =============================================
+ -- =============================================
 -- Author:		<Tito Garcia>
 -- Create date: <2025-01-20>
 -- Description:	<Retorna el headerCode y el Id de un municipio>
