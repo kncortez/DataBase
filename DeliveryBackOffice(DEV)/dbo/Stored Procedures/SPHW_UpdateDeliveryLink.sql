@@ -7,6 +7,10 @@
 -- Modified date:	<2024-10-10>
 -- Description:		<Se devuelve url si es un link creado con usuario logeado o no>
 -- =============================================
+-- Author:			<Walter Orozco>
+-- Modified date:	<2025-05-27>
+-- Description:		<Mejoras de multipaís para SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_UpdateDeliveryLink] 
 @Token         NVARCHAR(250),
 @ReceiverName  NVARCHAR(200),
@@ -118,7 +122,7 @@ BEGIN
    DECLARE @URL NVARCHAR(200) = (SELECT 
 										CASE 
 											WHEN DL.IsUserWithoutLogin = 1 THEN (SELECT [Value] FROM dbo.ConfigParams WITH(NOLOCK) WHERE [Name]='URLWithoutLogin')
-											ELSE (SELECT [Value] FROM dbo.ConfigParams WITH(NOLOCK) WHERE [Name]='URLLinkdeEntrega') 
+											ELSE (SELECT [Value] FROM dbo.ConfigParams WITH(NOLOCK) WHERE [Name]='URLLinkdeEntrega' AND [IdCountry] = @CountryId) 
 										END
 									FROM dbo.DeliveryLink DL WITH(NOLOCK)
 									WHERE DL.Token = @Token);
@@ -163,13 +167,13 @@ BEGIN
 	  
 	COMMIT TRANSACTION;
 
+	DECLARE @NameCountry NVARCHAR(50) = 
+	( SELECT CountryNameES FROM DeliveryBackOffice.dbo.CatCountry WITH(NOLOCK) WHERE IdCountry = @CountryId );
+
 	IF(@Result=1)
 	BEGIN
 	     SELECT 1 AS [StatusCode], 'Datos Actualizados exitosamente' AS[MessageResponse], @NickName [NickName],@PBX AS 'PBX',
-						CASE 
-						     WHEN @CountryId ='GT' THEN 'Guatemala'
-							 ELSE 'Honduras' END
-							 AS 'Country',
+							 @NameCountry AS 'Country',
 							 @URL + @Token AS [URL],
 							 @SenderPhone AS  [SenderPhone] ,
 							 @SenderEmail AS [SenderEmail]
@@ -177,17 +181,11 @@ BEGIN
 	     ELSE IF (@Result=0)
 		 BEGIN
 		    SELECT 0 AS [StatusCode], 'Token no vigente' AS[MessageResponse], @NickName [NickName],@PBX AS 'PBX',
-						CASE 
-						     WHEN @CountryId ='GT' THEN 'Guatemala'
-							 ELSE 'Honduras' END
-							 AS 'Country' 
+						@NameCountry AS 'Country' 
 			END
 			  ELSE
 		          SELECT 3 AS [StatusCode], 'Token Anulado' AS[MessageResponse], @NickName [NickName],@PBX AS 'PBX',
-						CASE 
-						     WHEN @CountryId ='GT' THEN 'Guatemala'
-							 ELSE 'Honduras' END
-							 AS 'Country' 
+						@NameCountry AS 'Country' 
 
 	END TRY
 	
