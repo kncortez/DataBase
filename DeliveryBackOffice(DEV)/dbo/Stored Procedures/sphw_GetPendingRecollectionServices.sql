@@ -22,7 +22,7 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @RefClientId INT = (SELECT TOP 1 Cu.IdCustomer FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK) ON Acc.IdCustomer = Cu.IdCustomer WHERE Cu.[Name] = 'Cliente Referenciado' COLLATE Latin1_General_CI_AI);
+	DECLARE @RefClientId INT = (SELECT TOP 1 Cu.IdCustomer FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK) ON Acc.IdCustomer = Cu.IdCustomer WHERE Cu.[Name] = 'Cliente Referenciado');
 	
 	IF OBJECT_ID('tempdb.dbo.#ServiceAlert', 'U') IS NOT NULL
         DROP TABLE #ServiceAlert;
@@ -109,7 +109,7 @@ BEGIN
 				ON ISNULL(twnT.HeaderCode, TwnTvpc.HeaderCode) = hub.HeaderCode
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
 				ON shp.TypeVehicleId = ctv.IdTypeVehicle
-			LEFT JOIN dbo.ServiceManagement srv
+			LEFT JOIN dbo.ServiceManagement srv WITH (NOLOCK)
 				ON srv.IdSchedulePickup = shp.SchedulePickupId
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
 				ON css.IdServiceStatus = srv.ServiceStatusId
@@ -154,7 +154,7 @@ BEGIN
 			AND
 			------------------------------------------------------------------------
 			--FILTRO DE SERVICIO PENDINETE (ESTADO VALIDO Y SIN INCIDENCIA)
-				srv.ServiceStatusId IN (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name IN ('Creado','Asignado a Ruta','Reprogramado'))
+				srv.ServiceStatusId IN (SELECT IdServiceStatus FROM DBO.CatServiceStatus WITH(NOLOCK) WHERE Name IN ('Creado','Asignado a Ruta','Reprogramado'))
 				AND
 				INSRV.ServiceManagementId IS NULL--No posee ninguna incidencia registrada
 			------------------------------------------------------------------------
