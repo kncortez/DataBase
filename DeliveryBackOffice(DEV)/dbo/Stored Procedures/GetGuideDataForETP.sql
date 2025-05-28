@@ -4,6 +4,11 @@
 -- Create date: <2022-10-21>
 -- Description:	< Obtiene la información de una guía para solicitar ETP a Courier.>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2025-05-23>
+-- Description:	< Optmizacion para mejorar rendimiento de ejecucion del sp>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetGuideDataForETP]
 	@GuideSerie NVARCHAR(2),
@@ -11,6 +16,7 @@ CREATE PROCEDURE [dbo].[GetGuideDataForETP]
 AS
 BEGIN
 
+	DECLARE @Today DATE = CAST(GETDATE() AS DATE);
 	DECLARE @ResponseTable AS TABLE (
 		CourierName NVARCHAR(200),
 		CourierPhones NVARCHAR(50),
@@ -64,7 +70,7 @@ BEGIN
 					AND
 					RP.RowStatus = 1
 					AND
-					RP.DateRoutePreparation = CAST(GETDATE() AS DATE)
+					RP.DateRoutePreparation = @Today
 			LEFT JOIN
 				[DeliveryBackOffice].[dbo].[ServiceManagementDetail] SMD WITH(NOLOCK)
 				ON

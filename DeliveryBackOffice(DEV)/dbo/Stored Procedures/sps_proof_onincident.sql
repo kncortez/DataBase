@@ -23,6 +23,11 @@
 -- Update date: <2024-07-23>
 -- Description:	<Se guarda en la tabla ConfirmationOfIncidence el comentario que registra el piloto al momento de crear la incidencia>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2025-05-23>
+-- Description:	< Optmizacion para mejorar rendimiento de ejecucion del sp>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sps_proof_onincident]
     @GuideSerie NVARCHAR(2)
@@ -49,7 +54,7 @@ BEGIN
                 SELECT TOP (1)
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
-                WHERE [CS].[SysNameSystem] = 'CourierAPP' COLLATE Latin1_General_CI_AI
+                WHERE [CS].[SysNameSystem] = 'CourierAPP'
             );
     -- control de inserción de imagen en tabla de fotografías
     DECLARE @ID_Photo INT;
@@ -70,20 +75,21 @@ BEGIN
     DECLARE @CatTypeConfirmationOfIncidenceId INT;
     DECLARE @ConfirmationOfIncidenceId INT;
     DECLARE @MessageReturn NVARCHAR(100) = N'';
+    DECLARE @DateGlobal DATE = CONVERT(DATE, GETDATE());
 
     DECLARE @EmailNotificationMedium INT =
             (
                 SELECT TOP (1)
                        [CNM].[IdCatNotificationMedium]
                 FROM [DeliveryBackOffice].[dbo].[CatNotificationMedium] CNM WITH (NOLOCK)
-                WHERE [CNM].[NotificationMediumName] = 'Correo SMTP' COLLATE Latin1_General_CI_AI
+                WHERE [CNM].[NotificationMediumName] = 'Correo SMTP'
             );
     DECLARE @NotificationType BIGINT =
             (
                 SELECT TOP (1)
                        [CNT].[IdCatNotificationType]
                 FROM [DeliveryBackOffice].[dbo].[CatNotificationType] CNT WITH (NOLOCK)
-                WHERE [CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin' COLLATE Latin1_General_CI_AI
+                WHERE [CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin'
             );
 
     DECLARE @TokenLinkGeneration NVARCHAR(100) = N'';
@@ -95,8 +101,9 @@ BEGIN
                 FROM [dbo].[DeliveryAttempt]                   DA WITH (NOLOCK)
                     INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-                WHERE DA.Guide_Number = @GuideNumber
-                      AND CONVERT(DATE, DA.Date_Created) = CONVERT(DATE, GETDATE())
+                WHERE DA.Guide_Serie = @GuideSerie
+                  AND DA.Guide_Number = @GuideNumber
+                  AND CONVERT(DATE, DA.Date_Created) = @DateGlobal
             );
 
     IF (ISNULL(@CurrentIncidentCount, 0) <= 0)
@@ -270,7 +277,7 @@ BEGIN
                   )
                   AND da.Guide_Serie = @GuideSerie
                   AND da.Guide_Number = @GuideNumber
-                  AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
+                  AND CONVERT(VARCHAR, da.Date_Created, 23) = @DateGlobal
             ORDER BY da.Date_Created DESC;
 
             -- insertar foto y guardar ID para actualizar tabla de entregas
@@ -655,7 +662,7 @@ BEGIN
                                       AND [NQ].[CatNotificationMediumId] = @EmailNotificationMedium
                                       AND [NQ].[IsSent] = 0
                                       AND [NQ].[RowStatus] = 1
-                                      AND [NQ].[DateToSend] = CAST(GETDATE() AS DATE)
+                                      AND [NQ].[DateToSend] = @DateGlobal
                                 ORDER BY [NQ].[DateToSend] ASC
                             );
 
@@ -854,7 +861,7 @@ BEGIN
                                 SELECT TOP 1
                                        WT.IdWebhookType
                                 FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                WHERE WT.WebhookName = 'GuideStatusChange'
                                       AND WT.RowStatus = 1
                             );
 
@@ -863,8 +870,8 @@ BEGIN
                                      SELECT TOP 1
                                             DO.IdCustomer
                                      FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                     WHERE DO.Guide_Number = @GuideNumber
-                                           AND DO.Guide_Serie = @GuideSerie
+                                     WHERE DO.Guide_Serie = @GuideSerie
+                                           AND DO.Guide_Number = @GuideNumber
                                  )
                                , -1
                                 );
@@ -884,8 +891,8 @@ BEGIN
                         SELECT TOP 1
                                DO.StatusOrderId
                         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                        WHERE DO.Guide_Number = @GuideNumber
-                              AND DO.Guide_Serie = @GuideSerie
+                        WHERE DO.Guide_Serie = @GuideSerie
+                              AND DO.Guide_Number = @GuideNumber
                     );
 
                     -- Cliente tiene webhook configurado para el tipo especificado

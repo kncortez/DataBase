@@ -25,6 +25,11 @@
 -- Update date: <2025-01-12>
 -- Description:	<Se agrega la funcion del proceso por ticket number para las guías>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2025-05-23>
+-- Description:	< Optmizacion para mejorar rendimiento de ejecucion del sp>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
@@ -50,7 +55,7 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
 AS
 BEGIN
 	
-	IF @GuideNumber IS NULL OR @GuideNumber = 0 OR @GuideSerie IS NULL OR @GuideSerie = ''
+	IF (@GuideNumber IS NULL OR @GuideNumber = 0) OR (@GuideSerie IS NULL OR @GuideSerie = '')
 	BEGIN
 		SELECT @GuideNumber = Guide_Number,
 			   @GuideSerie=Guide_Serie
@@ -90,6 +95,8 @@ BEGIN
     DECLARE @DataOriginId INT;
     -- variable para setear el nombre del módulo del cuál se desea obtener su id
     DECLARE @ModName NVARCHAR(50);
+    DECLARE @ActualDate VARCHAR(23) = CONVERT(VARCHAR, GETDATE(), 23);
+    DECLARE @ActualTime DATETIME = GETDATE();
 
     IF OBJECT_ID('tempdb..#TempDataClient', 'U') IS NOT NULL
     BEGIN
@@ -150,8 +157,8 @@ BEGIN
 	SET @IsGuideProcessed = IIF(EXISTS (
 				SELECT 1
 				FROM ProcessedGuideCOD WITH (NOLOCK)
-				WHERE GuideNumber = @GuideNumber
-					AND GuideSerie = @GuideSerie
+				WHERE GuideSerie = @GuideSerie
+					AND GuideNumber = @GuideNumber
 				), 1, 0);
 
     BEGIN TRY
@@ -354,7 +361,7 @@ BEGIN
 			  [SRLT].[LoginToken] = @PhoneNumber)
               AND da.Guide_Serie = @GuideSerie
               AND da.Guide_Number = @GuideNumber
-              AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
+              AND CONVERT(VARCHAR, da.Date_Created, 23) = @ActualDate
                ORDER BY da.Date_Created desc;
 
         -- insertar foto y guardar ID para actualizar tabla de entregas
@@ -404,7 +411,7 @@ BEGIN
             IF @StatusId NOT IN ( 5, 14, 22 ) -- estado etregado
             BEGIN
 
-                PRINT 'ACUTALIZADO DELIVERYORDER';
+			    PRINT 'ACUTALIZADO DELIVERYORDER';
                 PRINT @ExcludeCODPyament;
                 -- actualizar tabla de registro de guías electrónicas
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
@@ -481,7 +488,6 @@ BEGIN
                         INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                 ON dod.Guide_Serie = acodd.GuideSerie
                                AND dod.Guide_Number = acodd.GuideNumber
-                               --AND acodd.RowStatus = 1
                         INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
                                 ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
                         INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
@@ -505,7 +511,6 @@ BEGIN
                         INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                 ON dod.Guide_Serie = acodd.GuideSerie
                                AND dod.Guide_Number = acodd.GuideNumber
-                               --AND acodd.RowStatus = 1
                         INNER JOIN AnticipatedCODHeader acodh WITH(NOLOCK)
                                 ON acodh.IdAnticipatedCODHeader = acodd.AnticipatedCODHeaderId
                         INNER JOIN BatchDetailCOD bdcod WITH(NOLOCK)
@@ -544,7 +549,7 @@ BEGIN
                                 SELECT TOP 1
                                        WT.IdWebhookType
                                 FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                WHERE WT.WebhookName = 'GuideStatusChange' 
+                                WHERE WT.WebhookName = 'GuideStatusChange'
                                       AND WT.RowStatus = 1
                             );
 
@@ -553,8 +558,8 @@ BEGIN
                                                  SELECT TOP 1
                                                         DO.IdCustomer
                                                  FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                                 WHERE DO.Guide_Number = @GuideNumber
-                                                       AND DO.Guide_Serie = @GuideSerie
+                                                 WHERE DO.Guide_Serie = @GuideSerie
+                                                       AND DO.Guide_Number = @GuideNumber
                                              ),
                                              -1
                                                    );
@@ -574,8 +579,8 @@ BEGIN
                         SELECT TOP 1
                                DO.StatusOrderId
                         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                        WHERE DO.Guide_Number = @GuideNumber
-                              AND DO.Guide_Serie = @GuideSerie
+                        WHERE DO.Guide_Serie = @GuideSerie
+                              AND DO.Guide_Number = @GuideNumber
                     );
 
                     -- Cliente tiene webhook configurado para el tipo especificado
@@ -662,8 +667,8 @@ BEGIN
 									AND do.Guide_Number = dop.GuideNumber
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
-									WHERE do.Guide_Number = @GuideNumber
-										AND do.Guide_Serie = @GuideSerie
+									WHERE do.Guide_Serie = @GuideSerie
+										AND do.Guide_Number = @GuideNumber
 										AND WHE.TypeConnectionId = 2
 									GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -695,13 +700,13 @@ BEGIN
 								INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 									ON do.Guide_Serie = dop.GuideSerie
 									AND do.Guide_Number = dop.GuideNumber
-									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+								INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
-									WHERE do.Guide_Number = @GuideNumber
-									AND do.Guide_Serie = @GuideSerie
+								WHERE do.Guide_Serie = @GuideSerie
+									AND do.Guide_Number = @GuideNumber
 									AND dop.ExternalPieceId IS NOT NULL
 									AND WHE.TypeConnectionId = 2
-									GROUP BY dop.GuideSerie,dop.GuideNumber
+								GROUP BY dop.GuideSerie,dop.GuideNumber
 					  
 					  		INSERT INTO WebhookTrackingQueueDetailForSFTP 
 								(CustomerId,
@@ -844,7 +849,7 @@ BEGIN
 								AND
 								MMBSHP.RowStatus = 1
 								AND
-								MMBSHP.ExpirationDate >= GETDATE()
+								MMBSHP.ExpirationDate >= @ActualTime
 					WHERE
 						DO.Guide_Serie = @GuideSerie
 						AND
@@ -865,8 +870,6 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[Membership] MMBSHP WITH(NOLOCK)
 							ON
 								MSL.MembershipId = MMBSHP.IdMembership
-								AND
-								MSL.SubscriptionId IS NULL
 					WHERE
 						MSL.LogGuideSerie = @GuideSerie
 						AND
@@ -875,6 +878,8 @@ BEGIN
 						MSL.RowStatus = 1
 						AND
 						MSL.LogServiceNumber <= MMBSHP.MembershipMaxServiceFixedValue
+						AND
+						MSL.SubscriptionId IS NULL
 
 					-- Por suscripción
 					SELECT
@@ -908,9 +913,9 @@ BEGIN
 					FROM
 						[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL
 					WHERE
-						PBSL.GuideNumber = @GuideNumber
-						AND
 						PBSL.GuideSerie = @GuideSerie
+						AND
+						PBSL.GuideNumber = @GuideNumber
 						AND
 						PBSL.RowStatus = 1
 
