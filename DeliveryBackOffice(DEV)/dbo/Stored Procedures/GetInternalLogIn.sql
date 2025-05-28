@@ -37,7 +37,6 @@ AS
 			Id NVARCHAR(50)
 		);
 
-        DECLARE @jsonResult NVARCHAR(MAX);
         DECLARE @StatusRestrinct NVARCHAR(50);
         DECLARE @StatusUser BIT;
         DECLARE @IdUser BIGINT;
@@ -64,7 +63,7 @@ AS
 				FROM 
 					[DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) 
 				WHERE 
-					CS.SysNameSystem = @SystemName COLLATE Latin1_General_CI_AI 
+					CS.SysNameSystem = @SystemName 
 					AND 
 					CS.SysRowStatus = 1
 			)
@@ -202,7 +201,7 @@ AS
                                         IF
                                         (
                                             SELECT COUNT(*)
-                                            FROM [dbo].TokenLog tkn
+                                            FROM [dbo].TokenLog tkn WITH(NOLOCK)
                                             WHERE tkn.TknIdToken = @Token
                                         ) = 0 --si el token no exite crearlo 
                                         BEGIN
@@ -237,11 +236,6 @@ AS
 													NULL
                                                 );
                                         END;
-
-                                        DECLARE @JsonModules NVARCHAR(MAX);
-                                        DECLARE @JsonAccounts NVARCHAR(MAX);
-                                        DECLARE @JsonProfile NVARCHAR(MAX);
-										DECLARE @JsonProfileEXP NVARCHAR(MAX) = '';
 
                                         -- obtener modulos a los que tiene acceso el usuario logueado
 										/*tabla temporal ModIdModule*/
@@ -331,7 +325,8 @@ AS
 											SELECT @TOTALSUBMODULES = COUNT(ModIdModule) FROM @TBSUBMODULES
 											
 										END 
-
+										
+										DECLARE @InformationTable TABLE(ModIdModule INT, Module NVARCHAR(150), Icon NVARCHAR(100), Path NVARCHAR(250))
 										
 										WHILE @TOTALSUBMODULES > 0
 										BEGIN 
@@ -343,15 +338,17 @@ AS
 											SELECT 
 												(SELECT TMP.ModIdModule FROM @TBSUBMODULES AS TMP WHERE TMP.ITERATOR = @ITERATORSUBMODULES) AS ModIdModuleDAD , cmo.ModIdModule AS ModIdModuleCHILD  
 											FROM DeliveryBackOffice.[dbo].RegisterUser us WITH(NOLOCK)
-												INNER JOIN 
-													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
-													ON 
-														RBUBA.RusIdUser = us.UsrIdUser
-												INNER JOIN dbo.RolByModuleBySystem rms WITH(NOLOCK) ON rms.RmsIdRol = RBUBA.RusIdRol
-												INNER JOIN [dbo].CatModule cmo WITH(NOLOCK) ON cmo.ModIdModule = rms.RmsIdModule
+												INNER JOIN DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
+													ON RBUBA.RusIdUser = us.UsrIdUser
+												INNER JOIN dbo.RolByModuleBySystem rms WITH(NOLOCK) 
+													ON rms.RmsIdRol = RBUBA.RusIdRol
+												INNER JOIN [dbo].CatModule cmo WITH(NOLOCK) 
+													ON cmo.ModIdModule = rms.RmsIdModule
 												-- AND 
-												INNER JOIN [dbo].CatRol rol  WITH(NOLOCK)ON rol.RolIdRol = rms.RmsIdRol
-												INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) ON iu.RegisterUserID = us.UsrIdUser
+												INNER JOIN [dbo].CatRol rol  WITH(NOLOCK)
+													ON rol.RolIdRol = rms.RmsIdRol
+												INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) 
+													ON iu.RegisterUserID = us.UsrIdUser
 											WHERE 
 												iu.UserName = @UserName 
 												and 
@@ -372,119 +369,128 @@ AS
 														TMP.ITERATOR = @ITERATORSUBMODULES
 											)
 
-											SELECT @CHILDSMENU = COUNT(1) FROM @TBSUBMODULES2
+											SELECT @CHILDSMENU = COUNT(1) FROM @TBSUBMODULES2											
 
 											WHILE @CHILDSMENU > 0
 											BEGIN 
-												SELECT @CHILDSMD = @CHILDSMD  + ' {"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata + '",' + '"Path":"' + cmo.ModPath + '"},'
-                                            FROM [dbo].CatModule cmo 
-												  WHERE cmo.ModIdModule = (select TMP.ModIdModuleCHILD from @TBSUBMODULES2 AS TMP where TMP.ITERATOR2 = @CHILDSMENU2)
-												  AND cmo.ModIdModuleParent = (SELECT TMP.ModIdModule FROM @TBSUBMODULES AS TMP WHERE TMP.ITERATOR = @ITERATORSUBMODULES)
+												INSERT INTO @InformationTable (ModIdModule, Module, Icon, Path)										
+												SELECT CMO.ModIdModuleParent,
+														cmo.ModName, 
+														cmo.ModMetadata, 
+														cmo.ModPath 
+												FROM [dbo].CatModule cmo WITH (NOLOCK)
+												WHERE cmo.ModIdModule = (select TMP.ModIdModuleCHILD from @TBSUBMODULES2 AS TMP where TMP.ITERATOR2 = @CHILDSMENU2)
+												AND cmo.ModIdModuleParent = (SELECT TMP.ModIdModule FROM @TBSUBMODULES AS TMP WHERE TMP.ITERATOR = @ITERATORSUBMODULES)
 
 												SET @CHILDSMENU2 = @CHILDSMENU2 + 1;
 												SET @CHILDSMENU= @CHILDSMENU - 1
 											END 
-											if (@CHILDSMD is not null and LEN(@CHILDSMD)>0)
-											BEGIN	
-													SET @CHILDSMD = LEFT(@CHILDSMD, LEN(@CHILDSMD) - 1) 
-											END
-											UPDATE @TBSUBMODULES
-											SET SUBMODULES = @CHILDSMD
-											WHERE ITERATOR = @ITERATORSUBMODULES
+
 											SET @ITERATORSUBMODULES = @ITERATORSUBMODULES + 1;
 											SET @TOTALSUBMODULES = @TOTALSUBMODULES - 1;
 										END 
 
+
 										/*END SUBMODULOES*/
-                                        SET @JsonModules =
-                                        (
-                                            SELECT STUFF(
-                                        (
-                                            SELECT ',{"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata + '",' + '"Path":"' + cmo.ModPath + '",' + '"Rol":"' + rol.RolName + 
-											(case when len(isnull(TMP.SUBMODULES,'')) > 0 then 
-											'",' + '"SubModule":['+COALESCE(TMP.SUBMODULES,'')+']}'
-											else '"}' end )
-                                            FROM DeliveryBackOffice.[dbo].RegisterUser us WITH(NOLOCK)
-												INNER JOIN 
-													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
-													ON RBUBA.RusIdUser = us.UsrIdUser
-                                                 INNER JOIN dbo.RolByModuleBySystem rms WITH(NOLOCK) ON rms.RmsIdRol = RBUBA.RusIdRol
-                                                 INNER JOIN [dbo].CatModule cmo  WITH(NOLOCK)ON cmo.ModIdModule = rms.RmsIdModule
-                                                 INNER JOIN [dbo].CatRol rol WITH(NOLOCK) ON rol.RolIdRol = rms.RmsIdRol
-												 LEFT JOIN @TBSUBMODULES TMP ON TMP.ModIdModule = cmo.ModIdModule 
-                                            INNER JOIN DeliveryBackOffice.dbo.InternalUser iu ON iu.RegisterUserID = us.UsrIdUser
-                                            WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
-                                              AND RBUBA.RusIdSystem = @IdSystem
-                                              AND RBUBA.RusRowStatus = 1
-                                              AND rms.RmsRowStatus = 1
-                                              AND cmo.ModRowStatus = 1
-                                              AND cmo.ModVisible = 1
-                                              AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
-                                            order by cmo.ModOrder FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'), 1, 1, '')
-                                        );
-                                        
-										-- obtener las cuentas a las que tiene acceso el usuario
+								SELECT 200 AS IdResult,
+									   @Token AS Token
+
+                                SELECT cmo.ModName AS Module, 
+										cmo.ModMetadata AS Icon, 
+										cmo.ModPath AS Path,
+										rol.RolName AS Rol, 
+										TMP.ModIdModule AS SubModule
+								--(CASE WHEN len(COALESCE(TMP.ModIdModule,'')) > 0 then COALESCE(TMP.ModIdModule,'') else '' end ) AS SubModule
+                                FROM DeliveryBackOffice.[dbo].RegisterUser us WITH(NOLOCK)
+								INNER JOIN DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
+									ON RBUBA.RusIdUser = us.UsrIdUser
+                                INNER JOIN dbo.RolByModuleBySystem rms WITH(NOLOCK) 
+									ON rms.RmsIdRol = RBUBA.RusIdRol
+                                INNER JOIN [dbo].CatModule cmo  WITH(NOLOCK)
+									ON cmo.ModIdModule = rms.RmsIdModule
+                                INNER JOIN [dbo].CatRol rol WITH(NOLOCK) 
+									ON rol.RolIdRol = rms.RmsIdRol
+								LEFT JOIN @TBSUBMODULES TMP 
+									ON TMP.ModIdModule = cmo.ModIdModule 
+                                INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH (NOLOCK) ON iu.RegisterUserID = us.UsrIdUser
+                                WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
+                                    AND RBUBA.RusIdSystem = @IdSystem
+                                    AND RBUBA.RusRowStatus = 1
+                                    AND rms.RmsRowStatus = 1
+                                    AND cmo.ModRowStatus = 1
+                                    AND cmo.ModVisible = 1
+                                    AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
+
+									--SELECT * FROM @TBSUBMODULES
+
+					-- obtener las cuentas a las que tiene acceso el usuario
+					IF EXISTS (SELECT TOP 1 * FROM @InformationTable ) 
+					BEGIN 			
+							SELECT	ModIdModule,
+									Module,
+									Icon,
+									Path
+							FROM @InformationTable
+					END
+					ELSE
+					BEGIN
+						SELECT -1 AS ModIdModule, 
+								'No hay módulos' AS Modules
+					END
+
+                    SELECT us.UsrIdUser AS IdUser, 
+							iu.Username AS UserName, 
+							'Interno' AS TacName, 
+							ro.RolName AS RolName, 
+							COALESCE(CTMSP.Code, 'N/A') AS SalesPersonCode 
+                        FROM DeliveryBackOffice.dbo.RegisterUser us WITH(NOLOCK)
+						INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) 
+							ON pe.PerIdPerson = us.UsrIdPerson
+						INNER JOIN DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
+							ON RBUBA.RusIdUser = us.UsrIdUser
+						INNER JOIN DeliveryBackOffice.dbo.CatRol ro WITH(NOLOCK) ON ro.RolIdRol = RBUBA.RusIdRol
+						INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) ON iu.RegisterUserID = UsrIdUser
+						LEFT JOIN [DeliveryBackOffice].[dbo].[CatTMSalesPerson] CTMSP WITH(NOLOCK)
+							ON CTMSP.RegisterUserId = us.UsrIdUser
+							AND CTMSP.RowStatus = 1
+					WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
+						AND pe.PerRowStatus = 1
+						AND RBUBA.RusIdSystem = @IdSystem
+						AND RBUBA.RusRowStatus = 1
+						AND iu.RowStatus = 1
+
+                    -- obtener los datos del perfil asociado al usuario 
 
 
-                                        SET @JsonAccounts =
-                                        (
-                                            SELECT STUFF(
-                                        (
-                                            SELECT ',{"IdUser":"' + CONVERT(VARCHAR, us.UsrIdUser) + '",' + '"UserName":"' + iu.Username + '",' + '"TacName":"Interno",' + '"RolName":"' + ro.RolName + '",'  + '"SalesPersonCode":"' + ISNULL(CTMSP.Code, 'N/A') + '"' + '}'
-                                            FROM DeliveryBackOffice.dbo.RegisterUser us WITH(NOLOCK)
-                                                 INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) 
-                                                        ON pe.PerIdPerson = us.UsrIdPerson
-                                                 INNER JOIN DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
-                                                        ON RBUBA.RusIdUser = us.UsrIdUser
-                                                 INNER JOIN DeliveryBackOffice.dbo.CatRol ro WITH(NOLOCK) ON ro.RolIdRol = RBUBA.RusIdRol
-                                                 INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) ON iu.RegisterUserID = UsrIdUser
-                                                 LEFT JOIN [DeliveryBackOffice].[dbo].[CatTMSalesPerson] CTMSP WITH(NOLOCK)
-                                                        ON CTMSP.RegisterUserId = us.UsrIdUser
-                                                        AND CTMSP.RowStatus = 1
-												WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
-                                                  AND pe.PerRowStatus = 1
-                                                  AND RBUBA.RusIdSystem = @IdSystem
-                                                  AND RBUBA.RusRowStatus = 1
-													AND iu.RowStatus = 1 FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'), 1, 1, '')
-                                        );
-                                        -- obtener los datos del perfil asociado al usuario 
+                    SELECT pe.PerFirstName AS FirstName, 
+							pe.PerLastName AS LastName, 
+							pe.PerGender AS Gender,
+							COALESCE(pe.PerBirthdate,'') AS Birthdate,
+							pe.PerIdentification AS Identification,  
+							pe.PerNationality AS Nationality, 
+							CONVERT(VARCHAR, us.UsrNickName) AS NickName, 
+							COALESCE(us.Phone,'') AS Phone, 									 
+							1 AS TAC
+                    FROM DeliveryBackOffice.dbo.RegisterUser us WITH(NOLOCK)
+                            INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) 
+                                    ON pe.PerIdPerson = us.UsrIdPerson
+                            INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) 
+                                    ON iu.RegisterUserID = us.UsrIdUser
+					WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
+						AND iu.RowStatus = 1
+                        AND pe.PerRowStatus = 1
 
-                                        SET @JsonProfile =
-                                        (
-                                            SELECT STUFF(
-                                        (
-                                           SELECT ',{"FirstName":"' + pe.PerFirstName + '",' + '"LastName":"' + pe.PerLastName + '",' + '"Gender":"' + pe.PerGender + '",' +
-                                         '"Birthdate":"' + CONVERT(VARCHAR, ISNULL(pe.PerBirthdate,'')) + '",' + '"Identification":"'
-                                         + pe.PerIdentification + '",' + '"Nationality":"' + pe.PerNationality + '",' 
-                                         + '"NickName":"' + CONVERT(VARCHAR, us.UsrNickName) + '",'
-                                         + '"Phone":"' + ISNULL(us.Phone,'') + '",'										 
-										 --+ '"IdCountry":"' + ISNULL(pe.PerCountryOrigin,'GT') + '",'
-										 + '"TAC":"TRUE"}'
-                                            FROM DeliveryBackOffice.dbo.RegisterUser us WITH(NOLOCK)
-                                                    INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) 
-                                                            ON pe.PerIdPerson = us.UsrIdPerson
-                                                    INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) 
-                                                            ON iu.RegisterUserID = us.UsrIdUser
-											WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
-											  AND iu.RowStatus = 1
-                                              AND pe.PerRowStatus = 1
-                                         FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'), 1, 1, '')
-                                        );
 
-						      IF (@VERIFYUSER > 0)
-							  BEGIN
+				IF (@VERIFYUSER > 0)
+				BEGIN
 
-                               SET @JsonProfileEXP = (SELECT STUFF((
-		   							SELECT DISTINCT
-											',{"Name":"' + ISNULL( CS.StationName ,'') + '",' +
-											'"ContactName":"' + isnull( RTRIM(LTRIM(CONCAT(pe.PerFirstName,' ', pe.PerLastName))) , '')  + '",' +	  	  
-											'"Phone":"' + isnull(ru.Phone, '')  + '",' +
-											'"Email":"' + isnull(ru.UsrEmail, '')  + '",' +
-											'"IdCountry":"' + ISNULL(CS.CountryId,'GT') + '",'+
-											'"Station":' + CAST(ISNULL(CS.IdStation,0) AS NVARCHAR)+',' + '}' 
+		   			SELECT DISTINCT
+							COALESCE( CS.StationName ,'') AS Name,
+							COALESCE( RTRIM(LTRIM(CONCAT(pe.PerFirstName,' ', pe.PerLastName))),'') AS ContactName,   	  
+							COALESCE(ru.Phone, '') AS Phone, 
+							COALESCE(ru.UsrEmail, '') AS Email, 
+							COALESCE(CS.CountryId,'GT') AS IdCountry,
+							COALESCE(CS.IdStation,0)  AS Station
 			        FROM  
 			         DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) 
 			        INNER JOIN DeliveryBackOffice.dbo.RegisterUser ru WITH(NOLOCK) 
@@ -499,59 +505,39 @@ AS
                       AND pe.PerRowStatus = 1
                       AND RBUBA.RusIdSystem = @IdSystem
                       AND RBUBA.RusRowStatus = 1
-		    FOR XML PATH(''), TYPE
-		   ).value('.', 'varchar(max)'),1,1,''
-		   			  )) 				
-END
+				
+				END
 
-         SET @jsonResult =
-                                        (
-                                            SELECT STUFF(
-                                        (
-                                            SELECT '{"IdResult":200' + ',' + '"Token":"' + @Token + '",' + '"Modules":[' + ISNULL(@JsonModules,'No hay módulos') + '],' + '"Accounts":[' + @JsonAccounts + '],' + '"Profile":[' + CASE WHEN @VERIFYUSER > 0 THEN @JsonProfile + ',' + @JsonProfileEXP ELSE @JsonProfile END + ']' + '}' FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'), 1, 1, '')
-                                        );
-                                    END;
-                                    ELSE
-                                    BEGIN
-                                        SET @jsonResult =
-                                        (
-                                            SELECT STUFF(
-                                        (
-                                            SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '"}'
-                                            FROM @ErrorMessage
-                                            WHERE Id = 'Inactive' FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'), 1, 1, '')
-                                        );
-                                    END;
-                            END;
-                            ELSE -- usuario bloqueado
-                            BEGIN
-                                IF((@StatusRestrinct = 'BLOCKED'))
-                                    BEGIN
-                                        SET @jsonResult =
-                                        (
-                                            SELECT STUFF(
-                                        (
-                                            SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '"}'
-                                            FROM @ErrorMessage
-                                            WHERE Id = 'Blocked' FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'), 1, 1, '')
-                                        );
-                                    END;
-                                    ELSE -- culaquier otro estado diferente de "ACTIVE" y "BLOCKED"
-                                    BEGIN
-                                        SET @jsonResult =
-                                        (
-                                            SELECT STUFF(
-                                        (
-                                            SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '"}'
-                                            FROM @ErrorMessage
-                                            WHERE Id = 'Inactive' FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)'), 1, 1, '')
-                                        );
-                                    END;
-                            END;
+                END;
+                ELSE
+                BEGIN
+
+                    SELECT IdResult, 
+							Message
+                    FROM @ErrorMessage
+                    WHERE Id = 'Inactive' 
+
+                END;
+        END;
+        ELSE -- usuario bloqueado
+        BEGIN
+            IF((@StatusRestrinct = 'BLOCKED'))
+                BEGIN
+                    SELECT IdResult,
+							Message 
+                    FROM @ErrorMessage
+                    WHERE Id = 'Blocked' 
+
+                END;
+                ELSE -- culaquier otro estado diferente de "ACTIVE" y "BLOCKED"
+                BEGIN
+
+                    SELECT IdResult,  
+							Message 
+                    FROM @ErrorMessage
+                    WHERE Id = 'Inactive' 
+                END;
+        END;
 
                     
             END;
@@ -570,18 +556,13 @@ END
                 WHERE usr.UsrEmail = @UserName;
 
                 -- retornar mensaje de error
-                SET @jsonResult =
-                (
-                    SELECT STUFF(
-                (
-                    SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '"}'
-                    FROM @ErrorMessage
-                    WHERE Id = 'Invalid' FOR XML PATH(''), TYPE
-                ).value('.', 'varchar(max)'), 1, 1, '')
-                );
+
+                SELECT IdResult, 
+						Message 
+                FROM @ErrorMessage
+                WHERE Id = 'Invalid' 
+
             END;
 
         -- retornar resultado en formato json
-
-        SELECT('[{' + @jsonResult + ']') jsonResult;
     END;
