@@ -1321,7 +1321,6 @@
     <Build Include="dbo\Stored Procedures\SupportCreateNewInternalUserWeb.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateHub.sql" />
-    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\SupportConfirmAccountexcweb.sql" />
     <Build Include="dbo\Stored Procedures\SupportChangeIdSation.sql" />
@@ -1769,7 +1768,6 @@
     <Build Include="dbo\Stored Procedures\SPWS_RemoveGuidesContainer.sql" />
     <Build Include="dbo\Stored Procedures\SPWS_SetGuidesContainer.sql" />
     <Build Include="dbo\Stored Procedures\SPWS_SetNewReferenceGuide.sql" />
-    <Build Include="dbo\Stored Procedures\FinishServiceCartByAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\GetGuideDuplicator.sql" />
     <Build Include="dbo\Stored Procedures\GetGuidesByContainerByReference.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
@@ -1778,11 +1776,10 @@
     <Build Include="dbo\Stored Procedures\SetFinishPickUpBatch.sql" />
     <Build Include="dbo\Stored Procedures\SetPickUpFinishAppPieces.sql" />
     <Build Include="dbo\Stored Procedures\SetValidPickUpPiece.sql" />
-    <Build Include="dbo\Stored Procedures\spg_gestion_usuario_internoV2.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RoutePreparationPickUp.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_GetGuideInfoHD.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetContainerInfoToSendEmail.sql" />
-    <Build Include="dbo\Stored Procedures\sphdGetGuidesByTicketNumberRestriction.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetGuidesByTicketNumberNoRestriction.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetInfoByCountry.sql" />
     <Build Include="dbo\Stored Procedures\sphdUpdateStatusContainer.sql" />
     <Build Include="dbo\Stored Procedures\sphdValidateGuideByContainer.sql" />
@@ -1791,15 +1788,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetNewDeliveryTracking.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByContainer.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
-    <Build Include="dbo\Stored Procedures\sphwGetGuidesByTRConfiguration.sql" />
-    <Build Include="dbo\Stored Procedures\GetProcessBatchPO.sql" />
-    <Build Include="dbo\Stored Procedures\GetUpdateRegisterGODearly_1.sql" />
-    <Build Include="dbo\Stored Procedures\SetFinalPickUp.sql" />
-    <Build Include="dbo\Stored Procedures\spg_get_RouteServiceAssignment.sql" />
-    <Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttempts.sql" />
-    <Build Include="dbo\Stored Procedures\spHM_GetMissingGuidesLinehaulRoutePreparation.sql" />
-    <Build Include="dbo\Stored Procedures\spw_get_deliveryorders_track.sql" />
-    <Build Include="dbo\Stored Procedures\spw_check_guide.sql" />
+    <Build Include="dbo\Stored Procedures\sphwGetGuidesByTNConfirmation.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1893,7 +1882,6 @@
     <Build Include="dbo\User Defined Types\TblAnticipatedCODCustomerBalance_1.sql" />
     <Build Include="dbo\Tables\FinishPickUpHeader.sql" />
     <Build Include="dbo\Tables\FinishPickUpDetail.sql" />
-    <Build Include="dbo\Stored Procedures\SetFinishPickUpBatch.sql" />
     <Build Include="dbo\Stored Procedures\GetSalesBook.sql" />
     <Build Include="dbo\Stored Procedures\GetProcessBatchPOD.sql" />
     <Build Include="dbo\Stored Procedures\GetBatchPOD.sql" />
