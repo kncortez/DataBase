@@ -3,6 +3,10 @@
 -- Create date: <10-02-2023>
 -- Description:	< Función para determinar tipo de servicio en base a datos de una guía, o verificar si tipo de servicio de guía es valido para condiciones de la guía >
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2025-05-27>
+-- Description:	<Se quita collate innecesario>
+-- =============================================
 CREATE FUNCTION  [dbo].[fn_GetGuideServiceType]
 (
 	@GuideSerie NVARCHAR(2),
@@ -97,7 +101,7 @@ BEGIN
 		AND
 		RD.ArticleId IS NULL
 		AND
-		CTS.CtsShortName = @StatedTypeService COLLATE Latin1_General_CI_AI
+		CTS.CtsShortName = @StatedTypeService
 
 	-- Se adminte que ya se encontro tipo de servicio
 	IF(@FinalTypeServiceFound = 1)
