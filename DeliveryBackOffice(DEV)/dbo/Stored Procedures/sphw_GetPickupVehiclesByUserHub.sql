@@ -16,7 +16,7 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @PickupServiceTypeId INT = (SELECT TOP 1 CTR.IdTypeRoute FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH(NOLOCK) WHERE CTR.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI)
+	DECLARE @PickupServiceTypeId INT = (SELECT TOP 1 CTR.IdTypeRoute FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH(NOLOCK) WHERE CTR.[Name] = 'Recolección')
 
 	DECLARE @ResponseTable AS TABLE(
 		CourierId INT,
@@ -131,10 +131,10 @@ BEGIN
 		(SELECT
 			hl.IdHubLogistic
 		FROM HubLogisticByUser hlbu WITH (NOLOCK)
-		INNER JOIN HubLogistics hl
+		INNER JOIN HubLogistics hl WITH (NOLOCK)
 			ON hl.IdHubLogistic = hlbu.HubLogisticId
 		WHERE UserId = @IdUser
-		AND ISNULL(hl.IdCountry, 'GT') = @IdCountry)
+		AND (hl.IdCountry = @IdCountry OR (hl.IdCountry IS NULL AND @IdCountry = 'GT')))
 	)
 	AND ra.RowStatus = 1
 	AND cr.IdTypeRoute = @PickupServiceTypeId
@@ -225,10 +225,10 @@ BEGIN
 		(SELECT
 			hl.IdHubLogistic
 		FROM HubLogisticByUser hlbu WITH (NOLOCK)
-		INNER JOIN HubLogistics hl
+		INNER JOIN HubLogistics hl WITH (NOLOCK)
 			ON hl.IdHubLogistic = hlbu.HubLogisticId
 		WHERE UserId = @IdUser
-		AND ISNULL(hl.IdCountry, 'GT') = @IdCountry)
+		AND (hl.IdCountry = @IdCountry OR (hl.IdCountry IS NULL AND @IdCountry = 'GT')))
 	)
 	AND RT.CourierId IS NULL
 	AND ra.RowStatus = 1
