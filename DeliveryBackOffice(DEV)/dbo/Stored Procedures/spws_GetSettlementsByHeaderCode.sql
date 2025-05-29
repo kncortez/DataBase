@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<Tito Garcia>
 -- Create date: <2025-01-03>
 -- Description:	<Retorna listado de poblados desde su codigo de cabecera del municipio>

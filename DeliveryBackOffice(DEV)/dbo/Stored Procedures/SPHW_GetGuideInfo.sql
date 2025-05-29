@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<Aylinne Recinos>
 -- Create date: <2024-27-12>
 -- Description:	<Método para obtener el número de guía y la serie utilizando el identificador del usuario y el número de orden>
