@@ -97,7 +97,7 @@ BEGIN
 		AND
 		Acc.AccRowStatus = 1
 		AND
-		ISNULL(Cu.RowSatus,1) = 1
+		COALESCE(Cu.RowSatus,1) = 1
 
 	-- Ingreso de filtros de estado
 	INSERT INTO @FilteredStatus
@@ -332,20 +332,20 @@ BEGIN
 
 			SELECT
 				CONCAT(DO.GuideSerie, DO.GuideNumber) 'Guide',
-				(ISNULL(DO.Pieces_Dry,0) + ISNULL(DO.Pieces_Cold,0)) 'Pieces',
-				ISNULL(DO.Ticket_Number,'') 'Reference',
+				(COALESCE(DO.Pieces_Dry,0) + COALESCE(DO.Pieces_Cold,0)) 'Pieces',
+				COALESCE(DO.Ticket_Number,'') 'Reference',
 				UPPER(LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName,' ',DO.Receiver_LastName)))) 'ReceiverName',
-				ISNULL(DO.Receiver_Phone, '') 'ReceiverPhone',
+				COALESCE(DO.Receiver_Phone, '') 'ReceiverPhone',
 				(CASE
 					WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 0
-					ELSE ISNULL(DO.IsCollect, 0)
+					ELSE COALESCE(DO.IsCollect, 0)
 				END) 'IsCollect',
-				CAST(CAST(ISNULL(DO.PriceShippment, 0) AS MONEY) AS NVARCHAR) 'PriceService',
-				CAST(CAST(ISNULL(DO.Collect_OnDelivery, 0) AS MONEY) AS NVARCHAR) 'CollectOnDelivery',
+				CAST(CAST(COALESCE(DO.PriceShippment, 0) AS MONEY) AS NVARCHAR) 'PriceService',
+				CAST(CAST(COALESCE(DO.Collect_OnDelivery, 0) AS MONEY) AS NVARCHAR) 'CollectOnDelivery',
 				SO.StatusOrderId 'IdStatus',
 				UPPER(SO.OrderDescription) 'StatusDescription',
-				ISNULL(DOPD.ShipmentCompleted, 0) 'ShippmentComplete',
-				ISNULL((
+				COALESCE(DOPD.ShipmentCompleted, 0) 'ShippmentComplete',
+				COALESCE((
 					CASE
 						WHEN ISNULL(DOPD.ShipmentCompleted, 0) = 0 THEN 'PENDIENTE'
 						WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
@@ -354,22 +354,22 @@ BEGIN
 						ELSE UPPER(CPType.PayTypeName)
 					END
 				), 'PENDIENTE') 'WayToPay',
-				ISNULL((
+				COALESCE((
 					CASE
-						WHEN ISNULL(DOPD.ShipmentCompleted, 0) = 0 THEN UPPER('pendiente de pago')
+						WHEN COALESCE(DOPD.ShipmentCompleted, 0) = 0 THEN UPPER('pendiente de pago')
 						WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 						WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 						WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER('pago al crédito')
 						ELSE UPPER(IOOMT.tio_pk_name)
 					END
 				), UPPER('pago en efectivo')) 'TypePayment',
-				UPPER(ISNULL(DO.TypeService, '')) 'TypeService',
+				UPPER(COALESCE(DO.TypeService, '')) 'TypeService',
 				(CASE 
 					WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN CONVERT(VARCHAR, @InmediatePaymentTime)
-					ELSE ISNULL(CONVERT(VARCHAR, DOPD.TimePlaId), '') 
+					ELSE COALESCE(CONVERT(VARCHAR, DOPD.TimePlaId), '') 
 				END) 'TimePayment',
-				ISNULL(CPTime.TimePlaName, '') 'TimePaymentDescription',
-				ISNULL(CCC.Symbol+'.','Q.') 'CurrencySymbol'
+				COALESCE(CPTime.TimePlaName, '') 'TimePaymentDescription',
+				COALESCE(CCC.Symbol+'.','Q.') 'CurrencySymbol'
 			FROM
 				#AccountFilteredGuides DO WITH(NOLOCK)
 				INNER JOIN
