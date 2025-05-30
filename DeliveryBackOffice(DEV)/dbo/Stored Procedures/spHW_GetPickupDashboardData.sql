@@ -66,13 +66,13 @@ BEGIN
 		SET @IsRecentDate = 1;
 
 	-- Variables de apoyo
-	DECLARE @PickupRouteTypeId INT = (SELECT TOP 1 CTR.IdTypeRoute FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH(NOLOCK) WHERE CTR.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI);
-	DECLARE @PickupServiceSubTypeId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI)
+	DECLARE @PickupRouteTypeId INT = (SELECT TOP 1 CTR.IdTypeRoute FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH(NOLOCK) WHERE CTR.[Name] = 'Recolección');
+	DECLARE @PickupServiceSubTypeId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Recolección')
 
-	DECLARE @PickedupServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Recolectado' COLLATE Latin1_General_CI_AI)
-	DECLARE @IncidenceServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Incidencia' COLLATE Latin1_General_CI_AI)
-	DECLARE @CanceledServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Cancelado' COLLATE Latin1_General_CI_AI)
-
+	DECLARE @PickedupServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Recolectado')
+	DECLARE @IncidenceServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Incidencia')
+	DECLARE @CanceledServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Cancelado')
+	--PRINT @PickupRouteTypeId; PRINT @PickupServiceSubTypeId; PRINT @PickedupServiceStatusId; PRINT @IncidenceServiceStatusId; PRINT @CanceledServiceStatusId;
 	-- Variables de retorno de datos
 	DECLARE @CourierData TABLE(
 		CourierId INT,
@@ -142,21 +142,15 @@ BEGIN
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[HubLogisticByUser] HLU WITH(NOLOCK)
 				ON
-					SR.HubLogisticId = HLU.HubLogisticId
-					AND
-					HLU.UserId = @UserId
+					SR.HubLogisticId = HLU.HubLogisticId					
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
 				ON
-					SR.ID = RA.IdCurrierMan
-					AND
-					RA.DateOfRoute BETWEEN @StartDate AND @EndDate
+					SR.ID = RA.IdCurrierMan					
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[CatRoute] CR WITH(NOLOCK)
 				ON
-					RA.IdRoute = CR.IdRoute
-					AND
-					CR.IdTypeRoute = @PickupRouteTypeId
+					RA.IdRoute = CR.IdRoute					
 			LEFT JOIN
 				[DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH(NOLOCK)
 				ON
@@ -194,6 +188,9 @@ BEGIN
 		WHERE
 			(@CourierId IS NULL OR SR.ID = @CourierId)
 			AND ISNULL(SR.IdCountry, 'GT') = @IdCountry
+			AND HLU.UserId = @UserId
+			AND RA.DateOfRoute BETWEEN @StartDate AND @EndDate
+			AND CR.IdTypeRoute = @PickupRouteTypeId
 		GROUP BY
 			SR.ID
 			,SR.First_Name
@@ -222,17 +219,11 @@ BEGIN
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
 					ON
-						CD.CourierId = RA.IdCurrierMan
-						AND
-						RA.DateOfRoute = CAST(GETDATE() AS DATE)
-						AND
-						RA.RowStatus = 1
+						CD.CourierId = RA.IdCurrierMan						
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[CatRoute] CR WITH(NOLOCK)
 					ON
-						RA.IdRoute = CR.IdRoute
-						AND
-						CR.IdTypeRoute = @PickupRouteTypeId
+						RA.IdRoute = CR.IdRoute						
 				-- Ubicación por ubica
 				LEFT JOIN
 					[DeliveryBackOffice].[dbo].[CatVehicle] CV WITH(NOLOCK)
@@ -246,6 +237,12 @@ BEGIN
 				ISNULL(CD.CourierLatitude,'') = ''
 				AND
 				ISNULL(CD.CourierLongitude,'') = ''
+				AND
+				RA.DateOfRoute = CAST(GETDATE() AS DATE)
+				AND
+				RA.RowStatus = 1
+				AND
+				CR.IdTypeRoute = @PickupRouteTypeId
 				
 			-- Actualización con ubicaciones
 			UPDATE
@@ -262,17 +259,11 @@ BEGIN
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
 					ON
-						CD.CourierId = RA.IdCurrierMan
-						AND
-						RA.DateOfRoute = CAST(GETDATE() AS DATE)
-						AND
-						RA.RowStatus = 1
+						CD.CourierId = RA.IdCurrierMan						
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[CatRoute] CR WITH(NOLOCK)
 					ON
-						RA.IdRoute = CR.IdRoute
-						AND
-						CR.IdTypeRoute = @PickupRouteTypeId
+						RA.IdRoute = CR.IdRoute						
 				-- Ubicación por forza driver
 				LEFT JOIN
 					@CourierLocations CL
@@ -282,6 +273,12 @@ BEGIN
 				ISNULL(CD.CourierLatitude,'') = ''
 				AND
 				ISNULL(CD.CourierLongitude,'') = ''
+				AND
+				RA.DateOfRoute = CAST(GETDATE() AS DATE)
+				AND
+				RA.RowStatus = 1
+				AND
+				CR.IdTypeRoute = @PickupRouteTypeId
 
 			SELECT
 				200 'ResultCode',
