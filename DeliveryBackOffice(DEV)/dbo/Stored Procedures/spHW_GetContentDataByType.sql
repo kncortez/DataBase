@@ -36,14 +36,14 @@ BEGIN
 		IdContentDescriptionTag BIGINT
 	)
 
-	IF ( @ContentTypeName = 'TutorialesYPreguntasFrecuentes' COLLATE Latin1_General_CI_AI )
+	IF ( @ContentTypeName = 'TutorialesYPreguntasFrecuentes')
 	BEGIN
 
 		INSERT INTO @FilteredContentType
 			(IdContentType)
 		VALUES
-			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Preguntas frecuentes' COLLATE Latin1_General_CI_AI) )
-			, ( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Tutoriales' COLLATE Latin1_General_CI_AI) )
+			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Preguntas frecuentes') )
+			, ( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Tutoriales') )
 
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
@@ -52,7 +52,7 @@ BEGIN
 		FROM [DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
 			INNER JOIN @FilteredContentType FCT ON CT.TypeContentId = FCT.IdContentType					
 		WHERE CT.RowStatus = 1
-			AND	CT.CountryId = ISNULL(NULLIF(@CountryId,''), 'GT')
+			AND	CT.CountryId = @CountryId OR (CT.CountryId IS NULL AND @CountryId = 'GT' )
 				
 		-- Contenido de contenido valido
 		INSERT INTO @FilteredContentDescription
@@ -120,7 +120,7 @@ BEGIN
 					ON
 						CT.IdContentTitle = FCT.IdContentTitle
 				INNER JOIN
-					[DeliveryBackOffice].[dbo].[CatTypeContent] CTC
+					[DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK)
 					ON
 						CT.TypeContentId = CTC.IdCatTypeContent
 
@@ -152,8 +152,8 @@ BEGIN
 						.value('.', 'varchar(max)'),1,1,'' 
 					)
 				) 'ContentTags'
-				,ISNULL(CD.IsPageURLExternal, 0) 'IsPageURLExternal'
-				,ISNULL(CD.IsVideoURLExternal, 0) 'IsVideoURLExternal'
+				,COALESCE(CD.IsPageURLExternal, 0) 'IsPageURLExternal'
+				,COALESCE(CD.IsVideoURLExternal, 0) 'IsVideoURLExternal'
 			FROM
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
 				INNER JOIN
@@ -172,13 +172,13 @@ BEGIN
 		END
 
 	END
-	ELSE IF ( @ContentTypeName = 'ListasColapsadas' COLLATE Latin1_General_CI_AI )
+	ELSE IF ( @ContentTypeName = 'ListasColapsadas')
 	BEGIN
 
 		INSERT INTO @FilteredContentType
 			(IdContentType)
 		VALUES
-			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Informativo' COLLATE Latin1_General_CI_AI) )
+			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Informativo') )
 	
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
@@ -187,7 +187,7 @@ BEGIN
 		FROM [DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
 			INNER JOIN @FilteredContentType FCT ON CT.TypeContentId = FCT.IdContentType
 		WHERE CT.RowStatus = 1
-			AND	CT.CountryId = ISNULL(NULLIF(@CountryId,''), 'GT')
+			AND	CT.CountryId = @CountryId OR (CT.CountryId IS NULL AND @CountryId = 'GT' )
 				
 		-- Contenido de contenido valido
 		INSERT INTO @FilteredContentDescription
@@ -256,7 +256,7 @@ BEGIN
 					ON
 						CT.IdContentTitle = FCT.IdContentTitle
 				INNER JOIN
-					[DeliveryBackOffice].[dbo].[CatTypeContent] CTC
+					[DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK)
 					ON
 						CT.TypeContentId = CTC.IdCatTypeContent
 
@@ -288,8 +288,8 @@ BEGIN
 						.value('.', 'varchar(max)'),1,1,'' 
 					)
 				) 'ContentTags'
-				,ISNULL(CD.IsPageURLExternal, 0) 'IsPageURLExternal'
-				,ISNULL(CD.IsVideoURLExternal, 0) 'IsVideoURLExternal'
+				,COALESCE(CD.IsPageURLExternal, 0) 'IsPageURLExternal'
+				,COALESCE(CD.IsVideoURLExternal, 0) 'IsVideoURLExternal'
 			FROM
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
 				INNER JOIN
