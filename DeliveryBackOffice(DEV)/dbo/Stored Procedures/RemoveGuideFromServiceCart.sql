@@ -30,19 +30,19 @@ BEGIN
 		DECLARE @ActualGuideStatus AS INT;
 
 		SET @GEN_STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
-									FROM	[dbo].[StatusOrder] SO
+									FROM	[dbo].[StatusOrder] SO WITH(NOLOCK)
 									WHERE	[SO].[OrderDescription] = 'Generado');
 
 		SET @SOL_STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
-									FROM	[dbo].[StatusOrder] SO
+									FROM	[dbo].[StatusOrder] SO WITH(NOLOCK)
 									WHERE	[SO].[OrderDescription] = 'Solicitado');
 
 		SET @NULL_STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
-									FROM	[dbo].[StatusOrder] SO
+									FROM	[dbo].[StatusOrder] SO WITH(NOLOCK)
 									WHERE	[SO].[OrderDescription] = 'Anulado');
 
 		SELECT TOP 1 @AccountServiceCartId = IdAccountServiceCart
-		FROM		[dbo].[AccountServiceCart] ACSC
+		FROM		[dbo].[AccountServiceCart] ACSC WITH(NOLOCK)
 		WHERE		[ACSC].[AccountId] = @IdAccount
 			AND		[ACSC].[IsPending] = 1
 			AND		[ACSC].[RowStatus] = 1
@@ -60,7 +60,7 @@ BEGIN
 					AND [AccountId] = @IdAccount;
 
 				SELECT	@AccountServicecartDetailId = IdAccountServiceCartDetail
-				FROM	[dbo].[AccountServiceCartDetail] ASCD
+				FROM	[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
 				WHERE	[ASCD].[AccountServiceCartId] = @AccountServiceCartId
 					AND [ASCD].[GuideSerie] = @GuideSerie
 					AND [ASCD].[GuideNumber] = @GuideNumber
@@ -123,7 +123,7 @@ BEGIN
 					-- *********************** INICIA ACTUALIZACIÓN ANULACION DE TRANSACCIONES EN CON MEMBRESÍA O SUSCRIPCIÓN *******************************************
 									-- Obtener ID de suscripción con transacción asociada 
 									SET @TR_ID = (SELECT [MSL].[SubscriptionId]
-													FROM	[dbo].[MembershipSubscriptionLog] MSL
+													FROM	[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
 													WHERE	[MSL].[LogGuideSerie] = @GuideSerie
 														AND [MSL].[LogGuideNumber] = @GuideNumber
 														AND [MSL].[RowStatus] = 1
@@ -149,7 +149,7 @@ BEGIN
 										END
 									-- Obtener ID de membresía con transacción asociada
 									SET @TR_ID = (SELECT [MSL].[MembershipId]
-													FROM	[dbo].[MembershipSubscriptionLog] MSL
+													FROM	[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
 													WHERE	[MSL].[LogGuideSerie] = @GuideSerie
 														AND [MSL].[LogGuideNumber] = @GuideNumber
 														AND [MSL].[RowStatus] = 1
@@ -176,7 +176,7 @@ BEGIN
 					-- *********************** FINALIZA ACTUALIZACIÓN ANULACION DE TRANSACCIONES EN CON MEMBRESÍA O SUSCRIPCIÓN **********************************
 
 									IF NOT EXISTS	(SELECT TOP 1 1
-													FROM	[dbo].[AccountServiceCartDetail] ASCD
+													FROM	[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
 													WHERE	[ASCD].[AccountServiceCartId] = @AccountServiceCartId
 														AND [ASCD].[RowStatus] = 1)
 										BEGIN
