@@ -17,33 +17,37 @@ BEGIN
     -- Insert statements for procedure here
 	BEGIN TRY
 
-		SELECT
-			do.Guide_Serie GuideSerie
-		   ,do.Guide_Number GuideNumber
-		   ,CONCAT(do.Guide_Serie, do.Guide_Number) Guide
-		   ,cr.CodeRoute RouteCode
-		   ,CONCAT(sr.First_Name, ' ', sr.Last_Name) CourierName
-		   ,CASE
-				WHEN do.IsLastMileReturn = 1 THEN CONCAT(do.Sender_FirstName, ' ', do.Sender_LastName)
-				ELSE CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)
-			END CustomerName
-		   ,CASE
-				WHEN do.IsLastMileReturn = 1 THEN do.Sender_Phone
-				ELSE do.Receiver_Phone
-			END CustomerPhone
-		   ,CASE
-				WHEN do.IsLastMileReturn = 1 THEN do.Sender_Address
-				ELSE do.Receiver_Address
-			END CustomerAddress
-			,ISNULL(do.IsLastMileReturn, 0) IsReturn
-			,cti.NameIncidence IncidenceDescription
-			,da.Date_Created IncidenceDate
-			,da.Latitude IncidenceLatitude
-			,da.Longitude IncidenceLongitude
+	;WITH DO_EXT AS (
+			SELECT 
+				do.StatusOrderId,
+				do.Guide_Serie,
+				do.Guide_Number,
+				CASE WHEN do.IsLastMileReturn = 1 THEN do.SenderIdTownship ELSE do.ReceiverIdTownship END AS IdTwn,
+				CASE WHEN do.IsLastMileReturn = 1 THEN do.Sender_Town ELSE do.Receiver_Town END AS TownName,
+				CASE WHEN do.IsLastMileReturn = 1 THEN CONCAT(do.Sender_FirstName, ' ', do.Sender_LastName)
+					 ELSE CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName) END AS CustomerName,
+				CASE WHEN do.IsLastMileReturn = 1 THEN do.Sender_Phone ELSE do.Receiver_Phone END AS CustomerPhone,
+				CASE WHEN do.IsLastMileReturn = 1 THEN do.Sender_Address ELSE do.Receiver_Address END AS CustomerAddress,
+				ISNULL(do.IsLastMileReturn, 0) AS IsReturnS
+			FROM DeliveryOrder do WITH (NOLOCK)
+		)
+		SELECT 
+			do.Guide_Serie AS GuideSerie,
+			do.Guide_Number AS GuideNumber,
+			CONCAT(do.Guide_Serie, do.Guide_Number) AS Guide,
+			cr.CodeRoute AS RouteCode,
+			CONCAT(sr.First_Name, ' ', sr.Last_Name) AS CourierName,
+			do.CustomerName,
+			do.CustomerPhone,
+			do.CustomerAddress,
+			do.IsReturnS AS IsReturn,
+			cti.NameIncidence AS IncidenceDescription,
+			da.Date_Created AS IncidenceDate,
+			da.Latitude AS IncidenceLatitude,
+			da.Longitude AS IncidenceLongitude
 		FROM ConfirmationOfIncidence coi WITH (NOLOCK)
 		INNER JOIN CatTypeConfirmationOfIncidence ctcoi WITH (NOLOCK)
 			ON coi.CatTypeConfirmationOfIncidenceId = ctcoi.IdCatTypeConfirmationOfIncidence
-			AND ctcoi.[Name] = 'Visita Fallida'
 		INNER JOIN DeliveryAttempt da WITH (NOLOCK)
 			ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
 		INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
@@ -54,33 +58,25 @@ BEGIN
 			ON dobs.ID_Courier = sr.ID
 		INNER JOIN CatRoute cr WITH (NOLOCK)
 			ON dobs.CatRouteId = cr.IdRoute
-		INNER JOIN DeliveryOrder do WITH (NOLOCK)
-			ON da.Guide_Serie = do.Guide_Serie
-				AND da.Guide_Number = do.Guide_Number
+		INNER JOIN DO_EXT do
+			ON da.Guide_Serie = do.Guide_Serie AND da.Guide_Number = do.Guide_Number
 		INNER JOIN StatusOrder so WITH (NOLOCK)
 			ON do.StatusOrderId = so.StatusOrderId
 		INNER JOIN Township twn WITH (NOLOCK)
-			ON CASE
-					WHEN do.IsLastMileReturn = 1 THEN do.SenderIdTownship
-					ELSE do.ReceiverIdTownship
-				END = twn.IdTownship
-				OR CASE
-					WHEN do.IsLastMileReturn = 1 THEN do.Sender_Town
-					ELSE do.Receiver_Town
-				END = twn.TownshipName
-		INNER JOIN (SELECT
-				dsc.HeaderCode
-			   ,MAX(dsc.Hub) hub
-			FROM dbo.DumpServiceCoverage dsc WITH (NOLOCK)
-			GROUP BY dsc.HeaderCode) sub1
-			ON sub1.HeaderCode = twn.HeaderCode
+			ON do.IdTwn = twn.IdTownship OR do.TownName = twn.TownshipName
+		INNER JOIN (
+			SELECT HeaderCode, MAX(Hub) AS hub
+			FROM dbo.DumpServiceCoverage WITH (NOLOCK)
+			GROUP BY HeaderCode
+		) sub1 ON sub1.HeaderCode = twn.HeaderCode
 		INNER JOIN dbo.HubLogistics hub WITH (NOLOCK)
 			ON hub.HubAbbreviation = sub1.hub
-		WHERE @FinishDate >= @StartDate
-		AND coi.RowStatus = 1
-		AND CAST(coi.DateCreated AS DATE) >= @StartDate
-		AND CAST(coi.DateCreated AS DATE) <= @FinishDate
-		AND so.OrderDescription NOT IN ('Anulado', 'Entregado', 'Devuelto', 'Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center', 'COD liquidado', 'COD pagado', 'Paquete destruido')
+	WHERE @FinishDate >= @StartDate
+			AND ctcoi.[Name] = 'Visita Fallida'
+			AND coi.RowStatus = 1
+			AND CAST(coi.DateCreated AS DATE) >= @StartDate
+			AND CAST(coi.DateCreated AS DATE) <= @FinishDate
+			AND so.OrderDescription NOT IN ('Anulado', 'Entregado', 'Devuelto', 'Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center', 'COD liquidado', 'COD pagado', 'Paquete destruido')
 		AND hub.IdHubLogistic IN (SELECT
 				hlbu.HubLogisticId
 			FROM HubLogisticByUser hlbu WITH (NOLOCK)
