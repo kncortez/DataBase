@@ -1285,7 +1285,7 @@ BEGIN
                               INNER JOIN #InsertedRecords IR
                                  ON PG.GuideSerie = IR.GuideSerie
                                      AND PG.GuideNumber = IR.GuideNumber
-                        WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
+                                     AND PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
 
                        SELECT 200 AS StatusCode,
                               'Se procesaron las guías con exito' AS [Message],
