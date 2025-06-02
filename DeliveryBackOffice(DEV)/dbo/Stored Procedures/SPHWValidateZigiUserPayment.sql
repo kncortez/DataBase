@@ -8,6 +8,18 @@ CREATE PROCEDURE [dbo].[SPHWValidateZigiUserPayment]
 	@GuideSerie NVARCHAR(50)
 AS
 BEGIN
+
+	--validar si ya fue pagada en rastreo
+	DECLARE @EnablePaidZigi INT = 1;
+	IF EXISTS(SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)
+					 INNER JOIN [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH(NOLOCK)  
+						ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number)
+					 where DOR.Guide_Serie = @GuideSerie  
+						AND DOR.Guide_Number = @GuideNumber
+						AND CCTBC.ReasonCode = '00')
+	BEGIN
+		SET @EnablePaidZigi = 0;
+	END
 	--verificar guia collect
 	IF NOT EXISTS (SELECT 1 FROM DeliveryOrder WITH(NOLOCK) WHERE Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND IsCollect = 1 )
 	BEGIN
@@ -26,7 +38,7 @@ BEGIN
 	BEGIN
 		SELECT 200 [IdResult],
 			'Guia no tiene link asociado ' AS [Message],
-			1				AS [PaidZigi],
+			@EnablePaidZigi	AS [PaidZigi],
 			@GuideNumber	AS GuideNumber,
 			@GuideSerie		AS GuideSerie,
 			0				AS [LinkCreated],
@@ -39,7 +51,7 @@ BEGIN
 	BEGIN
 		SELECT 200 [IdResult],
 			'Guia link creado' AS [Message],
-			1				AS [PaidZigi],
+			@EnablePaidZigi	AS [PaidZigi],
 			@GuideNumber	AS GuideNumber,
 			@GuideSerie		AS GuideSerie,
 			1				AS [LinkCreated],
@@ -56,7 +68,7 @@ BEGIN
 	BEGIN
 		SELECT 400 AS [IdResult],
 			'Link de Guia ha sido pagado'	AS [Message],
-			1				AS [PaidZigi],
+			@EnablePaidZigi	AS [PaidZigi],
 			@GuideNumber	AS GuideNumber,
 			@GuideSerie		AS GuideSerie,
 			1				AS [LinkCreated],
@@ -73,7 +85,7 @@ BEGIN
 	BEGIN
 		SELECT 1 AS [IdResult],
 			'Link HA SIDO DESHABILITADO'	AS [Message],
-			1				AS [PaidZigi],
+			@EnablePaidZigi	AS [PaidZigi],
 			@GuideNumber	AS GuideNumber,
 			@GuideSerie		AS GuideSerie,
 			1				AS [LinkCreated],
@@ -89,7 +101,7 @@ BEGIN
 	BEGIN
 		SELECT 1 AS [IdResult],
 			'Link ha fallado'	AS [Message],
-			1				AS [PaidZigi],
+			@EnablePaidZigi	AS [PaidZigi],
 			@GuideNumber	AS GuideNumber,
 			@GuideSerie		AS GuideSerie,
 			0				AS [LinkCreated],

@@ -24,6 +24,10 @@
 )
 
 GO
+CREATE NONCLUSTERED INDEX [IX_PaymentZigi_GuideSerie_GuideNumber_ZigiReference]
+    ON [dbo].[PaymentZigi]([GuideSerie] ASC, [GuideNumber] ASC, [ZigiReference] ASC);
+
+GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
  @value = N'Registro de pagos realizados a través de la plataforma Zigi.',
  @level0type = N'SCHEMA',
