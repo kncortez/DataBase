@@ -49,7 +49,7 @@ BEGIN
                     @idTownship AS INT,
                     @idProvince AS INT;
 
-            IF(CAST(@StartDate AS DATE) = @Today)
+            IF(CAST(@StartDate AS DATE) >= @Today)
             BEGIN 
                  -- 1. Validar que no exista un servicio en el día ya solicitado
                  SELECT @SchedulePickupFinded    =SP.SchedulePickupId,
@@ -160,15 +160,16 @@ BEGIN
                   FROM DeliveryBackOffice.dbo.DefaultValuesPerCountry dfv
                  WHERE dfv.IdCountry = @IdCountry
 
-                IF (CONVERT(TIME, @TodayTime) <= @LimitHour)
+                IF (CONVERT(TIME, @TodayTime) <= @LimitHour) AND (CAST(@StartDate AS DATE) = @Today)
+                   OR (CAST(@StartDate AS DATE) > @Today)
                 BEGIN 
 
                   IF LEN(@addressPickUp) > 0
                      AND LEN(@nameSender) > 0
-                     AND @idProvince > 0
-                     AND @idTownship > 0
-                     AND @phoneSender > 0
-                     AND @idHub > 0
+                     AND LEN(@idProvince) > 0
+                     AND LEN(@idTownship) > 0
+                     AND LEN(@phoneSender) > 0
+                     AND LEN(@idHub) > 0
                   BEGIN
                         IF @EndDate IS NULL 
                         BEGIN
@@ -223,7 +224,7 @@ BEGIN
                          GETDATE(),                  --DateCreated
                          @CodeOfReference,           --SenderId
                          @nameSender,                --Fullname
-                         LTRIM(RTRIM(@phoneSender)), --Phone
+                         REPLACE(@phoneSender, ' ', ''), --Phone
                          @idHub,                     --IdHubLogistics
                          0.00,                       --AmountPickup
                          8,                          --IdSourcePlataform
@@ -285,7 +286,7 @@ BEGIN
                                    @ResultEndDate = @endDate,
                                    @ResultService = @ServiceManagementFinded,
                                    @ResultQuantityRegularPackages = @QuantityOfPieces,
-                                   @ResultTypeVehiculeId = @InsdTypeVehicle;
+                                   @ResultTypeVehiculeId = @TypeVehicle;
 
                             -- COMMIT de la transacción
                             IF @TransactionStarted = 1
@@ -357,7 +358,7 @@ BEGIN
                 END
                 ELSE 
                 BEGIN 
-                     SELECT @IdResult = 400 ,
+                     SELECT @IdResult = 409 ,
                             @ErrorMessage = CONCAT('Las solicitudes de recolección no pueden solicitarse despues de las ', ISNULL(@LimitHour,'17:00'), ' hrs.'),
                             @IsSuccess = 1,
                             @CodeOfReference = @CodeOfReference,
@@ -385,7 +386,7 @@ BEGIN
                   @IsSuccess = 0;
       END CATCH;
 
-      SELECT @IsSuccess AS IsSuccess,
+      SELECT REPLACE(@IsSuccess, ' ', '') AS IsSuccess,
              @IdResult AS IdResult,
              @ErrorMessage AS ErrorMessage,
              @CodeOfReference AS CodeOfReference,
