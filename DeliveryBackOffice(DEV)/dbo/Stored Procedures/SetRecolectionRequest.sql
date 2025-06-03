@@ -201,23 +201,22 @@ BEGIN
                 IF (@IdAccount != 0)
                 BEGIN
 
-                    DECLARE @VistitPointUser INT =
-                            (
-                                SELECT CodeOfReference
-                                FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
-                                    INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
-                                        ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-                                           --AND VPU.RowStatus = 1
-                                    INNER JOIN RegisterUser ru WITH (NOLOCK)
-                                        ON VPU.RegisterUserID = ru.UsrIdUser
-                                           --AND ru.UsrRowStatus = 1
-                                    INNER JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
-                                        ON rua.RuaIdUser = ru.UsrIdUser
-                                WHERE rua.RuaIdAccount = @IdAccount
+                   DECLARE @VistitPointUser INT;
+
+						SELECT @VistitPointUser = ISNULL((
+							SELECT TOP 1 CodeOfReference
+							FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
+								INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
+									ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
+								INNER JOIN RegisterUser ru WITH (NOLOCK)
+									ON VPU.RegisterUserID = ru.UsrIdUser
+								INNER JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
+									ON rua.RuaIdUser = ru.UsrIdUser
+							WHERE rua.RuaIdAccount = @IdAccount
 								AND VPU.RowStatus = 1
 								AND ru.UsrRowStatus = 1
-                            );
-
+						), 0);
+                        
                     INSERT INTO dbo.DeliveryOrderPaymentTransaction
                     (
                         [GuideNumber],
