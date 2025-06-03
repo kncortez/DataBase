@@ -76,7 +76,7 @@ BEGIN
                  IF @SchedulePickupFinded > 0
                  BEGIN 
                       SELECT @InsdDescTypeVehicle = [Name]
-                        FROM CatTypeVehicle
+                        FROM CatTypeVehicle WITH(NOLOCK)
                        WHERE IdTypeVehicle = @ResultTypeVehiculeId
 
                       SELECT @ResultTypeVehiculeId = CASE 
@@ -157,7 +157,7 @@ BEGIN
                      AND VPC.StatusClient=1
 
                 SELECT @LimitHour = dfv.LimitHourPickupByApi
-                  FROM DeliveryBackOffice.dbo.DefaultValuesPerCountry dfv
+                  FROM DeliveryBackOffice.dbo.DefaultValuesPerCountry dfv WITH(NOLOCK)
                  WHERE dfv.IdCountry = @IdCountry
 
                 IF (CONVERT(TIME, @TodayTime) <= @LimitHour) AND (CAST(@StartDate AS DATE) = @Today)
@@ -185,7 +185,7 @@ BEGIN
                                                    END
 
                         SELECT @InsdTypeVehicle  = IdTypeVehicle
-                          FROM DeliveryBackOffice.dbo.CatTypeVehicle
+                          FROM DeliveryBackOffice.dbo.CatTypeVehicle WITH(NOLOCK)
                          WHERE [Name] = @InsdDescTypeVehicle
                            AND ISNULL(IdCountry,'GT') = @IdCountry --Necesario el ISNULL debido a valores nulos en el catálogo
 
