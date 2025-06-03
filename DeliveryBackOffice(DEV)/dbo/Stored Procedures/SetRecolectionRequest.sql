@@ -8,6 +8,11 @@
 -- Update date: <2022-07-20>
 -- Description:	< Cambio de agrupaciones para evitar duplicados en servicios de recolección (Falsos positivos) >
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Update date: <2025-06-01>
+-- Description:	<Validar registros de la consulta que trae el CodeOfReference y devolver 0 cuando haya algun otro problema >
+-- =============================================
 CREATE PROCEDURE [dbo].[SetRecolectionRequest]
     @TblDeliveryOrdersList AS [TblDeliveryOrdersList2] READONLY,
     @Iscollected BIT = true,
@@ -968,9 +973,12 @@ BEGIN
             END;
 
             -- MODIFICACIÓN 07/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-            DECLARE @VistitPointUser1 INT =
-                    (
-                        SELECT CodeOfReference
+   
+           -- MODIFICACIÓN 01/06/2025 Edelman Vásquez
+            DECLARE @VistitPointUser1 INT;
+			
+           SELECT @VistitPointUser1 = ISNULL((
+                             SELECT TOP 1 CodeOfReference
                         FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                             INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
                                 ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
@@ -981,7 +989,7 @@ BEGIN
                         WHERE rua.RuaIdAccount = @IdAccount
                                    AND VPU.RowStatus = 1
                                    AND ru.UsrRowStatus = 1
-                    );
+                    ), 0);
             -- FIN MODIFICACIÓN
 
             INSERT INTO dbo.DeliveryOrderPaymentTransaction
