@@ -239,7 +239,9 @@ BEGIN
                         IdTownship,
                         Latitude,
                         Longitude,
-                        [IsOriginVisitPoint]
+                        [IsOriginVisitPoint],
+                        LogLatitude,
+                        LogLongitude
                     )
                     VALUES
                     (
@@ -266,7 +268,9 @@ BEGIN
                       @IdTownship,                        -- IdTownship - int
                       @Latitude,                          -- Latitude - varchar(50)
                       @Longitude,                         -- Longitude - varchar(50)
-                      @IsOriginVisitPoint
+                      @IsOriginVisitPoint,
+                      @Latitude,
+                      @Longitude
                     )
 
                     -- COMMIT de la transacción
