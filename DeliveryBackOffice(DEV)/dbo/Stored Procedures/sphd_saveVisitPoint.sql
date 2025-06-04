@@ -32,7 +32,7 @@ BEGIN
     (
         SELECT TOP (1)
                vpc.CodeOfReference + 1
-        FROM dbo.VisitPointClient vpc
+        FROM dbo.VisitPointClient vpc WITH(NOLOCK)
         ORDER BY vpc.CodeOfReference DESC
     );
 
@@ -40,7 +40,7 @@ BEGIN
     DECLARE @IdTownship AS INT = -1;
     SET @IdTownship =
     (
-        SELECT IdTownship FROM dbo.Township WHERE TownshipName = @Town
+        SELECT IdTownship FROM dbo.Township WITH(NOLOCK) WHERE TownshipName = @Town
     );
 
     -- Verificación de poblado
@@ -82,7 +82,7 @@ BEGIN
         DECLARE @Idplace AS INT =
                 (
                     SELECT ISNULL(IdCityPlace, -1)
-                      FROM dbo.CatCityPlace
+                      FROM dbo.CatCityPlace WITH(NOLOCK)
                      WHERE CityPlace = 'No Aplica'
                        AND IdCountry = @IdCountry
                 );
@@ -90,17 +90,17 @@ BEGIN
         SET @IdCountry =
                 (
                     SELECT CC.IdCountry
-                    FROM dbo.CatCountry CC
-                        LEFT JOIN dbo.Province PRV
+                    FROM dbo.CatCountry CC WITH(NOLOCK)
+                        LEFT JOIN dbo.Province PRV WITH(NOLOCK)
                             ON PRV.IdCountry = CC.IdCountry
-                        LEFT JOIN dbo.Township TS
+                        LEFT JOIN dbo.Township TS WITH(NOLOCK)
                             ON TS.IdProvince = PRV.IdProvince
                     WHERE IdTownship = @IdTownship
                 );
 
         DECLARE @IdAccount INT =
                 (
-                    SELECT AccIdAccount FROM dbo.Account ACC WHERE IdCustomer = @CustomerID
+                    SELECT AccIdAccount FROM dbo.Account ACC WITH(NOLOCK) WHERE IdCustomer = @CustomerID
                 );
 
 
