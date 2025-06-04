@@ -68,7 +68,8 @@ BEGIN
 						cs.InvoiceName,
 						cs.TaxIdentificationNumber,
 						cs.FiscalAddress,
-						cs.InvoiceEmail
+						cs.InvoiceEmail,
+                        cs.InvoiceContactPhone
 					FROM DeliveryBackOffice.dbo.Customer cs WITH(NOLOCK) 
 						INNER JOIN DeliveryBackOffice.dbo.CustomerType cust WITH(NOLOCK)
 							ON cs.IdCustomerType = cust.IdCustomerType

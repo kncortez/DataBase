@@ -20,7 +20,8 @@ BEGIN
 		PrefixNumber,
 		IconFlag,
 		CC.Symbol AS SymbolCurrency,
-		CultureInfo
+		CultureInfo,
+        DPC.CodeOfReferenceCorpForInvoice
 	FROM DefaultValuesPerCountry DPC WITH(NOLOCK)
 	INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
 		ON DC.Currency_IdCountry = DPC.IdCountry
