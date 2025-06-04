@@ -13,14 +13,14 @@ BEGIN TRY
 
 	EXEC sp_addextendedproperty 
 		@name = N'MS_Description', 
-		@value = N'Coordenada geográfica que especifica la posición norte-sur.', 
+		@value = N'Coordenada geogrÃ¡fica que especifica la posiciÃ³n norte-sur.', 
 		@level0type = N'SCHEMA', @level0name = 'dbo',
 		@level1type = N'TABLE',  @level1name = 'DefaultValuesPerCountry',
 		@level2type = N'COLUMN', @level2name = 'Latitude';
 
 	EXEC sp_addextendedproperty 
 		@name = N'MS_Description', 
-		@value = N'Coordenada geográfica que especifica la posición este-oeste.', 
+		@value = N'Coordenada geogrÃ¡fica que especifica la posiciÃ³n este-oeste.', 
 		@level0type = N'SCHEMA', @level0name = 'dbo',  
 		@level1type = N'TABLE',  @level1name = 'DefaultValuesPerCountry',
 		@level2type = N'COLUMN', @level2name = 'Longitude';
