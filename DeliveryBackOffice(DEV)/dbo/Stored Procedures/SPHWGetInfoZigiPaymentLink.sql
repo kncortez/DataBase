@@ -29,7 +29,7 @@ BEGIN
 		LEFT JOIN Cost CS WITH(NOLOCK)
 		ON CS.GuideNumber = ZI.GuideNumber
 			AND CS.GuideSerie = ZI.GuideSerie
-		LEFT JOIN CatCurrencyCOD CC
+		LEFT JOIN CatCurrencyCOD CC WITH(NOLOCK)
 			ON ISNULL(CS.CodCurrency,1) = CC.IdCatCurrencyCOD
 		WHERE ZI.GuideNumber = @GuideNumber 
 		AND ZI.GuideSerie = @GuideSerie 
