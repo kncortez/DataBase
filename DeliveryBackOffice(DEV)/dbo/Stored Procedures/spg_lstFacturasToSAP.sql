@@ -32,9 +32,9 @@ BEGIN
               -- 3 CUANDO YA ESTÁ ENVIADA A SAP
               -- -1 ES ANULADA
               AND ihd.inv_type IN ( 1, 2 )			 
-              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2025-04-01' AS DATE)
-			-- AND CAST(ihd.inv_dateRegister AS DATE)  <= CAST('2025-03-31' AS DATE)
-			 --AND ihd.inv_pk_id IN (4768858,4757945,4776676,4778749,4866106,4868155,4868223,4784902,4788014,4801084,4801779,4894868,4878348,4822837,4824449,4808097,4793032,4793718,4826545,4814330,4922047,4835284,4926314,4926724,4960218,4854811,4861629,4961828)
+              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2025-05-01' AS DATE)
+			 AND CAST(ihd.inv_dateRegister AS DATE)  <= CAST('2025-05-31' AS DATE)
+			-- AND ihd.inv_pk_id IN (5527722)
 			  --AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2023-09-27' AS DATE)
              -- AND cast(ihd.inv_dateRegister as date) <= CAST('2023-10-31' as date)
               AND
@@ -49,7 +49,7 @@ BEGIN
                   OR ir.invRetries <= 3
               )
 			  AND IHD.IsManualInvoice IS NULL	
-			  
+			 -- AND ihd.inv_pk_id = 5479943
 			 
 
 			  --AND ihd.inv_pk_id = 4006353 --PRIMER ENVÍO A SAP 10.0

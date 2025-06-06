@@ -1,11 +1,4 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[sps_set_finishService]    Script Date: 04/06/2025 14:54:51 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
--- =============================================
+﻿-- =============================================
 -- Author:      <Tito, Garcia>
 -- Update date: <2024-12-18>
 -- Description: <Se realizan optimizaciones recomendadas por DBA>
@@ -15,7 +8,7 @@ GO
 -- Update date: <2025-05-22>
 -- Description: <Se realizan nuevas optimizaciones>
 -- =============================================
-ALTER PROCEDURE [dbo].[sps_set_finishService]
+CREATE PROCEDURE [dbo].[sps_set_finishService]
     @InGuidesP VARCHAR(MAX),
     @TblListGuides AS TblListGuidesWithAnticipatedCOD READONLY,
     @TblDetail AS TblPaymentList READONLY,
@@ -953,7 +946,7 @@ BEGIN
                                     ON DOPD.GuideSerie = CG.GuideSerie
                                        AND DOPD.GuideNumber = CG.GuideNumber;
 
-                            -----------------WEBHOOK.INI-----------------------     
+                            -----------------WEBHOOK.INI-----------------------		
                             DECLARE @WebhookCustomerTable AS TABLE
                             (
                                 CustomerId INT,
@@ -1178,7 +1171,7 @@ BEGIN
                             BEGIN CATCH
 
                             END CATCH;
-                            -------------------WEBHOOK.FIN------------------------------    
+                            -------------------WEBHOOK.FIN------------------------------	
 
                             -------GUARDAR COSTO--------------------
                             DECLARE @IdCost INT = 0;
@@ -1386,9 +1379,9 @@ BEGIN
                                            @AuxLogServiceNumber = [TGP].[LogServiceNumber]
                                     FROM @TblGuidesForPoints TGP;
 
-                                    --SET @AccountId = (    SELECT [A].[AccIdAccount]
-                                    --                  FROM    [dbo].[Account] A
-                                    --                  WHERE   [A].[IdCustomer] = @CustomerId );
+                                    --SET @AccountId = (	SELECT [A].[AccIdAccount]
+                                    --					FROM	[dbo].[Account] A
+                                    --					WHERE	[A].[IdCustomer] = @CustomerId );
 
                                     SET @AuxPointsGenerated
                                         = CASE
@@ -1771,7 +1764,7 @@ BEGIN
                 END;
 
 
-            -----------------------------------------------------------------------------------------------------   
+            -----------------------------------------------------------------------------------------------------	
             END; --VER GUIAS VALIDAS
             ELSE IF (
                         (
@@ -2009,3 +2002,4 @@ BEGIN
 
     END;
 END;
+

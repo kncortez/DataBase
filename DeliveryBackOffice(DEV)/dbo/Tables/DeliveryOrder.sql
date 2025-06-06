@@ -158,6 +158,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -1043,4 +1045,15 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Ticket_Number_Customer]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para validar poblado de origen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'SenderIdSettlement';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Ticket_Number]
+    ON [dbo].[DeliveryOrder]([Ticket_Number] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCustomer_DateCreated_IncludedODBS]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC)
+    INCLUDE([Ticket_Number], [Shipping_Date], [Sender_ID], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Address], [Receiver_Alternant_SocialSecurity_ID], [Manifest_Serie], [Manifest_Number], [StatusOrderId], [Receiver_CUI], [NameOfReceiver]);
 

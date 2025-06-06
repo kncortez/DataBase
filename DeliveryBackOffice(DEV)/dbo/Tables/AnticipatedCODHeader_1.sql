@@ -23,6 +23,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualizacion del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -89,4 +91,24 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Llave princ
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que Maneja informacion de clientes para validaciones de COD Anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_PortfolioId_IdAnticipatedCODHeader]
+    ON [dbo].[AnticipatedCODHeader]([PortfolioId] ASC, [IdAnticipatedCODHeader] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_PortfolioId_IdAnticipatedCODHeader]
+    ON [dbo].[AnticipatedCODHeader]([CustomerId] ASC, [PortfolioId] ASC, [IdAnticipatedCODHeader] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_PortfolioId]
+    ON [dbo].[AnticipatedCODHeader]([CustomerId] ASC, [PortfolioId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId]
+    ON [dbo].[AnticipatedCODHeader]([CustomerId] ASC);
 

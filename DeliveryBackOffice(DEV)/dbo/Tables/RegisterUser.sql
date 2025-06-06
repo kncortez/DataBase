@@ -45,6 +45,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo que indica si telefono ya fue verificado o no.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RegisterUser', @level2type = N'COLUMN', @level2name = N'VerifiedPhone';
 
@@ -238,4 +240,9 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
 GO
 CREATE NONCLUSTERED INDEX [IDX_UsrEmail_UsrRowStatus]
     ON [dbo].[RegisterUser]([UsrEmail] ASC, [UsrRowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_UsrLastPassword]
+    ON [dbo].[RegisterUser]([UsrLastPassword] ASC);
 

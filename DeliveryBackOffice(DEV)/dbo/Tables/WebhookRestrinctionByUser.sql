@@ -18,6 +18,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookRestrinctionByUser', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -60,4 +62,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de restricción de estados permitidos por webhook de cliente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookRestrinctionByUser';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_WebhookTypeId]
+    ON [dbo].[WebhookRestrinctionByUser]([CustomerId] ASC, [WebhookTypeId] ASC);
 
