@@ -13,3 +13,15 @@
     CONSTRAINT [FK_GuidesBySMS_SMS_Received] FOREIGN KEY ([SmsId]) REFERENCES [dbo].[SMS_Received] ([SMS_ID])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_SmsId]
+    ON [dbo].[GuidesBySMS]([SmsId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber]
+    ON [dbo].[GuidesBySMS]([GuideSerie] ASC, [GuideNumber] ASC);
+

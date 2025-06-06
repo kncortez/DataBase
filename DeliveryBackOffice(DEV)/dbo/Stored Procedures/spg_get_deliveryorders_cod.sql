@@ -78,18 +78,18 @@ BEGIN
 				COALESCE(batch.Commission, 0) CommissionCOD,
 				CAST(ROUND(((COALESCE(batch.Commission, 0))/(Collect_OnDelivery)*100), 0) AS INT) ComissionPercentCOD
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-			LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide
+			LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide WITH(NOLOCK)
 				on paidguide.Guide_Serie = serv.Guide_Serie
 				and paidguide.Guide_Number = serv.Guide_Number
 				and paidguide.Deposit_Number = serv.Deposit_Number
 				and paidguide.IdStatus = 'TRUE'
-			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
+			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
 				ON serv.StatusOrderId = so.StatusOrderId
-			LEFT JOIN DeliveryBackOffice.DBO.BatchDetailCOD batch
+			LEFT JOIN DeliveryBackOffice.DBO.BatchDetailCOD batch WITH(NOLOCK)
 				ON batch.GuideSerie = serv.Guide_Serie
 				AND batch.GuideNumber = serv.Guide_Number
 				AND batch.CatConceptCODId = 2
-			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD
+			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD WITH(NOLOCK)
 				ON ccCOD.IdCatCurrencyCOD = IIF(batch.CatCurrencyCODId IS NULL, 1, batch.CatCurrencyCODId)
 			WHERE (serv.DateCreated BETWEEN  @StartDateTime AND @EndDateTime)
 				AND serv.StatusOrderId <> 7 -- No guías anuladas
@@ -119,18 +119,18 @@ BEGIN
 				COALESCE(batch.Commission, 0) CommissionCOD,
 				CAST(ROUND(((COALESCE(batch.Commission, 0))/(Collect_OnDelivery)*100), 0) AS INT) ComissionPercentCOD
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-			LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide
+			LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide WITH (NOLOCK)
 				on paidguide.Guide_Serie = serv.Guide_Serie
 				and paidguide.Guide_Number = serv.Guide_Number
 				and paidguide.Deposit_Number = serv.Deposit_Number
 				and paidguide.IdStatus = 'TRUE'
-			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
+			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
 				ON serv.StatusOrderId = so.StatusOrderId
-			LEFT JOIN DeliveryBackOffice.DBO.BatchDetailCOD batch
+			LEFT JOIN DeliveryBackOffice.DBO.BatchDetailCOD batch WITH (NOLOCK)
 				ON batch.GuideSerie = serv.Guide_Serie
 				AND batch.GuideNumber = serv.Guide_Number
 				AND batch.CatConceptCODId = 2
-			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD
+			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD WITH (NOLOCK)
 				ON ccCOD.IdCatCurrencyCOD = IIF(batch.CatCurrencyCODId IS NULL, 1, batch.CatCurrencyCODId)
 			WHERE serv.Guide_Serie = @GuideSerie 
 				AND serv.Guide_Number = @GuideNumber 

@@ -3,6 +3,10 @@
 -- Create date: <2024-09-13>
 -- Description:	<Obtiene información para la liquidación de rutas unificadas COD en desktop>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2025-04-25>
+-- Description:	<ZIGI - Se descartan guias pagadas con zigi en liquidacion ultima milla desktop>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetSettlementCODUnifiedRoute] @IdRoute INT
 AS
 BEGIN
@@ -112,6 +116,15 @@ BEGIN
               )
     ) AS s;
 
+	--quitar guias que hayan sido pagadas con zigi
+	DELETE GF
+	FROM @GuidesFound GF
+	LEFT JOIN PaymentZigi PZ
+	ON PZ.GuideNumber = GF.Guide_Number
+		  AND PZ.GuideSerie = GF.Guide_Serie
+		WHERE PZ.GuideNumber = GF.Guide_Number
+		  AND PZ.GuideSerie = GF.Guide_Serie
+		  AND (PZ.ZigiLinkStatus = 'PAID'OR PZ.AuthorizationNumberByUser IS NOT NULL)
 
     SELECT DISTINCT
            dbs.ID,
