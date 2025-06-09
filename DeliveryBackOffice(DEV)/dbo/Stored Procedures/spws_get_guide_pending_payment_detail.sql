@@ -123,7 +123,7 @@ BEGIN
         FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
         WHERE lg.Guide_Serie = do.Guide_Serie
               AND lg.Guide_Number = do.Guide_Number
-          AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
+          AND (do.SenderCountryId = @IdCountry OR (do.SenderCountryId IS NULL AND @IdCountry = 'GT'))
     );
 
     CREATE NONCLUSTERED INDEX IX_LGNE_NGUIDES ON #listGuidesNotExist (Guide_Serie, Guide_Number);
@@ -320,7 +320,7 @@ BEGIN
         FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
 		INNER JOIN Subscription sb WITH (NOLOCK)
 		ON sbl.SubscriptionId = sb.IdSubscription
-		WHERE LogGuideNumber = @RevalueGuide)
+		WHERE sbl.LogGuideNumber = @RevalueGuide AND sbl.LogGuideSerie = @RevalueSerie )
 
 		IF(@TypeSubsId IS NULL)
 			BEGIN
