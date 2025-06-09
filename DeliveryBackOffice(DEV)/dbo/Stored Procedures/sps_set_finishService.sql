@@ -1360,6 +1360,57 @@ BEGIN
 					, 'La suma de las guias no coincide con el monto de pago.'		AS 'Description'
 				
 			END;
+
+			--Finalización de flujo
+			IF (@ServiceType = 'RETURN' OR @ServiceType = 'DELIVERY')
+			BEGIN
+		
+				--- Borrado Logico de posición en la guía
+				UPDATE wh
+					SET Active = 0
+					,UserUpdated = @TokenP
+					,DateUpdated = GETDATE()
+				FROM Warehouse wh
+				INNER JOIN #TblListGuidesTwo tlg
+					ON wh.Guide_Serie = tlg.Guide_Serie
+					AND wh.Guide_Number = tlg.Guide_Number
+				WHERE wh.Active = 1
+
+			END;
+
+			-- Agregar guía marcada para devolución en tabla de proceso de COD.
+			INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+			(
+				GuideSerie,
+				GuideNumber,
+				DataOriginId,
+				Token,
+				CustomerId,
+				IsAnticipatedCOD
+			)
+			OUTPUT inserted.IdProcessedGuideCOD,
+				   inserted.GuideSerie,
+				   inserted.GuideNumber
+			INTO #TempData
+			SELECT  lge.Guide_Serie,
+					lge.Guide_Number,
+					25,
+					@TokenP UserCreated,
+					cus.IdCustomer, 
+					0 AS 'IsAnticipatedCOD'
+			FROM #listGuidesEnabled lge
+				INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
+					ON lge.Guide_Serie = dlo.Guide_Serie
+					AND lge.Guide_Number = dlo.Guide_Number
+				LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+					ON vp.CodeOfReference = CASE WHEN  dlo.IsLastMileReturn = 1 AND  dlo.Sender_ID != 0  THEN dlo.Sender_ID ELSE dlo.Receiver_ID END
+				LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+					ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+				LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+					ON pcd.GuideSerie = dlo.Guide_Serie
+					AND pcd.GuideNumber = dlo.Guide_Number
+			WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.IsLastMileReturn = 1 AND dlo.[IsCollect] = 1
+
 		END;
 		ELSE IF (
 					((SELECT COUNT(1)FROM #listGuidesEnabled) > 0)
@@ -1389,56 +1440,6 @@ BEGIN
 			FROM #listGuidesDisabled lge
 
 		END;
-
-		--Finalización de flujo
-		IF (@ServiceType = 'RETURN' OR @ServiceType = 'DELIVERY')
-		BEGIN
-		
-			--- Borrado Logico de posición en la guía
-			UPDATE wh
-				SET Active = 0
-				,UserUpdated = @TokenP
-				,DateUpdated = GETDATE()
-            FROM Warehouse wh
-            INNER JOIN #TblListGuidesTwo tlg
-                ON wh.Guide_Serie = tlg.Guide_Serie
-                AND wh.Guide_Number = tlg.Guide_Number
-            WHERE wh.Active = 1
-
-		END;
-
-		-- Agregar guía marcada para devolución en tabla de proceso de COD.
-        INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
-        (
-            GuideSerie,
-            GuideNumber,
-            DataOriginId,
-            Token,
-            CustomerId,
-            IsAnticipatedCOD
-        )
-        OUTPUT inserted.IdProcessedGuideCOD,
-               inserted.GuideSerie,
-               inserted.GuideNumber
-        INTO #TempData
-        SELECT  lge.Guide_Serie,
-                lge.Guide_Number,
-                25,
-                @TokenP UserCreated,
-                cus.IdCustomer, 
-                0 AS 'IsAnticipatedCOD'
-        FROM #listGuidesEnabled lge
-            INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-				ON lge.Guide_Serie = dlo.Guide_Serie
-				AND lge.Guide_Number = dlo.Guide_Number
-            LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                ON vp.CodeOfReference = CASE WHEN  dlo.IsLastMileReturn = 1 AND  dlo.Sender_ID != 0  THEN dlo.Sender_ID ELSE dlo.Receiver_ID END
-            LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-            LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
-                ON pcd.GuideSerie = dlo.Guide_Serie
-                AND pcd.GuideNumber = dlo.Guide_Number
-        WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.IsLastMileReturn = 1 AND dlo.[IsCollect] = 1
 
 	END; --Finaliza IF que valida guías que no existe en el sistema.
 
