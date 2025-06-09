@@ -40,7 +40,10 @@ BEGIN
            Latitude,
            Longitude,
            CASE 
-               WHEN [Zone] IS NULL OR LTRIM(RTRIM([Zone])) = '' THEN '0'
+               WHEN [Zone] IS NULL 
+                    OR LTRIM(RTRIM([Zone])) = ''
+                    OR ISNUMERIC([Zone]) = 0
+                    THEN '0'
                ELSE [Zone]
            END AS [Zone]
       FROM dbo.VisitPointClient vpc WITH(NOLOCK)
