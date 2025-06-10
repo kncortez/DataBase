@@ -1006,7 +1006,7 @@
     <Build Include="dbo\Stored Procedures\spg_get_RouteV2.sql" />
     <Build Include="dbo\Stored Procedures\spws_GetRouteHubBySettlement.sql" />
     <Build Include="dbo\Stored Procedures\spws_GetSettlementsByHeaderCode.sql" />
-    <Build Include="dbo\Stored Procedures\getHeaderCodeByTownshipAndDepartment.sql" />    
+    <Build Include="dbo\Stored Procedures\getHeaderCodeByTownshipAndDepartment.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RouteServiceAssigment.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RoutePreparation_test_cg.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RoutePreparation_test.sql" />
@@ -1900,6 +1900,8 @@
     <Build Include="dbo\Stored Procedures\SPHWInsertPaymentZigi.sql" />
     <Build Include="dbo\Stored Procedures\UpdatePaymentZigiByGuide.sql" />
     <Build Include="dbo\Stored Procedures\SPHWInsertAuthorizationNumberByUser.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserV2_2.sql" />
+    <Build Include="dbo\Stored Procedures\GetUpdateRegisterCODearly_2.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
