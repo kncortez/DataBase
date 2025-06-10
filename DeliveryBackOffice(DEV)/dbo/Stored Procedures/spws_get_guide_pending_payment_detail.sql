@@ -123,7 +123,7 @@ BEGIN
         FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
         WHERE lg.Guide_Serie = do.Guide_Serie
               AND lg.Guide_Number = do.Guide_Number
-          AND (do.SenderCountryId = @IdCountry OR (do.SenderCountryId IS NULL AND @IdCountry = 'GT'))
+          AND do.SenderCountryId = @IdCountry 
     );
 
     CREATE NONCLUSTERED INDEX IX_LGNE_NGUIDES ON #listGuidesNotExist (Guide_Serie, Guide_Number);
@@ -155,7 +155,7 @@ BEGIN
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21,32 )
           )
-      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+      AND do.SenderCountryId = @IdCountry;
 
     /*SELECT lg.Guide_Serie,
 			lg.Guide_Number
@@ -198,7 +198,7 @@ BEGIN
               AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
 			
           )
-      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+      AND do.SenderCountryId = @IdCountry;
 		  
   INSERT INTO #listGuidesExcluded
     SELECT lg.Guide_Serie,
@@ -217,7 +217,7 @@ BEGIN
                                     WHERE [CatCheckpointTypeId] = 3 
                                         AND RowStatus = 1 ))
 		)
-      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
+      AND do.SenderCountryId = @IdCountry
 
 ------------------------------------  Validación de estados terminales --------------------------------------------------
  
@@ -246,7 +246,7 @@ BEGIN
               AND DO.IsLastMileReturn = 1
 			  AND DOD.StatusOrderId IN ( 32 )						
           )
-      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
+      AND do.SenderCountryId = @IdCountry
          
 			END
 
@@ -287,7 +287,7 @@ BEGIN
 		AND PC.IdPromoCoupon IS NULL
 		AND PC.FinalActiveDate >= GETDATE()
 		AND PC.RowStatus = 1
-        AND ISNULL(ord.SenderCountryId,'GT') = @IdCountry ;
+        AND ord.SenderCountryId = @IdCountry ;
 
     CREATE NONCLUSTERED INDEX tempFila ON #RevalueGuides (fila);
 
@@ -572,7 +572,7 @@ BEGIN
                AND pyt.GuideNumber = ppt.GuideNumber
 		LEFT JOIN [dbo].[CatPaymentType] cpt WITH(NOLOCK)
 			ON (cpt.PayTypeId = pyt.PayTypeId)
-   WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+   WHERE do.SenderCountryId = @IdCountry;
 
     CREATE NONCLUSTERED INDEX IX_PPTID_ID ON #PendingPaymentTempId ([Id]);
 
@@ -716,7 +716,7 @@ BEGIN
 			ON CPv2.IdCountry = DO.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'
 		LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)
 			ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
-	WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry AND ach.RowStatus = 1;
+	WHERE do.SenderCountryId = @IdCountry AND ach.RowStatus = 1;
 
     DECLARE @Output VARCHAR(MAX);
     DECLARE @RowsNumber INT =
