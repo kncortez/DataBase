@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<Tito Garcia>
 -- Create date: <2025-01-06>
 -- Description:	<Retorna la ruta y el hub desde un poblado dado>
