@@ -1053,8 +1053,7 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Ticket_Number_Customer]
     ON [dbo].[DeliveryOrder]([Ticket_Number] ASC, [IdCustomer] ASC, [Preparation_Date] ASC);
 
 
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para validar poblado de origen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'SenderIdSettlement';
+
 
 
 GO
