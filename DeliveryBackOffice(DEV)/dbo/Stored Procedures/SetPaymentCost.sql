@@ -34,8 +34,8 @@ BEGIN
 
     IF NOT EXISTS
     (
-        SELECT *
-        FROM dbo.Cost
+        SELECT TOP 1 *
+        FROM dbo.Cost WITH (NOLOCK)
         WHERE IdProduct = @TypeProduct
               AND ProductNumber = @ProductNumber
     )
