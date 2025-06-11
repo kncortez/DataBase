@@ -21,7 +21,7 @@ DECLARE @Description NVARCHAR(500);
         BEGIN TRY
       
 
-IF(NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[GuideStatusNotification] WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber ))
+IF(NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[GuideStatusNotification] WITH (NOLOCK) WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber ))
 BEGIN
 
    INSERT INTO [dbo].[GuideStatusNotification] (NirPhoner,
