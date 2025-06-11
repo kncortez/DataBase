@@ -17,10 +17,10 @@
 -- Create date: <2025-04-21>
 -- Description: <Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion>
 -- =============================================
-CREATE PROCEDURE [dbo].[sps_getReprintMultipleGuides]
-    -- Add the parameters for the stored procedure here
-    @GUIDESLIST TblGuides READONLY
-  , @CountryThatConsults VARCHAR(2) = 'GT'
+CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
+	-- Add the parameters for the stored procedure here
+	@GUIDESLIST TblGUides READONLY,
+	@CountryThatConsults VARCHAR(2)= 'GT'
 AS
 BEGIN
 

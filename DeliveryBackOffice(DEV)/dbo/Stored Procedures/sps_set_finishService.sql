@@ -21,7 +21,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishService]
     @TblExclusions AS TblExclusions READONLY
 AS
 BEGIN
-    SET ARITHABORT OFF;
+    SET ARITHABORT ON;
     SET NOCOUNT ON;
 
     DECLARE @DateCreated DATETIME = GETDATE();
@@ -142,6 +142,9 @@ BEGIN
         BEGIN
             DROP TABLE #TempDataClient;
         END;
+
+		IF OBJECT_ID('tempdb..#PendingPaymentTemp') IS NOT NULL
+            DROP TABLE #PendingPaymentTemp;
 
         CREATE TABLE #TempDataClient
         (
@@ -1969,8 +1972,8 @@ BEGIN
                        AND pgd.GuideNumber = tmp.GuideNumber
                        AND pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
 
-            IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
-                DROP TABLE #TempData;
+            
+			
         END;
         ELSE
         BEGIN
@@ -2002,4 +2005,3 @@ BEGIN
 
     END;
 END;
-

@@ -130,6 +130,7 @@
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersList2.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersList.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD.sql" />
+    <Build Include="dbo\User Defined Types\TblDeliveryOrders_v2.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrders.sql" />
     <Build Include="dbo\User Defined Types\TblCustomerType.sql" />
     <Build Include="dbo\User Defined Types\TblCustomer.sql" />
@@ -1003,6 +1004,9 @@
     <Build Include="dbo\Stored Procedures\spg_get_SchedulePickUp.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RouteZone.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RouteV2.sql" />
+    <Build Include="dbo\Stored Procedures\spws_GetRouteHubBySettlement.sql" />
+    <Build Include="dbo\Stored Procedures\spws_GetSettlementsByHeaderCode.sql" />
+    <Build Include="dbo\Stored Procedures\getHeaderCodeByTownshipAndDepartment.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RouteServiceAssigment.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RoutePreparation_test_cg.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RoutePreparation_test.sql" />

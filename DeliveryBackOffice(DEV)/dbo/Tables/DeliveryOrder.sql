@@ -1,4 +1,9 @@
-﻿CREATE TABLE [dbo].[DeliveryOrder] (
+﻿-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego nuevo campo SenderIdSettlement para almacenar informacion de poblado de origen>
+-- =============================================
+CREATE TABLE [dbo].[DeliveryOrder] (
     [Ticket_Number]                        NVARCHAR (150)  NULL,
     [Order_Number]                         INT             NULL,
     [Preparation_Date]                     DATETIME        NULL,
@@ -160,6 +165,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -256,6 +263,10 @@ GO
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar el monto COD antes de modificarlo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'LastCollectOnDelivery';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para validar poblado de origen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'SenderIdSettlement';
 
 
 GO
@@ -1043,8 +1054,7 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Ticket_Number_Customer]
     ON [dbo].[DeliveryOrder]([Ticket_Number] ASC, [IdCustomer] ASC, [Preparation_Date] ASC);
 
 
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para validar poblado de origen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'SenderIdSettlement';
+
 
 
 GO
