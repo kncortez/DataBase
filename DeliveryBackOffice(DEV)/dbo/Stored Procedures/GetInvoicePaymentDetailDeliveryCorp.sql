@@ -5,16 +5,18 @@
 -- =============================================
 CREATE PROCEDURE GetInvoicePaymentDetailDeliveryCorp
 (
-  @LstVisitPointClient NVARCHAR(MAX) = '',
-  @CutOffDate          DATETIME,
-  @IdCountry           NVARCHAR(2) = 'GT'
+ @LstVisitPointClient NVARCHAR(MAX) = '',
+ @CutOffDate          DATETIME,
+ @IdCountry           NVARCHAR(2) = 'GT',
+ @Option              TINYINT = 0
 )
 AS
 BEGIN
   --     Inicia el bloque de manejo de excepciones
     BEGIN TRY
         --Variables locales
-        DECLARE @XmlVisitPointClient XML; 
+        DECLARE @XmlVisitPointClient XML,
+                @TypeService         NVARCHAR(3);
 
         DECLARE @IdCatInvoiceType INT =
                 (
@@ -24,6 +26,12 @@ BEGIN
                   WHERE [Name] = 'Envío'
                     AND RowStatus = 1
                 );
+
+        SELECT @TypeService = CASE
+                                 WHEN @Option = 1 THEN 'STD'
+                                 WHEN @Option = 3 THEN 'COD'
+                                 ELSE 'STD'
+                              END
 
         -- Verificar si la tabla existe y eliminarla si es necesario
         IF OBJECT_ID('tempdb..#InvoiceByVisitPointDetails') IS NOT NULL
@@ -54,7 +62,7 @@ BEGIN
         DECLARE @TempVisitPointClient TblBillingGuideDetail;
 
         INSERT INTO @TempVisitPointClient (IdVisitPointClient, GuideSerie, GuideNumber)
-        SELECT vst.IdVisitPointClient,
+        SELECT TOP 3 vst.IdVisitPointClient,
                do.Guide_Serie,
                do.Guide_Number
           FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
@@ -75,9 +83,10 @@ BEGIN
                                            SELECT v.value('.', 'NVARCHAR(MAX)') AS Valor
                                              FROM @XmlVisitPointClient.nodes('/LstVisitPointClient/PointClient') AS x(v)
                                           )
-           AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)
+           AND CAST(do.Preparation_Date AS DATE) >= CAST(@CutOffDate AS DATE)
            AND do.IsCollect = 0
            AND do.SenderCountryId = @IdCountry
+           AND do.TypeService = @TypeService
            AND EXISTS
                      (
                       SELECT TOP 1 1
@@ -121,7 +130,7 @@ BEGIN
         -- Deshace la transacción en caso de error
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
-
+            PRINT ERROR_MESSAGE()
             SELECT 0 AS StatusCode, 
                    'Ha ocurrido un error en el proceso' AS StatusMessage
     END CATCH
