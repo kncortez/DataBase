@@ -1,8 +1,8 @@
 CREATE TABLE [dbo].[InvoiceAuthorizationHeader](
     [IdInvoiceAuthorizationHeader]        [int] IDENTITY(1,1) NOT NULL,
     [Authorization]                 [nvarchar](512) NOT NULL,
-    [StartDate]                     [date] NOT NULL,
-    [EndDate]                       [date] NOT NULL,
+    [StartDate]                     [datetime] NOT NULL,
+    [EndDate]                       [datetime] NOT NULL,
     [RowStatus]                     [bit] NOT NULL,
     [TokenCreated]                  [nvarchar](100) NOT NULL,
     [DateCreated]                   [datetime] NOT NULL,

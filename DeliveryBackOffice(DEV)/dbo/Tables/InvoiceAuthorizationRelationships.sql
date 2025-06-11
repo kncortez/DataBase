@@ -6,7 +6,7 @@ CREATE TABLE [dbo].[InvoiceAuthorizationRelationships](
     [TokenCreated]                           [nvarchar](100) NOT NULL,
     [DateCreated]                            [datetime] NOT NULL,
     [TokenUpdated]                           [nvarchar](100) NULL,
-    [DateUpdated]                            [nchar](10) NULL,
+    [DateUpdated]                            [datetime] NULL,
     CONSTRAINT [PK_InvoiceAuthorizationRelationships] PRIMARY KEY CLUSTERED ([IdInvoiceAuthorizationRelationships] ASC),
     CONSTRAINT [FK_InvoiceAuthorizationRelationships_InvoiceAuthorizationRelationships] FOREIGN KEY ([IdInvoiceAuthorizationRelationships]) REFERENCES [dbo].[InvoiceAuthorizationRelationships] ([IdInvoiceAuthorizationRelationships]),
 );
