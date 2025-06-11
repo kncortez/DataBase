@@ -595,7 +595,7 @@ BEGIN
                     INNER JOIN #listGuides LGE WITH (NOLOCK)
                         ON ASCD.GuideSerie = LGE.ItemSerie
                            AND ASCD.GuideNumber = LGE.ItemNumber
-                           AND ASCD.RowStatus = 1;
+                WHERE  ASCD.RowStatus = 1;
 
                 UPDATE DOPD
                 SET DOPD.ShipmentCompleted = 1
@@ -819,7 +819,8 @@ BEGIN
 
                 ---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
                 UPDATE DeliveryOrderPiece
-                   SET IsPickup = 1
+                   SET IsPickup = 1,
+                       StatusOrderId = 2
                   FROM DeliveryOrderPiece WITH (NOLOCK)
                  WHERE GuideNumber IN
                        (
@@ -871,6 +872,8 @@ BEGIN
 
                 -----------------------------------------Registrar pago ---------------------------------------------------------------------------
 
+                 
+                 DECLARE @ConvertDate date =  CAST(GETDATE() AS DATE);
 
                 -- Revisar la existencia de un service management para ruta de Rabbit
                 IF (EXISTS
@@ -880,7 +883,7 @@ BEGIN
                     FROM [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
                     WHERE SPSD.ServiceManagementId = @transac
                           AND SPSD.RowStatus = 1
-                          AND CAST(SPSD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+                          AND CAST(SPSD.DateCreated AS DATE) = @ConvertDate
                           AND SPSD.SettlementDate IS NULL
                 )
                    )
@@ -1282,7 +1285,7 @@ BEGIN
                               INNER JOIN #InsertedRecords IR
                                  ON PG.GuideSerie = IR.GuideSerie
                                      AND PG.GuideNumber = IR.GuideNumber
-                        WHERE PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
+                                     AND PG.IdProcessedGuideCOD = IR.IdProcessedGuideCOD;
 
                        SELECT 200 AS StatusCode,
                               'Se procesaron las guías con exito' AS [Message],

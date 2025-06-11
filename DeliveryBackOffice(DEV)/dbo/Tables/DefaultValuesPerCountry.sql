@@ -1,25 +1,31 @@
-
-CREATE TABLE [dbo].[DefaultValuesPerCountry](
-    [IdCountry]             [varchar](2)    NOT NULL,
-    [UseMultiCountry]       [bit]           NOT NULL,
-    [DNIShortName]          [nvarchar](100) NULL,
-    [DNIDescription]        [nvarchar](255) NULL,
-    [RegxDNI]               [nvarchar](255) NULL,
-    [DNIMaxLength]          [int]           NULL,
-    [TaxShortName]          [nvarchar](100) NULL,
-    [TaxDescription]        [nvarchar](255) NULL,
-    [RegxPayerTaxNumber]    [nvarchar](255) NULL,
-    [PrefixNumber]          [nvarchar](5)   NULL,
-    [IconFlag]              [nvarchar](50)  NULL,
-    [CultureInfo]           [nvarchar](10)  NULL,
-    [RowStatus]             [bit]           NOT NULL,
-    [TokenCreated]          [varchar](50)   NOT NULL,
-    [DateCreated]           [datetime]      NOT NULL,
-    [TokenUpdated]          [varchar](50)   NULL,
-    [DateUpdated]           [datetime]      NULL,
+﻿
+CREATE TABLE [dbo].[DefaultValuesPerCountry] (
+    [IdCountry]          VARCHAR (2)    NOT NULL,
+    [UseMultiCountry]    BIT            NOT NULL,
+    [DNIShortName]       NVARCHAR (100) NULL,
+    [DNIDescription]     NVARCHAR (255) NULL,
+    [RegxDNI]            NVARCHAR (255) NULL,
+    [DNIMaxLength]       INT            NULL,
+    [TaxShortName]       NVARCHAR (100) NULL,
+    [TaxDescription]     NVARCHAR (255) NULL,
+    [RegxPayerTaxNumber] NVARCHAR (255) NULL,
+    [PrefixNumber]       NVARCHAR (5)   NULL,
+    [IconFlag]           NVARCHAR (50)  NULL,
+    [CultureInfo]        NVARCHAR (10)  NULL,
+    [RowStatus]          BIT            NOT NULL,
+    [TokenCreated]       VARCHAR (50)   NOT NULL,
+    [DateCreated]        DATETIME       NOT NULL,
+    [TokenUpdated]       VARCHAR (50)   NULL,
+    [DateUpdated]        DATETIME       NULL,
+    [Latitude]           DECIMAL (9, 6) NULL,
+    [Longitude]          DECIMAL (9, 6) NULL,
     PRIMARY KEY CLUSTERED ([IdCountry] ASC),
+    CONSTRAINT [CHK_DefaultValuesPerCountry_Latitude_ValidRange] CHECK ([Latitude]>=(-90) AND [Latitude]<=(90)),
+    CONSTRAINT [CHK_DefaultValuesPerCountry_Longitude_ValidRange] CHECK ([Longitude]>=(-180) AND [Longitude]<=(180)),
     CONSTRAINT [FK_DefaultValuesPerCountry_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO
@@ -81,3 +87,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description',@value = N'Código de c
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Almacena los valores predeterminados y configuraciones por país para funcionalidades multipaís del sistema.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DefaultValuesPerCountry';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Coordenada geográfica que especifica la posición este-oeste.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DefaultValuesPerCountry', @level2type = N'COLUMN', @level2name = N'Longitude';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Coordenada geográfica que especifica la posición norte-sur.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DefaultValuesPerCountry', @level2type = N'COLUMN', @level2name = N'Latitude';
+

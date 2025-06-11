@@ -139,9 +139,11 @@ BEGIN
 												'"ServiceType":"'+ CASE WHEN dor.TypeService='NDD' OR dor.TypeService='TDA' THEN 'NEXT DAY' ELSE 'SAME DAY' END +'",'+
 												'"PiecesDry":'+ CONVERT(VARCHAR,ISNULL( dor.Pieces_Dry, '') ) +','+
 												'"PiecesCold":'+ CONVERT(VARCHAR,ISNULL( dor.Pieces_Cold, '') )  +','+
-												'"ShipmentPrice":'+CONVERT(VARCHAR,ISNULL( dor.PriceShippment, '') ) +','+
+												--'"ShipmentPrice":'+CONVERT(VARCHAR,ISNULL( dor.PriceShippment, '') ) +','+
+												'"ShipmentPrice":'+ISNULL(CONVERT(VARCHAR, dor.PriceShippment), '') +','+
 												'"IsLastMileReturn":'+CONVERT(VARCHAR, ISNULL( (CASE WHEN dor.IsLastMileReturn = 1 THEN 1 ELSE 0 END), 0) ) +','+
-												'"COD":'+CONVERT(VARCHAR,ISNULL( dor.Collect_OnDelivery, '') ) +''+
+												'"COD":'+ISNULL(CONVERT(VARCHAR, dor.Collect_OnDelivery), '') +''+
+												--"COD":'+CONVERT(VARCHAR,ISNULL( dor.Collect_OnDelivery, '') ) +''+
 											'},'+
 									'"CourierData":{'+
 												'"CourierId":'+CONVERT(VARCHAR,ISNULL(sr.ID,''))+','+

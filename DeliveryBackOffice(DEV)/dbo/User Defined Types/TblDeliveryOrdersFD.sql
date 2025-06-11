@@ -1,4 +1,9 @@
-﻿CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE (
+﻿-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego nuevo campo SenderIdSettlement para almacenar informacion de poblado de origen>
+-- =============================================
+CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE (
     [RowNumber]                            INT             NOT NULL,
     [Ticket_Number]                        NVARCHAR (150)  NULL,
     [Order_Number]                         INT             NULL,
@@ -51,9 +56,7 @@
     [ReceiverIdTownship]                   INT             NULL,
     [ReceiverLatitude]                     NVARCHAR (25)   NULL,
     [ReceiverLongitude]                    NVARCHAR (25)   NULL,
-    [SenderIdSettlement]                   BIGINT          NULL);
-
-
+	[SenderIdSettlement]                   BIGINT          NULL);
 
 
 

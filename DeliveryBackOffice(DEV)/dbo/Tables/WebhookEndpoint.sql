@@ -24,6 +24,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -118,3 +120,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'WebhookEndpoint',
     @level2type = N'COLUMN',
     @level2name = N'RemoteRoute'
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_WebhookTypeId]
+    ON [dbo].[WebhookEndpoint]([CustomerId] ASC, [WebhookTypeId] ASC);
+

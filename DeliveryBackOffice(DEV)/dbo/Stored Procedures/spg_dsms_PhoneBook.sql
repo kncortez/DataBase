@@ -17,7 +17,7 @@
 --@MaxDeliveryDate = '2022-03-09 17:21:42.180',@ElementId = 1001
 
 CREATE PROCEDURE [dbo].[spg_dsms_PhoneBook] 
-	@MaxDeliveryDate DATETIME = '2020-06-09',
+	@MaxDeliveryDate DATETIME = '2025-05-06',
 	@ElementId INT = 1001
 AS
 BEGIN
@@ -151,7 +151,7 @@ BEGIN
                IIF(DO.DeliveryETA IS NULL, CAST (GETDATE() AS DATE), CAST(DO.DeliveryETA AS DATE))
        END AS DeliveryETA,
 	   --CS.Name AS CustomerName,
-	    CASE WHEN CS.IdCustomerType = 1 THEN COALESCE(A3.UsrNickName,'')
+	    CASE WHEN CS.IdCustomerType = 1 THEN COALESCE(tbl.UsrNickName,'')
 	   ELSE COALESCE(VPC.DescriptionOfClient,'') END CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
@@ -210,12 +210,14 @@ BEGIN
 	LEFT JOIN Cost CO WITH(NOLOCK)
 		ON DO.Guide_Serie = CO.GuideSerie
 			AND DO.Guide_Number = CO.GuideNumber
-	LEFT JOIN DeliveryBackOffice.dbo.Account A1 WITH(NOLOCK)
-	ON A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1
+	OUTER APPLY(
+	 SELECT top 1  UsrNickName FROM DeliveryBackOffice.dbo.Account A1 WITH(NOLOCK)
 	LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A2 WITH(NOLOCK)
 	ON A1.AccIdAccount = A2.RuaIdAccount AND A2.RuaRowStatus = 1
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A3 WITH(NOLOCK)
 	ON A3.UsrIdUser = A2.RuaIdUser AND A3.UsrRowStatus = 1
+	WHERE A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1	
+	)TBL
 	where not tu._Number is null
 	and not tu._Series is null
 	AND DOD.StatusOrderId = 11
@@ -268,7 +270,7 @@ BEGIN
                IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
        END AS DeliveryETA,
 	   --CS.Name AS CustomerName,
-	   CASE WHEN CS.IdCustomerType = 1 THEN COALESCE(A3.UsrNickName,'')
+	   CASE WHEN CS.IdCustomerType = 1 THEN COALESCE(tbl.UsrNickName,'')
 	   ELSE COALESCE(VPC.DescriptionOfClient,'') END CustomerName,
 	   CONCAT(SR.First_Name,' ',SR.Last_Name) AS Courier,
 	   CONCAT('en el vehículo tipo *',CTV.Name,'* con placa *',CVE.Plate,'*.') AS TypeVehicle,
@@ -326,12 +328,16 @@ BEGIN
 	LEFT JOIN Cost CO WITH(NOLOCK)
 		ON DO.Guide_Serie = CO.GuideSerie
 			AND DO.Guide_Number = CO.GuideNumber
-	LEFT JOIN DeliveryBackOffice.dbo.Account A1 WITH(NOLOCK)
-	ON A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1
+	
+	OUTER APPLY
+	(
+	select top 1 UsrNickName from DeliveryBackOffice.dbo.Account A1 WITH(NOLOCK)
 	LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A2 WITH(NOLOCK)
 	ON A1.AccIdAccount = A2.RuaIdAccount AND A2.RuaRowStatus = 1
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A3 WITH(NOLOCK)
 	ON A3.UsrIdUser = A2.RuaIdUser AND A3.UsrRowStatus = 1
+	where A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1	
+	)TBL
 	where not tu._Number is null
 	and not tu._Series is null
 	AND DOD.StatusOrderId = 4

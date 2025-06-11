@@ -201,8 +201,8 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[TSERoutePreparationDetail] TSERPD  WITH(NOLOCK) 
 				ON
 					[TSERPH].[IDTSERoutePreparationHeader] = [TSERPD].[TSERoutePreparationHeaderID]
-					AND
-					[TSERPD].[RowStatus] = 1
+					--AND
+					--[TSERPD].[RowStatus] = 1
 			INNER JOIN 
 				@TblListGuides TLG
 				ON
@@ -217,6 +217,8 @@ BEGIN
 					[DOPD].[GuideNumber] = [TSERPD].[GuideNumber]
 		WHERE
 			TSERPH.[IdCatRoute] = @IdRoute
+			AND
+					[TSERPD].[RowStatus] = 1
 
 		IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @UpdatedGuides ) )
 		BEGIN

@@ -36,6 +36,8 @@
 
 
 
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Día  el cual se desea poder renovar la suscripción.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'RenewalFixedDay'
@@ -70,4 +72,9 @@ CREATE NONCLUSTERED INDEX [idx_CatSubscriptionId]
 GO
 CREATE NONCLUSTERED INDEX [IDX_CustomerId_RowStatus_CatTypeSubscriptionId_ExpirationDate]
     ON [dbo].[Subscription]([CustomerId] ASC, [RowStatus] ASC, [CatTypeSubscriptionId] ASC, [ExpirationDate] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountId_RowStatus_CatTypeSubscriptionId_ExpirationDate]
+    ON [dbo].[Subscription]([AccountId] ASC, [RowStatus] ASC, [CatTypeSubscriptionId] ASC, [ExpirationDate] ASC);
 
