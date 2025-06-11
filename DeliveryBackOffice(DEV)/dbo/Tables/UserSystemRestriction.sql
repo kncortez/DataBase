@@ -21,6 +21,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para registro de bloqueo de usuario por sistema.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'UserSystemRestriction';
 
@@ -119,4 +121,15 @@ GO
 CREATE NONCLUSTERED INDEX [idx_UstIdSystem_Include]
     ON [dbo].[UserSystemRestriction]([UstIdSystem] ASC)
     INCLUDE([UstIdUser], [UstStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_UstIdUser_UstIdSystem_INCLUDE]
+    ON [dbo].[UserSystemRestriction]([UstIdUser] ASC, [UstIdSystem] ASC)
+    INCLUDE([UstStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_UstIdUser_UstIdSystem]
+    ON [dbo].[UserSystemRestriction]([UstIdUser] ASC, [UstIdSystem] ASC);
 

@@ -78,11 +78,11 @@ BEGIN
                acd.CollectOnDelivery, 
                acd.BalanceStatus
           FROM @AnticipatedCODDetail td 
-               LEFT JOIN AnticipatedCODHeader ach WITH(NOLOCK)
+               LEFT JOIN dbo.AnticipatedCODHeader ach WITH(NOLOCK)
                   ON ach.CustomerId = td.CustomerId
                  AND ach.PortfolioId IS NULL
                  AND ach.RowStatus = 1
-               INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
+               INNER JOIN dbo.AnticipatedCODDetail acd WITH(NOLOCK)
                   ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
          WHERE td.PortfolioId = 0
            AND ach.CustomerId IS NOT NULL
@@ -96,11 +96,11 @@ BEGIN
                acd.CollectOnDelivery, 
                acd.BalanceStatus
           FROM @AnticipatedCODDetail td 
-               LEFT JOIN AnticipatedCODHeader ach WITH(NOLOCK)
+               LEFT JOIN dbo.AnticipatedCODHeader ach WITH(NOLOCK)
                   ON ach.CustomerId = td.CustomerId
                  AND ach.PortfolioId = td.PortfolioId
                  AND ach.RowStatus = 1
-               INNER JOIN AnticipatedCODDetail acd WITH(NOLOCK)
+               INNER JOIN dbo.AnticipatedCODDetail acd WITH(NOLOCK)
                   ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
          WHERE td.PortfolioId != 0
            AND ach.CustomerId IS NOT NULL
@@ -112,7 +112,7 @@ BEGIN
                ISNULL(achs.PortfolioId,0) AS PortfolioId,
                ISNULL(AllDetail.Amount,0) AS Total, 
                ISNULL(AmountByPayed.Amount,0) AS Pagada
-          FROM AnticipatedCODHeader achs WITH(NOLOCK)
+          FROM dbo.AnticipatedCODHeader achs WITH(NOLOCK)
                OUTER APPLY (
                       SELECT ISNULL(SUM(CollectOnDelivery),0) AS Amount, 
                              dts.CustomerId,
@@ -155,7 +155,7 @@ BEGIN
                ISNULL(achs.PortfolioId,0) AS PortfolioId,
                ISNULL(AllDetail.Amount,0) AS Total, 
                ISNULL(AmountByPayed.Amount,0) AS Pagada
-          FROM AnticipatedCODHeader achs WITH(NOLOCK)
+          FROM dbo.AnticipatedCODHeader achs WITH(NOLOCK)
                OUTER APPLY (
                       SELECT ISNULL(SUM(CollectOnDelivery),0) AS Amount, 
                              dts.CustomerId,
@@ -198,7 +198,7 @@ BEGIN
         UPDATE ach
            SET ach.Balance = da.Result
           FROM #AnticipatedCODSummary da 
-               LEFT JOIN AnticipatedCODHeader ach WITH(NOLOCK)
+               LEFT JOIN dbo.AnticipatedCODHeader ach WITH(NOLOCK)
                  ON ach.customerId = da.customerId
                 AND ach.PortfolioId IS NULL
                 AND ach.IdAnticipatedCODHeader = da.IdAnticipatedCODHeader
@@ -214,7 +214,7 @@ BEGIN
         UPDATE ach
            SET ach.Balance = da.Result
           FROM #AnticipatedCODSummary da 
-               LEFT JOIN AnticipatedCODHeader ach WITH(NOLOCK)
+               LEFT JOIN dbo.AnticipatedCODHeader ach WITH(NOLOCK)
                  ON ach.customerId = da.customerId
                 AND ach.PortfolioId = da.PortfolioId
                 AND ach.IdAnticipatedCODHeader = da.IdAnticipatedCODHeader

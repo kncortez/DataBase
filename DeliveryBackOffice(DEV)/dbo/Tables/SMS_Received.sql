@@ -18,9 +18,10 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IX_SMS_Received]
-    ON [dbo].[SMS_Received]([SMS_MSisdn] ASC);
+
 
 
 GO

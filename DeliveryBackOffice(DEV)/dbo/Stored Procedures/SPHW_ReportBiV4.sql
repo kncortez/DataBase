@@ -797,7 +797,7 @@ FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH (NOLOCK) -- 1,197,011
 WHERE do.Guide_Number > 2301
       AND do.StatusOrderId <> 7
       AND do.StatusOrderId <> 15
-	  AND do.DateCreated  >= DATEADD(DAY, -45, DATEDIFF(DAY, 0, GETDATE()))
+	  AND do.DateCreated  >= DATEADD(DAY, -35, DATEDIFF(DAY, 0, GETDATE()))
 	 -- AND do.DateCreated >= '2025-02-01 00:00:00'
 	  ;
 

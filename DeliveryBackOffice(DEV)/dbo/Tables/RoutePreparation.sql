@@ -28,6 +28,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar la información de la preparación de entregas.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparation';
 
@@ -96,4 +98,9 @@ CREATE NONCLUSTERED INDEX [IDX_CatRouteId_DateRoutePreparation_RowStatus]
 GO
 CREATE NONCLUSTERED INDEX [IDX_DateRoutePreparation]
     ON [dbo].[RoutePreparation]([DateRoutePreparation] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdRoutePreparation_RowStatus_DateRoutePreparation]
+    ON [dbo].[RoutePreparation]([IdRoutePreparation] ASC, [RowStatus] ASC, [DateRoutePreparation] ASC);
 

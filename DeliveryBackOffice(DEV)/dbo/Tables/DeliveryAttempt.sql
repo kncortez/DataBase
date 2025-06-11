@@ -48,6 +48,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_deliveryattempt_guide]
     ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -124,4 +126,9 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_Date_Created_ConfirmationOfIncidenceId]
     ON [dbo].[DeliveryAttempt]([Date_Created] ASC, [ConfirmationOfIncidenceId] ASC)
     INCLUDE([Guide_Number], [ID_DeliveryOrderBySettlement]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Guide_Serie_Guide_Number_Date_Created]
+    ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC, [Date_Created] ASC);
 

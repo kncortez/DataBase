@@ -20,6 +20,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_delivery_order_oaid]
     ON [dbo].[DeliveryOrderPaid]([Guide_Serie] ASC, [Guide_Number] ASC, [IdStatus] ASC);
@@ -40,4 +42,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'0 Depósito
 GO
 CREATE NONCLUSTERED INDEX [IDX_Serie_Numero_guia]
     ON [dbo].[DeliveryOrderPaid]([Guide_Serie] ASC, [Guide_Number] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdStatus_INCLUDE]
+    ON [dbo].[DeliveryOrderPaid]([IdStatus] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number]);
 

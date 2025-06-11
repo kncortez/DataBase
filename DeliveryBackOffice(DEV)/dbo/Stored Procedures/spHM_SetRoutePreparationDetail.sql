@@ -107,7 +107,7 @@ BEGIN
 	 IF (@GuideNumber>1)
 	 BEGIN
 	 SET  @TimePlaId = (Select Top 1 TimePlaId  From [dbo].[DeliveryOrderPaymentDetail] WITH (NOLOCK)
-											  where GuideNumber = @GuideNumber);
+											  WHERE GuideSerie = @GuideSerie AND  GuideNumber = @GuideNumber);
 	 END;
 
     BEGIN TRANSACTION;
