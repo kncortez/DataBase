@@ -50,7 +50,7 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
 AS
 BEGIN
 	
-	IF @GuideNumber IS NULL OR @GuideNumber = 0 OR @GuideSerie IS NULL OR @GuideSerie = ''
+	IF (@GuideNumber IS NULL OR @GuideNumber = 0) OR (@GuideSerie IS NULL OR @GuideSerie = '')
 	BEGIN
 		SELECT @GuideNumber = Guide_Number,
 			   @GuideSerie=Guide_Serie
@@ -501,7 +501,7 @@ BEGIN
 						acodd.IsAgaintsBalancePaid = 1,
 						acodd.AgaintsBalanceAmount = bdcod.Amount,
 						acodd.AgaintsBalancePaid = bdcod.Amount
-                   FROM DeliveryOrderDetail dod
+                   FROM DeliveryOrderDetail dod WITH (NOLOCK)
                         INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
                                 ON dod.Guide_Serie = acodd.GuideSerie
                                AND dod.Guide_Number = acodd.GuideNumber
@@ -529,7 +529,7 @@ BEGIN
                 SET @RInserted = @@ROWCOUNT;
 
                 SELECT @DataOriginId = cm.ModIdModule
-                FROM DeliveryBackOffice.dbo.CatModule cm
+                FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
                 WHERE cm.ModName = @ModName;
 
                 -----------------WEBHOOK.INI-----------------------		
@@ -601,8 +601,8 @@ BEGIN
 						DECLARE @TypeConnect INT = 0;
 
 						SET @TypeConnect = (SELECT top 1 TypeConnectionId 
-									FROM WebhookEndpoint wh
-									INNER JOIN WebhookCatTypeConnection wc
+									FROM WebhookEndpoint wh WITH (NOLOCK)
+									INNER JOIN WebhookCatTypeConnection wc WITH (NOLOCK)
 										ON wh.TypeConnectionId = wc.IdCatTypeConnection
 									WHERE wh.CustomerId = @WebhookCustomerId)
 
@@ -695,13 +695,13 @@ BEGIN
 								INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 									ON do.Guide_Serie = dop.GuideSerie
 									AND do.Guide_Number = dop.GuideNumber
-									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+								INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
-									WHERE do.Guide_Number = @GuideNumber
-									AND do.Guide_Serie = @GuideSerie
+								WHERE do.Guide_Serie = @GuideSerie
+									AND do.Guide_Number = @GuideNumber
 									AND dop.ExternalPieceId IS NOT NULL
 									AND WHE.TypeConnectionId = 2
-									GROUP BY dop.GuideSerie,dop.GuideNumber
+								GROUP BY dop.GuideSerie,dop.GuideNumber
 					  
 					  		INSERT INTO WebhookTrackingQueueDetailForSFTP 
 								(CustomerId,
@@ -808,19 +808,19 @@ BEGIN
 									[CPP].[Saturday],
 									[CPP].[Sunday],
 									[CPP].[PointPromoFactor]
-					FROM	[dbo].[CatPointPromo] CPP
+					FROM	[dbo].[CatPointPromo] CPP WITH (NOLOCK)
 					WHERE	[CPP].[RowStatus] = 1
 						AND [CPP].[InPointGeneration] = 1
 						AND SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
 					ORDER BY [CPP].[PointPromoWeight] DESC;
 					
 					SET @ForzaPointsGenerationType = (	SELECT	[CP].[Value]
-														FROM	[dbo].[ConfigParams] CP
+														FROM	[dbo].[ConfigParams] CP WITH (NOLOCK)
 														WHERE	[CP].[Name] = 'ForzaPointsGenerationType'
 															AND [CP].[Status] = 1);
 
 					SET @ForzaPointsGenerationValue = ( SELECT	[CP].[Value]
-														FROM	[dbo].[ConfigParams] CP
+														FROM	[dbo].[ConfigParams] CP WITH (NOLOCK)
 														WHERE	[CP].[Name] = 'ForzaPointsGenerationValue'
 															AND [CP].[Status] = 1);
 
@@ -906,7 +906,7 @@ BEGIN
 						TOP 1
 							@GuideAlreadyInPointLog = 1
 					FROM
-						[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL
+						[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH (NOLOCK)
 					WHERE
 						PBSL.GuideNumber = @GuideNumber
 						AND
@@ -981,7 +981,7 @@ BEGIN
 																												WHEN @ForzaPointsGenerationType = 'MONTO' THEN CAST([PSL].[PointsReceived] / (SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
 																												ELSE 0
 																											END
-											FROM		[dbo].[PointsByServiceLog] PSL
+											FROM		[dbo].[PointsByServiceLog] PSL WITH (NOLOCK)
 											WHERE PSL.GuideSerie = @GuideSerie
 											AND PSL.GuideNumber = @GuideNumber
 											AND PSL.RowStatus = 1;
@@ -990,7 +990,7 @@ BEGIN
 
 							-- Agregar puntos a membresía
 							SET @PointsGenerated = ISNULL((SELECT	SUM([PSL].[PointsReceived])
-													FROM	[dbo].[PointsByServiceLog] PSL
+													FROM	[dbo].[PointsByServiceLog] PSL WITH (NOLOCK)
 													WHERE	[PSL].[GuideSerie] = @GuideSerie
 														AND [PSL].[GuideNumber] = @GuideNumber
 														AND PSL.RowStatus = 1), 0);
@@ -1054,7 +1054,7 @@ BEGIN
 						,ord.Guide_Number AS 'GuideNumber'
 						,(
 							SELECT TOP 1 IdCourierman
-							FROM DeliveryBackOffice.dbo.LogTokenPOD
+							FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
 							WHERE LogTokenPOD = @Token
 							) AS 'CourierManId'
 						,@DataOriginId AS 'DataOriginId'
@@ -1191,7 +1191,7 @@ BEGIN
 						,INSERTED.GuideNumber
 						,INSERTED.IdProcessedGuideCOD
 					INTO #GuidesProcessCOD
-					FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p
+					FROM DeliveryBackOffice.dbo.ProcessedGuideCOD p WITH (NOLOCK)
 					INNER JOIN DataToUpdate d ON p.GuideSerie = d.GuideSerie
 						AND p.GuideNumber = d.GuideNumber;
 				END;--FIN VALIDACION COD ANTICIPADO  
