@@ -11,17 +11,23 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @IdCountry     AS NVARCHAR(2),
-            @taxes         AS NVARCHAR(50),
-            @Address       AS NVARCHAR(500),
-            @Phone         AS NVARCHAR(15),
-            @CodeISO       AS NVARCHAR(200),
-            @IdTax         AS NVARCHAR(200),
-            @FELCorreo     AS NVARCHAR(200),
-            @cmp_name      AS NVARCHAR(200),
-            @Password      AS NVARCHAR(200),
-            @Username      AS NVARCHAR(200),
-            @TaxPercentage AS NVARCHAR(30);
+    DECLARE @IdCountry             AS NVARCHAR(2),
+            @taxes                 AS NVARCHAR(50),
+            @Address               AS NVARCHAR(500),
+            @Phone                 AS NVARCHAR(15),
+            @CodeISO               AS NVARCHAR(200),
+            @IdTax                 AS NVARCHAR(200),
+            @FELCorreo             AS NVARCHAR(200),
+            @cmp_name              AS NVARCHAR(200),
+            @Password              AS NVARCHAR(200),
+            @Username              AS NVARCHAR(200),
+            @TaxPercentage         AS NVARCHAR(30),
+            @inv_cmp_nameComercial AS NVARCHAR(200),
+            @inv_cmp_name          AS NVARCHAR(200),
+            @dpf_FELUserName             AS NVARCHAR(200),
+            @dpf_FELData3                AS NVARCHAR(200),
+            @dpf_FELAsuntoCorreoFactura  AS NVARCHAR(200),
+            @dpf_FELEstablecimiento      AS NVARCHAR(200);
 
      SELECT @Address = vpc.[Address], --@Address = 
             @IdCountry = vpc.[CountryId], --@IdCountry
@@ -44,20 +50,33 @@ BEGIN
             @FELCorreo = dp.dpf_FELCorreo,
             @cmp_name = dp.inv_cmp_name,
             @Password = dpf_FELRequestor,
-            @Username = dpf_FELUser
+            @Username = dpf_FELUser,
+            @inv_cmp_name = [inv_cmp_name],
+            @inv_cmp_nameComercial = [inv_cmp_nameComercial],
+            @dpf_FELUserName            = dpf_FELUserName,
+            @dpf_FELData3               = dpf_FELData3,
+            @dpf_FELAsuntoCorreoFactura = dpf_FELAsuntoCorreoFactura,
+            @dpf_FELEstablecimiento     = dpf_FELEstablecimiento
        FROM del_ParametrosFactura dp WITH(NOLOCK)
       WHERE dp.dpf_VpCodeOfReference = @VpCodeOfReference
 
-      SELECT ISNULL(@Address  ,'')      AS [Address],
-             ISNULL(@IdCountry,'')      AS IdCountry,
-             ISNULL(@CodeISO  ,'')      AS CodeISO,
-             ISNULL(@IdTax    ,'')      AS TaxID,
-             ISNULL(@FELCorreo,'')      AS Email,
-             ISNULL(@cmp_name ,'')      AS [Name],
-             ISNULL(@Phone    ,'')      AS Phone,
-             ISNULL(@Username ,'')      AS Username,
-             ISNULL(@Password ,'')      AS [Password],
-             ISNULL(@TaxPercentage ,'') AS TaxPercentage
+      SELECT ISNULL(@Address  ,'')            AS [Address],
+             ISNULL(@IdCountry,'')            AS IdCountry,
+             ISNULL(@CodeISO  ,'')            AS CodeISO,
+             ISNULL(@IdTax    ,'')            AS TaxID,
+             ISNULL(@FELCorreo,'')            AS Email,
+             ISNULL(@cmp_name ,'')            AS [Name],
+             ISNULL(@Phone    ,'')            AS Phone,
+             ISNULL(@Username ,'')            AS Username,
+             ISNULL(@Password ,'')            AS [Password],
+             ISNULL(@TaxPercentage ,'')       AS TaxPercentage,
+             ISNULL(@inv_cmp_name ,'')        AS inv_cmp_name,
+             ISNULL(@inv_cmp_nameComercial,'')AS inv_cmp_nameComercial,
+             ISNULL(@dpf_FELUserName           ,'') AS dpf_FELUserName,
+             ISNULL(@dpf_FELData3              ,'') AS dpf_FELData3,
+             ISNULL(@dpf_FELAsuntoCorreoFactura,'') AS dpf_FELAsuntoCorreoFactura,
+             ISNULL(@dpf_FELEstablecimiento    ,'') AS dpf_FELEstablecimiento
+
 
      SELECT CodeOfReference
             , aibc.[Node]

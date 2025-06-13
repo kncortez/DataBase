@@ -15,7 +15,9 @@ BEGIN TRY
     ('Header.AdditionalIssueDocInfo', 'CodEstPuntoV'             , NULL,'1234M010', 1, GETDATE(), 'JRAMIREZ-SYS'),
     ('Header.AdditionalIssueDocInfo', 'TipoModelo'               , NULL,'1', 1, GETDATE(), 'JRAMIREZ-SYS'),
     ('Header.AdditionalIssueDocInfo', 'TipoOperacion'            , NULL,'1', 1, GETDATE(), 'JRAMIREZ-SYS'),
-    ('Taxes.Tax', 'Code'                                         , NULL,'20', 1, GETDATE(), 'JRAMIREZ-SYS');
+    ('Taxes.Tax', 'Code'                                         , NULL,'20', 1, GETDATE(), 'JRAMIREZ-SYS'),
+    ('CreateDTE', 'USERNAME'                                     , NULL,'TESTFORZADELI', 1, GETDATE(), 'JRAMIREZ-SYS'),
+    ('CreateDTE', 'FORMAT'                                       , NULL,'PDF', 1, GETDATE(), 'JRAMIREZ-SYS');
 
     -- Consulta para verificar los datos
     SELECT * FROM AddInfoByConfigSV;
