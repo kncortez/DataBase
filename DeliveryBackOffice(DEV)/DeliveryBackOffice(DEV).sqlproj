@@ -1900,6 +1900,10 @@
     <Build Include="dbo\Stored Procedures\SPHWInsertPaymentZigi.sql" />
     <Build Include="dbo\Stored Procedures\UpdatePaymentZigiByGuide.sql" />
     <Build Include="dbo\Stored Procedures\SPHWInsertAuthorizationNumberByUser.sql" />
+    <Build Include="dbo\Tables\StateByBillingSV.sql" />
+    <Build Include="dbo\Tables\DistrictByBillingSV.sql" />
+    <Build Include="dbo\Tables\CatEconomicActivityBySV.sql" />
+    <Build Include="dbo\Tables\BillingCustomerBySV.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
