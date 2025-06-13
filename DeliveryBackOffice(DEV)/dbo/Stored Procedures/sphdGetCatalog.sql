@@ -18,6 +18,11 @@
 -- Create date: <2024-06-19>
 -- Description:	<se modifica para obtener datos de la tabla CatCurrencyCOD>
 -- =============================================
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2025-06-12>
+-- Description:	<Facturacion SV - Obtiene catalogos para facturacion de El Salvador>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCatalog]
     -- Add the parameters for the stored procedure here
     @IdCorrelative INT = -1,
@@ -644,6 +649,36 @@ BEGIN
            'BillingVolume' [Catalog]
     FROM [dbo].[CatBillingVolume] BV with (nolock)
     WHERE BV.RowStatus = 'TRUE'
+
+	--facturacion El Salvador	
+    -- Consulta de distritos
+    SELECT 
+		DS.Id [IdValue],
+        DS.CodeDistrict, 
+        DS.[Name] [NameValue],	
+		DS.StateId [IdFilter],
+        DS.StateCode,
+        'DistrictByBillingSV' [Catalog]
+    FROM DistrictByBillingSV DS WITH(NOLOCK)
+    WHERE DS.RowStatus = 1;
+
+    -- Consulta de estados
+    SELECT 
+		S.Id [IdValue],
+        S.Code, 
+        S.[Name] [NameValue],
+        'StateByBillingSV' [Catalog]
+    FROM StateByBillingSV S WITH(NOLOCK)
+    WHERE S.RowStatus = 1;
+
+    -- Consulta de actividades económicas
+    SELECT 
+		EA.Id [IdValue],
+        EA.CodeActivity, 
+        CONVERT(NVARCHAR(45),CONCAT(EA.[CodeActivity],' - ',EA.[Description])) [NameValue],
+        'EconomiActivity' [Catalog]
+    FROM CatEconomicActivityBySV EA WITH(NOLOCK)
+    WHERE EA.RowStatus = 1;
 
 
 END
