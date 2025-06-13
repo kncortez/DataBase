@@ -8,6 +8,10 @@
 -- Update date: <2024-11-28>
 -- Description: <Se agrega consulta para obtener los datos de facturación del cliente>
 -- =============================================
+-- Author:      <Brandon Pedroza>
+-- Update date: <2025-06-12>
+-- Description: <Facturacion SV - Se obtienen datos de cliente para facturar en El Salvador>
+--=============================================	
 CREATE PROCEDURE [dbo].[GetVisitPointOfClient]
 (
  @IdCustomer   INT,
@@ -68,10 +72,22 @@ BEGIN
 						cs.InvoiceName,
 						cs.TaxIdentificationNumber,
 						cs.FiscalAddress,
-						cs.InvoiceEmail
+						cs.InvoiceEmail,
+						DIS.CodeDistrict,
+						DIS.StateCode AS [CodeState],
+						CAT.CodeActivity,
+						CAT.[Description],
+                        BL.NRC,
+						BL.Phone
 					FROM DeliveryBackOffice.dbo.Customer cs WITH(NOLOCK) 
 						INNER JOIN DeliveryBackOffice.dbo.CustomerType cust WITH(NOLOCK)
 							ON cs.IdCustomerType = cust.IdCustomerType
+						LEFT JOIN DeliveryBackOffice.dbo.BillingCustomerBySV BL
+							ON cs.IdCustomer = BL.IdCustomer
+						LEFT JOIN dbo.CatEconomicActivityBySV CAT
+							ON BL.ActivityId = CAT.Id
+						LEFT JOIN dbo.DistrictByBillingSV DIS
+							ON BL.DistrictId = DIS.Id
 					WHERE (cs.IdCustomer = @IdCustomer
 						OR cs.SAPCardCode = @SAPCardCode)
 						AND cust.IdCustomerType = 1

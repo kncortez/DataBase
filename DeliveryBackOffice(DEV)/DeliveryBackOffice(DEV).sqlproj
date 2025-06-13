@@ -1904,6 +1904,7 @@
     <Build Include="dbo\Tables\DistrictByBillingSV.sql" />
     <Build Include="dbo\Tables\CatEconomicActivityBySV.sql" />
     <Build Include="dbo\Tables\BillingCustomerBySV.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDSaveBillingCustomerBySV.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
