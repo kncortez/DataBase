@@ -1,4 +1,4 @@
-﻿CREATE TYPE [dbo].[TblDeliveryOrders_v2] AS TABLE (
+CREATE TYPE [dbo].[TblDeliveryOrders_v2] AS TABLE (
     [RowNumber]                            INT             NOT NULL,
     [Ticket_Number]                        NVARCHAR (150)  NULL,
     [Order_Number]                         INT             NULL,
@@ -45,7 +45,7 @@
     [Collect_OnDelivery]                   DECIMAL (14, 2) NULL,
     [ParcelCode]                           NVARCHAR (1000) NULL,
     [IdCountrySender]                      NVARCHAR (2)    NULL,
-    [ReceiverIdSettlement]                 BIGINT          NULL,
-    [ReceiverIdTownship]                   INT             NULL,
-    [SenderIdSettlement]                   BIGINT          NULL);
-
+	[ReceiverIdSettlement]				   BIGINT		   NULL,
+	[ReceiverIdTownship]				   INT			   NULL,
+	[SenderIdSettlement]                   BIGINT          NULL
+);

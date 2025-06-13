@@ -5,3 +5,8 @@
     CONSTRAINT [pk_StringEncoding] PRIMARY KEY CLUSTERED ([EncodingType] ASC, [StringToReplace] ASC)
 );
 
+
+GO
+CREATE NONCLUSTERED INDEX [idx_EncodingType]
+    ON [dbo].[tb_StringEncoding]([EncodingType] ASC);
+
