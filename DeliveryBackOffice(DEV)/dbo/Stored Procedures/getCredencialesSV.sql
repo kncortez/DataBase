@@ -1,7 +1,7 @@
 -- =============================================
 -- Author:      Juan Ramirez
 -- Create date: 2025/06/04
--- Description: <Sp para obtener los valores de Buyer para facturar en el Salvador>
+-- Description: <Sp para obtener los valores de Seller para facturar en el Salvador>
 -- =============================================
 ALTER PROCEDURE [dbo].[getCredencialesSV]
 (
