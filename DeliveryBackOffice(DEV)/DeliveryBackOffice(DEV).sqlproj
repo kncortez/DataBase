@@ -1911,4 +1911,7 @@
   <ItemGroup>
     <RefactorLog Include="DeliveryBackOffice%28DEV).refactorlog" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="dbo\Functions\fn_get_diff_minutes_tbl.sql" />
+  </ItemGroup>
 </Project>
