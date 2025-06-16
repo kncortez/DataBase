@@ -12,8 +12,12 @@ CREATE PROCEDURE [dbo].[spHM_RegisterPetitionLog]
 	@RequestHeader nvarchar(4000),
 	@RequestBody nvarchar(MAX) = '',
 	@RequestDateTime datetime = NULL,
-	@RequestLauValue nvarchar(500)
+	@RequestLauValue nvarchar(500),
 
+	@ResponseHeader NVARCHAR(2500),
+	@ResponseCode INT,
+	@ResponseBody NVARCHAR(MAX),
+	@ResponseDateTime DATETIME
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
