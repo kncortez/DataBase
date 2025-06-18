@@ -13,9 +13,12 @@
 -- Update date: <2025-06-04>
 -- Description: <Cambio de respuesta sin JSON y optimizaciones.>
 -- =============================================
+-- Author:      <Tito Garcia>
+-- Update date: <2025-06-16>
+-- Description: <Se elimina el recalculo de montos ya que se enviaran desde frontend>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_finishService]
-    @InGuidesP VARCHAR(MAX)
-  , @IdModuleP INT
+    @IdModuleP INT
   , @TokenP VARCHAR(100)
   , @ServiceType VARCHAR(100)
   , @CUI VARCHAR(100)
@@ -30,7 +33,6 @@ BEGIN
 	SET NOCOUNT ON;
 
 	BEGIN TRY
-    BEGIN TRANSACTION;
     
     DECLARE @DateCreated DATETIME = GETDATE();
 	DECLARE @CatSalesPackageStatusId INT = 0;
@@ -101,29 +103,27 @@ BEGIN
         DROP TABLE #listGuidesEnabled;
     IF OBJECT_ID('tempdb.dbo.#listGuidesDisabled', 'U') IS NOT NULL
         DROP TABLE #listGuidesDisabled;
-    IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
-        DROP TABLE #TempData;
+    IF OBJECT_ID('tempdb..#TempDataSFS') IS NOT NULL
+        DROP TABLE #TempDataSFS;
     IF OBJECT_ID('tempdb..#TblListGuidesTwo') IS NOT NULL
         DROP TABLE #TblListGuidesTwo;
-    IF OBJECT_ID('tempdb..#TempDataClient', 'U') IS NOT NULL
-        DROP TABLE #TempDataClient;
-	IF OBJECT_ID('tempdb..#PendingPaymentTemp', 'U') IS NOT NULL
-        DROP TABLE PendingPaymentTemp;
+    IF OBJECT_ID('tempdb..#TempDataClientSFS', 'U') IS NOT NULL
+        DROP TABLE #TempDataClientSFS;
 
-	CREATE TABLE  #TempDataClient
+	CREATE TABLE  #TempDataClientSFS
     (
         IdCustomer INT NOT NULL,
         PortfolioId INT NOT NULL,
     );
-    CREATE NONCLUSTERED INDEX IDX_PK_TempDataClient ON #TempDataClient (IdCustomer, PortfolioId);
+    CREATE NONCLUSTERED INDEX IDX_PK_TempDataClient ON #TempDataClientSFS (IdCustomer, PortfolioId);
 
-    CREATE TABLE #TempData
+    CREATE TABLE #TempDataSFS
     (
         IdProcessedGuideCOD INT,
         GuideSerie  NVARCHAR(2),
         GuideNumber INT
     );
-    CREATE NONCLUSTERED INDEX INDX_sps_set_finishService_Temp ON #TempData (GuideSerie, GuideNumber);
+    CREATE NONCLUSTERED INDEX INDX_sps_set_finishService_Temp ON #TempDataSFS (GuideSerie, GuideNumber);
 
 	SELECT *
     INTO #TblListGuidesTwo
@@ -158,6 +158,8 @@ BEGIN
 		WHERE lg.Guide_Serie = do.Guide_Serie AND lg.Guide_Number = do.Guide_Number
 	);
 	CREATE NONCLUSTERED INDEX IX_LGNE_SERIE ON #listGuidesNotExist (Guide_Serie, Guide_Number);
+	
+    BEGIN TRANSACTION;
 
 	IF ((SELECT COUNT(1) FROM #listGuidesNotExist) <= 0)
 	BEGIN
@@ -244,104 +246,20 @@ BEGIN
             SELECT COUNT(1)FROM #listGuidesDisabled
         );
 
-		--========================================================================
-		--=========================== VALIDAR PAGO ===============================
-		--========================================================================
-		DECLARE @InTimeP INT;
-        DECLARE @IsReturnP BIT;
-        IF UPPER(@ServiceType) = 'PICKUP'
-        BEGIN
-            SET @InTimeP = 2;
-            SET @IsReturnP = 'FALSE';
-        END;
-        ELSE IF UPPER(@ServiceType) = 'DELIVERY'
-        BEGIN
-            SET @InTimeP = 3;
-            SET @IsReturnP = 'FALSE';
-        END;
-        ELSE IF @ServiceType = 'RETURN'
-        BEGIN
-            SET @InTimeP = 3;
-            SET @IsReturnP = 'TRUE';
-        END;
-
-		CREATE TABLE #PendingPaymentTemp
-        (
-            GuideSerie NVARCHAR(25) NULL,
-            GuideNumber INT,
-            IsCollect BIT,
-            Price DECIMAL(18, 2) NULL,
-            COD DECIMAL(18, 2) NULL,
-            AmountPaid DECIMAL(18, 2) NULL,
-            CODPaid DECIMAL(18, 2) NULL,
-            CODIsPaid BIT,
-            PaymentTime INT NULL,
-            TimeSequence INT NULL,
-            FelNumber NVARCHAR(50) NULL,
-            IsPaid BIT,
-            IsCustomer INT NULL,
-            ConditionPayment VARCHAR(200),
-            HaveCredit BIT,
-            CollectCOD BIT,
-            ReturnRate DECIMAL(18, 2) NULL,
-            CurrencyPrice_CODCodeISO NVARCHAR(8),
-            CurrencyPrice_CODSymbol  NVARCHAR(8),
-            CurrencyPriceCodeISO     NVARCHAR(8),
-            CurrencyPriceSymbol      NVARCHAR(8),
-            AmountToPay DECIMAL(18, 2) NULL,
-            CODAmount DECIMAL(18, 2) NULL,
-            ReturnRates DECIMAL(18, 2) NULL
-        );
-        CREATE NONCLUSTERED INDEX IX_PPT_GS ON #PendingPaymentTemp ( GuideSerie, GuideNumber );
-
-		INSERT INTO #PendingPaymentTemp
-        (
-            GuideSerie,
-            GuideNumber,
-            IsCollect,
-            Price,
-            COD,
-            AmountPaid,
-            CODPaid,
-            CODIsPaid,
-            PaymentTime,
-            TimeSequence,
-            FelNumber,
-            IsPaid,
-            IsCustomer,
-            ConditionPayment,
-            HaveCredit,
-            CollectCOD,
-            ReturnRate,
-            CurrencyPrice_CODCodeISO,
-            CurrencyPrice_CODSymbol,
-            CurrencyPriceCodeISO,
-            CurrencyPriceSymbol,
-            AmountToPay,
-            CODAmount,
-            ReturnRates
-        )
-        EXEC DeliveryBackOffice.dbo.spws_get_guide_pending_payment    @InGuides = @InGuidesP
-																	, @InTime = @InTimeP
-																	, @IsReturn = @IsReturnP
-																	, @CodeApp = ''
-																	, @IdModule = @IdModuleP
-																	, @Token = @TokenP;
-
-		DECLARE @TotalAmountBD DECIMAL(18, 2);
+		DECLARE @TotalAmount DECIMAL(18, 2);
         DECLARE @TotalAmountPortal DECIMAL(18, 2);
-        SET @TotalAmountBD = ( SELECT SUM(AmountToPay)FROM #PendingPaymentTemp);
+        SET @TotalAmount = ( SELECT SUM(AmountToPay)FROM #TblListGuidesTwo);
         SET @TotalAmountPortal = ( SELECT SUM(ServiceAmount)FROM @TblPayment );
 
-		IF (@TotalAmountBD IS NULL)
+		IF (@TotalAmount IS NULL)
         BEGIN
-            SET @TotalAmountBD = 0;
+            SET @TotalAmount = 0;
         END;
 
-        DECLARE @TotalCODAmountBD DECIMAL(18, 2);
+        DECLARE @TotalCODAmount DECIMAL(18, 2);
         DECLARE @TotalCODAmountPortal DECIMAL(18, 2);
         DECLARE @Exclude INT;
-        SET @TotalCODAmountBD = ( SELECT SUM(CODAmount)FROM #PendingPaymentTemp);
+        SET @TotalCODAmount = ( SELECT SUM(CODAmount)FROM #TblListGuidesTwo);
         SET @TotalCODAmountPortal = ( SELECT SUM(CODAmount)FROM @TblPayment );
         SET @Exclude = ( SELECT COUNT(ExcludeCOD)FROM #TblListGuidesTwo WHERE ExcludeCOD = 1 );
 
@@ -351,10 +269,10 @@ BEGIN
 				((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
            ) 
 		BEGIN --VER GUIAS VALIDAS
-			IF (@TotalAmountBD = @TotalAmountPortal) --VALIDAR SUMAS ServiceAmount
+			IF (@TotalAmount = @TotalAmountPortal) --VALIDAR SUMAS ServiceAmount
 			BEGIN
 				IF (
-						((@TotalCODAmountBD = @TotalCODAmountPortal) AND (@Exclude = 0))
+						((@TotalCODAmount = @TotalCODAmountPortal) AND (@Exclude = 0))
                         OR (@Exclude > 0)
 					) --VALIDAR SUMAS CODAmount
 				BEGIN
@@ -385,10 +303,10 @@ BEGIN
                     SET @TotalGuidesInclude =
                     (
                         SELECT SUM(pd.CODAmount)
-                        FROM #PendingPaymentTemp   pd
+                        FROM #TblListGuidesTwo   pd
                             INNER JOIN @TblInclude ti
-                                ON pd.GuideSerie = ti.Guide_Serie
-                                AND pd.GuideNumber = ti.Guide_Number
+                                ON pd.Guide_Serie = ti.Guide_Serie
+                                AND pd.Guide_Number = ti.Guide_Number
                     );
 
 					IF (@TotalGuidesInclude IS NULL)
@@ -455,7 +373,7 @@ BEGIN
 								acodh.PortfolioId = acodh.PortfolioId
 						OUTPUT inserted.CustomerId,
 								ISNULL(inserted.PortfolioId,0) AS PortfolioId
-						INTO #TempDataClient
+						INTO #TempDataClientSFS
 						FROM #listGuidesEnabled lge
 							INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
 								ON lge.Guide_Serie = acodd.GuideSerie
@@ -503,7 +421,7 @@ BEGIN
 
 						INSERT INTO @AnticipatedCODDetail
                         SELECT DISTINCT IdCustomer, PortfolioId
-                        FROM #TempDataClient
+                        FROM #TempDataClientSFS
 
                         EXEC spUpdateBalanceByIdClient @AnticipatedCODDetail
 
@@ -520,9 +438,9 @@ BEGIN
                                 INNER JOIN #listGuidesEnabled  lge
 									ON lge.Guide_Serie = do.Guide_Serie
                                     AND lge.Guide_Number = do.Guide_Number
-                                INNER JOIN #PendingPaymentTemp ppt
-									ON ppt.GuideSerie = do.Guide_Serie
-                                    AND ppt.GuideNumber = do.Guide_Number
+                                INNER JOIN #TblListGuidesTwo ppt
+									ON ppt.Guide_Serie = do.Guide_Serie
+                                    AND ppt.Guide_Number = do.Guide_Number
                             WHERE lge.ExcludeCOD = 1;
 
 							INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
@@ -537,7 +455,7 @@ BEGIN
                             OUTPUT	inserted.IdProcessedGuideCOD,
 									inserted.GuideSerie,
 									inserted.GuideNumber
-                            INTO #TempData
+                            INTO #TempDataSFS
                             SELECT lge.Guide_Serie
                                 , lge.Guide_Number
                                 , 25
@@ -675,7 +593,7 @@ BEGIN
                                     OUTPUT inserted.IdProcessedGuideCOD,
                                             inserted.GuideSerie,
                                             inserted.GuideNumber
-                                    INTO #TempData
+                                    INTO #TempDataSFS
                                     SELECT lge.Guide_Serie
                                             , lge.Guide_Number
                                             , 34
@@ -1025,9 +943,9 @@ BEGIN
                             , ti.Guide_Serie
                             , ti.Guide_Number
                         FROM @TblInclude                   ti
-                            INNER JOIN #PendingPaymentTemp pgt
-								ON ti.Guide_Serie = pgt.GuideSerie
-                                AND ti.Guide_Number = pgt.GuideNumber
+                            INNER JOIN #TblListGuidesTwo pgt
+								ON ti.Guide_Serie = pgt.Guide_Serie
+                                AND ti.Guide_Number = pgt.Guide_Number
                         WHERE NOT EXISTS
                         (
                             SELECT 1
@@ -1062,9 +980,9 @@ BEGIN
 													END
 												)
                         FROM Cost                          ct WITH (NOLOCK)
-                            INNER JOIN #PendingPaymentTemp ppt
-                                ON ct.GuideSerie = ppt.GuideSerie
-                                AND ct.GuideNumber = ppt.GuideNumber
+                            INNER JOIN #TblListGuidesTwo ppt
+                                ON ct.GuideSerie = ppt.Guide_Serie
+                                AND ct.GuideNumber = ppt.Guide_Number
                             INNER JOIN @TblInclude         ti
                                 ON ct.GuideSerie = ti.Guide_Serie
                                 AND ct.GuideNumber = ti.Guide_Number
@@ -1311,9 +1229,9 @@ BEGIN
 						-- FIN Acumulación de puntos FORZA
 						-----------------------------------------
 
-						SELECT
+						SELECT TOP 1
 							  '1'															AS 'ResponseCode'
-							, ISNULL(lge.StatusOrderDescription,'')							AS 'Description'
+							, ISNULL(lge.StatusOrderDescription,'Proceso realizado con exito')	AS 'Description'
 						FROM #listGuidesEnabled lge WITH(NOLOCK)
 
 					END;
@@ -1370,7 +1288,7 @@ BEGIN
 					SET Active = 0
 					,UserUpdated = @TokenP
 					,DateUpdated = GETDATE()
-				FROM Warehouse wh
+				FROM Warehouse wh WITH(NOLOCK)
 				INNER JOIN #TblListGuidesTwo tlg
 					ON wh.Guide_Serie = tlg.Guide_Serie
 					AND wh.Guide_Number = tlg.Guide_Number
@@ -1391,7 +1309,7 @@ BEGIN
 			OUTPUT inserted.IdProcessedGuideCOD,
 				   inserted.GuideSerie,
 				   inserted.GuideNumber
-			INTO #TempData
+			INTO #TempDataSFS
 			SELECT  lge.Guide_Serie,
 					lge.Guide_Number,
 					25,
@@ -1449,13 +1367,13 @@ BEGIN
         UPDATE pgd 
         SET pgd.IsCompleted = 1
         FROM ProcessedGuideCOD pgd WITH(NOLOCK)
-			INNER JOIN #TempData tmp
+			INNER JOIN #TempDataSFS tmp
                 ON pgd.GuideSerie   = tmp.GuideSerie
                 AND pgd.GuideNumber = tmp.GuideNumber
                 AND pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
 
-        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
-			DROP TABLE #TempData;
+        IF OBJECT_ID('tempdb..#TempDataSFS') IS NOT NULL
+			DROP TABLE #TempDataSFS;
 	END;
 	ELSE
 	BEGIN
