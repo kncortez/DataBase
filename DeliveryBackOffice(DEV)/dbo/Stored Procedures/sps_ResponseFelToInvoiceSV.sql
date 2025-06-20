@@ -72,7 +72,7 @@ BEGIN
      IF(@rowcount > 1)
      BEGIN 
         SELECT @secuencia = [Value]
-         FROM AddInfoByConfigSV
+         FROM AddInfoByConfigSV WITH(NOLOCK)
         WHERE RowStatus = 1
           AND [Name] = 'Secuencial'
           AND [Node] = 'Header.AdditionalIssueDocInfo'

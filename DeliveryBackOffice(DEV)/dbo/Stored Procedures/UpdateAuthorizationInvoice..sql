@@ -2,7 +2,7 @@
 -- =============================================
 -- Author:      Cristian Azurdia
 -- Create date: 2025-06-06
--- Description: Actualizaci髇 de un nuevo token Generado
+-- Description: Actualizaci贸n de un nuevo token Generado
 -- =============================================
 
 CREATE PROCEDURE [dbo].[UpdateAuthorizationInvoice]
@@ -22,11 +22,11 @@ BEGIN
     DECLARE @OldAuthorizationId INT;
     DECLARE @NewAuthorizationId INT;
     
-    -- Validaciones b醩icas
+    -- Validaciones b谩sicas
     IF LTRIM(RTRIM(@Authorization)) = ''
     BEGIN
         SET @Code = 0;
-        SET @Message = 'El par醡etro Authorization no puede estar vac韔';
+        SET @Message = 'El par谩metro Authorization no puede estar vac铆o';
         GOTO ErrorExit;
     END
     
@@ -42,7 +42,7 @@ BEGIN
     BEGIN TRY
 
          SELECT @OldAuthorizationId = IdInvoiceAuthorizationHeader 
-         FROM InvoiceAuthorizationHeader
+         FROM InvoiceAuthorizationHeader WITH(NOLOCK)
          WHERE RowStatus = 1;
 
          --Actualizamos a la nueva Authorization
@@ -56,19 +56,19 @@ BEGIN
          VALUES(@Authorization,@StartDate,@EndDate,1,@Token,GETDATE());
 
          SELECT @NewAuthorizationId = IdInvoiceAuthorizationHeader 
-         FROM InvoiceAuthorizationHeader
+         FROM InvoiceAuthorizationHeader WITH(NOLOCK)
          WHERE RowStatus = 1;
 
          --Insertamos la Relacion con los CodeOfReference Activos
          -- Registrados anteiormente y que este activos
          INSERT INTO InvoiceAuthorizationRelationships (CodeOfReference,InvoiceAuthorizationHeaderId,RowStatus,TokenCreated,DateCreated)
          SELECT CodeOfReference, @NewAuthorizationId, 1 RowStatus, @Token, GETDATE()
-         FROM InvoiceAuthorizationRelationships
+         FROM InvoiceAuthorizationRelationships WITH(NOLOCK)
          WHERE InvoiceAuthorizationHeaderId = @OldAuthorizationId
            AND RowStatus = 1
 
          --Invalidamos la Relacion con los CodeOfReference Anteriores
-         --Para que tome en cuenta los 鷗limos registrados
+         --Para que tome en cuenta los 煤tlimos registrados
          UPDATE InvoiceAuthorizationRelationships
          SET RowStatus = 0,
              TokenUPdated = @Token,
@@ -79,20 +79,20 @@ BEGIN
         
         -- Establecer valores de retorno exitosos
         SET @Code = 1;
-        SET @Message = 'Autorizaci髇 actualizada exitosamente';
+        SET @Message = 'Autorizaci贸n actualizada exitosamente';
         SET @NewAuthorization = @Authorization;
         SET @NewEndDate = @EndDate;
 
     END TRY
     BEGIN CATCH
-        -- En caso de error, revertir toda la transacci髇
+        -- En caso de error, revertir toda la transacci贸n
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
         
-        -- Capturar informaci髇 del error
+        -- Capturar informaci贸n del error
         SET @Code = ERROR_NUMBER();
         SET @Message = 'Error: ' + ERROR_MESSAGE() + 
-                      ' (L韓ea: ' + CAST(ERROR_LINE() AS NVARCHAR(10)) + 
+                      ' (L铆nea: ' + CAST(ERROR_LINE() AS NVARCHAR(10)) + 
                       ', Severidad: ' + CAST(ERROR_SEVERITY() AS NVARCHAR(10)) + ')';
         SET @Authorization = '';
         SET @EndDate = GETDATE();

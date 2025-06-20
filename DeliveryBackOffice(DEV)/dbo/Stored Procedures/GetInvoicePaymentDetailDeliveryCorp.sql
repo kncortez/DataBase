@@ -62,7 +62,7 @@ BEGIN
         DECLARE @TempVisitPointClient TblBillingGuideDetail;
 
         INSERT INTO @TempVisitPointClient (IdVisitPointClient, GuideSerie, GuideNumber)
-        SELECT TOP 3 vst.IdVisitPointClient,
+        SELECT vst.IdVisitPointClient,
                do.Guide_Serie,
                do.Guide_Number
           FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
@@ -83,7 +83,7 @@ BEGIN
                                            SELECT v.value('.', 'NVARCHAR(MAX)') AS Valor
                                              FROM @XmlVisitPointClient.nodes('/LstVisitPointClient/PointClient') AS x(v)
                                           )
-           AND CAST(do.Preparation_Date AS DATE) >= CAST(@CutOffDate AS DATE)
+           AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)
            AND do.IsCollect = 0
            AND do.SenderCountryId = @IdCountry
            AND do.TypeService = @TypeService
