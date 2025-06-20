@@ -8,21 +8,21 @@
   -- PAQUETE PLATINO
   -- PAQUETE PRO
 
-DECLARE @IdCatSubscriptionMICRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Micro'
+DECLARE @IdCatSubscriptionMICRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Micro'
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionPETIT INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Petit'
+DECLARE @IdCatSubscriptionPETIT INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Petit'
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionBASICO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Básico' 
+DECLARE @IdCatSubscriptionBASICO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Básico' 
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionPLUS INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Plus' 
+DECLARE @IdCatSubscriptionPLUS INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Plus' 
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionGOLD INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Gold'
+DECLARE @IdCatSubscriptionGOLD INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Gold'
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionFLEXI INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Flexi'
+DECLARE @IdCatSubscriptionFLEXI INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Flexi'
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionPLATINO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Platino' 
+DECLARE @IdCatSubscriptionPLATINO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Platino' 
        AND IdCountry='GT')
-DECLARE @IdCatSubscriptionPRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Pro' 
+DECLARE @IdCatSubscriptionPRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Pro' 
        AND IdCountry='GT')
 
 
@@ -186,6 +186,15 @@ SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo 
 	TokenUpdated='SYS-EVASQUEZ'
 WHERE CatSubscriptionId = @IdCatSubscriptionPRO  AND RowStatus=1 AND Title='¿Cómo Funciona?'
 
+/*Actualizar Restricciones*/
+
+UPDATE A
+SET A.[Description] ='En caso de que tu envío exceda el peso, +Q1.00 por libra adicional, consulta los términos y condiciones.'
+FROM [dbo].[CatSubscriptionDescription] A
+INNER JOIN [dbo].CatSubscription B
+ON A.CatSubscriptionId = B.IdCatSubscription
+WHERE A.Title='Aplican restricciones' AND A.Rowstatus=1
+      AND B.IdCountry= 'GT'
 
 /*Actualizar Atributos*/
 
