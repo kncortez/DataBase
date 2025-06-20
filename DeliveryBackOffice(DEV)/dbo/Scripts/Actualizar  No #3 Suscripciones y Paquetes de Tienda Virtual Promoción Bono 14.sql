@@ -8,21 +8,21 @@
   -- PAQUETE PLATINO
   -- PAQUETE PRO
   
-DECLARE @IdCatSubscriptionMICRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Micro'
+DECLARE @IdCatSubscriptionMICRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Micro'
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionPETIT INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Petit'
+DECLARE @IdCatSubscriptionPETIT INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Petit'
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionBASICO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Básico' 
+DECLARE @IdCatSubscriptionBASICO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Básico' 
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionPLUS INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Plus' 
+DECLARE @IdCatSubscriptionPLUS INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Plus' 
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionGOLD INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Gold'
+DECLARE @IdCatSubscriptionGOLD INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Gold'
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionFLEXI INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Flexi'
+DECLARE @IdCatSubscriptionFLEXI INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Flexi'
         AND IdCountry='GT')
-DECLARE @IdCatSubscriptionPLATINO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Platino' 
+DECLARE @IdCatSubscriptionPLATINO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Platino' 
        AND IdCountry='GT')
-DECLARE @IdCatSubscriptionPRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WITH(NOLOCK) WHERE SubscriptionName='Paquete Pro' 
+DECLARE @IdCatSubscriptionPRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Pro' 
        AND IdCountry='GT')
 
 
@@ -134,19 +134,19 @@ WHERE CatSubscriptionId = @IdCatSubscriptionPETIT   AND RowStatus=1 AND Title='�
 UPDATE  [dbo].[CatSubscriptionDescription]
 SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico.
 Prepara tus paquetes, completa la información de envío y entrégalos en las
-+90 agencias express center o puedes solicitar la recolección a tu casa u
++100 agencias express center o puedes solicitar la recolección a tu casa u
 oficina. Rastrea el progreso del envío con el número de guía proporcionado
 para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al
 centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de
 los detalles logísticos. Adquiere tu Paquete Petit y podrás obtener tus
-guías prepagadas de 25 envíos con tarifa única a todo el país a Q34.00
+guías prepagadas de 25 envíos con tarifa única a todo el país a Q30.60.00
 c/u.',
     DateUpdated=GETDATE(),
 	TokenUpdated='SYS-EVASQUEZ'
 WHERE CatSubscriptionId = @IdCatSubscriptionPETIT AND RowStatus=1 AND Title='¿Cómo Funciona?'
 
 UPDATE  [dbo].[CatSubscriptionDescription]
-SET [Description]='Nuestro paquete te ofrece 15 guías de envío prepagadas con Tarifa única a
+SET [Description]='Nuestro paquete te ofrece 50 guías de envío prepagadas con Tarifa única a
 todo el país, lo que significa que puedes enviar tus productos a cualquier
 destino sin preocuparte por tarifas variables. Pero eso no es todo, ¡nuestra
 tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías
@@ -162,19 +162,19 @@ WHERE CatSubscriptionId = @IdCatSubscriptionBASICO   AND RowStatus=1 AND Title='
 UPDATE  [dbo].[CatSubscriptionDescription]
 SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico.
 Prepara tus paquetes, completa la información de envío y entrégalos en las
-+90 agencias express center o puedes solicitar la recolección a tu casa u
++100 agencias express center o puedes solicitar la recolección a tu casa u
 oficina. Rastrea el progreso del envío con el número de guía proporcionado
 para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al
 centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de
-los detalles logísticos. Adquiere tu Paquete Basico y podrás obtener tus
-guías prepagadas de 50 envíos con tarifa única a todo el país a Q32.00
+los detalles logísticos. Adquiere tu Paquete Básico y podrás obtener tus
+guías prepagadas de 50 envíos con tarifa única a todo el país a Q28.80.00
 c/u.',
     DateUpdated=GETDATE(),
 	TokenUpdated='SYS-EVASQUEZ'
 WHERE CatSubscriptionId = @IdCatSubscriptionBASICO AND RowStatus=1 AND Title='¿Cómo Funciona?'
 
 UPDATE  [dbo].[CatSubscriptionDescription]
-SET [Description]='Nuestro paquete te ofrece 15 guías de envío prepagadas con Tarifa única a
+SET [Description]='Nuestro paquete te ofrece 100 guías de envío prepagadas con Tarifa única a
 todo el país, lo que significa que puedes enviar tus productos a cualquier
 destino sin preocuparte por tarifas variables. Pero eso no es todo, ¡nuestra
 tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías
@@ -190,18 +190,18 @@ WHERE CatSubscriptionId = @IdCatSubscriptionPLUS  AND RowStatus=1 AND Title='¿Q
 UPDATE  [dbo].[CatSubscriptionDescription]
 SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico.
 Prepara tus paquetes, completa la información de envío y entrégalos en las
-+90 agencias express center o puedes solicitar la recolección a tu casa u
++100 agencias express center o puedes solicitar la recolección a tu casa u
 oficina. Rastrea el progreso del envío con el número de guía proporcionado
 para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al
 centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de
 los detalles logísticos. Adquiere tu Paquete Plus y podrás obtener tus guías
-prepagadas de 100 envíos con tarifa única a todo el país a Q30.00 c/u.',
+prepagadas de 100 envíos con tarifa única a todo el país a Q27.00 c/u.',
     DateUpdated=GETDATE(),
 	TokenUpdated='SYS-EVASQUEZ'
 WHERE CatSubscriptionId = @IdCatSubscriptionPLUS AND RowStatus=1 AND Title='¿Cómo Funciona?'
 
 UPDATE  [dbo].[CatSubscriptionDescription]
-SET [Description]='Nuestro paquete te ofrece 15 guías de envío prepagadas con Tarifa única a
+SET [Description]='Nuestro paquete te ofrece 200 guías de envío prepagadas con Tarifa única a
 todo el país, lo que significa que puedes enviar tus productos a cualquier
 destino sin preocuparte por tarifas variables. Pero eso no es todo, ¡nuestra
 tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías
@@ -218,18 +218,18 @@ WHERE CatSubscriptionId = @IdCatSubscriptionGOLD  AND RowStatus=1 AND Title='¿Q
 UPDATE  [dbo].[CatSubscriptionDescription]
 SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico.
 Prepara tus paquetes, completa la información de envío y entrégalos en las
-+90 agencias express center o puedes solicitar la recolección a tu casa u
++100 agencias express center o puedes solicitar la recolección a tu casa u
 oficina. Rastrea el progreso del envío con el número de guía proporcionado
 para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al
 centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de
 los detalles logísticos. Adquiere tu Paquete Gold y podrás obtener tus
-guías prepagadas de 200 envíos con tarifa única a todo el país a Q28.00 c/u.',
+guías prepagadas de 200 envíos con tarifa única a todo el país a Q25.20 c/u.',
     DateUpdated=GETDATE(),
 	TokenUpdated='SYS-EVASQUEZ'
 WHERE CatSubscriptionId = @IdCatSubscriptionGOLD  AND RowStatus=1 AND Title='¿Cómo Funciona?'
 
 UPDATE  [dbo].[CatSubscriptionDescription]
-SET [Description]='Nuestro paquete te ofrece 15 guías de envío prepagadas con Tarifa única a
+SET [Description]='Nuestro paquete te ofrece 300 guías de envío prepagadas con Tarifa única a
 todo el país, lo que significa que puedes enviar tus productos a cualquier
 destino sin preocuparte por tarifas variables. Pero eso no es todo, ¡nuestra
 tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías
@@ -245,18 +245,18 @@ WHERE CatSubscriptionId = @IdCatSubscriptionFLEXI  AND RowStatus=1 AND Title='¿
 UPDATE  [dbo].[CatSubscriptionDescription]
 SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico.
 Prepara tus paquetes, completa la información de envío y entrégalos en las
-+90 agencias express center o puedes solicitar la recolección a tu casa u
++100 agencias express center o puedes solicitar la recolección a tu casa u
 oficina. Rastrea el progreso del envío con el número de guía proporcionado
 para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al
 centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de
 los detalles logísticos. Adquiere tu Paquete Gold y podrás obtener tus
-guías prepagadas de 200 envíos con tarifa única a todo el país a Q28.00 c/u.',
+guías prepagadas de 300 envíos con tarifa única a todo el país a Q23.40 c/u.',
     DateUpdated=GETDATE(),
 	TokenUpdated='SYS-EVASQUEZ'
 WHERE CatSubscriptionId = @IdCatSubscriptionFLEXI  AND RowStatus=1 AND Title='¿Cómo Funciona?'
 
 UPDATE  [dbo].[CatSubscriptionDescription]
-SET [Description]='Nuestro paquete te ofrece 15 guías de envío prepagadas con Tarifa única a
+SET [Description]='Nuestro paquete te ofrece 400 guías de envío prepagadas con Tarifa única a
 todo el país, lo que significa que puedes enviar tus productos a cualquier
 destino sin preocuparte por tarifas variables. Pero eso no es todo, ¡nuestra
 tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías
@@ -272,12 +272,12 @@ WHERE CatSubscriptionId = @IdCatSubscriptionPLATINO  AND RowStatus=1 AND Title='
 UPDATE  [dbo].[CatSubscriptionDescription]
 SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico.
 Prepara tus paquetes, completa la información de envío y entrégalos en las
-+90 agencias express center o puedes solicitar la recolección a tu casa u
++100 agencias express center o puedes solicitar la recolección a tu casa u
 oficina. Rastrea el progreso del envío con el número de guía proporcionado
 para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al
 centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de
 los detalles logísticos. Adquiere tu Paquete Platino y podrás obtener tus
-guías prepagadas de 400 envíos con tarifa única a todo el país a Q24.00 c/u.',
+guías prepagadas de 400 envíos con tarifa única a todo el país a Q21.60 c/u.',
     DateUpdated=GETDATE(),
 	TokenUpdated='SYS-EVASQUEZ'
 WHERE CatSubscriptionId = @IdCatSubscriptionPLATINO  AND RowStatus=1 AND Title='¿Cómo Funciona?'
@@ -299,12 +299,12 @@ WHERE CatSubscriptionId = @IdCatSubscriptionPRO  AND RowStatus=1 AND Title='¿Qu
 UPDATE  [dbo].[CatSubscriptionDescription]
 SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico.
 Prepara tus paquetes, completa la información de envío y entrégalos en las
-+90 agencias express center o puedes solicitar la recolección a tu casa u
++100 agencias express center o puedes solicitar la recolección a tu casa u
 oficina. Rastrea el progreso del envío con el número de guía proporcionado
 para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al
 centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de
 los detalles logísticos. Adquiere tu Paquete Pro y podrás obtener tus guías
-prepagadas de 500 envíos con tarifa única a todo el país a Q22.00 c/u.',
+prepagadas de 500 envíos con tarifa única a todo el país a Q19.80 c/u.',
     DateUpdated=GETDATE(),
 	TokenUpdated='SYS-EVASQUEZ'
 WHERE CatSubscriptionId = @IdCatSubscriptionPRO  AND RowStatus=1 AND Title='¿Cómo Funciona?'
@@ -318,6 +318,7 @@ INNER JOIN [dbo].CatSubscription B
 ON A.CatSubscriptionId = B.IdCatSubscription
 WHERE A.Title='Aplican restricciones' AND A.Rowstatus=1
       AND B.IdCountry= 'GT'
+
 
 /*Actualizar Atributos*/
 
