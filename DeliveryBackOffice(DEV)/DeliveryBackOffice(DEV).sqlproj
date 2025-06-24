@@ -761,6 +761,7 @@
     <Build Include="dbo\Stored Procedures\sps_set_incidence_service.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_finishService.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_finishDeliveryService.sql" />
+    <Build Include="dbo\Stored Procedures\sps_set_finishPickupService.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_finisTransfer.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_delivery_attempt.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_cancelGuide.sql" />
