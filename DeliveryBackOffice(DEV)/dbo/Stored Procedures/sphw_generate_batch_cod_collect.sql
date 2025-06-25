@@ -194,6 +194,13 @@ BEGIN
 								WHERE C.GuideSerie = do.Guide_Serie
 								    AND C.GuideNumber = do.Guide_Number
 							)tbl
+                            OUTER APPLY (
+                               SELECT TOP 1 PZ.GuideNumber, PZ.ZigiLinkStatus, PZ.AuthorizationNumberByUser
+                                   FROM  DeliveryBackOffice.dbo.PaymentZigi PZ WITH (NOLOCK)
+								WHERE PZ.GuideSerie = do.Guide_Serie
+								    AND PZ.GuideNumber = do.Guide_Number
+									AND (PZ.ZigiLinkStatus = 'PAID' OR PZ.AuthorizationNumberByUser IS NOT NULL)
+							)tblZigi
                        WHERE pg.BatchCODId IS NULL
                              AND do.Collect_OnDelivery = 0
                              AND do.IsCollect = 'true'
@@ -224,6 +231,7 @@ BEGIN
 							 AND pg.IsCompleted = 1
 		                     AND tbl.TransaccionFAC IS NULL
 		                     AND tbl.ReasonCode IS NULL
+                             AND pg.GuideNumber NOT IN (tblZigi.GuideNumber)
                        FOR XML PATH('')
                    ),
                    1,

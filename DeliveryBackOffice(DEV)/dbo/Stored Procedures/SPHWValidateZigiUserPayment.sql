@@ -3,6 +3,10 @@
 -- Create date: <2025-09-04>
 -- Description:	<ZIGI - Valida si el usuario ha pagado con zigi>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2025-24-06>
+-- Description:	<ZIGI - Habiliar opcion para guias prepago + cod>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWValidateZigiUserPayment]
 	@GuideNumber INT,
 	@GuideSerie NVARCHAR(50)
@@ -20,11 +24,21 @@ BEGIN
 	BEGIN
 		SET @EnablePaidZigi = 0;
 	END
+	
+	--si hay cod
+	IF EXISTS(SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)  
+		  WHERE DOR.Guide_Serie = @GuideSerie    
+		  AND DOR.Guide_Number = @GuideNumber  
+		  AND DOR.Collect_OnDelivery > 0)  
+	 BEGIN  
+		SET @EnablePaidZigi = 1; 
+	 END
+
 	--verificar guia collect
-	IF NOT EXISTS (SELECT 1 FROM DeliveryOrder WITH(NOLOCK) WHERE Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND IsCollect = 1 )
+	IF EXISTS (SELECT 1 FROM DeliveryOrder WITH(NOLOCK) WHERE Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND IsCollect = 0 and Collect_OnDelivery = 0)  
 	BEGIN
 		SELECT 400 [IdResult],
-			'la guia no es collect' AS [Message],
+			'opcion no habilitada' AS [Message],
 			0				AS [PaidZigi],
 			@GuideNumber	AS GuideNumber,
 			@GuideSerie		AS GuideSerie,
