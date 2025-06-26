@@ -167,7 +167,7 @@ oficina. Rastrea el progreso del envío con el número de guía proporcionado
 para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al
 centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de
 los detalles logísticos. Adquiere tu Paquete Básico y podrás obtener tus
-guías prepagadas de 50 envíos con tarifa única a todo el país a Q28.80.00
+guías prepagadas de 50 envíos con tarifa única a todo el país a Q28.80
 c/u.',
     DateUpdated=GETDATE(),
 	TokenUpdated='SYS-EVASQUEZ'
