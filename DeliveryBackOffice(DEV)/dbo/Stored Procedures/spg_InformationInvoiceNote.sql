@@ -35,7 +35,7 @@ begin
 			where ih.inv_certificationFEL = @fel
 			AND ISNULL(ih.IdCountry,'GT') = @IdCountry
 			AND ih.inv_serieFEL = @CAI
-			AND ibh.RowStatus = 1
+			--AND ibh.RowStatus = 1
 			AND ibh.TypeDocument = 1
 		);
 	END
