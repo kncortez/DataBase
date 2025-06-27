@@ -89,7 +89,7 @@ BEGIN
 		);	
 
 		-- Si hay guías que no existen, terminar el proceso con error
-		IF ((SELECT COUNT(1) FROM #listGuidesNotExist) <= 0)
+		IF ((SELECT COUNT(1) FROM #listGuidesNotExist) > 0)
 		BEGIN
 			SELECT
 				  '2'															AS 'ResponseCode'
@@ -259,7 +259,7 @@ BEGIN
 						acodh.PortfolioId = acodh.PortfolioId
 				OUTPUT inserted.CustomerId,
 						ISNULL(inserted.PortfolioId,0) AS PortfolioId
-				INTO #TempDataClient
+				INTO #TempDataClientSFS
 				FROM #listGuidesEnabled lge
 					INNER JOIN AnticipatedCODDetail acodd WITH(NOLOCK)
 						ON lge.Guide_Serie = acodd.GuideSerie
@@ -307,7 +307,7 @@ BEGIN
 
 				INSERT INTO @AnticipatedCODDetail
                 SELECT DISTINCT IdCustomer, PortfolioId
-                FROM #TempDataClient
+                FROM #TempDataClientSFS
 
                 EXEC spUpdateBalanceByIdClient @AnticipatedCODDetail
 
@@ -524,7 +524,7 @@ BEGIN
 				OUTPUT inserted.IdProcessedGuideCOD,
 					   inserted.GuideSerie,
 					   inserted.GuideNumber
-				INTO #TempData
+				INTO #TempDataSFS
 				SELECT  lge.Guide_Serie,
 						lge.Guide_Number,
 						25,

@@ -35,8 +35,6 @@ BEGIN
 			DROP TABLE #TempDataSFS;
 		IF OBJECT_ID('tempdb.dbo.#TblListGuidesTwo', 'U') IS NOT NULL
 			DROP TABLE #TblListGuidesTwo;
-		IF OBJECT_ID('tempdb.dbo.#TempDataClientSFS', 'U') IS NOT NULL
-			DROP TABLE #TempDataClientSFS;
 
 		CREATE TABLE #TempDataSFS
 		(
@@ -45,13 +43,6 @@ BEGIN
 			GuideNumber INT
 		);
 		CREATE NONCLUSTERED INDEX INDX_sps_set_finishService_Temp ON #TempDataSFS (GuideSerie, GuideNumber);
-
-		CREATE TABLE  #TempDataClientSFS
-		(
-			IdCustomer INT NOT NULL,
-			PortfolioId INT NOT NULL,
-		);
-		CREATE NONCLUSTERED INDEX IDX_PK_TempDataClient ON #TempDataClientSFS (IdCustomer, PortfolioId);
 
 		SELECT *
 		INTO #TblListGuidesTwo
@@ -89,7 +80,7 @@ BEGIN
 		);	
 
 		-- Si hay guías que no existen, terminar el proceso con error
-		IF ((SELECT COUNT(1) FROM #listGuidesNotExist) <= 0)
+		IF ((SELECT COUNT(1) FROM #listGuidesNotExist) > 0)
 		BEGIN
 			SELECT
 				  '2'															AS 'ResponseCode'
