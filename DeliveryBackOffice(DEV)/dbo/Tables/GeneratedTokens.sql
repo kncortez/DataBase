@@ -15,3 +15,8 @@
     CONSTRAINT [PK_ResetPasswordVerification] PRIMARY KEY CLUSTERED ([TokenId] ASC)
 );
 
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_UserId_VerificationStatus]
+    ON [dbo].[GeneratedTokens]([UserId] ASC, [VerificationStatus] ASC);
+
