@@ -137,8 +137,6 @@ BEGIN
 						DeliveryBackOffice.dbo.TownshipByHubLogistic tbh_destino WITH(NOLOCK)
 						ON 
 							serv.ReceiverIdTownship = tbh_destino.IdTownship
-							AND 
-							tbh_destino.StatusTownshipHub = 1
 					INNER JOIN 
 						DeliveryBackOffice.dbo.HubLogistics hl_destino WITH(NOLOCK)
 						ON 
@@ -149,7 +147,7 @@ BEGIN
 							ls.ItemSerie = dop.GuideSerie
 							AND 
 							ls.ItemNumber = dop.GuideNumber
-					WHERE dop.StatusOrderId = 19			
+					WHERE dop.StatusOrderId = 19 AND tbh_destino.StatusTownshipHub = 1		
 				)X
 				ORDER BY 
 					X.NoPiece ASC
