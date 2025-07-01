@@ -10,6 +10,10 @@
 -- Update date: <2024-12-09>
 -- Description:	<Separacion de flujos para generacion de lotes cod inmediato y cod anticipado>
 -- =============================================
+-- Author:		<Cristian Azurdia>
+-- Update date: <2025-04-23>
+-- Description:	<Configuracion de parametros de Bancos COD Multipais>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_recolection]
     @IdBankParam INT,
@@ -87,12 +91,11 @@ BEGIN
                     WHERE cm.ModName = @ModuleName
                 );
         DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
-        --DECLARE @IdCountry NVARCHAR(50) = N'GT';
         DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
         DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
-        DECLARE @AccountType NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'MONETARIA', N'CHEQUES');
+        DECLARE @AccountType NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'MONETARIA', IIF(@IdCountrySender = 'SV', N'CORRIENTE', N'CHEQUES'));
         DECLARE @ConceptCustomer NVARCHAR(50) = N'PAGO';
-        DECLARE @CreditAccount NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'903666261', N'730512881');
+        DECLARE @CreditAccount NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'903666261', IIF(@IdCountrySender = 'SV', N'903666263', N'730512881'));
         DECLARE @ConceptForza NVARCHAR(50) = N'RECOLECCION';
         DECLARE @BankBAC INT =
                 (
@@ -281,17 +284,6 @@ BEGIN
                    SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber
             FROM DeliveryBackOffice.dbo.SplitUnlimited(@ProductNumber, ',');
 
-            DECLARE @IdRateDefault INT =
-                    (
-                        SELECT
-                               rh.RheId
-                        FROM DeliveryBackOffice.dbo.RateHeader rh WITH (NOLOCK)
-                        WHERE rh.RheRowStatus = 1
-                              AND rh.RheDefault = 1
-							  AND rh.RateTypeId = 1
-							  AND ISNULL(rh.CountryId,'GT') = @IdCountrySender
-                    );
-            DECLARE @IdRate INT;
             DECLARE @CODRateDefault DECIMAL(12, 2) =
                     (
                         SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
