@@ -23,7 +23,7 @@ BEGIN
 
 		BEGIN TRY
 			
-			SET @Amount = (SELECT Collect_OnDelivery FROM DeliveryBackOffice.dbo.DeliveryOrder WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
+			SET @Amount = (SELECT Collect_OnDelivery FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 
 			-- actualizar guía debido al proceso de liquidación
 			UPDATE [DeliveryBackOffice].[dbo].[SettlementByPickupDetail]
@@ -31,8 +31,8 @@ BEGIN
 				TokenUpdated = @Token, 
 				DateUpdated = GETDATE(), 
 				IsReturn = 1 -- guía retornada en bodega
-				from DeliveryBackOffice.dbo.SettlementByPickup stp
-				join DeliveryBackOffice.dbo.SettlementByPickupDetail spd on stp.Id = spd.SettlementByPickupId
+				from DeliveryBackOffice.dbo.SettlementByPickup stp WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail spd WITH(NOLOCK) on stp.Id = spd.SettlementByPickupId
 				where stp.SequenceCode = @IdManifest and stp.SubTypeServiceManagmentId = @Subtipe and 
 				spd.GuideNumber = @GuideNumber and spd.GuideSerie = @GuideSerie and spd.NoPiece = @NoPiece 
 
