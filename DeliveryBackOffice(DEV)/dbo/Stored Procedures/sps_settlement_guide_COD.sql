@@ -158,8 +158,8 @@ BEGIN
                         ON vp.CodeOfReference = do.Sender_ID
                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
+                WHERE do.[Guide_Serie] = @GuideSerie
+                      AND do.[Guide_Number] = @GuideNumber
                       AND do.[Collect_OnDelivery] > 0
 					 AND do.IsLastMileReturn =0
                 UNION
@@ -179,8 +179,8 @@ BEGIN
                         ON vp.CodeOfReference = do.Sender_ID
                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
+                WHERE do.[Guide_Serie] = @GuideSerie
+                      AND do.[Guide_Number] = @GuideNumber
                       AND do.[Collect_OnDelivery] = 0 
                       AND do.IsCollect = 'true'
                 UNION
@@ -203,8 +203,8 @@ BEGIN
                     INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                         ON do.Guide_Serie = DOP.GuideSerie
                            AND do.Guide_Number = DOP.GuideNumber
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
+                WHERE do.[Guide_Serie] = @GuideSerie
+                      AND do.[Guide_Number] = @GuideNumber
                       AND do.IsCollect = 'false'
                       AND DOP.TimePlaId = 2;
             END;
@@ -216,7 +216,8 @@ BEGIN
                              (
                                  SELECT Collect_OnDelivery
                                  FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
-                                 WHERE Guide_Number = @GuideNumber
+                                 WHERE Guide_Serie = @GuideSerie 
+                                   AND Guide_Number = @GuideNumber
                              ) > 0 THEN
                                  'true'
                              ELSE
@@ -230,7 +231,7 @@ BEGIN
 			DECLARE @Isreturn bit  =0
 
 			SELECT @Isreturn = ord.IsLastMileReturn FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-			WHERE ord.Guide_Serie ='fd' AND ord.Guide_Number = @GuideNumber
+			WHERE ord.Guide_Serie = @GuideSerie AND ord.Guide_Number = @GuideNumber
 
 			IF @Isreturn = 1
 
@@ -239,7 +240,8 @@ BEGIN
                 --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET StatusOrderId = 24
-                WHERE Guide_Number = @GuideNumber;
+                WHERE Guide_Serie = @GuideSerie 
+                  AND Guide_Number = @GuideNumber;
 
                 --Actualiza es stado a "COD liquidado" en tabla DeliveryOrderDetail si la guia tuviera COD
 
@@ -263,14 +265,14 @@ BEGIN
 				(
 					SELECT 1
 					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
-					WHERE	acd.GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie
+					WHERE	GuideSerie = @GuideSerie AND acd.GuideNumber = @GuideNumber
 				)
 				BEGIN
 					UPDATE DeliveryBackOffice.dbo.AnticipatedCODDetail
 					SET BalanceStatus = 'COBRADO',
 					DateUpdated = GETDATE(),
 					TokenUpdated = @Token
-					WHERE	GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie;
+					WHERE	GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber;
 						
                     DECLARE @TempData TblAnticipatedCODCustomerBalance;
 
@@ -283,7 +285,7 @@ BEGIN
 					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
 					INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
 						ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
-					WHERE	acd.GuideNumber = @GuideNumber AND ACD.GuideSerie = @GuideSerie
+					WHERE	ACD.GuideSerie = @GuideSerie AND acd.GuideNumber = @GuideNumber
 
 					EXEC spUpdateBalanceByIdClient @TempData
 
@@ -410,7 +412,7 @@ BEGIN
                INNER JOIN #TempData tmp
                   ON pgd.GuideSerie   = tmp.GuideSerie
                  AND pgd.GuideNumber = tmp.GuideNumber
-         WHERE pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+                 AND pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
 
         IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
             DROP TABLE #TempData;
