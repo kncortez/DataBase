@@ -1,8 +1,11 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <2022-09-13>
 -- Description:	< Obtener listado de datos pendientes por enviar de webhooks >
+-- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date: <2025-06-29>
+-- Description:	< Se agrega la consulta para obtener el listado de notificaciones pendientes para Ultra Entregas >
 -- =============================================
 CREATE PROCEDURE [dbo].[GetWebhookTrackingQueue] 
 AS
@@ -18,22 +21,14 @@ BEGIN
 		,WTQ.GuideSerie
 		,WTQ.GuideNumber
 		,WE.WebhookEndpointURI
-	FROM
-		[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
-		INNER JOIN
-			[DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
-			ON
-				WTQ.WebhookEndpointId = WE.IdWebhookEndpoint
-		INNER JOIN
-			[DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK)
-			ON
-				WE.WebhookTypeId = WT.IdWebhookType
-	WHERE 
-		WTQ.HasNotified = 0
-		AND
-		WTQ.RowStatus = 1
-	ORDER BY
-		WTQ.IdWebhookTrackingQueue ASC;
+	FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
+			ON WTQ.WebhookEndpointId = WE.IdWebhookEndpoint
+		INNER JOIN [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK)
+			ON WE.WebhookTypeId = WT.IdWebhookType
+	WHERE WTQ.HasNotified = 0
+		AND	WTQ.RowStatus = 1
+		AND WT.IdWebhookType IN (SELECT IdWebhookType FROM [WebhookType] WHERE WebhookName IN ('GuideStatusChange'));
 
 	/***************************************************************************
 	************************** GUIAS PENDIENTES SFTP ***************************
@@ -78,4 +73,23 @@ BEGIN
 	)
 	--AND 1=0 --TEMPORAL BNHL
 
+	/***************************************************************************
+	**************** NOTIFICACIONES PENDIENTES ULTRA ENTREGAS ******************
+	****************************************************************************/
+
+	SELECT 
+		WTQ.IdWebhookTrackingQueue
+		,WT.WebhookName
+		,WT.IdWebhookType
+		,WTQ.GuideSerie
+		,WTQ.GuideNumber
+		,WE.WebhookEndpointURI
+	FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
+			ON WTQ.WebhookEndpointId = WE.IdWebhookEndpoint
+		INNER JOIN [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK)
+			ON WE.WebhookTypeId = WT.IdWebhookType
+	WHERE WTQ.HasNotified = 0
+		AND	WTQ.RowStatus = 1
+		AND WT.IdWebhookType IN (SELECT IdWebhookType FROM [WebhookType] WHERE WebhookName IN ('CreatedGuides','VoidedGuides','DeliveredGuides'));
 END

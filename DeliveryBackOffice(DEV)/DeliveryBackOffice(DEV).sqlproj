@@ -355,6 +355,7 @@
     <Build Include="dbo\Tables\InvoiceBatchDetailLinehaul.sql" />
     <Build Include="dbo\Tables\InvoiceBatchDetail.sql" />
     <Build Include="dbo\Tables\InternalUser.sql" />
+    <Build Include="dbo\Tables\IntegrationForzaUELog.sql" />    
     <Build Include="dbo\Tables\IncidentTypeRelation.sql" />
     <Build Include="dbo\Tables\Incident.sql" />
     <Build Include="dbo\Tables\IncidenceServices.sql" />
