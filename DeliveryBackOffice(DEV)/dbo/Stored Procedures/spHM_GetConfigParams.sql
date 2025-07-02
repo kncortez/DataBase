@@ -18,7 +18,7 @@ BEGIN
 			[CP].[Name],
 			[CP].[Description],
 			[CP].[Value]
-	FROM	[dbo].[ConfigParams] CP
+	FROM	[dbo].[ConfigParams] CP WITH(NOLOCK)
 	WHERE	[CP].[Name] = @Name
 		AND [CP].[Status] = 1
 		AND [CP].[IdCountry] = @IdCountry;
