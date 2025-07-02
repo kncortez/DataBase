@@ -182,7 +182,7 @@ BEGIN
                 WHERE do.[Guide_Serie] = @GuideSerie
                       AND do.[Guide_Number] = @GuideNumber
                       AND do.[Collect_OnDelivery] = 0 
-                      AND do.IsCollect = 'true'
+                      AND do.IsCollect = 1
                 UNION
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
@@ -205,7 +205,7 @@ BEGIN
                            AND do.Guide_Number = DOP.GuideNumber
                 WHERE do.[Guide_Serie] = @GuideSerie
                       AND do.[Guide_Number] = @GuideNumber
-                      AND do.IsCollect = 'false'
+                      AND do.IsCollect = 0
                       AND DOP.TimePlaId = 2;
             END;
 
@@ -219,12 +219,12 @@ BEGIN
                                  WHERE Guide_Serie = @GuideSerie 
                                    AND Guide_Number = @GuideNumber
                              ) > 0 THEN
-                                 'true'
+                                 1
                              ELSE
-                                 'false'
+                                 0
                          END;
 
-            IF (@IsCOD = 'true')
+            IF (@IsCOD = 1)
             BEGIN
 
 

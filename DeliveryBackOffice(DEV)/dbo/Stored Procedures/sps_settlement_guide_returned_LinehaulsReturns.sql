@@ -34,7 +34,7 @@ BEGIN
 				from DeliveryBackOffice.dbo.SettlementByPickup stp WITH(NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail spd WITH(NOLOCK) on stp.Id = spd.SettlementByPickupId
 				where stp.SequenceCode = @IdManifest and stp.SubTypeServiceManagmentId = @Subtipe and 
-				spd.GuideNumber = @GuideNumber and spd.GuideSerie = @GuideSerie and spd.NoPiece = @NoPiece 
+				spd.GuideSerie = @GuideSerie and spd.GuideNumber = @GuideNumber and spd.NoPiece = @NoPiece 
 
 			SET @RModified = @@ROWCOUNT
 

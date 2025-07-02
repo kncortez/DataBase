@@ -25,9 +25,6 @@ AS
 BEGIN
     SET ARITHABORT ON;
 
-    PRINT 'INICIO';
-    PRINT CONVERT(VARCHAR, GETDATE(), 9);
-
     DECLARE @datePickUp_Internal DATE = @datePickUp;
     DECLARE @TempPrice TABLE
     (
@@ -52,7 +49,6 @@ BEGIN
         CODAmount DECIMAL(14, 2) NULL,
         ReturnRates DECIMAL(14, 2) NULL
     );
-
 
     DECLARE @tbl TABLE
     (
@@ -84,9 +80,6 @@ BEGIN
         --StatusName NVARCHAR(100)
         IdServiceManagement INT NULL
     );
-
-    PRINT 'Insert tabla temp';
-    PRINT GETDATE();
 
     INSERT INTO @tbl
     SELECT 'Demanda' Periodicy,
@@ -130,7 +123,7 @@ BEGIN
                     ''
             END
            ) AS TypeService,
-           ISNULL(SchedulePickupStatus, 'True') SchedulePickupStatus,
+           ISNULL(SchedulePickupStatus, 1) SchedulePickupStatus,
            dop.GuideSerie,
            dop.GuideNumber,
            ISNULL(ctv.Name, '') ServiceVehicle,
@@ -148,8 +141,8 @@ BEGIN
         LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] dop WITH (NOLOCK)
             ON dop.IdHeaderRecolection = shp.SchedulePickupId
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder AS dro WITH (NOLOCK)
-            ON dro.Guide_Number = dop.GuideNumber
-               AND dro.Guide_Serie = dop.GuideSerie
+            ON dro.Guide_Serie = dop.GuideSerie
+               AND dro.Guide_Number = dop.GuideNumber
                AND dro.SalePipeLineId != 7
         LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twnTdro WITH (NOLOCK)
             ON dro.SenderIdTownship = twnTdro.IdTownship
@@ -195,8 +188,6 @@ BEGIN
         )
         AND IIF( prv.IdCountry IS NULL, 'GT', prv.IdCountry) = @IdCountry;
 
-    PRINT 'termina brain';
-    PRINT CONVERT(VARCHAR, GETDATE(), 9);
     SELECT MAX(tb.Periodicy) 'Periodicy',
            tb.idSchedulePickUp,
            MAX(tb.Name) 'Name',
