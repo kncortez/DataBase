@@ -40,7 +40,7 @@ BEGIN
 		FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides, ',')
 
 		SET @IdRouteAssigment = (SELECT ra.IdRouteAssigment
-								FROM RouteAssigment ra
+								FROM RouteAssigment ra WITH(NOLOCK)
 								WHERE ra.IdRoute = CAST(@Route AS INT) AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126))
 
 		SELECT
@@ -48,7 +48,7 @@ BEGIN
 			dop.GuideNumber,
 			dop.NoPiece
 		INTO #listGuidesPieces_Dispatch
-		FROM DeliveryOrderPiece dop
+		FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK) ON serv.Guide_Serie = dop.GuideSerie AND serv.Guide_Number = dop.GuideNumber
 			INNER JOIN #listGuides ls ON ls.ItemSerie = dop.GuideSerie AND ls.ItemNumber = dop.GuideNumber
 		WHERE dop.StatusOrderId = 4
@@ -59,13 +59,13 @@ BEGIN
 			dop.GuideNumber,
 			dop.NoPiece 
 		INTO #listGuidesPieces_NO_Dispatch
-		FROM DeliveryOrderPiece dop
+		FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
 			INNER JOIN #listGuides ls ON ls.ItemSerie = dop.GuideSerie AND ls.ItemNumber = dop.GuideNumber
 		WHERE dop.StatusOrderId != 4
 		ORDER BY dop.NoPiece ASC		
 
 		IF (SELECT TOP 1 ISNULL(COUNT(1), 0)
-			FROM SettlementByPickup
+			FROM SettlementByPickup WITH(NOLOCK)
 			WHERE RouteAssigmentId = @IdRouteAssigment and DateCreated =  CONVERT(CHAR(10), GETDATE(), 126)) = 0
 		BEGIN
 
@@ -99,8 +99,8 @@ BEGIN
 				SUM(x.TotalCold),
 				(SELECT COUNT(A.GuideNumber)
 				FROM (SELECT DISTINCT dop2.GuideNumber
-					FROM PieceByService pbs
-						INNER JOIN DeliveryOrderPiece dop2 ON dop2.GuidePiece = pbs.GuidePieceId
+					FROM PieceByService pbs WITH(NOLOCK)
+						INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop2 WITH(NOLOCK) ON dop2.GuidePiece = pbs.GuidePieceId
 					WHERE pbs.DateCreated =  CONVERT(CHAR(10), GETDATE(), 126)) A)
 				,NULL,
 				NULL,
@@ -113,17 +113,17 @@ BEGIN
 				null
 			FROM (SELECT COUNT(ISNULL(dop.Pieces_Dry, 0)) AS TotalDry,
 					0 AS TotalCold
-					FROM PieceByService pbs
-						INNER JOIN DeliveryOrderPiece dop1 ON pbs.GuidePieceId = dop1.GuidePiece
-						INNER JOIN DeliveryOrder dop ON dop.Guide_Serie = dop1.GuideSerie AND dop.Guide_Number = dop1.GuideNumber
+					FROM PieceByService pbs WITH(NOLOCK)
+						INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop1 WITH(NOLOCK) ON pbs.GuidePieceId = dop1.GuidePiece
+						INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder dop WITH(NOLOCK) ON dop.Guide_Serie = dop1.GuideSerie AND dop.Guide_Number = dop1.GuideNumber
 					WHERE CONVERT(char(10), pbs. DateCreated,126) =  CONVERT(CHAR(10), GETDATE(), 126) AND ISNULL(dop1.IsDry, 0) = 1
 					UNION ALL
 					SELECT
 						0 AS TotalDry,
 						COUNT(ISNULL(dop.Pieces_Cold, 0)) AS TotalCold
-					FROM PieceByService pbs
-						INNER JOIN DeliveryOrderPiece dop1 ON pbs.GuidePieceId = dop1.GuidePiece
-						INNER JOIN DeliveryOrder dop ON dop.Guide_Serie = dop1.GuideSerie AND dop.Guide_Number = dop1.GuideNumber
+					FROM PieceByService pbs WITH(NOLOCK)
+						INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop1 WITH(NOLOCK) ON pbs.GuidePieceId = dop1.GuidePiece
+						INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder dop WITH(NOLOCK) ON dop.Guide_Serie = dop1.GuideSerie AND dop.Guide_Number = dop1.GuideNumber
 					WHERE CONVERT(char(10), pbs. DateCreated,126) =  CONVERT(CHAR(10), GETDATE(), 126) AND ISNULL(dop1.IsDry, 0) = 0
 				) x
 
@@ -139,12 +139,12 @@ BEGIN
 
 			SET @Idd = (SELECT TOP 1
 							ISNULL(SettlementByPickup.Id, 0)
-						FROM SettlementByPickup
+						FROM SettlementByPickup WITH(NOLOCK)
 						WHERE RouteAssigmentId = @IdRouteAssigment AND  DateCreated =  CONVERT(CHAR(10), GETDATE(), 126))
 
 			SET @IdManifest = (SELECT TOP 1
 									ISNULL(SequenceCode, 0)
-								FROM SettlementByPickup
+								FROM SettlementByPickup WITH(NOLOCK)
 								WHERE RouteAssigmentId = @IdRouteAssigment AND  DateCreated =  CONVERT(CHAR(10), GETDATE(), 126))
 
 			PRINT '@Idd';
@@ -155,7 +155,7 @@ BEGIN
 		END
 
 		SET @ExisteDetail = (SELECT TOP 1 ISNULL(COUNT(1), 0)
-							FROM SettlementByPickupDetail sbpd
+							FROM SettlementByPickupDetail sbpd WITH(NOLOCK)
 								INNER JOIN #listGuidesPieces_Dispatch ls ON sbpd.GuideSerie = ls.GuideSerie
 								AND sbpd.GuideNumber = ls.GuideNumber
 								AND sbpd.NoPiece = ls.NoPiece
@@ -193,12 +193,12 @@ BEGIN
 				pc.NoPiece,
 				1
 			FROM #listGuidesPieces_Dispatch ls
-				INNER JOIN DeliveryOrderPiece pc ON pc.GuideSerie = ls.GuideSerie
+				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece pc WITH(NOLOCK) ON pc.GuideSerie = ls.GuideSerie
 						AND pc.GuideNumber = ls.GuideNumber
 						AND pc.NoPiece = ls.NoPiece
-				INNER JOIN dbo.PieceByService pbs ON pc.GuidePiece = pbs.GuidePieceId
-				JOIN ServiceManagement sm ON pbs.ServiceManagmentId = sm.IdServiceManagement
-				JOIN RouteAssigment ra ON sm.IdDlRouteAssigment = ra.IdRouteAssigment
+				INNER JOIN dbo.PieceByService pbs WITH(NOLOCK) ON pc.GuidePiece = pbs.GuidePieceId
+				INNER JOIN ServiceManagement sm WITH(NOLOCK) ON pbs.ServiceManagmentId = sm.IdServiceManagement
+				INNER JOIN RouteAssigment ra WITH(NOLOCK) ON sm.IdDlRouteAssigment = ra.IdRouteAssigment
 					AND   ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
 
 		END
