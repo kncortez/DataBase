@@ -3,13 +3,8 @@
 -- Create date: <19-10-2022>
 -- Description:	<Obtener valores de configParams>
 -- =============================================
--- Author:		<Brandon Pedroza>
--- Modified:	<02-07-2025>
--- Description:	<Se agrega parametro para filtrar por país>
--- =============================================
 CREATE PROCEDURE spHM_GetConfigParams 
-	@Name AS VARCHAR(50),
-	@IdCountry AS NVARCHAR(2) = 'GT'
+	@Name AS VARCHAR(50)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -18,8 +13,7 @@ BEGIN
 			[CP].[Name],
 			[CP].[Description],
 			[CP].[Value]
-	FROM	[dbo].[ConfigParams] CP WITH(NOLOCK)
+	FROM	[dbo].[ConfigParams] CP
 	WHERE	[CP].[Name] = @Name
-		AND [CP].[Status] = 1
-		AND [CP].[IdCountry] = @IdCountry;
+		AND [CP].[Status] = 1;
 END

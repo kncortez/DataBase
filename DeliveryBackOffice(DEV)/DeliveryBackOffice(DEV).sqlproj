@@ -1907,6 +1907,7 @@
     <Build Include="dbo\Stored Procedures\SetAddressByApi.sql" />
     <Build Include="dbo\Stored Procedures\GetUpdateRegisterCODearly_2.sql" />
     <Build Include="dbo\Stored Procedures\GetAddressByIntegration_1.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetConfigParamsByCountry.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
