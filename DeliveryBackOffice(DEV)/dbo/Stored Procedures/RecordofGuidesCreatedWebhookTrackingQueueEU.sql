@@ -38,9 +38,6 @@ BEGIN
 					   INNER JOIN 
 					     [dbo].[Customer] CU WITH (NOLOCK)
 						ON DO.IdCustomer = CU.IdCustomer
-					   INNER JOIN [dbo].[WebhookTrackingQueue] WH WITH (NOLOCK)
-						ON DO.Guide_Serie = WH.GuideSerie AND 
-						   DO.Guide_NUmber = WH.GuideNUmber
 					WHERE CU.CustomerUEId IS NOT NULL
 						AND DO.Guide_Serie = @GuideSerie
 						AND DO.Guide_Number = @GuideNumber
