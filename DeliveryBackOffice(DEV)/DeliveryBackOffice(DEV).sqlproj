@@ -230,6 +230,7 @@
     <Build Include="dbo\Tables\SettlementByPickupDetail.sql" />
     <Build Include="dbo\Tables\SettlementByPickup.sql" />
     <Build Include="dbo\Tables\Settlement.sql" />
+    <Build Include="dbo\Tables\SettlementMapping.sql" />    
     <Build Include="dbo\Tables\ServicesConfig.sql" />
     <Build Include="dbo\Tables\ServiceZoneConfiguration.sql" />
     <Build Include="dbo\Tables\ServiceTownshipConfiguration.sql" />
@@ -354,6 +355,7 @@
     <Build Include="dbo\Tables\InvoiceBatchDetailLinehaul.sql" />
     <Build Include="dbo\Tables\InvoiceBatchDetail.sql" />
     <Build Include="dbo\Tables\InternalUser.sql" />
+    <Build Include="dbo\Tables\IntegrationForzaUELog.sql" />    
     <Build Include="dbo\Tables\IncidentTypeRelation.sql" />
     <Build Include="dbo\Tables\Incident.sql" />
     <Build Include="dbo\Tables\IncidenceServices.sql" />
@@ -586,6 +588,7 @@
     <Build Include="dbo\Tables\CatArticleSAP.sql" />
     <Build Include="dbo\Tables\CatArticleCategorySAP.sql" />
     <Build Include="dbo\Tables\CatArticle.sql" />
+    <Build Include="dbo\Tables\ArticleMapping.sql" />    
     <Build Include="dbo\Tables\CatActionByServiceType.sql" />
     <Build Include="dbo\Tables\CatAccountTypeCOD.sql" />
     <Build Include="dbo\Tables\CATLINEHAUL_BK.sql" />
@@ -1900,6 +1903,13 @@
     <Build Include="dbo\Stored Procedures\SPHWInsertPaymentZigi.sql" />
     <Build Include="dbo\Stored Procedures\UpdatePaymentZigiByGuide.sql" />
     <Build Include="dbo\Stored Procedures\SPHWInsertAuthorizationNumberByUser.sql" />
+    <Build Include="dbo\Stored Procedures\TORRE_DE_CONTROL_V4_1.sql" />
+    <Build Include="dbo\Stored Procedures\Torre_De_Control_PBI_1.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserV2_2.sql" />
+    <Build Include="dbo\Stored Procedures\SetPickupServiceRequest_1.sql" />
+    <Build Include="dbo\Stored Procedures\SetAddressByApi.sql" />
+    <Build Include="dbo\Stored Procedures\GetUpdateRegisterCODearly_2.sql" />
+    <Build Include="dbo\Stored Procedures\GetAddressByIntegration_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

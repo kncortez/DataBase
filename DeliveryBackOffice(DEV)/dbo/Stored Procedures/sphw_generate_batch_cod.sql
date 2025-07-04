@@ -42,7 +42,7 @@ BEGIN
           , DateUpdated = GETDATE()
         WHERE IdCoDDailyExecution = @CoDProcessID;
 
-        COMMIT TRANSACTION Started_CoD_Execution_Process;
+        COMMIT TRANSACTION Started_CoD_Execution_Process; --COMMIT
 
     END TRY
     BEGIN CATCH
@@ -89,9 +89,9 @@ BEGIN
         DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
         DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
         DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
-        DECLARE @AccountType NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'MONETARIA', N'CHEQUES');
+        DECLARE @AccountType NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'MONETARIA', IIF(@IdCountrySender = 'SV', N'CORRIENTE', N'CHEQUES'));
         DECLARE @ConceptCustomer NVARCHAR(50) = N'PAGO';
-        DECLARE @CreditAccount NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'903666261', N'730512881');
+        DECLARE @CreditAccount NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'903666261', IIF(@IdCountrySender = 'SV', N'903666263', N'730512881'));
         DECLARE @ConceptForza NVARCHAR(50) = N'COMISION';
         DECLARE @BankBAC INT =
                 (
@@ -1045,7 +1045,7 @@ BEGIN
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
+                      AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
             END;
 
             IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
@@ -1063,7 +1063,7 @@ BEGIN
                            AND pgc.GuideNumber = tcpt.GuideNumber
                 WHERE pgc.BatchCODId IS NULL
                       AND pgc.RowStatus = 1
-					  AND ISNULL(pgc.IsAnticipatedCOD,0)  = 0;
+                      AND ISNULL(pgc.IsAnticipatedCOD,0)  = 0;
             END;
 
             IF ((@NewIdBatchCODForza IS NOT NULL) AND (@NewIdBatchCODForza > 0))
@@ -1081,7 +1081,7 @@ BEGIN
                            AND pgc.GuideNumber = tfpt.GuideNumber
                 WHERE pgc.BatchCODIdCommission IS NULL
                       AND pgc.RowStatus = 1
-					  AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
+                      AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
             END;
         END;
         ELSE
@@ -1098,7 +1098,7 @@ BEGIN
                   , DateUpdated = GETDATE()
                 WHERE IdCoDDailyExecution = @CoDProcessID;
 
-                COMMIT TRANSACTION Completed_CoD_Execution_Process;
+                COMMIT TRANSACTION Completed_CoD_Execution_Process;--COMMIT
 
             END TRY
             BEGIN CATCH
@@ -1119,15 +1119,15 @@ BEGIN
             --started before the procedure was called.  
             --The procedure must commit the transaction  
             --it started.  
-            COMMIT TRANSACTION;
+            COMMIT TRANSACTION;--COMMIT
 
-			UPDATE bdc
-			SET bdc.IsCompleted = 1 
-			FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH (NOLOCK)
-				INNER JOIN #GuidesProcessCOD gpc
-					ON bdc.GuideSerie = gpc.GuideSerie
-					AND bdc.GuideNumber = gpc.GuideNumber
-					AND bdc.IdBatchDetailCOD = gpc.IdBatchDetailCOD;
+            UPDATE bdc
+            SET bdc.IsCompleted = 1 
+            FROM DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH (NOLOCK)
+                INNER JOIN #GuidesProcessCOD gpc
+                    ON bdc.GuideSerie = gpc.GuideSerie
+                    AND bdc.GuideNumber = gpc.GuideNumber
+                    AND bdc.IdBatchDetailCOD = gpc.IdBatchDetailCOD;
         --END;
         END;
     END TRY
@@ -1146,7 +1146,7 @@ BEGIN
               , DateUpdated = GETDATE()
             WHERE IdCoDDailyExecution = @CoDProcessID;
 
-            COMMIT TRANSACTION Retry_CoD_Execution_Process;
+            COMMIT TRANSACTION Retry_CoD_Execution_Process;--COMMIT
 
         END TRY
         BEGIN CATCH
@@ -1211,7 +1211,7 @@ BEGIN
               , DateUpdated = GETDATE()
             WHERE IdCoDDailyExecution = @CoDProcessID;
 
-            COMMIT TRANSACTION Completed_CoD_Execution_Process;
+            COMMIT TRANSACTION Completed_CoD_Execution_Process;--COMMIT
 
         END TRY
         BEGIN CATCH
@@ -1265,7 +1265,7 @@ BEGIN
         --started before the procedure was called.  
         --The procedure must commit the transaction  
         --it started.
-        COMMIT TRANSACTION;
+        COMMIT TRANSACTION;--COMMIT
 
 		UPDATE bdc
 		SET bdc.IsCompleted = 1 
