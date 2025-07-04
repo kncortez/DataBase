@@ -28,6 +28,11 @@ BEGIN
     PRINT 'INICIO';
     PRINT CONVERT(VARCHAR, GETDATE(), 9);
 
+	IF OBJECT_ID('tempdb..#tbl') IS NOT NULL
+		DROP TABLE #tbl;
+
+
+
     DECLARE @datePickUp_Internal DATE = @datePickUp;
     DECLARE @TempPrice TABLE
     (
@@ -54,7 +59,7 @@ BEGIN
     );
 
 
-    DECLARE @tbl TABLE
+    CREATE TABLE  #tbl 
     (
         Periodicy NVARCHAR(50) NULL,
         idSchedulePickUp INT NULL,
@@ -88,7 +93,14 @@ BEGIN
     PRINT 'Insert tabla temp';
     PRINT GETDATE();
 
-    INSERT INTO @tbl
+	;WITH CTE_HubCoverage AS (
+    SELECT DSCAux.HeaderCode,
+           MAX(DSCAux.Hub) AS HubAbbreviation
+    FROM DeliveryBackOffice.dbo.DumpServiceCoverage DSCAux WITH (NOLOCK)
+    GROUP BY DSCAux.HeaderCode
+	)
+
+    INSERT INTO #tbl
     SELECT 'Demanda' Periodicy,
            SchedulePickupId 'idSchedulePickUp',
            SenderName 'Name',
@@ -105,15 +117,7 @@ BEGIN
            EstimatedWeight,
            IdHubLogistics,
            hub.HubAbbreviation,
-           (CASE
-                WHEN dro.Sender_Town IS NOT NULL THEN
-                    dro.Sender_Town
-                WHEN shp.TownshipId IS NOT NULL THEN
-                    twnT.TownshipName
-                ELSE
-                    ''
-            END
-           ) AS NameTownship,
+           COALESCE(dro.Sender_Town, twnT.TownshipName, '') AS NameTownship,
            (CASE
                 WHEN dro.Sender_Department IS NOT NULL THEN
                     dro.Sender_Department
@@ -157,14 +161,8 @@ BEGIN
             ON shp.SenderId = vpc.CodeOfReference
         LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TwnTvpc WITH (NOLOCK)
             ON vpc.IdTownship = TwnTvpc.IdTownship
-        LEFT JOIN
-        (
-            SELECT DSCAux.HeaderCode,
-                   MAX(DSCAux.Hub) 'HubAbbreviation'
-            FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSCAux WITH (NOLOCK)
-            GROUP BY DSCAux.HeaderCode
-        ) hub
-            ON ISNULL(ISNULL(twnT.HeaderCode, twnTdro.HeaderCode), TwnTvpc.HeaderCode) = hub.HeaderCode
+        LEFT JOIN CTE_HubCoverage hub
+			ON ISNULL(ISNULL(twnT.HeaderCode, twnTdro.HeaderCode), TwnTvpc.HeaderCode) = hub.HeaderCode
         LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
             ON shp.TypeVehicleId = ctv.IdTypeVehicle
         LEFT JOIN dbo.ServiceManagement srv WITH (NOLOCK)
@@ -221,7 +219,7 @@ BEGIN
            MIN(tb.ServiceVehicle) 'ServiceVehicle',
            --ISNULL(tb.StatusName,'') StatusName
            tb.IdServiceManagement
-    FROM @tbl tb
+    FROM #tbl tb
         LEFT JOIN @TempPrice tp
             ON tp.GuideSerie = tb.GuideSerie
                AND tp.GuideNumber = tb.GuideNumber
@@ -230,6 +228,11 @@ BEGIN
              Address,
             
              SchedulePickupStatus
-  OPTION (OPTIMIZE FOR UNKNOWN);
+
+	IF OBJECT_ID('tempdb..#tbl') IS NOT NULL
+		DROP TABLE #tbl;
+
+  --OPTION (OPTIMIZE FOR UNKNOWN);
+
 
 END;
