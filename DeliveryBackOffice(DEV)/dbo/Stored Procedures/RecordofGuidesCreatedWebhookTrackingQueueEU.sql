@@ -85,12 +85,15 @@ BEGIN
 	 	SELECT 0 as 'Code' , 'Registro fallido' as 'Result'
 	 DECLARE  @DataReceived NVARCHAR(500) = ERROR_MESSAGE() +' '+ ERROR_LINE();
 	 DECLARE  @DataSend   NVARCHAR(255) = @Type +' '+@GuideSerie + CAST(@GuideNumber AS NVARCHAR(50));
-	 EXEC [dbo].[SetWebhookLog]
-				@IdWebhookEndpoint,
-				@DataSend,
-			    @DataReceived,
-			   'SYS-HERMESWEBHOOKS'
 
+	 EXEC [dbo].[SetIntegrationForzaUELog]
+		@GuideSerie = @GuideSerie,
+		@GuideNumber = @GuideNumber,
+		@Description = @DataReceived,
+		@System = N'WebhookService',
+		@Token = N'SYS-HERMESWEBHOOKS'
+
+	
 
     END CATCH
 	  
