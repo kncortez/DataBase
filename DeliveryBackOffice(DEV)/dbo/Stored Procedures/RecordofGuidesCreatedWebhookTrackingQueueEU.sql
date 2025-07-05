@@ -73,11 +73,26 @@ BEGIN
 						   ,'SYS-ULTRAENTREGAS'
 						   ,NULL
 						   ,NULL)
-			END
+
+						    SELECT 1 as 'Code' , 'Registro exitoso' as 'Result'
+			END 
+			   ELSE
+			       BEGIN
+				         
+						 SELECT 0 as 'Code' , 'Registro fallido' as 'Result'
+
+				      	 EXEC [dbo].[SetIntegrationForzaUELog]
+							@GuideSerie = @GuideSerie,
+							@GuideNumber = @GuideNumber,
+							@Description = 'Registro fallido, cliente no esta configurado para UltraEntregas',
+							@System = N'WebhookService',
+							@Token = N'SYS-HERMESWEBHOOKS'
+
+				   END
 
 		COMMIT TRANSACTION;
 
-		SELECT 1 as 'Code' , 'Registro exitoso' as 'Result'
+		
 	END TRY
 	BEGIN CATCH
 	 
