@@ -16,7 +16,7 @@ DECLARE @IdCatSubscriptionGOLD INT =(SELECT IdCatSubscription FROM [dbo].[CatSub
 
 UPDATE [dbo].[CatSubscription]
 SET SubscriptionDescription ='Q22.00 c/u.',
-    SubscriptionCost=4040.00,
+    SubscriptionCost=4400.00,
 	DateUpdated=GETDATE(),
 	TokenUpdated='SYS-EVASQUEZ'
 WHERE  IdCatSubscription = @IdCatSubscriptionGOLD  AND  IdCountry='GT'
@@ -59,5 +59,5 @@ UPDATE dbo.CatSubscriptionAtribute
       DateUpdated=GETDATE(),
 	  TokenUpdated='SYS-EVASQUEZ'
 where CatSubscriptionId=@IdCatSubscriptionGOLD
-And SubscriptionAttributeDescription='200 guías a Q25.20 c/u.'
+And SubscriptionAttributeDescription='200 guías a Q28.00 c/u.'
 
