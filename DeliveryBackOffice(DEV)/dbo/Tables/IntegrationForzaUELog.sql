@@ -2,7 +2,7 @@ CREATE TABLE [dbo].[IntegrationForzaUELog] (
     [IdIntegrationForzaUELog]       INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]                    NVARCHAR (2)  NOT NULL,
     [GuideNumber]                   INT           NOT NULL,
-    [Description]                   NVARCHAR(250) NOT NULL,
+    [Description]                   NVARCHAR(MAX) NOT NULL,
     [System]                        NVARCHAR(250) NOT NULL,
     [RowStatus]                     BIT           NOT NULL,
     [TokenCreated]                  NVARCHAR (50) NOT NULL,
