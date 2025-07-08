@@ -6,17 +6,17 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[SetAddressByApi]
 (
-   @CodeApp                NVARCHAR(50),
-   @IdCountry              NVARCHAR(10) = 'GT',
-   @HeaderCode             NVARCHAR(4),
-   @IdSettlement           INT = NULL, --Proviene de algoritmo
-   @FullName               NVARCHAR(200) ,
+   @CodeApp                NVARCHAR(60),
+   @IdCountry              NVARCHAR(10)  = 'GT',
+   @HeaderCode             NVARCHAR(10),
+   @IdSettlement           INT = 0,      --Proviene de algoritmo
+   @FullName               NVARCHAR(200),
    @Address1               NVARCHAR(600),
-   @NirPhone               NVARCHAR(3) ,
-   @Phone                  NVARCHAR(50) ,
-   @Latitude               NVARCHAR(50)=NULL,
-   @Longitude              NVARCHAR(50)=NULL,
-   @Zone                   SMALLINT = NULL,
+   @NirPhone               NVARCHAR(3),
+   @Phone                  NVARCHAR(50),
+   @Latitude               NVARCHAR(50)  = NULL,
+   @Longitude              NVARCHAR(50)  = NULL,
+   @Zone                   SMALLINT      = NULL,
    @Email                  NVARCHAR(200) = NULL
 )
 AS
@@ -27,9 +27,9 @@ BEGIN
     DECLARE @CodeOfReference    INT
            ,@IdCustomer         INT
            ,@IdTownship         INT
-           ,@IdProvince       INT
+           ,@IdProvince         INT
            ,@TownshipName       NVARCHAR(200)
-           ,@ProvinceName         NVARCHAR(100)
+           ,@ProvinceName       NVARCHAR(100)
            ,@IsOriginVisitPoint BIT = 1
            ,@IDVP               INT = -1
            ,@ResultNirPhone     NVARCHAR(3)
@@ -61,19 +61,16 @@ BEGIN
                         FROM DeliveryBackOffice.[dbo].[Ecommerce] eco WITH (NOLOCK)
                        WHERE eco.UserKey = @CodeApp
                          AND eco.IdCountry = @IdCountry
-                         AND eco.EcommerceStatus = 'TRUE'
+                         AND eco.EcommerceStatus = 1
                     );
 
-                SELECT @IdTownship = IdTownship,
-                       @IdProvince = IdProvince 
-                  FROM Settlement stt WITH(NOLOCK)
-                 WHERE stt.IdSettlement = @IdSettlement;
-
                 SELECT @ProvinceName = pv.ProvinceName,
-                       @TownshipName = ts.TownshipName 
+                       @TownshipName = ts.TownshipName,
+                       @IdTownship = ts.IdTownship,
+                       @IdProvince = pv.IdProvince
                   FROM Province pv WITH(NOLOCK)
                        INNER JOIN Township ts with(nolock) ON pv.IdProvince = ts.IdProvince
-                 WHERE ts.IdTownship = @IdTownship;
+                 WHERE ts.HeaderCode = @HeaderCode;
 
                 -- VALIDACIÓN 1: FullName + IdCustomer
                 IF EXISTS (
@@ -201,18 +198,30 @@ BEGIN
                      WHERE vpc.CustomerID = @IdCustomer
                        AND vpc.[Address] = @Address1;
 
-                   -- ROLLBACK porque no vamos a insertar
+                    --ROLLBACK porque no vamos a insertar
                    IF @TransactionStarted = 1
                    BEGIN
                        ROLLBACK TRANSACTION;
                        SET @TransactionStarted = 0;
                    END
                 END
+                ELSE IF ( @IdCustomer = 0) -- VALIDACIÓN 3: 
+                BEGIN
+                     SELECT @IdResult = 500,
+                            @ErrorMessage = 'No se encontró un cliente activo con los datos proporcionados.',
+                            @IsSuccess = 0;
+                END 
                 ELSE  -- Si no hay errores procedemos con el INSERT
                 BEGIN
                      SET @CodeOfReference = (SELECT TOP (1) vpc3.CodeOfReference + 1 
                                                FROM dbo.VisitPointClient vpc3 WITH(NOLOCK)
                                               ORDER BY vpc3.CodeOfReference DESC)
+
+                    -- Verificar si ya contiene el guion
+                    IF CHARINDEX('-', @Phone) = 0 AND LEN(@Phone) = 8
+                    BEGIN
+                        SET @Phone = STUFF(@Phone, 5, 0, '-');
+                    END
 
                     INSERT INTO dbo.VisitPointClient
                     (
@@ -245,32 +254,32 @@ BEGIN
                     )
                     VALUES
                     (
-                      @CodeOfReference,                   -- CodeOfReference - int
-                      @FullName,                          -- DescriptionOfClient - nvarchar(100)
-                      'TRUE',                             -- StatusClient - bit
-                      @IdCountry,                         -- CountryId - nvarchar(2)
-                      NULL,                               -- VisitPointId - bigint
-                      @CodeApp,                           -- TokenCreated - nvarchar(50)
-                      @Date,                              -- DateCreated - datetime
-                      NULL,                               -- TokenUpdated - nvarchar(50)
-                      NULL,                               -- DateUpdated - datetime
-                      @IdCustomer,                        -- CustomerID - int
-                      @Address1,                          -- Address - nvarchar(600)
-                      @Zone,                              -- Zone - nvarchar(100)
-                      @TownshipName,                      -- Town - nvarchar(100)
-                      @ProvinceName,                        -- Department - nvarchar(100)
-                      CONCAT('(',@NirPhone,') ',@Phone),  -- Phone - nvarchar(50)
-                      '',                                 -- ContactName - nvarchar(200)
-                      NULL,                               -- IdKindOfVPClient,
-                      NULL,                               -- IdKindOfVPBusiness - int
-                      @IdSettlement,                      -- IdSettlement - bigint
-                      '',                                 -- Email - nvarchar(200)
-                      @IdTownship,                        -- IdTownship - int
-                      @Latitude,                          -- Latitude - varchar(50)
-                      @Longitude,                         -- Longitude - varchar(50)
-                      @IsOriginVisitPoint,
-                      @Latitude,
-                      @Longitude
+                      @CodeOfReference,                            -- CodeOfReference - int
+                      LTRIM(RTRIM(@FullName)),                     -- DescriptionOfClient - nvarchar(100)
+                      'TRUE',                                      -- StatusClient - bit
+                      @IdCountry,                                  -- CountryId - nvarchar(2)
+                      NULL,                                        -- VisitPointId - bigint
+                      @CodeApp,                                    -- TokenCreated - nvarchar(50)
+                      @Date,                                       -- DateCreated - datetime
+                      NULL,                                        -- TokenUpdated - nvarchar(50)
+                      NULL,                                        -- DateUpdated - datetime
+                      @IdCustomer,                                 -- CustomerID - int
+                      @Address1,                                   -- Address - nvarchar(600)
+                      @Zone,                                       -- Zone - nvarchar(100)
+                      @TownshipName,                               -- Town - nvarchar(100)
+                      @ProvinceName,                               -- Department - nvarchar(100)
+                      CONCAT('(',@NirPhone,') ',@Phone),           -- Phone - nvarchar(50)
+                      '',                                          -- ContactName - nvarchar(200)
+                      NULL,                                        -- IdKindOfVPClient,
+                      NULL,                                        -- IdKindOfVPBusiness - int
+                      IIF(@IdSettlement = 0, NULL,@IdSettlement),  -- IdSettlement - bigint
+                      '',                                          -- Email - nvarchar(200)
+                      @IdTownship,                                 -- IdTownship - int
+                      @Latitude,                                   -- Latitude - varchar(50)
+                      @Longitude,                                  -- Longitude - varchar(50)
+                      @IsOriginVisitPoint,                         -- [IsOriginVisitPoint]
+                      @Latitude,                                   -- LogLatitude
+                      @Longitude                                   -- LogLongitude
                     )
 
                     -- COMMIT de la transacción
@@ -309,6 +318,11 @@ BEGIN
                   @IsSuccess = 0;
       END CATCH
 
+      IF CHARINDEX('-', @ResultPhone) > 0
+      BEGIN
+          SET @ResultPhone = REPLACE(@ResultPhone, '-', '');
+      END
+
       SELECT @IsSuccess AS IsSuccess,
              @IdResult AS IdResult,
              @ErrorMessage AS ErrorMessage,
@@ -317,7 +331,7 @@ BEGIN
              @ResultAddress AS [Address],
              @ResultCustomerId AS CustomerId,
              @ResultNirPhone AS NirPhone,
-             @ResultPhone AS Phone,
+             REPLACE(@ResultPhone,' ','') AS Phone,
              @ResultEmail AS Email,
              @ResultCreatedDate AS CreatedDate,
              @ProvinceName AS ProvinceName,
