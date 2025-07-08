@@ -210,6 +210,13 @@ BEGIN
                      SELECT @IdResult = 500,
                             @ErrorMessage = 'No se encontró un cliente activo con los datos proporcionados.',
                             @IsSuccess = 0;
+
+                    -- ROLLBACK porque no vamos a insertar
+                    IF @TransactionStarted = 1
+                    BEGIN
+                        ROLLBACK TRANSACTION;
+                        SET @TransactionStarted = 0;
+                    END
                 END 
                 ELSE  -- Si no hay errores procedemos con el INSERT
                 BEGIN
