@@ -394,8 +394,8 @@ BEGIN
 		--======================================================================================================
 		
 		SELECT 
-			@Pending_Counter						AS Pending,
-			@Delivered_Counter						AS Delivered,
+			ISNULL(@Pending_Counter,0)				AS Pending,
+			ISNULL(@Delivered_Counter,0)			AS Delivered,
 			ISNULL(SUM(ConfirmationIncidents),0)	AS ConfirmationIncidents,
 			ISNULL(SUM(UnConfirmationIncidents),0)	AS UnConfirmationIncidents
 		FROM #DetailGetQualityControlData
