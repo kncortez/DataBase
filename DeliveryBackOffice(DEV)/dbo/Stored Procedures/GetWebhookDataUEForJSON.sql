@@ -32,17 +32,28 @@ BEGIN
 			ON DO.SenderIdSettlement = SM.SettlementForzaId
 		LEFT JOIN dbo.SettlementMapping SM2 WITH(NOLOCK)
 			ON DO.ReceiverIdSettlement = SM2.SettlementForzaId
-		WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId
+		WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId;
 
 
-		SELECT DOP.ParcelCode AS IdPacket
-			, COUNT(*) AS Quantity
-			, SUM(DOP.PieceWeight) AS Weight
-		FROM DeliveryOrderPiece DOP WITH(NOLOCK) 
-		INNER JOIN WebhookTrackingQueue WTQ WITH(NOLOCK)
-			ON DOP.GuideSerie = WTQ.GuideSerie AND DOP.GuideNumber = WTQ.GuideNumber
-		WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId
-		GROUP BY DOP.ParcelCode
+		WITH TrackingInfo AS (
+			SELECT GuideSerie, GuideNumber
+			FROM WebhookTrackingQueue WITH(NOLOCK)
+			WHERE IdWebhookTrackingQueue = @WebhookTrackingQueueId
+		)
+		SELECT DOP.ParcelCode,
+			AM.ArticleUEId AS IdPacket,
+			COUNT(*) AS Quantity,
+			SUM(DOP.PieceWeight) AS Weight
+		FROM DeliveryOrderPiece DOP WITH(NOLOCK)
+		INNER JOIN TrackingInfo T
+			ON DOP.GuideSerie = T.GuideSerie AND DOP.GuideNumber = T.GuideNumber
+		LEFT JOIN ArticleByCustomer ABC
+			ON DOP.ParcelCode = ABC.Code
+		LEFT JOIN CatArticle CA
+			ON ABC.AbcIdArticle = CA.ArtId
+		LEFT JOIN ArticleMapping AM
+			ON CA.ArtId = AM.ArticleForzaId
+		GROUP BY DOP.ParcelCode, AM.ArticleUEId;
 
 	END
 	ELSE IF @WebhookTypeName = 'VoidedGuides'
@@ -53,7 +64,7 @@ BEGIN
 		FROM DeliveryOrder DO WITH(NOLOCK) 
 			INNER JOIN WebhookTrackingQueue WTQ WITH(NOLOCK)
 				ON DO.Guide_Serie = WTQ.GuideSerie AND do.Guide_Number = WTQ.GuideNumber
-		WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId
+		WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId;
 	END
 	ELSE IF @WebhookTypeName = 'DeliveredGuides'
 	BEGIN
@@ -63,6 +74,6 @@ BEGIN
 		FROM DeliveryOrder DO WITH(NOLOCK) 
 			INNER JOIN WebhookTrackingQueue WTQ WITH(NOLOCK)
 				ON DO.Guide_Serie = WTQ.GuideSerie AND do.Guide_Number = WTQ.GuideNumber
-		WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId
+		WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId;
 	END
 END

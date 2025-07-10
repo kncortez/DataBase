@@ -91,5 +91,6 @@ BEGIN
 			ON WE.WebhookTypeId = WT.IdWebhookType
 	WHERE WTQ.HasNotified = 0
 		AND	WTQ.RowStatus = 1
-		AND WT.IdWebhookType IN (SELECT IdWebhookType FROM [WebhookType] WHERE WebhookName IN ('CreatedGuides','VoidedGuides','DeliveredGuides'));
+		AND WT.IdWebhookType IN (SELECT IdWebhookType FROM [WebhookType] WHERE WebhookName IN ('CreatedGuides','VoidedGuides','DeliveredGuides'))
+	ORDER BY WTQ.NotificationDate ASC;
 END
