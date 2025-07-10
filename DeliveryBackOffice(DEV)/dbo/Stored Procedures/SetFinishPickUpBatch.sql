@@ -202,11 +202,11 @@ BEGIN
                     ItemPiece INT
                 );
 
-                CREATE NONCLUSTERED INDEX templistGuides_Piece495
-                ON #listGuides (
-                                   ItemSerie,
-                                   ItemNumber
-                               );
+                --CREATE NONCLUSTERED INDEX templistGuides_Piece495
+                --ON #listGuides (
+                --                   ItemSerie,
+                --                   ItemNumber
+                --               );
 
                 CREATE NONCLUSTERED INDEX templistGuides_4444
                 ON #listGuides (
@@ -582,11 +582,13 @@ BEGIN
                           FROM #listGuides
                        );
 
-                DECLARE @CartGuides AS TABLE
-                (
-                    GuideSerie NVARCHAR(2),
-                    GuideNumber INT
-                );
+                --DECLARE @CartGuides AS TABLE
+                --(
+                --    GuideSerie NVARCHAR(2),
+                --    GuideNumber INT
+                --);
+
+
                 UPDATE ASCD
                 SET RowStatus = 0,
                     TokenUpdated = @Token,
@@ -600,9 +602,9 @@ BEGIN
                 UPDATE DOPD
                 SET DOPD.ShipmentCompleted = 1
                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
-                    INNER JOIN @CartGuides CG
-                        ON DOPD.GuideSerie = CG.GuideSerie
-                           AND DOPD.GuideNumber = CG.GuideNumber;
+                    INNER JOIN #listGuides CG
+                        ON DOPD.GuideSerie = CG.ItemSerie
+                           AND DOPD.GuideNumber = CG.ItemNumber;
 
                 ---------------------WEBHOOK.INI--------------------------------
                 DECLARE @WebhookCustomerTable AS TABLE
@@ -820,16 +822,11 @@ BEGIN
                 ---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
                 UPDATE DeliveryOrderPiece
                    SET IsPickup = 1,
-                       StatusOrderId = 2
-                  FROM DeliveryOrderPiece WITH (NOLOCK)
-                 WHERE GuideNumber IN
-                       (
-                           SELECT ItemNumber FROM #listGuides
-                       )
-                       AND GuideSerie IN
-                       (
-                           SELECT ItemSerie FROM #listGuides
-                       );
+				       StatusOrderId = 2
+                  FROM DeliveryOrderPiece DOP WITH (NOLOCK)
+                 INNER JOIN #listGuides LG
+					ON DOP.GuideSerie = LG.ItemSerie
+	 			 AND DOP.GuideNumber = LG.ItemNumber;
 
                 ---------------------------------------------- Actualiza el Status del Servicio  -------------------------------------------------------------------------
 
@@ -872,9 +869,6 @@ BEGIN
 
                 -----------------------------------------Registrar pago ---------------------------------------------------------------------------
 
-                 
-                 DECLARE @ConvertDate date =  CAST(GETDATE() AS DATE);
-
                 -- Revisar la existencia de un service management para ruta de Rabbit
                 IF (EXISTS
                 (
@@ -883,7 +877,7 @@ BEGIN
                     FROM [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
                     WHERE SPSD.ServiceManagementId = @transac
                           AND SPSD.RowStatus = 1
-                          AND CAST(SPSD.DateCreated AS DATE) = @ConvertDate
+                          AND CAST(SPSD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                           AND SPSD.SettlementDate IS NULL
                 )
                    )
@@ -965,18 +959,13 @@ BEGIN
                 DECLARE @mail VARCHAR(200) =
                         (
                             SELECT TOP 1
-                                   RegexEmail
-                            FROM Customer ct WITH (NOLOCK)
-                                INNER JOIN DeliveryOrder ord WITH (NOLOCK)
-                                    ON (ord.IdCustomer = ct.IdCustomer)
-                            WHERE ord.Guide_Number IN
-                                  (
-                                      SELECT ItemNumber FROM #listGuides
-                                  )
-                                  AND ord.Guide_Serie IN 
-                                  (
-                                        SELECT ItemSerie FROM #listGuides
-                                  )
+								   ct.RegexEmail
+							FROM Customer ct WITH (NOLOCK)
+							INNER JOIN DeliveryOrder ord WITH (NOLOCK)
+								ON ord.IdCustomer = ct.IdCustomer
+							INNER JOIN #listGuides lg
+								ON lg.ItemSerie = ord.Guide_Serie
+								AND lg.ItemNumber = ord.Guide_Number
                         );
 
 
