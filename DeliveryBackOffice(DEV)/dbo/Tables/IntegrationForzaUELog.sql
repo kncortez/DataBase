@@ -9,7 +9,7 @@ CREATE TABLE [dbo].[IntegrationForzaUELog] (
     [DateCreated]                   DATETIME      NOT NULL,
     [TokenUpdated]                  NVARCHAR (50) NULL,
     [DateUpdated]                   DATETIME      NULL,
-    CONSTRAINT [PK_IntegrationForzaUELog] PRIMARY KEY CLUSTERED ([IdIntegrationLogForzaUE] ASC),
+    CONSTRAINT [PK_IntegrationForzaUELog] PRIMARY KEY CLUSTERED ([IdIntegrationForzaUELog] ASC),
     CONSTRAINT [FK_IntegrationForzaUELog_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
 
