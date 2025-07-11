@@ -1,7 +1,7 @@
 CREATE TABLE [dbo].[ArticleMapping] (
     [IdArticleMapping]      INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ArticleForzaId]        INT           NOT NULL,
-    [ArticletUEId]          INT           NOT NULL,
+    [ArticleUEId]          INT           NOT NULL,
     [RowStatus]             BIT           NOT NULL,
     [TokenCreated]          NVARCHAR (50) NOT NULL,
     [DateCreated]           DATETIME      NOT NULL,
@@ -18,7 +18,7 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Articulo de Forza', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ArticleMapping', @level2type = N'COLUMN', @level2name = N'ArticleForzaId';
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Articulo de Ultra Entregas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ArticleMapping', @level2type = N'COLUMN', @level2name = N'ArticletUEId';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Articulo de Ultra Entregas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ArticleMapping', @level2type = N'COLUMN', @level2name = N'ArticleUEId';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si el registro está vigente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ArticleMapping', @level2type = N'COLUMN', @level2name = N'RowStatus';
