@@ -25,7 +25,7 @@ BEGIN
 
     -- Variables de control
     DECLARE @CodeOfReference    INT
-           ,@IdCustomer         INT
+           ,@IdCustomer         INT = 0
            ,@IdTownship         INT
            ,@IdProvince         INT
            ,@TownshipName       NVARCHAR(200)
@@ -72,8 +72,42 @@ BEGIN
                        INNER JOIN Township ts with(nolock) ON pv.IdProvince = ts.IdProvince
                  WHERE ts.HeaderCode = @HeaderCode;
 
-                -- VALIDACIÓN 1: FullName + IdCustomer
-                IF EXISTS (
+                -- VALIDACIÓN: Otro headerCode diferente al pais
+                IF NOT EXISTS
+                ( 
+                         SELECT TOP 1 1
+                           FROM Province pv WITH(NOLOCK)
+                                INNER JOIN Township ts with(nolock) ON pv.IdProvince = ts.IdProvince
+                          WHERE ts.HeaderCode = @HeaderCode
+                            AND pv.IdCountry = @IdCountry
+                ) 
+                BEGIN
+                     SELECT @IdResult = 409,
+                            @ErrorMessage = 'No se encontró un HeaderCode valido con el país indicado.',
+                            @IsSuccess = 0;
+
+                     SELECT @ResultPointId = 0,
+                            @ResultFullName = @FullName,
+                            @ResultAddress = @Address1,
+                            @ResultCustomerId = @IdCustomer,
+                            @ResultPhone = @Phone,
+                            @ResultNirPhone = @NirPhone,
+                            @ResultEmail = @Email,
+                            @ResultCreatedDate = GETDATE(),
+                            @TownshipName = '',
+                            @ProvinceName = '',
+                            @IdProvince = 0,
+                            @Latitude = @Latitude,
+                            @Longitude = @Longitude
+
+                    -- ROLLBACK porque no vamos a insertar
+                    IF @TransactionStarted = 1
+                    BEGIN
+                        ROLLBACK TRANSACTION;
+                        SET @TransactionStarted = 0;
+                    END
+                END 
+                ELSE IF EXISTS (
                     SELECT TOP 1 1 
                       FROM dbo.VisitPointClient vpc WITH(NOLOCK)
                      WHERE vpc.DescriptionOfClient = @FullName 
@@ -205,18 +239,33 @@ BEGIN
                        SET @TransactionStarted = 0;
                    END
                 END
-                ELSE IF ( @IdCustomer = 0) -- VALIDACIÓN 3: 
+                ELSE IF ( @IdCustomer = 0 
+                          OR @IdCustomer IS NULL) -- VALIDACIÓN 3: 
                 BEGIN
-                     SELECT @IdResult = 500,
+                     SELECT @IdResult = 409,
                             @ErrorMessage = 'No se encontró un cliente activo con los datos proporcionados.',
                             @IsSuccess = 0;
 
-                    -- ROLLBACK porque no vamos a insertar
-                    IF @TransactionStarted = 1
-                    BEGIN
-                        ROLLBACK TRANSACTION;
-                        SET @TransactionStarted = 0;
-                    END
+                     SELECT @ResultPointId = 0,
+                            @ResultFullName = @FullName,
+                            @ResultAddress = @Address1,
+                            @ResultCustomerId = @IdCustomer,
+                            @ResultPhone = @Phone,
+                            @ResultNirPhone = @NirPhone,
+                            @ResultEmail = @Email,
+                            @ResultCreatedDate = GETDATE(),
+                            @TownshipName = '',
+                            @ProvinceName = '',
+                            @IdProvince = 0,
+                            @Latitude = @Latitude,
+                            @Longitude = @Longitude
+
+                     -- ROLLBACK porque no vamos a insertar
+                     IF @TransactionStarted = 1
+                     BEGIN
+                         ROLLBACK TRANSACTION;
+                         SET @TransactionStarted = 0;
+                     END
                 END 
                 ELSE  -- Si no hay errores procedemos con el INSERT
                 BEGIN
