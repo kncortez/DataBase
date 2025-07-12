@@ -3,6 +3,10 @@
 -- Create date: <15/02/2025>
 -- Description:	< Se obtiene la URL del comprobante de entrega escaneado de lo clientes corporativos que tienen configurado que desean comprobante impreso>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date: <11/07/2025>
+-- Description:	<Se agrega la base de la URL ya que cambio la respuesta de la función>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_GetDeliveryVoucherURL]
 @GuideSerie NVARCHAR(2),
 @GuideNumber INT
@@ -14,6 +18,7 @@ BEGIN
     BEGIN TRY
 		DECLARE @IsVoucherRequired INT;
 		DECLARE @URL VARCHAR(300);
+		DECLARE @URLBase VARCHAR(50);
 
 		SELECT @IsVoucherRequired = c.IsVoucherRequired
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
@@ -25,8 +30,9 @@ BEGIN
 
 		
 		IF @IsVoucherRequired = 1
-		BEGIN
-			SET @URL = COALESCE(CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) AS VARCHAR(300)), '');
+		BEGIN			
+			SET @URLBase = (SELECT Value FROM ConfigParams WHERE Name = 'BaseURL');
+			SET @URL = CONCAT(@URLBase,(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) as VARCHAR(300))));
 
 			IF @URL IS NULL OR @URL = ''
 			BEGIN
