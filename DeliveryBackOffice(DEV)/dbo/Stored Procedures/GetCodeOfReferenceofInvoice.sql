@@ -10,6 +10,8 @@ BEGIN
     SELECT inv_vpCodeOfReferences AS CodeOfReference
          , inv_pk_id              AS IdInvoice
          , inv_numberFEL          AS CorrelativeInvoice
-    FROM invoiceHeader
-    WHERE inv_certificationFEL = @NumberFel;
+    FROM invoiceHeader WITH(NOLOCK)
+    WHERE inv_certificationFEL = @NumberFel
+	ORDER BY inv_pk_id desc
+	;
 END;

@@ -209,3 +209,20 @@ BEGIN
              , ERROR_STATE();
     END CATCH;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportCreatNewDesktopUser] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportCreatNewDesktopUser] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportCreatNewDesktopUser] TO [cvaldes]
+    AS [dbo];
+

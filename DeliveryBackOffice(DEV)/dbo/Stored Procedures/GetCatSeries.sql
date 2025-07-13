@@ -15,7 +15,7 @@ SELECT
     ',{"IdSerie":"' +  Convert(varchar, IdSerie) +  '",'  +   
       '"Status":"' + Convert(varchar, SerieStatus) + + '"}'
 
-      from DeliveryBackOffice.dbo.CatSeries
+      from DeliveryBackOffice.dbo.CatSeries WITH(NOLOCK)
 	  --where  SerieStatus =   @Status  
 
   FOR XML PATH(''), TYPE 
