@@ -118,3 +118,20 @@ BEGIN
 	    SELECT 'Usuario no existe o no esta de baja consulta el estado de este usuario con el sp [SupportGetStatusCorporateUser] '
 	END
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportSetActivateInternalUser] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportSetActivateInternalUser] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportSetActivateInternalUser] TO [cvaldes]
+    AS [dbo];
+

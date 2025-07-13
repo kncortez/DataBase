@@ -96,8 +96,8 @@ BEGIN
 														   IIF(
 															  (
 																  SELECT COUNT(1)
-																  FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-																  WHERE ec.IdCustomer = DOR.IdCustomer
+																    FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
+																   WHERE ec.IdCustomer = DOR.IdCustomer
 															  ) > 0,
 															  'API',
 															  'Parser')),
@@ -277,17 +277,17 @@ BEGIN
 									) INH
 										ON INH.dti_fk_orderSerie = DOR.Guide_Serie
 										   AND INH.dti_fk_orderNumber = DOR.Guide_Number
-									LEFT JOIN DeliveryOrderPaymentDetail DORPD
+									LEFT JOIN DeliveryOrderPaymentDetail DORPD WITH (NOLOCK)
 										ON DOR.Guide_Serie = DORPD.GuideSerie
 										   AND DOR.Guide_Number = DORPD.GuideNumber
-									LEFT JOIN PromoCoupon PRC
+									LEFT JOIN PromoCoupon PRC WITH (NOLOCK)
 										ON DOR.Guide_Serie = PRC.GuideSerieDestination
 										   AND DOR.Guide_Number = PRC.GuideNumberDestination
-									LEFT JOIN DeliveryBackOffice.dbo.CatSystem CTS --22TEBNHL
+									LEFT JOIN DeliveryBackOffice.dbo.CatSystem CTS WITH (NOLOCK) --22TEBNHL 
 										ON CTS.SysIdSystem = INH.systemOperation
-									LEFT JOIN DeliveryBackOffice.dbo.InOutOfMoneyDetail InOut --22TEBNHL
+									LEFT JOIN DeliveryBackOffice.dbo.InOutOfMoneyDetail InOut WITH (NOLOCK) --22TEBNHL
 										ON InOut.io_invoice = INH.inv_pk_id
-									LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney TypeInOut
+									LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney TypeInOut WITH (NOLOCK)
 										ON TypeInOut.tio_pk_id = InOut.io_type
 									LEFT JOIN
 									(
@@ -309,23 +309,23 @@ BEGIN
 										GROUP BY CSD.IdCost
 									) CSD
 										ON CST.IdCost = CSD.IdCost
-									LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney CTO
+									LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney CTO WITH(NOLOCK)
 										ON CTO.tio_pk_id = CSD.IdTypeOfMoney
-									LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+									LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 										ON VPC.CodeOfReference = DOR.Sender_ID
-									LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient KVP
+									LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient KVP WITH(NOLOCK)
 										ON KVP.IdKindOfVPClient = VPC.IdKindOfVPClient
-									LEFT JOIN DeliveryBackOffice.dbo.Customer CTM
+									LEFT JOIN DeliveryBackOffice.dbo.Customer CTM WITH(NOLOCK)
 										ON CTM.IdCustomer = DOR.IdCustomer
-									LEFT JOIN DeliveryBackOffice.dbo.Customer CTV
+									LEFT JOIN DeliveryBackOffice.dbo.Customer CTV WITH(NOLOCK)
 										ON CTV.IdCustomer = VPC.CustomerID
 									LEFT JOIN DeliveryBackOffice.dbo.Customer CTM2 WITH(NOLOCK)
-									ON DOR.IdCustomer = CTM2.IdCustomer
-									LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB
+									    ON DOR.IdCustomer = CTM2.IdCustomer
+									LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB WITH(NOLOCK)
 										ON ISNULL(CTV.TypeOfBusinessID, CTM.TypeOfBusinessID) = CTOB.IdTypeOfBusiness
-									LEFT JOIN DeliveryBackOffice.dbo.CustomerType CTT
+									LEFT JOIN DeliveryBackOffice.dbo.CustomerType CTT WITH(NOLOCK)
 										ON CTT.IdCustomerType = CTM.IdCustomerType --45STEBNHL
-									LEFT JOIN #TransactionFAC1 FAC
+									LEFT JOIN #TransactionFAC1 FAC WITH(NOLOCK)
 										ON FAC.GuideSerie = DOR.Guide_Serie
 										   AND FAC.OrderNumber = DOR.Guide_Number
 									LEFT JOIN
@@ -353,12 +353,14 @@ BEGIN
 									) DOP
 										ON DOP.Guide_Serie = DOR.Guide_Serie
 										   AND DOP.Guide_Number = DOR.Guide_Number
-									LEFT JOIN dbo.Township TONW WITH (NOLOCK)
-										ON TONW.IdTownship = DOR.ReceiverIdTownship
-									LEFT JOIN dbo.Township TWN WITH (NOLOCK)
-										ON TWN.TownshipName = DOR.Receiver_Town ----26TEBNHL
-										AND TWN.HeaderCode NOT LIKE 'H%'
-										LEFT JOIN dbo.Province prd ON prd.IdProvince = TWN.IdProvince  AND prd.IdCountry  = DOR.ReceiverCountryId --03OctCRAS
+                                    LEFT JOIN dbo.Township TONW WITH (NOLOCK)
+                                      ON TONW.IdTownship = DOR.ReceiverIdTownship
+                                      OR (TONW.IdTownship IS NULL 
+                                          AND TONW.TownshipName = DOR.Receiver_Town ----26TEBNHL
+                                          AND TONW.HeaderCode NOT LIKE 'H%')
+									LEFT JOIN dbo.Province prd 
+                                        ON prd.IdProvince = TONW.IdProvince  
+                                       AND prd.IdCountry  = DOR.ReceiverCountryId --03OctCRAS
 									LEFT JOIN
 									(
 										SELECT CV.HeaderCode,
@@ -366,19 +368,20 @@ BEGIN
 										FROM dbo.DumpServiceCoverage CV WITH (NOLOCK)
 										GROUP BY CV.HeaderCode
 									) HB
-										ON HB.HeaderCode = ISNULL(TONW.HeaderCode, TWN.HeaderCode)
+										ON HB.HeaderCode = TONW.HeaderCode
 									LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount DCBA WITH (NOLOCK)
 										ON DCBA.DCBA_Id = DOR.DCBA_ID
 									LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank DBA WITH (NOLOCK)
 										ON DBA.Id_bank = DCBA.DCBA_Bank_Id
 										   AND DBA.Id_country = 'GT'
 										   AND DBA.Id_status = 1
-									LEFT JOIN DeliveryBackOffice.dbo.StatusOrder STO ON STO.StatusOrderId = DOR.StatusOrderId
+									LEFT JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
+                                      ON STO.StatusOrderId = DOR.StatusOrderId
 									LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 									ON c.IdCustomer = vpc.CustomerID
 								WHERE EXISTS
 								(
-									SELECT 1
+									SELECT TOP(1) 1
 									FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH (NOLOCK) --18TEBNHL
 									WHERE DOR.StatusOrderId <> 7
 										  AND DOR.StatusOrderId <> 15

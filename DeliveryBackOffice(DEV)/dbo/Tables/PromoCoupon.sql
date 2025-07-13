@@ -53,6 +53,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_PromoCoupon_GuideSerieOrigin]
     ON [dbo].[PromoCoupon]([GuideSerieOrigin] ASC, [GuideNumberOrigin] ASC);
@@ -194,4 +196,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último tok
 GO
 CREATE NONCLUSTERED INDEX [idx_PromoCouponSerie_RedeemedDate_RowStatus_FinalActiveDate]
     ON [dbo].[PromoCoupon]([PromoCouponSerie] ASC, [RedeemedDate] ASC, [RowStatus] ASC, [FinalActiveDate] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideNumberOrigin_GuideSerieOrigin]
+    ON [dbo].[PromoCoupon]([GuideNumberOrigin] ASC, [GuideSerieOrigin] ASC);
 
