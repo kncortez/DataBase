@@ -9,6 +9,10 @@
 -- Create date: <2024-07-15>
 -- Description:	<Se agrega el simbolo de la moneda por pais>
 -- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <202-07-15>
+-- Description:	<Se agrega el simbolo de moneda escalable por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDepositReportCOD_Generic]
     -- Add the parameters for the stored procedure here
     @IdCustomer INT = -1
@@ -89,12 +93,7 @@ BEGIN
                      , btd.[Amount]                                                                      AS TotalAmount
                      , IIF(btd.BankId IN ( 3, 5, 31, 33, 1 ), 1, 0)                                      FlagImmediateOrAch
                      , btd.[AuthorizationDate]
-                     , CASE
-                           WHEN ISNULL(do.SenderCountryId, 'GT') = 'GT' THEN
-                               'Q.'
-                           ELSE
-                               'L.'
-                       END                                                                               AS CurrencySymbol
+                     , (ccd.Symbol + '.')                                                                AS CurrencySymbol
                 FROM [dbo].[BatchDetailCOD]              AS btd WITH (NOLOCK)
                     INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
                         ON btd.[GuideSerie] = pg.[GuideSerie]
@@ -129,6 +128,8 @@ BEGIN
                         ON dc.DCBA_Id = do.DCBA_ID
                     LEFT JOIN dbo.DeliveryBank                bk WITH (NOLOCK)
                         ON bk.Id_bank = dc.DCBA_Bank_Id
+                    LEFT JOIN dbo.CatCurrencyCOD                ccd WITH (NOLOCK)
+                        ON ccd.IdCatCurrencyCOD = btd.CatCurrencyCODId
                 WHERE btd.[AuthorizationNumber] IS NOT NULL
                       AND pg.BatchCODId IS NOT NULL
                       AND (cu.IdCustomer = @IdCustomer)
@@ -202,12 +203,7 @@ BEGIN
                      , IIF(btd.BankId IN ( 3, 5, 31, 33, 1 ), 1, 0)                                       FlagImmediateOrAch
                      , btd.[AuthorizationDate]
                      , CONVERT(VARCHAR(10), @StarDate, 103) + ' - ' + CONVERT(VARCHAR(10), @EndDate, 103) AS DateDelivery
-                     , CASE
-                           WHEN ISNULL(do.SenderCountryId, 'GT') = 'GT' THEN
-                               'Q.'
-                           ELSE
-                               'L.'
-                       END                                                                                AS CurrencySymbol
+                     , (ccd.Symbol + '.')                                                                 AS CurrencySymbol
                 FROM [dbo].[BatchDetailCOD]              AS btd WITH (NOLOCK)
                     INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
                         ON btd.[GuideSerie] = pg.[GuideSerie]
@@ -242,6 +238,8 @@ BEGIN
                         ON dc.DCBA_Id = do.DCBA_ID
                     LEFT JOIN dbo.DeliveryBank                bk WITH (NOLOCK)
                         ON bk.Id_bank = dc.DCBA_Bank_Id
+                    LEFT JOIN dbo.CatCurrencyCOD                ccd WITH (NOLOCK)
+                        ON ccd.IdCatCurrencyCOD = btd.CatCurrencyCODId
                 WHERE btd.[AuthorizationNumber] IS NOT NULL
                       AND pg.BatchCODId IS NOT NULL
                       AND LTRIM(RTRIM(do.Sender_Mail)) = @SenderEmail
