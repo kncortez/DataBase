@@ -55,7 +55,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,567,40,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,567,80,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -78,7 +78,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,568,53,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,568,91,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -101,7 +101,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,569,70,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,569,125,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -124,7 +124,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,570,75.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,570,136,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -147,7 +147,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,571,81,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentMetro,NULL,NULL,571,147,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 
 
 
@@ -175,7 +175,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,567,47.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,567,95,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -198,7 +198,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,568,53,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,568,106,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -221,7 +221,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,569,70,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,569,140,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -244,7 +244,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,570,75.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,570,151,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -267,7 +267,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,571,81,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentLocal,NULL,NULL,571,162,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -294,7 +294,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,567,55,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,567,110,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -317,7 +317,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,568,60.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,568,121,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -340,7 +340,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,569,77.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,569,155,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -363,7 +363,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,570,83,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,570,166,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -386,7 +386,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,571,88.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentDepart,NULL,NULL,571,177,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -415,7 +415,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,567,62.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,567,125,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -438,7 +438,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,568,68,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,568,136,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -461,7 +461,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,569,85,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,569,170,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -484,7 +484,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,570,90.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,570,181,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -507,7 +507,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,571,96,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentRegional,NULL,NULL,571,192,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -537,7 +537,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,567,75,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,567,150,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -560,7 +560,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,568,80.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,568,161,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -583,7 +583,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,569,97.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,569,195,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -606,7 +606,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,570,103,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,570,206,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -629,7 +629,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,571,108.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceSTD,@IdSegmentNacional,NULL,NULL,571,217,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 
 
 
@@ -657,7 +657,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,567,102.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,567,205,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -680,7 +680,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,568,108,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,568,216,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -703,7 +703,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,569,125,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,569,250,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -726,7 +726,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,570,130.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,570,261,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -749,7 +749,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,571,136,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForOlancho,NULL,NULL,571,272,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -777,7 +777,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,567,142.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,567,285,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -800,7 +800,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,568,148,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,568,296,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -823,7 +823,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,569,165,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,569,330,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -846,7 +846,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,570,170.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,570,341,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -869,7 +869,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,571,176,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentEspecial,NULL,NULL,571,352,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -896,7 +896,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,567,192.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,567,385,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -919,7 +919,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,568,198,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,568,396,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -942,7 +942,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,569,215,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,569,430,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -965,7 +965,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,570,220.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,570,441,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -988,7 +988,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,571,226,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForIslas,NULL,NULL,571,452,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -1015,7 +1015,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,567,242.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,567,485,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1038,7 +1038,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,568,248,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,568,496,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1061,7 +1061,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,569,260,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,569,520,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1084,7 +1084,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,570,265.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,570,531,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1107,7 +1107,7 @@ AND TypeServiceId = @TypeServiceSTD --estandar
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,571,271,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceSTD,@IdSegmentForGracias,NULL,NULL,571,542,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -1152,7 +1152,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,567,35,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,567,70,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1175,7 +1175,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,568,40.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,568,81,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1198,7 +1198,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,569,57.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,569,115,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1221,7 +1221,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,570,63,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,570,126,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1244,7 +1244,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,571,68.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentMetro,NULL,NULL,571,137,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 
 
 
@@ -1271,7 +1271,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,567,42.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,567,85,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1294,7 +1294,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,568,48,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,568,96,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1317,7 +1317,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,569,65,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,569,130,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1340,7 +1340,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,570,70.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,570,141,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1363,7 +1363,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,571,76,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentLocal,NULL,NULL,571,152,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -1392,7 +1392,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,567,50,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,567,100,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1415,7 +1415,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,568,55.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,568,111,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1438,7 +1438,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,569,72.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,569,145,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1461,7 +1461,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,570,78,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,570,156,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1484,7 +1484,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,571,83.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentDepart,NULL,NULL,571,167,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -1511,7 +1511,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,567,57.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,567,115,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1534,7 +1534,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,568,63,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,568,126,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1557,7 +1557,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,569,80,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,569,160,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1580,7 +1580,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,570,85.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,570,171,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1603,7 +1603,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,571,91,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentRegional,NULL,NULL,571,182,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -1632,7 +1632,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,567,70,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,567,140,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1655,7 +1655,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,568,75.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,568,151,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1678,7 +1678,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,569,92.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,569,185,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1701,7 +1701,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,570,98,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,570,196,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1724,7 +1724,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,571,103.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ ( @IdRate,@TypeServiceCOD,@IdSegmentNacional,NULL,NULL,571,207,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 
 
 
@@ -1754,7 +1754,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,567,97.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,567,195,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1777,7 +1777,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,568,103,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,568,206,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1800,7 +1800,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,569,120,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,569,240,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1823,7 +1823,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,570,125.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,570,251,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1846,7 +1846,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,571,131,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForOlancho,NULL,NULL,571,262,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -1874,7 +1874,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,567,137.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,567,275,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1897,7 +1897,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,568,143,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,568,286,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1920,7 +1920,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,569,160,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,569,320,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1943,7 +1943,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,570,165.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,570,331,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -1966,7 +1966,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,571,171,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentEspecial,NULL,NULL,571,342,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -1995,7 +1995,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,567,187.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,567,375,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -2018,7 +2018,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,568,193,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,568,386,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -2041,7 +2041,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,569,210,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,569,420,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -2064,7 +2064,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,570,215.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,570,431,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -2087,7 +2087,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,571,221,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForIslas,NULL,NULL,571,442,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
 
@@ -2115,7 +2115,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,567,237.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,567,475,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -2138,7 +2138,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,568,242.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,568,485,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -2161,7 +2161,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,569,252.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,569,505,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -2184,7 +2184,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,570,257.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,570,515,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
  INSERT INTO dbo.RateData
  (
      RateId
@@ -2207,7 +2207,7 @@ AND TypeServiceId = @TypeServiceCOD --COD
    , PackagesTo
  )
  VALUES
- ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,571,262.5,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+ ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,571,525,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 
  COMMIT TRANSACTION
