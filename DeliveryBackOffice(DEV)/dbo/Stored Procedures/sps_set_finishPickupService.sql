@@ -106,7 +106,7 @@ BEGIN
 				AND lg.Guide_Number = do.Guide_Number
 			INNER JOIN DeliveryBackOffice.dbo.StatusOrder   so WITH (NOLOCK)
 				ON do.StatusOrderId = so.StatusOrderId
-		WHERE so.StatusOrderId NOT IN ( 15, 4, 1, 16  );
+		WHERE so.StatusOrderId NOT IN ( 15, 50, 1, 45  );
 
 		IF ((SELECT COUNT(1)FROM #listGuidesDisabled) > 0)
 		BEGIN --VER GUIAS VALIDAS E INVALIDAS
@@ -138,7 +138,7 @@ BEGIN
 			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
 				ON lg.Guide_Serie = do.Guide_Serie
 					AND lg.Guide_Number = do.Guide_Number
-		WHERE do.StatusOrderId IN ( 15, 4, 1, 16  );
+		WHERE do.StatusOrderId IN ( 15, 50, 1, 45  );
 
 		CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable ON #listGuidesEnabled (Guide_Serie, Guide_Number);
 		CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable_excludeCOD ON #listGuidesEnabled (ExcludeCOD);
