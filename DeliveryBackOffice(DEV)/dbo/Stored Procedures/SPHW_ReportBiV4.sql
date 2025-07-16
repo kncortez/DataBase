@@ -2,6 +2,8 @@
 -- Author:		<Walter Orozco>
 -- Create date: <11-06-2025>
 -- Description:	<Reestructuración del procedimiento almacenado completo.>
+-- Create date: <16-07-2025>
+-- Description:	<Modificación para obtener Hub origen y destino por guía.>
 -- =============================================
 --Server 3.200
 --PowerBI Delivery LIVE Dashboard v4.AI (04 marzo 2025)
@@ -66,6 +68,10 @@ BEGIN
       ,[BilledWeight]
       ,[SenderCountryId]
       ,[ReceiverCountryId]
+	  ,[HubOriginId]
+	  ,[HubDestinationId]
+	  ,[SenderIdSettlement]
+	  ,[ReceiverIdSettlement]
 	INTO #tmp_FilDeliveryOrder
 	FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
 	WHERE 
@@ -542,18 +548,43 @@ BEGIN
 		)
 	) AS SC
 	OUTER APPLY (
-		SELECT MAX(CV.Hub) AS SenderHub
-		FROM DeliveryBackOffice.dbo.Township	T	WITH (NOLOCK)
-		INNER JOIN dbo.DumpServiceCoverage		CV	WITH (NOLOCK)
-			ON CV.HeaderCode = T.HeaderCode
-		WHERE T.IdTownship = DO.SenderIdTownship
+		SELECT TOP 1
+			COALESCE(
+				HL.HubAbbreviation,       -- Forma 1: HubOriginId → HubLogistics
+				DSC1.Hub,                 -- Forma 2: SenderIdSettlement → DumpServiceCoverage
+				DSC2.Hub,                 -- Forma 3: VisitPointClient → DumpServiceCoverage
+				CV.Hub		              -- Forma 4: Municipio → DumpServiceCoverage
+			) AS SenderHub
+		FROM (VALUES(1)) AS x(dummy)
+		LEFT JOIN DeliveryBackOffice.dbo.HubLogistics           HL   WITH(NOLOCK)
+			ON HL.IdHubLogistic    = DO.HubOriginId
+		LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage    DSC1 WITH(NOLOCK)
+			ON DSC1.IdSettlement   = DO.SenderIdSettlement
+		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient       VPC  WITH(NOLOCK)
+			ON VPC.CodeOfReference = DO.Sender_ID
+		LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage    DSC2 WITH(NOLOCK)
+			ON DSC2.IdSettlement   = VPC.IdSettlement
+		INNER JOIN DeliveryBackOffice.dbo.Township              T    WITH(NOLOCK)
+			ON T.IdTownship       = DO.SenderIdTownship
+		LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage    CV   WITH(NOLOCK)
+			ON CV.HeaderCode      = T.HeaderCode
 	) AS HUB_S
 	OUTER APPLY (
-		SELECT MAX(CV.Hub) AS ReceiverHub
-		FROM DeliveryBackOffice.dbo.Township	T	WITH (NOLOCK)
-		INNER JOIN dbo.DumpServiceCoverage		CV	WITH (NOLOCK)
-			ON CV.HeaderCode = T.HeaderCode
-		WHERE T.IdTownship = DO.ReceiverIdTownship
+		SELECT TOP 1
+			COALESCE(
+				HL.HubAbbreviation,    -- Forma 1: HubOriginId → HubLogistics
+				DSC.Hub,               -- Forma 2: SenderIdSettlement → DumpServiceCoverage
+				CV.Hub                 -- Forma 3: Municipio → DumpServiceCoverage
+			) AS ReceiverHub
+		FROM (VALUES(1)) AS x(dummy)
+		LEFT JOIN DeliveryBackOffice.dbo.HubLogistics			HL	WITH(NOLOCK)
+			ON HL.IdHubLogistic     = DO.HubDestinationId
+		LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage	DSC	WITH(NOLOCK)
+			ON DSC.IdSettlement     = DO.ReceiverIdSettlement
+		INNER JOIN DeliveryBackOffice.dbo.Township				T	WITH(NOLOCK)
+			ON T.IdTownship         = DO.ReceiverIdTownship
+		LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage	CV	WITH(NOLOCK)
+			ON CV.HeaderCode        = T.HeaderCode
 	) AS HUB_R
 	OUTER APPLY (
 		SELECT 
