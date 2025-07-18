@@ -2,6 +2,10 @@
 -- Author:	<Oscar Rodriguez>
 -- Description: Se regresa informacion de poblado de origen
 -- =============================================
+-- =============================================
+-- Author:	<Walter Orozco>
+-- Description: Se modifica moneda para multipais.
+-- =============================================
 
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
@@ -672,7 +676,7 @@ BEGIN
                0,
                0,
                NULL,
-               'GTQ',
+               CCC.CodeISO,
                0,
                GETDATE(),
                NULL,
@@ -692,7 +696,12 @@ BEGIN
         FROM @Pieces PIC
             INNER JOIN #GuideTable GTB
                 ON PIC.Guide_Serie = GTB.Guide_Serie
-                   AND PIC.Guide_Number = GTB.Guide_Number;
+                AND PIC.Guide_Number = GTB.Guide_Number
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC	WITH(NOLOCK)
+				ON DC.Currency_IdCountry = ISNULL(GTB.IdCountrySender,'GT')
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD   CCC	WITH(NOLOCK)
+				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
+			WHERE DC.DefaultPerCountry = 1;
 
 
         DECLARE @idcustomer INT =
