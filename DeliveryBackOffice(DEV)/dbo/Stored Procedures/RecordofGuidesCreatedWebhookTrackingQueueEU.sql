@@ -4,7 +4,7 @@
 -- Description:	<Description,Registrar guías creadas,entregadas y anuladas por cliente Ultraentregas para encolar notificaciones Webhook>
 -- =============================================
 CREATE PROCEDURE [dbo].[RecordofGuidesCreatedWebhookTrackingQueueEU] 
-@GuideSerie VARCHAR(2)='FD',
+@GuideSerie NVARCHAR(2)='FD',
 @GuideNumber INT,
 @Type NVARCHAR (25)
 AS
