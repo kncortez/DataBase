@@ -8,6 +8,11 @@
 -- Create date: <2024-07-22>
 -- Description: <Se agregan los valores de moneda de pago y moneda de COD para el reporte en corporativo>
 -- =============================================
+-- =============================================
+-- Author:      <Walter, Orozco>
+-- Create date: <2025-07-22>
+-- Description: <Se modifica como obtener el campo de municipio destino.>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetCustomerGuidesReport]
     @AccountId INT
   , @DateStart DATETIME = NULL
@@ -100,7 +105,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                      )                                                            'Fecha de recolección'
              , ISNULL(DSC.Hub, '')                                                'Hub destino'
              , DO.Receiver_Department                                             'Departamento destino'
-             , DO.Receiver_Town                                                   'Municipio destino'
+             , TwnId.TownshipName                                                 'Municipio destino'
              , CONCAT(DO.Receiver_FirstName, '', DO.Receiver_LastName)            'Destinatario'
              , DO.Receiver_Phone                                                  'Teléfono destinatario'
              , DO.Receiver_Address                                                'Dirección destinatario'
@@ -183,7 +188,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                      )                                                            'Fecha de recolección'
              , ISNULL(DSC.Hub, '')                                                'Hub destino'
              , DO.Receiver_Department                                             'Departamento destino'
-             , DO.Receiver_Town                                                   'Municipio destino'
+             , TwnId.TownshipName                                                 'Municipio destino'
              , CONCAT(DO.Receiver_FirstName, '', DO.Receiver_LastName)            'Destinatario'
              , DO.Receiver_Phone                                                  'Teléfono destinatario'
              , DO.Receiver_Address                                                'Dirección destinatario'
@@ -282,7 +287,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                      )                                                            'Fecha de recolección'
              , ISNULL(DSC.Hub, '')                                                'Hub destino'
              , DO.Receiver_Department                                             'Departamento destino'
-             , DO.Receiver_Town                                                   'Municipio destino'
+             , TwnId.TownshipName                                                 'Municipio destino'
              , CONCAT(DO.Receiver_FirstName, '', DO.Receiver_LastName)            'Destinatario'
              , DO.Receiver_Phone                                                  'Teléfono destinatario'
              , DO.Receiver_Address                                                'Dirección destinatario'
