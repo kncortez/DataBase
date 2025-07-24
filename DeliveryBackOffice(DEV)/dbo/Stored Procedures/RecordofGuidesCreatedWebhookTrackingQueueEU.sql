@@ -9,43 +9,50 @@ CREATE PROCEDURE [dbo].[RecordofGuidesCreatedWebhookTrackingQueueEU]
 @Type NVARCHAR (25)
 AS
 BEGIN
+
+    SET NOCOUNT ON;
 	BEGIN TRANSACTION
 	BEGIN TRY
 
-    DECLARE @CustomerId INT = (Select IdCustomer From dbo.DeliveryOrder WITH(NOLOCK) 
-	                                WHERE Guide_Serie = @GuideSerie AND Guide_Number=@GuideNumber);
-
-    DECLARE @IdWebhookType INT = (SELECT IdWebhookType FROM dbo.WebhookType WITH(NOLOCK)
-									  WHERE WebhookName = @Type );
+    DECLARE @CustomerId INT;
+	DECLARE @IdWebhookType INT;
+	DECLARE @IdWebhookEndpoint INT;
+     
    
-    DECLARE @IdWebhookEndpoint INT =( SELECT IdWebhookEndpoint FROM WebhookEndpoint WITH(NOLOCK) 
-									   WHERE WebhookTypeId = @IdWebhookType AND 
-									   CustomerId = @CustomerId);
-    DECLARE @StatusOrder INT =(
-	                             SELECT CASE
-								            WHEN @Type ='CreatedGuides' THEN 15
-											WHEN @Type ='VoidedGuides' THEN 7
-											ELSE 5 END
+  
+    DECLARE @StatusOrder INT = CASE
+								  WHEN @Type ='CreatedGuides' THEN 15
+								  WHEN @Type ='VoidedGuides' THEN 7
+							      ELSE 5 
+							    END;
+	  SELECT 
+			 Top 1 @CustomerId=IdCustomer
+	   From dbo.DeliveryOrder WITH(NOLOCK) 
+	   WHERE Guide_Serie = @GuideSerie AND 
+		                                Guide_Number=@GuideNumber;
 	
-	                                   );
+	   SELECT 
+	        @IdWebhookType = IdWebhookType 
+	   FROM dbo.WebhookType WITH(NOLOCK)
+	   WHERE WebhookName = @Type;  
+	   
+	   SELECT 
+	        @IdWebhookEndpoint=IdWebhookEndpoint 
+	   FROM WebhookEndpoint WITH(NOLOCK) 
+	   WHERE WebhookTypeId = @IdWebhookType AND 
+									   CustomerId = @CustomerId;
 
-	DECLARE @CustomerWithUEId INT =
-    (
-        SELECT CASE WHEN  EXISTS
+	 
+
+	
+        IF ( EXISTS
             (
-                SELECT 1
-					FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
-					   INNER JOIN 
-					     [dbo].[Customer] CU WITH (NOLOCK)
-						ON DO.IdCustomer = CU.IdCustomer
+                SELECT  1 
+					  FROM   [dbo].[Customer] CU WITH (NOLOCK)
 					WHERE CU.CustomerUEId IS NOT NULL
-						AND DO.Guide_Serie = @GuideSerie
-						AND DO.Guide_Number = @GuideNumber
-						AND DO.IdCustomer = @CustomerId
-              ) THEN 1 ELSE 0 END
-        );
-
-			IF(@CustomerWithUEId > 0)
+						AND CU.IdCustomer = @CustomerId
+            )
+			 )
 			BEGIN
 				INSERT INTO [dbo].[WebhookTrackingQueue]
 						   ([WebhookEndpointId]
