@@ -44,11 +44,26 @@ BEGIN
 		);
 		CREATE NONCLUSTERED INDEX INDX_sps_set_finishService_Temp ON #TempDataSFS (GuideSerie, GuideNumber);
 
-		SELECT *
-		INTO #TblListGuidesTwo
-		FROM @TblListGuides;
+		CREATE TABLE #TblListGuidesTwo (
+			Guide_Serie       NVARCHAR(2),
+			Guide_Number      INT,
+			ExcludeCOD        BIT,
+			IsAnticipatedCOD  BIT,
+			AmountToPay       DECIMAL(18, 2),
+			CODAmount         DECIMAL(18, 2)
+		);
+
 		CREATE NONCLUSTERED INDEX IX_TLGT_SERIE ON #TblListGuidesTwo (Guide_Serie, Guide_Number);
 		CREATE NONCLUSTERED INDEX IX_TLGT_EXCLUDE ON #TblListGuidesTwo (ExcludeCOD);
+
+		INSERT INTO #TblListGuidesTwo (Guide_Serie, Guide_Number, ExcludeCOD, IsAnticipatedCOD, AmountToPay, CODAmount)
+		SELECT Guide_Serie,
+			   Guide_Number,
+			   ExcludeCOD,
+			   IsAnticipatedCOD,
+			   AmountToPay,
+			   CODAmount
+		FROM @TblListGuides;
 
 		DECLARE @IdTypeOfMoney INT;
 		DECLARE @Amount DECIMAL(18, 2);
@@ -404,7 +419,7 @@ BEGIN
 
 				UPDATE DOPD
 					SET DOPD.ShipmentCompleted = 1
-				FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
+				FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
 				INNER JOIN @CartGuides                                   CG
 					ON DOPD.GuideSerie = CG.GuideSerie
 					AND DOPD.GuideNumber = CG.GuideNumber;
@@ -515,26 +530,25 @@ BEGIN
 						, [DateCreated]
 						, [Responsible]
 					)
-					SELECT ct.IdCost
-						, @IdTypeOfMoney
-						, ct.TotalAmountPaid
-						, IIF(@IdTypeOfMoney = 6, @Voucher, '')
-						, 1 -- crear registro activo por default
-						, @TokenP
-						, GETDATE()
-						, @Responsible
-					FROM Cost                                             ct WITH(NOLOCK)
-						INNER JOIN @TblInclude                            ti
-							ON ct.GuideSerie = ti.Guide_Serie
-							AND ti.Guide_Number = ti.Guide_Number
-						LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
-							ON ct.IdCost = CD.IdCost
+					SELECT 
+						ct.IdCost,
+						@IdTypeOfMoney,
+						ct.TotalAmountPaid,
+						IIF(@IdTypeOfMoney = 6, @Voucher, '') AS Voucher,
+						1 AS IsActive,
+						@TokenP AS Token,
+						GETDATE() AS DateCreated,
+						@Responsible AS Responsible
+					FROM Cost ct WITH (NOLOCK)
+					INNER JOIN @TblInclude ti
+						ON ct.GuideSerie = ti.Guide_Serie
+						AND ct.GuideNumber = ti.Guide_Number -- ← corregido
 					WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0
 					AND NOT EXISTS (
-							SELECT 1
-							FROM [DeliveryBackOffice].[dbo].[CostDetail] cd WITH(NOLOCK)
-							WHERE cd.IdCost = ct.IdCost
-						);
+						SELECT 1
+						FROM CostDetail cd WITH (NOLOCK)
+						WHERE cd.IdCost = ct.IdCost
+					);
 
 					UPDATE CD
 						SET CD.Amount = ct.TotalAmountPaid
