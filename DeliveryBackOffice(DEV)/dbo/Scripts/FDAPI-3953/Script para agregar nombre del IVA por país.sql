@@ -1,6 +1,6 @@
 --SELECT * FROM DeliveryBackOffice.dbo.DefaultValuesPerCountry WITH(NOLOCK)
 
---Script para agregar nombre del IVA por país
+--Script para agregar nombre del IVA por paÃ­s
 BEGIN TRY
     BEGIN TRANSACTION;
     
@@ -8,7 +8,7 @@ BEGIN TRY
 	ALTER TABLE dbo.DefaultValuesPerCountry
 	ADD VATShortName VARCHAR(10) NULL;
 
-	-- 2. Actualizar los valores existentes según el código de país
+	-- 2. Actualizar los valores existentes segÃºn el cÃ³digo de paÃ­s
 	UPDATE dbo.DefaultValuesPerCountry
 	SET VATShortName = CASE IdCountry
 		WHEN 'GT' THEN 'IVA'   -- Guatemala
@@ -19,7 +19,7 @@ BEGIN TRY
 
 	EXEC sp_addextendedproperty
     @name = 'MS_Description',
-    @value = 'Abreviación del Impuesto al Valor Agregado por país (VAT: Value Added Tax)',
+    @value = 'AbreviaciÃ³n del Impuesto al Valor Agregado por paÃ­s (VAT: Value Added Tax)',
     @level0type = 'SCHEMA',  @level0name = 'dbo',
     @level1type = 'TABLE',   @level1name = 'DefaultValuesPerCountry',
     @level2type = 'COLUMN',  @level2name = 'VATShortName';
