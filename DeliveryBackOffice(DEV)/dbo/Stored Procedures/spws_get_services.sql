@@ -14,6 +14,11 @@
 -- Create date: <2024-06-26>
 -- Description:	< Se muestra el simbolo de la moneda origen si es GT Q y si es HN L >
 -- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Create date: <2025-04-03>
+-- Description:	< Se modifico moneda para soportar multipaís.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_services]
     -- Add the parameters for the stored procedure here
     @StartDate DATE = NULL,
@@ -182,7 +187,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -311,6 +316,10 @@ set arithabort off
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -456,7 +465,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -588,6 +597,10 @@ set arithabort off
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -754,7 +767,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -853,6 +866,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -973,7 +990,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1074,6 +1091,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
 
@@ -1245,7 +1266,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1347,6 +1368,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
@@ -1481,7 +1506,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1584,6 +1609,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.GuideSeries = ord.Guide_Serie
@@ -1736,7 +1765,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1837,6 +1866,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 													AND gb.GuideSeries = ord.Guide_Serie
@@ -1951,7 +1984,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2054,6 +2087,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -2193,7 +2230,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2321,6 +2358,10 @@ set arithabort off
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -2411,7 +2452,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2541,6 +2582,10 @@ set arithabort off
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -2666,7 +2711,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2765,6 +2810,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -2853,7 +2902,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2954,6 +3003,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -3098,7 +3151,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3199,6 +3252,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -3310,7 +3367,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3413,6 +3470,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -3535,7 +3596,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3636,6 +3697,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
@@ -3725,7 +3790,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3828,6 +3893,10 @@ set arithabort off
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												AND gb.GuideSeries = ord.Guide_Serie
