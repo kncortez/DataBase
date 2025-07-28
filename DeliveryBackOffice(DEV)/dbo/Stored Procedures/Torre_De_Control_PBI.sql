@@ -1,4 +1,5 @@
-CREATE procedure [dbo].[Torre_De_Control_PBI]
+﻿
+create procedure Torre_De_Control_PBI
 
 as
 begin
@@ -287,4 +288,3 @@ begin
 	order by Delivery_effectiveness desc
 
 end
-

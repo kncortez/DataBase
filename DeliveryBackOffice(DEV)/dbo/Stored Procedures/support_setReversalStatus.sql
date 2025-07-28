@@ -184,3 +184,20 @@ BEGIN
         SELECT @current_BatchCODId, @dateBatchCOD AS BatchCODId
     END
 END
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[support_setReversalStatus] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[support_setReversalStatus] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[support_setReversalStatus] TO [cvaldes]
+    AS [dbo];
+

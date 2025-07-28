@@ -293,6 +293,12 @@ CREATE NONCLUSTERED INDEX [idx_inv_dateRegister_inv_type_inv_SAPDocEntry_include
 
 
 GO
+CREATE NONCLUSTERED INDEX [IDX_IsManualInvoice_inv_dateRegister_inv_type_inv_SAPDocEntry_INCLUDE]
+    ON [dbo].[invoiceHeader]([IsManualInvoice] ASC, [inv_dateRegister] ASC, [inv_type] ASC, [inv_SAPDocEntry] ASC)
+    INCLUDE([inv_vpCodeOfReferences], [inv_certificationFEL], [inv_status], [inv_invoiceOfCreditNote], [IdCountry]);
+
+
+GO
 CREATE NONCLUSTERED INDEX [IDX_inv_invoiceOfCreditNote_inv_creditNote_Include]
     ON [dbo].[invoiceHeader]([inv_invoiceOfCreditNote] ASC, [inv_creditNote] ASC)
     INCLUDE([inv_cli_name], [inv_certificationFEL], [inv_serieFEL], [inv_numberFEL], [IdCountry]);
