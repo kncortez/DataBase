@@ -14,7 +14,14 @@ CREATE PROCEDURE [dbo].[SetPaymentMethod]
 	@DisplayText NVARCHAR(25),
 	@Type NVARCHAR(2),
 	@Token NVARCHAR(50),
-	@Holder NVARCHAR(50)
+	@Holder NVARCHAR(50),
+	@FirstName NVARCHAR(50)= NULL,
+	@LastName NVARCHAR(50)= NULL,
+	@Nirphone NVARCHAR(5)= NULL,
+	@Address NVARCHAR(150)= NULL,
+	@Phone NVARCHAR(15)= NULL,
+	@IsoCode NVARCHAR(3)= NULL,
+	@PaymentGateway NVARCHAR(25)= NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -24,9 +31,9 @@ BEGIN
 	BEGIN TRY
 		BEGIN TRANSACTION
 
-		IF NOT EXISTS (SELECT 1 FROM CustomerPaymentValue WHERE CustomerId = @CustomerId AND TokenizedToken = @TokenizedToken AND RowStatus = 1)
+		IF NOT EXISTS (SELECT 1 FROM CustomerPaymentValue WITH(NOLOCK) WHERE CustomerId = @CustomerId AND TokenizedToken = @TokenizedToken AND RowStatus = 1)
 		BEGIN
-			DECLARE @IsDefault BIT = ISNULL((SELECT TOP 1 0 FROM CustomerPaymentValue WHERE CustomerId = @CustomerId AND RowStatus = 1), 1)
+			DECLARE @IsDefault BIT = ISNULL((SELECT TOP 1 0 FROM CustomerPaymentValue WITH(NOLOCK) WHERE CustomerId = @CustomerId AND RowStatus = 1), 1)
 		
 
 			INSERT INTO [dbo].[CustomerPaymentValue] ([AccountId]
@@ -43,8 +50,16 @@ BEGIN
 			, [DateCreated]
 			, [TokenUpdated]
 			, [DateUpdated]
-			, [Holder])
-				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedExpirationDate, @TokenizedCVV, @DisplayText, @IsDefault, @Type, 1, @Token, GETDATE(), NULL, NULL,@Holder)
+			, [Holder]
+			, [FirstName]
+			, [LastName]
+			, [Nirphone]
+			, [Address]
+			, [Phone]
+			, [IsoCode]
+			, [PaymentGateway]
+			)
+				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedExpirationDate, @TokenizedCVV, @DisplayText, @IsDefault, @Type, 1, @Token, GETDATE(), NULL, NULL,@Holder, @FirstName,	@LastName,	@Nirphone,	@Address,	@Phone,	@IsoCode,	@PaymentGateway)
 			
 			COMMIT TRANSACTION
 
