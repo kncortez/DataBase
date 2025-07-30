@@ -1914,6 +1914,11 @@
     <Build Include="dbo\Stored Procedures\ValidateAuthorizationInvoice.sql" />
     <Build Include="dbo\Stored Procedures\GetAuthorizationInvoice.sql" />
     <Build Include="dbo\Stored Procedures\getCredencialesSV.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetInvoiceInfoByNumberFEL.sql" />
+    <Build Include="dbo\User Defined Types\TblResponseCreditNoteSV.sql" />
+    <Build Include="dbo\User Defined Types\TblBuyerInfo.sql" />
+    <Build Include="dbo\Tables\CatTypeIdentifationDocument.sql" />
+    <Build Include="dbo\Tables\InformationBuyerInvoice.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
