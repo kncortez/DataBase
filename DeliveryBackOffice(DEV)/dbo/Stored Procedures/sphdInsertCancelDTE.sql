@@ -16,7 +16,8 @@ BEGIN
     BEGIN TRY
         DECLARE @DateOrigen AS DATETIME,
                 @DocumentOriginFEL AS NVARCHAR(50),
-                @pk_inv_id AS BIGINT;
+                @pk_inv_id AS BIGINT,
+                @TypeInvCancelation AS INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Anulación DTE');
         
         IF NOT EXISTS
         (
@@ -119,12 +120,12 @@ BEGIN
                inv_subjectFEL,
                inv_IVA,
                inv_amount,
-               1,-- inv_status nuevo
+               2,-- inv_status nuevo
                GETDATE(),
                @Token,
                NULL,
                NULL,
-               5,-- inv_type (nuevo valor)
+               @TypeInvCancelation,-- inv_type (nuevo valor)
                @pk_inv_id,
                @MotivoAnulacion,
                @DateOrigen,

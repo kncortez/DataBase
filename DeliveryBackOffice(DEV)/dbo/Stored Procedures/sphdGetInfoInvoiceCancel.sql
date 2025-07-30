@@ -10,9 +10,11 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	DECLARE @TypeDocument INT,
+	DECLARE @TypeDocumentCreditNote INT,
 			@IssueDate DATE,
 			@CancelTypeId INT;
+	
+	SET @TypeDocumentCreditNote = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Nota de Crédito');
 
 	-- Obtener el ID del estado 'Anulada'
 	SELECT @CancelTypeId = ist_pk_id 
@@ -39,7 +41,22 @@ BEGIN
 	)
 	BEGIN
 		SELECT 400 AS [Code],
-			   'El número de documento ya ha sido anulado' AS [Message];
+			CONCAT('El documento: ',@Guid,' ya ha sido anulado previamente.') AS [Message];
+		RETURN;
+	END
+
+	IF EXISTS(
+			SELECT 1  
+			FROM invoiceHeader IH WITH(NOLOCK)
+			INNER JOIN invoiceHeader IH2 WITH(NOLOCK)
+			ON IH.inv_pk_id = IH2.inv_invoiceOfCreditNote
+			WHERE IH2.inv_type = @TypeDocumentCreditNote
+				AND IH.inv_numberFEL = @Guid AND IH.IdCountry = @IdCountry
+				AND IH2.inv_status = 2
+	)
+	BEGIN
+		SELECT 401 AS [Code],  
+			CONCAT('El documento: ',@Guid,' no puede anularse ya que cuenta con notas de crédito asociadas.') AS [Message];
 		RETURN;
 	END
 

@@ -172,6 +172,9 @@ BEGIN
 
 	IF(@IdCountry ='SV')
 	BEGIN
+		DECLARE @TypeCF INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Comprobante Crédito Fiscal');
+		DECLARE @TypeInvoice INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Factura');
+		
 		Select  0 'HaveaCreditNote',  
 				ID.dti_description,  
 				IH.inv_pk_id,  
@@ -185,6 +188,7 @@ BEGIN
 			ON IH.inv_pk_id = ID.dti_fk_header  
 			WHERE   
 			inv_numberFEL = @NumberFel  
+			AND IH.inv_type in (@TypeInvoice,@TypeCF)
 			ORDER BY IH.inv_pk_id DESC  
 	END
 	ELSE
