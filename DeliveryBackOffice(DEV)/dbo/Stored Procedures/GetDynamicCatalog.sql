@@ -1,4 +1,9 @@
-﻿CREATE PROCEDURE [dbo].[GetDynamicCatalog]
+﻿-- =============================================
+-- Update:		<Edelman>
+-- Create date: <2025-07-29>
+-- Description:	<Agregar campos nuevos para pasarela de pago PAyWayOne SV>
+-- =============================================
+CREATE PROCEDURE [dbo].[GetDynamicCatalog]
     @TypeMethod VARCHAR(100) = 'GetTypePayment',
     @IdAccount INT = 1,
     @Token VARCHAR(100) = '0BE2F8F3BD53652635746ACD069954B5',
@@ -581,9 +586,18 @@ BEGIN
         (
             SELECT STUFF(
                             (
-                                SELECT ',{"Id":"' + CONVERT(NVARCHAR, cpv.IdCustomerPaymentValue) + '",'
+                               SELECT ',{"Id":"' + CONVERT(NVARCHAR, cpv.IdCustomerPaymentValue) + '",'
                                        + '"DisplayText":"' + cpv.DisplayText + '",' 
-									   + '"IsDefault":' + IIF(cpv.IsDefault = 1, 'true','false') + ',' + '}'
+									   + '"IsDefault":' + IIF(cpv.IsDefault = 1, 'true','false') + ',' 
+									   + '"FirstName":"' + cpv.FirstName + '",' 
+									   + '"LastName":"' +  cpv.LastName + '",' 
+									   + '"Nirphone":"' +   cpv.Nirphone + '",' 
+									   + '"Address":"' +    cpv.[Address] + '",' 
+									   + '"Phone":"' +      cpv.Phone + '",' 
+									   + '"IsoCode":"' +    cpv.IsoCode + '",'
+									   + '"TokenizedToken":"' +  cpv.TokenizedToken + '",' 
+									   + '"TokenizedCVV":"' +  cpv.TokenizedCVV + '",' 
+									   + '}'
                                 FROM CustomerPaymentValue cpv
 								WHERE (cpv.AccountId = @IdAccount
 								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM Account WHERE AccIdAccount = @IdAccount)))

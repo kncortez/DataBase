@@ -3,6 +3,11 @@
 -- Create date: <2022-07-08>
 -- Description:	<Almacena una tarjeta de crédito/débito asociada a un cliente>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2025-07-29>
+-- Description:	<Agregar campos nuevos para pasarela de pago PAyWayOne SV>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetPaymentMethod] 
 	-- Add the parameters for the stored procedure here
 	@AccountId BIGINT,
