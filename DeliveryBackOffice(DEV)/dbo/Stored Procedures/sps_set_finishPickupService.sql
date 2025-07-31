@@ -263,7 +263,7 @@ BEGIN
 				INSERT INTO #GuidesToProcessTEMP (GuideSerieTEMP, GuideNumberTEMP)
                 SELECT dlo.Guide_Serie, dlo.Guide_Number
                 FROM #listGuidesEnabled            lge
-                    INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]       dlo WITH (NOLOCK)
                         ON lge.Guide_Serie = dlo.Guide_Serie
                         AND lge.Guide_Number = dlo.Guide_Number
                 WHERE dlo.Collect_OnDelivery > 0
@@ -311,14 +311,14 @@ BEGIN
                                 , cus.IdCustomer
                                 , 1 AS 'IsAnticipatedCOD'
                         FROM #listGuidesEnabled            lge
-                            INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
+                            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]       dlo WITH (NOLOCK)
                                 ON lge.Guide_Serie = dlo.Guide_Serie
                                     AND lge.Guide_Number = dlo.Guide_Number
-                            LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vp WITH (NOLOCK)
                                 ON vp.CodeOfReference = dlo.Sender_ID
-                            LEFT JOIN dbo.Customer         cus WITH (NOLOCK)
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]         cus WITH (NOLOCK)
                                 ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-                            LEFT JOIN ProcessedGuideCOD    pcd WITH (NOLOCK)
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[ProcessedGuideCOD]    pcd WITH (NOLOCK)
                                 ON pcd.GuideSerie = dlo.Guide_Serie
                                     AND pcd.GuideNumber = dlo.Guide_Number
                         WHERE dlo.Collect_OnDelivery > 0
@@ -343,14 +343,14 @@ BEGIN
 
 				UPDATE do
 					SET do.StatusOrderId = @NewStatusOrderId
-				FROM DeliveryOrder                do WITH (NOLOCK)
+				FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                do WITH (NOLOCK)
 				INNER JOIN #listGuidesEnabled lge
 					ON lge.Guide_Serie = do.Guide_Serie
 					AND lge.Guide_Number = do.Guide_Number;
 
 				UPDATE dop
 					SET StatusOrderId = @NewStatusOrderId
-				FROM DeliveryOrderPiece           dop WITH (NOLOCK)
+				FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]           dop WITH (NOLOCK)
 				INNER JOIN #listGuidesEnabled lge
 					ON lge.Guide_Serie = dop.GuideSerie
 					AND lge.Guide_Number = dop.GuideNumber;
