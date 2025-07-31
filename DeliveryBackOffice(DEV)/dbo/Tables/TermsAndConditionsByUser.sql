@@ -18,6 +18,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar si un usuario ha aceptado los términos y condiciones de transporte de Forza Delivery Express', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TermsAndConditionsByUser';
 
@@ -56,4 +58,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hor
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TermsAndConditionsByUser', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdAccount]
+    ON [dbo].[TermsAndConditionsByUser]([IdAccount] ASC);
 

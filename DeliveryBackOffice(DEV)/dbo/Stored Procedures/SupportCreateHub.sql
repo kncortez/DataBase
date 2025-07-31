@@ -92,3 +92,20 @@ VALUES
 	 , ERROR_MESSAGE() , ERROR_NUMBER()
 	END CATCH
 END
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportCreateHub] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportCreateHub] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportCreateHub] TO [cvaldes]
+    AS [dbo];
+

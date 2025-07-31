@@ -19,3 +19,20 @@ UPDATE dbo.Person
 SET PerRowStatus =1
 WHERE PerIdPerson = 24068
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportAtivateUserTemp] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportAtivateUserTemp] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportAtivateUserTemp] TO [cvaldes]
+    AS [dbo];
+

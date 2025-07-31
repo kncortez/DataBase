@@ -20,6 +20,7 @@ CREATE TABLE [dbo].[DefaultValuesPerCountry] (
     [Latitude]             DECIMAL (9, 6) NULL,
     [Longitude]            DECIMAL (9, 6) NULL,
     [LimitHourPickupByApi] NVARCHAR (5)   NULL,
+    [VATShortName]         VARCHAR (10)   NULL,
     PRIMARY KEY CLUSTERED ([IdCountry] ASC),
     CONSTRAINT [CHK_DefaultValuesPerCountry_Latitude_ValidRange] CHECK ([Latitude]>=(-90) AND [Latitude]<=(90)),
     CONSTRAINT [CHK_DefaultValuesPerCountry_Longitude_ValidRange] CHECK ([Longitude]>=(-180) AND [Longitude]<=(180)),
@@ -97,3 +98,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Coordenada 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Coordenada geográfica que especifica la posición norte-sur.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DefaultValuesPerCountry', @level2type = N'COLUMN', @level2name = N'Latitude';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Abreviación del Impuesto al Valor Agregado por país (VAT: Value Added Tax)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DefaultValuesPerCountry', @level2type = N'COLUMN', @level2name = N'VATShortName';
