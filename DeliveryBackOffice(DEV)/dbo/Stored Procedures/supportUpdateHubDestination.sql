@@ -48,3 +48,14 @@ END TRY
 BEGIN CATCH
     SELECT ERROR_MESSAGE() AS RESPUESTA;
 END CATCH;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[supportUpdateHubDestination] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[supportUpdateHubDestination] TO [cvaldes]
+    AS [dbo];
+

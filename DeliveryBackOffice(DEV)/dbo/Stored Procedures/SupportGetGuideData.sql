@@ -193,3 +193,20 @@ where dtd.Guide_Serie = @GuideSerie
 order by dtd.DateCreated desc;
 
 END
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportGetGuideData] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportGetGuideData] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportGetGuideData] TO [cvaldes]
+    AS [dbo];
+

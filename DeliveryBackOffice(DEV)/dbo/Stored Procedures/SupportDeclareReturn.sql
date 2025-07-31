@@ -80,3 +80,14 @@ END TRY
 BEGIN CATCH
     SELECT ERROR_MESSAGE() AS Respuesta;
 END CATCH;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportDeclareReturn] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportDeclareReturn] TO [cvaldes]
+    AS [dbo];
+
