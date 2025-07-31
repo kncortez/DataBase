@@ -1,4 +1,4 @@
-CREATE procedure  [dbo].[TORRE_DE_CONTROL_V4]
+﻿CREATE procedure  [dbo].[TORRE_DE_CONTROL_V4]
 
 as 
 begin
@@ -229,15 +229,15 @@ begin
 		[DeliveryBackOffice].[dbo].[CatTypeSenderReceiver] TYSRE WITH (NOLOCK)
 		ON SRE.CatTypeSenderReceiverId = TYSRE.IdCatTypeSenderReceiver
 	LEFT JOIN 
-		Incidents I
+		Incidents I WITH (NOLOCK)
 		ON I.ID = DSD.ID_DeliveryOrderBySettlement
 	LEFT JOIN 
-		IncidentsReal IR
+		IncidentsReal IR WITH (NOLOCK)
 		ON  IR.ID =  DSD.ID_DeliveryOrderBySettlement
 	LEFT JOIN 
-		IncidentsFalse FI
+		IncidentsFalse FI WITH (NOLOCK)
 		ON   FI.ID =  DSD.ID_DeliveryOrderBySettlement
-	LEFT JOIN IncidentsInRoute IIR
+	LEFT JOIN IncidentsInRoute IIR WITH (NOLOCK)
 		ON    IIR.ID = DSD.ID_DeliveryOrderBySettlement  
 	OUTER APPLY (
 		SELECT TOP 1 COUNT(DOP1.GuidePiece) AS NoPiece

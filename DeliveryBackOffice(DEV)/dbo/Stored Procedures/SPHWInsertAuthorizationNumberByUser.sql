@@ -3,11 +3,12 @@
 -- Create date: <2025-15-04>
 -- Description:	<ZIGI - Guarda el numero de autorizacion de pago brindado por el usuario>
 -- =============================================
-create PROCEDURE [dbo].[SPHWInsertAuthorizationNumberByUser]
+CREATE PROCEDURE [dbo].[SPHWInsertAuthorizationNumberByUser]
 	@GuideNumber INT,
 	@GuideSerie NVARCHAR(50),
 	@Reference NVARCHAR(100),
-	@AuthorizationNumberByUser NVARCHAR(100)
+	@AuthorizationNumberByUser NVARCHAR(100),
+	@Token NVARCHAR(50)
 AS
 BEGIN
 	BEGIN TRY
@@ -15,7 +16,7 @@ BEGIN
 		SET 
 			AuthorizationNumberByUser = @AuthorizationNumberByUser,
 			DateUpdated = GETDATE(),
-			TokenUpdated = 'SPHWInsertAuthorizationNumberByUser'
+			TokenUpdated = @Token
 		WHERE GuideNumber = @GuideNumber
 			AND GuideSerie = @GuideSerie
 			AND ZigiReference = @Reference;
