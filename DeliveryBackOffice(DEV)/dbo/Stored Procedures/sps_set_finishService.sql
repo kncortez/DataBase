@@ -32,6 +32,7 @@ BEGIN
 	SET ARITHABORT ON;
 	SET NOCOUNT ON;
 
+<<<<<<< HEAD
 	BEGIN TRY
     
     DECLARE @DateCreated DATETIME = GETDATE();
@@ -238,11 +239,29 @@ BEGIN
 		DECLARE @GuidesEnable INT;
         DECLARE @GuidesDisable INT;
         SET @GuidesEnable =
+=======
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        DECLARE @DateCreated DATETIME = GETDATE();
+        DECLARE @CatSalesPackageStatusId INT = 0;
+        -- Puntos FORZA
+        DECLARE @MembershipId INT = 0;
+        DECLARE @MaxServiceMembership INT = 0;
+        DECLARE @CustomerId INT = 0;
+        DECLARE @DayName NVARCHAR(20) = N'';
+        DECLARE @IsValidDay BIT = 0;
+        DECLARE @PointsGenerated INT = 0;
+        DECLARE @ForzaPointsGenerationValue DECIMAL = 0;
+        DECLARE @ForzaPointsGenerationType NVARCHAR(50) = N'';
+        DECLARE @CatPointPromoTbl TABLE
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
         (
             SELECT COUNT(1)FROM #listGuidesEnabled
         );
         SET @GuidesDisable =
         (
+<<<<<<< HEAD
             SELECT COUNT(1)FROM #listGuidesDisabled
         );
 
@@ -276,6 +295,16 @@ BEGIN
                         OR (@Exclude > 0)
 					) --VALIDAR SUMAS CODAmount
 				BEGIN
+=======
+            GuideSerie NVARCHAR(5),
+            GuideNumber INT,
+            CustomerId INT,
+            PriceShipment DECIMAL(18, 2),
+            LogServiceNumber INT,
+            MembershipId INT,
+            MaxServiceMembership INT
+        );
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
 
 					--========================================================================
 					--====================== TABLA PARA GUIAS INCLUDE ========================
@@ -299,6 +328,7 @@ BEGIN
                     FROM #TblListGuidesTwo tlg
                     WHERE tlg.ExcludeCOD = 0;
 
+<<<<<<< HEAD
 					DECLARE @TotalGuidesInclude DECIMAL(18, 2);
                     SET @TotalGuidesInclude =
                     (
@@ -308,6 +338,206 @@ BEGIN
                                 ON pd.Guide_Serie = ti.Guide_Serie
                                 AND pd.Guide_Number = ti.Guide_Number
                     );
+=======
+        SET @CatSalesPackageStatusId =
+        (
+            SELECT [IdCatSalesPackageStatus]
+            FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] WITH (NOLOCK)
+            WHERE [SalesPackageStatusName] = 'Activa'
+                  AND [RowStatus] = 1
+        );
+
+        INSERT INTO @CatPointPromoTbl
+        SELECT TOP 1
+               [CPP].[IdPointPromo],
+               [CPP].[PointPromoDescription],
+               [CPP].[Monday],
+               [CPP].[Tuesday],
+               [CPP].[Wednesday],
+               [CPP].[Thursday],
+               [CPP].[Friday],
+               [CPP].[Saturday],
+               [CPP].[Sunday],
+               [CPP].[PointPromoFactor]
+        FROM [dbo].[CatPointPromo] CPP
+        WHERE [CPP].[RowStatus] = 1
+              AND [CPP].[InPointGeneration] = 1
+              AND SYSDATETIME()
+              BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
+        ORDER BY [CPP].[PointPromoWeight] DESC;
+
+        IF OBJECT_ID('tempdb.dbo.#listGuidesNotExist', 'U') IS NOT NULL
+            DROP TABLE #listGuidesNotExist;
+        IF OBJECT_ID('tempdb.dbo.#listGuidesEnabled', 'U') IS NOT NULL
+            DROP TABLE #listGuidesEnabled;
+        IF OBJECT_ID('tempdb.dbo.#listGuidesDisabled', 'U') IS NOT NULL
+            DROP TABLE #listGuidesDisabled;
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
+        IF OBJECT_ID('tempdb..#TblListGuidesTwo') IS NOT NULL
+            DROP TABLE #TblListGuidesTwo;
+        IF OBJECT_ID('tempdb..#TempDataClient', 'U') IS NOT NULL
+            DROP TABLE #TempDataClient;
+        IF OBJECT_ID('tempdb..#PendingPaymentTemp', 'U') IS NOT NULL
+            DROP TABLE PendingPaymentTemp;
+
+        CREATE TABLE #TempDataClient
+        (
+            IdCustomer INT NOT NULL,
+            PortfolioId INT NOT NULL,
+        );
+        CREATE NONCLUSTERED INDEX IDX_PK_TempDataClient
+        ON #TempDataClient (
+                               IdCustomer,
+                               PortfolioId
+                           );
+
+        CREATE TABLE #TempData
+        (
+            IdProcessedGuideCOD INT,
+            GuideSerie NVARCHAR(2),
+            GuideNumber INT
+        );
+        CREATE NONCLUSTERED INDEX INDX_sps_set_finishService_Temp
+        ON #TempData (
+                         GuideSerie,
+                         GuideNumber
+                     );
+
+        SELECT *
+        INTO #TblListGuidesTwo
+        FROM @TblListGuides;
+        CREATE NONCLUSTERED INDEX IX_TLGT_SERIE
+        ON #TblListGuidesTwo (
+                                 Guide_Serie,
+                                 Guide_Number
+                             );
+        CREATE NONCLUSTERED INDEX IX_TLGT_EXCLUDE
+        ON #TblListGuidesTwo (ExcludeCOD);
+
+        DECLARE @IdTypeOfMoney INT;
+        DECLARE @Amount DECIMAL(18, 2);
+        DECLARE @Voucher VARCHAR(100);
+        DECLARE @Responsible VARCHAR(100);
+
+        SELECT @IdTypeOfMoney = td.IdTypeOfMoney,
+               @Amount = td.Amount,
+               @Voucher = td.Voucher,
+               @Responsible = td.Responsible
+        FROM @TblDetail td;
+
+        --========================================================================
+        --=================== Obtener guias que no existen =======================
+        --========================================================================
+        SELECT lg.Guide_Serie,
+               lg.Guide_Number,
+               -1 StatusOrderId,
+               'La guía no existe en el sistema.' 'Description'
+        INTO #listGuidesNotExist
+        FROM #TblListGuidesTwo lg
+        WHERE NOT EXISTS
+        (
+            SELECT 1
+            FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+            WHERE lg.Guide_Serie = do.Guide_Serie
+                  AND lg.Guide_Number = do.Guide_Number
+        );
+        CREATE NONCLUSTERED INDEX IX_LGNE_SERIE
+        ON #listGuidesNotExist (
+                                   Guide_Serie,
+                                   Guide_Number
+                               );
+
+        IF ((SELECT COUNT(1)FROM #listGuidesNotExist) <= 0)
+        BEGIN
+
+            IF (UPPER(@ServiceType) = 'PICKUP')
+            BEGIN
+                UPDATE #TblListGuidesTwo
+                SET ExcludeCOD = 0;
+            END;
+
+            --========================================================================
+            --====================== OBTENER GUIAS HABILITADAS =======================
+            --========================================================================
+            SELECT lg.Guide_Serie,
+                   lg.Guide_Number,
+                   so.StatusOrderId,
+                   so.OrderDescription StatusOrderDescription,
+                   lg.ExcludeCOD,
+                   do.IdCustomer,
+                   do.PriceShippment,
+                   lg.IsAnticipatedCOD
+            INTO #listGuidesEnabled
+            FROM #TblListGuidesTwo lg
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                    ON lg.Guide_Serie = do.Guide_Serie
+                       AND lg.Guide_Number = do.Guide_Number
+                INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
+                    ON do.StatusOrderId = so.StatusOrderId
+            WHERE (
+                      UPPER(@ServiceType) = 'PICKUP'
+                      AND so.StatusOrderId IN ( 15, 4, 1, 16 )
+                  )
+                  OR
+                  (
+                      UPPER(@ServiceType) = 'DELIVERY'
+                      AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )
+                  )
+                  OR
+                  (
+                      UPPER(@ServiceType) = 'RETURN'
+                      AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+                  );
+
+            CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable
+            ON #listGuidesEnabled (
+                                      Guide_Serie,
+                                      Guide_Number
+                                  );
+            CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable_excludeCOD
+            ON #listGuidesEnabled (ExcludeCOD);
+
+            --========================================================================
+            --==================== OBTENER GUIAS DESHABILITADAS ======================
+            --========================================================================
+            SELECT lg.Guide_Serie,
+                   lg.Guide_Number,
+                   so.StatusOrderId,
+                   so.OrderDescription StatusOrderDescription
+            INTO #listGuidesDisabled
+            FROM #TblListGuidesTwo lg
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                    ON lg.Guide_Serie = do.Guide_Serie
+                       AND lg.Guide_Number = do.Guide_Number
+                INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
+                    ON do.StatusOrderId = so.StatusOrderId
+            WHERE (
+                      UPPER(@ServiceType) = 'PICKUP'
+                      AND so.StatusOrderId NOT IN ( 15, 4, 1, 16 )
+                  )
+                  OR
+                  (
+                      UPPER(@ServiceType) = 'DELIVERY'
+                      AND so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+                  )
+                  OR
+                  (
+                      UPPER(@ServiceType) = 'RETURN'
+                      AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+                  );
+
+            DECLARE @GuidesEnable INT;
+            DECLARE @GuidesDisable INT;
+            SET @GuidesEnable =
+            (
+                SELECT COUNT(1)FROM #listGuidesEnabled
+            );
+            SET @GuidesDisable =
+            (
+                SELECT COUNT(1)FROM #listGuidesDisabled
+            );
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
 
 					IF (@TotalGuidesInclude IS NULL)
                     BEGIN
@@ -367,6 +597,7 @@ BEGIN
                         WHERE lge.ExcludeCOD = 1
                         AND dot.StatusOrderId = 22;
 
+<<<<<<< HEAD
 						UPDATE acodh
 							SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0),
 								acodh.CustomerId = acodh.CustomerId,
@@ -391,6 +622,12 @@ BEGIN
                             AND bdcod.Excluded = 0
                             AND bdcod.CatConceptCODId = 2
                             AND acodd.RowStatus = 1;
+=======
+                        IF (@TotalGuidesInclude IS NULL)
+                        BEGIN
+                            SET @TotalGuidesInclude = 0;
+                        END;
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
 
 						UPDATE acodh
                             SET acodh.BalanceStatus = 'DEVOLUCION',
@@ -419,6 +656,7 @@ BEGIN
 
 						DECLARE @AnticipatedCODDetail AS TblAnticipatedCODCustomerBalance
 
+<<<<<<< HEAD
 						INSERT INTO @AnticipatedCODDetail
                         SELECT DISTINCT IdCustomer, PortfolioId
                         FROM #TempDataClientSFS
@@ -444,6 +682,11 @@ BEGIN
                             WHERE lge.ExcludeCOD = 1;
 
 							INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+=======
+                            DECLARE @VoucherExclude VARCHAR(100);
+                            DECLARE @ResponsibleExclude VARCHAR(100);
+                            SET @VoucherExclude =
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
                             (
                                 GuideSerie
 								, GuideNumber
@@ -452,6 +695,7 @@ BEGIN
 								, CustomerId
 								, IsAnticipatedCOD
                             )
+<<<<<<< HEAD
                             OUTPUT	inserted.IdProcessedGuideCOD,
 									inserted.GuideSerie,
 									inserted.GuideNumber
@@ -533,6 +777,16 @@ BEGIN
 							INNER JOIN #listGuidesEnabled LGD
 								ON LGD.Guide_Serie = ACD.GuideSerie AND LGD.Guide_Number = ACD.GuideNumber
 						END;
+=======
+                            SELECT lge.Guide_Serie,
+                                   lge.Guide_Number,
+                                   @statusOrderId,
+                                   @TokenP UserCreated,
+                                   @DateCreated DateCreated,
+                                   @DateCreated DateCreatedInSystem,
+                                   @observations
+                            FROM #listGuidesEnabled lge;
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
 
 						--========================================================================================
 						-- INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA Recepción de guías Y SEA COD Anticipado
@@ -579,6 +833,7 @@ BEGIN
                                     @Code = @Code OUTPUT,
                                     @Message = @Message OUTPUT;
 
+<<<<<<< HEAD
                                 IF (@Code = 200)
                                 BEGIN
                                     INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
@@ -1089,6 +1344,104 @@ BEGIN
 
 							WHILE @AuxCont > 0
                             -- Recorrer listado de guías
+=======
+                                INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+                                (
+                                    GuideSerie,
+                                    GuideNumber,
+                                    DataOriginId,
+                                    Token,
+                                    CustomerId,
+                                    IsAnticipatedCOD
+                                )
+                                OUTPUT inserted.IdProcessedGuideCOD,
+                                       inserted.GuideSerie,
+                                       inserted.GuideNumber
+                                INTO #TempData
+                                SELECT lge.Guide_Serie,
+                                       lge.Guide_Number,
+                                       25,
+                                       @TokenP UserCreated,
+                                       cus.IdCustomer,
+                                       0 AS 'IsAnticipatedCOD'
+                                FROM #listGuidesEnabled lge
+                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
+                                        ON lge.Guide_Serie = dlo.Guide_Serie
+                                           AND lge.Guide_Number = dlo.Guide_Number
+                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                                        ON vp.CodeOfReference = dlo.Sender_ID
+                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                                        ON pcd.GuideSerie = dlo.Guide_Serie
+                                           AND pcd.GuideNumber = dlo.Guide_Number
+                                WHERE dlo.Collect_OnDelivery > 0
+                                      AND pcd.IdProcessedGuideCOD IS NULL
+                                UNION
+                                SELECT lge.Guide_Serie,
+                                       lge.Guide_Number,
+                                       25,
+                                       @TokenP UserCreated,
+                                       cus.IdCustomer,
+                                       0 AS 'IsAnticipatedCOD'
+                                FROM #listGuidesEnabled lge
+                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
+                                        ON lge.Guide_Serie = dlo.Guide_Serie
+                                           AND lge.Guide_Number = dlo.Guide_Number
+                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                                        ON vp.CodeOfReference = dlo.Sender_ID
+                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                                        ON pcd.GuideSerie = dlo.Guide_Serie
+                                           AND pcd.GuideNumber = dlo.Guide_Number
+                                WHERE (
+                                          dlo.Collect_OnDelivery = 0
+                                          AND dlo.IsCollect = 'true'
+                                      )
+                                      AND pcd.IdProcessedGuideCOD IS NULL
+                                UNION
+                                SELECT lge.Guide_Serie,
+                                       lge.Guide_Number,
+                                       25,
+                                       @TokenP UserCreated,
+                                       cus.IdCustomer,
+                                       0 AS 'IsAnticipatedCOD'
+                                FROM #listGuidesEnabled lge
+                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
+                                        ON lge.Guide_Serie = dlo.Guide_Serie
+                                           AND lge.Guide_Number = dlo.Guide_Number
+                                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
+                                        ON dlo.Guide_Serie = DOP.GuideSerie
+                                           AND dlo.Guide_Number = DOP.GuideNumber
+                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                                        ON vp.CodeOfReference = dlo.Sender_ID
+                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                                        ON pcd.GuideSerie = dlo.Guide_Serie
+                                           AND pcd.GuideNumber = dlo.Guide_Number
+                                WHERE (
+                                          dlo.IsCollect = 'false'
+                                          AND DOP.TimePlaId = 2
+                                      )
+                                      AND pcd.IdProcessedGuideCOD IS NULL;
+                                -- ACTUALIZACION DE ESTADO DE BALANCE PARA ANTICIPATEDCODDETAIL
+                                UPDATE ACD
+                                SET ACD.BalanceStatus = 'COBRADO',
+                                    ACD.DateUpdated = GETDATE(),
+                                    ACD.TokenUpdated = @TokenP
+                                FROM DeliveryBackOffice.dbo.AnticipatedCODDetail ACD WITH (NOLOCK)
+                                    INNER JOIN #listGuidesEnabled LGD
+                                        ON LGD.Guide_Serie = ACD.GuideSerie
+                                           AND LGD.Guide_Number = ACD.GuideNumber;
+                            END;
+
+                            --========================================================================================
+                            -- INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA Recepción de guías Y SEA COD Anticipado
+                            --========================================================================================
+                            IF (UPPER(@ServiceType) = 'PICKUP')
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
                             BEGIN
 
 								SELECT TOP 1
@@ -1229,10 +1582,19 @@ BEGIN
 						-- FIN Acumulación de puntos FORZA
 						-----------------------------------------
 
+<<<<<<< HEAD
 						SELECT TOP 1
 							  '1'															AS 'ResponseCode'
 							, ISNULL(lge.StatusOrderDescription,'Proceso realizado con exito')	AS 'Description'
 						FROM #listGuidesEnabled lge WITH(NOLOCK)
+=======
+                                WHILE EXISTS (SELECT 1 FROM #GuidesToProcessTEMP)
+                                BEGIN
+                                    SELECT TOP 1
+                                           @GuideSerieT = GuideSerieTEMP,
+                                           @GuideNumberT = GuideNumberTEMP
+                                    FROM #GuidesToProcessTEMP;
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
 
 					END;
 					ELSE
@@ -1279,6 +1641,7 @@ BEGIN
 				
 			END;
 
+<<<<<<< HEAD
 			--Finalización de flujo
 			IF (@ServiceType = 'RETURN' OR @ServiceType = 'DELIVERY')
 			BEGIN
@@ -1293,9 +1656,33 @@ BEGIN
 					ON wh.Guide_Serie = tlg.Guide_Serie
 					AND wh.Guide_Number = tlg.Guide_Number
 				WHERE wh.Active = 1
+=======
+                            DECLARE @CartGuides AS TABLE
+                            (
+                                GuideSerie NVARCHAR(2),
+                                GuideNumber INT
+                            );
+                            UPDATE ASCD
+                            SET RowStatus = 0,
+                                TokenUpdated = @TokenP,
+                                DateUpdated = GETDATE()
+                            OUTPUT inserted.GuideSerie,
+                                   inserted.GuideNumber
+                            INTO @CartGuides
+                            (
+                                GuideSerie,
+                                GuideNumber
+                            )
+                            FROM [DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ASCD WITH (NOLOCK)
+                                INNER JOIN #listGuidesEnabled LGE
+                                    ON ASCD.GuideSerie = LGE.Guide_Serie
+                                       AND ASCD.GuideNumber = LGE.Guide_Number
+                            WHERE ASCD.RowStatus = 1;
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
 
 			END;
 
+<<<<<<< HEAD
 			-- Agregar guía marcada para devolución en tabla de proceso de COD.
 			INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
 			(
@@ -1328,6 +1715,20 @@ BEGIN
 					ON pcd.GuideSerie = dlo.Guide_Serie
 					AND pcd.GuideNumber = dlo.Guide_Number
 			WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.IsLastMileReturn = 1 AND dlo.[IsCollect] = 1
+=======
+                            --========================================================================
+                            --============================ WEBHOOK.INI ===============================
+                            --========================================================================
+                            DECLARE @WebhookCustomerTable AS TABLE
+                            (
+                                CustomerId INT,
+                                CustomerEndpointId BIGINT,
+                                WebhookType INT,
+                                GuideSerie NVARCHAR(2),
+                                GuideNumber INT,
+                                GuideStatusId TINYINT
+                            );
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
 
 		END;
 		ELSE IF (
@@ -1364,6 +1765,7 @@ BEGIN
 	IF @@TRANCOUNT > 0
 	BEGIN
 
+<<<<<<< HEAD
         UPDATE pgd 
         SET pgd.IsCompleted = 1
         FROM ProcessedGuideCOD pgd WITH(NOLOCK)
@@ -1385,6 +1787,47 @@ BEGIN
 			, CONCAT(lge.Guide_Serie, CAST(lge.Guide_Number AS VARCHAR))	AS 'Guide'
             , '-1'															AS 'StatusOrderId'
 		FROM #listGuidesNotExist lge
+=======
+                            INSERT INTO @GuidePiecesTable
+                            (
+                                CustomerId,
+                                GuideSerie,
+                                GuideNumber,
+                                GuideStatusId,
+                                NumberPieces
+                            )
+                            SELECT wct.CustomerId,
+                                   dop.GuideSerie,
+                                   dop.GuideNumber,
+                                   wct.GuideStatusId,
+                                   COUNT(dop.GuideNumber)
+                            FROM DeliveryOrderPiece dop WITH (NOLOCK)
+                                INNER JOIN @WebhookCustomerTable wct
+                                    ON dop.GuideSerie = wct.GuideSerie
+                                       AND dop.GuideNumber = wct.GuideNumber
+                                INNER JOIN WebhookEndpoint WHE WITH (NOLOCK)
+                                    ON wct.CustomerId = WHE.CustomerId
+                                INNER JOIN DeliveryOrder do WITH (NOLOCK)
+                                    ON dop.GuideSerie = do.Guide_Serie
+                                       AND dop.GuideNumber = do.Guide_Number
+                            WHERE do.IdCustomer = wct.CustomerId
+                                  AND WHE.TypeConnectionId = 2
+                            GROUP BY wct.CustomerId,
+                                     dop.GuideSerie,
+                                     dop.GuideNumber,
+                                     wct.GuideStatusId;
+
+                            DECLARE @PiecesGuideRelatedTable AS TABLE
+                            (
+                                CustomerId INT,
+                                CustomerEndpointId BIGINT,
+                                WebhookType INT,
+                                GuideSerie NVARCHAR(2),
+                                GuideNumber INT,
+                                GuideStatusId TINYINT,
+                                NumberRelatedPieces INT
+                            );
+>>>>>>> feature/FDAPI-4071-mejora-en-procesos-de-entrega_EXC
 
 	END;
 
