@@ -17,7 +17,12 @@
 -- Update date: <2024-07-16 >
 -- Description: <Se obtiene la nacionalidad del usuario para filtrar por pais >
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_GetCorporateLogIn]
+-- =============================================
+-- Author:      <Walter, Orozco>
+-- Update date: <2025-07-17>
+-- Description: <Se agrega multipais para short name de DPI,IVA y NIT.>
+-- =============================================
+CREATE  PROCEDURE [dbo].[spws_GetCorporateLogIn]
     -- Add the parameters for the stored procedure here
     @UserCode BIGINT = 0
   , @UserName VARCHAR(200)
@@ -46,24 +51,24 @@ BEGIN
     SET @VERIFYUSER =
     (
         SELECT COUNT(iu.Username)
-        FROM DeliveryBackOffice.[dbo].RegisterUser           ru WITH (NOLOCK)
-            INNER JOIN DeliveryBackOffice.[dbo].InternalUser iu WITH (NOLOCK)
+        FROM DeliveryBackOffice.[dbo].RegisterUser           ru WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.[dbo].InternalUser iu WITH(NOLOCK)
                 ON ru.UsrIdUser = iu.RegisterUserID
         WHERE iu.Username = @UserName
               AND ru.UsrRowStatus = 1
     );
 
-    SELECT TOP 1
+    SELECT TOP 1 
            @CountryByNacionality = pe.PerNationality
-    FROM DeliveryBackOffice.dbo.RegisterUser           us WITH (NOLOCK)
-        INNER JOIN DeliveryBackOffice.dbo.Person       pe WITH (NOLOCK)
-            ON pe.PerIdPerson = us.UsrIdPerson
-        INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH (NOLOCK)
-            ON iu.RegisterUserID = us.UsrIdUser
-    WHERE iu.Username = @UserName
-          AND iu.IdUser = @UserCode
-          AND iu.RowStatus = 1
-          AND pe.PerRowStatus = 1;
+      FROM DeliveryBackOffice.dbo.RegisterUser           us WITH(NOLOCK)
+           INNER JOIN DeliveryBackOffice.dbo.Person       pe WITH(NOLOCK)
+               ON pe.PerIdPerson = us.UsrIdPerson
+           INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK)
+               ON iu.RegisterUserID = us.UsrIdUser
+     WHERE iu.Username = @UserName
+       AND iu.IdUser = @UserCode
+       AND iu.RowStatus = 1
+       AND pe.PerRowStatus = 1
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN
 
@@ -143,11 +148,11 @@ BEGIN
             PRINT @StatusAccount;
             IF @StatusRestrinct = 'ACTIVE' --USUARIO sin restricciones
             BEGIN
-                PRINT @StatusRestrinct;
+			PRINT @StatusRestrinct
                 IF @StatusUser = 1 -- usuario activo
                 BEGIN
-                    PRINT '@StatusUser';
-                    PRINT @StatusUser;
+				PRINT '@StatusUser'
+				PRINT @StatusUser
                     -- GENERAR TOKEN 
                     DECLARE @Token AS NVARCHAR(50)
                         =
@@ -160,7 +165,7 @@ BEGIN
                             );
                     IF
                     (
-                        SELECT COUNT(*)FROM [dbo].TokenLog  tkn WITH(NOLOCK) WHERE tkn.TknIdToken = @Token
+                        SELECT COUNT(*)FROM [dbo].TokenLog tkn WITH(NOLOCK) WHERE tkn.TknIdToken = @Token
                     ) = 0 --si el token no exite crearlo 
                     BEGIN
                         INSERT INTO [dbo].[TokenLog]
@@ -211,13 +216,13 @@ BEGIN
                         INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu WITH(NOLOCK)
                             ON iu.RegisterUserID = us.UsrIdUser
                     WHERE iu.Username = @UserName
-                          AND iu.IdUser = @UserCode
-                          AND iu.RowStatus = 1
-                          AND rua.RuaRowStatus = 1
-                          AND rms.RmsRowStatus = 1
-                          AND cmo.ModRowStatus = 1
-                          AND cmo.ModVisible = 1
-                          AND cmo.ModIdModuleParent IS NOT NULL;
+                      AND iu.IdUser = @UserCode
+                      AND iu.RowStatus = 1
+                      AND rua.RuaRowStatus = 1
+                      AND rms.RmsRowStatus = 1
+                      AND cmo.ModRowStatus = 1
+                      AND cmo.ModVisible = 1
+                      AND cmo.ModIdModuleParent IS NOT NULL;
 
                     IF (@TOTALSUBMODULES) > 0
                     BEGIN /*PARENT LIST*/
@@ -246,16 +251,17 @@ BEGIN
                               AND cmo.ModVisible = 1
                               AND cmo.ModIdModuleParent IS NULL
                               AND cmo.ModIdModule IN
-                                  (
-                                      SELECT ModIdModuleParent FROM DeliveryBackOffice.[dbo].CatModule
-                                  );
+                                                    (
+                                                     SELECT ModIdModuleParent
+                                                       FROM DeliveryBackOffice.[dbo].CatModule WITH(NOLOCK)
+                                                    );
 
                         SELECT @TOTALSUBMODULES = COUNT(ModIdModule)
                         FROM @TBSUBMODULES;
 
                     END;
                     /*INSERT SUBMODULES*/
-                    DECLARE @MININDEXSUBITEM2 INT = 0;
+					DECLARE @MININDEXSUBITEM2 INT= 0
                     WHILE @TOTALSUBMODULES > 0
                     BEGIN
                         DECLARE @CHILDSMD    VARCHAR(MAX) = ''
@@ -267,7 +273,7 @@ BEGIN
                           , ModIdModuleDAD INT
                           , ModIdModuleCHILD INT
                         );
-
+                       
                         --	IF (@VERIFYUSER  > 0 )
                         --BEGIN
 
@@ -333,11 +339,11 @@ BEGIN
 
                         --	END
 
-                        SELECT @CHILDSMENU = COUNT(1) + @MININDEXSUBITEM2
+                        SELECT @CHILDSMENU = COUNT(1)+@MININDEXSUBITEM2
                         FROM @TBSUBMODULES2;
-                        PRINT '@CHILDSMENU';
+						 PRINT '@CHILDSMENU';
                         PRINT @CHILDSMENU;
-                        SET @CHILDSMD = '';
+						SET @CHILDSMD=''
                         WHILE @CHILDSMENU > @MININDEXSUBITEM2
                         BEGIN
                             SELECT @CHILDSMD
@@ -358,7 +364,7 @@ BEGIN
                             (
                                 SELECT TMP.ModIdModuleCHILD
                                 FROM @TBSUBMODULES2 AS TMP
-                                WHERE TMP.ITERATOR2 = @CHILDSMENU2 + @MININDEXSUBITEM2
+                                WHERE TMP.ITERATOR2 = @CHILDSMENU2+@MININDEXSUBITEM2
                             );
 
                             SET @CHILDSMENU2 = @CHILDSMENU2 + 1;
@@ -373,11 +379,8 @@ BEGIN
                         WHERE ITERATOR = @ITERATORSUBMODULES;
                         SET @ITERATORSUBMODULES = @ITERATORSUBMODULES + 1;
                         SET @TOTALSUBMODULES = @TOTALSUBMODULES - 1;
-                        SET @MININDEXSUBITEM2 =
-                        (
-                            SELECT MAX(ITERATOR2) AS UltimoID FROM @TBSUBMODULES2
-                        );
-                        DELETE FROM @TBSUBMODULES2;
+						SET @MININDEXSUBITEM2= (SELECT MAX(ITERATOR2) AS UltimoID FROM @TBSUBMODULES2);														
+						DELETE FROM @TBSUBMODULES2;                        
                     END;
 
                     /*END SUBMODULOES*/
@@ -406,7 +409,7 @@ BEGIN
                                                     ON rol.RolIdRol = rms.RmsIdRol
                                                 LEFT JOIN @TBSUBMODULES                        TMP
                                                     ON TMP.ModIdModule = cmo.ModIdModule
-                                                INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
+                                                INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK)
                                                     ON iu.RegisterUserID = us.UsrIdUser
                                             WHERE iu.Username = @UserName
                                                   AND iu.IdUser = @UserCode
@@ -444,7 +447,7 @@ BEGIN
                                                 INNER JOIN DeliveryBackOffice.dbo.CatRol               ro WITH(NOLOCK)
                                                     ON ro.RolIdRol = rua.RuaIdRol
                                                 INNER JOIN DeliveryBackOffice.dbo.Account              ac WITH(NOLOCK)
-                                                    ON ac.AccIdAccount = rua.RuaIdAccount
+                                                    ON ac.AccIdAccount = rua.RuaIdAccount 
                                                 INNER JOIN DeliveryBackOffice.dbo.CatTypeAccount       ta WITH(NOLOCK)
                                                     ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
                                                 INNER JOIN DeliveryBackOffice.dbo.InternalUser         iu WITH(NOLOCK)
@@ -491,35 +494,21 @@ BEGIN
                                                    + '"Nationality":"' + pe.PerNationality + '",' + '"NickName":"'
                                                    + CONVERT(VARCHAR, us.UsrNickName) + '",'
                                                    -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-                                                   + '"Phone":"' + ISNULL(us.Phone, '') + '",' + '"TAC":"' + @TAC
-                                                   + '",' + '"TaxCountry":"' + CASE pe.PerNationality
-                                                                                   WHEN 'GT' THEN
-                                                                                       'IVA'
-                                                                                   WHEN 'HN' THEN
-                                                                                       'ISV'
-                                                                                   ELSE
-                                                                                       'IVA'
-                                                                               END + '",' + '"NameBilling":"'
-                                                   + CASE pe.PerNationality
-                                                         WHEN 'GT' THEN
-                                                             'NIT'
-                                                         WHEN 'HN' THEN
-                                                             'RTN'
-                                                         ELSE
-                                                             'NIT'
-                                                     END + '",' + '"NameIdentification":"' + CASE pe.PerNationality
-                                                                                                 WHEN 'GT' THEN
-                                                                                                     'DPI'
-                                                                                                 WHEN 'HN' THEN
-                                                                                                     'DNI'
-                                                                                                 ELSE
-                                                                                                     'DPI'
-                                                                                             END + '"}'
+                                                   + '"Phone":"' + ISNULL(us.Phone, '') + '",' + '"TAC":"' + @TAC + '",'
+                                                   + '"TaxCountry":"' + 
+                                                   ISNULL(dvc.VATShortName,'IVA')
+                                                   + '",' 
+                                                   + '"NameBilling":"' + 
+                                                   ISNULL(dvc.TaxShortName,'NIT') + '",' 
+                                                   + '"NameIdentification":"' +
+                                                   ISNULL(dvc.DNIShortName,'DPI') + '"}'
                                             FROM DeliveryBackOffice.dbo.RegisterUser           us WITH(NOLOCK)
                                                 INNER JOIN DeliveryBackOffice.dbo.Person       pe WITH(NOLOCK)
                                                     ON pe.PerIdPerson = us.UsrIdPerson
                                                 INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK)
                                                     ON iu.RegisterUserID = us.UsrIdUser
+												LEFT JOIN DeliveryBackOffice.dbo.DefaultValuesPerCountry dvc WITH(NOLOCK)
+													ON dvc.IdCountry = pe.PerNationality
                                             WHERE iu.Username = @UserName
                                                   AND iu.IdUser = @UserCode
                                                   AND pe.PerRowStatus = 1
@@ -534,8 +523,8 @@ BEGIN
 
                     IF (@VERIFYUSER > 0)
                     BEGIN
-                        PRINT '@CountryByNacionality';
-                        PRINT @CountryByNacionality;
+					PRINT '@CountryByNacionality'
+					PRINT @CountryByNacionality
                         SET @JsonProfileEXP =
                         (
                             SELECT STUFF(
@@ -576,14 +565,15 @@ BEGIN
                                                                             , ''
                                                                           )
                                                                 ) + '",' + '"HasRate":"'
-                                                       + CONVERT(NVARCHAR, ISNULL(RC.[RbcRowStatus], '')) + '",'
+                                                       + CONVERT(NVARCHAR, ISNULL(rc.[RbcRowStatus], '')) + '",'
                                                        + '"CodeOfReference":"'
                                                        + ISNULL(CONVERT(NVARCHAR(20), vpc.CodeOfReference), '') + '",'
                                                        + '"CurrencyCorporate":"'
                                                        + ISNULL(CONVERT(NVARCHAR(20), CCC.CodeISO), '') + '",'
                                                        + '"CurrencySymbolCorporate":"'
                                                        + ISNULL(CONVERT(NVARCHAR(20), CCC.Symbol), '') + '",'
-                                                     , +'"NameSettlement":"' + ISNULL(STL.Settlement, '') + '",'
+                                                     , +'"NameSettlement":"' + ISNULL(STL.Settlement, '') + '",' 
+
                                                        + '"ListCod":' + '[{' + '"IdBank":"'
                                                        + ISNULL(
                                                                    CONVERT(
@@ -615,31 +605,26 @@ BEGIN
                                                                 ) + '",' + '"NumberAcc":"'
                                                        + ISNULL(ISNULL(vpconf.CODAccountNumber, cu.[CODAccountNumber]), '')
                                                        + '",'
-                                                     , +'"DPI":"' + ISNULL(cu.[LegalSponsorDPI], '') + '"' + '}]' + '}'
+                                                     , +'"DPI":"' + ISNULL(cu.[LegalSponsorDPI], '') + '"' 
+                                                     + '}]' + '}'
                                                 FROM DeliveryBackOffice.dbo.InternalUser                     iu WITH(NOLOCK)
-                                                    INNER JOIN DeliveryBackOffice.dbo.RegisterUser           ru WITH(NOLOCK)
+                                                    INNER JOIN DeliveryBackOffice.dbo.RegisterUser                 ru WITH(NOLOCK)
                                                         ON ru.UsrIdUser = iu.RegisterUserID
-                                                    INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount     rua WITH(NOLOCK)
+                                                    INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount           rua WITH(NOLOCK)
                                                         ON rua.RuaIdUser = ru.UsrIdUser
-                                                    INNER JOIN DeliveryBackOffice.dbo.Account                ac WITH(NOLOCK)
+                                                    INNER JOIN DeliveryBackOffice.dbo.Account                      ac WITH(NOLOCK)
                                                         ON ac.AccIdAccount = rua.RuaIdAccount
-                                                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient       vpc WITH(NOLOCK)
+                                                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient             vpc WITH(NOLOCK)
                                                         ON vpc.CustomerID = ac.IdCustomer
-                                                    INNER JOIN DeliveryBackOffice.dbo.VisitPointByUser       vup WITH (NOLOCK)
-                                                        ON vup.IdVisitPointClient = vpc.IdVisitPointClient
-                                                           AND vup.RegisterUserID = ru.UsrIdUser
-                                                    LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer          RC WITH (NOLOCK)
+													INNER JOIN DeliveryBackOffice.dbo.VisitPointByUser vup WITH(NOLOCK) ON vup.IdVisitPointClient = vpc.IdVisitPointClient AND vup.RegisterUserID = ru.UsrIdUser
+                                                    LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
                                                         ON vpc.CustomerID = RC.RbcIdCustomer
-                                                           AND RC.RbcRowStatus = 1
-                                                    LEFT JOIN DeliveryBackOffice.dbo.RateHeader              RH WITH (NOLOCK)
-                                                        ON RC.RbcIdRate = RH.RheId
-                                                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD          CCC WITH (NOLOCK)
-                                                        ON CCC.IdCatCurrencyCOD = RH.IdCurrency
-                                                           OR
-                                                           (
-                                                               RH.IdCurrency IS NULL
-                                                               AND CCC.IdCatCurrencyCOD = 1
-                                                           ) --1 DEFAULT GT
+                                                        AND rc.RbcRowStatus = 1
+                                                    LEFT JOIN DeliveryBackOffice.dbo.RateHeader        RH WITH(NOLOCK)
+                                                        ON RC.RbcIdRate = RH.RheId 
+                                                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD    CCC WITH(NOLOCK)
+                                                        ON CCC.IdCatCurrencyCOD = RH.IdCurrency 
+                                                        OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) --1 DEFAULT GT
                                                     LEFT JOIN DeliveryBackOffice.dbo.Settlement              STL WITH(NOLOCK)
                                                         ON vpc.IdSettlement = STL.IdSettlement
                                                     LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage     dsc WITH(NOLOCK)
@@ -663,7 +648,7 @@ BEGIN
                                                         ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
                                                     LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser        vpu WITH(NOLOCK)
                                                         ON vpu.RegisterUserID = ru.UsrIdUser
-                                                           AND vpu.IdVisitPointClient = vpc.IdVisitPointClient
+                                                       AND vpu.IdVisitPointClient = vpc.IdVisitPointClient
                                                     -- Configuración del punto de visita
                                                     LEFT JOIN DeliveryBackOffice.dbo.VisitPointConfiguration vpconf WITH(NOLOCK)
                                                         ON vpc.CodeOfReference = vpconf.VisitPointID
@@ -683,19 +668,19 @@ BEGIN
                         );
                     END;
 
-                    PRINT 'Token';
-                    PRINT @Token;
-                    PRINT 'JsonModules';
-                    PRINT @JsonModules;
-                    PRINT 'JsonAccounts';
-                    PRINT @JsonAccounts;
-                    PRINT '@VERIFYUSER';
-                    PRINT @VERIFYUSER;
-                    PRINT '@JsonProfile';
-                    PRINT @JsonProfile;
+					PRINT 'Token'
+					PRINT @Token
+					PRINT 'JsonModules'
+					PRINT @JsonModules
+					PRINT 'JsonAccounts'
+					PRINT @JsonAccounts
+					PRINT '@VERIFYUSER'
+					PRINT @VERIFYUSER
+					PRINT '@JsonProfile'
+					PRINT @JsonProfile
 
-                    PRINT 'JsonProfileEXP';
-                    PRINT @JsonProfileEXP;
+					PRINT 'JsonProfileEXP'
+					PRINT @JsonProfileEXP
 
 
                     SET @jsonResult =

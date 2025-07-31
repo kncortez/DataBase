@@ -3,7 +3,7 @@
 -- Create date: <19-10-2022>
 -- Description:	<Obtener valores de configParams>
 -- =============================================
-CREATE PROCEDURE spHM_GetConfigParams 
+CREATE PROCEDURE [dbo].[spHM_GetConfigParams] 
 	@Name AS VARCHAR(50)
 AS
 BEGIN

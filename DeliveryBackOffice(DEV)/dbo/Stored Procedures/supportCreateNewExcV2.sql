@@ -410,3 +410,20 @@ BEGIN
     END CATCH;
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
+    AS [dbo];
+

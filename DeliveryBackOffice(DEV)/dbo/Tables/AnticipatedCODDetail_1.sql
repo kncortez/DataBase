@@ -127,6 +127,12 @@ CREATE NONCLUSTERED INDEX [IDX_RowStatus_INCLUDE]
 
 
 GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_DateCreated_include]
+    ON [dbo].[AnticipatedCODDetail]([RowStatus] ASC, [DateCreated] ASC)
+    INCLUDE([AnticipatedCODHeaderId], [CollectOnDelivery]);
+
+
+GO
 CREATE NONCLUSTERED INDEX [idx_AnticipatedCODHeaderId_RowStatus_INCLUDE]
     ON [dbo].[AnticipatedCODDetail]([AnticipatedCODHeaderId] ASC, [RowStatus] ASC)
     INCLUDE([CollectOnDelivery], [BalanceStatus]);
