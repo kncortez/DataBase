@@ -1988,12 +1988,12 @@ AND TypeServiceId = @TypeServiceCOD --COD
 
 
  COMMIT TRANSACTION
-    PRINT 'Actualización realizada correctamente.'
+    PRINT 'ActualizaciÃ³n realizada correctamente.'
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION
 
-    PRINT 'Ocurrió un error al ejecutar la actualización.'
+    PRINT 'OcurriÃ³ un error al ejecutar la actualizaciÃ³n.'
     PRINT ERROR_MESSAGE()
 END CATCH

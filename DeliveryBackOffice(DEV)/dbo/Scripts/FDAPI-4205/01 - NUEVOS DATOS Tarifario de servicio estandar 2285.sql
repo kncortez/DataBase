@@ -177,7 +177,7 @@ WHERE rt.RateId = @IdRate
 	--3		Chimaltenango
 	--6		Escuintla
 	--7		Guatemala
-	--16	Sacatepéquez
+	--16	SacatepÃ©quez
 	--18	Santa Rosa
 
 
@@ -211,7 +211,7 @@ WHERE rt.RateId = @IdRate
 	--1		Alta Verapaz
 
 
--- Cobertura Regional -- Región OCCIDENTE
+-- Cobertura Regional -- RegiÃ³n OCCIDENTE
 UPDATE rt
 SET rt.SegmentTypeId =
     (
@@ -239,10 +239,10 @@ FROM dbo.RateTownshipCoverage rt
 	--15	Retalhuleu
 	--17	San Marcos
 	--19	Solola
-	--20	Suchitepéquez
+	--20	SuchitepÃ©quez
 	--8		Huehuetenango
-	--14	Quiché
-	--21	Totonicapán
+	--14	QuichÃ©
+	--21	TotonicapÃ¡n
 
 
 
@@ -269,12 +269,12 @@ WHERE rt.RateId = @IdRate
 					);
 
  COMMIT TRANSACTION
-    PRINT 'Actualización realizada correctamente.'
+    PRINT 'ActualizaciÃ³n realizada correctamente.'
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION
 
-    PRINT 'Ocurrió un error al ejecutar la actualización.'
+    PRINT 'OcurriÃ³ un error al ejecutar la actualizaciÃ³n.'
     PRINT ERROR_MESSAGE()
 END CATCH
