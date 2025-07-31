@@ -153,3 +153,20 @@ BEGIN
              , ERROR_NUMBER();
     END CATCH;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportCancelGuideClubForza] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportCancelGuideClubForza] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportCancelGuideClubForza] TO [cvaldes]
+    AS [dbo];
+

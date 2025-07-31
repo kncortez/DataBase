@@ -43,3 +43,14 @@ BEGIN
         SELECT 'Ya existe un registro de este sistema para este usuario' AS Mensaje;
     END;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportAddSystemUser] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportAddSystemUser] TO [cvaldes]
+    AS [dbo];
+

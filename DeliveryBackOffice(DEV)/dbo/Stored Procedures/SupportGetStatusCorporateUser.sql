@@ -91,3 +91,20 @@ BEGIN
         SELECT 'Usuario no exite ';
     END;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportGetStatusCorporateUser] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportGetStatusCorporateUser] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportGetStatusCorporateUser] TO [cvaldes]
+    AS [dbo];
+
