@@ -24,6 +24,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookTrackingQueue', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -83,4 +85,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de co
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_RowStatus_StatusOrderId_Include]
     ON [dbo].[WebhookTrackingQueue]([GuideSerie] ASC, [GuideNumber] ASC, [StatusOrderId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_HasNotified_RowStatus_INCLUDE]
+    ON [dbo].[WebhookTrackingQueue]([HasNotified] ASC, [RowStatus] ASC)
+    INCLUDE([WebhookEndpointId], [GuideSerie], [GuideNumber]);
 

@@ -52,3 +52,20 @@ BEGIN
     END CATCH;
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportSetConfigurationExcGuides] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportSetConfigurationExcGuides] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportSetConfigurationExcGuides] TO [cvaldes]
+    AS [dbo];
+

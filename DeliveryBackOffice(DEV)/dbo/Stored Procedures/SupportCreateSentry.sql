@@ -207,3 +207,20 @@ BEGIN
     END;
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportCreateSentry] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportCreateSentry] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportCreateSentry] TO [cvaldes]
+    AS [dbo];
+
