@@ -27,6 +27,11 @@ BEGIN
 
 INSERT INTO @DescriptionAritcle (Id, Description, Country, Main,Label,Width2,Dim,IsOversized)
 VALUES
+	('Paquete pequeño', 'Si el lado más largo es menor o igual a 28 cm - Peso: 1 a 10 lbs.', 'SV',1,'Pequeño','60%','Máx: 28cm o 10lbs',0),
+    ('Paquete mediano', 'Si el lado más largo mide entre 28.1 y 36 cm - Peso: 10.1 a 20 lbs.', 'SV',0,'Mediano','70%','Máx: 36cm o 20lbs',0),
+    ('Paquete grande', 'Si el lado más largo mide entre 36.1 y 47 cm - Peso: 20.1 a 40 lbs.', 'SV',0,'Grande','80%','Máx: 47cm o 40lbs',0),
+    ('Paquete extra grande', 'Si el lado más largo mide entre 47.1 y 51 cm - Peso: 40.1 a 59 lbs.', 'SV',0,'Extra Grande','90%','Máx: 51cm o 59lbs',0),
+    ('Paquete sobredimensionado', 'Si el lado más largo es mayor a 51 cm - Peso: 60 lbs en adelante.', 'SV',0,'Sobredimensionado','100%','Min: 60lbs',1),
     ('Paquete pequeño', 'Si el lado más largo es menor o igual a 28 cm - Peso: 1 a 10 lbs.', 'HN',1,'Pequeño','60%','Máx: 28cm o 10lbs',0),
     ('Paquete mediano', 'Si el lado más largo mide entre 28.1 y 36 cm - Peso: 10.1 a 20 lbs.', 'HN',0,'Mediano','70%','Máx: 36cm o 20lbs',0),
     ('Paquete grande', 'Si el lado más largo mide entre 36.1 y 47 cm - Peso: 20.1 a 40 lbs.', 'HN',0,'Grande','80%','Máx: 47cm o 40lbs',0),

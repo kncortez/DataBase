@@ -230,6 +230,8 @@
     <Build Include="dbo\Tables\SettlementByPickupDetail.sql" />
     <Build Include="dbo\Tables\SettlementByPickup.sql" />
     <Build Include="dbo\Tables\Settlement.sql" />
+    <Build Include="dbo\Tables\SettlementMapping.sql" />    
+    <Build Include="dbo\Tables\SetIntegrationForzaUELog.sql" />    
     <Build Include="dbo\Tables\ServicesConfig.sql" />
     <Build Include="dbo\Tables\ServiceZoneConfiguration.sql" />
     <Build Include="dbo\Tables\ServiceTownshipConfiguration.sql" />
@@ -354,6 +356,7 @@
     <Build Include="dbo\Tables\InvoiceBatchDetailLinehaul.sql" />
     <Build Include="dbo\Tables\InvoiceBatchDetail.sql" />
     <Build Include="dbo\Tables\InternalUser.sql" />
+    <Build Include="dbo\Tables\IntegrationForzaUELog.sql" />    
     <Build Include="dbo\Tables\IncidentTypeRelation.sql" />
     <Build Include="dbo\Tables\Incident.sql" />
     <Build Include="dbo\Tables\IncidenceServices.sql" />
@@ -586,6 +589,7 @@
     <Build Include="dbo\Tables\CatArticleSAP.sql" />
     <Build Include="dbo\Tables\CatArticleCategorySAP.sql" />
     <Build Include="dbo\Tables\CatArticle.sql" />
+    <Build Include="dbo\Tables\ArticleMapping.sql" />    
     <Build Include="dbo\Tables\CatActionByServiceType.sql" />
     <Build Include="dbo\Tables\CatAccountTypeCOD.sql" />
     <Build Include="dbo\Tables\CATLINEHAUL_BK.sql" />
@@ -1557,8 +1561,9 @@
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
-    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueue.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataUEForJSON.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForJSON.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />
@@ -1868,6 +1873,7 @@
     <Build Include="dbo\Stored Procedures\sphw_GetCodeOfReferenceByDefault_Corp_1.sql" />
     <Build Include="dbo\Stored Procedures\sphw_generate_batch_cod_anticipated_1.sql" />
     <Build Include="dbo\Stored Procedures\spHM_SetSettlementIncidenceValidate_1.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_SetTotalAmountDO.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetSettlementIncidenceValidate_1.sql" />
     <Build Include="dbo\Stored Procedures\sphd_getGuidesFromReferenceNumber_1.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RouteLastMile_1.sql" />
@@ -2028,6 +2034,7 @@
     <Build Include="dbo\Stored Procedures\analisis_recolecciones.sql" />
     <Build Include="Security\ECS-DB-DENARIUS_deliveryreport_1.sql" />
     <Build Include="Security\Permissions.sql" />
+    <Build Include="dbo\Stored Procedures\Support_AddMembershipSuscription.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
