@@ -10,7 +10,8 @@ CREATE PROCEDURE [dbo].[UpdatePaymentZigiByGuide]
 	@ZigiReference			NVARCHAR(20),
 	@ZigiTransactionId		NVARCHAR(100),
 	@ZigiPaymentId			NVARCHAR(100),
-	@DateTimeStamp			DATETIME
+	@DateTimeStamp			DATETIME,
+	@Token					NVARCHAR(50)
 AS
 BEGIN
 	BEGIN TRY
@@ -21,7 +22,7 @@ BEGIN
 			PaymentId			= @ZigiPaymentId,
 			DateTimeStamp		= @DateTimeStamp,
 			DateUpdated			= GETDATE(),
-			TokenUpdated		= 'UpdatePaymentZigiByGuide'
+			TokenUpdated		= @Token
 		WHERE 
 		GuideNumber = @GuideNumber 
 		AND GuideSerie = @GuideSerie

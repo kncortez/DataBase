@@ -28,6 +28,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber]
     ON [dbo].[AnticipatedCODDetail]([GuideSerie] ASC, [GuideNumber] ASC)
@@ -116,4 +118,22 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Llave princ
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que Maneja informacion de clientes spbre historico de COD Anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_INCLUDE]
+    ON [dbo].[AnticipatedCODDetail]([RowStatus] ASC)
+    INCLUDE([AnticipatedCODHeaderId], [CollectOnDelivery], [BalanceStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_DateCreated_include]
+    ON [dbo].[AnticipatedCODDetail]([RowStatus] ASC, [DateCreated] ASC)
+    INCLUDE([AnticipatedCODHeaderId], [CollectOnDelivery]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_AnticipatedCODHeaderId_RowStatus_INCLUDE]
+    ON [dbo].[AnticipatedCODDetail]([AnticipatedCODHeaderId] ASC, [RowStatus] ASC)
+    INCLUDE([CollectOnDelivery], [BalanceStatus]);
 

@@ -63,3 +63,20 @@ BEGIN
 
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[support_ReleaseContainer] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[support_ReleaseContainer] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[support_ReleaseContainer] TO [cvaldes]
+    AS [dbo];
+

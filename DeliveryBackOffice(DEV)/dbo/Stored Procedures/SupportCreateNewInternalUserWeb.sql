@@ -269,3 +269,20 @@ BEGIN
              , ERROR_STATE();
     END CATCH;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportCreateNewInternalUserWeb] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportCreateNewInternalUserWeb] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportCreateNewInternalUserWeb] TO [cvaldes]
+    AS [dbo];
+

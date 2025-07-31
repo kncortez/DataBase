@@ -14,7 +14,8 @@ CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @ZigiPaymentLinkId  NVARCHAR(100),
     @PaidAmount         DECIMAL(10,2),
     @CollectValue       DECIMAL(10,2),
-    @CODValue           DECIMAL(10,2)
+    @CODValue           DECIMAL(10,2),
+    @Token              NVARCHAR(50)
 AS
 BEGIN
     BEGIN TRY
@@ -46,7 +47,7 @@ BEGIN
             @CollectValue,
             @CODValue,
             GETDATE(),
-            'SYS-APICORE'
+            @Token
         );
 		SELECT 200 [IdResult],
 			'Link Creado' AS [Message],

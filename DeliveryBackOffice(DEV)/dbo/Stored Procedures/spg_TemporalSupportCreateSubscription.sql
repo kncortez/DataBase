@@ -144,3 +144,20 @@ BEGIN
 	
 	END
 END
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[spg_TemporalSupportCreateSubscription] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[spg_TemporalSupportCreateSubscription] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[spg_TemporalSupportCreateSubscription] TO [cvaldes]
+    AS [dbo];
+

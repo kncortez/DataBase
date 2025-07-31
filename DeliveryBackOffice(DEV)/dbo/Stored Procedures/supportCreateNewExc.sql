@@ -253,3 +253,20 @@ BEGIN
     END CATCH;
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[supportCreateNewExc] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[supportCreateNewExc] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[supportCreateNewExc] TO [cvaldes]
+    AS [dbo];
+
