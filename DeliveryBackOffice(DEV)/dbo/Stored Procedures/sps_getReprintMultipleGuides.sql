@@ -473,6 +473,7 @@ BEGIN
             END
            )                                                                                        AS 'Route_Code'
          , ISNULL(DPF.dpf_SAPcardCode, '')                                                          AS 'CardCode'
+         , dev.IndicationsToSendDestination
     FROM DeliveryBackOffice.dbo.DeliveryOrder                   dev WITH (NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.Cost                   cst WITH (NOLOCK)
             ON cst.GuideSerie = dev.Guide_Serie
