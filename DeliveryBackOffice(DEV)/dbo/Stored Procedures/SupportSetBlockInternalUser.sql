@@ -114,3 +114,20 @@ BEGIN
 	    SELECT 'Usuario no exite '
 	END
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportSetBlockInternalUser] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportSetBlockInternalUser] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportSetBlockInternalUser] TO [cvaldes]
+    AS [dbo];
+

@@ -34,3 +34,20 @@ begin
     end catch;
 
 end;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportSetPaymentGuide] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportSetPaymentGuide] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportSetPaymentGuide] TO [cvaldes]
+    AS [dbo];
+
