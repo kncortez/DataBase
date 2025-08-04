@@ -13,6 +13,11 @@
 -- Create date: <2024-11-20>
 -- Description:	<Se agrega el nuevo estado en ruta para el envio de WhatsApp del tracking>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-08-04>
+-- Description:	<Se hace la configuración para que se pueda enviar mensajes de Whatsapp mediante Concepto Móvil, se discriminan contactos CORPORATIVOS, y se separan algunos campos que estaban concatenados, manteniendo los que estaban concatenados por si son útiles en otras herramientas>
+-- =============================================
 --exec [dbo].[spg_dsms_PhoneBook] 
 --@MaxDeliveryDate = '2022-03-09 17:21:42.180',@ElementId = 1001
 
@@ -108,6 +113,10 @@ BEGIN
 	,_Courier NVARCHAR(150)
 	,_TypeVehicle NVARCHAR(200)
 	,_InsuranceAmount NVARCHAR(300)
+    ,_Amount NVARCHAR(300)
+	,_Currency NVARCHAR(300)
+	,_VehicleType NVARCHAR(300)
+	,_VechiclePlate NVARCHAR(300)
 	)
 	insert into @PhoneBook
 	--SELECT TOP 1 --TMP BNHL
@@ -177,7 +186,11 @@ BEGIN
                      )
            ELSE
                ' '
-       END AS InsuranceAmount
+       END AS InsuranceAmount,
+	   CCU.Symbol,
+	    (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) AS Amount,
+        CTV.Name,
+       CVE.Plate
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
@@ -220,6 +233,7 @@ BEGIN
 	)TBL
 	where not tu._Number is null
 	and not tu._Series is null
+	AND CS.IdCustomerType <> @CustomerCorporative
 	AND DOD.StatusOrderId = 11
 	AND DC.DefaultPerCountry = 1
 	AND NOT EXISTS 
@@ -296,7 +310,11 @@ BEGIN
                      )
            ELSE
                ' '
-       END AS InsuranceAmount
+       END AS InsuranceAmount,
+	    CCU.Symbol,
+	    (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) AS Amount,
+        CTV.Name,
+       CVE.Plate
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
@@ -340,6 +358,7 @@ BEGIN
 	)TBL
 	where not tu._Number is null
 	and not tu._Series is null
+	AND CS.IdCustomerType <> @CustomerCorporative
 	AND DOD.StatusOrderId = 4
 	AND DC.DefaultPerCountry = 1
 	AND NOT EXISTS 
@@ -375,6 +394,10 @@ BEGIN
 	,_Courier NVARCHAR(150)
 	,_TypeVehicle NVARCHAR(200)
 	,_InsuranceAmount NVARCHAR(300)
+	,_Currency NVARCHAR(5)
+	,_Amount NVARCHAR(300)
+	,_VehicleType NVARCHAR(300)
+	,_VechiclePlate NVARCHAR(300)
 	)
 	insert into @CleanPhoneBook	
 	select 
@@ -401,6 +424,10 @@ BEGIN
 		,pb._Courier
 		,pb._TypeVehicle
 		,pb._InsuranceAmount
+	    ,pb._Currency
+	    ,pb._Amount
+        ,pb._VehicleType
+        ,pb._VechiclePlate
 	from @PhoneBook pb 
 
 	--select TOP 1 --TEMP BNHL
@@ -429,6 +456,10 @@ BEGIN
 		,pb._Courier
 		,pb._TypeVehicle
 		,pb._InsuranceAmount
+	    ,pb._Currency
+	    ,pb._Amount
+        ,pb._VehicleType
+        ,pb._VechiclePlate
 	from @CleanPhoneBook pb 
 
 	INSERT INTO [dbo].[SMS_Sent]
