@@ -13,7 +13,8 @@ WHERE IdCountry ='HN';
 GO
 
 UPDATE DefaultValuesPerCountry
-   SET CodeOfReferenceCorpForInvoice = 0
+   SET CodeOfReferenceCorpForInvoice = 1378846 --A configurar
 WHERE IdCountry ='SV';
 
 GO
+

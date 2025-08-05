@@ -1,6 +1,4 @@
 
-ALTER TABLE DefaultValuesPerCountry
- DROP COLUMN RegxRNC ;
 
 ALTER TABLE DefaultValuesPerCountry
   ADD RegxNRC NVARCHAR(500);
