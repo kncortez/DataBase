@@ -81,7 +81,7 @@ BEGIN
           RETURN;
      END
 
-     IF NOT EXISTS (
+     IF EXISTS (
                     SELECT TOP 1 1
                       FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                            INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
