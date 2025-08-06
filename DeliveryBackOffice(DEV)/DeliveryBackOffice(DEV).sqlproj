@@ -2052,6 +2052,8 @@
     <Build Include="dbo\Stored Procedures\ValidateAuthorizationInvoice.sql" />
     <Build Include="dbo\Stored Procedures\GetAuthorizationInvoice.sql" />
     <Build Include="dbo\Stored Procedures\getCredencialesSV.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetInfoInvoiceCancel.sql" />
+    <Build Include="dbo\Stored Procedures\sphdInsertCancelDTE.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
