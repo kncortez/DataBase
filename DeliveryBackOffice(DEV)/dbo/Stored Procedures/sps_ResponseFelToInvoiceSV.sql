@@ -4,7 +4,7 @@
 -- Create date: 2025-06-11
 -- Description: Actualiza estado de factura por respueta de Digifact
 -- =============================================
-ALTER PROCEDURE [dbo].[sps_ResponseFelToInvoiceSV]
+CREATE PROCEDURE [dbo].[sps_ResponseFelToInvoiceSV]
 (
   @id                    BIGINT,
   @documentSend          VARCHAR(max),
