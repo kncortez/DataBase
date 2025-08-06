@@ -14,17 +14,17 @@ BEGIN TRY
         TokenCreated,
         RowStatus
     ) VALUES
-    (1378846, 'Seller','NRC', '3182701', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','CodigoActividad', '62090', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','DescActividad', 'Otras actividades de tecnología de información y servicios de computadora', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','NombreComercial', 'Digifact Servicios S.A', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','TipoEstablecimiento', '01', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','CodEstablecimientoMH', 'M001', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','CodEstablecimiento', 'M001', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','CodPuntoVentaMH', 'P001', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','CodPuntoVenta', 'P001', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','District', '20', 2, GETDATE(), 'JRAMIREZ-SYS',1),
-    (1378846, 'Seller','State', '06', 2, GETDATE(), 'JRAMIREZ-SYS',1);
+    (1378846, 'Seller','NRC', '3182701', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','CodigoActividad', '62090', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','DescActividad', 'Otras actividades de tecnología de información y servicios de computadora', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','NombreComercial', 'Digifact Servicios S.A', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','TipoEstablecimiento', '01', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','CodEstablecimientoMH', 'M001', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','CodEstablecimiento', 'M001', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','CodPuntoVentaMH', 'P001', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','CodPuntoVenta', 'P001', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','District', '20', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (1378846, 'Seller','State', '06', 1, GETDATE(), 'JRAMIREZ-SYS',1);
 
     -- Consulta para verificar los datos
     SELECT * FROM AddInfoByCodeOfReference;

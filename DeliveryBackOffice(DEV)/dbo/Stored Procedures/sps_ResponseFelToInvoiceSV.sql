@@ -35,7 +35,7 @@ ALTER PROCEDURE [dbo].[sps_ResponseFelToInvoiceSV]
 AS
 BEGIN
     SET NOCOUNT ON;
-    DECLARE @secuencia INT,
+    DECLARE @secuencia BIGINT,
             @rowcount  INT;
     -- Insert statements for procedure here
     UPDATE DeliveryBackOffice.dbo.invoiceHeader
@@ -69,7 +69,7 @@ BEGIN
 
      SET @rowcount = @@rowcount
 
-     IF(@rowcount > 1)
+     IF(@rowcount >= 1)
      BEGIN 
         SELECT @secuencia = [Value]
          FROM AddInfoByConfigSV WITH(NOLOCK)
