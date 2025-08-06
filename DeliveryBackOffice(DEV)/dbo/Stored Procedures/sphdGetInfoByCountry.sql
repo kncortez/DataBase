@@ -27,7 +27,8 @@ BEGIN
 		CC.Symbol AS SymbolCurrency,
 		CultureInfo,
 		Latitude,
-		Longitude
+		Longitude,
+        dpc.CodeOfReferenceCorpForInvoice
 	FROM DefaultValuesPerCountry DPC WITH(NOLOCK)
 	INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
 		ON DC.Currency_IdCountry = DPC.IdCountry
