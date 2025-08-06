@@ -653,23 +653,24 @@ BEGIN
 	--facturacion El Salvador	
     -- Consulta de distritos
     SELECT 
-		DS.Id [IdValue],
-        DS.CodeDistrict, 
-        DS.[Name] [NameValue],	
-		DS.StateId [IdFilter],
-        DS.StateCode,
+        DS.IdTownship [IdValue], 
+        DS.[TownshipName] [NameValue],	
+        DS.IdProvince [IdFilter],
         'DistrictByBillingSV' [Catalog]
-    FROM DistrictByBillingSV DS WITH(NOLOCK)
-    WHERE DS.RowStatus = 1;
+    FROM Township DS WITH(NOLOCK)
+    INNER JOIN Province pv ON pv.IdProvince = DS.IdProvince
+    WHERE DS.TownshipStatus = 1
+      AND pv.ProvinceStatus = 1
+      AND pv.IdCountry = 'SV'
 
     -- Consulta de estados
     SELECT 
-		S.Id [IdValue],
-        S.Code, 
-        S.[Name] [NameValue],
+		S.[IdProvince] [IdValue],
+        S.[ProvinceName] [NameValue],
         'StateByBillingSV' [Catalog]
-    FROM StateByBillingSV S WITH(NOLOCK)
-    WHERE S.RowStatus = 1;
+    FROM Province S WITH(NOLOCK)
+    WHERE S.IdCountry = 'SV'
+      AND s.ProvinceStatus = 1;
 
     -- Consulta de actividades económicas
     SELECT 
