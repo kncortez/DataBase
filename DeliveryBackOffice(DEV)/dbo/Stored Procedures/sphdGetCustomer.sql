@@ -340,13 +340,15 @@ BEGIN
 	SELECT
 		BL.Id,
 		BL.IdCustomer,
-		BL.DistrictId AS [CodeDistrict],
-		BL.StateId AS [CodeState],
+		DIS.CodeDistrict AS [CodeDistrict],
+		DIS.StateCode AS [CodeState],
 		BL.ActivityId AS CodeActivity,
 		BL.NRC,
 		BL.Nirphone,
 		BL.Phone
-    FROM dbo.BillingCustomerBySV BL WITH(NOLOCK)		
+    FROM dbo.BillingCustomerBySV BL WITH(NOLOCK)
+    LEFT JOIN dbo.DistrictByBillingSV DIS WITH(NOLOCK)
+       ON DistrictId = DIS.Id
     WHERE BL.IdCustomer = @IdCustomer
         AND BL.RowStatus = 1;
 

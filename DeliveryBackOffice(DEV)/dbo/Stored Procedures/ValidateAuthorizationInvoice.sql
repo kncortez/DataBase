@@ -30,7 +30,7 @@ BEGIN
                        AND iar.[RowStatus] = 1
                    )
      BEGIN
-          SELECT @Code = 0,
+          SELECT @Code = 2,
                  @Message = 'No existe una Autorización activa para el CodeOfReference indicado'
 
           SELECT @Code AS code,
@@ -81,7 +81,7 @@ BEGIN
           RETURN;
      END
 
-     IF NOT EXISTS (
+     IF EXISTS (
                     SELECT TOP 1 1
                       FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                            INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
@@ -89,11 +89,11 @@ BEGIN
                      WHERE iar.CodeOfReference = @CodeOfReference
                        AND iah.[RowStatus] = 1
                        AND iar.[RowStatus] = 1
-                       AND GETDATE() <= iah.EndDate
+                       AND GETDATE() >= iah.EndDate
                    )
      BEGIN
           SELECT @Code = 2,
-                 @Message = 'La fecha actual excede la fecha límite de facturación para la autorización'
+                 @Message = 'La fecha actual excede la fecha limite de facturación para la autorización'
 
           SELECT @Code AS code,
                  @Message AS [Message];

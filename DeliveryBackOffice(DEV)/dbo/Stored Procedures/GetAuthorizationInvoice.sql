@@ -11,7 +11,7 @@ CREATE PROCEDURE [dbo].[GetAuthorizationInvoice]
 )
 AS
 BEGIN
-     DECLARE @Authorization        INT,
+     DECLARE @Authorization        NVARCHAR(512),
              @EndDAte              DATETIME,
              @Code                 INT = 0,
              @Message              NVARCHAR(250)
@@ -36,10 +36,9 @@ BEGIN
 
     IF @Code <> 0
     BEGIN
+
          SELECT @Authorization AS 'Authorization',
-                @EndDAte AS'EndDate',
-                @Code AS code,
-                @Message AS [message]
+                @EndDAte AS'EndDate';
     END
 
 END;

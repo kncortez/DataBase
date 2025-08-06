@@ -28,7 +28,12 @@ BEGIN
 		CultureInfo,
 		Latitude,
 		Longitude,
-        dpc.CodeOfReferenceCorpForInvoice
+        dpc.CodeOfReferenceCorpForInvoice,
+        DC.IdCurrencyCOD as IdCurrency,
+        RegxNRC,
+        NRCShortDescription,
+        RegxPassport,
+        PassportShortDescription
 	FROM DefaultValuesPerCountry DPC WITH(NOLOCK)
 	INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
 		ON DC.Currency_IdCountry = DPC.IdCountry
@@ -36,7 +41,6 @@ BEGIN
 		ON DC. IdCurrencyCOD = CC.IdCatCurrencyCOD
 	WHERE DPC.IdCountry = @IdCountry
 		AND DC.DefaultPerCountry = 1;
-
 
 	SELECT IconFlag,
 		PrefixNumber

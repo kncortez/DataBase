@@ -4,7 +4,7 @@
 -- Create date: 2025-06-11
 -- Description: Actualiza estado de factura por respueta de Digifact
 -- =============================================
-ALTER PROCEDURE [dbo].[sps_ResponseFelToInvoiceSV]
+CREATE PROCEDURE [dbo].[sps_ResponseFelToInvoiceSV]
 (
   @id                    BIGINT,
   @documentSend          VARCHAR(max),
@@ -35,7 +35,7 @@ ALTER PROCEDURE [dbo].[sps_ResponseFelToInvoiceSV]
 AS
 BEGIN
     SET NOCOUNT ON;
-    DECLARE @secuencia INT,
+    DECLARE @secuencia BIGINT,
             @rowcount  INT;
     -- Insert statements for procedure here
     UPDATE DeliveryBackOffice.dbo.invoiceHeader
@@ -69,7 +69,7 @@ BEGIN
 
      SET @rowcount = @@rowcount
 
-     IF(@rowcount > 1)
+     IF(@rowcount >= 1)
      BEGIN 
         SELECT @secuencia = [Value]
          FROM AddInfoByConfigSV WITH(NOLOCK)

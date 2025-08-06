@@ -42,7 +42,7 @@ BEGIN
     BEGIN TRY
 
          SELECT @OldAuthorizationId = IdInvoiceAuthorizationHeader 
-         FROM InvoiceAuthorizationHeader WITH(NOLOCK)
+         FROM InvoiceAuthorizationHeader
          WHERE RowStatus = 1;
 
          --Actualizamos a la nueva Authorization
@@ -56,25 +56,39 @@ BEGIN
          VALUES(@Authorization,@StartDate,@EndDate,1,@Token,GETDATE());
 
          SELECT @NewAuthorizationId = IdInvoiceAuthorizationHeader 
-         FROM InvoiceAuthorizationHeader WITH(NOLOCK)
+         FROM InvoiceAuthorizationHeader
          WHERE RowStatus = 1;
 
-         --Insertamos la Relacion con los CodeOfReference Activos
-         -- Registrados anteiormente y que este activos
-         INSERT INTO InvoiceAuthorizationRelationships (CodeOfReference,InvoiceAuthorizationHeaderId,RowStatus,TokenCreated,DateCreated)
-         SELECT CodeOfReference, @NewAuthorizationId, 1 RowStatus, @Token, GETDATE()
-         FROM InvoiceAuthorizationRelationships WITH(NOLOCK)
-         WHERE InvoiceAuthorizationHeaderId = @OldAuthorizationId
-           AND RowStatus = 1
+         IF (@OldAuthorizationId IS NOT NULL)
+         BEGIN
+             --Insertamos la Relacion con los CodeOfReference Activos
+             -- Registrados anteiormente y que este activos
+             INSERT INTO InvoiceAuthorizationRelationships (CodeOfReference,InvoiceAuthorizationHeaderId,RowStatus,TokenCreated,DateCreated)
+             SELECT CodeOfReference, @NewAuthorizationId, 1 RowStatus, @Token, GETDATE()
+             FROM InvoiceAuthorizationRelationships
+             WHERE InvoiceAuthorizationHeaderId = @OldAuthorizationId
+               AND RowStatus = 1
+             
+             --Invalidamos la Relacion con los CodeOfReference Anteriores
+             --Para que tome en cuenta los útlimos registrados
+             UPDATE InvoiceAuthorizationRelationships
+             SET RowStatus = 0,
+                 TokenUPdated = @Token,
+                 DateUpdated = GETDATE()
+             WHERE InvoiceAuthorizationHeaderId = @OldAuthorizationId;
+             
+         END
+         ELSE
+         BEGIN
 
-         --Invalidamos la Relacion con los CodeOfReference Anteriores
-         --Para que tome en cuenta los útlimos registrados
-         UPDATE InvoiceAuthorizationRelationships
-         SET RowStatus = 0,
-             TokenUPdated = @Token,
-             DateUpdated = GETDATE()
-         WHERE InvoiceAuthorizationHeaderId = @OldAuthorizationId;
+             --Insertamos la Relacion con el CodeOfReference por defecto
+             -- Registrados para facturación corporativo
+             INSERT INTO InvoiceAuthorizationRelationships (CodeOfReference,InvoiceAuthorizationHeaderId,RowStatus,TokenCreated,DateCreated)
+             SELECT CodeOfReferenceCorpForInvoice, @NewAuthorizationId, 1 RowStatus, @Token, GETDATE()
+             FROM DefaultValuesPerCountry 
+             WHERE IdCountry = 'SV';
 
+         END
          COMMIT TRANSACTION;
         
         -- Establecer valores de retorno exitosos
