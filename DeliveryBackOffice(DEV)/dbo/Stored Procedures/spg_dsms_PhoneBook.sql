@@ -113,10 +113,10 @@ BEGIN
 	,_Courier NVARCHAR(150)
 	,_TypeVehicle NVARCHAR(200)
 	,_InsuranceAmount NVARCHAR(300)
-    ,_Amount NVARCHAR(300)
-	,_Currency NVARCHAR(300)
+    ,_Currency NVARCHAR(300)
+	,_Amount NVARCHAR(300)
 	,_VehicleType NVARCHAR(300)
-	,_VechiclePlate NVARCHAR(300)
+	,_VehiclePlate NVARCHAR(300)
 	)
 	insert into @PhoneBook
 	--SELECT TOP 1 --TMP BNHL
@@ -397,7 +397,7 @@ BEGIN
 	,_Currency NVARCHAR(5)
 	,_Amount NVARCHAR(300)
 	,_VehicleType NVARCHAR(300)
-	,_VechiclePlate NVARCHAR(300)
+	,_VehiclePlate NVARCHAR(300)
 	)
 	insert into @CleanPhoneBook	
 	select 
@@ -427,7 +427,7 @@ BEGIN
 	    ,pb._Currency
 	    ,pb._Amount
         ,pb._VehicleType
-        ,pb._VechiclePlate
+        ,pb._VehiclePlate
 	from @PhoneBook pb 
 
 	--select TOP 1 --TEMP BNHL
@@ -459,7 +459,7 @@ BEGIN
 	    ,pb._Currency
 	    ,pb._Amount
         ,pb._VehicleType
-        ,pb._VechiclePlate
+        ,pb._VehiclePlate
 	from @CleanPhoneBook pb 
 
 	INSERT INTO [dbo].[SMS_Sent]
