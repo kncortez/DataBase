@@ -1,632 +1,609 @@
 ﻿-- Stored Procedure
-
 -- =============================================
 -- Author:		<Edwin,Ramirez>
 -- Create date: <2020-05-20>
 -- Description:	<Devuelve ordenes de entrega por rango fecha>
 -- =============================================
--- =============================================
 -- Author:		<Edelman Vásquez>
 -- Create date: <2022-01-26>
 -- Description:	<Se Agregaron a las consultas los campos de receptor Alterante>
--- =============================================
 -- =============================================
 -- Author:		<Walter Orozco>
 -- Create date: <2025-04-25>
 -- Description:	<Mejoras de multimoneda.>
 -- Create date: <2025-05-02>
 -- Description:	<Filtrado por país cuando se solicitan las guías de todos los clientes.>
+-- Create date: <2025-08-01>
+-- Description:	<Mejoras de rendimiento y reestructura.>
 -- =============================================
 CREATE PROCEDURE [dbo].[spw_get_geliveryorders_track]
     -- Add the parameters for the stored procedure here
-    @Token AS VARCHAR(50) = '08cc0ffe737713a57ce17ad4997156a0', --'f16ec23a337713eb710aa07a0c98b9b6',
-    @Rol AS BIGINT = 874,
-    @BeginDate AS VARCHAR(50) = '23/09/2021',
-    @EndDate AS VARCHAR(50) = '23/09/2021',
-    @IdCustomer AS INT = -1,
-    @GuideSerie AS VARCHAR(2) = 'FD',
-    @GuideNumber AS INT = 0 ,                                    --509517--509508
-	@IdCountry AS NVARCHAR(2) = 'GT'
-
+    @Token AS VARCHAR(50)		= '08cc0ffe737713a57ce17ad4997156a0',
+    @Rol AS BIGINT				= 874,
+    @BeginDate AS VARCHAR(50)	= '23/09/2021',
+    @EndDate AS VARCHAR(50)		= '23/09/2021',
+    @IdCustomer AS INT			= -1,
+    @GuideSerie AS VARCHAR(2)	= 'FD',
+    @GuideNumber AS INT			= 0 ,
+	@IdCountry AS NVARCHAR(2)	= 'GT'
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
+
+	-- SET NOCOUNT ON added to prevent extra result sets from
     SET NOCOUNT ON;
 
-    -- Insert statements for procedure here
-    DECLARE @IdToken AS VARCHAR(50);
-    DECLARE @IdRol AS BIGINT;
-
-    DECLARE @DateIni AS DATE;
+	-- Insert statements for procedure here
+	DECLARE @IdSystem AS INT;
+	DECLARE @DateIni AS DATE;
     DECLARE @DateFin AS DATE;
-    DECLARE @CustomerId AS INT;
 
     SET DATEFORMAT DMY;
-    SET @IdToken = @Token;
-    SET @IdRol = @Rol;
-    SET @DateIni = CONVERT(DATE, @BeginDate);
+	SET @DateIni = CONVERT(DATE, @BeginDate);
     SET @DateFin = CONVERT(DATE, @EndDate);
-    SET @CustomerId = @IdCustomer;
 
-    DECLARE @IdSystem AS INT;
-
-    SELECT @IdSystem = ROL.LGN_IdSystem
+	SELECT @IdSystem = ROL.LGN_IdSystem
     FROM DenariusUser_Dev.dbo.LGN_Rol ROL WITH (NOLOCK)
-    WHERE ROL.LGN_IdRol = @IdRol;
+    WHERE ROL.LGN_IdRol = @Rol;
 
-    IF
-    (
-        SELECT COUNT(logtoken.SSN_IdToken) SSN_IdToken
-        FROM DenariusUser_Dev.dbo.LGN_LogByToken logtoken WITH (NOLOCK)
-        WHERE logtoken.SSN_IdToken = @IdToken
-              AND logtoken.SSN_IdSystem = @IdSystem
-              AND logtoken.SSN_TokenStatus = 1
-    ) > 0
-    BEGIN
+	IF EXISTS 
+	  (	SELECT 1 FROM DenariusUser_Dev.dbo.LGN_LogByToken logtoken WITH (NOLOCK)
+		WHERE logtoken.SSN_IdToken = @Token AND logtoken.SSN_IdSystem = @IdSystem
+		AND logtoken.SSN_TokenStatus = 1 )
+	BEGIN
+		IF (@IdCustomer = -1)
+		BEGIN
+			IF (@GuideNumber = 0)
+            BEGIN
 
-        IF (@CustomerId = -1)
-        BEGIN
-            IF (@GuideNumber = 0)
+				PRINT 'ENTRO CUSTOMER -1 Y GUIDENUMBER = 0';
+
+                SELECT TOP 1000
+					  CAST(DO.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(DO.Sender_FirstName), '') + ' '
+                      + ISNULL(UPPER(DO.Sender_LastName), '')													[NameOfSender]
+					, ISNULL(UPPER(DO.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(DO.Receiver_LastName), '')	[NameOfReceiver]
+					, ISNULL(UPPER(DO.NameOfReceiver), '')														[ReceiverName]  
+					, CONVERT(VARCHAR, DO.DateCreated, 103)														[PickUpDateTime]
+					, CONVERT(VARCHAR, DO.Shipping_Date, 103)													[ScheduledDeliveryDate]
+					, ISNULL(CONVERT(VARCHAR, DOD_REAL.RealDeliveryDate, 103), '')								[RealDeliveryDate]
+					, DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR)											[GuideNumber]
+					, SO.OrderDescription																		[OrderStatus]
+					, DO.Manifest_Serie + CAST(DO.Manifest_Number AS VARCHAR)									[ManifestNumber]
+					, ISNULL(DO.Receiver_Department, '')														[ReceiverDepartment]
+                    , ISNULL(DO.Ticket_Number, '')																[IdOrderReference]
+					, ISNULL(IH.inv_certificationFEL, '')														[CertificationFEL]
+					, CASE 
+						WHEN ACCF.IdCustomer IS NOT NULL	THEN 'Portal Web'
+						WHEN cs.IdCustomerType		= 2		THEN 'Express Center'
+						WHEN cs.IdCustomerType		= 1		THEN 'Corporativo'
+						WHEN cs.IdCustomerType		= 3		THEN 'Individual'
+						WHEN ACCF2.Acc				>= 1	THEN 'Portal Web'
+						ELSE 'Otros'
+					  END																						[SourceGuide]
+					, CAST((ISNULL(DO.Pieces_Cold, 0) + ISNULL(DO.Pieces_Dry, 0)) AS VARCHAR)					[Pieces]
+					, ISNULL(CCC.Symbol + '.', 'Q.')															[Symbol]
+					, CAST(ISNULL(DO.IsCollect, 0) AS VARCHAR)													[IsCollect]
+					, IIF(DO.IsCollect = 1, CAST(DO.PriceShippment AS VARCHAR), '0.00')							[AmountShipment]
+					, CAST(DO.Collect_OnDelivery AS VARCHAR)													[AmmountCOD]
+                    , ISNULL(UPPER(VPC.DescriptionOfClient), '')												[VPSource]
+                    , ISNULL(UPPER(CS.[Name]), '')																[Customer]
+					, ISNULL(DO.Order_Number, '')																[OrderNumber]
+                    , ISNULL(DO.Receiver_Address, '')															[ReceiverAddress]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityId]
+					, ISNULL(DO.Receiver_CUI, '')																[CUI]
+                    , ISNULL(DO.Receiver_Alternant_FullName, '')												[NameOfReceiverAlternante]
+                    , ISNULL(DO.Receiver_Alternant_CUI, '')														[CUIAlternante]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityAlternante]
+                    , ISNULL(DO.Receiver_Alternant_Phone, '')													[PhoneAlternante]
+                FROM DeliveryBackOffice.dbo.DeliveryOrder				DO		WITH (NOLOCK)
+                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder		SO		WITH (NOLOCK)
+                        ON DO.StatusOrderId = SO.StatusOrderId
+                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient	VPC		WITH (NOLOCK)
+                        ON DO.Sender_ID = VPC.CodeOfReference
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer			CS		WITH (NOLOCK)
+                        ON CS.IdCustomer = VPC.CustomerID
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail		ID		WITH (NOLOCK)
+                        ON dti_fk_orderNumber = DO.Guide_Number
+                        AND dti_fk_orderSerie = DO.Guide_Serie
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader		IH		WITH (NOLOCK)
+                        ON IH.inv_pk_id = ID.dti_fk_header
+						AND IH.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
+						AND IH.inv_certificationFEL IS NOT NULL
+						AND IH.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost				C		WITH (NOLOCK)
+                        ON DO.Guide_Serie = C.GuideSerie 
+						AND DO.Guide_Number = C.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD		CCC		WITH (NOLOCK)
+                        ON CCC.IdCatCurrencyCOD = ISNULL(C.CodCurrency,C.ShippingCurrency)
+					OUTER APPLY (
+						SELECT TOP 1 DOD.DateCreated AS RealDeliveryDate
+						FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD		WITH (NOLOCK)
+						WHERE DOD.Guide_Number = DO.Guide_Number
+						AND DOD.Guide_Serie = DO.Guide_Serie
+						AND DOD.StatusOrderId = 5
+						ORDER BY DOD.DateCreated ASC
+					) DOD_REAL
+					OUTER APPLY (
+						SELECT TOP (1)
+							ACC.IdCustomer
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = cs.IdCustomer
+                        AND ACC.AccRowStatus = 'TRUE'
+					) ACCF
+					OUTER APPLY (
+                        SELECT TOP 1 1 Acc
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = DO.IdCustomer
+                    ) ACCF2
+                WHERE 
+					DO.DateCreated >= @DateIni AND DO.DateCreated < DATEADD(DAY, 1, @DateFin)
+					AND DO.ReceiverCountryId = @IdCountry  --Filtrado por país
+                    AND DO.StatusOrderId <> 7	-- No guías anuladas
+                    AND DO.StatusOrderId <> 15  -- No guías generadas
+				ORDER BY DO.DateCreated DESC
+			END;
+			ELSE
+			BEGIN
+				
+				PRINT 'ENTRO CUSTOMER -1 Y GUIDENUMBER  <> 0';
+
+                SELECT
+					  CAST(DO.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(DO.Sender_FirstName), '') + ' '
+                      + ISNULL(UPPER(DO.Sender_LastName), '')													[NameOfSender]
+					, ISNULL(UPPER(DO.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(DO.Receiver_LastName), '')	[NameOfReceiver]
+					, ISNULL(UPPER(DO.NameOfReceiver), '')														[ReceiverName]  
+					, CONVERT(VARCHAR, DO.DateCreated, 103)														[PickUpDateTime]
+					, CONVERT(VARCHAR, DO.Shipping_Date, 103)													[ScheduledDeliveryDate]
+					, ISNULL(CONVERT(VARCHAR, DOD_REAL.RealDeliveryDate, 103), '')								[RealDeliveryDate]
+					, DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR)											[GuideNumber]
+					, SO.OrderDescription																		[OrderStatus]
+					, DO.Manifest_Serie + CAST(DO.Manifest_Number AS VARCHAR)									[ManifestNumber]
+					, ISNULL(DO.Receiver_Department, '')														[ReceiverDepartment]
+                    , ISNULL(DO.Ticket_Number, '')																[IdOrderReference]
+					, ISNULL(IH.inv_certificationFEL, '')														[CertificationFEL]
+					, CASE 
+						WHEN ACCF.IdCustomer IS NOT NULL	THEN 'Portal Web'
+						WHEN cs.IdCustomerType		= 2		THEN 'Express Center'
+						WHEN cs.IdCustomerType		= 1		THEN 'Corporativo'
+						WHEN cs.IdCustomerType		= 3		THEN 'Individual'
+						WHEN ACCF2.Acc				>= 1	THEN 'Portal Web'
+						ELSE 'Otros'
+					  END																						[SourceGuide]
+					, CAST((ISNULL(DO.Pieces_Cold, 0) + ISNULL(DO.Pieces_Dry, 0)) AS VARCHAR)					[Pieces]
+					, ISNULL(CCC.Symbol + '.', 'Q.')															[Symbol]
+					, CAST(ISNULL(DO.IsCollect, 0) AS VARCHAR)													[IsCollect]
+					, IIF(DO.IsCollect = 1, CAST(DO.PriceShippment AS VARCHAR), '0.00')							[AmountShipment]
+					, CAST(DO.Collect_OnDelivery AS VARCHAR)													[AmmountCOD]
+                    , ISNULL(UPPER(VPC.DescriptionOfClient), '')												[VPSource]
+                    , ISNULL(UPPER(CS.[Name]), '')																[Customer]
+					, ISNULL(DO.Order_Number, '')																[OrderNumber]
+                    , ISNULL(DO.Receiver_Address, '')															[ReceiverAddress]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityId]
+					, ISNULL(DO.Receiver_CUI, '')																[CUI]
+                    , ISNULL(DO.Receiver_Alternant_FullName, '')												[NameOfReceiverAlternante]
+                    , ISNULL(DO.Receiver_Alternant_CUI, '')														[CUIAlternante]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityAlternante]
+                    , ISNULL(DO.Receiver_Alternant_Phone, '')													[PhoneAlternante]
+                FROM DeliveryBackOffice.dbo.DeliveryOrder				DO		WITH (NOLOCK)
+                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder		SO		WITH (NOLOCK)
+                        ON DO.StatusOrderId = SO.StatusOrderId
+                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient	VPC		WITH (NOLOCK)
+                        ON DO.Sender_ID = VPC.CodeOfReference
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer			CS		WITH (NOLOCK)
+                        ON CS.IdCustomer = VPC.CustomerID
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail		ID		WITH (NOLOCK)
+                        ON dti_fk_orderNumber = DO.Guide_Number
+                        AND dti_fk_orderSerie = DO.Guide_Serie
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader		IH		WITH (NOLOCK)
+                        ON IH.inv_pk_id = ID.dti_fk_header
+						AND IH.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
+						AND IH.inv_certificationFEL IS NOT NULL
+						AND IH.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost				C		WITH (NOLOCK)
+                        ON DO.Guide_Serie = C.GuideSerie 
+						AND DO.Guide_Number = C.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD		CCC		WITH (NOLOCK)
+                        ON CCC.IdCatCurrencyCOD = ISNULL(C.CodCurrency,C.ShippingCurrency)
+					OUTER APPLY (
+						SELECT TOP 1 DOD.DateCreated AS RealDeliveryDate
+						FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD		WITH (NOLOCK)
+						WHERE DOD.Guide_Number = DO.Guide_Number
+						AND DOD.Guide_Serie = DO.Guide_Serie
+						AND DOD.StatusOrderId = 5
+						ORDER BY DOD.DateCreated ASC
+					) DOD_REAL
+					OUTER APPLY (
+						SELECT TOP (1)
+							ACC.IdCustomer
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = cs.IdCustomer
+                        AND ACC.AccRowStatus = 'TRUE'
+					) ACCF
+					OUTER APPLY (
+                        SELECT TOP 1 1 Acc
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = DO.IdCustomer
+                    ) ACCF2
+                WHERE 
+					DO.Guide_Serie = @GuideSerie
+                    AND DO.Guide_Number = @GuideNumber
+					AND DO.ReceiverCountryId = @IdCountry  --Filtrado por país
+                    AND DO.StatusOrderId <> 7	-- No guías anuladas
+                    AND DO.StatusOrderId <> 15; -- No guías generadas
+			END;
+		END;
+		ELSE
+		BEGIN
+			IF (@GuideNumber = 0)
             BEGIN
-                PRINT 'ENTRO CUSTOMER -1 Y GUIDENUMBER = 0';
-                SELECT   CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' '
-                       + ISNULL(UPPER(serv.Sender_LastName), '') [NameOfSender],
-                       ISNULL(UPPER(serv.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(serv.Receiver_LastName), '') [NameOfReceiver],
-                       ISNULL(UPPER(NameOfReceiver), '') AS [ReceiverName],
-                       CONVERT(VARCHAR, serv.DateCreated, 103) [PickUpDateTime],
-                       CONVERT(VARCHAR, serv.Shipping_Date, 103) [ScheduledDeliveryDate],
-                       ISNULL(CONVERT(   VARCHAR,
-                              (
-                                  SELECT TOP 1
-                                         dod.DateCreated
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
-                                  WHERE dod.Guide_Number = serv.Guide_Number
-                                    AND dod.Guide_Serie = serv.Guide_Serie
-                                        AND dod.StatusOrderId = 5
-                              ),
-                                         103
-                                     ),
-                              ''
-                             ) AS [RealDeliveryDate],
-                       serv.Guide_Serie + CAST(serv.Guide_Number AS VARCHAR) [GuideNumber],
-                       so.OrderDescription AS OrderStatus,
-                       serv.Manifest_Serie + CAST(serv.Manifest_Number AS VARCHAR) [ManifestNumber],
-                       ISNULL(serv.Receiver_Department, '') [ReceiverDepartment],
-                       ISNULL(serv.Ticket_Number, '') [IdOrderReference],
-                       ISNULL(invHead.inv_certificationFEL, '') [CertificationFEL],
-                       CASE
-                           WHEN
-                           (
-                               SELECT TOP (1)
-                                      ACC.IdCustomer
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = cs.IdCustomer
-                                     AND ACC.AccRowStatus = 'TRUE'
-                               ORDER BY ACC.AccDateCreated DESC
-                           ) IS NOT NULL THEN
-                               'Portal Web'
-                           WHEN cs.IdCustomerType = 2 THEN
-                               'Express Center'
-                           WHEN cs.IdCustomerType = 1 THEN
-                               'Corporativo'
-                           WHEN cs.IdCustomerType = 3 THEN
-                               'Individual'
-                           WHEN
-                           (
-                               SELECT COUNT(1)
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = serv.IdCustomer
-                           ) >= 1 THEN
-                               'Portal Web'
-                           ELSE
-                               'Otros'
-                       END [SourceGuide],
-                       CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
-                       CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
-                       CASE serv.IsCollect
-                           WHEN 'true' THEN
-                               CAST(serv.PriceShippment AS VARCHAR(50))
-                           ELSE
-                               '0.00'
-                       END [AmountShipment],
-                       CAST(serv.[Collect_OnDelivery] AS VARCHAR(50)) [AmmountCOD],
-                       ISNULL(UPPER(vpc.DescriptionOfClient), '') [VPSource],
-                       ISNULL(UPPER(cs.Name), '') [Customer],
-                       ISNULL(serv.Order_Number, '') [OrderNumber],
-                       ISNULL(serv.Receiver_Address, '') ReceiverAddress,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId,
-                       ISNULL(serv.Receiver_CUI, '') CUI,
-                       ISNULL(serv.Receiver_Alternant_FullName, '') NameOfReceiverAlternante,
-                       ISNULL(serv.Receiver_Alternant_CUI, '') CUIAlternante,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityAlternante,
-                       ISNULL(serv.Receiver_Alternant_Phone, '') PhoneAlternante
-                FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
-                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
-                        ON serv.StatusOrderId = so.StatusOrderId
-                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
-                        ON serv.Sender_ID = vpc.CodeOfReference
-                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs WITH (NOLOCK)
-                        ON cs.IdCustomer = vpc.CustomerID
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet WITH (NOLOCK)
-                        ON dti_fk_orderNumber = serv.Guide_Number
-                           AND dti_fk_orderSerie = serv.Guide_Serie
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead WITH (NOLOCK)
-                        ON invHead.inv_pk_id = invDet.dti_fk_header
-                           AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
-                           AND invHead.inv_certificationFEL IS NOT NULL
-                           AND invHead.inv_serieFEL IS NOT NULL
-                    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
-                        ON serv.Guide_Serie = c.GuideSerie
-                           AND serv.Guide_Number = c.GuideNumber
-                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
-                WHERE CONVERT(DATE, serv.DateCreated)
-                      BETWEEN @DateIni AND @DateFin
-					  AND (serv.SenderCountryId = @IdCountry OR serv.ReceiverCountryId = @IdCountry)
-                      AND serv.StatusOrderId <> 7 -- No guías anuladas
-                      AND serv.StatusOrderId <> 15; -- No guías generadas
-            END;
-            ELSE
-            BEGIN
-                PRINT 'ENTRO CUSTOMER -1 Y GUIDENUMBER <> 0  ';
-                SELECT CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' '
-                       + ISNULL(UPPER(serv.Sender_LastName), '') [NameOfSender],
-                       ISNULL(UPPER(serv.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(serv.Receiver_LastName), '') [NameOfReceiver],
-                       ISNULL(UPPER(NameOfReceiver), '') AS [ReceiverName],
-                       CONVERT(VARCHAR, serv.DateCreated, 103) [PickUpDateTime],
-                       CONVERT(VARCHAR, serv.Shipping_Date, 103) [ScheduledDeliveryDate],
-                       ISNULL(CONVERT(   VARCHAR,
-                              (
-                                  SELECT TOP 1
-                                         dod.DateCreated
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
-                                  WHERE dod.Guide_Number = serv.Guide_Number
-                                    AND dod.Guide_Serie = serv.Guide_Serie
-                                        AND dod.StatusOrderId = 5
-                              ),
-                                         103
-                                     ),
-                              ''
-                             ) AS [RealDeliveryDate],
-                       serv.Guide_Serie + CAST(serv.Guide_Number AS VARCHAR) [GuideNumber],
-                       so.OrderDescription AS OrderStatus,
-                       serv.Manifest_Serie + CAST(serv.Manifest_Number AS VARCHAR) [ManifestNumber],
-                       ISNULL(serv.Receiver_Department, '') [ReceiverDepartment],
-                       ISNULL(serv.Ticket_Number, '') [IdOrderReference],
-                       ISNULL(invHead.inv_certificationFEL, '') [CertificationFEL],
-                       CASE
-                           WHEN
-                           (
-                               SELECT TOP (1)
-                                      ACC.IdCustomer
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = cs.IdCustomer
-                                     AND ACC.AccRowStatus = 'TRUE'
-                               ORDER BY ACC.AccDateCreated DESC
-                           ) IS NOT NULL THEN
-                               'Portal Web'
-                           WHEN cs.IdCustomerType = 2 THEN
-                               'Express Center'
-                           WHEN cs.IdCustomerType = 1 THEN
-                               'Corporativo'
-                           WHEN cs.IdCustomerType = 3 THEN
-                               'Individual'
-                           WHEN
-                           (
-                               SELECT COUNT(1)
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = serv.IdCustomer
-                           ) >= 1 THEN
-                               'Portal Web'
-                           ELSE
-                               'Otros'
-                       END [SourceGuide],
-                       CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
-                       CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
-                       CASE serv.IsCollect
-                           WHEN 'true' THEN
-                               CAST(serv.PriceShippment AS VARCHAR(50))
-                           ELSE
-                               '0.00'
-                       END [AmountShipment],
-                       CAST(serv.[Collect_OnDelivery] AS VARCHAR(50)) [AmmountCOD],
-                       ISNULL(UPPER(vpc.DescriptionOfClient), '') [VPSource],
-                       ISNULL(UPPER(cs.Name), '') [Customer],
-                       ISNULL(serv.Order_Number, '') [OrderNumber],
-                       ISNULL(serv.Receiver_Address, '') ReceiverAddress,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId,
-                       ISNULL(serv.Receiver_CUI, '') CUI,
-                       ISNULL(serv.Receiver_Alternant_FullName, '') NameOfReceiverAlternante,
-                       ISNULL(serv.Receiver_Alternant_CUI, '') CUIAlternante,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityAlternante,
-                       ISNULL(serv.Receiver_Alternant_Phone, '') PhoneAlternante
-                FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
-                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
-                        ON serv.StatusOrderId = so.StatusOrderId
-                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
-                        ON serv.Sender_ID = vpc.CodeOfReference
-                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs WITH (NOLOCK)
-                        ON cs.IdCustomer = vpc.CustomerID
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet WITH (NOLOCK)
-                        ON dti_fk_orderNumber = serv.Guide_Number
-                           AND dti_fk_orderSerie = serv.Guide_Serie
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead WITH (NOLOCK)
-                        ON invHead.inv_pk_id = invDet.dti_fk_header
-                           AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
-                           AND invHead.inv_certificationFEL IS NOT NULL
-                           AND invHead.inv_serieFEL IS NOT NULL
-                    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
-                        ON serv.Guide_Serie = c.GuideSerie
-                           AND serv.Guide_Number = c.GuideNumber
-                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
-                WHERE serv.Guide_Serie = @GuideSerie
-                      AND serv.Guide_Number = @GuideNumber
-					  AND (serv.SenderCountryId = @IdCountry OR serv.ReceiverCountryId = @IdCountry)
-                      AND serv.StatusOrderId <> 7 -- No guías anuladas
-                      AND serv.StatusOrderId <> 15; -- No guías generadas
-            END;
-        END;
-        ELSE
-        BEGIN
-            IF (@GuideNumber = 0)
-            BEGIN
-                PRINT 'ENTRO CUSTOMER <> -1 Y GUIDENUMBER = 0';
-                SELECT  TOP 10000  CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' '
-                       + ISNULL(UPPER(serv.Sender_LastName), '') [NameOfSender],
-                       ISNULL(UPPER(serv.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(serv.Receiver_LastName), '') [NameOfReceiver],
-                       ISNULL(UPPER(NameOfReceiver), '') AS [ReceiverName],
-                       CONVERT(VARCHAR, serv.DateCreated, 103) [PickUpDateTime],
-                       CONVERT(VARCHAR, serv.Shipping_Date, 103) [ScheduledDeliveryDate],
-                       ISNULL(CONVERT(   VARCHAR,
-                              (
-                                  SELECT TOP 1
-                                         dod.DateCreated
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
-                                  WHERE dod.Guide_Number = serv.Guide_Number
-                                    AND dod.Guide_Serie = serv.Guide_Serie
-                                        AND dod.StatusOrderId = 5
-                              ),
-                                         103
-                                     ),
-                              ''
-                             ) AS [RealDeliveryDate],
-                       serv.Guide_Serie + CAST(serv.Guide_Number AS VARCHAR) [GuideNumber],
-                       so.OrderDescription AS OrderStatus,
-                       serv.Manifest_Serie + CAST(serv.Manifest_Number AS VARCHAR) [ManifestNumber],
-                       ISNULL(serv.Receiver_Department, '') [ReceiverDepartment],
-                       ISNULL(serv.Ticket_Number, '') [IdOrderReference],
-                       ISNULL(invHead.inv_certificationFEL, '') [CertificationFEL],
-                       CASE
-                           WHEN
-                           (
-                               SELECT TOP (1)
-                                      ACC.IdCustomer
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = cs.IdCustomer
-                                     AND ACC.AccRowStatus = 'TRUE'
-                               ORDER BY ACC.AccDateCreated DESC
-                           ) IS NOT NULL THEN
-                               'Portal Web'
-                           WHEN cs.IdCustomerType = 2 THEN
-                               'Express Center'
-                           WHEN cs.IdCustomerType = 1 THEN
-                               'Corporativo'
-                           WHEN cs.IdCustomerType = 3 THEN
-                               'Individual'
-                           WHEN
-                           (
-                               SELECT COUNT(1)
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = serv.IdCustomer
-                           ) >= 1 THEN
-                               'Portal Web'
-                           ELSE
-                               'Otros'
-                       END [SourceGuide],
-                       CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
-                       CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
-                       CASE serv.IsCollect
-                           WHEN 'true' THEN
-                               CAST(serv.PriceShippment AS VARCHAR(50))
-                           ELSE
-                               '0.00'
-                       END [AmountShipment],
-                       CAST(serv.[Collect_OnDelivery] AS VARCHAR(50)) [AmmountCOD],
-                       ISNULL(UPPER(vpclient.DescriptionOfClient), '') [VPSource],
-                       ISNULL(UPPER(cs.Name), '') [Customer],
-                       ISNULL(serv.Order_Number, '') [OrderNumber],
-                       ISNULL(serv.Receiver_Address, '') ReceiverAddress,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId,
-                       ISNULL(serv.Receiver_CUI, '') CUI,
-                       ISNULL(serv.Receiver_Alternant_FullName, '') NameOfReceiverAlternante,
-                       ISNULL(serv.Receiver_Alternant_CUI, '') CUIAlternante,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityAlternante,
-                       ISNULL(serv.Receiver_Alternant_Phone, '') PhoneAlternante
-                FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
-                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpclient WITH (NOLOCK)
-                        ON serv.Sender_ID = vpclient.CodeOfReference
-                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
-                        ON serv.StatusOrderId = so.StatusOrderId
-                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs WITH (NOLOCK)
-                        ON cs.IdCustomer = vpclient.CustomerID
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet WITH (NOLOCK)
-                        ON dti_fk_orderNumber = serv.Guide_Number
-                           AND dti_fk_orderSerie = serv.Guide_Serie
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead WITH (NOLOCK)
-                        ON invHead.inv_pk_id = invDet.dti_fk_header
-                           AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
-                           AND invHead.inv_certificationFEL IS NOT NULL
-                           AND invHead.inv_serieFEL IS NOT NULL
-                    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
-                        ON serv.Guide_Serie = c.GuideSerie
-                           AND serv.Guide_Number = c.GuideNumber
-                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
-                WHERE (
-                          --(
-                          --    serv.Sender_ID = 0
-                          --    AND @CustomerId = serv.IdCustomer
-                          --)
-                          --OR
-                          (
-                              vpclient.CustomerID = @CustomerId
-                              AND serv.Sender_ID > 0
-                          )
-                      )
-                      AND (CONVERT(DATE, serv.DateCreated)
-                      BETWEEN @DateIni AND @DateFin
-                          )
-					  AND (serv.SenderCountryId = @IdCountry OR serv.ReceiverCountryId = @IdCountry)
-                      AND serv.StatusOrderId <> 7 -- No guías anuladas
-                      AND serv.StatusOrderId <> 15 -- No guías generadas
+
+				PRINT 'ENTRO CUSTOMER <> -1 Y GUIDENUMBER = 0';
+
+				SELECT TOP 500
+					  CAST(DO.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(DO.Sender_FirstName), '') + ' '
+                      + ISNULL(UPPER(DO.Sender_LastName), '')													[NameOfSender]
+					, ISNULL(UPPER(DO.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(DO.Receiver_LastName), '')	[NameOfReceiver]
+					, ISNULL(UPPER(DO.NameOfReceiver), '')														[ReceiverName]  
+					, CONVERT(VARCHAR, DO.DateCreated, 103)														[PickUpDateTime]
+					, CONVERT(VARCHAR, DO.Shipping_Date, 103)													[ScheduledDeliveryDate]
+					, ISNULL(CONVERT(VARCHAR, DOD_REAL.RealDeliveryDate, 103), '')								[RealDeliveryDate]
+					, DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR)											[GuideNumber]
+					, SO.OrderDescription																		[OrderStatus]
+					, DO.Manifest_Serie + CAST(DO.Manifest_Number AS VARCHAR)									[ManifestNumber]
+					, ISNULL(DO.Receiver_Department, '')														[ReceiverDepartment]
+                    , ISNULL(DO.Ticket_Number, '')																[IdOrderReference]
+					, ISNULL(IH.inv_certificationFEL, '')														[CertificationFEL]
+					, CASE 
+						WHEN ACCF.IdCustomer IS NOT NULL	THEN 'Portal Web'
+						WHEN cs.IdCustomerType		= 2		THEN 'Express Center'
+						WHEN cs.IdCustomerType		= 1		THEN 'Corporativo'
+						WHEN cs.IdCustomerType		= 3		THEN 'Individual'
+						WHEN ACCF2.Acc				>= 1	THEN 'Portal Web'
+						ELSE 'Otros'
+					  END																						[SourceGuide]
+					, CAST((ISNULL(DO.Pieces_Cold, 0) + ISNULL(DO.Pieces_Dry, 0)) AS VARCHAR)					[Pieces]
+					, ISNULL(CCC.Symbol + '.', 'Q.')															[Symbol]
+					, CAST(ISNULL(DO.IsCollect, 0) AS VARCHAR)													[IsCollect]
+					, IIF(DO.IsCollect = 1, CAST(DO.PriceShippment AS VARCHAR), '0.00')							[AmountShipment]
+					, CAST(DO.Collect_OnDelivery AS VARCHAR)													[AmmountCOD]
+                    , ISNULL(UPPER(VPC.DescriptionOfClient), '')												[VPSource]
+                    , ISNULL(UPPER(CS.[Name]), '')																[Customer]
+					, ISNULL(DO.Order_Number, '')																[OrderNumber]
+                    , ISNULL(DO.Receiver_Address, '')															[ReceiverAddress]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityId]
+					, ISNULL(DO.Receiver_CUI, '')																[CUI]
+                    , ISNULL(DO.Receiver_Alternant_FullName, '')												[NameOfReceiverAlternante]
+                    , ISNULL(DO.Receiver_Alternant_CUI, '')														[CUIAlternante]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityAlternante]
+                    , ISNULL(DO.Receiver_Alternant_Phone, '')													[PhoneAlternante]
+                FROM DeliveryBackOffice.dbo.DeliveryOrder				DO		WITH (NOLOCK)
+                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder		SO		WITH (NOLOCK)
+                        ON DO.StatusOrderId = SO.StatusOrderId
+                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient	VPC		WITH (NOLOCK)
+                        ON DO.Sender_ID = VPC.CodeOfReference
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer			CS		WITH (NOLOCK)
+                        ON CS.IdCustomer = VPC.CustomerID
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail		ID		WITH (NOLOCK)
+                        ON dti_fk_orderNumber = DO.Guide_Number
+                        AND dti_fk_orderSerie = DO.Guide_Serie
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader		IH		WITH (NOLOCK)
+                        ON IH.inv_pk_id = ID.dti_fk_header
+						AND IH.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
+						AND IH.inv_certificationFEL IS NOT NULL
+						AND IH.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost				C		WITH (NOLOCK)
+                        ON DO.Guide_Serie = C.GuideSerie 
+						AND DO.Guide_Number = C.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD		CCC		WITH (NOLOCK)
+                        ON CCC.IdCatCurrencyCOD = ISNULL(C.CodCurrency,C.ShippingCurrency)
+					OUTER APPLY (
+						SELECT TOP 1 DOD.DateCreated AS RealDeliveryDate
+						FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD		WITH (NOLOCK)
+						WHERE DOD.Guide_Number = DO.Guide_Number
+						AND DOD.Guide_Serie = DO.Guide_Serie
+						AND DOD.StatusOrderId = 5
+						ORDER BY DOD.DateCreated ASC
+					) DOD_REAL
+					OUTER APPLY (
+						SELECT TOP (1)
+							ACC.IdCustomer
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = cs.IdCustomer
+                        AND ACC.AccRowStatus = 'TRUE'
+					) ACCF
+					OUTER APPLY (
+                        SELECT TOP 1 1 Acc
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = DO.IdCustomer
+                    ) ACCF2
+                WHERE 
+                    VPC.CustomerID = @IdCustomer
+                    AND DO.Sender_ID > 0
+					AND DO.DateCreated >= @DateIni AND DO.DateCreated < DATEADD(DAY, 1, @DateFin)
+					AND DO.ReceiverCountryId = @IdCountry  --Filtrado por país
+                    AND DO.StatusOrderId <> 7	-- No guías anuladas
+                    AND DO.StatusOrderId <> 15 -- No guías generadas
 
 				UNION
 
-				SELECT  TOP 10000  CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' '
-                       + ISNULL(UPPER(serv.Sender_LastName), '') [NameOfSender],
-                       ISNULL(UPPER(serv.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(serv.Receiver_LastName), '') [NameOfReceiver],
-                       ISNULL(UPPER(NameOfReceiver), '') AS [ReceiverName],
-                       CONVERT(VARCHAR, serv.DateCreated, 103) [PickUpDateTime],
-                       CONVERT(VARCHAR, serv.Shipping_Date, 103) [ScheduledDeliveryDate],
-                       ISNULL(CONVERT(   VARCHAR,
-                              (
-                                  SELECT TOP 1
-                                         dod.DateCreated
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
-                                  WHERE dod.Guide_Number = serv.Guide_Number
-                                    AND dod.Guide_Serie = serv.Guide_Serie
-                                        AND dod.StatusOrderId = 5
-                              ),
-                                         103
-                                     ),
-                              ''
-                             ) AS [RealDeliveryDate],
-                       serv.Guide_Serie + CAST(serv.Guide_Number AS VARCHAR) [GuideNumber],
-                       so.OrderDescription AS OrderStatus,
-                       serv.Manifest_Serie + CAST(serv.Manifest_Number AS VARCHAR) [ManifestNumber],
-                       ISNULL(serv.Receiver_Department, '') [ReceiverDepartment],
-                       ISNULL(serv.Ticket_Number, '') [IdOrderReference],
-                       ISNULL(invHead.inv_certificationFEL, '') [CertificationFEL],
-                       CASE
-                           WHEN
-                           (
-                               SELECT TOP (1)
-                                      ACC.IdCustomer
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = cs.IdCustomer
-                                     AND ACC.AccRowStatus = 'TRUE'
-                               ORDER BY ACC.AccDateCreated DESC
-                           ) IS NOT NULL THEN
-                               'Portal Web'
-                           WHEN cs.IdCustomerType = 2 THEN
-                               'Express Center'
-                           WHEN cs.IdCustomerType = 1 THEN
-                               'Corporativo'
-                           WHEN cs.IdCustomerType = 3 THEN
-                               'Individual'
-                           WHEN
-                           (
-                               SELECT COUNT(1)
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = serv.IdCustomer
-                           ) >= 1 THEN
-                               'Portal Web'
-                           ELSE
-                               'Otros'
-                       END [SourceGuide],
-                       CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
-                       CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
-                       CASE serv.IsCollect
-                           WHEN 'true' THEN
-                               CAST(serv.PriceShippment AS VARCHAR(50))
-                           ELSE
-                               '0.00'
-                       END [AmountShipment],
-                       CAST(serv.[Collect_OnDelivery] AS VARCHAR(50)) [AmmountCOD],
-                       ISNULL(UPPER(vpclient.DescriptionOfClient), '') [VPSource],
-                       ISNULL(UPPER(cs.Name), '') [Customer],
-                       ISNULL(serv.Order_Number, '') [OrderNumber],
-                       ISNULL(serv.Receiver_Address, '') ReceiverAddress,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId,
-                       ISNULL(serv.Receiver_CUI, '') CUI,
-                       ISNULL(serv.Receiver_Alternant_FullName, '') NameOfReceiverAlternante,
-                       ISNULL(serv.Receiver_Alternant_CUI, '') CUIAlternante,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityAlternante,
-                       ISNULL(serv.Receiver_Alternant_Phone, '') PhoneAlternante
-                FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
-                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpclient WITH (NOLOCK)
-                        ON serv.Sender_ID = vpclient.CodeOfReference
-                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
-                        ON serv.StatusOrderId = so.StatusOrderId
-                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs WITH (NOLOCK)
-                        ON cs.IdCustomer = vpclient.CustomerID
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet WITH (NOLOCK)
-                        ON dti_fk_orderNumber = serv.Guide_Number
-                           AND dti_fk_orderSerie = serv.Guide_Serie
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead WITH (NOLOCK)
-                        ON invHead.inv_pk_id = invDet.dti_fk_header
-                           AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
-                           AND invHead.inv_certificationFEL IS NOT NULL
-                           AND invHead.inv_serieFEL IS NOT NULL
-                    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
-                        ON serv.Guide_Serie = c.GuideSerie
-                           AND serv.Guide_Number = c.GuideNumber
-                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
-                WHERE (
-                          (
-                              serv.Sender_ID = 0
-                              AND @CustomerId = serv.IdCustomer
-                          )
-                          --OR
-                          --(
-                          --    vpclient.CustomerID = @CustomerId
-                          --    AND serv.Sender_ID > 0
-                          --)
-                      )
-                      AND (CONVERT(DATE, serv.DateCreated)
-                      BETWEEN @DateIni AND @DateFin
-                          )
-					  AND (serv.SenderCountryId = @IdCountry OR serv.ReceiverCountryId = @IdCountry)
-                      AND serv.StatusOrderId <> 7 -- No guías anuladas
-                      AND serv.StatusOrderId <> 15; -- No guías generadas
+				SELECT TOP 500
+					  CAST(DO.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(DO.Sender_FirstName), '') + ' '
+                      + ISNULL(UPPER(DO.Sender_LastName), '')													[NameOfSender]
+					, ISNULL(UPPER(DO.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(DO.Receiver_LastName), '')	[NameOfReceiver]
+					, ISNULL(UPPER(DO.NameOfReceiver), '')														[ReceiverName]  
+					, CONVERT(VARCHAR, DO.DateCreated, 103)														[PickUpDateTime]
+					, CONVERT(VARCHAR, DO.Shipping_Date, 103)													[ScheduledDeliveryDate]
+					, ISNULL(CONVERT(VARCHAR, DOD_REAL.RealDeliveryDate, 103), '')								[RealDeliveryDate]
+					, DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR)											[GuideNumber]
+					, SO.OrderDescription																		[OrderStatus]
+					, DO.Manifest_Serie + CAST(DO.Manifest_Number AS VARCHAR)									[ManifestNumber]
+					, ISNULL(DO.Receiver_Department, '')														[ReceiverDepartment]
+                    , ISNULL(DO.Ticket_Number, '')																[IdOrderReference]
+					, ISNULL(IH.inv_certificationFEL, '')														[CertificationFEL]
+					, CASE 
+						WHEN ACCF.IdCustomer IS NOT NULL	THEN 'Portal Web'
+						WHEN cs.IdCustomerType		= 2		THEN 'Express Center'
+						WHEN cs.IdCustomerType		= 1		THEN 'Corporativo'
+						WHEN cs.IdCustomerType		= 3		THEN 'Individual'
+						WHEN ACCF2.Acc				>= 1	THEN 'Portal Web'
+						ELSE 'Otros'
+					  END																						[SourceGuide]
+					, CAST((ISNULL(DO.Pieces_Cold, 0) + ISNULL(DO.Pieces_Dry, 0)) AS VARCHAR)					[Pieces]
+					, ISNULL(CCC.Symbol + '.', 'Q.')															[Symbol]
+					, CAST(ISNULL(DO.IsCollect, 0) AS VARCHAR)													[IsCollect]
+					, IIF(DO.IsCollect = 1, CAST(DO.PriceShippment AS VARCHAR), '0.00')							[AmountShipment]
+					, CAST(DO.Collect_OnDelivery AS VARCHAR)													[AmmountCOD]
+                    , ISNULL(UPPER(VPC.DescriptionOfClient), '')												[VPSource]
+                    , ISNULL(UPPER(CS.[Name]), '')																[Customer]
+					, ISNULL(DO.Order_Number, '')																[OrderNumber]
+                    , ISNULL(DO.Receiver_Address, '')															[ReceiverAddress]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityId]
+					, ISNULL(DO.Receiver_CUI, '')																[CUI]
+                    , ISNULL(DO.Receiver_Alternant_FullName, '')												[NameOfReceiverAlternante]
+                    , ISNULL(DO.Receiver_Alternant_CUI, '')														[CUIAlternante]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityAlternante]
+                    , ISNULL(DO.Receiver_Alternant_Phone, '')													[PhoneAlternante]
+                FROM DeliveryBackOffice.dbo.DeliveryOrder				DO		WITH (NOLOCK)
+                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder		SO		WITH (NOLOCK)
+                        ON DO.StatusOrderId = SO.StatusOrderId
+                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient	VPC		WITH (NOLOCK)
+                        ON DO.Sender_ID = VPC.CodeOfReference
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer			CS		WITH (NOLOCK)
+                        ON CS.IdCustomer = VPC.CustomerID
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail		ID		WITH (NOLOCK)
+                        ON dti_fk_orderNumber = DO.Guide_Number
+                        AND dti_fk_orderSerie = DO.Guide_Serie
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader		IH		WITH (NOLOCK)
+                        ON IH.inv_pk_id = ID.dti_fk_header
+						AND IH.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
+						AND IH.inv_certificationFEL IS NOT NULL
+						AND IH.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost				C		WITH (NOLOCK)
+                        ON DO.Guide_Serie = C.GuideSerie 
+						AND DO.Guide_Number = C.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD		CCC		WITH (NOLOCK)
+                        ON CCC.IdCatCurrencyCOD = ISNULL(C.CodCurrency,C.ShippingCurrency)
+					OUTER APPLY (
+						SELECT TOP 1 DOD.DateCreated AS RealDeliveryDate
+						FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD		WITH (NOLOCK)
+						WHERE DOD.Guide_Number = DO.Guide_Number
+						AND DOD.Guide_Serie = DO.Guide_Serie
+						AND DOD.StatusOrderId = 5
+						ORDER BY DOD.DateCreated ASC
+					) DOD_REAL
+					OUTER APPLY (
+						SELECT TOP (1)
+							ACC.IdCustomer
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = cs.IdCustomer
+                        AND ACC.AccRowStatus = 'TRUE'
+					) ACCF
+					OUTER APPLY (
+                        SELECT TOP 1 1 Acc
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = DO.IdCustomer
+                    ) ACCF2
+                WHERE 
+					DO.Sender_ID = 0
+                    AND DO.IdCustomer = @IdCustomer
+					AND DO.DateCreated >= @DateIni AND DO.DateCreated < DATEADD(DAY, 1, @DateFin)
+					AND DO.ReceiverCountryId = @IdCountry  --Filtrado por país
+                    AND DO.StatusOrderId <> 7	-- No guías anuladas
+                    AND DO.StatusOrderId <> 15 -- No guías generadas
+				
+			END;
+			ELSE
+			BEGIN
 
-            END;
-            ELSE
-            BEGIN
-                PRINT 'ENTRO CUSTOMER <> -1 Y GUIDENUMBER <> 0';
-                SELECT CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' '
-                       + ISNULL(UPPER(serv.Sender_LastName), '') [NameOfSender],
-                       ISNULL(UPPER(serv.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(serv.Receiver_LastName), '') [NameOfReceiver],
-                       ISNULL(UPPER(NameOfReceiver), '') AS [ReceiverName],
-                       CONVERT(VARCHAR, serv.DateCreated, 103) [PickUpDateTime],
-                       CONVERT(VARCHAR, serv.Shipping_Date, 103) [ScheduledDeliveryDate],
-                       ISNULL(CONVERT(   VARCHAR,
-                              (
-                                  SELECT TOP 1
-                                         dod.DateCreated
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
-                                  WHERE dod.Guide_Number = serv.Guide_Number
-                                    AND dod.Guide_Serie = serv.Guide_Serie
-                                        AND dod.StatusOrderId = 5
-                              ),
-                                         103
-                                     ),
-                              ''
-                             ) AS [RealDeliveryDate],
-                       serv.Guide_Serie + CAST(serv.Guide_Number AS VARCHAR) [GuideNumber],
-                       so.OrderDescription AS OrderStatus,
-                       serv.Manifest_Serie + CAST(serv.Manifest_Number AS VARCHAR) [ManifestNumber],
-                       ISNULL(serv.Receiver_Department, '') [ReceiverDepartment],
-                       ISNULL(serv.Ticket_Number, '') [IdOrderReference],
-                       ISNULL(invHead.inv_certificationFEL, '') [CertificationFEL],
-                       CASE
-                           WHEN
-                           (
-                               SELECT TOP (1)
-                                      ACC.IdCustomer
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = cs.IdCustomer
-                                     AND ACC.AccRowStatus = 'TRUE'
-                               ORDER BY ACC.AccDateCreated DESC
-                           ) IS NOT NULL THEN
-                               'Portal Web'
-                           WHEN cs.IdCustomerType = 2 THEN
-                               'Express Center'
-                           WHEN cs.IdCustomerType = 1 THEN
-                               'Corporativo'
-                           WHEN cs.IdCustomerType = 3 THEN
-                               'Individual'
-                           WHEN
-                           (
-                               SELECT COUNT(1)
-                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
-                               WHERE ACC.IdCustomer = serv.IdCustomer
-                           ) >= 1 THEN
-                               'Portal Web'
-                           ELSE
-                               'Otros'
-                       END [SourceGuide],
-                       CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
-					   IIF(ccCOD.Symbol IS NULL, 'Q.', ccCOD.Symbol + '.') [Symbol],
-                       CAST(serv.IsCollect AS VARCHAR(50)) [IsCollect],
-                       CASE serv.IsCollect
-                           WHEN 'true' THEN
-                               CAST(serv.PriceShippment AS VARCHAR(50))
-                           ELSE
-                               '0.00'
-                       END [AmountShipment],
-                       CAST(serv.[Collect_OnDelivery] AS VARCHAR(50)) [AmmountCOD],
-                       ISNULL(UPPER(vpclient.DescriptionOfClient), '') [VPSource],
-                       ISNULL(UPPER(cs.Name), '') [Customer],
-                       ISNULL(serv.Order_Number, '') [OrderNumber],
-                       ISNULL(serv.Receiver_Address, '') ReceiverAddress,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId,
-                       ISNULL(serv.Receiver_CUI, '') CUI,
-                       ISNULL(serv.Receiver_Alternant_FullName, '') NameOfReceiverAlternante,
-                       ISNULL(serv.Receiver_Alternant_CUI, '') CUIAlternante,
-                       ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityAlternante,
-                       ISNULL(serv.Receiver_Alternant_Phone, '') PhoneAlternante
-                FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
-                    inner JOIN DeliveryBackOffice.dbo.VisitPointClient vpclient WITH (NOLOCK)
-                        ON serv.Sender_ID = vpclient.CodeOfReference 
-                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
-                        ON serv.StatusOrderId = so.StatusOrderId
-                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs WITH (NOLOCK)
-                        ON cs.IdCustomer = vpclient.CustomerID
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet WITH (NOLOCK)
-                        ON dti_fk_orderNumber = serv.Guide_Number
-                           AND dti_fk_orderSerie = serv.Guide_Serie
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead WITH (NOLOCK)
-                        ON invHead.inv_pk_id = invDet.dti_fk_header
-                           AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
-                           AND invHead.inv_certificationFEL IS NOT NULL
-                           AND invHead.inv_serieFEL IS NOT NULL
-                    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
-                        ON serv.Guide_Serie = c.GuideSerie
-                           AND serv.Guide_Number = c.GuideNumber
-                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
-                        ON ccCOD.IdCatCurrencyCOD = ISNULL(c.CodCurrency,c.ShippingCurrency)
-                WHERE (
-                          (
-                              serv.Sender_ID = 0
-                              AND @CustomerId = serv.IdCustomer
-                          )
-                          OR
-                          (
-                              vpclient.CustomerID = @CustomerId
-                              AND serv.Sender_ID > 0
-                          )
-                      )
-                      AND serv.Guide_Serie = @GuideSerie
-                      AND serv.Guide_Number = @GuideNumber
-					  AND (serv.SenderCountryId = @IdCountry OR serv.ReceiverCountryId = @IdCountry)
-                      AND serv.StatusOrderId <> 7 -- No guías anuladas
-                      AND serv.StatusOrderId <> 15; -- No guías generadas
-            END;
-        END;
+				PRINT 'ENTRO CUSTOMER <> -1 Y GUIDENUMBER <> 0';
+				SELECT
+					  CAST(DO.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(DO.Sender_FirstName), '') + ' '
+                      + ISNULL(UPPER(DO.Sender_LastName), '')													[NameOfSender]
+					, ISNULL(UPPER(DO.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(DO.Receiver_LastName), '')	[NameOfReceiver]
+					, ISNULL(UPPER(DO.NameOfReceiver), '')														[ReceiverName]  
+					, CONVERT(VARCHAR, DO.DateCreated, 103)														[PickUpDateTime]
+					, CONVERT(VARCHAR, DO.Shipping_Date, 103)													[ScheduledDeliveryDate]
+					, ISNULL(CONVERT(VARCHAR, DOD_REAL.RealDeliveryDate, 103), '')								[RealDeliveryDate]
+					, DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR)											[GuideNumber]
+					, SO.OrderDescription																		[OrderStatus]
+					, DO.Manifest_Serie + CAST(DO.Manifest_Number AS VARCHAR)									[ManifestNumber]
+					, ISNULL(DO.Receiver_Department, '')														[ReceiverDepartment]
+                    , ISNULL(DO.Ticket_Number, '')																[IdOrderReference]
+					, ISNULL(IH.inv_certificationFEL, '')														[CertificationFEL]
+					, CASE 
+						WHEN ACCF.IdCustomer IS NOT NULL	THEN 'Portal Web'
+						WHEN cs.IdCustomerType		= 2		THEN 'Express Center'
+						WHEN cs.IdCustomerType		= 1		THEN 'Corporativo'
+						WHEN cs.IdCustomerType		= 3		THEN 'Individual'
+						WHEN ACCF2.Acc				>= 1	THEN 'Portal Web'
+						ELSE 'Otros'
+					  END																						[SourceGuide]
+					, CAST((ISNULL(DO.Pieces_Cold, 0) + ISNULL(DO.Pieces_Dry, 0)) AS VARCHAR)					[Pieces]
+					, ISNULL(CCC.Symbol + '.', 'Q.')															[Symbol]
+					, CAST(ISNULL(DO.IsCollect, 0) AS VARCHAR)													[IsCollect]
+					, IIF(DO.IsCollect = 1, CAST(DO.PriceShippment AS VARCHAR), '0.00')							[AmountShipment]
+					, CAST(DO.Collect_OnDelivery AS VARCHAR)													[AmmountCOD]
+                    , ISNULL(UPPER(VPC.DescriptionOfClient), '')												[VPSource]
+                    , ISNULL(UPPER(CS.[Name]), '')																[Customer]
+					, ISNULL(DO.Order_Number, '')																[OrderNumber]
+                    , ISNULL(DO.Receiver_Address, '')															[ReceiverAddress]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityId]
+					, ISNULL(DO.Receiver_CUI, '')																[CUI]
+                    , ISNULL(DO.Receiver_Alternant_FullName, '')												[NameOfReceiverAlternante]
+                    , ISNULL(DO.Receiver_Alternant_CUI, '')														[CUIAlternante]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityAlternante]
+                    , ISNULL(DO.Receiver_Alternant_Phone, '')													[PhoneAlternante]
+                FROM DeliveryBackOffice.dbo.DeliveryOrder				DO		WITH (NOLOCK)
+                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder		SO		WITH (NOLOCK)
+                        ON DO.StatusOrderId = SO.StatusOrderId
+                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient	VPC		WITH (NOLOCK)
+                        ON DO.Sender_ID = VPC.CodeOfReference
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer			CS		WITH (NOLOCK)
+                        ON CS.IdCustomer = VPC.CustomerID
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail		ID		WITH (NOLOCK)
+                        ON dti_fk_orderNumber = DO.Guide_Number
+                        AND dti_fk_orderSerie = DO.Guide_Serie
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader		IH		WITH (NOLOCK)
+                        ON IH.inv_pk_id = ID.dti_fk_header
+						AND IH.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
+						AND IH.inv_certificationFEL IS NOT NULL
+						AND IH.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost				C		WITH (NOLOCK)
+                        ON DO.Guide_Serie = C.GuideSerie 
+						AND DO.Guide_Number = C.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD		CCC		WITH (NOLOCK)
+                        ON CCC.IdCatCurrencyCOD = ISNULL(C.CodCurrency,C.ShippingCurrency)
+					OUTER APPLY (
+						SELECT TOP 1 DOD.DateCreated AS RealDeliveryDate
+						FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD		WITH (NOLOCK)
+						WHERE DOD.Guide_Number = DO.Guide_Number
+						AND DOD.Guide_Serie = DO.Guide_Serie
+						AND DOD.StatusOrderId = 5
+						ORDER BY DOD.DateCreated ASC
+					) DOD_REAL
+					OUTER APPLY (
+						SELECT TOP (1)
+							ACC.IdCustomer
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = cs.IdCustomer
+                        AND ACC.AccRowStatus = 'TRUE'
+					) ACCF
+					OUTER APPLY (
+                        SELECT TOP 1 1 Acc
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = DO.IdCustomer
+                    ) ACCF2
+                WHERE 
+                    VPC.CustomerID = @IdCustomer
+                    AND DO.Sender_ID > 0
+					AND DO.Guide_Serie = @GuideSerie
+                    AND DO.Guide_Number = @GuideNumber
+					AND DO.ReceiverCountryId = @IdCountry  --Filtrado por país
+                    AND DO.StatusOrderId <> 7	-- No guías anuladas
+                    AND DO.StatusOrderId <> 15 -- No guías generadas
 
+				UNION
 
-    END;
-    ELSE
-    BEGIN
-        SELECT NULL [NameOfSender],
-               '' [NameOfReceiver],
-               '' [ReceiverName],
-               '' [PickUpDateTime],
-               '' [ScheduledDeliveryDate],
-               '' [RealDeliveryDate],
-               '' [GuideNumber],
-               'INACTIVE TOKEN ' [OrderStatus],
-               '' [ManifestNumber],
-               '' [ReceiverDepartment],
-               '' [IdOrderReference];
-    END;
+				SELECT
+					  CAST(DO.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(DO.Sender_FirstName), '') + ' '
+                      + ISNULL(UPPER(DO.Sender_LastName), '')													[NameOfSender]
+					, ISNULL(UPPER(DO.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(DO.Receiver_LastName), '')	[NameOfReceiver]
+					, ISNULL(UPPER(DO.NameOfReceiver), '')														[ReceiverName]  
+					, CONVERT(VARCHAR, DO.DateCreated, 103)														[PickUpDateTime]
+					, CONVERT(VARCHAR, DO.Shipping_Date, 103)													[ScheduledDeliveryDate]
+					, ISNULL(CONVERT(VARCHAR, DOD_REAL.RealDeliveryDate, 103), '')								[RealDeliveryDate]
+					, DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR)											[GuideNumber]
+					, SO.OrderDescription																		[OrderStatus]
+					, DO.Manifest_Serie + CAST(DO.Manifest_Number AS VARCHAR)									[ManifestNumber]
+					, ISNULL(DO.Receiver_Department, '')														[ReceiverDepartment]
+                    , ISNULL(DO.Ticket_Number, '')																[IdOrderReference]
+					, ISNULL(IH.inv_certificationFEL, '')														[CertificationFEL]
+					, CASE 
+						WHEN ACCF.IdCustomer IS NOT NULL	THEN 'Portal Web'
+						WHEN cs.IdCustomerType		= 2		THEN 'Express Center'
+						WHEN cs.IdCustomerType		= 1		THEN 'Corporativo'
+						WHEN cs.IdCustomerType		= 3		THEN 'Individual'
+						WHEN ACCF2.Acc				>= 1	THEN 'Portal Web'
+						ELSE 'Otros'
+					  END																						[SourceGuide]
+					, CAST((ISNULL(DO.Pieces_Cold, 0) + ISNULL(DO.Pieces_Dry, 0)) AS VARCHAR)					[Pieces]
+					, ISNULL(CCC.Symbol + '.', 'Q.')															[Symbol]
+					, CAST(ISNULL(DO.IsCollect, 0) AS VARCHAR)													[IsCollect]
+					, IIF(DO.IsCollect = 1, CAST(DO.PriceShippment AS VARCHAR), '0.00')							[AmountShipment]
+					, CAST(DO.Collect_OnDelivery AS VARCHAR)													[AmmountCOD]
+                    , ISNULL(UPPER(VPC.DescriptionOfClient), '')												[VPSource]
+                    , ISNULL(UPPER(CS.[Name]), '')																[Customer]
+					, ISNULL(DO.Order_Number, '')																[OrderNumber]
+                    , ISNULL(DO.Receiver_Address, '')															[ReceiverAddress]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityId]
+					, ISNULL(DO.Receiver_CUI, '')																[CUI]
+                    , ISNULL(DO.Receiver_Alternant_FullName, '')												[NameOfReceiverAlternante]
+                    , ISNULL(DO.Receiver_Alternant_CUI, '')														[CUIAlternante]
+                    , ISNULL(DO.Receiver_Alternant_SocialSecurity_ID, '')										[SocialSecurityAlternante]
+                    , ISNULL(DO.Receiver_Alternant_Phone, '')													[PhoneAlternante]
+                FROM DeliveryBackOffice.dbo.DeliveryOrder				DO		WITH (NOLOCK)
+                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder		SO		WITH (NOLOCK)
+                        ON DO.StatusOrderId = SO.StatusOrderId
+                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient	VPC		WITH (NOLOCK)
+                        ON DO.Sender_ID = VPC.CodeOfReference
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer			CS		WITH (NOLOCK)
+                        ON CS.IdCustomer = VPC.CustomerID
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail		ID		WITH (NOLOCK)
+                        ON dti_fk_orderNumber = DO.Guide_Number
+                        AND dti_fk_orderSerie = DO.Guide_Serie
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader		IH		WITH (NOLOCK)
+                        ON IH.inv_pk_id = ID.dti_fk_header
+						AND IH.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
+						AND IH.inv_certificationFEL IS NOT NULL
+						AND IH.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost				C		WITH (NOLOCK)
+                        ON DO.Guide_Serie = C.GuideSerie 
+						AND DO.Guide_Number = C.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD		CCC		WITH (NOLOCK)
+                        ON CCC.IdCatCurrencyCOD = ISNULL(C.CodCurrency,C.ShippingCurrency)
+					OUTER APPLY (
+						SELECT TOP 1 DOD.DateCreated AS RealDeliveryDate
+						FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD		WITH (NOLOCK)
+						WHERE DOD.Guide_Number = DO.Guide_Number
+						AND DOD.Guide_Serie = DO.Guide_Serie
+						AND DOD.StatusOrderId = 5
+						ORDER BY DOD.DateCreated ASC
+					) DOD_REAL
+					OUTER APPLY (
+						SELECT TOP (1)
+							ACC.IdCustomer
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = cs.IdCustomer
+                        AND ACC.AccRowStatus = 'TRUE'
+					) ACCF
+					OUTER APPLY (
+                        SELECT TOP 1 1 Acc
+                        FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
+                        WHERE ACC.IdCustomer = DO.IdCustomer
+                    ) ACCF2
+                WHERE 
+					DO.Sender_ID = 0
+                    AND DO.IdCustomer = @IdCustomer
+					AND DO.Guide_Serie = @GuideSerie
+                    AND DO.Guide_Number = @GuideNumber
+					AND DO.ReceiverCountryId = @IdCountry  --Filtrado por país
+                    AND DO.StatusOrderId <> 7	-- No guías anuladas
+                    AND DO.StatusOrderId <> 15 -- No guías generadas
+			END;
+		END;
+	END;
+	ELSE
+	BEGIN
+		SELECT 
+			NULL				[NameOfSender],
+			''					[NameOfReceiver],
+			''					[ReceiverName],
+			''					[PickUpDateTime],
+			''					[ScheduledDeliveryDate],
+			''					[RealDeliveryDate],
+			''					[GuideNumber],
+			'INACTIVE TOKEN '	[OrderStatus],
+			''					[ManifestNumber],
+			''					[ReceiverDepartment],
+			''					[IdOrderReference];
+	END;
 END;
-
