@@ -596,11 +596,12 @@ BEGIN
 									   + '"Phone":"' +      cpv.Phone + '",' 
 									   + '"IsoCode":"' +    cpv.IsoCode + '",'
 									   + '"TokenizedToken":"' +  cpv.TokenizedToken + '",' 
-									   + '"TokenizedCVV":"' +  cpv.TokenizedCVV + '",' 
+									   + '"TokenizedCVV":"' +  cpv.TokenizedCVV + '",'
+                                       + '"ExpirationDate":"' + ISNULL(cpv.TokenizedExpirationDate,'') + '",' 
 									   + '}'
-                                FROM CustomerPaymentValue cpv
+                                FROM CustomerPaymentValue cpv WITH (NOLOCK)
 								WHERE (cpv.AccountId = @IdAccount
-								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM Account WHERE AccIdAccount = @IdAccount)))
+								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM Account WITH (NOLOCK) WHERE AccIdAccount = @IdAccount)))
 								AND cpv.RowStatus = 1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
