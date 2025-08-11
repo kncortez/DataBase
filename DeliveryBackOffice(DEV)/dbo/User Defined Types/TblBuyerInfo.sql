@@ -1,11 +1,11 @@
 ﻿CREATE TYPE [dbo].[TblBuyerInfo] AS TABLE
 (
-	DistrictCode		varchar (100) NULL,
-	StateCode			varchar (100) NULL,
-	ActivityCode		varchar (100) NULL,
-	ActivityDescription	varchar (500) NULL,
-	NRC					varchar (20) NULL,
-	TypeDocument		varchar (100) NULL,
-	IdDocument			varchar (100) NULL,
-	Phone				varchar (100) NULL
+	DistrictCode		VARCHAR (100) NULL,
+	StateCode			VARCHAR (100) NULL,
+	ActivityCode		VARCHAR (100) NULL,
+	ActivityDescription	VARCHAR (500) NULL,
+	NRC					VARCHAR (20) NULL,
+	TypeDocument		VARCHAR (100) NULL,
+	IdDocument			VARCHAR (100) NULL,
+	Phone				VARCHAR (100) NULL
 )

@@ -94,10 +94,10 @@ BEGIN
                                     CAT.[Description],
                                     NRC,
                                     PHONE
-                            FROM DeliveryBackOffice.dbo.BillingCustomerBySV
-                            LEFT JOIN dbo.DistrictByBillingSV DIS
+                            FROM DeliveryBackOffice.dbo.BillingCustomerBySV WITH(NOLOCK)
+                            LEFT JOIN dbo.DistrictByBillingSV DIS           WITH(NOLOCK)
                                ON DistrictId = DIS.Id
-                            LEFT JOIN dbo.CatEconomicActivityBySV CAT
+                            LEFT JOIN dbo.CatEconomicActivityBySV CAT       WITH(NOLOCK)
                                ON ActivityId = CAT.Id
                             WHERE cs.IdCustomer = IdCustomer
                         ) bcsvf
@@ -110,14 +110,13 @@ BEGIN
                                    NULL [Description],
                                    NULL NRC,
                                    NULL PHONE
-                            FROM DeliveryBackOffice.dbo.VisitPointClient vpc
-                            INNER JOIN DeliveryBackOffice.dbo.TownshipDistrictByBillingSV tdbsv
+                            FROM DeliveryBackOffice.dbo.VisitPointClient vpc                    WITH(NOLOCK)
+                            INNER JOIN DeliveryBackOffice.dbo.TownshipDistrictByBillingSV tdbsv WITH(NOLOCK)
                             ON tdbsv.TownshipId = vpc.IdTownship
-                            LEFT JOIN dbo.DistrictByBillingSV DIS
+                            LEFT JOIN dbo.DistrictByBillingSV DIS                               WITH(NOLOCK)
                             ON tdbsv.DistrictId = DIS.Id
                             WHERE cs.IdCustomer = vpc.CustomerID
                         ) vpcf
-                        
                     WHERE (cs.IdCustomer = @IdCustomer
                         OR cs.SAPCardCode = @SAPCardCode)
                         AND cust.IdCustomerType = 1

@@ -26,7 +26,7 @@ DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK)
         SELECT
               @pk_id = inv_pk_id
              ,@InvoiceBalance = inv_amount
-        FROM  InvoiceHeader
+        FROM  InvoiceHeader WITH(NOLOCK)
         WHERE inv_SerieFEL = @Inv_SerieFEL
           AND inv_numberFEL = @Inv_NumberFEL
           AND IdCountry = @idCountry
@@ -36,7 +36,7 @@ DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK)
         SELECT
               @pk_id = inv_pk_id
              ,@InvoiceBalance = inv_amount
-        FROM  InvoiceHeader
+        FROM  InvoiceHeader WITH(NOLOCK)
         WHERE inv_SerieFEL = @Inv_SerieFEL
           AND inv_certificationFEL = @Inv_NumberFEL
           AND IdCountry = @idCountry
@@ -55,7 +55,7 @@ DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK)
 	        SELECT
               @pk_id = inv_pk_id
              ,@InvoiceBalance = inv_amount
-        FROM  InvoiceHeader
+        FROM  InvoiceHeader WITH (NOLOCK)
         WHERE inv_numberFEL = @Inv_NumberFEL
           AND IdCountry = @idCountry
 		  AND inv_type = @TypeDocument --comprobante de credito fiscal
@@ -78,7 +78,7 @@ DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK)
            ,inv_amount
            ,@InvoiceBalance inv_balance
            --,*
-    FROM invoiceHeader 
+    FROM invoiceHeader WITH(NOLOCK)
     WHERE inv_pk_id = @pk_id;
 
     SELECT
@@ -87,7 +87,7 @@ DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK)
            ,dti_fk_orderNumber
            ,dti_amount
            --,*
-    FROM invoiceDetail
+    FROM invoiceDetail WITH(NOLOCK)
     WHERE dti_fk_header = @pk_id;
 
 END

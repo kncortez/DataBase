@@ -25,7 +25,7 @@ BEGIN
     BEGIN
          SELECT  @Authorization = invHe.[Authorization]
                 ,@EndDAte = invHe.[EndDate]
-           FROM InvoiceAuthorizationHeader invHe
+           FROM InvoiceAuthorizationHeader invHe WITH(NOLOCK)
                 INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                   ON invHe.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
           WHERE iar.CodeOfReference = @CodeOfReference
