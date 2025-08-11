@@ -3,7 +3,7 @@
 -- Create date: 2025/06/04
 -- Description: <Sp para obtener los valores de Seller para facturar en el Salvador>
 -- =============================================
-ALTER PROCEDURE [dbo].[getCredencialesSV]
+CREATE PROCEDURE [dbo].[getCredencialesSV]
 (
   @VpCodeOfReference as varchar(100) = '1162393'
 )

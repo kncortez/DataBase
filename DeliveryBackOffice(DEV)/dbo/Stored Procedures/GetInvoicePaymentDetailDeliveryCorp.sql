@@ -130,7 +130,6 @@ BEGIN
         -- Deshace la transacción en caso de error
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
-            PRINT ERROR_MESSAGE()
             SELECT 0 AS StatusCode, 
                    'Ha ocurrido un error en el proceso' AS StatusMessage
     END CATCH
