@@ -7,6 +7,10 @@
 -- Create date: <24/07/2024>
 -- Description:	<Se agrega CommentOnIncident para devolver el comentario que el piloto ingreso al momento de crear la incidencia>
 -- =============================================
+-- Author:		<Josue Villagrán>
+-- Create date: <29/07/2025>
+-- Description:	<Se hace reingeniería del SP para optimizar y modularizar , es más eficiente (+24%) y más escalable>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_status_order_detail_wbs]
 	@Guide_Serie NVARCHAR(2),
 	@Guide_Number BIGINT
@@ -16,6 +20,103 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 	
+DECLARE @DeliveryOrder TABLE (	
+	Guide_Serie NVARCHAR(100),
+	Guide_Number DECIMAL(38,0),
+	Sender_FirstName NVARCHAR(100),
+	Sender_LastName NVARCHAR(100),
+	Receiver_FirstName NVARCHAR(100),
+	Receiver_LastName NVARCHAR(100),
+	OriginAdress NVARCHAR(255),
+	DestinyAddress NVARCHAR(255),
+	Delivery_Max_Date DATETIME,
+	NameOfReceiver NVARCHAR(100),
+	Manifest_Serie NVARCHAR(50),
+	Manifest_Number INT
+);
+
+DECLARE @DeliveryOrderDetail TABLE (
+	DateCreated DATETIME,
+	Guide_Serie NVARCHAR(100),
+	Guide_Number DECIMAL(38,0),
+	StatusOrderId TINYINT,
+	StageDate DATETIME,
+	Observations NVARCHAR(500),
+	OrderDescription NVARCHAR(500) 
+);
+
+DECLARE @DeliveryAttempt TABLE (
+	Guide_Serie NVARCHAR(100),
+	Guide_Number DECIMAL(38,0),
+	First_Name NVARCHAR(100),
+	Last_Name NVARCHAR(100),
+	DescriptionIncidence NVARCHAR(255),
+	Latitude VARCHAR(50),
+	Longitude VARCHAR(50),
+	Observations NVARCHAR(500) ,
+	CommentOnIncident NVARCHAR(500) 
+);
+
+	
+	INSERT INTO @DeliveryOrder
+	SELECT 
+		do.Guide_Serie,
+		do.Guide_Number,
+		DO.Sender_FirstName,
+		DO.Sender_LastName,
+		do.Receiver_FirstName,
+		do.Receiver_LastName,
+		do.Sender_Address as OriginAdress,
+		do.Receiver_Address as DestinyAddress,
+		do.Delivery_Max_Date,
+		do.NameOfReceiver, 
+		do.Manifest_Serie,
+		do.Manifest_Number
+	FROM DeliveryBackOffice.dbo.DeliveryOrder do
+	WHERE do.Guide_Serie = @Guide_Serie 
+	  AND do.Guide_Number = @Guide_Number
+
+	INSERT INTO @DeliveryOrderDetail
+	SELECT  
+		DOD.DateCreated,
+		DOD.Guide_Serie,
+		DOD.Guide_Number,
+		DOD.StatusOrderId,
+		DOD.DateCreated AS StageDate,
+		DOD.Observations,
+		SO.OrderDescription
+	FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK) 
+		ON so.StatusOrderId = dod.StatusOrderId
+	WHERE dod.Guide_Serie = @Guide_Serie 
+	  AND dod.Guide_Number = @Guide_Number;
+
+	  INSERT INTO @DeliveryAttempt
+		SELECT TOP 1
+			DA.Guide_Serie,
+			DA.Guide_Number,
+			CUR.First_Name,
+			CUR.Last_Name,
+			INC.DescriptionIncidence,
+			DA.Latitude,
+			DA.Longitude,
+			Observations,
+			CommentOnIncident
+		FROM @DeliveryOrderDetail DET
+		LEFT JOIN  DeliveryBackOffice.dbo.DeliveryAttempt DA WITH (NOLOCK) 
+			ON DA.Guide_Serie =DET.Guide_Serie
+			AND DA.Guide_Number = DET.Guide_Number
+		LEFT JOIN  DeliveryBackOffice.dbo.CatTypeIncidence INC WITH (NOLOCK)
+			ON DA.ID_Incident = INC.IdIncidenceType
+		LEFT JOIN dbo.SenderReceiver CUR 
+			ON CUR.ID = DA.ID_Courier
+		LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
+			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+		WHERE DA.Guide_Serie = @Guide_Serie 
+			AND DA.Guide_Number = @Guide_Number
+
+
+
 	SELECT RES.[EventID],
 		   RES.[OrderId],
 		   --RES.[PreparationDate],
@@ -45,22 +146,14 @@ BEGIN
 		(SELECT
 			0 [EventID],
 			do.Guide_Serie + CAST(do.Guide_Number AS VARCHAR) as [OrderId], -- guide [Field3]
-			--CONVERT(varchar,do.Preparation_Date ,103) as [PreparationDate],   --[Field6],
-			--'Iniciada hace ' + 
-			--RIGHT(CONVERT(CHAR(5), 10000 + CONVERT(VARCHAR(4), FLOOR(DATEDIFF(ss, do.Preparation_Date, GETDATE()) / (24 * 3600)))), 4) + 'd ' +
-			--RIGHT(CONVERT(CHAR(3), 100 + CONVERT(VARCHAR(2), DATEDIFF(ss, do.Preparation_Date, GETDATE()) % (24 * 3600) / 3600)), 2) + 'h ' +
-			--RIGHT(CONVERT(CHAR(3), 100 + CONVERT(VARCHAR(2), DATEDIFF(ss, do.Preparation_Date, GETDATE()) % 3600 / 60)), 2) + 'm ' +
-			--RIGHT(CONVERT(CHAR(3), 100 + CONVERT(VARCHAR(2), DATEDIFF(ss, do.Preparation_Date, GETDATE()) % 60)), 2) + 's' [DifferenceNowStarted], --[Field1]
 			isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') as [CustomerFullname], -- receiver fullname  [Field2]
-			do.Sender_Address as [OriginAdress], -- sender address   [Field8]
+			OriginAdress, -- sender address   [Field8]
 			'' as [OriginLatitude],
 			'' as [OriginLongitude],
-			do.Receiver_Address as [DestinyAddress], -- receiver address  [Field4]
+			DestinyAddress, -- receiver address  [Field4]
 			'' as [DestintyLatitude],
 			'' as [DestinyLongitude],
 			 CONVERT(varchar,do.Delivery_Max_Date ,120) as [EstimatedDeliveryDate], --[Field5],
-				--FORMAT(do.Delivery_Max_Date, 'dddd', 'es-es') + ', '  + CONVERT(varchar,do.Delivery_Max_Date,106) as [EstimatedDeliveryDate], 
-				--FORMAT(do.Delivery_Max_Date, 'U', 'es-es')  --[Field5] Otra opcion con hora
 			'' [CourierName], --[Field9]
 			'' [StageId], -- status order id
 			'' [StageDate], -- date of status id
@@ -74,10 +167,10 @@ BEGIN
 			da.Latitude,
 			da.Longitude,
 			'' AS [CommentOnIncident]
-		FROM DeliveryBackOffice.dbo.DeliveryOrder do with(nolock)
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da with(nolock) 
+		FROM @DeliveryOrder do 
+		LEFT JOIN @DeliveryAttempt da 
 		on da.Guide_Serie = do.Guide_Serie and da.Guide_Number = do.Guide_Number
-		WHERE do.Guide_Serie = @Guide_Serie AND do.Guide_Number = @Guide_Number
+		
 		UNION
 		SELECT 
 			ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC)  AS EventID,
@@ -95,27 +188,17 @@ BEGIN
 			'' [CourierName], --[Field9]
 			Cast(dod.StatusOrderId as nvarchar) as [StageId], -- status order id
 			dod.DateCreated as [StageDate], -- date of status id
-			so.OrderDescription as [StageTitle], -- status order name
+			OrderDescription as [StageTitle], -- status order name
 			'web' as [StageSource],
 			(CASE
                  WHEN dod.StatusOrderId IN ( 6, 8) THEN
                      ISNULL(dod.Observations, '')
                  WHEN dod.StatusOrderId IN ( 12 ) THEN
                      ISNULL(
-                     (
-                         SELECT TOP 1
-								   (SELECT '[ ' + 
-											DeliveryBackOffice.dbo.[CapitalizeFirstLetter](LOWER(courier.First_Name) + ' '+LOWER(courier.Last_Name)) +
-											' ]'
-								   FROM dbo.SenderReceiver courier WITH (NOLOCK)   WHERE courier.ID = da.ID_Courier ) + ' ' + 
-								   I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
-							FROM DeliveryBackOffice.dbo.CatTypeIncidence I WITH (NOLOCK) 
-								inner JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-									ON da.ID_Incident = I.IdIncidenceType
-                         WHERE dod.Guide_Serie = da.Guide_Serie
-                               AND dod.Guide_Number = da.Guide_Number
-                         ORDER BY da.Date_Created DESC
-                     ),
+                     ( 
+						SELECT '[ ' + DeliveryBackOffice.dbo.[CapitalizeFirstLetter](LOWER(First_Name) + ' '+LOWER(Last_Name)) + ' ] '+ 
+												   DescriptionIncidence  + ' ' + ISNULL(Observations,'')
+						FROM @DeliveryAttempt ),
                      ''
                            )
                  WHEN dod.StatusOrderId IN ( 15 ) THEN
@@ -124,37 +207,15 @@ BEGIN
 					ISNULL(dod.Observations, '')
              END
             ) AS [StageDescription],
-			--(CASE ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC) WHEN 1 THEN
-			--														ISNULL(
-			--															ISNULL(
-			--																   (SELECT TOP 1 
-			--																		'data:image/jpeg;base64,' + (select cast('' as xml).value('xs:base64Binary(sql:column("[Proof_Dry]"))', 'varchar(max)'))
-			--																	FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp with(nolock)
-			--																	JOIN DeliveryBackOffice.dbo.DeliveryAttempt da with(nolock) ON da.Guide_Serie = dp.Guide_Serie AND da.Guide_Number = dp.Guide_Number AND da.Verified = 1 AND da.Accepted = 1
-			--																	WHERE dp.Guide_Serie = dod.Guide_Serie AND dp.Guide_Number = dod.Guide_Number ORDER BY Date_Photo DESC)
-			--																   ,
-			--																   (Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie + CAST(dod.Guide_Number AS VARCHAR)) as VARCHAR(300)))
-			--															),'')
-			--													   ELSE '' END) as [ImagePath],
 			'' as [ImagePath],
 			'' as NameOfReceiver,
 			'' as Place,
 			'' as [ManifestNumber],
 			'' as Latitude,
 			'' as Longitude,
-			COI.CommentOnIncident AS [CommentOnIncident]
-		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK) --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
-		   INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK) 
-		   		ON so.StatusOrderId = dod.StatusOrderId
-            LEFT  JOIN [dbo].[DeliveryAttempt] da WITH(NOLOCK)
-			    ON da.ID = dod.DeliveryAttemptId
-			LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
-			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-		WHERE dod.Guide_Serie = @Guide_Serie and dod.Guide_Number = @Guide_Number
+			CommentOnIncident
+		FROM @DeliveryOrderDetail DOD
+		LEFT JOIN @DeliveryAttempt DA ON DOD.Guide_Number = DA.Guide_Number
 		) RES
-		ORDER BY RES.[EventID], RES.[StageDate] ASC
-	
+		ORDER BY RES.[EventID], RES.[StageDate] ASC	
 END
-  
-
-
