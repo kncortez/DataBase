@@ -641,9 +641,6 @@ BEGIN
     FROM [dbo].[CatBillingTime] BT with (nolock)
     WHERE BT.RowStatus = 'TRUE'
 
-
-
-
     SELECT BV.IdCatBillingVolume [IdValue],
            BV.NameBillingVolume [NameValue],
            'BillingVolume' [Catalog]
@@ -657,8 +654,9 @@ BEGIN
         DS.[TownshipName] [NameValue],	
         DS.IdProvince [IdFilter],
         'DistrictByBillingSV' [Catalog]
-    FROM Township DS WITH(NOLOCK)
-    INNER JOIN Province pv ON pv.IdProvince = DS.IdProvince
+    FROM Township DS       WITH(NOLOCK)
+    INNER JOIN Province pv WITH(NOLOCK) 
+       ON pv.IdProvince = DS.IdProvince 
     WHERE DS.TownshipStatus = 1
       AND pv.ProvinceStatus = 1
       AND pv.IdCountry = 'SV'

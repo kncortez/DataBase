@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:      <Brandon Pedroza>
 -- Create date: <2025-07-18>
 -- Description: <Facturacion - Insercion y actualizacion de relacion factura y cancelacion SV>
@@ -143,7 +143,7 @@ BEGIN
                Retries,
                IdCurrency,
                IdCountry
-        FROM invoiceHeader
+        FROM invoiceHeader   WITH (NOLOCK)
         WHERE inv_numberFEL = @NumberFEL;
         
         DECLARE @new_inv_pk_id INT = SCOPE_IDENTITY();
