@@ -72,7 +72,7 @@ DECLARE @DeliveryAttempt TABLE (
 		do.NameOfReceiver, 
 		do.Manifest_Serie,
 		do.Manifest_Number
-	FROM DeliveryBackOffice.dbo.DeliveryOrder do
+	FROM DeliveryBackOffice.dbo.DeliveryOrder do  WITH(NOLOCK) 
 	WHERE do.Guide_Serie = @Guide_Serie 
 	  AND do.Guide_Number = @Guide_Number
 
@@ -108,7 +108,7 @@ DECLARE @DeliveryAttempt TABLE (
 			AND DA.Guide_Number = DET.Guide_Number
 		LEFT JOIN  DeliveryBackOffice.dbo.CatTypeIncidence INC WITH (NOLOCK)
 			ON DA.ID_Incident = INC.IdIncidenceType
-		LEFT JOIN dbo.SenderReceiver CUR 
+		LEFT JOIN dbo.SenderReceiver CUR  WITH(NOLOCK) 
 			ON CUR.ID = DA.ID_Courier
 		LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
 			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
