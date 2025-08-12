@@ -22,6 +22,11 @@
 -- Update date: <2025-07-17>
 -- Description: <Se agrega multipais para short name de DPI,IVA y NIT.>
 -- =============================================
+-- =============================================
+-- Author:      <Brandon, Pedroza>
+-- Update date: <2025-08-12>
+-- Description: <Guias Rapidas - Bandera que indica restriccion por articulo, para punto de visita o socio de negocio.>
+-- =============================================
 CREATE  PROCEDURE [dbo].[spws_GetCorporateLogIn]
     -- Add the parameters for the stored procedure here
     @UserCode BIGINT = 0
@@ -573,7 +578,9 @@ BEGIN
                                                        + '"CurrencySymbolCorporate":"'
                                                        + ISNULL(CONVERT(NVARCHAR(20), CCC.Symbol), '') + '",'
                                                      , +'"NameSettlement":"' + ISNULL(STL.Settlement, '') + '",' 
-
+                                                       +'"RestrictionByArticle":"' + CONVERT(NVARCHAR(2),
+                                                                                             ISNULL(vpc.RestrictionByArticle, ISNULL(cu.RestrictionByArticle,0))
+                                                                                             )+'",' 
                                                        + '"ListCod":' + '[{' + '"IdBank":"'
                                                        + ISNULL(
                                                                    CONVERT(
