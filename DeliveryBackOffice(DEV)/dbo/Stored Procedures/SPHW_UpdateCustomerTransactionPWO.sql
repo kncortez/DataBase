@@ -7,7 +7,7 @@
 CREATE PROCEDURE SPHW_UpdateCustomerTransactionPWO 
     @Type AS INT = -1
   , @System AS INT = 1
-  , @CardNumber AS NVARCHAR(50)
+  , @CardNumber AS NVARCHAR(50) =NULL
   , @Signature AS NVARCHAR(100) = NULL
   , @ReferenceNumber AS VARCHAR(50) = ''
   , @TransactionStain AS VARCHAR(50) = ''
@@ -36,7 +36,7 @@ BEGIN
              IF (@IdTransaction > 0)
              BEGIN
 
-			      IF(@CardNumber<>NULL)
+			      IF(@CardNumber<>null)
 				   BEGIN
 						UPDATE DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
 						SET [System] = @System
