@@ -17,7 +17,14 @@ BEGIN TRY
 	-- SE ACTUALIZA ENCABEZADO DE DETALLE
 	UPDATE CatSubscriptionAtribute SET SubscriptionAttributeDescription = '50 guias a Q25.00 c/u.', SubscriptionAttributeDescriptionLong = '50 guías a Q25 c/u.' WHERE CatSubscriptionId = @CatSubcription AND  RowStatus = 1 AND SubscriptionAttributePosition = 1 
 
+	-- SE PASA A NOVEDADES
+	
+	DECLARE @ProductTagOld INT = (SELECT IdMarketplaceProductTags FROM MarketplaceProductTags WHERE MarketplaceProductTagsName = 'LO MÁS VENDIDO' AND ISNULL(IdCountry,'GT') = 'GT')
+	DECLARE @ProductTag INT = (SELECT IdMarketplaceProductTags FROM MarketplaceProductTags WHERE MarketplaceProductTagsName = 'NOVEDADES' AND ISNULL(IdCountry,'GT') = 'GT')
+
+	UPDATE MarketplaceTagsByProduct SET MarketplaceProductTagsId = @ProductTag WHERE CatSubscriptionId = @CatSubcription AND MarketplaceProductTagsId = @ProductTagOld
 	COMMIT TRANSACTION;
+
 	SELECT 'DATOS ACTUALIZADOS CORRECTAMENTE' AS MESSAGE
 END TRY
 BEGIN CATCH
