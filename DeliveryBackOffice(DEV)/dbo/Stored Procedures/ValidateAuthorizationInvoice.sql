@@ -12,14 +12,16 @@ CREATE PROCEDURE [dbo].[ValidateAuthorizationInvoice]
 AS
 BEGIN
 
+     DECLARE @today DATETIME = GETDATE()
+
      IF NOT EXISTS (
                     SELECT TOP 1 1
                       FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                            INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                              ON iah.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
+                             AND iah.[RowStatus] = iar.[RowStatus]
                      WHERE iar.CodeOfReference = @CodeOfReference
                        AND iah.[RowStatus] = 1
-                       AND iar.[RowStatus] = 1
                    )
      BEGIN
           SELECT @Code = 2,
@@ -35,9 +37,9 @@ BEGIN
                   FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                        INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                          ON iah.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
+                         AND iah.[RowStatus] = iar.[RowStatus]
                  WHERE iar.CodeOfReference = @CodeOfReference
                    AND iah.[RowStatus] = 1
-                   AND iar.[RowStatus] = 1
                    AND (
                         ISNULL(iah.[Authorization],'') = ''
                    )
@@ -56,9 +58,9 @@ BEGIN
                   FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                        INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                          ON iah.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
+                         AND iah.[RowStatus] = iar.[RowStatus]
                  WHERE iar.CodeOfReference = @CodeOfReference
                    AND iah.[RowStatus] = 1
-                   AND iar.[RowStatus] = 1
                    AND (
                         ISNULL(iah.[DateCreated], '') = ''
                         OR ISNULL(iah.[EndDate],'') = ''
@@ -78,10 +80,10 @@ BEGIN
                       FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                            INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                              ON iah.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
+                             AND iah.[RowStatus] = iar.[RowStatus]
                      WHERE iar.CodeOfReference = @CodeOfReference
                        AND iah.[RowStatus] = 1
-                       AND iar.[RowStatus] = 1
-                       AND GETDATE() >= iah.EndDate
+                       AND @today >= iah.EndDate
                    )
      BEGIN
           SELECT @Code = 2,
