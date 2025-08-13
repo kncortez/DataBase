@@ -13,3 +13,6 @@ UPDATE CatSubscriptionDescription SET Description = 'Compra en la tienda virtual
 
 -- SE DA DE BAJA EL PAQUETE FLEXI
 UPDATE CatSubscription SET RowStatus = 0 WHERE SubscriptionName = 'Paquete FLEXI'
+
+-- SE ACTUALIZA ENCABEZADO DE DETALLE
+UPDATE CatSubscriptionAtribute SET SubscriptionAttributeDescription = '50 guias a Q25.00 c/u.', SubscriptionAttributeDescriptionLong = '50 guías a Q25 c/u.' WHERE CatSubscriptionId = @CatSubcription AND  RowStatus = 1 AND SubscriptionAttributePosition = 1 
