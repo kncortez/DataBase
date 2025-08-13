@@ -141,19 +141,19 @@ BEGIN
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
-              AND so.StatusOrderId IN ( 1, 4, 15, 16,45,50 )
+              AND so.StatusOrderId IN ( 1, 15, 50, 45 )
 			  
           )
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )			  
+              AND so.StatusOrderId IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 )			  
 			  AND COALESCE(DO.IsLastMileReturn,0) = 0
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
-              AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21,32 )
+              AND so.StatusOrderId IN ( 10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35 )
           )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
 
@@ -183,19 +183,19 @@ BEGIN
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
-              AND (so.StatusOrderId NOT IN ( 1, 4, 15, 16 )
+              AND (so.StatusOrderId NOT IN ( 1, 15, 50, 45 )
 			))
           
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND (so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+              AND (so.StatusOrderId NOT IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 )
 			  )
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
-              AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+              AND so.StatusOrderId NOT IN ( 10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35 )
 			
           )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
@@ -320,7 +320,7 @@ BEGIN
         FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
 		INNER JOIN Subscription sb WITH (NOLOCK)
 		ON sbl.SubscriptionId = sb.IdSubscription
-		WHERE LogGuideNumber = @RevalueGuide)
+		WHERE sbl.LogGuideNumber = @RevalueGuide AND sbl.LogGuideSerie = @RevalueSerie )
 
 		IF(@TypeSubsId IS NULL)
 			BEGIN
@@ -572,7 +572,7 @@ BEGIN
                AND pyt.GuideNumber = ppt.GuideNumber
 		LEFT JOIN [dbo].[CatPaymentType] cpt WITH(NOLOCK)
 			ON (cpt.PayTypeId = pyt.PayTypeId)
-   WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+   WHERE do.SenderCountryId = @IdCountry;
 
     CREATE NONCLUSTERED INDEX IX_PPTID_ID ON #PendingPaymentTempId ([Id]);
 
