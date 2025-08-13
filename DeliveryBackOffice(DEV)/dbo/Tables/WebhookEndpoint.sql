@@ -14,7 +14,7 @@
     [Password]           NVARCHAR (50)  NULL,
     [Port]               INT            NULL,
     [RemoteRoute]        NVARCHAR (50)  NULL,
-    [IsCountryRequired]  BIT            DEFAULT ((0)) NOT NULL;
+    [IsCountryRequired]  BIT            DEFAULT ((0)) NOT NULL,
     PRIMARY KEY CLUSTERED ([IdWebhookEndpoint] ASC),
     CONSTRAINT [FK_WebhookEndpoint_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_WebhookEndpoint_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType])
