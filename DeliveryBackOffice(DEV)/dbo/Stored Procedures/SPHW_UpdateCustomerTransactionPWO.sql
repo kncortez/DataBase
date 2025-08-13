@@ -4,7 +4,7 @@
 -- Create date: <Create Date,12/08/2025>
 -- Description:	<Description,Actualizar el estado de la transacción de pasarela de pago PayWayOne SV>
 -- =============================================
-ALTER PROCEDURE SPHW_UpdateCustomerTransactionPWO 
+CREATE PROCEDURE SPHW_UpdateCustomerTransactionPWO 
     @Type AS INT = -1
   , @System AS INT = 1
   , @CardNumber AS NVARCHAR(50)
