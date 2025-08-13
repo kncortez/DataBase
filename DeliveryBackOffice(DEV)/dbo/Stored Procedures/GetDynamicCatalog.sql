@@ -598,6 +598,7 @@ BEGIN
 									   + '"TokenizedToken":"' +  cpv.TokenizedToken + '",' 
 									   + '"TokenizedCVV":"' +  cpv.TokenizedCVV + '",'
                                        + '"ExpirationDate":"' + ISNULL(cpv.TokenizedExpirationDate,'') + '",' 
+                                       + '"Type":"' + ISNULL( cpv.[Type],'') + '",'
 									   + '}'
                                 FROM CustomerPaymentValue cpv WITH (NOLOCK)
 								WHERE (cpv.AccountId = @IdAccount
