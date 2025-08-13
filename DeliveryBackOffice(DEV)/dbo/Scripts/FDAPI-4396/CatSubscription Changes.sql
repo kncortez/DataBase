@@ -5,7 +5,7 @@ BEGIN TRY
 	DECLARE @CatSubcription INT = ( SELECT IdCatSubscription FROM CatSubscription WHERE SubscriptionName = 'Paquete Básico' AND IdCountry = @IdCountry AND RowStatus = 1)
 
 	--ACTUALIZAMOS EL PRECIO
-	UPDATE CatSubscription SET SubscriptionDescription = '50 guías a Q25.00 c/u.', SubscriptionCost = '1250.00' WHERE IdCatSubscription = @CatSubcription
+	UPDATE CatSubscription SET SubscriptionDescription = '50 guías a Q25.00 c/u.', SubscriptionCost = '1250.00', Tag = 'NOVEDADES' WHERE IdCatSubscription = @CatSubcription
 
 	--ACTUALIZAMOS DECRIPCIONES
 
