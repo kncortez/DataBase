@@ -27,6 +27,10 @@
 -- Update date: <2024-10-21>
 -- Description:	<Se agrega nuevo campo IsVoucherRequired>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2025-08-14>
+-- Description:	<Guias Rapidas - Obtiene campos que indica si restringue uso a tarifario por articulo>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer AS INT = -1
@@ -129,6 +133,7 @@ BEGIN
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
 			 , cst.[IsVoucherRequired]
+             , ISNULL(cst.[RestrictionByArticle], 0)       AS RestrictionByArticle
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
@@ -232,6 +237,7 @@ BEGIN
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
 			 , cst.[IsVoucherRequired]
+             , ISNULL(cst.[RestrictionByArticle], 0)       AS RestrictionByArticle
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
