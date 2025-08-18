@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SellerDepot] (
-    [IdSellerDepot]       INT            IDENTITY (1, 1) NOT NULL,
+    [IdSellerDepot]       INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdSeller]            INT            NOT NULL,
     [IdSettlement]        BIGINT         NOT NULL,
     [CodeOfReference]     NVARCHAR (100) NOT NULL,
@@ -17,6 +17,8 @@
     CONSTRAINT [FK_SellerDepot_VisitPointClient] FOREIGN KEY ([IdVisitPointClient]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [SellerDepot_UK] UNIQUE NONCLUSTERED ([IdSeller] ASC, [CodeOfReference] ASC)
 );
+
+
 
 
 

@@ -1,21 +1,23 @@
-CREATE TABLE [dbo].[CatProductImage](
-	[IdCatProductImage] [int] IDENTITY(1,1) NOT NULL,
-	[CatProductImageSmallImageURL] [nvarchar](200) NULL,
-	[CatProductImageLargeImageURL] [nvarchar](200) NULL,
-	[CatProductImageOrder] [int] NOT NULL,
-	[RowStatus] [bit] NOT NULL,
-	[TokenCreated] [nvarchar](50) NOT NULL,
-	[DateCreated] [datetime] NOT NULL,
-	[TokenUpdated] [nvarchar](50) NULL,
-	[DateUpdated] [datetime] NULL,
-	[CatSubscriptionId] [int] NULL,
-	[CatMembershipId] [int] NULL,
-	[CatProductImageBigImageURL] [nvarchar](200) NULL,
- 	[CatProductImageXXXLImageURL] [nvarchar](200) NULL,
-	CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED ([IdCatProductImage] ASC),
-	CONSTRAINT [FK_CatProductImage_CatMembership] FOREIGN KEY([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
-	CONSTRAINT [FK_CatProductImage_CatSubscription] FOREIGN KEY([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
-)
+﻿CREATE TABLE [dbo].[CatProductImage] (
+    [IdCatProductImage]            INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [CatProductImageSmallImageURL] NVARCHAR (200) NULL,
+    [CatProductImageLargeImageURL] NVARCHAR (200) NULL,
+    [CatProductImageOrder]         INT            NOT NULL,
+    [RowStatus]                    BIT            NOT NULL,
+    [TokenCreated]                 NVARCHAR (50)  NOT NULL,
+    [DateCreated]                  DATETIME       NOT NULL,
+    [TokenUpdated]                 NVARCHAR (50)  NULL,
+    [DateUpdated]                  DATETIME       NULL,
+    [CatSubscriptionId]            INT            NULL,
+    [CatMembershipId]              INT            NULL,
+    [CatProductImageBigImageURL]   NVARCHAR (200) NULL,
+    [CatProductImageXXXLImageURL]  NVARCHAR (200) NULL,
+    CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED ([IdCatProductImage] ASC),
+    CONSTRAINT [FK_CatProductImage_CatMembership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
+    CONSTRAINT [FK_CatProductImage_CatSubscription] FOREIGN KEY ([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
+);
+
+
 GO
 
 

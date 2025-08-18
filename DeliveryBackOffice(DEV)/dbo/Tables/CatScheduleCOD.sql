@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatScheduleCOD] (
-    [IdCatScheduleCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatScheduleCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Hour]             TIME (7)      NOT NULL,
     [RowStatus]        BIT           CONSTRAINT [DF_CatScheduleCOD_RowStatus] DEFAULT ('TRUE') NOT NULL,
     [TokenCreated]     NVARCHAR (50) NOT NULL,

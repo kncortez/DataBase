@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointCoverage] (
-    [IdVpbySegment] INT          IDENTITY (1, 1) NOT NULL,
+    [IdVpbySegment] INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [VisitPointId]  INT          NOT NULL,
     [HubLogisticId] INT          NOT NULL,
     [SegmentId]     INT          NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FKSegmentVP] FOREIGN KEY ([SegmentId]) REFERENCES [dbo].[CatRateSegment] ([CrsId]),
     CONSTRAINT [FKVpSegment] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

@@ -70,3 +70,20 @@ BEGIN
         SELECT 'La ruta ya existe ';
     END;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportCreateRoute] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportCreateRoute] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportCreateRoute] TO [cvaldes]
+    AS [dbo];
+

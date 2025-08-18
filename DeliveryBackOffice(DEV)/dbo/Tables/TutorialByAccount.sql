@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TutorialByAccount] (
-    [IdTutorialByAccount] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdTutorialByAccount] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TutorialId]          INT           NOT NULL,
     [AccountId]           BIGINT        NOT NULL,
     [ToDisplay]           BIT           DEFAULT ((1)) NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_TutorialByAccount_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_TutorialByAccount_Tutorial] FOREIGN KEY ([TutorialId]) REFERENCES [dbo].[Tutorial] ([IdTutorial])
 );
+
+
 
 
 

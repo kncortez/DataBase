@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderPaymentDetail] (
-    [DopId]                 BIGINT          IDENTITY (1, 1) NOT NULL,
+    [DopId]                 BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideNumber]           INT             NOT NULL,
     [GuideSerie]            NVARCHAR (2)    NULL,
     [PayTypeId]             INT             NULL,
@@ -25,6 +25,8 @@
     [RecolectPayment]       DECIMAL (18, 2) NULL,
     PRIMARY KEY CLUSTERED ([DopId] ASC)
 );
+
+
 
 
 

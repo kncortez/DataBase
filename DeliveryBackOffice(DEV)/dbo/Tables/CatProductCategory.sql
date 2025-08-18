@@ -1,6 +1,6 @@
 ﻿
 CREATE TABLE [dbo].[CatProductCategory] (
-    [IdCatProductCategory]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatProductCategory]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatProductCategoryName]        NVARCHAR (100) NOT NULL,
     [CatProductCategoryDescription] NVARCHAR (200) NULL,
     [CatProductCategoryOrder]       INT            NOT NULL,
@@ -15,6 +15,8 @@ CREATE TABLE [dbo].[CatProductCategory] (
     CONSTRAINT [PK_CatProductCategory] PRIMARY KEY CLUSTERED ([IdCatProductCategory] ASC),
     CONSTRAINT [FK_CatProductCategory_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO

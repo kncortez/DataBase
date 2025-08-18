@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTagContent] (
-    [IdCatTagContent]          BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdCatTagContent]          BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatTagContentName]        NVARCHAR (50)  NOT NULL,
     [CatTagContentDescription] NVARCHAR (500) NULL,
     [RowStatus]                BIT            DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [TokenUpdated]             NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdCatTagContent] ASC)
 );
+
+
 
 
 GO

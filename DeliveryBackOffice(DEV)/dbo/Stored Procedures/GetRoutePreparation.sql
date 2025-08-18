@@ -28,6 +28,11 @@
 -- Update date: <2024-10-01>
 -- Description:	<Se filtra para que tome en cuenta unicamente las guias que no han sido despachadas>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2025-01-17>
+-- Description:	<devolución de campo Ticlet_Number como referencia>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetRoutePreparation]
 	@IdRoute INT,
 	@Date DATE
@@ -59,14 +64,10 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 					ON
 						RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
-						AND
-						RPD.RowStatus = 1
 				inner JOIN
 					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 					ON
 						RPD.RoutePreparationId = RP.IdRoutePreparation
-						AND
-						RP.RowStatus = 1
 				inner JOIN 
 					[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 					ON
@@ -81,6 +82,10 @@ BEGIN
 				RP.DateRoutePreparation = @Date
 				AND
 				RPDP.RowStatus = 1
+				AND
+				RPD.RowStatus = 1
+				AND
+				RP.RowStatus = 1
 
 			--- Actualizar la preparación de ruta en base a los datos almacenados
 			UPDATE RP
@@ -173,6 +178,7 @@ BEGIN
 		, cu.Abbreviation 'CustomerAbbreviation' 
 		, RPD.ETAGuide 'GuideETA'
 		, cu.IsVoucherRequired
+		,do.Ticket_Number
 	FROM RoutePreparation RP WITH(NOLOCK)
 	LEFT JOIN RoutePreparationDetail RPD WITH(NOLOCK)
 		ON

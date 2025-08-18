@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ProofIncidence] (
-    [IdProofIncidence] INT           IDENTITY (1, 1) NOT NULL,
+    [IdProofIncidence] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IncidenceId]      INT           NULL,
     [PathIncidence]    VARCHAR (200) NULL,
     [RowStatus]        BIT           NOT NULL,

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AnticipatedCODDetail] (
-    [IdAnticipatedCODDetail]    INT             IDENTITY (1, 1) NOT NULL,
+    [IdAnticipatedCODDetail]    INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AnticipatedCODHeaderId]    INT             NOT NULL,
     [GuideSerie]                NVARCHAR (2)    NULL,
     [GuideNumber]               INT             NOT NULL,
@@ -24,6 +24,10 @@
     CONSTRAINT [FKAnticipatedCODHeaderId_AnticipatedCODDetail] FOREIGN KEY ([AnticipatedCODHeaderId]) REFERENCES [dbo].[AnticipatedCODHeader] ([IdAnticipatedCODHeader]),
     CONSTRAINT [FKGuideSerie_AnticipatedCODDetail] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
+
+
 
 
 GO
@@ -114,4 +118,22 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Llave princ
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que Maneja informacion de clientes spbre historico de COD Anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODDetail';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_INCLUDE]
+    ON [dbo].[AnticipatedCODDetail]([RowStatus] ASC)
+    INCLUDE([AnticipatedCODHeaderId], [CollectOnDelivery], [BalanceStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_DateCreated_include]
+    ON [dbo].[AnticipatedCODDetail]([RowStatus] ASC, [DateCreated] ASC)
+    INCLUDE([AnticipatedCODHeaderId], [CollectOnDelivery]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_AnticipatedCODHeaderId_RowStatus_INCLUDE]
+    ON [dbo].[AnticipatedCODDetail]([AnticipatedCODHeaderId] ASC, [RowStatus] ASC)
+    INCLUDE([CollectOnDelivery], [BalanceStatus]);
 

@@ -215,3 +215,8 @@ BEGIN
     END;
 
 END;
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[spws_SetHwNewCorporateUserV2] TO [ebarrios]
+    AS [dbo];
+

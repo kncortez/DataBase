@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SubscriptionDiscountRange] (
-    [IdSubscriptionDiscountRange] INT            IDENTITY (1, 1) NOT NULL,
+    [IdSubscriptionDiscountRange] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SubscriptionId]              INT            NOT NULL,
     [DiscountLowServiceRange]     INT            NOT NULL,
     [DiscountTopServiceRange]     INT            NULL,
@@ -12,6 +12,8 @@
     [DateUpdated]                 DATETIME       NULL,
     CONSTRAINT [PK_SubscriptionDiscountRange] PRIMARY KEY CLUSTERED ([IdSubscriptionDiscountRange] ASC)
 );
+
+
 
 
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AccountingClosuresHeaderVisitPoint] (
-    [IdAccountingClosuresHeaderVisitPoint] INT             IDENTITY (1, 1) NOT NULL,
+    [IdAccountingClosuresHeaderVisitPoint] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UserId]                               BIGINT          NOT NULL,
     [ClosurerPOS]                          NVARCHAR (50)   NULL,
     [TotalAmountCash]                      DECIMAL (18, 5) NOT NULL,
@@ -33,6 +33,8 @@
     CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_User] FOREIGN KEY ([UserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser]),
     CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_VisitPointClient] FOREIGN KEY ([VisitPoint]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[MembershipAffiliateDiscount] (
-    [IdMembershipAffiliateDiscount] BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdMembershipAffiliateDiscount] BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatMembershipId]               INT            NOT NULL,
     [AffiliateId]                   BIGINT         NOT NULL,
     [DiscountValueType]             INT            NOT NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_MembershipAffiliateDiscount_Membership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
     UNIQUE NONCLUSTERED ([AffiliateId] ASC, [CatMembershipId] ASC)
 );
+
+
 
 
 GO

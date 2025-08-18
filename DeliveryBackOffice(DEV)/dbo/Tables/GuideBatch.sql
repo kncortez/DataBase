@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[GuideBatch] (
-    [IdRow]                         BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdRow]                         BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdBatch]                       BIGINT        NOT NULL,
     [IdUser]                        BIGINT        NOT NULL,
     [GuideSeries]                   VARCHAR (100) NOT NULL,
@@ -16,6 +16,14 @@
     CONSTRAINT [FKRegisterUserBatch] FOREIGN KEY ([IdUser]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser]),
     CONSTRAINT [FKUserAddressBatch] FOREIGN KEY ([IdAddress]) REFERENCES [dbo].[UserAddress] ([UadIdAddress])
 );
+
+
+
+
+
+
+
+
 
 
 
@@ -88,4 +96,27 @@ CREATE NONCLUSTERED INDEX [IDX_IdUser_RowStatus]
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber]
     ON [dbo].[GuideBatch]([GuideSeries] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdUser_RowStatus_include]
+    ON [dbo].[GuideBatch]([IdUser] ASC, [RowStatus] ASC)
+    INCLUDE([IdBatch], [GuideNumber], [Status]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_INCLUDE]
+    ON [dbo].[GuideBatch]([RowStatus] ASC)
+    INCLUDE([IdBatch], [GuideSeries], [GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSeries_GuideNumber_RowStatus_include]
+    ON [dbo].[GuideBatch]([GuideSeries] ASC, [GuideNumber] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSeries_RowStatus_INCLUDE]
+    ON [dbo].[GuideBatch]([GuideSeries] ASC, [RowStatus] ASC)
+    INCLUDE([GuideNumber], [Status]);
 

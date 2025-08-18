@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AccountBankFormatRule] (
-    [IdAccountBankFormatRule] INT           IDENTITY (1, 1) NOT NULL,
+    [IdAccountBankFormatRule] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [DeliveryBankId]          INT           NOT NULL,
     [CatBankAccountTypeId]    INT           NOT NULL,
     [MinimumLength]           INT           NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_AccountBankFormatRule_CatBankAccountTypeId] FOREIGN KEY ([CatBankAccountTypeId]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
     CONSTRAINT [FK_AccountBankFormatRule_DeliveryBankId] FOREIGN KEY ([DeliveryBankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TypeVehicleGroup] (
-    [IdTypeVehicleGroup] INT           IDENTITY (1, 1) NOT NULL,
+    [IdTypeVehicleGroup] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TypeVehicleOrigin]  INT           NOT NULL,
     [TypeVehicleValid]   INT           NOT NULL,
     [RowStatus]          BIT           DEFAULT ((1)) NOT NULL,

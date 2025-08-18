@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CustomerType] (
-    [IdCustomerType]     INT            IDENTITY (1, 1) NOT NULL,
+    [IdCustomerType]     INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Description]        NVARCHAR (100) NULL,
     [CustomerTypeStatus] BIT            CONSTRAINT [DF_CustomerType_StatusCustomerType] DEFAULT ('TRUE') NULL,
     [TokenCreated]       NVARCHAR (50)  NULL,
@@ -8,6 +8,8 @@
     [DateUpdated]        DATETIME       NULL,
     CONSTRAINT [PK_CustomerType] PRIMARY KEY CLUSTERED ([IdCustomerType] ASC)
 );
+
+
 
 
 GO

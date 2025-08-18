@@ -4,7 +4,7 @@
 -- Description:	<Se agrego nuevo campo [AttentionSchedule] para el manejo de los horarios de atencion para los express center proyecto Navenik>
 -- =============================================
 CREATE TABLE [dbo].[VisitPointClient] (
-    [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT NULL,
+    [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CodeOfReference]         INT            NOT NULL,
     [DescriptionOfClient]     NVARCHAR (100) NULL,
     [StatusClient]            BIT            NOT NULL,
@@ -49,6 +49,10 @@ CREATE TABLE [dbo].[VisitPointClient] (
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
+
+
 
 
 
@@ -212,4 +216,21 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_StatusClient]
     ON [dbo].[VisitPointClient]([StatusClient] ASC)
     INCLUDE([IdVisitPointClient], [DescriptionOfClient], [CountryId], [CustomerID], [Phone]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusClient_IdKindOfVPBusiness_INCLUDE]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [IdKindOfVPBusiness] ASC)
+    INCLUDE([DescriptionOfClient], [CountryId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusClient_CountryId_INCLUDE]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC)
+    INCLUDE([DescriptionOfClient], [CustomerID]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DescriptionOfClient_StatusClient_CountryId]
+    ON [dbo].[VisitPointClient]([DescriptionOfClient] ASC, [StatusClient] ASC, [CountryId] ASC);
 

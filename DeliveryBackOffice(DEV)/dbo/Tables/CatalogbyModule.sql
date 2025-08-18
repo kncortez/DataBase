@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatalogbyModule] (
-    [IdCatModule]  INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatModule]  INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NameCatalog]  NVARCHAR (50) NULL,
     [ModuleID]     INT           NULL,
     [SystemID]     INT           NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_CatalogbyModule_CatModule] FOREIGN KEY ([ModuleID]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
     CONSTRAINT [FK_CatalogbyModule_CatSystem] FOREIGN KEY ([SystemID]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 
 
 GO

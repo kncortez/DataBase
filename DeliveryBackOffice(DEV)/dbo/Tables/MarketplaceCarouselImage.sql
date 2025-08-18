@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[MarketplaceCarouselImage] (
-    [IdCarouselImage] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCarouselImage] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [XXLImageURL]     NVARCHAR (200) NOT NULL,
     [XLImageURL]      NVARCHAR (200) NOT NULL,
     [MDImageURL]      NVARCHAR (200) NOT NULL,
@@ -16,6 +16,8 @@
     CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC),
     CONSTRAINT [FK_MCSenderIdCountry_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 

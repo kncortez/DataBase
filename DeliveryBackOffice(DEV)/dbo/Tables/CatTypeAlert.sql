@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeAlert] (
-    [IdCatTypeAlert] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatTypeAlert] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AlertName]      VARCHAR (15)  NULL,
     [RowStatus]      BIT           NOT NULL,
     [TokenCreated]   NVARCHAR (50) NOT NULL,
@@ -8,6 +8,8 @@
     [DateUpdated]    DATETIME      NULL,
     CONSTRAINT [PK_CatAlertStatus] PRIMARY KEY CLUSTERED ([IdCatTypeAlert] ASC)
 );
+
+
 
 
 

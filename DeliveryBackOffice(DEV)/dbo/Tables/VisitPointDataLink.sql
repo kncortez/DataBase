@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointDataLink] (
-    [IdVisitPointDataLink]   BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdVisitPointDataLink]   BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [VisitPointId]           INT            NULL,
     [ServiceToken]           NVARCHAR (50)  NOT NULL,
     [ServiceTokenExpiration] DATETIME       NULL,
@@ -18,6 +18,8 @@
     CONSTRAINT [FK_VisitPointDataLink_DataLinkStatus] FOREIGN KEY ([DataLinkStatusId]) REFERENCES [dbo].[CatDataLinkStatus] ([IdCatDataLinkStatus]),
     CONSTRAINT [FK_VisitPointDataLink_VisitPoint] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

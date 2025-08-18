@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LocationRecord] (
-    [IdLocationRecord]  INT            IDENTITY (1, 1) NOT NULL,
+    [IdLocationRecord]  INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SocialSecurityId]  NVARCHAR (200) NULL,
     [Phone]             NVARCHAR (10)  NULL,
     [Address]           NVARCHAR (600) NULL,
@@ -17,6 +17,8 @@
     [LongitudeToReview] NVARCHAR (20)  NULL,
     CONSTRAINT [PK_LocationRecord_IdLocationRecord] PRIMARY KEY CLUSTERED ([IdLocationRecord] ASC)
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SchedulePickup] (
-    [SchedulePickupId]               BIGINT          IDENTITY (1, 1) NOT NULL,
+    [SchedulePickupId]               BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountId]                      BIGINT          NULL,
     [StartDate]                      DATETIME        NULL,
     [EndDate]                        DATETIME        NULL,
@@ -35,6 +35,8 @@
     CONSTRAINT [FK_SchedulePickup_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_SchedulePickup_CatTypeVehicle] FOREIGN KEY ([TypeVehicleId]) REFERENCES [dbo].[CatTypeVehicle] ([IdTypeVehicle])
 );
+
+
 
 
 

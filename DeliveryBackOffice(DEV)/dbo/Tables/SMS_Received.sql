@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SMS_Received] (
-    [SMS_ID]                   BIGINT         IDENTITY (1, 1) NOT NULL,
+    [SMS_ID]                   BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SMS_Message_ID]           BIGINT         NOT NULL,
     [SMS_Message]              NVARCHAR (500) NOT NULL,
     [SMS_MSisdn]               NVARCHAR (50)  NOT NULL,
@@ -16,9 +16,12 @@
 );
 
 
+
+
+
+
 GO
-CREATE NONCLUSTERED INDEX [IX_SMS_Received]
-    ON [dbo].[SMS_Received]([SMS_MSisdn] ASC);
+
 
 
 GO

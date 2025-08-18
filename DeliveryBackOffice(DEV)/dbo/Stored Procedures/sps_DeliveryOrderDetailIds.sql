@@ -1,10 +1,15 @@
-﻿CREATE PROCEDURE [dbo].[sps_DeliveryOrderDetailIds]
- @GuideSerie						varchar(2) = 'FD'
-,@GuideNumber						int = 0
-,@IdCustomer						int = 0 
-,@TypeService						varchar(4) = NULL
-,@IndicationsOrigin					varchar(1500) = ''
-,@IndicationsDestination			varchar(1500) = ''
+﻿-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <Update date,2025-04-28>
+-- Description:	<Se agrega codigo de ruta para manejar en impresion de guias en metodo de creacion de guias api core>
+-- =============================================
+CREATE PROCEDURE [dbo].[sps_DeliveryOrderDetailIds]
+ @GuideSerie						VARCHAR(2) = 'FD'
+,@GuideNumber						INT = 0
+,@IdCustomer						INT = 0 
+,@TypeService						VARCHAR(4) = NULL
+,@IndicationsOrigin					VARCHAR(1500) = ''
+,@IndicationsDestination			VARCHAR(1500) = ''
 ,@Sender_Mail						varchar(200) = ''
 ,@Ticket_Number						varchar(300) = ''
 ,@IsInsuarance						bit = 0
@@ -30,7 +35,7 @@ BEGIN
 			TOP (1) 
 				[DO].[CatSystemId] 
 		FROM 
-			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) 
 		WHERE
 			[DO].[Guide_Serie] = @GuideSerie
 			AND
@@ -83,7 +88,7 @@ BEGIN
 	DECLARE @Price DECIMAL(12,2)
 	DECLARE @CouponApplied BIT
 
-	SELECT @Price = ISNULL(dr.PriceShippment,0) FROM dbo.DeliveryOrder dr
+	SELECT @Price = ISNULL(dr.PriceShippment,0) FROM dbo.DeliveryOrder dr WITH(NOLOCK) 
 	WHERE dr.Guide_Serie = @GuideSerie AND dr.Guide_Number =@GuideNumber
 
 	SET @CouponApplied = ISNULL((
@@ -125,6 +130,13 @@ BEGIN
 	select 1,
 		ISNULL(@GuideServiceType, 'STD') [GuideServiceType]
 		, PriceShippment
-	FROM DeliveryBackOffice.dbo.DeliveryOrder
+		, ISNULL(CAST(DSC.RouteCode AS varchar),'') [Route_Code]
+	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+    LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
+        ON DSC.IdSettlement = do.ReceiverIdSettlement 
+    LEFT JOIN Settlement s WITH(NOLOCK)
+        ON DSC.IdSettlement = s.IdSettlement
+		AND s.SettlementSatus = 1
 	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber;
+
 END

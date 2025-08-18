@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatWayToPay] (
-    [WayPayId]          INT           IDENTITY (1, 1) NOT NULL,
+    [WayPayId]          INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [WayPayName]        VARCHAR (55)  NULL,
     [WayPayDescription] VARCHAR (100) NULL,
     [WayPayAbrev]       VARCHAR (10)  NULL,

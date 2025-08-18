@@ -82,9 +82,9 @@ BEGIN
 				DateUpdated = GETDATE(),
 				IsPieceLiquidaded = 1
 				from DeliveryBackOffice.dbo.SettlementByPickup stp
-				join DeliveryBackOffice.dbo.SettlementByPickupDetail spd on stp.Id = spd.SettlementByPickupId
+				INNER JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail spd on stp.Id = spd.SettlementByPickupId
 				where stp.SequenceCode = @IdManifest and stp.SubTypeServiceManagmentId = @Subtipe and 
-				spd.GuideNumber = @GuideNumber and spd.GuideSerie = @GuideSerie and spd.NoPiece = @NoPiece 
+				spd.GuideSerie = @GuideSerie and spd.GuideNumber = @GuideNumber and spd.NoPiece = @NoPiece 
 					
 				SET @RModified = @@ROWCOUNT
 

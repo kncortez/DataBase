@@ -55,8 +55,14 @@ BEGIN
     (
        IdCustomer INT NOT NULL,
        PortfolioId INT NOT NULL,
-       CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
+       --CONSTRAINT PK_TempDataClient PRIMARY KEY (IdCustomer, PortfolioId)
     );
+
+    CREATE NONCLUSTERED INDEX IDX_PK_TempDataClient
+    ON #TempDataClient (
+                         IdCustomer
+                       , PortfolioId
+                       );
 
     DECLARE @IsLastMileReturn BIT = ISNULL(
                                     (
@@ -195,6 +201,7 @@ BEGIN
                             WHERE Guide_Serie = @Guide_Serie
                                   AND Guide_Number = @Guide_Number
                         );
+                        SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
 
                         UPDATE acodh 
                            SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0),
@@ -250,7 +257,6 @@ BEGIN
 
                         EXEC spUpdateBalanceByIdClient @AnticipatedCODDetail
 
-                        SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
 
                         -------------------WEBHOOK.INI--------------------------------------------------------------------------------------------
                         DECLARE @WebhookCustomerId INT = -1;

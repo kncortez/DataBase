@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SettlementByPickup] (
-    [Id]                        INT           IDENTITY (1, 1) NOT NULL,
+    [Id]                        INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RouteAssigmentId]          INT           NULL,
     [DatePrinted]               DATETIME      NULL,
     [TokenCreated]              VARCHAR (50)  NOT NULL,
@@ -20,6 +20,8 @@
     [DateUpdated]               DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([Id] ASC)
 );
+
+
 
 
 

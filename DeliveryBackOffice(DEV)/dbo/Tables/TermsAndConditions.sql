@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TermsAndConditions] (
-    [IdTAC]        BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdTAC]        BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]         VARCHAR (50)  NOT NULL,
     [Description]  VARCHAR (250) NOT NULL,
     [RowStatus]    BIT           NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]  DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdTAC] ASC)
 );
+
+
 
 
 
