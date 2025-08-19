@@ -3,7 +3,7 @@ BEGIN TRANSACTION
 BEGIN TRY
 
    ALTER TABLE DefaultValuesPerCountry
-   ADD RegxNRC NVARCHAR(500);
+   ADD RegxNRC NVARCHAR(200);
 
    ALTER TABLE DefaultValuesPerCountry
    ADD NRCShortDescription NVARCHAR(500);
@@ -27,7 +27,7 @@ BEGIN TRY
  -------------------------------
 
    ALTER TABLE DefaultValuesPerCountry
-   ADD RegxPassport NVARCHAR(500);
+   ADD RegxPassport NVARCHAR(200);
 
    ALTER TABLE DefaultValuesPerCountry
    ADD PassportShortDescription NVARCHAR(500);
