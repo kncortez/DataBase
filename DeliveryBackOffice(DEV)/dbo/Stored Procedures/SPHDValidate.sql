@@ -48,7 +48,7 @@ If (@Guide IS NOT NULL)
 Begin
 
 
-     Select Top 1 @dti_fk_header = dti_fk_header From [dbo].[invoiceDetail]
+     Select Top 1 @dti_fk_header = dti_fk_header From [dbo].[invoiceDetail] WITH(NOLOCK)
 								Where dti_fk_orderSerie + Cast(dti_fk_orderNumber as varchar)  = @Guide
 								
 
