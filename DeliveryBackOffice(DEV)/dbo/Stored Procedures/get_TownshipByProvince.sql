@@ -20,7 +20,7 @@ BEGIN
                ON pv.IdProvince = ts.IdProvince
          WHERE TownshipStatus = 1
            AND pv.ProvinceStatus = 1
-           AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
+           AND pv.IdCountry = @IdCountry
     END
     ELSE
     BEGIN
@@ -32,7 +32,7 @@ BEGIN
                ON pv.IdProvince = ts.IdProvince
          WHERE TownshipStatus = 1
            AND pv.ProvinceStatus = 1
-           AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
+           AND pv.IdCountry = @IdCountry
            AND ts.IdProvince = @IdProvince
     END
 END
