@@ -2,6 +2,8 @@
 -- Author:		<Walter Orozco>
 -- Create date: <2024-10-08>
 -- Description:	<Delivery Tracking - Método para obtener información pública para rastreo de parquete.>
+-- Create date: <2025-07-25>
+-- Description:	<Se modifica la bandera de cambio de dirección, no se puede si es entrega EXC.>
 -- =============================================
 -- =============================================
 -- Author:		<Cristian Suazo>
@@ -467,6 +469,9 @@ BEGIN
                                               AND CI.IsDenied = 0
                                     ) > 1 --INTENTO DEVOLUCIONES
                                     OR SO.CatStatusProcessId = @StatusProcessFinal --LA GUÍA SE ENCUENTRA EN UN ESTADO ENTREGADO
+                                    OR --La guia esta configurada para entregarse en EXC
+									(DO.IdDeliveryOption = ( SELECT IdDeliveryOption FROM [DeliveryBackOffice].[dbo].[CatDeliveryOptions] WITH (NOLOCK)
+															 WHERE [Name] = 'Express Center' AND [IdCountry] = ISNULL(DO.ReceiverCountryId, 'GT')))
                         THEN
                                    'false'
                                ELSE
