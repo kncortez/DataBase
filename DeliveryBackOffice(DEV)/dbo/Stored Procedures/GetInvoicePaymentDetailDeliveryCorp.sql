@@ -33,12 +33,8 @@ BEGIN
                                  ELSE 'STD'
                               END
 
-        -- Verificar si la tabla existe y eliminarla si es necesario
-        IF OBJECT_ID('tempdb..#InvoiceByVisitPointDetails') IS NOT NULL
-            DROP TABLE #InvoiceByVisitPointDetails;
-
         -- Crear la tabla
-        CREATE TABLE #InvoiceByVisitPointDetails
+        DECLARE @InvoiceByVisitPointDetails TABLE
         (
             IdVisitPointClient INT NOT NULL,
             Guide_Serie        NVARCHAR(2)  NOT NULL,
@@ -103,18 +99,27 @@ BEGIN
                      )
          ORDER BY do.Guide_Number DESC
 
-        INSERT INTO #InvoiceByVisitPointDetails
+        INSERT INTO @InvoiceByVisitPointDetails
         EXEC [dbo].[GetBillingGuideDetailForList] @TempVisitPointClient
 
             -- Validar si hay registros en la tabla temporal
             IF EXISTS (SELECT TOP 1 1 
-                         FROM #InvoiceByVisitPointDetails)
+                         FROM @InvoiceByVisitPointDetails)
             BEGIN
                 SELECT 1 AS StatusCode, 
                        'Detalle obtenido con éxito' AS StatusMessage;
 
-                SELECT *
-                  FROM #InvoiceByVisitPointDetails
+                SELECT IdVisitPointClient,
+                       Guide_Serie,
+                       Guide_Number,
+                       CountryByGuide,
+                       SAPCode,
+                       [Name],
+                       [Description],
+                       Price,
+                       Category,
+                       SendToInvoice
+                  FROM @InvoiceByVisitPointDetails
                  ORDER BY IdVisitPointClient DESC, Guide_Serie DESC, Guide_Number DESC;
             END
             ELSE
@@ -134,7 +139,4 @@ BEGIN
                    'Ha ocurrido un error en el proceso' AS StatusMessage
     END CATCH
 
-    -- Validar y eliminar la tabla temporal si ya existe
-    IF OBJECT_ID('tempdb..#VisitPoints') IS NOT NULL
-        DROP TABLE #InvoiceByVisitPointDetails;
 END;
