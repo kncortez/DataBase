@@ -43,8 +43,8 @@ BEGIN
                           AND ind.dti_fk_orderserie = tbd.orderSerie
                         INNER JOIN invoiceHeader inh WITH (NOLOCK)
                            ON ind.dti_fk_header = inh.inv_pk_id
-                          AND inh.CatInvoiceTypeId = @idType
                   WHERE inh.inv_certificationFEL IS NULL
+                    AND inh.CatInvoiceTypeId = @idType
                 );
 
      IF(@Guide <= 0)

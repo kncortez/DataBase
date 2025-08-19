@@ -39,12 +39,15 @@ BEGIN
     SET @Calalog = UPPER(@Calalog);
     DECLARE @NameOfCatalog AS NVARCHAR(50) = N'';
 
-    IF OBJECT_ID('tempdb.dbo.#Catalogs', 'U') IS NOT NULL
-        DROP TABLE #Catalogs;
+    DECLARE @Catalogs TABLE
+    (
+        IdCatalog INT,
+        NameCatalog VARCHAR(100)
+    );
 
+	INSERT INTO @Catalogs (IdCatalog,NameCatalog)
     SELECT ModuleID,
            cbm.NameCatalog
-    INTO #Catalogs
     FROM CatalogbyModule cbm
     WHERE cbm.ModuleID = @IdModule
           AND cbm.RowStatus = 'TRUE'
@@ -59,7 +62,7 @@ BEGIN
 
     DECLARE @IdMax AS INT =
             (
-                SELECT COUNT(*)FROM #Catalogs
+                SELECT COUNT(*)FROM @Catalogs
             );
 
     WHILE @count <= @IdMax
@@ -68,7 +71,7 @@ BEGIN
 
         SELECT TOP 1
                @NameOfCatalog = ctl.NameCatalog
-        FROM #Catalogs ctl;
+        FROM @Catalogs ctl;
         PRINT @NameOfCatalog;
         IF (@NameOfCatalog = 'SaleAdvisor')
         BEGIN
@@ -630,7 +633,7 @@ BEGIN
 
         SET @count = @count + 1;
         DELETE TOP (1)
-        FROM #Catalogs;
+        FROM @Catalogs;
     END;
 
 
