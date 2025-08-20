@@ -3,6 +3,10 @@
 -- Create date: <2025-01-09>
 -- Description: <Retorna los datos de una factura, asi como su detalle y guías>
 -- =============================================
+-- Author:      <Brandon, Pedroza>
+-- Create date: <2025-07-30>
+-- Description: <Facturacion SV - Se agrega validacion para obtener información para SV>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetInvoiceData]
 
     @Inv_SerieFEL NVARCHAR(200) = NULL,
@@ -15,13 +19,14 @@ BEGIN
 DECLARE @pk_id INT = 0;
 DECLARE @InvoiceBalance DECIMAL(18,2) = 0;
 DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
+DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Comprobante Crédito Fiscal')
 
     IF(@idCountry = 'GT')
     BEGIN
         SELECT
               @pk_id = inv_pk_id
              ,@InvoiceBalance = inv_amount
-        FROM  InvoiceHeader
+        FROM  InvoiceHeader WITH(NOLOCK)
         WHERE inv_SerieFEL = @Inv_SerieFEL
           AND inv_numberFEL = @Inv_NumberFEL
           AND IdCountry = @idCountry
@@ -31,7 +36,7 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
         SELECT
               @pk_id = inv_pk_id
              ,@InvoiceBalance = inv_amount
-        FROM  InvoiceHeader
+        FROM  InvoiceHeader WITH(NOLOCK)
         WHERE inv_SerieFEL = @Inv_SerieFEL
           AND inv_certificationFEL = @Inv_NumberFEL
           AND IdCountry = @idCountry
@@ -45,6 +50,24 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
        SET @InvoiceBalance = @InvoiceBalance - @AmountNotesCredits;
 
     END
+	ELSE IF(@idCountry = 'SV')
+	BEGIN
+	        SELECT
+              @pk_id = inv_pk_id
+             ,@InvoiceBalance = inv_amount
+        FROM  InvoiceHeader WITH (NOLOCK)
+        WHERE inv_numberFEL = @Inv_NumberFEL
+          AND IdCountry = @idCountry
+		  AND inv_type = @TypeDocument --comprobante de credito fiscal
+
+        --CALCULOS DE MONTOS  NOTAS DE CREDITO
+        SELECT @AmountNotesCredits = ISNULL(SUM(inv_amount),0)
+        FROM InvoiceHeader WITH (NOLOCK)
+        WHERE inv_invoiceOfCreditNote = @pk_id
+           AND inv_type = 2;
+
+       SET @InvoiceBalance = @InvoiceBalance - @AmountNotesCredits;
+	END
 
     SELECT
             inv_pk_id
@@ -55,7 +78,7 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
            ,inv_amount
            ,@InvoiceBalance inv_balance
            --,*
-    FROM invoiceHeader 
+    FROM invoiceHeader WITH(NOLOCK)
     WHERE inv_pk_id = @pk_id;
 
     SELECT
@@ -64,7 +87,7 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
            ,dti_fk_orderNumber
            ,dti_amount
            --,*
-    FROM invoiceDetail
+    FROM invoiceDetail WITH(NOLOCK)
     WHERE dti_fk_header = @pk_id;
 
 END

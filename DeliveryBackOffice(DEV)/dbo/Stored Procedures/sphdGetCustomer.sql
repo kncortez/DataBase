@@ -27,6 +27,10 @@
 -- Update date: <2024-10-21>
 -- Description:	<Se agrega nuevo campo IsVoucherRequired>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2025-06-12>
+-- Description:	<Facturación SV - Obtiene campos de direccion de clientes para facturar de El Salvador>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer AS INT = -1
@@ -332,5 +336,20 @@ BEGIN
 			 AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
 	END;
+    -- Facturacion El Salvador
+	SELECT
+		BL.Id,
+		BL.IdCustomer,
+		DIS.CodeDistrict AS [CodeDistrict],
+		DIS.StateCode AS [CodeState],
+		BL.ActivityId AS CodeActivity,
+		BL.NRC,
+		BL.Nirphone,
+		BL.Phone
+    FROM dbo.BillingCustomerBySV BL WITH(NOLOCK)
+    LEFT JOIN dbo.DistrictByBillingSV DIS WITH(NOLOCK)
+       ON DistrictId = DIS.Id
+    WHERE BL.IdCustomer = @IdCustomer
+        AND BL.RowStatus = 1;
 
 END;
