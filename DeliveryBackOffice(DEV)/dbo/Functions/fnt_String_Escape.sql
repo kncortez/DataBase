@@ -13,3 +13,8 @@ BEGIN
   WHERE EncodingType = @Encoding;
    RETURN @StringToEscape
 END
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[fnt_String_Escape] TO [caquino]
+    AS [dbo];
+

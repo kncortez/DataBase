@@ -126,6 +126,10 @@ CREATE NONCLUSTERED INDEX [idx_inv_pk_id_CatInvoiceTypeId]
     ON [dbo].[invoiceHeader]( [CatInvoiceTypeId]);
 
 GO
+CREATE NONCLUSTERED INDEX IX_invoiceHeader_IdCountry_inv_numberFEL
+        ON dbo.invoiceHeader (IdCountry, inv_numberFEL ASC);
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del pais registrado para la factura', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'IdCountry';
 
 GO
@@ -290,6 +294,12 @@ GO
 CREATE NONCLUSTERED INDEX [idx_inv_dateRegister_inv_type_inv_SAPDocEntry_include]
     ON [dbo].[invoiceHeader]([inv_dateRegister] ASC, [inv_type] ASC, [inv_SAPDocEntry] ASC)
     INCLUDE([inv_vpCodeOfReferences], [inv_date], [inv_status], [inv_invoiceOfCreditNote], [IdCountry]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IsManualInvoice_inv_dateRegister_inv_type_inv_SAPDocEntry_INCLUDE]
+    ON [dbo].[invoiceHeader]([IsManualInvoice] ASC, [inv_dateRegister] ASC, [inv_type] ASC, [inv_SAPDocEntry] ASC)
+    INCLUDE([inv_vpCodeOfReferences], [inv_certificationFEL], [inv_status], [inv_invoiceOfCreditNote], [IdCountry]);
 
 
 GO

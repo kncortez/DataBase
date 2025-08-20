@@ -31,3 +31,20 @@ BEGIN
  where UstIdUser = @UstIdUser
 END 
 END
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[spgs_ActivateUserPortal] TO [koliva]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[spgs_ActivateUserPortal] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[spgs_ActivateUserPortal] TO [cixtetela]
+    AS [dbo];
+

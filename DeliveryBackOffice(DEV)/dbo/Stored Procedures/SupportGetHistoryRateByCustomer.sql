@@ -20,3 +20,20 @@ BEGIN
             ON tk.SSN_IdToken = rc.RbcTokenCreated
     WHERE rc.RbcIdCustomer = @CustomerID;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportGetHistoryRateByCustomer] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportGetHistoryRateByCustomer] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportGetHistoryRateByCustomer] TO [cvaldes]
+    AS [dbo];
+
