@@ -215,7 +215,7 @@ DECLARE @DeliveryAttempt TABLE (
 			'' as Longitude,
 			CommentOnIncident
 		FROM @DeliveryOrderDetail DOD
-		LEFT JOIN @DeliveryAttempt DA ON DOD.Guide_Number = DA.Guide_Number AND DOD.Guide_Serie = DA.Guide_Serie
+		LEFT JOIN @DeliveryAttempt DA ON DOD.Guide_Serie = DA.Guide_Serie AND DOD.Guide_Number = DA.Guide_Number 
 		) RES
 		ORDER BY RES.[EventID], RES.[StageDate] ASC	
 END
