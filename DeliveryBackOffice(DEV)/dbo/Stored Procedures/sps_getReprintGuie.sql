@@ -7,6 +7,14 @@
 -- Create date: <2024-07-24>
 -- Description: <Se retiro el parametro de pais, y se toma el pais desde la guia>
 -- =============================================
+-- Modified:    <Oscar, Rodriguez>
+-- Create date: <2025-04-21>
+-- Description: <Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion>
+-- =============================================
+-- Modified:    <Walter Orozco>
+-- Create date: <2025-04-03>
+-- Description: <Cambiar CashOnDeliveryCurrency para soportar multipaís.>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
@@ -280,8 +288,8 @@ begin
         SET @integrationCost = LEFT(@integrationCost, LEN(@integrationCost) - 1);
     END;
 
-	SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
-		INNER JOIN Membership mb
+	SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do WITH(NOLOCK)
+		INNER JOIN Membership mb WITH(NOLOCK)
 		ON do.IdCustomer = mb.CustomerId
 		WHERE do.Guide_Number = @Guide_Number
 		AND do.Guide_Serie = @Serie_Number
@@ -611,13 +619,7 @@ begin
                                                                        ) + ',' + '"CreditNumber":"'
                                      + CONVERT(VARCHAR, ISNULL(dev.Order_Number, 0)) + '",' + '"AmmountCashOnDelivery": '
                                      + COALESCE(CONVERT(VARCHAR, dev.Collect_OnDelivery), '0') + ','
-                                     + '"CashOnDeliveryCurrency":"' + 
-                                        CASE 
-                                            WHEN dev.SenderCountryId = 'GT' THEN 'GTQ'
-                                            WHEN dev.SenderCountryId = 'HN' THEN 'HNL'
-                                            ELSE 'HNL'
-                                        END  
-                                     + '",'
+                                     + '"CashOnDeliveryCurrency":"' + ISNULL(ccc.CodeISO, '')     + '",'
                                      + '"BankAccountName":"AccountName",' /*,*/ + '"BankId":"'
                                      + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Bank_Id), '') + '",' + '"BankAccountType":"'
                                      + COALESCE(CONVERT(VARCHAR, dcba.DCBA_BankAccountType), '') + '",'
@@ -640,7 +642,11 @@ begin
 									 + '"ProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL,[MSL].[MembershipId], IIF(MSL.SubscriptionId IS NOT NULL,MSL.SubscriptionId, 0))) + ','  
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
 									 + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ',' 
-                                     + '"Route_Code": "' + ISNULL(CAST(DSC.RouteCode AS varchar),'') + '",' 
+                                     + '"Route_Code": "' + (CASE 
+									                           WHEN ISNULL([dev].[IsLastMileReturn], 0) = 1 
+									                           THEN ISNULL(CAST(DSC2.RouteCode AS varchar),'') + '",' 
+															   ELSE ISNULL(CAST(DSC.RouteCode AS varchar),'') + '",'
+														    END)
 									 + '"DeliveryETA": "' + COALESCE
 																(
 																	FORMAT([dev].[DeliveryETA], 'ddMM')
@@ -713,6 +719,10 @@ begin
                                       ON p.IdProvince = tws.IdProvince
                                   LEFT JOIN DeliveryBackOffice.dbo.Province p2 WITH (NOLOCK)
                                       ON p2.IdProvince = tws2.IdProvince
+                                  LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH(NOLOCK)
+								      ON dev.Guide_Serie = c.GuideSerie AND dev.Guide_Number = c.GuideNumber
+								  LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccc WITH(NOLOCK)
+								      ON ISNULL(c.CodCurrency,c.ShippingCurrency) = ccc.IdCatCurrencyCOD
                                   LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH (NOLOCK)
                                       ON dcba.DCBA_Id = dev.DCBA_ID
                                   LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)
@@ -744,6 +754,8 @@ begin
 									  AND CSBT.RowStatus = 1
                                 LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
 			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
+                                LEFT JOIN DumpServiceCoverage DSC2 WITH(NOLOCK)
+			                          ON DSC2.IdSettlement = dev.SenderIdSettlement
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),
@@ -758,4 +770,4 @@ begin
     SELECT @jsonOutput FormatJson;
 
 
-END; 
+END;

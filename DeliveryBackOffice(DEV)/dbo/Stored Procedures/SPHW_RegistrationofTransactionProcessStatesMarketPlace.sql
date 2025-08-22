@@ -1,8 +1,12 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date, 2024-01-08>
 -- Description:	<Description,Insertar registro que indica inicio del  proceso de una transacción de compra carrito marketplace>
+-- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-06-09>
+-- Description:	<Se modifica el tipo de entrada de CardId (GetCardsCredit) de varchar a int.>
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHW_RegistrationofTransactionProcessStatesMarketPlace] 
 @AccountId AS INT,
@@ -12,7 +16,7 @@ CREATE PROCEDURE [dbo].[SPHW_RegistrationofTransactionProcessStatesMarketPlace]
 @FiscalAddress AS NVARCHAR(500),
 @TaxId AS NVARCHAR (100),
 @IsAutoRenewable AS BIT,
-@CardId AS NVARCHAR (20),
+@CardId AS INT,
 @Token AS NVARCHAR(50),
 @System AS INT,
 @TblSalePackageMarketPlace [TblProductMarketPlace2] READONLY,

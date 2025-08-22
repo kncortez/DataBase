@@ -48,3 +48,20 @@ BEGIN
 	    SELECT 'Cupón no exite '
 	END
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportSetExtendExpirationDateCoupon] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportSetExtendExpirationDateCoupon] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportSetExtendExpirationDateCoupon] TO [cvaldes]
+    AS [dbo];
+

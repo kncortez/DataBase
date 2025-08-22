@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ConflictManifest] (
-    [IdConflictManifest] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdConflictManifest] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CourierResponsible] INT             NOT NULL,
     [TotalAmount]        DECIMAL (18, 2) NOT NULL,
     [RowStatus]          BIT             CONSTRAINT [DF_ConflictManifest_RowStatus] DEFAULT ((0)) NOT NULL,
@@ -10,6 +10,8 @@
     CONSTRAINT [PK_ConflictManifest] PRIMARY KEY CLUSTERED ([IdConflictManifest] ASC),
     CONSTRAINT [DF_ConflictManifest_SenderReceiver] FOREIGN KEY ([CourierResponsible]) REFERENCES [dbo].[SenderReceiver] ([ID])
 );
+
+
 
 
 GO

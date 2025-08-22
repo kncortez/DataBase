@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[WebhookRestrinctionByUser] (
-    [IdWebhookRestrinctionByUser] BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdWebhookRestrinctionByUser] BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CustomerId]                  INT            NOT NULL,
     [WebhookTypeId]               INT            NOT NULL,
     [StatusOrderId]               TINYINT        NOT NULL,
@@ -14,6 +14,10 @@
     CONSTRAINT [FK_WebhookRestrinctionByUser_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId]),
     CONSTRAINT [FK_WebhookRestrinctionByUser_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType])
 );
+
+
+
+
 
 
 GO
@@ -58,4 +62,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de restricción de estados permitidos por webhook de cliente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookRestrinctionByUser';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_WebhookTypeId]
+    ON [dbo].[WebhookRestrinctionByUser]([CustomerId] ASC, [WebhookTypeId] ASC);
 

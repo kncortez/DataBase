@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Affiliate] (
-    [IdAffiliate]           BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdAffiliate]           BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AffiliateName]         NVARCHAR (100) NOT NULL,
     [AffiliateContactName]  NVARCHAR (100) NULL,
     [AffiliateContactPhone] NVARCHAR (50)  NULL,
@@ -11,6 +11,8 @@
     [TokenUpdated]          NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdAffiliate] ASC)
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Cost] (
-    [IdCost]                      INT             IDENTITY (1, 1) NOT NULL,
+    [IdCost]                      INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdProduct]                   INT             NULL,
     [ProductNumber]               VARCHAR (100)   NULL,
     [IdTypeCharge]                INT             NULL,
@@ -31,6 +31,10 @@
     CONSTRAINT [FKCostModule] FOREIGN KEY ([IdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
     CONSTRAINT [FKCostProduct] FOREIGN KEY ([IdProduct]) REFERENCES [dbo].[CatTypeProduct] ([IdTypeProduct])
 );
+
+
+
+
 
 
 
@@ -125,4 +129,10 @@ GO
 CREATE NONCLUSTERED INDEX [idx_RowStatus_include]
     ON [dbo].[Cost]([RowStatus] ASC)
     INCLUDE([ProductNumber], [DateCreated], [TotalAmountPaid], [GuideSerie], [GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSerie_INCLUDE]
+    ON [dbo].[Cost]([GuideSerie] ASC)
+    INCLUDE([TotalAmountPaid]);
 

@@ -195,7 +195,7 @@ BEGIN
                              --I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
                              ISNULL(dod.Observations, '')
                          FROM DeliveryBackOffice.dbo.CatTypeIncidence I
-                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da
+                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH(NOLOCK)
                                  ON da.ID_Incident = I.IdIncidenceType
                          WHERE dod.Guide_Serie = da.Guide_Serie
                                AND dod.Guide_Number = da.Guide_Number
@@ -204,7 +204,7 @@ BEGIN
                      ''
                            )
                 WHEN dod.StatusOrderId = @StatusIncident THEN
-                        (SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  
+                        (SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  WITH(NOLOCK)
                         INNER JOIN CatTypeIncidence cti 
                         ON dla.ID_Incident = cti.IdIncidenceType WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number AND dod.DeliveryAttemptId = dla.ID)
 
@@ -275,8 +275,8 @@ BEGIN
 				WHEN dod.StatusOrderId =@StatusIncidentValidated THEN 
 						(SELECT TOP 1
                             dlp.Path_Incident
-							FROM dbo.DeliveryAttempt datt
-                         INNER JOIN dbo.DeliveryProof dlp
+							FROM dbo.DeliveryAttempt datt WITH(NOLOCK)
+                         INNER JOIN dbo.DeliveryProof dlp WITH(NOLOCK)
                              ON datt.ID_Proof = dlp.ID
 							WHERE dod.Guide_Serie = @Guide_Serie
                           AND dod.Guide_Number = @Guide_Number

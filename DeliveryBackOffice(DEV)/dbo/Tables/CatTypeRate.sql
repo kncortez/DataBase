@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeRate] (
-    [IdTypeRate]   INT           IDENTITY (1, 1) NOT NULL,
+    [IdTypeRate]   INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]         VARCHAR (100) NOT NULL,
     [Description]  VARCHAR (50)  NULL,
     [RowStatus]    BIT           NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]  DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdTypeRate] ASC)
 );
+
+
 
 GO
 

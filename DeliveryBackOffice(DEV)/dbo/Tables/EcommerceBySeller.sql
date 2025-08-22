@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[EcommerceBySeller] (
-    [IdAssigment]      INT      IDENTITY (1, 1) NOT NULL,
+    [IdAssigment]      INT      IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCommerce]       INT      NOT NULL,
     [IdSeller]         INT      NOT NULL,
     [StatusAssignment] BIT      NOT NULL,
@@ -8,6 +8,8 @@
     CONSTRAINT [FK_EcommerceBySeller] FOREIGN KEY ([IdCommerce]) REFERENCES [dbo].[Ecommerce] ([IdEcommerce]),
     CONSTRAINT [FK_EcommerceBySeller_2] FOREIGN KEY ([IdSeller]) REFERENCES [dbo].[Seller] ([IdSeller])
 );
+
+
 
 
 GO

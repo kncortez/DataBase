@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[NotificationQueueDetail] (
-    [IdNotificationQueueDetail] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdNotificationQueueDetail] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NotificationQueueId]       BIGINT        NOT NULL,
     [GuideSerie]                NVARCHAR (10) NULL,
     [GuideNumber]               INT           NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_NotificationQueueDetail_NotificationQueue] FOREIGN KEY ([NotificationQueueId]) REFERENCES [dbo].[NotificationQueue] ([IdNotificationQueue]),
     CONSTRAINT [FK_NotificationQueueDetail_Subscription] FOREIGN KEY ([SubscriptionId]) REFERENCES [dbo].[Subscription] ([IdSubscription])
 );
+
+
 
 
 

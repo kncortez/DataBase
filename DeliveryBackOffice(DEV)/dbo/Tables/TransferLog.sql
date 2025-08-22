@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TransferLog] (
-    [IdTransferLog]   INT            IDENTITY (1, 1) NOT NULL,
+    [IdTransferLog]   INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCourier]       INT            NOT NULL,
     [CourierName]     NVARCHAR (50)  NOT NULL,
     [DPI]             NVARCHAR (50)  NULL,
@@ -17,6 +17,8 @@
     FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_TransferLog_VisitPointClient] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

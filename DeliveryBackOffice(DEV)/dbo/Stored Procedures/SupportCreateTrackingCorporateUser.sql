@@ -662,3 +662,20 @@ BEGIN CATCH
 
 END CATCH;
 END
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportCreateTrackingCorporateUser] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportCreateTrackingCorporateUser] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportCreateTrackingCorporateUser] TO [cvaldes]
+    AS [dbo];
+

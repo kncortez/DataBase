@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AnticipatedCODHeader] (
-    [IdAnticipatedCODHeader] INT             IDENTITY (1, 1) NOT NULL,
+    [IdAnticipatedCODHeader] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CustomerId]             INT             NOT NULL,
     [PortfolioId]            BIGINT          NULL,
     [DailyDate]              DATE            NOT NULL,
@@ -19,6 +19,10 @@
     CONSTRAINT [FKCustomerId_AnticipatedCODHeader] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FKPortfolioId_AnticipatedCODHeader] FOREIGN KEY ([PortfolioId]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio])
 );
+
+
+
+
 
 
 GO
@@ -87,4 +91,24 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Llave princ
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que Maneja informacion de clientes para validaciones de COD Anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_PortfolioId_IdAnticipatedCODHeader]
+    ON [dbo].[AnticipatedCODHeader]([PortfolioId] ASC, [IdAnticipatedCODHeader] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_PortfolioId_IdAnticipatedCODHeader]
+    ON [dbo].[AnticipatedCODHeader]([CustomerId] ASC, [PortfolioId] ASC, [IdAnticipatedCODHeader] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_PortfolioId]
+    ON [dbo].[AnticipatedCODHeader]([CustomerId] ASC, [PortfolioId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId]
+    ON [dbo].[AnticipatedCODHeader]([CustomerId] ASC);
 

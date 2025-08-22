@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ScoreServiceGuide] (
-    [IdScoreGuide] INT            IDENTITY (1, 1) NOT NULL,
+    [IdScoreGuide] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Score]        DECIMAL (5, 2) NOT NULL,
     [GuideSerie]   NVARCHAR (4)   NOT NULL,
     [GuideNumber]  BIGINT         NOT NULL,
@@ -13,6 +13,8 @@
     PRIMARY KEY CLUSTERED ([IdScoreGuide] ASC),
     CONSTRAINT [FK_ScoreServiceGuide_System] FOREIGN KEY ([IdSystem]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 
 
 GO

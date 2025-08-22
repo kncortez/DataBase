@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatAccountTypeCOD] (
-    [IdCatAccountTypeCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatAccountTypeCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountType]         NVARCHAR (50) NOT NULL,
     [Description]         NVARCHAR (50) NULL,
     [RowStatus]           BIT           CONSTRAINT [DF_CatAccountTypeCOD_RowStatus] DEFAULT ('TRUE') NOT NULL,

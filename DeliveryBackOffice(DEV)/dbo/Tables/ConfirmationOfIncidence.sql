@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ConfirmationOfIncidence] (
-    [IdConfirmationOfIncidence]        INT            IDENTITY (1, 1) NOT NULL,
+    [IdConfirmationOfIncidence]        INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ConfirmationOfIncidentToken]      NVARCHAR (50)  NOT NULL,
     [CatTypeConfirmationOfIncidenceId] INT            NOT NULL,
     [IsValid]                          BIT            CONSTRAINT [DF_ConfirmationOfIncidence_IsValid] DEFAULT ((0)) NOT NULL,
@@ -32,6 +32,8 @@
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
+
+
 
 
 

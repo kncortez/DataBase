@@ -1,15 +1,17 @@
 ﻿CREATE TABLE [dbo].[CatRegion] (
-    [IdCatRegion]  INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatRegion]  INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RegionName]   NVARCHAR (30) NOT NULL,
     [RowStatus]    BIT           NOT NULL,
     [TokenCreated] NVARCHAR (50) NOT NULL,
     [DateCreated]  DATETIME      NOT NULL,
     [TokenUpdated] NVARCHAR (50) NULL,
     [DateUpdated]  DATETIME      NULL,
-    [IdCountry]    VARCHAR  (2)  NULL,
+    [IdCountry]    VARCHAR (2)   NULL,
     CONSTRAINT [PK_CatRegion] PRIMARY KEY CLUSTERED ([IdCatRegion] ASC),
-    CONSTRAINT [FK_Id_Cat_Region] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
+    CONSTRAINT [FK_Id_Cat_Region] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO

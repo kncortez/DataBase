@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatModule] (
-    [ModIdModule]       INT           IDENTITY (1, 1) NOT NULL,
+    [ModIdModule]       INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ModName]           VARCHAR (100) NOT NULL,
     [ModIdModuleParent] INT           NULL,
     [ModPath]           VARCHAR (200) NOT NULL,
@@ -16,6 +16,8 @@
     PRIMARY KEY CLUSTERED ([ModIdModule] ASC),
     FOREIGN KEY ([ModIdModuleParent]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
 
 
 

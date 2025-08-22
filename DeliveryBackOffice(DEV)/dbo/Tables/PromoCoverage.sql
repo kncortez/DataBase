@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[PromoCoverage] (
-    [IdPromoCoverage]    INT           IDENTITY (1, 1) NOT NULL,
+    [IdPromoCoverage]    INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatPromoId]         INT           NOT NULL,
     [CustomerId]         INT           NULL,
     [VisitPointClientId] INT           NULL,
@@ -16,6 +16,8 @@
     CONSTRAINT [FK_PromoCoverage_CustomerType] FOREIGN KEY ([CustomerTypeId]) REFERENCES [dbo].[CustomerType] ([IdCustomerType]),
     CONSTRAINT [FK_PromoCoverage_VisitPointClient] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO

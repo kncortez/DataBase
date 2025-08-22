@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TSERoutePreparationDetail] (
-    [IDTSERoutePreparationDetail] INT           IDENTITY (1, 1) NOT NULL,
+    [IDTSERoutePreparationDetail] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TSERoutePreparationHeaderID] INT           NOT NULL,
     [GuideSerie]                  NVARCHAR (2)  NOT NULL,
     [GuideNumber]                 INT           NOT NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [PK_TSERoutePreparationDetail] PRIMARY KEY CLUSTERED ([IDTSERoutePreparationDetail] ASC),
     CONSTRAINT [FK_TSERoutePreparationDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[WebhookEndpoint] (
-    [IdWebhookEndpoint]  BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdWebhookEndpoint]  BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [WebhookTypeId]      INT            NOT NULL,
     [CustomerId]         INT            NOT NULL,
     [WebhookEndpointURI] NVARCHAR (MAX) NOT NULL,
@@ -18,6 +18,10 @@
     CONSTRAINT [FK_WebhookEndpoint_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_WebhookEndpoint_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType])
 );
+
+
+
+
 
 
 
@@ -116,3 +120,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'WebhookEndpoint',
     @level2type = N'COLUMN',
     @level2name = N'RemoteRoute'
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_WebhookTypeId]
+    ON [dbo].[WebhookEndpoint]([CustomerId] ASC, [WebhookTypeId] ASC);
+

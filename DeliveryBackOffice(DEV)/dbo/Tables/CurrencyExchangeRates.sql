@@ -1,14 +1,17 @@
-CREATE TABLE [dbo].[CurrencyExchangeRates] (
-    [IdExchange]               INT             IDENTITY (1, 1) NOT NULL PRIMARY KEY,
-    [ExchangeDate]             DATETIME        NOT NULL,
-    [IdCountry]                VARCHAR(2)      NOT NULL,
-    [SourceCurrency]           INT             NULL,
-    [TargetCurrency]           INT             NULL,
-    [ExchangeRate]             DECIMAL (12, 6) NULL,
-    CONSTRAINT [FK_SourceCurrency_CatCurrencyCOD] FOREIGN KEY (SourceCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
-    CONSTRAINT [FK_TargetCurrency_CatCurrencyCOD] FOREIGN KEY (TargetCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
+﻿CREATE TABLE [dbo].[CurrencyExchangeRates] (
+    [IdExchange]     INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [ExchangeDate]   DATETIME        NOT NULL,
+    [IdCountry]      VARCHAR (2)     NOT NULL,
+    [SourceCurrency] INT             NULL,
+    [TargetCurrency] INT             NULL,
+    [ExchangeRate]   DECIMAL (12, 6) NULL,
+    PRIMARY KEY CLUSTERED ([IdExchange] ASC),
     CONSTRAINT [FK_IdCountryCER_IdCountryCC] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
+    CONSTRAINT [FK_SourceCurrency_CatCurrencyCOD] FOREIGN KEY ([SourceCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD]),
+    CONSTRAINT [FK_TargetCurrency_CatCurrencyCOD] FOREIGN KEY ([TargetCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
+
+
 
 GO
 

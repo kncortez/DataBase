@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SMS_UpdatedElements] (
-    [Id]             INT            IDENTITY (1, 1) NOT NULL,
+    [Id]             INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UpdateStatus]   BIT            CONSTRAINT [DF_SMS_UpdatedElements_UpdateStatus] DEFAULT ((1)) NOT NULL,
     [ElementId]      INT            NOT NULL,
     [ElementName]    NVARCHAR (300) NOT NULL,
@@ -8,6 +8,8 @@
     [UpdateDateTime] DATETIME       NOT NULL,
     CONSTRAINT [PK_SMS_UpdatedElements] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
+
+
 
 
 GO

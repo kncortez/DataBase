@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AnticipatedCODComission] (
-    [IdAnticipatedCodComission] INT             IDENTITY (1, 1) NOT NULL,
+    [IdAnticipatedCodComission] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RateHeaderId]              INT             NOT NULL,
     [InitialRange]              INT             NOT NULL,
     [FinalRange]                INT             NOT NULL,
@@ -12,6 +12,8 @@
     PRIMARY KEY CLUSTERED ([IdAnticipatedCodComission] ASC),
     CONSTRAINT [FKRateHeaderId_AnticipatedCODComission] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[MembershipPaymentLog] (
-    [IdMembershipPaymentLog] INT            IDENTITY (1, 1) NOT NULL,
+    [IdMembershipPaymentLog] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [MembershipId]           INT            NOT NULL,
     [Authorization]          NVARCHAR (50)  NULL,
     [TypeOfInOutOfMoneyId]   INT            NOT NULL,
@@ -14,6 +14,8 @@
     CONSTRAINT [FK_MembershipPaymentLog_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
     CONSTRAINT [FK_MembershipPaymentLog_PaymentType] FOREIGN KEY ([TypeOfInOutOfMoneyId]) REFERENCES [dbo].[ctgTypeOfInOutOfMoney] ([tio_pk_id])
 );
+
+
 
 
 

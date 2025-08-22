@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Geofence] (
-    [IdGeofence]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdGeofence]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CountryId]           VARCHAR (2)    NOT NULL,
     [GeofenceDescription] NVARCHAR (50)  NOT NULL,
     [RowStatus]           BIT            NOT NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_Geofence_Country] FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     CONSTRAINT [FK_Geofence_Settlement] FOREIGN KEY ([SettlementId]) REFERENCES [dbo].[Settlement] ([IdSettlement])
 );
+
+
 
 
 

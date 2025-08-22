@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeAct] (
-    [IdCatTypeAct]   INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatTypeAct]   INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ActName]        NVARCHAR (50)  NOT NULL,
     [ActDescription] NVARCHAR (200) NULL,
     [RowStatus]      BIT            DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]    DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdCatTypeAct] ASC)
 );
+
+
 
 
 

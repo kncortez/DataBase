@@ -36,9 +36,9 @@ BEGIN
 
 	DECLARE @jsonToken NVARCHAR(MAX)
 	declare @jsonService NVARCHAR(MAX)
-	 declare @TokenAct int  = (select top 1 RowStatus from LogTokenPOD where LogTokenPOD LIKE '%' + @Token + '%' order by DateCreated desc)
-	declare @hourtoken int = (select top 1 DATEDIFF(HOUR, DateCreated, GETDATE() ) as horas from LogTokenPOD where LogTokenPOD  LIKE '%' + @Token + '%' order by DateCreated desc)
-	declare @servicio int = (select COUNT(IdServiceManagement) from ServiceManagement where IdServiceManagement = @ServiceManagementId)
+	 declare @TokenAct int  = (select top 1 RowStatus from LogTokenPOD WITH(NOLOCK) where LogTokenPOD LIKE '%' + @Token + '%' order by DateCreated desc)
+	declare @hourtoken int = (select top 1 DATEDIFF(HOUR, DateCreated, GETDATE() ) as horas from LogTokenPOD WITH(NOLOCK) where LogTokenPOD  LIKE '%' + @Token + '%' order by DateCreated desc)
+	declare @servicio int = (select COUNT(IdServiceManagement) from ServiceManagement WITH(NOLOCK) where IdServiceManagement = @ServiceManagementId)
 
 	print 'validando token'
 	if ( (@TokenAct = 1 and @hourtoken <= 8) OR 1 = 1 )
@@ -46,7 +46,7 @@ BEGIN
 				print 'token validado'
 	
 						
-					declare @validate int  = (select ServiceStatusId from ServiceManagement where IdServiceManagement =  @ServiceManagementId)
+					declare @validate int  = (select ServiceStatusId from ServiceManagement WITH(NOLOCK) where IdServiceManagement =  @ServiceManagementId)
 								
 				 print 'validando status'  
 				 print @validate
@@ -103,13 +103,13 @@ BEGIN
 				
 																	---------------------------------------------- Actualiza el Status del Pickup  -------------------------------------------------------------------------
 																
-																	declare @Status int = (	select IdServiceStatus from  CatServiceStatus where IdServiceStatus =  4)
+																	declare @Status int = (	select IdServiceStatus from  CatServiceStatus WITH(NOLOCK) where IdServiceStatus =  4)
 													
 																	update ServiceManagement set ServiceStatusId = @Status, DateUpdated = GETDATE(), TokenUpdated = @Token
-																		from ServiceManagement
+																		from ServiceManagement WITH(NOLOCK)
 																		where IdServiceManagement = @ServiceManagementId
 													
-																		declare @transac int = (select top 1 IdServiceManagement from ServiceManagement where IdServiceManagement = @ServiceManagementId)
+																		declare @transac int = (select top 1 IdServiceManagement from ServiceManagement WITH(NOLOCK) where IdServiceManagement = @ServiceManagementId)
 																
 																   ---------------------------------------------- Inserta en EventService el comportamiento del Pickup  -------------------------------------------------------------------------	
 																	
@@ -120,7 +120,7 @@ BEGIN
 																	BEGIN
 
 																		update ServiceManagement set ServiceStatusId = @CanceledStatusId, DateUpdated = GETDATE(), TokenUpdated = @Token
-																		from ServiceManagement
+																		from ServiceManagement WITH(NOLOCK)
 																		where IdServiceManagement = @ServiceManagementId
 																	
 																		insert into EventService (ServiceManagementId, ServiceStatusId, RowStauts, TokenCreated, DateCreated, Observations)
@@ -129,8 +129,8 @@ BEGIN
 																		--Se cancela la solicitud
 																		UPDATE sp 
 																		SET sp.SchedulePickupStatus = 0
-																		FROM SchedulePickup sp
-																		INNER JOIN ServiceManagement sm
+																		FROM SchedulePickup sp WITH(NOLOCK)
+																		INNER JOIN ServiceManagement sm WITH(NOLOCK)
 																			ON sm.IdSchedulePickup = sp.SchedulePickupId
 																		WHERE sm.IdServiceManagement = @ServiceManagementId
 
@@ -218,4 +218,3 @@ BEGIN
 	end
 
 END
-

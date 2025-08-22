@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RoutePreparationDetail] (
-    [IdRoutePreparationDetail]  INT            IDENTITY (1, 1) NOT NULL,
+    [IdRoutePreparationDetail]  INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RoutePreparationId]        INT            NOT NULL,
     [Guide_Serie]               NVARCHAR (2)   NOT NULL,
     [Guide_Number]              INT            NOT NULL,
@@ -19,6 +19,8 @@
     CONSTRAINT [FK_RoutePreparationDetail_RoutePreparationId] FOREIGN KEY ([RoutePreparationId]) REFERENCES [dbo].[RoutePreparation] ([IdRoutePreparation]),
     CONSTRAINT [FK_RoutePreparationDetail_ServiceManagementDetail] FOREIGN KEY ([ServiceManagementDetailId]) REFERENCES [dbo].[ServiceManagementDetail] ([IdServiceManagementDetail])
 );
+
+
 
 
 

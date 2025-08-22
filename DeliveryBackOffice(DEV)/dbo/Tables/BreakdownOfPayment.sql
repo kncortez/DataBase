@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[BreakdownOfPayment] (
-    [IdBreakdownOfPayment]     INT             IDENTITY (1, 1) NOT NULL,
+    [IdBreakdownOfPayment]     INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCost]                   INT             NULL,
     [Description]              VARCHAR (100)   NULL,
     [Amount]                   DECIMAL (18, 2) NULL,
@@ -17,6 +17,8 @@
     CONSTRAINT [FKCost] FOREIGN KEY ([IdCost]) REFERENCES [dbo].[Cost] ([IdCost]),
     CONSTRAINT [FKCostDetCatModule] FOREIGN KEY ([ModIdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
 
 
 

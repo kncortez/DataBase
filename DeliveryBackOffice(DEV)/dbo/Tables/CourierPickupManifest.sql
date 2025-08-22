@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CourierPickupManifest] (
-    [IdManifest]       BIGINT         IDENTITY (1000, 1) NOT NULL,
+    [IdManifest]       BIGINT         IDENTITY (1000, 1) NOT FOR REPLICATION NOT NULL,
     [ManifestSerie]    NVARCHAR (50)  NOT NULL,
     [SenderReceiverId] INT            NOT NULL,
     [ManifestURL]      NVARCHAR (MAX) NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [PKCourierPickupManifest] PRIMARY KEY CLUSTERED ([IdManifest] ASC),
     CONSTRAINT [FKCourierPickupManifestSenderReceiverId] FOREIGN KEY ([SenderReceiverId]) REFERENCES [dbo].[SenderReceiver] ([ID])
 );
+
+
 
 
 GO

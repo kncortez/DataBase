@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CorporateManifest] (
-    [IdManifest]        BIGINT         IDENTITY (1000, 1) NOT NULL,
+    [IdManifest]        BIGINT         IDENTITY (1000, 1) NOT FOR REPLICATION NOT NULL,
     [ManifestSerie]     NVARCHAR (MAX) NOT NULL,
     [AccountId]         BIGINT         NOT NULL,
     [CodeOfReferenceId] INT            NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FKCorporateManifestAccountId] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FKCorporateManifestCodeOfReference] FOREIGN KEY ([CodeOfReferenceId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO

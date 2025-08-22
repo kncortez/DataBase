@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[WebhookTrackingQueue] (
-    [IdWebhookTrackingQueue] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdWebhookTrackingQueue] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [WebhookEndpointId]      BIGINT        NOT NULL,
     [CustomerId]             INT           NULL,
     [GuideSerie]             NVARCHAR (2)  NULL,
@@ -18,6 +18,10 @@
     CONSTRAINT [FK_WebhookTrackingQueue_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_WebhookTrackingQueue_Status] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
+
+
+
+
 
 
 
@@ -81,4 +85,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de co
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_RowStatus_StatusOrderId_Include]
     ON [dbo].[WebhookTrackingQueue]([GuideSerie] ASC, [GuideNumber] ASC, [StatusOrderId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_HasNotified_RowStatus_INCLUDE]
+    ON [dbo].[WebhookTrackingQueue]([HasNotified] ASC, [RowStatus] ASC)
+    INCLUDE([WebhookEndpointId], [GuideSerie], [GuideNumber]);
 

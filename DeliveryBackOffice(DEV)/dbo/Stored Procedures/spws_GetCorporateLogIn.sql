@@ -17,6 +17,11 @@
 -- Update date: <2024-07-16 >
 -- Description: <Se obtiene la nacionalidad del usuario para filtrar por pais >
 -- =============================================
+-- =============================================
+-- Author:      <Walter, Orozco>
+-- Update date: <2025-07-17>
+-- Description: <Se agrega multipais para short name de DPI,IVA y NIT.>
+-- =============================================
 CREATE  PROCEDURE [dbo].[spws_GetCorporateLogIn]
     -- Add the parameters for the stored procedure here
     @UserCode BIGINT = 0
@@ -46,8 +51,8 @@ BEGIN
     SET @VERIFYUSER =
     (
         SELECT COUNT(iu.Username)
-        FROM DeliveryBackOffice.[dbo].RegisterUser           ru
-            INNER JOIN DeliveryBackOffice.[dbo].InternalUser iu
+        FROM DeliveryBackOffice.[dbo].RegisterUser           ru WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.[dbo].InternalUser iu WITH(NOLOCK)
                 ON ru.UsrIdUser = iu.RegisterUserID
         WHERE iu.Username = @UserName
               AND ru.UsrRowStatus = 1
@@ -55,10 +60,10 @@ BEGIN
 
     SELECT TOP 1 
            @CountryByNacionality = pe.PerNationality
-      FROM DeliveryBackOffice.dbo.RegisterUser           us
-           INNER JOIN DeliveryBackOffice.dbo.Person       pe
+      FROM DeliveryBackOffice.dbo.RegisterUser           us WITH(NOLOCK)
+           INNER JOIN DeliveryBackOffice.dbo.Person       pe WITH(NOLOCK)
                ON pe.PerIdPerson = us.UsrIdPerson
-           INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
+           INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK)
                ON iu.RegisterUserID = us.UsrIdUser
      WHERE iu.Username = @UserName
        AND iu.IdUser = @UserCode
@@ -72,19 +77,19 @@ BEGIN
          , ISNULL(usr.UsrIdUser, 0)     IdUser
          , ISNULL(ac.AccConfirm, 'N')   StatusAccount
     INTO #User
-    FROM DeliveryBackOffice.[dbo].RegisterUser                   usr
-        INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu
+    FROM DeliveryBackOffice.[dbo].RegisterUser                   usr WITH(NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu WITH(NOLOCK)
             ON iu.RegisterUserID = usr.UsrIdUser
-        INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus
+        INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus WITH(NOLOCK)
             ON rus.RusIdUser = usr.UsrIdUser
                AND rus.RusIdSystem = @IdSystem
-        LEFT JOIN DeliveryBackOffice.[dbo].UserSystemRestriction res
+        LEFT JOIN DeliveryBackOffice.[dbo].UserSystemRestriction res WITH(NOLOCK)
             ON res.UstIdUser = rus.RusIdUser
                AND res.UstIdSystem = rus.RusIdSystem
-        LEFT JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount]  rua
+        LEFT JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount]  rua WITH(NOLOCK)
             ON rua.RuaIdUser = usr.UsrIdUser
                AND rua.RuaRowStatus = 1
-        INNER JOIN DeliveryBackOffice.[dbo].Account              ac
+        INNER JOIN DeliveryBackOffice.[dbo].Account              ac WITH(NOLOCK)
             ON ac.AccIdAccount = rua.RuaIdAccount
     WHERE iu.IdUser = @UserCode
           AND iu.Username = @UserName
@@ -160,7 +165,7 @@ BEGIN
                             );
                     IF
                     (
-                        SELECT COUNT(*)FROM [dbo].TokenLog tkn WHERE tkn.TknIdToken = @Token
+                        SELECT COUNT(*)FROM [dbo].TokenLog tkn WITH(NOLOCK) WHERE tkn.TknIdToken = @Token
                     ) = 0 --si el token no exite crearlo 
                     BEGIN
                         INSERT INTO [dbo].[TokenLog]
@@ -199,16 +204,16 @@ BEGIN
                       , SUBMODULES VARCHAR(MAX)
                     );
                     SELECT @TOTALSUBMODULES = COUNT(cmo.ModIdModule)
-                    FROM DeliveryBackOffice.[dbo].RegisterUser                   us
-                        INNER JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount] rua
+                    FROM DeliveryBackOffice.[dbo].RegisterUser                   us WITH(NOLOCK)
+                        INNER JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount] rua WITH(NOLOCK)
                             ON rua.RuaIdUser = us.UsrIdUser
-                        INNER JOIN DeliveryBackOffice.[dbo].RolByModuleBySystem  rms
+                        INNER JOIN DeliveryBackOffice.[dbo].RolByModuleBySystem  rms WITH(NOLOCK)
                             ON rms.RmsIdRol = rua.RuaIdRol
-                        INNER JOIN DeliveryBackOffice.[dbo].CatModule            cmo
+                        INNER JOIN DeliveryBackOffice.[dbo].CatModule            cmo WITH(NOLOCK)
                             ON cmo.ModIdModule = rms.RmsIdModule
-                        INNER JOIN DeliveryBackOffice.[dbo].CatRol               rol
+                        INNER JOIN DeliveryBackOffice.[dbo].CatRol               rol WITH(NOLOCK)
                             ON rol.RolIdRol = rms.RmsIdRol
-                        INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu
+                        INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu WITH(NOLOCK)
                             ON iu.RegisterUserID = us.UsrIdUser
                     WHERE iu.Username = @UserName
                       AND iu.IdUser = @UserCode
@@ -226,16 +231,16 @@ BEGIN
                             ModIdModule
                         )
                         SELECT cmo.ModIdModule
-                        FROM DeliveryBackOffice.[dbo].RegisterUser                   us
-                            INNER JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount] rua
+                        FROM DeliveryBackOffice.[dbo].RegisterUser                   us WITH(NOLOCK)
+                            INNER JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount] rua WITH(NOLOCK)
                                 ON rua.RuaIdUser = us.UsrIdUser
-                            INNER JOIN DeliveryBackOffice.[dbo].RolByModuleBySystem  rms
+                            INNER JOIN DeliveryBackOffice.[dbo].RolByModuleBySystem  rms WITH(NOLOCK)
                                 ON rms.RmsIdRol = rua.RuaIdRol
-                            INNER JOIN DeliveryBackOffice.[dbo].CatModule            cmo
+                            INNER JOIN DeliveryBackOffice.[dbo].CatModule            cmo WITH(NOLOCK)
                                 ON cmo.ModIdModule = rms.RmsIdModule
-                            INNER JOIN DeliveryBackOffice.[dbo].CatRol               rol
+                            INNER JOIN DeliveryBackOffice.[dbo].CatRol               rol WITH(NOLOCK)
                                 ON rol.RolIdRol = rms.RmsIdRol
-                            INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu
+                            INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu WITH(NOLOCK)
                                 ON iu.RegisterUserID = us.UsrIdUser
                         WHERE iu.Username = @UserName
                               AND iu.IdUser = @UserCode
@@ -248,7 +253,7 @@ BEGIN
                               AND cmo.ModIdModule IN
                                                     (
                                                      SELECT ModIdModuleParent
-                                                       FROM DeliveryBackOffice.[dbo].CatModule
+                                                       FROM DeliveryBackOffice.[dbo].CatModule WITH(NOLOCK)
                                                     );
 
                         SELECT @TOTALSUBMODULES = COUNT(ModIdModule)
@@ -284,16 +289,16 @@ BEGIN
                                 WHERE TMP.ITERATOR = @ITERATORSUBMODULES
                             )               AS ModIdModuleDAD
                           , cmo.ModIdModule AS ModIdModuleCHILD
-                        FROM RegisterUser                                  us
-                            INNER JOIN [dbo].[RolByUserByAccount]          rua
+                        FROM RegisterUser                                  us WITH(NOLOCK)
+                            INNER JOIN [dbo].[RolByUserByAccount]          rua WITH(NOLOCK)
                                 ON rua.RuaIdUser = us.UsrIdUser
-                            INNER JOIN dbo.RolByModuleBySystem             rms
+                            INNER JOIN dbo.RolByModuleBySystem             rms WITH(NOLOCK)
                                 ON rms.RmsIdRol = rua.RuaIdRol
-                            INNER JOIN [dbo].CatModule                     cmo
+                            INNER JOIN [dbo].CatModule                     cmo WITH(NOLOCK)
                                 ON cmo.ModIdModule = rms.RmsIdModule
-                            INNER JOIN [dbo].CatRol                        rol
+                            INNER JOIN [dbo].CatRol                        rol WITH(NOLOCK)
                                 ON rol.RolIdRol = rms.RmsIdRol
-                            INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
+                            INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK)
                                 ON iu.RegisterUserID = us.UsrIdUser
                         WHERE iu.Username = @UserName
                               AND iu.IdUser = @UserCode
@@ -393,18 +398,18 @@ BEGIN
                                                               '"}'
                                                       END
                                                      )
-                                            FROM RegisterUser                                  us
-                                                INNER JOIN [dbo].[RolByUserByAccount]          rua
+                                            FROM RegisterUser                                  us WITH(NOLOCK)
+                                                INNER JOIN [dbo].[RolByUserByAccount]          rua WITH(NOLOCK)
                                                     ON rua.RuaIdUser = us.UsrIdUser
-                                                INNER JOIN dbo.RolByModuleBySystem             rms
+                                                INNER JOIN dbo.RolByModuleBySystem             rms WITH(NOLOCK)
                                                     ON rms.RmsIdRol = rua.RuaIdRol
-                                                INNER JOIN [dbo].CatModule                     cmo
+                                                INNER JOIN [dbo].CatModule                     cmo WITH(NOLOCK)
                                                     ON cmo.ModIdModule = rms.RmsIdModule
-                                                INNER JOIN [dbo].CatRol                        rol
+                                                INNER JOIN [dbo].CatRol                        rol WITH(NOLOCK)
                                                     ON rol.RolIdRol = rms.RmsIdRol
                                                 LEFT JOIN @TBSUBMODULES                        TMP
                                                     ON TMP.ModIdModule = cmo.ModIdModule
-                                                INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
+                                                INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK)
                                                     ON iu.RegisterUserID = us.UsrIdUser
                                             WHERE iu.Username = @UserName
                                                   AND iu.IdUser = @UserCode
@@ -434,18 +439,18 @@ BEGIN
                                                    + '"AccountName":"' + ac.AccName + '",' + '"TacName":"' + ta.TacName
                                                    + '",' + '"IdCustomer":"'
                                                    + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '"' + '}'
-                                            FROM DeliveryBackOffice.dbo.RegisterUser                   us
-                                                INNER JOIN DeliveryBackOffice.dbo.Person               pe
+                                            FROM DeliveryBackOffice.dbo.RegisterUser                   us WITH(NOLOCK)
+                                                INNER JOIN DeliveryBackOffice.dbo.Person               pe WITH(NOLOCK)
                                                     ON pe.PerIdPerson = us.UsrIdPerson
-                                                INNER JOIN DeliveryBackOffice.dbo.[RolByUserByAccount] rua
+                                                INNER JOIN DeliveryBackOffice.dbo.[RolByUserByAccount] rua WITH(NOLOCK)
                                                     ON rua.RuaIdUser = us.UsrIdUser
-                                                INNER JOIN DeliveryBackOffice.dbo.CatRol               ro
+                                                INNER JOIN DeliveryBackOffice.dbo.CatRol               ro WITH(NOLOCK)
                                                     ON ro.RolIdRol = rua.RuaIdRol
-                                                INNER JOIN DeliveryBackOffice.dbo.Account              ac
-                                                    ON ac.AccIdAccount = rua.RuaIdAccount
-                                                INNER JOIN DeliveryBackOffice.dbo.CatTypeAccount       ta
+                                                INNER JOIN DeliveryBackOffice.dbo.Account              ac WITH(NOLOCK)
+                                                    ON ac.AccIdAccount = rua.RuaIdAccount 
+                                                INNER JOIN DeliveryBackOffice.dbo.CatTypeAccount       ta WITH(NOLOCK)
                                                     ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
-                                                INNER JOIN DeliveryBackOffice.dbo.InternalUser         iu
+                                                INNER JOIN DeliveryBackOffice.dbo.InternalUser         iu WITH(NOLOCK)
                                                     ON iu.RegisterUserID = UsrIdUser
                                             WHERE iu.Username = @UserName
                                                   AND iu.IdUser = @UserCode
@@ -491,29 +496,19 @@ BEGIN
                                                    -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                                                    + '"Phone":"' + ISNULL(us.Phone, '') + '",' + '"TAC":"' + @TAC + '",'
                                                    + '"TaxCountry":"' + 
-                                                   CASE pe.PerNationality
-                                                       WHEN 'GT' THEN 'IVA'
-                                                       WHEN 'HN' THEN 'ISV'
-                                                       ELSE 'IVA'
-                                                   END 
+                                                   ISNULL(dvc.VATShortName,'IVA')
                                                    + '",' 
                                                    + '"NameBilling":"' + 
-                                                   CASE pe.PerNationality
-                                                       WHEN 'GT' THEN 'NIT'
-                                                       WHEN 'HN' THEN 'RTN'
-                                                       ELSE 'NIT'
-                                                   END + '",' 
+                                                   ISNULL(dvc.TaxShortName,'NIT') + '",' 
                                                    + '"NameIdentification":"' +
-                                                   CASE pe.PerNationality
-                                                       WHEN 'GT' THEN 'DPI'
-                                                       WHEN 'HN' THEN 'DNI'
-                                                       ELSE 'DPI'
-                                                   END + '"}'
-                                            FROM DeliveryBackOffice.dbo.RegisterUser           us
-                                                INNER JOIN DeliveryBackOffice.dbo.Person       pe
+                                                   ISNULL(dvc.DNIShortName,'DPI') + '"}'
+                                            FROM DeliveryBackOffice.dbo.RegisterUser           us WITH(NOLOCK)
+                                                INNER JOIN DeliveryBackOffice.dbo.Person       pe WITH(NOLOCK)
                                                     ON pe.PerIdPerson = us.UsrIdPerson
-                                                INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
+                                                INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK)
                                                     ON iu.RegisterUserID = us.UsrIdUser
+												LEFT JOIN DeliveryBackOffice.dbo.DefaultValuesPerCountry dvc WITH(NOLOCK)
+													ON dvc.IdCountry = pe.PerNationality
                                             WHERE iu.Username = @UserName
                                                   AND iu.IdUser = @UserCode
                                                   AND pe.PerRowStatus = 1
@@ -612,14 +607,14 @@ BEGIN
                                                        + '",'
                                                      , +'"DPI":"' + ISNULL(cu.[LegalSponsorDPI], '') + '"' 
                                                      + '}]' + '}'
-                                                FROM DeliveryBackOffice.dbo.InternalUser                     iu
-                                                    INNER JOIN DeliveryBackOffice.dbo.RegisterUser                 ru
+                                                FROM DeliveryBackOffice.dbo.InternalUser                     iu WITH(NOLOCK)
+                                                    INNER JOIN DeliveryBackOffice.dbo.RegisterUser                 ru WITH(NOLOCK)
                                                         ON ru.UsrIdUser = iu.RegisterUserID
-                                                    INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount           rua
+                                                    INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount           rua WITH(NOLOCK)
                                                         ON rua.RuaIdUser = ru.UsrIdUser
-                                                    INNER JOIN DeliveryBackOffice.dbo.Account                      ac
+                                                    INNER JOIN DeliveryBackOffice.dbo.Account                      ac WITH(NOLOCK)
                                                         ON ac.AccIdAccount = rua.RuaIdAccount
-                                                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient             vpc
+                                                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient             vpc WITH(NOLOCK)
                                                         ON vpc.CustomerID = ac.IdCustomer
 													INNER JOIN DeliveryBackOffice.dbo.VisitPointByUser vup WITH(NOLOCK) ON vup.IdVisitPointClient = vpc.IdVisitPointClient AND vup.RegisterUserID = ru.UsrIdUser
                                                     LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
@@ -630,36 +625,36 @@ BEGIN
                                                     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD    CCC WITH(NOLOCK)
                                                         ON CCC.IdCatCurrencyCOD = RH.IdCurrency 
                                                         OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) --1 DEFAULT GT
-                                                    LEFT JOIN DeliveryBackOffice.dbo.Settlement              STL
+                                                    LEFT JOIN DeliveryBackOffice.dbo.Settlement              STL WITH(NOLOCK)
                                                         ON vpc.IdSettlement = STL.IdSettlement
-                                                    LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage     dsc
+                                                    LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage     dsc WITH(NOLOCK)
                                                         ON dsc.IdSettlement = STL.IdSettlement
                                                            AND dsc.RowStatus = 1
-                                                    LEFT JOIN DeliveryBackOffice.dbo.Township                TWS
+                                                    LEFT JOIN DeliveryBackOffice.dbo.Township                TWS WITH(NOLOCK)
                                                         ON TWS.IdTownship = STL.IdTownship
-                                                    LEFT JOIN DeliveryBackOffice.dbo.Province                PRV
+                                                    LEFT JOIN DeliveryBackOffice.dbo.Province                PRV WITH(NOLOCK)
                                                         ON PRV.IdProvince = TWS.IdProvince
-                                                    LEFT JOIN DeliveryBackOffice.dbo.Customer                cu
+                                                    LEFT JOIN DeliveryBackOffice.dbo.Customer                cu WITH(NOLOCK)
                                                         ON cu.IdCustomer = ac.IdCustomer
                                                            AND cu.RowSatus = 1
-                                                    LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank            dbk
+                                                    LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank            dbk WITH(NOLOCK)
                                                         ON cu.CODAccountBankID = dbk.Id_bank
                                                            AND dbk.Id_country = @CountryByNacionality
                                                            AND dbk.Id_status = 1
-                                                    LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType      cba
+                                                    LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType      cba WITH(NOLOCK)
                                                         ON cu.CODAccountTypeID = cba.IdBankAccountType
                                                            AND cba.RowStatus = 1
-                                                    LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment   ccp
+                                                    LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment   ccp WITH(NOLOCK)
                                                         ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
-                                                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser        vpu
+                                                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser        vpu WITH(NOLOCK)
                                                         ON vpu.RegisterUserID = ru.UsrIdUser
                                                        AND vpu.IdVisitPointClient = vpc.IdVisitPointClient
                                                     -- Configuración del punto de visita
-                                                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointConfiguration vpconf
+                                                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointConfiguration vpconf WITH(NOLOCK)
                                                         ON vpc.CodeOfReference = vpconf.VisitPointID
-                                                    LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType      cbaconf
+                                                    LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType      cbaconf WITH(NOLOCK)
                                                         ON vpconf.CODAccountBankTypeID = cbaconf.IdBankAccountType
-                                                    LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank            dbkconf
+                                                    LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank            dbkconf WITH(NOLOCK)
                                                         ON vpconf.CODAccountBankID = dbkconf.Id_bank
                                                 WHERE iu.Username = @UserName
                                                       AND iu.IdUser = @UserCode

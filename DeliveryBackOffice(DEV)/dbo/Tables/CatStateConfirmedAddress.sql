@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatStateConfirmedAddress] (
-    [IdStatus]     INT           IDENTITY (1, 1) NOT NULL,
+    [IdStatus]     INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NameState]    NVARCHAR (50) NOT NULL,
     [TokenCreated] VARCHAR (50)  NOT NULL,
     [DateCreated]  DATETIME      NOT NULL,
@@ -8,6 +8,8 @@
     [RowStatus]    BIT           NOT NULL,
     CONSTRAINT [PK_CatSateConfirmedAddress] PRIMARY KEY CLUSTERED ([IdStatus] ASC)
 );
+
+
 
 
 GO

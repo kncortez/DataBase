@@ -49,7 +49,7 @@ BEGIN
                 SELECT TOP (1)
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
-                WHERE [CS].[SysNameSystem] = 'CourierAPP' COLLATE Latin1_General_CI_AI
+                WHERE [CS].[SysNameSystem] = 'CourierAPP'
             );
     -- control de inserción de imagen en tabla de fotografías
     DECLARE @ID_Photo INT;
@@ -70,20 +70,21 @@ BEGIN
     DECLARE @CatTypeConfirmationOfIncidenceId INT;
     DECLARE @ConfirmationOfIncidenceId INT;
     DECLARE @MessageReturn NVARCHAR(100) = N'';
+    DECLARE @DateGlobal DATE = CONVERT(DATE, GETDATE());
 
     DECLARE @EmailNotificationMedium INT =
             (
                 SELECT TOP (1)
                        [CNM].[IdCatNotificationMedium]
                 FROM [DeliveryBackOffice].[dbo].[CatNotificationMedium] CNM WITH (NOLOCK)
-                WHERE [CNM].[NotificationMediumName] = 'Correo SMTP' COLLATE Latin1_General_CI_AI
+                WHERE [CNM].[NotificationMediumName] = 'Correo SMTP'
             );
     DECLARE @NotificationType BIGINT =
             (
                 SELECT TOP (1)
                        [CNT].[IdCatNotificationType]
                 FROM [DeliveryBackOffice].[dbo].[CatNotificationType] CNT WITH (NOLOCK)
-                WHERE [CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin' COLLATE Latin1_General_CI_AI
+                WHERE [CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin'
             );
 
     DECLARE @TokenLinkGeneration NVARCHAR(100) = N'';
@@ -96,7 +97,8 @@ BEGIN
                     INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
                 WHERE DA.Guide_Number = @GuideNumber
-                      AND CONVERT(DATE, DA.Date_Created) = CONVERT(DATE, GETDATE())
+                  AND DA.Guide_Serie = @GuideSerie
+                  AND CONVERT(DATE, DA.Date_Created) = @DateGlobal
             );
 
     IF (ISNULL(@CurrentIncidentCount, 0) <= 0)
@@ -270,7 +272,7 @@ BEGIN
                   )
                   AND da.Guide_Serie = @GuideSerie
                   AND da.Guide_Number = @GuideNumber
-                  AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
+                  AND CONVERT(VARCHAR, da.Date_Created, 23) = @DateGlobal
             ORDER BY da.Date_Created DESC;
 
             -- insertar foto y guardar ID para actualizar tabla de entregas
@@ -655,7 +657,7 @@ BEGIN
                                       AND [NQ].[CatNotificationMediumId] = @EmailNotificationMedium
                                       AND [NQ].[IsSent] = 0
                                       AND [NQ].[RowStatus] = 1
-                                      AND [NQ].[DateToSend] = CAST(GETDATE() AS DATE)
+                                      AND [NQ].[DateToSend] = @DateGlobal
                                 ORDER BY [NQ].[DateToSend] ASC
                             );
 
@@ -854,7 +856,7 @@ BEGIN
                                 SELECT TOP 1
                                        WT.IdWebhookType
                                 FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                WHERE WT.WebhookName = 'GuideStatusChange'
                                       AND WT.RowStatus = 1
                             );
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateByArticuleByCustomer] (
-    [Id]                   INT             IDENTITY (1, 1) NOT NULL,
+    [Id]                   INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ArticuleByCustomerId] INT             NOT NULL,
     [SegmetId]             INT             NOT NULL,
     [Price]                DECIMAL (12, 2) NOT NULL,

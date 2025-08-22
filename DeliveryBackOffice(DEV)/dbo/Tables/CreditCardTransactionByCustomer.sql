@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CreditCardTransactionByCustomer] (
-    [IdTransaction]        BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdTransaction]        BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [System]               INT             NOT NULL,
     [CardNumber]           NVARCHAR (50)   NOT NULL,
     [TypeCardNumber]       NVARCHAR (5)    NOT NULL,
@@ -28,6 +28,8 @@
     FOREIGN KEY ([System]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     FOREIGN KEY ([System]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 
 
 

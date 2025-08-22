@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateTownshipCoverage] (
-    [IdRateTownshipCoverage] INT           IDENTITY (1, 1) NOT NULL,
+    [IdRateTownshipCoverage] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RateId]                 INT           NOT NULL,
     [TownshipSourceId]       INT           NOT NULL,
     [TownshipDestinyId]      INT           NOT NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_RateTownshipCoverage_TownshipDestiny] FOREIGN KEY ([TownshipDestinyId]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_RateTownshipCoverage_TownshipSource] FOREIGN KEY ([TownshipSourceId]) REFERENCES [dbo].[Township] ([IdTownship])
 );
+
+
 
 
 
@@ -95,4 +97,10 @@ CREATE NONCLUSTERED INDEX [IDX_TownshipDestinyId_TownshipSourceId_RateId]
 GO
 CREATE NONCLUSTERED INDEX [idx_RateId_RowStatus]
     ON [dbo].[RateTownshipCoverage]([RateId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RateId_TownshipSourceId_INCLUDE]
+    ON [dbo].[RateTownshipCoverage]([RateId] ASC, [TownshipSourceId] ASC)
+    INCLUDE([TownshipDestinyId], [SegmentTypeId]);
 

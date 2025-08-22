@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DimensionalParameter] (
-    [IdDimensional]     INT           IDENTITY (1, 1) NOT NULL,
+    [IdDimensional]     INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdUnit]            INT           NULL,
     [ByRange]           BIT           NULL,
     [ByUnity]           BIT           NULL,

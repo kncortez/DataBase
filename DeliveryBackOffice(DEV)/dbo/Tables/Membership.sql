@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Membership] (
-    [IdMembership]                   INT             IDENTITY (1, 1) NOT NULL,
+    [IdMembership]                   INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatMembershipId]                INT             NOT NULL,
     [CatMembershipStatusId]          INT             NOT NULL,
     [MembershipCode]                 NVARCHAR (50)   NULL,
@@ -40,6 +40,8 @@
     CONSTRAINT [FK_Membership_MembershipStatus] FOREIGN KEY ([CatMembershipStatusId]) REFERENCES [dbo].[CatSalesPackageStatus] ([IdCatSalesPackageStatus]),
     CONSTRAINT [FK_Membership_VisitPointClient] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

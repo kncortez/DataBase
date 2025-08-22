@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Province] (
-    [IdProvince]           INT            IDENTITY (1, 1) NOT NULL,
+    [IdProvince]           INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ProvinceName]         NVARCHAR (50)  NULL,
     [ProvinceDescription]  NVARCHAR (100) NULL,
     [ProvinceStatus]       BIT            NULL,
@@ -15,6 +15,8 @@
     [LocalCode]            VARCHAR (10)   NULL,
     CONSTRAINT [PK_Province] PRIMARY KEY CLUSTERED ([IdProvince] ASC)
 );
+
+
 
 
 GO

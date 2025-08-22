@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SettlementPickupStationDetail] (
-    [IdSettlementPickupStationDetail] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdSettlementPickupStationDetail] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SettlementPickupStationId]       BIGINT          NOT NULL,
     [ServiceManagementId]             BIGINT          NOT NULL,
     [Price]                           DECIMAL (12, 2) NOT NULL,
@@ -19,6 +19,8 @@
     FOREIGN KEY ([SettlementStationId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     FOREIGN KEY ([SettlementStationId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

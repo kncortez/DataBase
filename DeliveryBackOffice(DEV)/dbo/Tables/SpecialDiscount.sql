@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SpecialDiscount] (
-    [IdSpecialDiscount]     INT             IDENTITY (1, 1) NOT NULL,
+    [IdSpecialDiscount]     INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [DiscountName]          NVARCHAR (50)   NULL,
     [PercentValue]          DECIMAL (18, 2) NULL,
     [SpecialDiscountStatus] BIT             NULL,
@@ -12,6 +12,4 @@
     CONSTRAINT [PK_SpecialDiscount] PRIMARY KEY CLUSTERED ([IdSpecialDiscount] ASC),
     CONSTRAINT [FK_SpecialDiscount_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
-
-
 

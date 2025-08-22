@@ -5,16 +5,18 @@
 -- =============================================
 CREATE PROCEDURE GetInvoicePaymentDetailDeliveryCorp
 (
-  @LstVisitPointClient NVARCHAR(MAX) = '',
-  @CutOffDate          DATETIME,
-  @IdCountry           NVARCHAR(2) = 'GT'
+ @LstVisitPointClient NVARCHAR(MAX) = '',
+ @CutOffDate          DATETIME,
+ @IdCountry           NVARCHAR(2) = 'GT',
+ @Option              TINYINT = 0
 )
 AS
 BEGIN
   --     Inicia el bloque de manejo de excepciones
     BEGIN TRY
         --Variables locales
-        DECLARE @XmlVisitPointClient XML; 
+        DECLARE @XmlVisitPointClient XML,
+                @TypeService         NVARCHAR(3);
 
         DECLARE @IdCatInvoiceType INT =
                 (
@@ -25,12 +27,14 @@ BEGIN
                     AND RowStatus = 1
                 );
 
-        -- Verificar si la tabla existe y eliminarla si es necesario
-        IF OBJECT_ID('tempdb..#InvoiceByVisitPointDetails') IS NOT NULL
-            DROP TABLE #InvoiceByVisitPointDetails;
+        SELECT @TypeService = CASE
+                                 WHEN @Option = 1 THEN 'STD'
+                                 WHEN @Option = 3 THEN 'COD'
+                                 ELSE 'STD'
+                              END
 
         -- Crear la tabla
-        CREATE TABLE #InvoiceByVisitPointDetails
+        DECLARE @InvoiceByVisitPointDetails TABLE
         (
             IdVisitPointClient INT NOT NULL,
             Guide_Serie        NVARCHAR(2)  NOT NULL,
@@ -78,6 +82,7 @@ BEGIN
            AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)
            AND do.IsCollect = 0
            AND do.SenderCountryId = @IdCountry
+           AND do.TypeService = @TypeService
            AND EXISTS
                      (
                       SELECT TOP 1 1
@@ -94,18 +99,27 @@ BEGIN
                      )
          ORDER BY do.Guide_Number DESC
 
-        INSERT INTO #InvoiceByVisitPointDetails
+        INSERT INTO @InvoiceByVisitPointDetails
         EXEC [dbo].[GetBillingGuideDetailForList] @TempVisitPointClient
 
             -- Validar si hay registros en la tabla temporal
             IF EXISTS (SELECT TOP 1 1 
-                         FROM #InvoiceByVisitPointDetails)
+                         FROM @InvoiceByVisitPointDetails)
             BEGIN
                 SELECT 1 AS StatusCode, 
                        'Detalle obtenido con éxito' AS StatusMessage;
 
-                SELECT *
-                  FROM #InvoiceByVisitPointDetails
+                SELECT IdVisitPointClient,
+                       Guide_Serie,
+                       Guide_Number,
+                       CountryByGuide,
+                       SAPCode,
+                       [Name],
+                       [Description],
+                       Price,
+                       Category,
+                       SendToInvoice
+                  FROM @InvoiceByVisitPointDetails
                  ORDER BY IdVisitPointClient DESC, Guide_Serie DESC, Guide_Number DESC;
             END
             ELSE
@@ -121,12 +135,8 @@ BEGIN
         -- Deshace la transacción en caso de error
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
-
             SELECT 0 AS StatusCode, 
                    'Ha ocurrido un error en el proceso' AS StatusMessage
     END CATCH
 
-    -- Validar y eliminar la tabla temporal si ya existe
-    IF OBJECT_ID('tempdb..#VisitPoints') IS NOT NULL
-        DROP TABLE #InvoiceByVisitPointDetails;
 END;

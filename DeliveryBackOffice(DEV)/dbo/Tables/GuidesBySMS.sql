@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[GuidesBySMS] (
-    [IdGuidesBySMS] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdGuidesBySMS] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SmsId]         BIGINT        NOT NULL,
     [GuideSerie]    NVARCHAR (2)  NULL,
     [GuideNumber]   INT           NULL,
@@ -12,4 +12,16 @@
     CONSTRAINT [FK_GuidesBySMS_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_GuidesBySMS_SMS_Received] FOREIGN KEY ([SmsId]) REFERENCES [dbo].[SMS_Received] ([SMS_ID])
 );
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_SmsId]
+    ON [dbo].[GuidesBySMS]([SmsId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber]
+    ON [dbo].[GuidesBySMS]([GuideSerie] ASC, [GuideNumber] ASC);
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CustomerPaymentValue] (
-    [IdCustomerPaymentValue]  INT            IDENTITY (1, 1) NOT NULL,
+    [IdCustomerPaymentValue]  INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountId]               BIGINT         NULL,
     [CustomerId]              INT            NOT NULL,
     [VisitPointId]            INT            NULL,
@@ -20,6 +20,8 @@
     CONSTRAINT [FK_CustomerPaymentValue_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_CustomerPaymentValue_VisitPointClient] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO

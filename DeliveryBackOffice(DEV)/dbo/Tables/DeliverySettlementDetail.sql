@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliverySettlementDetail] (
-    [ID]                             INT             IDENTITY (1, 1) NOT NULL,
+    [ID]                             INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ID_DeliveryOrderBySettlement]   BIGINT          NOT NULL,
     [Guide_Serie]                    NVARCHAR (2)    NOT NULL,
     [Guide_Number]                   INT             NOT NULL,
@@ -25,6 +25,8 @@
     CONSTRAINT [FK_DeliverySettlementDetail_DeliveryOrderBySettlement] FOREIGN KEY ([ID_DeliveryOrderBySettlement]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID]),
     CONSTRAINT [FK_DeliverySettlementDetail_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
+
+
 
 
 

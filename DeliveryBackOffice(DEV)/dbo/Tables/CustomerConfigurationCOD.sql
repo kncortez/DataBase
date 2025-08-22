@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CustomerConfigurationCOD] (
-    [CustomerConfigurationCODId] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [CustomerConfigurationCODId] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CustomerId]                 INT          NOT NULL,
     [IdCatBatchTypeCOD]          BIGINT       NOT NULL,
     [IdCatBatchFrequencyCOD]     BIGINT       NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FK_CustomerConfigurationCOD_IdCatBatchFrequencyCOD] FOREIGN KEY ([IdCatBatchFrequencyCOD]) REFERENCES [dbo].[CatBatchFrequencyCOD] ([CatBatchFrequencyCODId]),
     CONSTRAINT [FK_CustomerConfigurationCOD_IdCatBatchTypeCOD] FOREIGN KEY ([IdCatBatchTypeCOD]) REFERENCES [dbo].[CatBatchTypeCOD] ([CatBatchTypeCODId])
 );
+
+
 
 
 GO

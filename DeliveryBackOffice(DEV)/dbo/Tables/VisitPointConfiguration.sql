@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointConfiguration] (
-    [IdVPConfiguration]    BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdVPConfiguration]    BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [VisitPointID]         INT           NOT NULL,
     [TransportCompanyID]   INT           NULL,
     [HubLogisticID]        INT           NULL,
@@ -26,6 +26,8 @@
     CONSTRAINT [FK_VisitPointConfiguration_HubLogistics] FOREIGN KEY ([HubLogisticID]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_VisitPointConfiguration_VisitPointClient] FOREIGN KEY ([VisitPointID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

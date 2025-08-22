@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatSystem] (
-    [SysIdSystem]     INT           IDENTITY (1, 1) NOT NULL,
+    [SysIdSystem]     INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SysNameSystem]   VARCHAR (100) NOT NULL,
     [SysPlataform]    VARCHAR (50)  NOT NULL,
     [SysDescription]  VARCHAR (50)  NULL,
@@ -10,6 +10,8 @@
     [SysDateUpdated]  DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([SysIdSystem] ASC)
 );
+
+
 
 
 

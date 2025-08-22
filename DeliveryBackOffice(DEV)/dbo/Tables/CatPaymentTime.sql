@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatPaymentTime] (
-    [TimePlaId]          INT           IDENTITY (1, 1) NOT NULL,
+    [TimePlaId]          INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TimePlaName]        VARCHAR (55)  NULL,
     [TimePlaDescription] VARCHAR (100) NULL,
     [TimePlaAbrev]       VARCHAR (10)  NULL,
@@ -12,6 +12,8 @@
     [CollectCOD]         BIT           NULL,
     CONSTRAINT [TimePlaId] PRIMARY KEY CLUSTERED ([TimePlaId] ASC)
 );
+
+
 
 
 GO

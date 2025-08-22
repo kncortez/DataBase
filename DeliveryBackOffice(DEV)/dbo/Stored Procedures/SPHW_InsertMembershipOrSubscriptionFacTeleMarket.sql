@@ -104,15 +104,32 @@ BEGIN
     ------------------------------------------------------------------------------------
     ------------------------------------------------------------------------------------
 
+    --SELECT TOP 1
+    --    @inv_cli_name = InvoiceName,
+    --    @inv_cli_nit = TaxIdNumber,
+    --    @inv_cli_email = InvoiceEmail,
+    --    @inv_cli_adress = FiscalAddress
+    --FROM [DeliveryBackOffice].[dbo].[Membership] M
+    --WHERE [M].[AccountId] = @IdAccount
+    --      AND [M].[RowStatus] = 1
+    --ORDER BY DateCreated DESC;
+
+	IF EXISTS (
+    SELECT 1
+    FROM [DeliveryBackOffice].[dbo].[Membership]
+    WHERE AccountId = @IdAccount AND RowStatus = 1
+)
+BEGIN
     SELECT TOP 1
         @inv_cli_name = InvoiceName,
         @inv_cli_nit = TaxIdNumber,
         @inv_cli_email = InvoiceEmail,
-        @inv_cli_adress = FiscalAddress
-    FROM [DeliveryBackOffice].[dbo].[Membership] M
-    WHERE [M].[AccountId] = @IdAccount
-          AND [M].[RowStatus] = 1
+        @inv_cli_adress = ISNULL(FiscalAddress,'')
+    FROM [DeliveryBackOffice].[dbo].[Membership]
+    WHERE AccountId = @IdAccount AND RowStatus = 1
     ORDER BY DateCreated DESC;
+END
+
     ------------------------------------------------------------------------------------
     --Datos detalle de factura
     DECLARE @dti_fk_header BIGINT;

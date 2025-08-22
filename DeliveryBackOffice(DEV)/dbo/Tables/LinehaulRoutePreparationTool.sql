@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRoutePreparationTool] (
-    [IdLinehaulRoutePreparationTool] INT           IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRoutePreparationTool] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRoutePreparationId]     INT           NOT NULL,
     [ToolId]                         INT           NOT NULL,
     [RowStatus]                      BIT           DEFAULT ((1)) NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_LinehaulRoutePreparationTool_Tool] FOREIGN KEY ([ToolId]) REFERENCES [dbo].[Tool] ([IdTool]),
     CONSTRAINT [UQ_LinehaulRoutePreparation_Tool] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationId] ASC, [ToolId] ASC)
 );
+
+
 
 
 GO

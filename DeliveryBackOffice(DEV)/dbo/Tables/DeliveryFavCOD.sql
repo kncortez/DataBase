@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryFavCOD] (
-    [IdDeliveryFavCOD]              INT          IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryFavCOD]              INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AliasFavCOD]                   VARCHAR (50) NULL,
     [NameAccountFavCOD]             VARCHAR (50) NULL,
     [TypeAccountFavCOD]             VARCHAR (50) NULL,
@@ -16,6 +16,8 @@
     [IsDefault]                     BIT          CONSTRAINT [DF_DeliveryFavCOD_IsDefault] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_DeliveryFavCOD] PRIMARY KEY CLUSTERED ([IdDeliveryFavCOD] ASC)
 );
+
+
 
 
 
