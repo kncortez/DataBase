@@ -7,6 +7,10 @@
 -- Updated date: <2025-06-29>
 -- Description:	< Se agrega la consulta para obtener el listado de notificaciones pendientes para Ultra Entregas >
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date: <2025-08-18>
+-- Description:	<Se agrega WTQ.CustomerId en consulta para manejar el cliente de la notificación>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetWebhookTrackingQueue] 
 AS
 BEGIN
@@ -21,6 +25,7 @@ BEGIN
 		,WTQ.GuideSerie
 		,WTQ.GuideNumber
 		,WE.WebhookEndpointURI
+		,WTQ.CustomerId
 	FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
 		INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
 			ON WTQ.WebhookEndpointId = WE.IdWebhookEndpoint
