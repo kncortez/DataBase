@@ -40,6 +40,7 @@ BEGIN
 		BEGIN
 			DECLARE @IsDefault BIT = ISNULL((SELECT TOP 1 0 FROM [Deliverybackoffice].[dbo].[CustomerPaymentValue] WITH(NOLOCK) WHERE CustomerId = @CustomerId AND RowStatus = 1), 1)
 		
+            DECLARE @DateNow Datetime = GETDATE();  
 
 			INSERT INTO [dbo].[CustomerPaymentValue] ([AccountId]
 			, [CustomerId]
@@ -64,7 +65,7 @@ BEGIN
 			, [IsoCode]
 			, [PaymentGateway]
 			)
-				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedExpirationDate, @TokenizedCVV, @DisplayText, @IsDefault, @Type, 1, @Token, GETDATE(), NULL, NULL,@Holder, @FirstName,	@LastName,	@Nirphone,	@Address,	@Phone,	@IsoCode,	@PaymentGateway)
+				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedExpirationDate, @TokenizedCVV, @DisplayText, @IsDefault, @Type, 1, @Token, @DateNow, NULL, NULL,@Holder, @FirstName,	@LastName,	@Nirphone,	@Address,	@Phone,	@IsoCode,	@PaymentGateway)
 			
 			COMMIT TRANSACTION
 
