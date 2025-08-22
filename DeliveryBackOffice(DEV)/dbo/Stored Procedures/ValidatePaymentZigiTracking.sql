@@ -1,14 +1,17 @@
 ﻿-- =============================================
+-- System:		<API>
 -- Author:		<Walter Orozco>
 -- Create date: <2025-08-11>
 -- Description:	<ZIGI - Validar telefono, pago y link zigi para flujo de tracking WhatsApp pago con Zigi.>
+-- Create date: <2025-08-21>
+-- Description:	<Se agrega actualizacion de la bandera para solicitud de link zigi enviado por whatsapp.>
 -- =============================================
-
 CREATE PROCEDURE [dbo].[ValidatePaymentZigiTracking]
     @GuideNumber        INT,
     @GuideSerie         NVARCHAR(2),
     @NirPhone			INT,
-    @Phone				INT
+    @Phone				INT,
+	@Token				NVARCHAR(200) = 'SYS-TrackingZigi'
 AS
 BEGIN
     BEGIN TRY
@@ -85,6 +88,13 @@ BEGIN
 				END
 				ELSE
 				BEGIN
+
+					-- Actualizar bandera para envio de mensaje por WhatsApp
+					UPDATE DeliveryBackOffice.dbo.PaymentZigi
+					SET LinkRequestSent = 0, DateUpdated = GETDATE(), TokenUpdated = @Token
+					WHERE RowStatus = 1 AND LinkRequestSent = 1 AND PaymentConfirmSent = 0 AND ZigiLinkStatus = 'CREATED' 
+					AND GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie;
+
 					SELECT
 						  201																AS	[IdResult]
 						, 'Este envío ya fue pagado'										AS	[Title]
