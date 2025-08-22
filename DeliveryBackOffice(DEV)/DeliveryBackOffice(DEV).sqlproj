@@ -2039,6 +2039,7 @@
     <Build Include="Security\Permissions.sql" />
     <Build Include="dbo\Stored Procedures\Support_AddMembershipSuscription.sql" />
     <Build Include="dbo\Stored Procedures\ValidatePaymentZigiTracking.sql" />
+    <Build Include="dbo\Stored Procedures\sms_ZigiSend.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

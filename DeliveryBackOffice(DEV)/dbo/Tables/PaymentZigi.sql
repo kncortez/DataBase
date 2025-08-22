@@ -18,6 +18,8 @@
     [DateUpdated]               DATETIME        NULL,
     [TokenUpdated]              NVARCHAR (50)   NULL,
     [AuthorizationNumberByUser] NVARCHAR (100)  NULL,
+    [LinkRequestSent]           BIT             CONSTRAINT [DF_PaymentZigi_LinkRequestSent] DEFAULT ((0)) NOT NULL,
+    [PaymentConfirmSent]        BIT             CONSTRAINT [DF_PaymentZigi_PaymentConfirmSent] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_PaymentZigi] PRIMARY KEY CLUSTERED ([ZigiPaymentId] ASC),
     CONSTRAINT [FK_PaymentZigi_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
@@ -103,6 +105,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador único del registro de pago en Zigi.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi', @level2type = N'COLUMN', @level2name = N'ZigiPaymentId';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si se envió el WhatsApp para solicitar el link de Zigi (1=Enviado, 0=No enviado).', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi', @level2type = N'COLUMN', @level2name = N'LinkRequestSent';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si se envió el WhatsApp de confirmación de pago de Zigi (1=Enviado, 0=No enviado).', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi', @level2type = N'COLUMN', @level2name = N'PaymentConfirmSent';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de pagos realizados a través de la plataforma Zigi.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi';
