@@ -36,9 +36,9 @@ BEGIN
 	BEGIN TRY
 		BEGIN TRANSACTION
 
-		IF NOT EXISTS (SELECT 1 FROM CustomerPaymentValue WITH(NOLOCK) WHERE CustomerId = @CustomerId AND TokenizedToken = @TokenizedToken AND RowStatus = 1)
+		IF NOT EXISTS (SELECT 1 FROM [Deliverybackoffice].[dbo].[CustomerPaymentValue] WITH(NOLOCK) WHERE CustomerId = @CustomerId AND TokenizedToken = @TokenizedToken AND RowStatus = 1)
 		BEGIN
-			DECLARE @IsDefault BIT = ISNULL((SELECT TOP 1 0 FROM CustomerPaymentValue WITH(NOLOCK) WHERE CustomerId = @CustomerId AND RowStatus = 1), 1)
+			DECLARE @IsDefault BIT = ISNULL((SELECT TOP 1 0 FROM [Deliverybackoffice].[dbo].[CustomerPaymentValue] WITH(NOLOCK) WHERE CustomerId = @CustomerId AND RowStatus = 1), 1)
 		
 
 			INSERT INTO [dbo].[CustomerPaymentValue] ([AccountId]

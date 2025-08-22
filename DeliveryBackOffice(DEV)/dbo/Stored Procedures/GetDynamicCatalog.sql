@@ -600,9 +600,9 @@ BEGIN
                                        + '"ExpirationDate":"' + ISNULL(cpv.TokenizedExpirationDate,'') + '",' 
                                        + '"Type":"' + ISNULL( cpv.[Type],'') + '",'
 									   + '}'
-                                FROM CustomerPaymentValue cpv WITH (NOLOCK)
+                                FROM [Deliverybackoffice].[dbo].[CustomerPaymentValue] cpv WITH (NOLOCK)
 								WHERE (cpv.AccountId = @IdAccount
-								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM Account WITH (NOLOCK) WHERE AccIdAccount = @IdAccount)))
+								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM [Deliverybackoffice].[dbo].[Account] WITH (NOLOCK) WHERE AccIdAccount = @IdAccount)))
 								AND cpv.RowStatus = 1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),

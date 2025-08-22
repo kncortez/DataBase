@@ -115,8 +115,7 @@ GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla para almacenar datos de TC de clientes' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue'
 
 
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar datos de TC de clientes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue';
+
 
 
 
