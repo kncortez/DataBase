@@ -9,6 +9,11 @@
 -- Create date: 12-08-2024 
 -- Description:	Se calcula y se inserta la moneda y el pais en InvoiceHeader
 -- =============================================
+-- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <30 Julio 2025>
+-- Description:	<Facturacion SV - Se guardan datos de factura emitida para SV>
+-- =============================================
 */
 CREATE PROCEDURE [dbo].[sps_headerInvoice]
 	-- Add the parameters for the stored procedure here
@@ -24,12 +29,14 @@ CREATE PROCEDURE [dbo].[sps_headerInvoice]
 	,@type int
 	,@systemOrigen int = 1
 	,@CatTypeInvoiceId INT = NULL
+	,@TblBuyerInfo TblBuyerInfo READONLY
 AS
 BEGIN
 
 
 DECLARE @IdCountry NVARCHAR(2),
-		@IdCurrency INT;
+		@IdCurrency INT,
+		@invoiceHeaderId BIGINT=-1;
 
 	SELECT @IdCountry=CountryId 
 	FROM VisitPointClient WITH (NOLOCK)
@@ -92,5 +99,43 @@ END
 		   ,@IdCurrency
 		   ,@IdCountry
 		   )
-		   select @@IDENTITY 'IDENTITY'
+          SET @invoiceHeaderId= @@IDENTITY
+        --INSERT EN TABLA LOG DE INFORMACION DEL CLIENTE CUANDO SE EMITE UNA FACTURA
+            IF(@IdCountry = 'SV')
+            BEGIN
+            INSERT INTO InformationBuyerInvoice 
+                        (
+                        InvoiceId,
+                        DistrictCode,
+                        StateCode,
+                        ActivityCode,
+                        ActivityDescription,
+                        NRC,
+                        TypeIdentificationDocumentCode,
+                        IdDocument,
+                        Phone,
+                        Rowstatus,
+                        TokenCreated,
+                        DateCreated,
+                        TokenUpdated,
+                        DateUpdated
+                        )
+                SELECT @invoiceHeaderId
+                        ,BI.DistrictCode
+                        ,BI.StateCode
+                        ,BI.ActivityCode
+                        ,BI.ActivityDescription
+                        ,BI.NRC
+                        ,BI.TypeDocument
+                        ,BI.IdDocument
+                        ,BI.Phone
+                        ,1
+                        ,@tokenRegister
+                        ,GETDATE()
+                        ,NULL
+                        ,NULL
+                    FROM @TblBuyerInfo BI
+            END
+        
+        SELECT @invoiceHeaderId 'IDENTITY'
 END
