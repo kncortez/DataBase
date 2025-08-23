@@ -1565,6 +1565,7 @@
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataForJSONAeropost.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataUEForJSON.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForJSON.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
