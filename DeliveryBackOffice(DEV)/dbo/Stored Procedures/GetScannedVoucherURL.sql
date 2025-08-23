@@ -15,7 +15,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @URLBase VARCHAR(50);
-	SET @URLBase = (SELECT Value FROM ConfigParams WHERE Name = 'BaseURL');
+	SET @URLBase = (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams WHERE Name = 'BaseURL');
 
     SELECT
 		do.Guide_Number,

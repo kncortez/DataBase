@@ -31,7 +31,7 @@ BEGIN
 		
 		IF @IsVoucherRequired = 1
 		BEGIN			
-			SET @URLBase = (SELECT Value FROM ConfigParams WHERE Name = 'BaseURL');
+			SET @URLBase = (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams WHERE Name = 'BaseURL');
 			SET @URL = CONCAT(@URLBase,(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) as VARCHAR(300))));
 
 			IF @URL IS NULL OR @URL = ''
