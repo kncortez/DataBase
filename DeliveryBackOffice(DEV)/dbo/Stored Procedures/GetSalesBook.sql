@@ -16,8 +16,8 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    select  ROW_NUMBER() OVER(ORDER BY INH.inv_numberFEL) [row_number]
-            ih.inv_date       [date]
+    select  ROW_NUMBER() OVER(ORDER BY IH.inv_numberFEL) [row_number]
+            ,ih.inv_date       [date]
             ,ih.inv_cli_nit   [id_client]
             ,ih.inv_cli_name  [client_name]
             ,CASE WHEN @IdCountry = 'GT' THEN ih.inv_serieFEL 
@@ -30,23 +30,23 @@ BEGIN
             END [document_type]
             ,0 [exportation]
             ,0 [sales]
-            ,CASE WHEN dt.category = 'BIEN'  THEN ih.inv_amount  
+            ,CASE WHEN IND.dti_category = 'BIEN'  THEN ih.inv_amount  
                 ELSE 0
             END [sales_goods]
-            ,CASE WHEN dt.category = 'SERVICIO'  THEN ih.inv_amount  
+            ,CASE WHEN IND.dti_category = 'SERVICIO'  THEN ih.inv_amount  
             ELSE 0
             END [sales_services]
             ,0 [discount]
             ,(inv_amount-inv_IVA) [amount_base]
             ,inv_IVA [tax]
-            ,f.CtsName   [document_type_description]
-            ,dt.dti_description [document_description]
-		    , iif (ISNULL( f.ConditionOfPaymentID, 1) =1 , 'CONTADO', 'CREDITO') 
-		    ,CASE WHEN DOR.IsCollect = 1 THEN 'SI' ELSE 'NO' END                [IsCollect]
+            ,DOR.CtsName   [document_type_description]
+            ,IND.dti_description [document_description]
+            , iif (ISNULL( DOR.ConditionOfPaymentID, 1) =1 , 'CONTADO', 'CREDITO') 
+            ,CASE WHEN DOR.IsCollect = 1 THEN 'SI' ELSE 'NO' END                [IsCollect]
             ,DOR.SAPCardCode                       [SAPCardCode]
-    from invoiceHeader ih          WITH (NOLOCK)
+    from invoiceHeader IH          WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
-            ON IND.dti_fk_header = INH.inv_pk_id
+            ON IND.dti_fk_header = IH.inv_pk_id
         LEFT JOIN
         (
             SELECT  DO.Guide_Serie    [Guide_Serie]
@@ -63,24 +63,26 @@ BEGIN
         ) DOR
             ON DOR.Guide_Serie   = IND.dti_fk_orderSerie
             AND DOR.Guide_Number = IND.dti_fk_orderNumber
-    WHERE INH.IdCountry = @IdCountry
-          AND  INH.inv_date >= CAST(@BeginDate AS DATETIME)
-          AND  INH.inv_date < CAST(DATEADD(DAY, 1, @EndDate) AS DATETIME)
-          AND INH.inv_certificationFEL IS NOT NULL
-          AND INH.inv_type IN (1,2)
+    WHERE IH.IdCountry = @IdCountry
+          AND IH.inv_date >= CAST(@BeginDate AS DATETIME)
+          AND IH.inv_date < CAST(DATEADD(DAY, 1, @EndDate) AS DATETIME)
+          AND IH.inv_certificationFEL IS NOT NULL
+          AND IH.inv_type IN (1,2)
     GROUP BY inv_date
-                ,inv_cli_nit
-                ,inv_cli_name
-                ,inv_serieFEL
-                ,inv_certificationFEL
-                ,inv_numberFEL
-                ,inv_type
-                ,inv_amount
-                ,inv_IVA
-                ,dor.CtsName
-                ,dor.ConditionOfPaymentID
-                ,dor.IsCollect
-                ,dor.SAPCardCode
+            ,inv_cli_nit
+            ,inv_cli_name
+            ,inv_serieFEL
+            ,inv_certificationFEL
+            ,inv_numberFEL
+            ,ind.dti_category
+            ,inv_type
+            ,inv_amount
+            ,inv_IVA
+            ,ind.dti_description
+            ,dor.CtsName
+            ,dor.ConditionOfPaymentID
+            ,dor.IsCollect
+            ,dor.SAPCardCode
     ORDER BY [row_number] asc
 
 END
