@@ -62,7 +62,7 @@ BEGIN
 		ON DO.ReceiverCountryId = DC.Currency_IdCountry
 	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 		ON CCC.IdCatCurrencyCOD = DC.IdCurrencyCOD
-	WHERE Z.RowStatus = 1 AND Z.LinkRequestSent = 0 AND Z.PaymentConfirmSent = 0 AND Z.ZigiLinkStatus = 'CREATED'
+	WHERE Z.RowStatus = 1 AND Z.LinkRequestSent = 0 AND Z.PaymentConfirmSent = 0 AND Z.ZigiLinkStatus = 'CREATED' AND DC.DefaultPerCountry = 1
 	UNION 
 	SELECT 
 		   DO.Receiver_Phone
@@ -87,7 +87,7 @@ BEGIN
 		ON DO.ReceiverCountryId = DC.Currency_IdCountry
 	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 		ON CCC.IdCatCurrencyCOD = DC.IdCurrencyCOD
-	WHERE Z.RowStatus = 1 AND Z.LinkRequestSent = 1 AND Z.PaymentConfirmSent = 0 AND Z.ZigiLinkStatus = 'PAID';
+	WHERE Z.RowStatus = 1 AND Z.LinkRequestSent = 1 AND Z.PaymentConfirmSent = 0 AND Z.ZigiLinkStatus = 'PAID' AND DC.DefaultPerCountry = 1;
 
 	--================================================================================================
 	--================================== ACTUALIZACION DE DATOS ======================================
