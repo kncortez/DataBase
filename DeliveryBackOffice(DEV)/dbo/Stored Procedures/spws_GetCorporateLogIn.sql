@@ -579,7 +579,7 @@ BEGIN
                                                        + ISNULL(CONVERT(NVARCHAR(20), CCC.Symbol), '') + '",'
                                                      , +'"NameSettlement":"' + ISNULL(STL.Settlement, '') + '",' 
                                                        +'"RestrictionByArticle":"' + CONVERT(NVARCHAR(2),
-                                                                                             ISNULL(vpc.RestrictionByArticle, ISNULL(cu.RestrictionByArticle,0))
+                                                                                             COALESCE(vpc.RestrictionByArticle,cu.RestrictionByArticle,0)
                                                                                              )+'",' 
                                                        + '"ListCod":' + '[{' + '"IdBank":"'
                                                        + ISNULL(
