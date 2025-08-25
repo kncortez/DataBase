@@ -4,7 +4,7 @@
 -- Create date: <2024-12-30>
 -- Description: Generación de libro de ventas GT, HN
 -- =============================================
-CREATE PROCEDURE [dbo].[GetSalesBook]
+CREATE  PROCEDURE [dbo].[GetSalesBook]
 	-- Add the parameters for the stored procedure here
 	@BeginDate DATETIME,
 	@EndDate   DATETIME,
@@ -41,12 +41,16 @@ BEGIN
             ,inv_IVA [tax]
             ,DOR.CtsName   [document_type_description]
             ,IND.dti_description [document_description]
-            , iif (ISNULL( DOR.ConditionOfPaymentID, 1) =1 , 'CONTADO', 'CREDITO') 
+            ,IIF(ISNULL( DOR.ConditionOfPaymentID, 1) =1 , 'CONTADO', 'CREDITO') [payment_method]
             ,CASE WHEN DOR.IsCollect = 1 THEN 'SI' ELSE 'NO' END                [IsCollect]
             ,DOR.SAPCardCode                       [SAPCardCode]
     from invoiceHeader IH          WITH (NOLOCK)
-        INNER JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
-            ON IND.dti_fk_header = IH.inv_pk_id
+        CROSS APPLY (
+            SELECT TOP 1 dti_category, dti_description, dti_fk_orderSerie, dti_fk_orderNumber
+            FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
+            WHERE IND.dti_fk_header = IH.inv_pk_id
+            ORDER BY IND.SAPCode DESC
+        ) IND
         LEFT JOIN
         (
             SELECT  DO.Guide_Serie    [Guide_Serie]
@@ -65,7 +69,7 @@ BEGIN
             AND DOR.Guide_Number = IND.dti_fk_orderNumber
     WHERE IH.IdCountry = @IdCountry
           AND IH.inv_date >= CAST(@BeginDate AS DATETIME)
-          AND IH.inv_date < CAST(DATEADD(DAY, 1, @EndDate) AS DATETIME)
+          AND IH.inv_date < CAST(DATEADD(DAY, 2, @EndDate) AS DATETIME)
           AND IH.inv_certificationFEL IS NOT NULL
           AND IH.inv_type IN (1,2)
     GROUP BY inv_date
