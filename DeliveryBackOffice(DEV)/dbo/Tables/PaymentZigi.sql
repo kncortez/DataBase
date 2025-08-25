@@ -114,3 +114,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si s
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de pagos realizados a través de la plataforma Zigi.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador unico proporcionado por Zigi para diferenciar el usuario que hace el pago', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi', @level2type = N'COLUMN', @level2name = N'ZigiBuyerId';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de cuenta bancaria donde Zigi relaciona el pago', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi', @level2type = N'COLUMN', @level2name = N'ZigiBankAccount';
