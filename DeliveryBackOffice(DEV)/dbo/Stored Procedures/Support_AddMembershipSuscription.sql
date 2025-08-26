@@ -3,10 +3,13 @@
 -- Modified: <2025-07-15>
 -- Description:	<Utilizado para soporte, en el cual se debe verificar manualmente el pago exitoso de membresia/suscripcion.
 -- Inserta valores en sus respectivas tablas segun la compra.>
+-- Modified: <2025-08-19>
+-- Description:	<Se agrega el parametro de fecha para que la validación se pueda hacer manual en caso pasaran varios días de la compra.>
 -- =============================================
 CREATE PROCEDURE [dbo].[Support_AddMembershipSuscription]
 	  @OrderNumber	AS NVARCHAR(38) = 'SP00025133807'	-- Ej. SP00025123696 debe ser unico
 	, @TokenUpdated	AS NVARCHAR(50) = 'SYS-SYSTEM'		-- Token de ejecutor
+	, @OrderDate	AS DATE			= '2025-08-19'		-- Fecha en la que se intento realizar la compra
 AS
 BEGIN
 
@@ -61,7 +64,7 @@ BEGIN
 		SET 
 			  ReasonCode			= @ReasonCode
 			, ReasonDescription		= @ReasonDescription
-			, DateUpdated			= GETDATE() ---@DateUpdated,
+			, DateUpdated			= @DateUpdated
 			, TokenUpdated			= @TokenUpdated
 			, ECIIndicator			= @ECIIndicator
 			, Authenticationresult	= @Authenticationresult
@@ -69,7 +72,7 @@ BEGIN
 		WHERE IdTransaction = @IdTransaction
 		AND OrderNumber		= @OrderNumber
 		AND StatusSend		<> 1
-		AND CAST(@DateUpdated AS DATE) = CAST(DateCreated AS DATE);
+		AND CAST(DateCreated AS DATE) = @OrderDate;
 
 		--=============================================================
 		--============== Asociar membresía o sucripción ===============
