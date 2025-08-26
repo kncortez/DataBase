@@ -828,7 +828,4 @@ BEGIN
         DROP TABLE #AllData;
 END;
 GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[spws_get_daily_route] TO [cixtetela]
-    AS [dbo];
 
