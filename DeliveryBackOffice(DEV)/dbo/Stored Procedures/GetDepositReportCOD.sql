@@ -124,12 +124,7 @@ BEGIN
                 fb.AccountNumber AS Cuenta,
                 CONCAT(fb.GuideSerie, fb.GuideNumber) AS GuideNumber,
                 (do.Pieces_Dry + do.Pieces_Cold) AS Piezas,
-                ISNULL((
-                    SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
-                    FROM [DeliveryBackOffice].dbo.DeliveryOrderPiece dp WITH (NOLOCK)
-                    WHERE dp.GuideSerie = do.Guide_Serie
-                    AND dp.GuideNumber = do.Guide_Number
-                ), 0) AS Peso,
+                ISNULL((peso.peso), 0) AS Peso,
                 ISNULL(prv.ProvinceName, pr.ProvinceName) AS Departamento,
                 ISNULL(twn.TownshipName, tw.TownshipName) AS Municipio,
                 CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName) AS Receiver,
@@ -179,6 +174,12 @@ BEGIN
                 AND Guide_Number = do.Guide_Number
                 AND StatusOrderId IN (11, 2)
             ) arrival
+            OUTER APPLY (
+                SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight)) AS peso
+                FROM [DeliveryBackOffice].dbo.DeliveryOrderPiece dp WITH (NOLOCK)
+                WHERE dp.GuideSerie = do.Guide_Serie
+                AND dp.GuideNumber = do.Guide_Number
+            ) peso
             OUTER APPLY (
                 SELECT TOP 1 DateCreated
                 FROM [DeliveryBackOffice].dbo.DeliveryOrderDetail WITH (NOLOCK)
