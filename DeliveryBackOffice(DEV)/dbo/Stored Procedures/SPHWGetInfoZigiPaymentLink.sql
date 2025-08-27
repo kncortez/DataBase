@@ -35,13 +35,13 @@ BEGIN
 	INNER JOIN DeliveryOrder DO WITH(NOLOCK)
 	ON ZI.GuideNumber = DO.Guide_Number
 	AND ZI.GuideSerie = DO.Guide_Serie
-	LEFT JOIN Cost CS WITH(NOLOCK)
-	ON CS.GuideNumber = ZI.GuideNumber
-		AND CS.GuideSerie = ZI.GuideSerie
-		LEFT JOIN CatCurrencyCOD CC WITH(NOLOCK)
-		ON ISNULL(CS.CodCurrency,1) = CC.IdCatCurrencyCOD
+	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+		ON DO.ReceiverCountryId = DC.Currency_IdCountry
+	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
+		ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
 	WHERE ZI.GuideNumber = @GuideNumber 
 	AND ZI.GuideSerie = @GuideSerie 
+	AND DC.DefaultPerCountry = 1
 	AND ZI.ZigiLinkStatus = 'PAID'
 	AND ZI.RowStatus = 1
 	RETURN
@@ -68,13 +68,13 @@ BEGIN
 		INNER JOIN DeliveryOrder DO WITH(NOLOCK)
 		ON ZI.GuideNumber = DO.Guide_Number
 		AND ZI.GuideSerie = DO.Guide_Serie
-		LEFT JOIN Cost CS WITH(NOLOCK)
-		ON CS.GuideNumber = ZI.GuideNumber
-			AND CS.GuideSerie = ZI.GuideSerie
-		LEFT JOIN CatCurrencyCOD CC WITH(NOLOCK)
-			ON ISNULL(CS.CodCurrency,1) = CC.IdCatCurrencyCOD
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+			ON DO.ReceiverCountryId = DC.Currency_IdCountry
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
+			ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
 		WHERE ZI.GuideNumber = @GuideNumber 
 		AND ZI.GuideSerie = @GuideSerie 
+		AND DC.DefaultPerCountry = 1
 		AND ZI.ZigiLinkStatus = 'CREATED'
 		AND ZI.RowStatus = 1
 END

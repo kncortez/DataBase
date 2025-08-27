@@ -48,8 +48,8 @@ BEGIN
 		SET @GuidePaid = CASE WHEN EXISTS 
 			(SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH(NOLOCK)
-				ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) AND CCTBC.ReasonCode = '00'
-			WHERE	DOR.Guide_Serie = @GuideSerie AND	DOR.Guide_Number = @GuideNumber) THEN 1 ELSE 0 END;
+				ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 
+			WHERE	DOR.Guide_Serie = @GuideSerie AND	DOR.Guide_Number = @GuideNumber AND CCTBC.ReasonCode = '00') THEN 1 ELSE 0 END;
 
 		IF((@ReceiverPhone = @NirPhoneStr + @PhoneStr) OR (@ReceiverPhone = @PhoneStr))
 		BEGIN

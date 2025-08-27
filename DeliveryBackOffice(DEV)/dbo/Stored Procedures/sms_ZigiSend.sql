@@ -33,7 +33,8 @@ BEGIN
 		[_GuideNumber]    INT            NOT NULL,
 		[_Amount]         DECIMAL(10,2)  NULL,
 		[_Currency]       NVARCHAR(10)   NULL,      
-		[_LinkZigi]       NVARCHAR(MAX)  NULL
+		[_LinkZigi]       NVARCHAR(MAX)  NULL,
+		CONSTRAINT PK_WhatsappRecipientZigi PRIMARY KEY CLUSTERED ([_GuideSerie], [_GuideNumber])
 	);
 
     
