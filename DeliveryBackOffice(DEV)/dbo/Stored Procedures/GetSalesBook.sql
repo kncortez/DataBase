@@ -1,10 +1,10 @@
---USE DeliveryBackOffice
--- =============================================
--- Author:      Cristian Azurdia
--- Create date: <2024-12-30>
--- Description: Generación de libro de ventas GT, HN
--- =============================================
-CREATE  PROCEDURE [dbo].[GetSalesBook]
+    --USE DeliveryBackOffice
+    -- =============================================
+    -- Author:      Cristian Azurdia
+    -- Create date: <2024-12-30>
+    -- Description: Generación de libro de ventas GT, HN
+    -- =============================================
+    CREATE  PROCEDURE [dbo].[GetSalesBook]
 	-- Add the parameters for the stored procedure here
 	@BeginDate DATETIME,
 	@EndDate   DATETIME,
@@ -16,34 +16,34 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    select  ROW_NUMBER() OVER(ORDER BY IH.inv_numberFEL) [row_number]
-            ,ih.inv_date       [date]
-            ,ih.inv_cli_nit   [id_client]
-            ,ih.inv_cli_name  [client_name]
+    select  ROW_NUMBER() OVER(ORDER BY MAX(IH.inv_numberFEL)) [row_number]
+            ,MAX(ih.inv_date)       [date]
+            ,MAX(ih.inv_cli_nit)   [id_client]
+            ,MAX(ih.inv_cli_name)  [client_name]
             ,CASE WHEN @IdCountry = 'GT' THEN ih.inv_serieFEL 
                 WHEN @IdCountry = 'HN' THEN ih.inv_certificationFEL ELSE '0' 
              END  [document_serie]
-            ,ih.inv_numberFEL [document_correlative]
-            ,CASE WHEN ih.inv_type = 1 THEN 'FACTURA' 
-                WHEN ih.inv_type = 2 THEN 'NOTA DE CREDITO' 
+            ,MAX(ih.inv_numberFEL) [document_correlative]
+            ,CASE WHEN MAX(ih.inv_type) = 1 THEN 'FACTURA' 
+                WHEN MAX(ih.inv_type) = 2 THEN 'NOTA DE CREDITO' 
                 ELSE 'NO DEFINIDO'
             END [document_type]
             ,0 [exportation]
             ,0 [sales]
-            ,CASE WHEN IND.dti_category = 'BIEN'  THEN ih.inv_amount  
+            ,CASE WHEN MAX(IND.dti_category) = 'BIEN'  THEN ih.inv_amount  
                 ELSE 0
             END [sales_goods]
-            ,CASE WHEN IND.dti_category = 'SERVICIO'  THEN ih.inv_amount  
+            ,CASE WHEN MAX(IND.dti_category) = 'SERVICIO'  THEN ih.inv_amount  
             ELSE 0
             END [sales_services]
             ,0 [discount]
             ,(inv_amount-inv_IVA) [amount_base]
             ,inv_IVA [tax]
-            ,DOR.CtsName   [document_type_description]
-            ,IND.dti_description [document_description]
-            ,IIF(ISNULL( DOR.ConditionOfPaymentID, 1) =1 , 'CONTADO', 'CREDITO') [payment_method]
+            ,MAX(DOR.CtsName)   [document_type_description]
+            ,MAX(IND.dti_description) [document_description]
+            ,IIF(ISNULL(MAX(DOR.ConditionOfPaymentID), 1) =1 , 'CONTADO', 'CREDITO') [payment_method]
             ,CASE WHEN DOR.IsCollect = 1 THEN 'SI' ELSE 'NO' END                [IsCollect]
-            ,DOR.SAPCardCode                       [SAPCardCode]
+            ,MAX(DOR.SAPCardCode)                       [SAPCardCode]
     from invoiceHeader IH          WITH (NOLOCK)
         CROSS APPLY (
             SELECT TOP 1 dti_category, dti_description, dti_fk_orderSerie, dti_fk_orderNumber
@@ -72,21 +72,11 @@ BEGIN
           AND IH.inv_date < CAST(DATEADD(DAY, 2, @EndDate) AS DATETIME)
           AND IH.inv_certificationFEL IS NOT NULL
           AND IH.inv_type IN (1,2)
-    GROUP BY inv_date
-            ,inv_cli_nit
-            ,inv_cli_name
-            ,inv_serieFEL
+    GROUP BY inv_serieFEL
             ,inv_certificationFEL
-            ,inv_numberFEL
-            ,ind.dti_category
-            ,inv_type
             ,inv_amount
             ,inv_IVA
-            ,ind.dti_description
-            ,dor.CtsName
-            ,dor.ConditionOfPaymentID
-            ,dor.IsCollect
-            ,dor.SAPCardCode
+            ,DOR.IsCollect
     ORDER BY [row_number] asc
 
 END
