@@ -3,12 +3,12 @@ BEGIN TRY
 
     --======================================= EJECUTAR MANUALMENTE DE PRIMERO =======================================
 
-    /* WhatsAppLinkRequestSent: 1 = ya se envió el mensaje solicitando link Zigi */
+    /* WhatsAppLinkRequestSent: 1 = ya se enviÃ³ el mensaje solicitando link Zigi */
 	ALTER TABLE DeliveryBackOffice.dbo.PaymentZigi
 	ADD LinkRequestSent bit NOT NULL
 	CONSTRAINT DF_PaymentZigi_LinkRequestSent DEFAULT (0) WITH VALUES;
 
-	/* WhatsAppPaymentConfirmSent: 1 = ya se envió el mensaje de confirmación de pago Zigi */
+	/* WhatsAppPaymentConfirmSent: 1 = ya se enviÃ³ el mensaje de confirmaciÃ³n de pago Zigi */
 	ALTER TABLE DeliveryBackOffice.dbo.PaymentZigi
 	ADD PaymentConfirmSent bit NOT NULL
 	CONSTRAINT DF_PaymentZigi_PaymentConfirmSent DEFAULT (0) WITH VALUES;
@@ -17,19 +17,19 @@ BEGIN TRY
 
 	EXEC sys.sp_addextendedproperty
 	  @name = N'MS_Description',
-	  @value = N'Indica si se envió el WhatsApp para solicitar el link de Zigi (1=Enviado, 0=No enviado).',
+	  @value = N'Indica si se enviÃ³ el WhatsApp para solicitar el link de Zigi (1=Enviado, 0=No enviado).',
 	  @level0type = N'SCHEMA', @level0name = N'dbo',
 	  @level1type = N'TABLE',  @level1name = N'PaymentZigi',
 	  @level2type = N'COLUMN', @level2name = N'LinkRequestSent';
 
 	EXEC sys.sp_addextendedproperty
 	  @name = N'MS_Description',
-	  @value = N'Indica si se envió el WhatsApp de confirmación de pago de Zigi (1=Enviado, 0=No enviado).',
+	  @value = N'Indica si se enviÃ³ el WhatsApp de confirmaciÃ³n de pago de Zigi (1=Enviado, 0=No enviado).',
 	  @level0type = N'SCHEMA', @level0name = N'dbo',
 	  @level1type = N'TABLE',  @level1name = N'PaymentZigi',
 	  @level2type = N'COLUMN', @level2name = N'PaymentConfirmSent';
 
-	-- IMPORTANTE: marcar existentes como ENVIADOS (1) para no disparar históricos
+	-- IMPORTANTE: marcar existentes como ENVIADOS (1) para no disparar histÃ³ricos
     UPDATE DeliveryBackOffice.dbo.PaymentZigi SET LinkRequestSent = 1;
 	UPDATE DeliveryBackOffice.dbo.PaymentZigi SET PaymentConfirmSent = 1;
 
