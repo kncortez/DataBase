@@ -28,7 +28,7 @@
 -- Description: <Guias Rapidas - Bandera que indica restriccion por articulo, para punto de visita o socio de negocio.>
 -- =============================================
 CREATE  PROCEDURE [dbo].[spws_GetCorporateLogIn]
-    -- Add the parameters for the stored procedure here
+
     @UserCode BIGINT = 0
   , @UserName VARCHAR(200)
   , @Password VARCHAR(200)
@@ -36,8 +36,7 @@ CREATE  PROCEDURE [dbo].[spws_GetCorporateLogIn]
   , @IdSystem INT = 1
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
+
     SET NOCOUNT ON;
     DECLARE @jsonResult NVARCHAR(MAX);
     DECLARE @StatusRestrinct NVARCHAR(50);
@@ -45,11 +44,6 @@ BEGIN
     DECLARE @IdUser BIGINT;
     DECLARE @StatusAccount CHAR(1);
     DECLARE @CountryByNacionality VARCHAR(2);
-    --	declare @Username as nvarchar(100)='a.cesarene@gmail.com'
-    --	declare	@Password as nvarchar(100)='7hFMXRrKI3G0addPtjwAHA=='
-    --	declare @IdSystem as int = 1 
-    --	DECLARE	@IP AS NVARCHAR(30) ='localhost'
-    -- validar usuario y contraseña
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
@@ -87,7 +81,6 @@ BEGIN
             ON iu.RegisterUserID = usr.UsrIdUser
         INNER JOIN DeliveryBackOffice.[dbo].RolByUserBySystem    rus WITH(NOLOCK)
             ON rus.RusIdUser = usr.UsrIdUser
-               AND rus.RusIdSystem = @IdSystem
         LEFT JOIN DeliveryBackOffice.[dbo].UserSystemRestriction res WITH(NOLOCK)
             ON res.UstIdUser = rus.RusIdUser
                AND res.UstIdSystem = rus.RusIdSystem
@@ -99,7 +92,8 @@ BEGIN
     WHERE iu.IdUser = @UserCode
           AND iu.Username = @UserName
           AND usr.UsrLastPassword = @Password
-          AND ac.AccRowStatus = 1;
+          AND ac.AccRowStatus = 1
+          AND rus.RusIdSystem = @IdSystem;
     -- insertar en tabla temporal posbibles mensajes de error
 
     IF OBJECT_ID('tempdb.dbo.#errormessage', 'U') IS NOT NULL
@@ -319,31 +313,6 @@ BEGIN
                                   WHERE TMP.ITERATOR = @ITERATORSUBMODULES
                               );
 
-                        --END
-                        --	ELSE 
-                        --	BEGIN
-                        --	PRINT 'VERIFYUSER  = 0 [USUARIO INDIVIDUAL]';
-                        --INSERT INTO @TBSUBMODULES2 (ModIdModuleDAD, ModIdModuleCHILD)											
-                        --   SELECT (SELECT TMP.ModIdModule FROM @TBSUBMODULES AS TMP WHERE TMP.ITERATOR = @ITERATORSUBMODULES) AS ModIdModuleDAD , cmo.ModIdModule AS ModIdModuleCHILD  
-                        --   FROM /*RegisterUser us
-                        --                                       INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
-                        --                                                                                    AND rua.RuaRowStatus = 1
-                        --                                       INNER JOIN dbo.RolByModuleBySystem rms ON rms.RmsIdRol = rua.RuaIdRol
-                        --                                                AND rms.RmsRowStatus = 1
-                        --                                       INNER JOIN */[dbo].CatModule cmo /*ON cmo.ModIdModule = rms.RmsIdModule
-                        --                                                                         AND cmo.ModRowStatus = 1
-                        --                                                                         AND cmo.ModVisible = 1
-                        --										   AND */
-                        --                                       --INNER JOIN [dbo].CatRol rol ON rol.RolIdRol = rms.RmsIdRol
-                        --                                  WHERE /*us.UsrEmail = @UserName
-                        --                                        AND us.UsrRowStatus = 1 order by cmo.ModOrder*/
-                        --		  cmo.ModIdModuleParent = (SELECT TMP.ModIdModule FROM @TBSUBMODULES AS TMP WHERE TMP.ITERATOR = @ITERATORSUBMODULES)
-
-                        --		  ;
-
-
-                        --	END
-
                         SELECT @CHILDSMENU = COUNT(1)+@MININDEXSUBITEM2
                         FROM @TBSUBMODULES2;
 						 PRINT '@CHILDSMENU';
@@ -354,17 +323,8 @@ BEGIN
                             SELECT @CHILDSMD
                                 = @CHILDSMD + ' {"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata + '",'
                                   + '"Path":"' + cmo.ModPath + '"},'
-                            FROM /*RegisterUser us
-                                                 INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
-                                                                                              AND rua.RuaRowStatus = 1
-                                                 INNER JOIN dbo.RolByModuleBySystem rms ON rms.RmsIdRol = rua.RuaIdRol
-                                                          AND rms.RmsRowStatus = 1
-                                                 INNER JOIN */
-                                [dbo].CatModule cmo --ON cmo.ModIdModule = rms.RmsIdModule
-                            --AND cmo.ModRowStatus = 1
-                            --AND cmo.ModVisible = 1
-                            --AND cmo.ModIdModuleParent IS NOT NULL
-                            --INNER JOIN [dbo].CatRol rol ON rol.RolIdRol = rms.RmsIdRol
+                            FROM 
+                                [dbo].CatModule cmo 
                             WHERE cmo.ModIdModule =
                             (
                                 SELECT TMP.ModIdModuleCHILD
@@ -471,8 +431,6 @@ BEGIN
                                     )
                     );
                     -- obtener los datos del perfil asociado al usuario 
-
-                    -- MODIFICACIÓN 09/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                     -- Determinar si ya ha aceptado los terminos y condiciones
                     DECLARE @ValTAC INT =
                             (
@@ -498,7 +456,6 @@ BEGIN
                                                    + '",' + '"Identification":"' + pe.PerIdentification + '",'
                                                    + '"Nationality":"' + pe.PerNationality + '",' + '"NickName":"'
                                                    + CONVERT(VARCHAR, us.UsrNickName) + '",'
-                                                   -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                                                    + '"Phone":"' + ISNULL(us.Phone, '') + '",' + '"TAC":"' + @TAC + '",'
                                                    + '"TaxCountry":"' + 
                                                    ISNULL(dvc.VATShortName,'IVA')
