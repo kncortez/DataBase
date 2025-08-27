@@ -827,5 +827,4 @@ BEGIN
     IF OBJECT_ID('#AllData', 'U') IS NOT NULL
         DROP TABLE #AllData;
 END;
-GO
 
