@@ -16,6 +16,8 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
+    DECLARE @NewEndDate DATETIME = CAST(DATEADD(DAY, 2, @EndDate) AS DATETIME);
+
     select  ROW_NUMBER() OVER(ORDER BY MAX(IH.inv_numberFEL)) [row_number]
             ,MAX(ih.inv_date)       [date]
             ,MAX(ih.inv_cli_nit)   [id_client]
@@ -68,8 +70,8 @@ BEGIN
             ON DOR.Guide_Serie   = IND.dti_fk_orderSerie
             AND DOR.Guide_Number = IND.dti_fk_orderNumber
     WHERE IH.IdCountry = @IdCountry
-          AND IH.inv_date >= CAST(@BeginDate AS DATETIME)
-          AND IH.inv_date < CAST(DATEADD(DAY, 2, @EndDate) AS DATETIME)
+          AND IH.inv_date >= @BeginDate
+          AND IH.inv_date <  @NewEndDate
           AND IH.inv_certificationFEL IS NOT NULL
           AND IH.inv_type IN (1,2)
     GROUP BY inv_serieFEL
