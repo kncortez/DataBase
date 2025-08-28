@@ -169,6 +169,8 @@ BEGIN
                     LEFT JOIN CatCurrencyCOD as curr WITH(NOLOCK)
                         ON IH.IdCurrency = curr.IdCatCurrencyCOD
               WHERE IH.inv_status = 2
+                AND LEN(IH.inv_numberFEL) > 0
+                AND LEN(IH.inv_serieFEL) > 0
               ORDER BY IH.inv_pk_id
 
             --DETALLE
@@ -187,6 +189,8 @@ BEGIN
                     INNER JOIN InvoiceDetail  as ID  WITH (NOLOCK)
                         ON ID.dti_fk_header = LIP.inv_pk_id
               WHERE IH.inv_status = 2
+                AND LEN(IH.inv_numberFEL) > 0
+                AND LEN(IH.inv_serieFEL) > 0
               ORDER BY LIP.inv_pk_id
 
                IF OBJECT_ID('tempdb.dbo.#listInvoicePending', 'U') IS NOT NULL
