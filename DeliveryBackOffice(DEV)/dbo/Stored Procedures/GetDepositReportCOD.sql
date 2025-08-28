@@ -84,7 +84,8 @@ BEGIN
                 CODCommissionPercentage DECIMAL(18,2),
                 Amount DECIMAL(18,2),
                 BankId INT,
-                AuthorizationDate DATETIME
+                AuthorizationDate DATETIME,
+				CatCurrencyCODId INT
             );
 
             -- First filter the BatchDetailCOD table with the most restrictive conditions
@@ -100,7 +101,8 @@ BEGIN
                 btd.CODCommissionPercentage,
                 btd.Amount,
                 btd.BankId,
-                TBDC.AuthorizationDate
+                TBDC.AuthorizationDate,
+				btd.CatCurrencyCODId
             FROM [DeliveryBackOffice].[dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
             LEFT JOIN #TempBatchDetailCOD TBDC ON btd.IdBatchDetailCOD = TBDC.IdBatchDetailCOD
             INNER JOIN [DeliveryBackOffice].[dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
@@ -188,7 +190,7 @@ BEGIN
                 AND StatusOrderId IN (5, 22)
             ) delivery
             LEFT JOIN [DeliveryBackOffice].dbo.CatCurrencyCOD ccc WITH (NOLOCK)
-                ON btd.CatCurrencyCODId = ccc.IdCatCurrencyCOD
+                ON fb.CatCurrencyCODId = ccc.IdCatCurrencyCOD
             WHERE cu.IdCustomer = @IdCustomer
             ORDER BY fb.AuthorizationDate ASC;
 
