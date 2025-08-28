@@ -340,8 +340,8 @@ BEGIN
 	SELECT
 		BL.Id,
 		BL.IdCustomer,
-		DIS.CodeDistrict AS [CodeDistrict],
-		DIS.StateCode AS [CodeState],
+        BL.IdTownship,
+        BL.IdProvince,
 		BL.ActivityId AS CodeActivity,
 		BL.NRC,
 		BL.Nirphone,
