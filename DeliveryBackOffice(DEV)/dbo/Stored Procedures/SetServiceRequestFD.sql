@@ -474,28 +474,6 @@ BEGIN
 										   GETDATE()
 									FROM #GuideTable GIT
 
-									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
-									--SELECT 1,
-									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
-									--	   1,
-									--	   GDT.PriceShippment,
-									--	   1,
-									--	   @Token,
-									--	   GETDATE(),
-									--	   GDT.Guide_Serie,
-									--	   GDT.Guide_Number
-									--FROM #GuideTable GDT
-									-- SET @IdCost = @@IDENTITY; 
-
-									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
-									--SELECT @IdCost,
-									--	   'Servicio',
-									--	   GTL.PriceShippment,
-									--	   1,
-									--		@Token,
-									--		GETDATE()
-									--FROM #GuideTable GTL
-
 								END
 							ELSE
 								BEGIN
@@ -510,27 +488,6 @@ BEGIN
 										   GETDATE()
 									FROM #GuideTable GIT
 
-									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
-									--SELECT 1,
-									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
-									--	   1,
-									--	   GDT.PriceShippment,
-									--	   1,
-									--	   @Token,
-									--	   GETDATE(),
-									--	   GDT.Guide_Serie,
-									--	   GDT.Guide_Number
-									--FROM #GuideTable GDT
-									-- SET @IdCost = @@IDENTITY; 
-
-									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
-									--SELECT @IdCost,
-									--	   'Servicio',
-									--	   GTL.PriceShippment,
-									--	   1,
-									--		@Token,
-									--		GETDATE()
-									--FROM #GuideTable GTL
 							  END
 						END
 
