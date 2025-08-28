@@ -29,10 +29,6 @@ BEGIN TRY
 	  @level1type = N'TABLE',  @level1name = N'PaymentZigi',
 	  @level2type = N'COLUMN', @level2name = N'PaymentConfirmSent';
 
-	-- IMPORTANTE: marcar existentes como ENVIADOS (1) para no disparar históricos
-    UPDATE DeliveryBackOffice.dbo.PaymentZigi SET LinkRequestSent = 1;
-	UPDATE DeliveryBackOffice.dbo.PaymentZigi SET PaymentConfirmSent = 1;
-
     COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH
