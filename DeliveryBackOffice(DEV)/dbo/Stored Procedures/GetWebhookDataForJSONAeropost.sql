@@ -15,14 +15,11 @@ BEGIN
             @URL NVARCHAR(500),
             @TicketNumber NVARCHAR(50);
 
-    --========================================================================================================
-    --===                                       STATUS CHANGE                                              ===
-    --========================================================================================================
     IF (@WebhookTypeName = 'GuideStatusChange')
     BEGIN
         BEGIN TRY
             SELECT TOP 1
-                   @StatusId = SO.StatusOrderId,
+                   @StatusId = WTQ.StatusOrderId,
                    @URL = WE.WebhookEndpointURI,
                    @TicketNumber = DO.Ticket_Number
             FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
@@ -45,7 +42,7 @@ BEGIN
             IF (@StatusId IS NULL)
             BEGIN
                 SELECT CAST(0 AS BIT) AS blnResult,
-                       'Error obteniendo datos de webhook' AS resultMessage
+                       'Error obteniendo datos de webhook/ La notificación ya fue realizada' AS resultMessage
                 RETURN;
             END;
 
@@ -56,53 +53,58 @@ BEGIN
                    'Datos de Webhook - Cliente Aeropost' AS resultMessage,
                    @URL AS EndpointUrl
 
-			
-			IF (@StatusId = 50)  -- Incidencias validadas StatusOrderId = 50
+
+			DECLARE @AttempNumber INT;
+			DECLARE @TypeIncidenceId INT;
+			DECLARE @StatusIncidenceId INT = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WHERE OrderDescription = 'Incidencia Validada')
+			DECLARE @StatusInRouteId INT = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WHERE OrderDescription = 'En ruta')
+
+			SELECT 
+				@AttempNumber = ISNULL(att.AttemptNumber, 1), -- Si no hay registro => primer intento
+				@TypeIncidenceId = ISNULL(att.IdIncidenceType, 0)
+			FROM dbo.WebhookTrackingQueue wtq WITH (NOLOCK)
+			OUTER APPLY 
+			(
+				SELECT TOP 1
+					dod.StatusOrderId,
+					cti.IdIncidenceType,
+					2 AS AttemptNumber  -- si entra aquí, ya es segundo intento
+				FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] dod WITH (NOLOCK)
+				INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] d WITH (NOLOCK)
+					ON d.ID = dod.DeliveryAttemptId
+				INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] cof WITH (NOLOCK)
+					ON cof.IdConfirmationOfIncidence = d.ConfirmationOfIncidenceId
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] cti WITH (NOLOCK)
+					ON d.ID_Incident = cti.IdIncidenceType
+				WHERE cof.IsConfirmed = 1
+					AND wtq.GuideSerie = dod.Guide_Serie
+					AND wtq.GuideNumber = dod.Guide_Number
+				ORDER BY d.Date_Created ASC
+			) att
+			WHERE wtq.IdWebhookTrackingQueue = @WebhookTrackingQueueId
+				AND wtq.HasNotified = 0
+			ORDER BY wtq.GuideSerie, wtq.GuideNumber;
+
+			IF(@StatusId = @StatusIncidenceId AND @TypeIncidenceId > 0)
 			BEGIN
-			-- Se verifica número de intento (primero o segundo)
-				;WITH Attempts AS
-				(
-					SELECT
-						wtq.GuideNumber,
-						itc.IdIncidenceType,
-						ROW_NUMBER() OVER (
-							PARTITION BY wtq.GuideSerie, wtq.GuideNumber
-							ORDER BY da.Date_Created ASC
-						) AS rn,
-						COUNT(*) OVER (
-							PARTITION BY wtq.GuideSerie, wtq.GuideNumber
-						) AS total_attempts
-					FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] wtq WITH (NOLOCK)
-					INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] dod WITH (NOLOCK)
-						ON wtq.GuideSerie = dod.Guide_Serie
-					   AND wtq.GuideNumber = dod.Guide_Number
-					INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] da WITH (NOLOCK)
-						ON da.ID = dod.DeliveryAttemptId
-					INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] coi WITH (NOLOCK)
-						ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-					INNER JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] itc WITH (NOLOCK)
-						ON da.ID_Incident = itc.IdIncidenceType
-					WHERE coi.IsConfirmed = 1
-                        AND dod.StatusOrderId = @StatusId
-					    AND wtq.IdWebhookTrackingQueue = @WebhookTrackingQueueId
-				)
-				SELECT 
-					m.NewCode
-				FROM Attempts a
-				INNER JOIN [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] m
-					ON m.StatusOrderId = @StatusId
-				   AND m.IncidenceTypeId = a.IdIncidenceType
-				   AND m.AttemptNumber = a.total_attempts
-				WHERE a.rn = a.total_attempts
-				ORDER BY a.GuideNumber;
+				SELECT NewCode AS [new_code]
+				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] 
+				WHERE AttemptNumber = @AttempNumber
+					AND IncidenceTypeId = @TypeIncidenceId;
+			END
+			ELSE IF (@StatusId = @StatusInRouteId AND @AttempNumber = 2)
+			BEGIN
+				SELECT NewCode AS [new_code]
+				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping]
+				WHERE AttemptNumber = @AttempNumber
+					AND StatusOrderId = @StatusInRouteId;
 			END
 			ELSE
 			BEGIN
-				SELECT ISM.NewCode
-				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] ISM
-				WHERE ISM.StatusOrderId = @StatusId
-				  AND ISM.IncidenceTypeId IS NULL
-				  AND ISM.AttemptNumber IS NULL;
+				SELECT NewCode AS [new_code]
+				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] 
+				WHERE AttemptNumber = @AttempNumber
+					AND StatusOrderId = @StatusInRouteId;
 			END
 
         END TRY
@@ -115,11 +117,8 @@ BEGIN
     END
     ELSE
     BEGIN
-        --========================================================================================================
-        --===                                      NO WEBHOOK FOUND                                            ===
-        --========================================================================================================
+
         SELECT CAST(0 AS BIT) AS blnResult,
                'Tipo de webhook inexistente, por favor, verifique su información' AS resultMessage
     END;
 END;
-
