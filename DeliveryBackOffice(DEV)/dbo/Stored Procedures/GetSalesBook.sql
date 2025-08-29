@@ -16,7 +16,7 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    DECLARE @NewEndDate DATETIME = CAST(DATEADD(DAY, 2, @EndDate) AS DATETIME);
+    DECLARE @NewEndDate DATETIME = CAST(DATEADD(DAY, 1, @EndDate) AS DATETIME);
 
     select  ROW_NUMBER() OVER(ORDER BY MAX(IH.inv_numberFEL)) [row_number]
             ,MAX(ih.inv_date)       [date]
