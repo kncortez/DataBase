@@ -39,7 +39,7 @@ BEGIN
                  SELECT TOP 1
                         IdCatInvoiceType
                    FROM CatInvoiceType  WITH(NOLOCK)
-                  WHERE [Name] = 'Comisión COD'
+                  WHERE [Name] = 'PAGO DE LA GUIA'
                     AND RowStatus = 1
                 );
   
