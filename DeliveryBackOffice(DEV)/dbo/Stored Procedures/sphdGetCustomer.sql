@@ -48,7 +48,7 @@ BEGIN
         SELECT CAST(cst.IdCustomer AS NVARCHAR)                                                                [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                                   [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
               AND
@@ -63,7 +63,7 @@ BEGIN
         SELECT cst.SAPCardCode                                                                          [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                            [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
               AND
@@ -133,7 +133,7 @@ BEGIN
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
 			 , cst.[IsVoucherRequired]
-        FROM Customer cst
+        FROM Customer cst    WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
               AND
@@ -151,7 +151,7 @@ BEGIN
         SELECT CAST(cst.IdCustomer AS NVARCHAR)                                                                [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                                   [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
@@ -165,7 +165,7 @@ BEGIN
         SELECT cst.SAPCardCode                                                                          [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                            [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
@@ -236,7 +236,7 @@ BEGIN
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
 			 , cst.[IsVoucherRequired]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
@@ -255,7 +255,7 @@ BEGIN
         SELECT CAST(cst.IdCustomer AS NVARCHAR)                                                                [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                                   [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
@@ -269,7 +269,7 @@ BEGIN
         SELECT cst.SAPCardCode                                                                          [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                            [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
@@ -281,7 +281,7 @@ BEGIN
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
              , cst.[Name]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
@@ -299,7 +299,7 @@ BEGIN
         SELECT CAST(cst.IdCustomer AS NVARCHAR)                                                                [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                                   [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
@@ -313,7 +313,7 @@ BEGIN
         SELECT cst.SAPCardCode                                                                          [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                            [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
@@ -326,7 +326,7 @@ BEGIN
         SELECT cst.[IdCustomer]
              , cst.[Name]
 			 , cst.[SaleAdvisorID]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
