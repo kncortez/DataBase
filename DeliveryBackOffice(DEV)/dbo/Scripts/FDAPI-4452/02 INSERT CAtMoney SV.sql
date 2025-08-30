@@ -1,5 +1,5 @@
 /*
-  INSERCIÓN DE DENOMINACION DE MONEDAS Y BILLETES PARA PAIS EL SALBADOR
+  INSERCIÃ“N DE DENOMINACION DE MONEDAS Y BILLETES PARA PAIS EL SALBADOR
 */
 BEGIN TRY
     BEGIN TRANSACTION;
@@ -29,10 +29,10 @@ BEGIN TRY
         (@CurrencySV, 'BILLETE', 100, 'SYS-CAZURDIA', GETDATE());
 
     COMMIT TRANSACTION;
-    PRINT 'Inserción completada correctamente.';
+    PRINT 'InserciÃ³n completada correctamente.';
 
 END TRY
 BEGIN CATCH
     ROLLBACK TRANSACTION;
-    PRINT 'Error en la inserción: ' + ERROR_MESSAGE();
+    PRINT 'Error en la inserciÃ³n: ' + ERROR_MESSAGE();
 END CATCH;
