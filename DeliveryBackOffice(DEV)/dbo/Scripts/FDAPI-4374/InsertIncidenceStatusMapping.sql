@@ -9,7 +9,7 @@ BEGIN TRY
     FROM
     (
         VALUES
-            (4,NULL,2,420,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
+            (4,NULL,1,420,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
             (5,NULL,1,1000,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
             (5,NULL,2,1000,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
             (22,NULL,1,1000,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
@@ -45,9 +45,9 @@ BEGIN TRY
             (50,134,2,1208,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
             (50,136,2,1208,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
             (50,138,2,1208,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
-            (50,208,2,1209,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
-            (50,207,2,1204,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
-            (50,206,2,1201,1,'SYS-TGARCIA',GETDATE(),NULL,NULL)
+            (50,210,2,1209,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
+            (50,209,2,1204,1,'SYS-TGARCIA',GETDATE(),NULL,NULL),
+            (50,208,2,1201,1,'SYS-TGARCIA',GETDATE(),NULL,NULL)
     ) v (StatusOrderId, IncidenceTypeId, AttemptNumber, NewCode,
         RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
     WHERE NOT EXISTS (

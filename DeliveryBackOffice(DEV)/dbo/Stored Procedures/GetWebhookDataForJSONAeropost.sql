@@ -53,22 +53,24 @@ BEGIN
                    'Datos de Webhook - Cliente Aeropost' AS resultMessage,
                    @URL AS EndpointUrl
 
-
 			DECLARE @AttempNumber INT;
 			DECLARE @TypeIncidenceId INT;
 			DECLARE @StatusIncidenceId INT = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WHERE OrderDescription = 'Incidencia Validada')
 			DECLARE @StatusInRouteId INT = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WHERE OrderDescription = 'En ruta')
 
 			SELECT 
-				@AttempNumber = ISNULL(att.AttemptNumber, 1), -- Si no hay registro => primer intento
-				@TypeIncidenceId = ISNULL(att.IdIncidenceType, 0)
+				@AttempNumber = CASE 
+									WHEN att.AttemptCount = 1 THEN 1
+									WHEN att.AttemptCount = 2 THEN 2
+									ELSE 2
+								END,
+				@TypeIncidenceId =ISNULL(att.IdIncidenceType, 0)
 			FROM dbo.WebhookTrackingQueue wtq WITH (NOLOCK)
 			OUTER APPLY 
 			(
-				SELECT TOP 1
-					dod.StatusOrderId,
-					cti.IdIncidenceType,
-					2 AS AttemptNumber  -- si entra aquí, ya es segundo intento
+				SELECT 
+					COUNT(DISTINCT d.ID) AS AttemptCount,
+					MAX(cti.IdIncidenceType) AS IdIncidenceType
 				FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] dod WITH (NOLOCK)
 				INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] d WITH (NOLOCK)
 					ON d.ID = dod.DeliveryAttemptId
@@ -79,33 +81,48 @@ BEGIN
 				WHERE cof.IsConfirmed = 1
 					AND wtq.GuideSerie = dod.Guide_Serie
 					AND wtq.GuideNumber = dod.Guide_Number
-				ORDER BY d.Date_Created ASC
+					AND dod.DeliveryAttemptId IS NOT NULL
+					AND dod.StatusOrderId = @StatusIncidenceId
 			) att
 			WHERE wtq.IdWebhookTrackingQueue = @WebhookTrackingQueueId
 				AND wtq.HasNotified = 0
 			ORDER BY wtq.GuideSerie, wtq.GuideNumber;
 
-			IF(@StatusId = @StatusIncidenceId AND @TypeIncidenceId > 0)
+			DECLARE @NewCode INT = 0;
+
+			IF (@StatusId = @StatusIncidenceId AND @TypeIncidenceId > 0)
 			BEGIN
-				SELECT NewCode AS [new_code]
+				SELECT @NewCode = COALESCE(NewCode, 0)
 				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] 
 				WHERE AttemptNumber = @AttempNumber
-					AND IncidenceTypeId = @TypeIncidenceId;
+				  AND IncidenceTypeId = @TypeIncidenceId
+				  AND StatusOrderId = @StatusId;
+    
+				IF (@@ROWCOUNT = 0)
+					SET @NewCode = 0;
 			END
-			ELSE IF (@StatusId = @StatusInRouteId AND @AttempNumber = 2)
+			ELSE IF (@StatusId = @StatusInRouteId AND @AttempNumber = 1)
 			BEGIN
-				SELECT NewCode AS [new_code]
+				SELECT @NewCode = COALESCE(NewCode, 0)
 				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping]
 				WHERE AttemptNumber = @AttempNumber
-					AND StatusOrderId = @StatusInRouteId;
+				  AND StatusOrderId = @StatusId;
+    
+				IF (@@ROWCOUNT = 0)
+					SET @NewCode = 0;
 			END
 			ELSE
 			BEGIN
-				SELECT NewCode AS [new_code]
+				SELECT @NewCode = COALESCE(NewCode, 0)
 				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] 
 				WHERE AttemptNumber = @AttempNumber
-					AND StatusOrderId = @StatusInRouteId;
+				  AND StatusOrderId = @StatusId;
+    
+				IF (@@ROWCOUNT = 0)
+					SET @NewCode = 0;
 			END
+
+			SELECT @NewCode AS [new_code];
 
         END TRY
         BEGIN CATCH
