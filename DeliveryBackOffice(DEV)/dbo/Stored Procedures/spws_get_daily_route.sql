@@ -411,7 +411,7 @@ BEGIN
 				 [DeliveryOption],
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
 				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id],
-				 ISNULL(DOR.Ticket_Number, '') [TicketNumber],
+				 ISNULL(REPLACE(DOR.Ticket_Number, '"', ''), '') [TicketNumber],
 				 0 [ServiceManagementId],
 				 ISNULL(
 					ISNULL(
@@ -827,8 +827,4 @@ BEGIN
     IF OBJECT_ID('#AllData', 'U') IS NOT NULL
         DROP TABLE #AllData;
 END;
-GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[spws_get_daily_route] TO [cixtetela]
-    AS [dbo];
 
