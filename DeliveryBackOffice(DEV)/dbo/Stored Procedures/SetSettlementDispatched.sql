@@ -64,14 +64,14 @@ BEGIN
 			FROM RoutePreparationDetailPiece rpdp WITH(NOLOCK) 
 			INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
 				ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
-				AND rpd.RowStatus = 1
 			WHERE rpd.RoutePreparationId = @IdRoutePreparation
-			AND NOT EXISTS (
-				SELECT 1 
-				FROM @ListGuides lg
-				WHERE lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
-			)
-			AND rpdp.RowStatus = 1
+				AND NOT EXISTS (
+					SELECT 1 
+					FROM @ListGuides lg
+					WHERE lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
+				)
+				AND rpdp.RowStatus = 1
+				AND rpd.RowStatus = 1;
 			
 			--Desactivar filas en RoutePreparationDetail si no están incluídas
 			UPDATE rpd
@@ -165,7 +165,7 @@ BEGIN
 				FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
 					INNER JOIN @WebhookCustomerTable WCT
 						ON WE.CustomerId = WCT.CustomerId
-							AND WE.WebhookTypeId = @GuideStatusChangeWebhook;
+				WHERE WE.WebhookTypeId = @GuideStatusChangeWebhook;
 
 
 				DECLARE @ResponseTable AS TABLE
@@ -549,8 +549,10 @@ BEGIN
 			SELECT @ID_Manifest,lg.Guide_Serie,lg.Guide_Number,lg.Guide_Order, lg.Guide_ETA,GETDATE(),@Token
 			FROM @ListGuides lg
 			INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
-				ON lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
-				AND rpd.RoutePreparationId = @IdRoutePreparation AND rpd.RowStatus = 1
+				ON lg.Guide_Serie = rpd.Guide_Serie 
+				AND lg.Guide_Number = rpd.Guide_Number
+			WHERE rpd.RoutePreparationId = @IdRoutePreparation 
+				AND rpd.RowStatus = 1
 
 			--operation 5
 			IF COALESCE(@@ROWCOUNT,0) > 0
