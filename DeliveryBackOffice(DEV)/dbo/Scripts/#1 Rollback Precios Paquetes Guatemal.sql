@@ -8,6 +8,10 @@
   -- PAQUETE PLATINO
   -- PAQUETE PRO
 
+
+BEGIN TRANSACTION
+BEGIN TRY
+
 DECLARE @IdCatSubscriptionMICRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Micro'
         AND IdCountry='GT')
 DECLARE @IdCatSubscriptionPETIT INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Petit'
@@ -272,3 +276,17 @@ And SubscriptionAttributeDescription='500 guías a Q19.80 c/u.'
   SET  Tag = NULL
   WHERE IdCatSubscription = @IdCatSubscriptionMICRO 
 
+
+COMMIT TRANSACTION;
+SELECT 1 AS [StatusCode], 'Proceso finalizado exitosamente!!' AS[MessageResponse]
+
+	END TRY
+	
+		BEGIN CATCH
+		
+			ROLLBACK TRANSACTION;
+
+			SELECT 1 AS [StatusCode], 
+			       ERROR_MESSAGE()  AS [MessageResponse]
+
+		 END CATCH
