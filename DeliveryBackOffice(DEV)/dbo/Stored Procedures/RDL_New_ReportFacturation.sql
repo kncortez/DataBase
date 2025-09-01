@@ -125,7 +125,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO' --  invoiceHeader.inv_status  NO TIENE ID DEFINIDO
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -332,7 +332,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -541,7 +541,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -772,6 +772,9 @@ BEGIN
 				CommercialSegmentName NVARCHAR(200)
 			);
 
+		    CREATE NONCLUSTERED INDEX tempReport 
+		    ON #Report (Origen_de_guia);
+
 			;WITH FacturasSinFEL AS (
 				SELECT 
 					IND.dti_fk_orderSerie,
@@ -790,7 +793,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -1078,7 +1081,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -1284,7 +1287,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
