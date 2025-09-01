@@ -125,7 +125,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO' --  invoiceHeader.inv_status  NO TIENE ID DEFINIDO
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -149,8 +149,8 @@ BEGIN
 						END AS 'Origen de guía',--SI
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
-					COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '') 'Remitente', --SI
-					COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '') 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -332,7 +332,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -356,8 +356,8 @@ BEGIN
 						END AS 'Origen de guía',--SI
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
-					COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '') 'Remitente', --SI
-					COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '') 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -541,7 +541,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -565,8 +565,8 @@ BEGIN
 						END AS 'Origen de guía',--SI
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
-					COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '') 'Remitente', --SI
-					COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '') 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -772,6 +772,9 @@ BEGIN
 				CommercialSegmentName NVARCHAR(200)
 			);
 
+		    CREATE NONCLUSTERED INDEX tempReport 
+		    ON #Report (Origen_de_guia);
+
 			;WITH FacturasSinFEL AS (
 				SELECT 
 					IND.dti_fk_orderSerie,
@@ -790,7 +793,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -854,8 +857,8 @@ BEGIN
 						END AS 'Origen de guía',--SI
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
-					COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '') 'Remitente', --SI
-					COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '') 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -1078,7 +1081,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -1101,8 +1104,8 @@ BEGIN
 						END AS 'Origen de guía',--SI
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
-					COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '') 'Remitente', --SI
-					COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '') 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -1284,7 +1287,7 @@ BEGIN
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 					ON IND.dti_fk_header = INH.inv_pk_id
-					AND INH.inv_certificationFEL IS NOT NULL
+				WHERE INH.inv_certificationFEL IS NOT NULL
 					AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
 					AND INH.inv_creditNote IS NULL
 					AND INH.inv_motiveCreditNote IS NULL
@@ -1307,8 +1310,8 @@ BEGIN
 						END AS 'Origen de guía',--SI
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
-					COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '') 'Remitente', --SI
-					COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '') 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
