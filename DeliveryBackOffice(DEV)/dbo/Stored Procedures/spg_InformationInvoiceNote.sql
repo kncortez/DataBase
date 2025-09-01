@@ -7,6 +7,10 @@
 -- Modified:	<30 Julio 2025>
 -- Description:	<Facturacion SV - Obtener informacion de factura para SV>
 -- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Modified:	<01 septiembre 2025>
+-- Description:	<Fix para generacion de notas de credito para facturas en lotes de facturacion inactivos>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_InformationInvoiceNote]
     -- Add the parameters for the stored procedure here
     @fel nvarchar(100),
@@ -51,7 +55,7 @@ begin
 			where ih.inv_certificationFEL = @fel
 			AND ISNULL(ih.IdCountry,'GT') = @IdCountry
 			AND ih.inv_serieFEL = @CAI
-			AND ibh.RowStatus = 1
+			--AND ibh.RowStatus = 1
 			AND ibh.TypeDocument = 1
 		);
 	END
