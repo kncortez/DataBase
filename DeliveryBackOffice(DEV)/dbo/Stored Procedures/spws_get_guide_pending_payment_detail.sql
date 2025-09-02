@@ -155,7 +155,7 @@ BEGIN
 
     -- 2. Agregar guías pagadas a los excluidos (Rejects)
     INSERT INTO #listGuidesExcluded (Guide_Serie, Guide_Number, StatusOrderId, Description)
-    SELECT Guide_Serie, Guide_Number, 999, 'Guía pagada en Zigi, no permite realizar el proceso.'
+    SELECT Guide_Serie, Guide_Number, 999, 'Guía pagada en Zigi'
     FROM #listGuidesPaidZigi;
 
 
@@ -902,5 +902,4 @@ BEGIN
 
     SELECT @Output FormatJson;
 END;
-
 
