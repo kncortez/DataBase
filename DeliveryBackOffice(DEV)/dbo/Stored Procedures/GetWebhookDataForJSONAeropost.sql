@@ -55,8 +55,8 @@ BEGIN
 
 			DECLARE @AttempNumber INT;
 			DECLARE @TypeIncidenceId INT;
-			DECLARE @StatusIncidenceId INT = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WHERE OrderDescription = 'Incidencia Validada')
-			DECLARE @StatusInRouteId INT = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WHERE OrderDescription = 'En ruta')
+			DECLARE @StatusIncidenceId INT = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WITH (NOLOCK) WHERE OrderDescription = 'Incidencia Validada')
+			DECLARE @StatusInRouteId INT = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WITH (NOLOCK) WHERE OrderDescription = 'En ruta')
 
 			SELECT 
 				@AttempNumber = CASE 
@@ -93,7 +93,7 @@ BEGIN
 			IF (@StatusId = @StatusIncidenceId AND @TypeIncidenceId > 0)
 			BEGIN
 				SELECT @NewCode = COALESCE(NewCode, 0)
-				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] 
+				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] WITH (NOLOCK)
 				WHERE AttemptNumber = @AttempNumber
 				  AND IncidenceTypeId = @TypeIncidenceId
 				  AND StatusOrderId = @StatusId;
@@ -104,7 +104,7 @@ BEGIN
 			ELSE IF (@StatusId = @StatusInRouteId AND @AttempNumber = 1)
 			BEGIN
 				SELECT @NewCode = COALESCE(NewCode, 0)
-				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping]
+				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] WITH (NOLOCK)
 				WHERE AttemptNumber = @AttempNumber
 				  AND StatusOrderId = @StatusId;
     
@@ -114,7 +114,7 @@ BEGIN
 			ELSE
 			BEGIN
 				SELECT @NewCode = COALESCE(NewCode, 0)
-				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] 
+				FROM [DeliveryBackOffice].[dbo].[IncidenceStatusMapping] WITH (NOLOCK)
 				WHERE AttemptNumber = @AttempNumber
 				  AND StatusOrderId = @StatusId;
     
