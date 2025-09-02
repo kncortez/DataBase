@@ -51,3 +51,14 @@ BEGIN
 
  END
 END
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[spgConfirmAccount] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[spgConfirmAccount] TO [cixtetela]
+    AS [dbo];
+

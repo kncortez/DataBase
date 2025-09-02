@@ -34,6 +34,7 @@
     [DescriptionCC]           NVARCHAR (100) NULL,
     [CatBusinessSegmentId]    INT            NULL,
     [AllowScheduledPickups]   BIT            DEFAULT ((1)) NULL,
+    [RestrictionByArticle] BIT NULL, 
     CONSTRAINT [PK_VisitPointClient_1] PRIMARY KEY CLUSTERED ([CodeOfReference] ASC),
     CONSTRAINT [FK_VisitPointClient_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_VisitPointClient_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer]),
@@ -43,6 +44,8 @@
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
 
 
 
@@ -206,3 +209,30 @@ CREATE NONCLUSTERED INDEX [IDX_StatusClient]
     ON [dbo].[VisitPointClient]([StatusClient] ASC)
     INCLUDE([IdVisitPointClient], [DescriptionOfClient], [CountryId], [CustomerID], [Phone]);
 
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusClient_IdKindOfVPBusiness_INCLUDE]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [IdKindOfVPBusiness] ASC)
+    INCLUDE([DescriptionOfClient], [CountryId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusClient_CountryId_INCLUDE]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC)
+    INCLUDE([DescriptionOfClient], [CustomerID]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DescriptionOfClient_StatusClient_CountryId]
+    ON [dbo].[VisitPointClient]([DescriptionOfClient] ASC, [StatusClient] ASC, [CountryId] ASC);
+
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Bandera que indica si se utilizará tarifario por artículo.',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointClient',
+    @level2type = N'COLUMN',
+    @level2name = N'RestrictionByArticle'

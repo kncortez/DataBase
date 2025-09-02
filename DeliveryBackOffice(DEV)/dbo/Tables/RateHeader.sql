@@ -54,6 +54,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_RheDefault]
     ON [dbo].[RateHeader]([RheDefault] ASC)
@@ -171,4 +173,10 @@ EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que conti
 GO
 CREATE NONCLUSTERED INDEX [idx_RheName]
     ON [dbo].[RateHeader]([RheName] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RheRowStatus_INCLUDE]
+    ON [dbo].[RateHeader]([RheRowStatus] ASC)
+    INCLUDE([RheName], [RateTypeId], [CountryId], [CatBusinessSegmentId]);
 

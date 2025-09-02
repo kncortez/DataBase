@@ -31,3 +31,20 @@ BEGIN
         @StationId
     )
 END
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportInsertRol] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportInsertRol] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportInsertRol] TO [cvaldes]
+    AS [dbo];
+

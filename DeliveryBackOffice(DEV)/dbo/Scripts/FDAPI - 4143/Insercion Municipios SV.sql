@@ -1,4 +1,4 @@
--- Iniciar transacci髇
+-- Iniciar transacci贸n
 BEGIN TRANSACTION
 
 BEGIN TRY
@@ -305,15 +305,15 @@ INSERT INTO TownshipDistrictByBillingSV(StateByBillingSVId,TownshipId,DistrictId
 INSERT INTO TownshipDistrictByBillingSV(StateByBillingSVId,TownshipId,DistrictId,RowStatus,TokenCreated,DateCreated)VALUES(15,801,45,1,'SYS-CAZURDIA','2025-07-24 15:35:44')
 	
 	COMMIT TRANSACTION
-	print 'Inserci髇 exitosa'
+	print 'Inserci贸n exitosa'
 
 END TRY
 BEGIN CATCH
-	-- Revertir transacci髇 en caso de error
+	-- Revertir transacci贸n en caso de error
 	IF @@TRANCOUNT > 0
 		ROLLBACK TRANSACTION
     
-	-- Capturar informaci髇 del error
+	-- Capturar informaci贸n del error
 	SELECT ERROR_MESSAGE(),
 			ERROR_SEVERITY(),
 			ERROR_STATE()

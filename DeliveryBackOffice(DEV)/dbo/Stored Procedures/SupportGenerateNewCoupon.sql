@@ -217,3 +217,20 @@ BEGIN
 
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportGenerateNewCoupon] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportGenerateNewCoupon] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportGenerateNewCoupon] TO [cvaldes]
+    AS [dbo];
+

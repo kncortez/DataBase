@@ -31,6 +31,10 @@
 -- Update date: <2025-06-12>
 -- Description:	<Facturación SV - Obtiene campos de direccion de clientes para facturar de El Salvador>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2025-08-14>
+-- Description:	<Guias Rapidas - Obtiene campos que indica si restringue uso a tarifario por articulo>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer AS INT = -1
@@ -133,6 +137,7 @@ BEGIN
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
 			 , cst.[IsVoucherRequired]
+             , ISNULL(cst.[RestrictionByArticle], 0)       AS RestrictionByArticle
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
@@ -236,6 +241,7 @@ BEGIN
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
 			 , cst.[IsVoucherRequired]
+             , ISNULL(cst.[RestrictionByArticle], 0)       AS RestrictionByArticle
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
@@ -340,13 +346,15 @@ BEGIN
 	SELECT
 		BL.Id,
 		BL.IdCustomer,
-		BL.DistrictId AS [CodeDistrict],
-		BL.StateId AS [CodeState],
+		DIS.CodeDistrict AS [CodeDistrict],
+		DIS.StateCode AS [CodeState],
 		BL.ActivityId AS CodeActivity,
 		BL.NRC,
 		BL.Nirphone,
 		BL.Phone
-    FROM dbo.BillingCustomerBySV BL WITH(NOLOCK)		
+    FROM dbo.BillingCustomerBySV BL WITH(NOLOCK)
+    LEFT JOIN dbo.DistrictByBillingSV DIS WITH(NOLOCK)
+       ON DistrictId = DIS.Id
     WHERE BL.IdCustomer = @IdCustomer
         AND BL.RowStatus = 1;
 

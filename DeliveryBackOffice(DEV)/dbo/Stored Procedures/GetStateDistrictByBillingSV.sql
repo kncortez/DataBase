@@ -13,14 +13,14 @@ BEGIN
     
     select sbsv.Code         StateCode,    
            dbsv.CodeDistrict DistrictCode    
-      From TownshipDistrictByBillingSV tdbsv    
-           inner Join DistrictByBillingSV dbsv    
+      From TownshipDistrictByBillingSV tdbsv    WITH(NOLOCK)
+           inner Join DistrictByBillingSV dbsv  WITH(NOLOCK)
               on dbsv.Id = tdbsv.DistrictId    
-           inner Join StateByBillingSV    sbsv    
+           inner Join StateByBillingSV    sbsv  WITH(NOLOCK)  
               on sbsv.Id = tdbsv.StateByBillingSVId    
-           Inner Join Township t    
+           Inner Join Township t                WITH(NOLOCK) 
               on t.IdTownship = tdbsv.TownshipId    
-           Inner Join Province p    
+           Inner Join Province p                WITH(NOLOCK)
               on p.IdProvince = t.IdProvince    
      Where t.IdProvince =  @IdProvince    
        and t.IdTownship = @IdTownship      

@@ -39,12 +39,15 @@ BEGIN
     SET @Calalog = UPPER(@Calalog);
     DECLARE @NameOfCatalog AS NVARCHAR(50) = N'';
 
-    IF OBJECT_ID('tempdb.dbo.#Catalogs', 'U') IS NOT NULL
-        DROP TABLE #Catalogs;
+    DECLARE @Catalogs TABLE
+    (
+        IdCatalog INT,
+        NameCatalog VARCHAR(100)
+    );
 
+	INSERT INTO @Catalogs (IdCatalog,NameCatalog)
     SELECT ModuleID,
            cbm.NameCatalog
-    INTO #Catalogs
     FROM CatalogbyModule cbm
     WHERE cbm.ModuleID = @IdModule
           AND cbm.RowStatus = 'TRUE'
@@ -59,7 +62,7 @@ BEGIN
 
     DECLARE @IdMax AS INT =
             (
-                SELECT COUNT(*)FROM #Catalogs
+                SELECT COUNT(*)FROM @Catalogs
             );
 
     WHILE @count <= @IdMax
@@ -68,7 +71,7 @@ BEGIN
 
         SELECT TOP 1
                @NameOfCatalog = ctl.NameCatalog
-        FROM #Catalogs ctl;
+        FROM @Catalogs ctl;
         PRINT @NameOfCatalog;
         IF (@NameOfCatalog = 'SaleAdvisor')
         BEGIN
@@ -630,7 +633,7 @@ BEGIN
 
         SET @count = @count + 1;
         DELETE TOP (1)
-        FROM #Catalogs;
+        FROM @Catalogs;
     END;
 
 
@@ -641,9 +644,6 @@ BEGIN
     FROM [dbo].[CatBillingTime] BT with (nolock)
     WHERE BT.RowStatus = 'TRUE'
 
-
-
-
     SELECT BV.IdCatBillingVolume [IdValue],
            BV.NameBillingVolume [NameValue],
            'BillingVolume' [Catalog]
@@ -653,23 +653,25 @@ BEGIN
 	--facturacion El Salvador	
     -- Consulta de distritos
     SELECT 
-		DS.Id [IdValue],
-        DS.CodeDistrict, 
-        DS.[Name] [NameValue],	
-		DS.StateId [IdFilter],
-        DS.StateCode,
+        DS.IdTownship [IdValue], 
+        DS.[TownshipName] [NameValue],	
+        DS.IdProvince [IdFilter],
         'DistrictByBillingSV' [Catalog]
-    FROM DistrictByBillingSV DS WITH(NOLOCK)
-    WHERE DS.RowStatus = 1;
+    FROM Township DS       WITH(NOLOCK)
+    INNER JOIN Province pv WITH(NOLOCK) 
+       ON pv.IdProvince = DS.IdProvince 
+    WHERE DS.TownshipStatus = 1
+      AND pv.ProvinceStatus = 1
+      AND pv.IdCountry = 'SV'
 
     -- Consulta de estados
     SELECT 
-		S.Id [IdValue],
-        S.Code, 
-        S.[Name] [NameValue],
+		S.[IdProvince] [IdValue],
+        S.[ProvinceName] [NameValue],
         'StateByBillingSV' [Catalog]
-    FROM StateByBillingSV S WITH(NOLOCK)
-    WHERE S.RowStatus = 1;
+    FROM Province S WITH(NOLOCK)
+    WHERE S.IdCountry = 'SV'
+      AND s.ProvinceStatus = 1;
 
     -- Consulta de actividades económicas
     SELECT 

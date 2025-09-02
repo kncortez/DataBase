@@ -11,7 +11,7 @@ AS
 BEGIN
 
         SELECT [Id],[CodeActivity], [Description] 
-          FROM DeliveryBackOffice.[dbo].[CatEconomicActivityBySV]
+          FROM DeliveryBackOffice.[dbo].[CatEconomicActivityBySV] WITH(NOLOCK)
          WHERE RowStatus = 1
 
 END

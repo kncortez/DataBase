@@ -65,3 +65,20 @@ BEGIN
 
 							
 END
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportReleaseDHLGuide] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportReleaseDHLGuide] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportReleaseDHLGuide] TO [cvaldes]
+    AS [dbo];
+

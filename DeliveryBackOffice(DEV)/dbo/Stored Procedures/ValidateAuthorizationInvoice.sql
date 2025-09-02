@@ -1,11 +1,3 @@
-USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[ValidateBatchInvoice]    Script Date: 5/06/2025 15:57:47 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 -- =============================================
 -- Author:      Cristian Azurdia
 -- Create date: 2024-08-14
@@ -20,17 +12,19 @@ CREATE PROCEDURE [dbo].[ValidateAuthorizationInvoice]
 AS
 BEGIN
 
+     DECLARE @today DATETIME = GETDATE()
+
      IF NOT EXISTS (
                     SELECT TOP 1 1
                       FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                            INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                              ON iah.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
+                             AND iah.[RowStatus] = iar.[RowStatus]
                      WHERE iar.CodeOfReference = @CodeOfReference
                        AND iah.[RowStatus] = 1
-                       AND iar.[RowStatus] = 1
                    )
      BEGIN
-          SELECT @Code = 0,
+          SELECT @Code = 2,
                  @Message = 'No existe una Autorización activa para el CodeOfReference indicado'
 
           SELECT @Code AS code,
@@ -43,9 +37,9 @@ BEGIN
                   FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                        INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                          ON iah.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
+                         AND iah.[RowStatus] = iar.[RowStatus]
                  WHERE iar.CodeOfReference = @CodeOfReference
                    AND iah.[RowStatus] = 1
-                   AND iar.[RowStatus] = 1
                    AND (
                         ISNULL(iah.[Authorization],'') = ''
                    )
@@ -64,9 +58,9 @@ BEGIN
                   FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                        INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                          ON iah.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
+                         AND iah.[RowStatus] = iar.[RowStatus]
                  WHERE iar.CodeOfReference = @CodeOfReference
                    AND iah.[RowStatus] = 1
-                   AND iar.[RowStatus] = 1
                    AND (
                         ISNULL(iah.[DateCreated], '') = ''
                         OR ISNULL(iah.[EndDate],'') = ''
@@ -81,19 +75,19 @@ BEGIN
           RETURN;
      END
 
-     IF NOT EXISTS (
+     IF EXISTS (
                     SELECT TOP 1 1
                       FROM InvoiceAuthorizationHeader iah WITH(NOLOCK)
                            INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                              ON iah.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
+                             AND iah.[RowStatus] = iar.[RowStatus]
                      WHERE iar.CodeOfReference = @CodeOfReference
                        AND iah.[RowStatus] = 1
-                       AND iar.[RowStatus] = 1
-                       AND GETDATE() <= iah.EndDate
+                       AND @today >= iah.EndDate
                    )
      BEGIN
           SELECT @Code = 2,
-                 @Message = 'La fecha actual excede la fecha límite de facturación para la autorización'
+                 @Message = 'La fecha actual excede la fecha limite de facturación para la autorización'
 
           SELECT @Code AS code,
                  @Message AS [Message];

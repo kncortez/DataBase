@@ -11,7 +11,7 @@ CREATE PROCEDURE [dbo].[GetAuthorizationInvoice]
 )
 AS
 BEGIN
-     DECLARE @Authorization        INT,
+     DECLARE @Authorization        NVARCHAR(512),
              @EndDAte              DATETIME,
              @Code                 INT = 0,
              @Message              NVARCHAR(250)
@@ -25,7 +25,7 @@ BEGIN
     BEGIN
          SELECT  @Authorization = invHe.[Authorization]
                 ,@EndDAte = invHe.[EndDate]
-           FROM InvoiceAuthorizationHeader invHe
+           FROM InvoiceAuthorizationHeader invHe WITH(NOLOCK)
                 INNER JOIN InvoiceAuthorizationRelationships iar WITH(NOLOCK)
                   ON invHe.IdInvoiceAuthorizationHeader = iar.InvoiceAuthorizationHeaderId
           WHERE iar.CodeOfReference = @CodeOfReference
@@ -36,10 +36,9 @@ BEGIN
 
     IF @Code <> 0
     BEGIN
+
          SELECT @Authorization AS 'Authorization',
-                @EndDAte AS'EndDate',
-                @Code AS code,
-                @Message AS [message]
+                @EndDAte AS'EndDate';
     END
 
 END;

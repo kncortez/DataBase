@@ -21,6 +21,15 @@ BEGIN
 	DECLARE @TokenAct INT = 1;
     DECLARE @hourtoken INT = 5;
 
+    IF OBJECT_ID('#DatasetPickup', 'U') IS NOT NULL
+        DROP TABLE  #DatasetPickup;
+
+    IF OBJECT_ID('#DatasetDelivery', 'U') IS NOT NULL
+        DROP TABLE #DatasetDelivery;
+
+    IF OBJECT_ID('#AllData', 'U') IS NOT NULL
+        DROP TABLE #AllData;
+
 	/******************************************************************************************************************************
 	****************************************************** OBTENER TIPOS DE ALERTAS ***********************************************
 	*******************************************************************************************************************************/
@@ -272,9 +281,9 @@ BEGIN
 		******************************************************************************************************************************************/
 
         SELECT 'Pickup' [ServiceType],
-				ISNULL(vpc.CodeOfReference, 0) [CodeOfReference],
+				ISNULL(CAST(vpc.CodeOfReference AS NVARCHAR(500)), '0') [CodeOfReference],
 				ISNULL(spk.SchedulePickupId, '-1') [Id],
-				ISNULL(sma.IdServiceManagement, -1) [ServiceManagementId],
+				ISNULL(CAST(sma.IdServiceManagement AS NVARCHAR), '-1') [ServiceManagementId],
 				ISNULL(cpt.TimePlaName, 'N/A') [ServicePaymentTime],
 				dbo.fnt_String_Escape(ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A'),'json') [Sender],
 				dbo.fnt_String_Escape(
@@ -352,6 +361,7 @@ BEGIN
 				 ccc.Symbol[CurrencyPriceSymbol],
                  ccc.CodeISO[PickupPriceCodeISO],
                  ccc.Symbol[PickupPriceSymbol]
+            INTO #DatasetPickup -- Crea y llena la tabla temporal
             FROM dbo.RouteAssigment             ras WITH (NOLOCK)
                 INNER JOIN dbo.ServiceManagement sma WITH (NOLOCK)
                     ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
@@ -383,6 +393,8 @@ BEGIN
 					AND ISNULL(sma.SubTypeServiceManagmentId,1)=1
 		
 
+          CREATE CLUSTERED INDEX IX_ID_Dataset1 ON #DatasetPickup (CodeOfReference);
+
 		/*****************************************************************************************************************************************
 		**************************************** CONSULTA PARA DESPLEGAR LAS ENTREGAS Y SUS ALERTAS **********************************************
 		******************************************************************************************************************************************/
@@ -399,7 +411,7 @@ BEGIN
 				 [DeliveryOption],
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
 				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id],
-				 ISNULL(DOR.Ticket_Number, '') [TicketNumber],
+				 ISNULL(REPLACE(DOR.Ticket_Number, '"', ''), '') [TicketNumber],
 				 0 [ServiceManagementId],
 				 ISNULL(
 					ISNULL(
@@ -614,7 +626,7 @@ BEGIN
 						) IS NOT NULL , 
 						(
 							SELECT NumImgEvidence AS num
-							FROM Customer
+							FROM Customer WITH (NOLOCK)
 							WHERE IdCustomer = DOR.IdCustomer
 						), 1
 					) [NumImageEvidence],
@@ -646,7 +658,16 @@ BEGIN
 		TRPreturns.CurrencyPrice_CODCodeISO [CurrencyPrice_CodeISO],
         TRPreturns.CurrencyPrice_CODSymbol  [CurrencyPrice_CODSymbol],
 		TRPreturns.CurrencyPriceCodeISO		[CurrencyPriceCodeISO],
-		TRPreturns.CurrencyPriceSymbol		[CurrencyPriceSymbol]
+		TRPreturns.CurrencyPriceSymbol		[CurrencyPriceSymbol],
+		CASE
+           WHEN kvp.IdKindOfVPClient = 1 THEN
+               1
+           WHEN kvp.IdKindOfVPClient IS NULL THEN
+               0
+           ELSE
+               0
+       END FlagEXP
+          INTO #DatasetDelivery
 		FROM
 		(
 			SELECT  MAX(ID_DeliveryOrderBySettlement) ID_DeliveryOrderBySettlement,
@@ -741,17 +762,51 @@ BEGIN
           AND DSD.RowStatus = 1
           AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48, 50 )
           AND DSD.RowStatus = 1
-
+          
+       CREATE CLUSTERED INDEX IX_ID_Dataset2 ON #DatasetDelivery ([Id]);
+       
 		/******************************************************************************************************************************
 		****************************************** CONSULTA PARA MOSTRAR LAS ALERTAS DISPONIBLES **************************************
 		*******************************************************************************************************************************/
 
-		SELECT 
-				TMAP.ServiceManagementId,
-				TMAP.TypeAlert,
-				dbo.fnt_String_Escape(TMAP.DescriptionAlert,'json') DescriptionAlert,
-				TMAP.DateCreated
-		FROM	#TmpAlertList TMAP
+          -- Retorna el Dataset 1 al cliente
+          SELECT ServiceType,CodeOfReference,Id,CAST(ServiceManagementId AS NVARCHAR) AS ServiceManagementId,ServicePaymentTime,Sender,[Address],Phone,PiecesDry,
+                 PiecesCold,ScheduleStart,ScheduleEnd,Photo,Latitude,Longitude,[Precision],Price,Pickup,customerName,alterName,
+                 HighPriority,Alerts,[Status],CurrencyPriceCodeISO,CurrencyPriceSymbol,PickupPriceCodeISO,PickupPriceSymbol 
+            FROM #DatasetPickup
+
+          -- Retorna el Dataset 2 al cliente
+          SELECT ServiceType,CodeOfReference,DeliveryOption,IsLastMileReturn,CAST(Id AS NVARCHAR) AS Id,TicketNumber,ServiceManagementId,Sender,[Address],
+                 Sender_Phone,Phone,PiecesDry,PiecesCold,ScheduleStart,ScheduleEnd,Photo,Latitude,Longitude,[Precision],Price_COD,
+                 Price,Pickup,customerName,alterName,NumImageEvidence,[Status],HighPriority,Alerts,CurrencyPrice_CodeISO,CurrencyPrice_CODSymbol,
+                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP
+            FROM #DatasetDelivery;
+
+          CREATE TABLE #AllData (IdAllData NVARCHAR(70) PRIMARY KEY); -- Ajusta el tipo de dato
+
+          INSERT INTO #AllData (IdAllData)
+          SELECT CodeOfReference 
+            FROM #DatasetPickup
+           UNION -- UNION elimina duplicados automáticamente
+          SELECT Id 
+            FROM #DatasetDelivery;
+
+          -- Sobre tabla completa
+          CREATE INDEX IX_ID_Filtrar ON #AllData (IdAllData);
+
+          SELECT CAST(T3.ServiceManagementId AS INT) AS ServiceManagementId,
+                 T3.TypeAlert,
+                 T3.DescriptionAlert,
+                 T3.DateCreated
+            FROM
+                (
+                 SELECT CAST(TMAP.ServiceManagementId AS NVARCHAR)  AS ServiceManagementId,
+                        TMAP.TypeAlert,
+                        dbo.fnt_String_Escape(TMAP.DescriptionAlert,'json') DescriptionAlert,
+                        TMAP.DateCreated
+                   FROM #TmpAlertList TMAP
+                ) AS T3
+            INNER JOIN #AllData AS TIF ON TIF.IdAllData = T3.ServiceManagementId;
 
 		SELECT 200 [IdResult], 'Se encontraron registros' [Message];
 
@@ -762,4 +817,14 @@ BEGIN
 		SELECT '403' [IdResult], 'Token Inválido' [DescriptionError];
         
 	END;
+
+    IF OBJECT_ID('#DatasetPickup', 'U') IS NOT NULL
+        DROP TABLE  #DatasetPickup;
+
+    IF OBJECT_ID('#DatasetDelivery', 'U') IS NOT NULL
+        DROP TABLE #DatasetDelivery;
+
+    IF OBJECT_ID('#AllData', 'U') IS NOT NULL
+        DROP TABLE #AllData;
 END;
+

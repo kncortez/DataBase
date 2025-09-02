@@ -15,22 +15,24 @@ BEGIN
         SELECT ts.IdTownship,
                ts.TownshipName,
                ts.IdProvince 
-          FROM Township ts
-               INNER JOIN Province pv ON pv.IdProvince = ts.IdProvince
+          FROM Township ts WITH(NOLOCK)
+               INNER JOIN Province pv WITH(NOLOCK)
+               ON pv.IdProvince = ts.IdProvince
          WHERE TownshipStatus = 1
            AND pv.ProvinceStatus = 1
-           AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
+           AND pv.IdCountry = @IdCountry
     END
     ELSE
     BEGIN
         SELECT ts.IdTownship,
                ts.TownshipName,
                ts.IdProvince 
-          FROM Township ts
-               INNER JOIN Province pv ON pv.IdProvince = ts.IdProvince
+          FROM Township ts WITH(NOLOCK)
+               INNER JOIN Province pv WITH(NOLOCK)
+               ON pv.IdProvince = ts.IdProvince
          WHERE TownshipStatus = 1
            AND pv.ProvinceStatus = 1
-           AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
+           AND pv.IdCountry = @IdCountry
            AND ts.IdProvince = @IdProvince
     END
 END
