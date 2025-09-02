@@ -4,6 +4,12 @@
 -- Create date: <2025-08-21>
 -- Description:	<Su funcion es verificar si existen mensajes pendientes de enviar por Zigi a Whatsapp del cliente.>
 -- =============================================
+-- =============================================
+-- System:		<SMS_Sender>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-08-28>
+-- Description:	<Se agregan 2 campos de la tabla DefaultValuesPerCountry para obtener la expresion regular y el numero de Whatsapp y que sea dinámico>
+-- =============================================
 CREATE PROCEDURE [dbo].[sms_ZigiSend]
 	@Token NVARCHAR(50) = 'SYS_ZigiSMSender'
 AS
@@ -34,6 +40,8 @@ BEGIN
 		[_Amount]         DECIMAL(10,2)  NULL,
 		[_Currency]       NVARCHAR(10)   NULL,      
 		[_LinkZigi]       NVARCHAR(MAX)  NULL,
+		[_RegxMovilPhone] NVARCHAR(50)  NULL,
+		[_WhatsappNumber] NVARCHAR(15)   NULL,
 		CONSTRAINT PK_WhatsappRecipientZigi PRIMARY KEY CLUSTERED ([_GuideSerie], [_GuideNumber])
 	);
 
@@ -54,6 +62,8 @@ BEGIN
 		 , Z.PaidAmount
 		 , CCC.Symbol
 		 , Z.ZigiLink
+		 , DPC.RegxMovilPhone
+		 , DPC.WhatsappNumber
 	FROM DeliveryBackOffice.dbo.PaymentZigi Z WITH (NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 		ON Z.GuideSerie = DO.Guide_Serie AND Z.GuideNumber = DO.Guide_Number
@@ -79,6 +89,8 @@ BEGIN
 		 , Z.PaidAmount
 		 , CCC.Symbol
 		 , Z.ZigiLink
+		 , DPC.RegxMovilPhone
+		 , DPC.WhatsappNumber
 	FROM DeliveryBackOffice.dbo.PaymentZigi Z WITH (NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 		ON Z.GuideSerie = DO.Guide_Serie AND Z.GuideNumber = DO.Guide_Number
