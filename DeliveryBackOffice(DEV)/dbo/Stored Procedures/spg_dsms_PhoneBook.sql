@@ -23,6 +23,11 @@
 -- Create date: <2025-08-06>
 -- Description:	<Se agrega el campo NirPhone.>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-08-28>
+-- Description:	<Se agrega campos RegxMovilPhone y WhatsappNumber.>
+-- =============================================
 --exec [dbo].[spg_dsms_PhoneBook] 
 --@MaxDeliveryDate = '2022-03-09 17:21:42.180',@ElementId = 1001
 
@@ -51,9 +56,9 @@ BEGIN
 	)
 		
 	declare @LastUpdate datetime=  dateadd(MINUTE,-200,@MaxDeliveryDate)
-	
+
 	declare @ToUpdate as table (_Series nvarchar(50), _Number int)
- 
+
 	  insert into @ToUpdate
 	  SELECT DISTINCT do.[Guide_Serie]
 		  ,do.[Guide_Number]
@@ -63,14 +68,14 @@ BEGIN
 	  where do.DateCreatedInSystem>=@LastUpdate
 	  and   CAST(do.DateCreatedInSystem as date)>=CAST('2022-03-07' as date)
 	  and (
-		(do.StatusOrderId=11 and (@ElementId = 1001 or @ElementId = 1002) and ISNULL(ss.SentTypeStatus,0) = 0 and ISNULL(ss.Sent,0) = 0) 
-		/*or 
+		(do.StatusOrderId=11 and (@ElementId = 1001 or @ElementId = 1002) and ISNULL(ss.SentTypeStatus,0) = 0 and ISNULL(ss.Sent,0) = 0)
+		/*or
 		(do.StatusOrderId=2 and @ElementId = 1002 and ISNULL(ss.SentTypeStatus,0) = 0 and ISNULL(ss.Sent,0) = 0) */
 	  )
-	  and not exists 
+	  and not exists
 		  (
 		  select 1 from DeliveryBackOffice.dbo.DeliveryOrderDetail DOR2 with(nolock)
-		  where do.Guide_Serie = DOR2.Guide_Serie 
+		  where do.Guide_Serie = DOR2.Guide_Serie
 		  and do.Guide_Number = DOR2.Guide_Number
 		  and StatusOrderId in (5,7,22,30,14,24,25/*,4,IIF(@ElementId = 1002,11,0)*/)
 		  AND do.RowStatus = 1 --solo estado activos
@@ -82,7 +87,7 @@ BEGIN
 		AND SS2.Sent_Guide_Series = do.Guide_Serie
 		AND ISNULL(SS2.SentTypeStatus,0) IN (0,1,2,3)
 	  )
-	  
+
 
 	INSERT INTO @ToUpdate
 	SELECT DISTINCT
@@ -95,7 +100,7 @@ BEGIN
 	WHERE DOD.DateCreatedInSystem >= @LastUpdate
 		  and CAST(dod.DateCreatedInSystem as date) >= CAST('2022-03-07' as date)
 		  AND DOD.StatusOrderId = 4
-	
+
 
 	declare @PhoneBook as table (
 	_FirstName nvarchar(300),
@@ -120,14 +125,17 @@ BEGIN
 	,_InsuranceAmount NVARCHAR(300)
     ,_Currency NVARCHAR(300)
 	,_Amount NVARCHAR(300)
+	,_CODAmount NVARCHAR(300)
 	,_VehicleType NVARCHAR(300)
 	,_VehiclePlate NVARCHAR(300)
 	,_NirPhone NVARCHAR(3)
+    ,_RegxMovilPhone NVARCHAR(50)
+	,__WhatsappNumber NVARCHAR(15)
 	)
 	insert into @PhoneBook
 	--SELECT TOP 1 --TMP BNHL
 	SELECT DISTINCT
-		IIF(do.Receiver_FirstName = '',do.Receiver_Alternant_FullName,do.Receiver_FirstName), 
+		IIF(do.Receiver_FirstName = '',do.Receiver_Alternant_FullName,do.Receiver_FirstName),
 		do.Receiver_LastName,
 		do.Receiver_Phone,
 		do.Receiver_Address,
@@ -138,7 +146,7 @@ BEGIN
 		do.Guide_Serie,
 		do.Guide_Number
 		,RTRIM(LTRIM(ISNULL(/*IIF(do.Sender_ID <> 0,VPC.DescriptionOfClient,*/do.Sender_FirstName +' ' + do.Sender_LastName /*)*/,'') ))
-		,' https://forzadelivery.com/rastreo/' + do.Guide_Serie 
+		,' https://forzadelivery.com/rastreo/' + do.Guide_Serie
 		  + convert(varchar,do.Guide_Number)
 		, IIF(SDFG.GuideToken IS NOT NULL, CONCAT( ' https://forzadelivery.io/' , SDFG.GuideToken ),'')
 		,ISNULL(do.SenderCountryId,'GT')
@@ -195,15 +203,18 @@ BEGIN
        END AS InsuranceAmount,
 	   CCU.Symbol,
 	    (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) AS Amount,
+	    CO.CODAmount,
         CTV.Name,
        CVE.Plate,
-	   DPC.PrefixNumber
+	   DPC.PrefixNumber,
+	    DPC.RegxMovilPhone,
+	    DPC.WhatsappNumber
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
 	left join DeliveryBackOffice.dbo.VisitPointClient VPC with(nolock) ON VPC.CodeOfReference = do.Sender_ID
 	left join DeliveryBackOffice.dbo.ServiceDataForGuide SDFG with(nolock) ON do.Guide_Serie = SDFG.GuideSerie and do.Guide_Number = SDFG.GuideNumber and SDFG.IsDelivery = 1 AND  SDFG.IsInRoute = 0
-	INNER JOIN StatusOrder SO WITH (NOLOCK) 
+	INNER JOIN StatusOrder SO WITH (NOLOCK)
 		ON SO.StatusOrderId = DO.StatusOrderId
 	LEFT JOIN DeliverySettlementDetail DSD WITH(NOLOCK)
 		ON DO.Guide_Number = DSD.Guide_Number
@@ -225,7 +236,7 @@ BEGIN
 	INNER JOIN CatCurrencyCOD CCU WITH(NOLOCK)
 		ON CCU.IdCatCurrencyCOD = DC.IdCurrencyCOD
 	LEFT JOIN SMS_Sent SMS WITH(NOLOCK)
-		ON SMS.Sent_Guide_Number = DO.Guide_Number 
+		ON SMS.Sent_Guide_Number = DO.Guide_Number
 		AND Sent_Guide_Series = DO.Guide_Serie
 	LEFT JOIN Cost CO WITH(NOLOCK)
 		ON DO.Guide_Serie = CO.GuideSerie
@@ -238,14 +249,14 @@ BEGIN
 	ON A1.AccIdAccount = A2.RuaIdAccount AND A2.RuaRowStatus = 1
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A3 WITH(NOLOCK)
 	ON A3.UsrIdUser = A2.RuaIdUser AND A3.UsrRowStatus = 1
-	WHERE A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1	
+	WHERE A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1
 	)TBL
 	where not tu._Number is null
 	and not tu._Series is null
 	AND CS.IdCustomerType <> @CustomerCorporative
 	AND DOD.StatusOrderId = 11
 	AND DC.DefaultPerCountry = 1
-	AND NOT EXISTS 
+	AND NOT EXISTS
 	(
 		SELECT TOP 1 1 FROM DeliveryBackOffice.dbo.SMS_Sent SS2 with(nolock)
 		WHERE SS2.Sent_Guide_Number = do.Guide_Number
@@ -254,7 +265,7 @@ BEGIN
 	)
 	UNION ALL
 	SELECT DISTINCT
-		IIF(do.Receiver_FirstName = '',do.Receiver_Alternant_FullName,do.Receiver_FirstName), 
+		IIF(do.Receiver_FirstName = '',do.Receiver_Alternant_FullName,do.Receiver_FirstName),
 		do.Receiver_LastName,
 		do.Receiver_Phone,
 		do.Receiver_Address,
@@ -265,7 +276,7 @@ BEGIN
 		do.Guide_Serie,
 		do.Guide_Number
 		,RTRIM(LTRIM(ISNULL(/*IIF(do.Sender_ID <> 0,VPC.DescriptionOfClient,*/do.Sender_FirstName +' ' + do.Sender_LastName /*)*/,'') ))
-		,' https://forzadelivery.com/rastreo/' + do.Guide_Serie 
+		,' https://forzadelivery.com/rastreo/' + do.Guide_Serie
 		  + convert(varchar,do.Guide_Number)
 		, IIF(SDFG.GuideToken IS NOT NULL, CONCAT( ' https://forzadelivery.io/' , SDFG.GuideToken ),'')
 		,ISNULL(do.SenderCountryId,'GT')
@@ -322,15 +333,18 @@ BEGIN
        END AS InsuranceAmount,
 	    CCU.Symbol,
 	    (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) AS Amount,
+	    CO.CODAmount,
         CTV.Name,
        CVE.Plate,
-	   DPC.PrefixNumber
+	   DPC.PrefixNumber,
+	   DPC.RegxMovilPhone,
+	    DPC.WhatsappNumber
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	LEFT JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON tu._Series = DOD.Guide_Serie AND tu._Number = DOD.Guide_Number
 	left join DeliveryBackOffice.dbo.VisitPointClient VPC with(nolock) ON VPC.CodeOfReference = do.Sender_ID
 	left join DeliveryBackOffice.dbo.ServiceDataForGuide SDFG with(nolock) ON do.Guide_Serie = SDFG.GuideSerie and do.Guide_Number = SDFG.GuideNumber and SDFG.IsDelivery = 1 AND  SDFG.IsInRoute = 0
-	INNER JOIN StatusOrder SO WITH (NOLOCK) 
+	INNER JOIN StatusOrder SO WITH (NOLOCK)
 		ON SO.StatusOrderId = DO.StatusOrderId
 	LEFT JOIN DeliverySettlementDetail DSD WITH(NOLOCK)
 		ON DO.Guide_Number = DSD.Guide_Number
@@ -365,14 +379,14 @@ BEGIN
 	ON A1.AccIdAccount = A2.RuaIdAccount AND A2.RuaRowStatus = 1
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A3 WITH(NOLOCK)
 	ON A3.UsrIdUser = A2.RuaIdUser AND A3.UsrRowStatus = 1
-	where A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1	
+	where A1.IdCustomer = CS.IdCustomer AND A1.AccRowStatus = 1
 	)TBL
 	where not tu._Number is null
 	and not tu._Series is null
 	AND CS.IdCustomerType <> @CustomerCorporative
 	AND DOD.StatusOrderId = 4
 	AND DC.DefaultPerCountry = 1
-	AND NOT EXISTS 
+	AND NOT EXISTS
 	(
 		SELECT TOP 1 1 FROM DeliveryBackOffice.dbo.SMS_Sent SS2 with(nolock)
 		WHERE SS2.Sent_Guide_Number = do.Guide_Number
@@ -407,12 +421,15 @@ BEGIN
 	,_InsuranceAmount NVARCHAR(300)
 	,_Currency NVARCHAR(5)
 	,_Amount NVARCHAR(300)
+	,_CODAmount NVARCHAR(300)
 	,_VehicleType NVARCHAR(300)
 	,_VehiclePlate NVARCHAR(300)
 	,_NirPhone NVARCHAR(3)
+	,_RegxMovilPhone NVARCHAR(50)
+	,__WhatsappNumber NVARCHAR(15)
 	)
-	insert into @CleanPhoneBook	
-	select 
+	insert into @CleanPhoneBook
+	select
 		 pb._FirstName
 		,pb._LastName
 		,replace(replace(replace(replace(replace(replace(ltrim(rtrim(pb._Phone)),'''',';'),'"',';'),' ',';'),'/',';'),',',';'),'-',(case when CHARINDEX('-', LTRIM(RTRIM(pb._Phone)))>8 then';'else ''end))'_Phone'
@@ -438,19 +455,22 @@ BEGIN
 		,pb._InsuranceAmount
 	    ,pb._Currency
 	    ,pb._Amount
-        ,pb._VehicleType
+        ,pb._CODAmount,
+         pb._VehicleType
         ,pb._VehiclePlate
 		,pb._NirPhone
-	from @PhoneBook pb 
+	    ,pb._RegxMovilPhone
+	    ,pb._WhatsappNumber
+	from @PhoneBook pb
 
 	--select TOP 1 --TEMP BNHL
-	select 
+	select
 		 pb._FirstName
 		,pb._LastName
 		--,'54743119' _Phone
 		,pb._Phone --TEMP BNHL
 		,(case when LEN(pb._Address)>45
-		  then substring(pb._Address,1,45)	
+		  then substring(pb._Address,1,45)
 		  else pb._Address end)'_Address'
 		,pb._Town
 		,pb._Department
@@ -471,10 +491,13 @@ BEGIN
 		,pb._InsuranceAmount
 	    ,pb._Currency
 	    ,pb._Amount
+	    ,pb._CODAmount
         ,pb._VehicleType
         ,pb._VehiclePlate
 		,pb._NirPhone
-	from @CleanPhoneBook pb 
+	    ,pb._RegxMovilPhone
+	    ,pb._WhatsappNumber
+	from @CleanPhoneBook pb
 
 	INSERT INTO [dbo].[SMS_Sent]
 			   ([Sent_Guide_Series]
@@ -486,7 +509,7 @@ BEGIN
 			   ,[StatusOrderId]
 			   )
 			(
-				select 
+				select
 					 pb._Series
 					,pb._Number
 					,0
@@ -494,7 +517,7 @@ BEGIN
 					,'SYS-SMSService'
 					,GETDATE()
 					,pb._StatusOrderId
-				from @PhoneBook pb 
+				from @PhoneBook pb
 			)
 
 	update [DeliveryBackOffice].[dbo].[SMS_UpdatedElements]
@@ -502,3 +525,5 @@ BEGIN
 	where ElementId=@ElementId
 
 END
+go
+
