@@ -276,6 +276,10 @@ And SubscriptionAttributeDescription='500 guías a Q19.80 c/u.'
   SET  Tag = NULL
   WHERE IdCatSubscription = @IdCatSubscriptionMICRO 
 
+  UPDATE [DeliveryBackOffice].[dbo].[CatSubscription]
+  SET  Tag = NULL
+  WHERE IdCatSubscription = @IdCatSubscriptionGOLD
+
 
 COMMIT TRANSACTION;
 SELECT 1 AS [StatusCode], 'Proceso finalizado exitosamente!!' AS[MessageResponse]
