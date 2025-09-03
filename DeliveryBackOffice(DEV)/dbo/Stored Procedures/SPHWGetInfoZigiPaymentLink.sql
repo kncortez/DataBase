@@ -9,16 +9,23 @@
 -- Create date: <2025-08-21>
 -- Description:	<Se agrega actualizacion de la bandera para solicitud de link zigi enviado por whatsapp.>
 -- =============================================
+-- =============================================
+-- System:		<API>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-09-03>
+-- Description:	<Si se recibe PhoneNumber distinto a null, se usa el recibido y se modifica en la tabla PaymentZigi para ser usado; si es null, se usa el de la tabla DeliveryOrder.>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWGetInfoZigiPaymentLink]
 (
   @GuideNumber INT
  ,@GuideSerie NVARCHAR(50)
  ,@Token NVARCHAR(200) = 'SYS-SPHWGetInfoZigiPaymentLink'
+ ,@PhoneNumber NVARCHAR(20) = NULL
 )
 AS
 BEGIN
 
-	IF EXISTS(SELECT 1 FROM PaymentZigi WITH(NOLOCK) WHERE GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie AND ZigiLinkStatus = 'PAID')
+	IF EXISTS(SELECT 1 FROM PaymentZigi WHERE GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie AND ZigiLinkStatus = 'PAID')
 	BEGIN
 			SELECT  201 AS IdResult,
 			'Guia ha sido pagada' AS [Message],
@@ -53,6 +60,12 @@ BEGIN
 	WHERE RowStatus = 1 AND LinkRequestSent = 1 AND PaymentConfirmSent = 0 AND ZigiLinkStatus = 'CREATED' 
 	AND GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie;
 
+	-- ACTUALIZAR PhoneNumber en la tabla PaymentZigi, aunque no se haya enviado, esto favorece el flujo de Zigi desde EXC
+	UPDATE DeliveryBackOffice.dbo.PaymentZigi
+	SET PhoneNumber = @PhoneNumber
+	WHERE RowStatus = 1 AND PaymentConfirmSent = 0 AND ZigiLinkStatus = 'CREATED' 
+	AND GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie;
+
 	SELECT  200 AS IdResult,
 				'Guia tiene link asociado' AS [Message],
 				ZI.ZigiLink,
@@ -61,7 +74,7 @@ BEGIN
 				ZI.PaidAmount AS Amount,
 				IIF(DO.Receiver_FirstName = '',DO.Receiver_Alternant_FullName,DO.Receiver_FirstName) AS ReceiverName,
 				DO.Receiver_LastName AS ReceiverLastName,
-				DO.Receiver_Phone AS Phone,
+				ISNULL(ZI.PhoneNumber, DO.Receiver_Phone) AS Phone,
 				DO.ReceiverCountryId AS IdCountry,
 				CC.Symbol 
 		FROM PaymentZigi ZI WITH(NOLOCK)
