@@ -9,6 +9,12 @@
 -- Create date: <2025-08-28>
 -- Description:	<Se agregan 2 campos de la tabla DefaultValuesPerCountry para obtener la expresion regular y el numero de Whatsapp y que sea dinámico>
 -- =============================================
+-- System:		<SMS_Sender>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-09-03>
+-- Description:	<El campo WhatsappNumber puede venir el asignado para la guía, o si se personalizó, usará el que viene desde la tabla PaymentZigi, esto último beneficia a links pedidos desde EXC para uniguías y multiguías>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sms_ZigiSend]
 	@Token NVARCHAR(50) = 'SYS_ZigiSMSender'
 AS
@@ -48,7 +54,7 @@ BEGIN
 	-- Insertar pendientes de envio de link
 	INSERT INTO #WhatsappRecipientZigi
 	SELECT 
-		   DO.Receiver_Phone
+		   ISNULL(Z.PhoneNumber, DO.Receiver_Phone)
 		 , DO.StatusOrderId
 		 , 1	--Tipo de mensaje: Solicitud de link
 		 , 0
@@ -75,7 +81,7 @@ BEGIN
 	WHERE Z.RowStatus = 1 AND Z.LinkRequestSent = 0 AND Z.PaymentConfirmSent = 0 AND Z.ZigiLinkStatus = 'CREATED' AND DC.DefaultPerCountry = 1
 	UNION 
 	SELECT 
-		   DO.Receiver_Phone
+		   ISNULL(Z.PhoneNumber, DO.Receiver_Phone)
 		 , DO.StatusOrderId
 		 , 0
 		 , 1	--Tipo de mensaje: Confirmacion de pago de link
@@ -89,7 +95,7 @@ BEGIN
 		 , CCC.Symbol
 		 , Z.ZigiLink
 		 , DPC.RegxMovilPhone
-		 , DPC.WhatsappNumber
+		 , ISNULL(Z.PhoneNumber, DPC.WhatsappNumber)
 	FROM DeliveryBackOffice.dbo.PaymentZigi Z WITH (NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 		ON Z.GuideSerie = DO.Guide_Serie AND Z.GuideNumber = DO.Guide_Number
