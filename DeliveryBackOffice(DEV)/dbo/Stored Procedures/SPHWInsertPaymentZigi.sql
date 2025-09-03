@@ -3,6 +3,10 @@
 -- Create date: <2025-11-04>
 -- Description:	<ZIGI - Insertar informacion de nuevo link de pago zigi>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-09-03>
+-- Description:	<ZIGI - Se agrega campo de PhoneNumber por si se desea personalizar el número a donde enviar el link, y no solo al relacionado con la Guía, además sirve para casos de multiguías>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @GuideNumber        INT,
@@ -15,7 +19,8 @@ CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @PaidAmount         DECIMAL(10,2),
     @CollectValue       DECIMAL(10,2),
     @CODValue           DECIMAL(10,2),
-    @Token              NVARCHAR(50)
+    @Token              NVARCHAR(50),
+    @PhoneNumber NVARCHAR(20) = NULL
 AS
 BEGIN
     BEGIN TRY
@@ -32,7 +37,8 @@ BEGIN
             CollectValue,
             CODValue,
             DateCreated,
-            TokenCreated
+            TokenCreated,
+            PhoneNumber
         )
         VALUES
         (
@@ -47,7 +53,8 @@ BEGIN
             @CollectValue,
             @CODValue,
             GETDATE(),
-            @Token
+            @Token,
+            @PhoneNumber
         );
 		SELECT 200 [IdResult],
 			'Link Creado' AS [Message],
