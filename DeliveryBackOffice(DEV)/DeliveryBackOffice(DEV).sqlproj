@@ -360,6 +360,7 @@
     <Build Include="dbo\Tables\IncidentTypeRelation.sql" />
     <Build Include="dbo\Tables\Incident.sql" />
     <Build Include="dbo\Tables\IncidenceServices.sql" />
+    <Build Include="dbo\Tables\IncidenceStatusMapping.sql" />
     <Build Include="dbo\Tables\IncidenceDynamicQuestion.sql" />
     <Build Include="dbo\Tables\IncidenceDynamicInput.sql" />
     <Build Include="dbo\Tables\IncidenceActionByTypeIncidence.sql" />
@@ -1564,6 +1565,7 @@
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataForJSONAeropost.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataUEForJSON.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForJSON.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
