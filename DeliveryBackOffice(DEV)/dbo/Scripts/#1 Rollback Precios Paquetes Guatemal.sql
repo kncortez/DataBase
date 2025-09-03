@@ -229,7 +229,7 @@ UPDATE dbo.CatSubscriptionAtribute
       DateUpdated=GETDATE(),
 	  TokenUpdated='SYS-EVASQUEZ'
 where CatSubscriptionId=@IdCatSubscriptionGOLD
-And SubscriptionAttributeDescription='200 guías a Q25.20 c/u.'
+And SubscriptionAttributeDescription='200 guías a Q22.00 c/u.'
 
 UPDATE dbo.CatSubscriptionAtribute
   SET SubscriptionAttributeDescription='200 guías a Q28.00 c/u.',
