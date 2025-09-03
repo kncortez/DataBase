@@ -229,7 +229,7 @@ UPDATE dbo.CatSubscriptionAtribute
       DateUpdated=GETDATE(),
 	  TokenUpdated='SYS-EVASQUEZ'
 where CatSubscriptionId=@IdCatSubscriptionGOLD
-And SubscriptionAttributeDescription='200 guías a Q25.20 c/u.'
+And SubscriptionAttributeDescription='200 guías a Q22.00 c/u.'
 
 UPDATE dbo.CatSubscriptionAtribute
   SET SubscriptionAttributeDescription='200 guías a Q28.00 c/u.',
@@ -275,6 +275,10 @@ And SubscriptionAttributeDescription='500 guías a Q19.80 c/u.'
  UPDATE [DeliveryBackOffice].[dbo].[CatSubscription]
   SET  Tag = NULL
   WHERE IdCatSubscription = @IdCatSubscriptionMICRO 
+
+  UPDATE [DeliveryBackOffice].[dbo].[CatSubscription]
+  SET  Tag = NULL
+  WHERE IdCatSubscription = @IdCatSubscriptionGOLD
 
 
 COMMIT TRANSACTION;
