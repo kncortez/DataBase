@@ -60,7 +60,7 @@ BEGIN
 
 					SELECT 
 						200																										AS	[IdResult]
-						, '!Listo¡ Hemos generado tu link de pago'																AS	[Title]
+						, '¡Listo! Hemos generado tu link de pago'																AS	[Title]
 						, 'En breve recibirás un mensaje por WhatsApp con el enlace para realizar tu pago de forma segura.' 	AS	[Message]
 						, CASE
 							WHEN DO.IdDeliveryOption = @IdDeliveryOption 
@@ -106,7 +106,7 @@ BEGIN
 			BEGIN
 				SELECT
 					  203																									AS	[IdResult]
-					, '!Listo¡ Hemos enviado tu link de pago'																AS	[Title]
+					, '¡Listo! Hemos enviado tu link de pago'																AS	[Title]
 					, 'En breve recibirás un mensaje por WhatsApp con el enlace para realizar tu pago de forma segura.' 	AS	[Message]
 			END
 		END
