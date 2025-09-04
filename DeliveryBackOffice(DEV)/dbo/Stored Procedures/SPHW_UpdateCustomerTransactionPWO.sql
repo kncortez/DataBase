@@ -28,9 +28,10 @@ BEGIN
 
 
             -- Flujo normal de spws_set_facapidelcreditcardtransaction
-            SELECT @IdTransaction = ISNULL([IdTransaction], 0)
-            FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH (NOLOCK)
-            WHERE [CCTBC].TransactionStain = @TransactionStain
+            SELECT @IdTransaction = ISNULL([IdTransaction], 0),
+			       @OrderNumber   = ISNULL(OrderNumber,'') 
+            FROM [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH (NOLOCK)
+            WHERE [CCTBC].Signature = @Signature
                   
       
              IF (@IdTransaction > 0)
@@ -38,7 +39,7 @@ BEGIN
 
 			      IF(@CardNumber<>null)
 				   BEGIN
-						UPDATE DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+						UPDATE [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer]
 						SET [System] = @System
 						  , CardNumber = @CardNumber
 						  , [Signature] = @Signature
@@ -54,7 +55,7 @@ BEGIN
 					END
 					   ELSE
 					   BEGIN
-					        UPDATE DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+					        UPDATE [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer]
 							SET 
 							    ReasonCode = @ReasonCode
 							  , ReasonDescription = @ReasonDescription
@@ -70,7 +71,8 @@ BEGIN
             END
 		    
 			 SELECT @Code    AS   'Code',
-                    @Description AS [Description]
+                    @Description AS [Description],
+					@OrderNumber AS 'OrderNumber'
 
             COMMIT TRANSACTION LogTransactionTypeOne;
         END TRY
@@ -79,6 +81,7 @@ BEGIN
 
 			SELECT 0    AS   'Code'
              , 'Error' AS [Description]
+			 , @OrderNumber AS 'OrderNumber'
 
         END CATCH;
 
