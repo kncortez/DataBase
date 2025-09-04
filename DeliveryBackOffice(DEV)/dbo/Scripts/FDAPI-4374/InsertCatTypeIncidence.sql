@@ -22,7 +22,7 @@ BEGIN TRY
     IF NOT EXISTS (
         SELECT 1 
         FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] 
-        WHERE [NameIncidence] = 'Zona roja o inaccecible'
+        WHERE [NameIncidence] = 'Zona roja o inaccesible'
         AND [CountryId] = 'HN'
     )
     BEGIN
@@ -32,7 +32,7 @@ BEGIN TRY
                 [IsForcedIncidence],[ValidatesLocation],[HasConfirmationProcess],[NotifiesOrigin],
                 [NameIncidencePublic],[EvidenceRequirement],[CourierInstructions],[CountryId])
         VALUES
-            ('Zona roja o inaccecible','Zona roja o inaccecible',1,'SYS-TGARCIA',GETDATE(),
+            ('Zona roja o inaccecible','Zona roja o inaccesible',1,'SYS-TGARCIA',GETDATE(),
                 NULL,NULL,'DELIVERY',1,NULL,1,1,0,1,1,NULL,1,NULL,'HN');
     END;
 
