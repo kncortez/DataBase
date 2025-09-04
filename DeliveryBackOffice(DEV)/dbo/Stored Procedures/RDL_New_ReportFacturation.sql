@@ -3177,7 +3177,7 @@ BEGIN
 						AND CAST(DOR.DateCreated AS DATE) <= CAST(@EndDate AS DATE)
 						AND @DATE1 = @DATE2
 			)
-			AND ISNULL(DOR.SenderCountryId,'GT') = @IdCountry
+			AND  COALESCE(INH.inv_certificationFEL, '') = ''
 
 			SELECT 
 				Ultimo_estado AS 'Último estado',
