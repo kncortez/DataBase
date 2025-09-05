@@ -23,7 +23,8 @@ BEGIN
               , @Hub             AS NVARCHAR(20)
               , @StatusGuide     AS NVARCHAR(20)
               , @StatusDelivered AS INT
-              , @HubCourier      AS NVARCHAR(25);
+              , @HubCourier      AS NVARCHAR(25)
+			  , @StatusArribal AS INT;
         --Encabezados
         DECLARE @EncabezadoRastreo TABLE
         (
@@ -36,6 +37,12 @@ BEGIN
         (
             SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Entregado'
         );
+
+		SET @StatusArribal =
+		(
+			SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Arribó a las instalaciones'
+		);
+
 
         ----NOTA EL HUB QUEDA PENDIENTE DE VALIDAR, SEGUN SEAN LOS NUEVOS REQUERIMIENTOS
         SELECT @SenderName   = CONCAT(ISNULL(DO.Sender_FirstName, ''), ' ', ISNULL(DO.Sender_LastName, ''))
@@ -560,7 +567,8 @@ BEGIN
               , @HasDry       BIT
               , @HasCold      BIT
               , @HasLatitude  BIT
-              , @HasLongitude BIT;
+              , @HasLongitude BIT
+			  , @ConfirmGuide NVARCHAR(10);
 
         -- Consultamos los valores y asignamos las variables
         SET @HasImagePath = IIF(
@@ -668,6 +676,16 @@ BEGIN
                               , 1
                               , 0);
 
+		SET @ConfirmGuide = 
+		(
+			SELECT CASE WHEN DO.StatusOrderId = @StatusArribal THEN 'true' ELSE 'false' END 
+			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+			WHERE DO.Guide_Serie = @GuideSerie
+				AND DO.Guide_Number = @GuideNumber
+		);
+
+		
+
         --Banderas
         SELECT ISNULL(@f1, 'false')                                                                         AS 'flagRescheduleDelivery'
              , ISNULL(@f2, 'false')                                                                         AS 'flagChangeAdress'
@@ -676,7 +694,8 @@ BEGIN
              , IIF(@HasImagePath = 1, 'true', IIF(@HasDry = 1, 'true', IIF(@HasCold = 1, 'true', 'false'))) AS 'flagShowImage'
              , IIF(@HasLatitude = 1 AND @HasLongitude = 1, 'true', 'false')                                 AS 'flagShowMapa'
              , 'true'                                                                                       AS 'flagRequestHelp' --Esta bandera siempre va visible para frontend
-             , ISNULL(@f5, 'false')                                                                         AS 'flagQualify';
+             , ISNULL(@f5, 'false')                                                                         AS 'flagQualify'
+			 , @ConfirmGuide																				AS 'flagConfirmAdress';
 
     END TRY
     BEGIN CATCH
