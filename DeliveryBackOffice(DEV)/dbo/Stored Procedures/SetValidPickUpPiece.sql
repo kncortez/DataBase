@@ -60,13 +60,16 @@ BEGIN
 							AND SP.SchedulePickupId =@IdPickup
 		)
 
-
-        SELECT TOP 1
-            @TokenAct = RowStatus,
-            @hourtoken = DATEDIFF(HOUR, DateCreated, GETDATE())
-        FROM LogTokenPOD WITH (NOLOCK)
-        WHERE LogTokenPOD = @Token 
-        ORDER BY DateCreated DESC
+        ;WITH t AS (
+            SELECT TOP (1) RowStatus, DateCreated
+              FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
+             WHERE LogTokenPOD = @Token
+             ORDER BY DateCreated DESC
+        )
+        SELECT @TokenAct  = t.RowStatus,
+               @hourtoken = DATEDIFF(HOUR, t.DateCreated, GETDATE())
+          FROM t
+        OPTION (FAST 1);
 
         IF ((@TokenAct = 1 AND @hourtoken <= 8) OR 1 = 1)
         BEGIN
