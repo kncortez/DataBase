@@ -12,6 +12,10 @@
 -- Description:	 <Se elimina variable @StatusChange innecesaria, se quita el collete, se agrega parámetro country en info de notificaciones de entrega, 
 --                se cambia consulta repetitiva que obtiene el statusid, se agrega validación para clientes que requieren el país>
 -- =============================================
+-- Author:		 <Tito Garcia>
+-- Updated date: <2025-09-05>
+-- Description:	 <Se agrega notificación de estado 50 (Incidencia validada)>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetWebhookDataForJSON]
     @WebhookTrackingQueueId BIGINT,
     @WebhookTypeId INT,
@@ -20,6 +24,7 @@ AS
 BEGIN
     DECLARE @StatusId AS INT;
     DECLARE @IsCountryRequired AS BIT;
+    DECLARE @RestrictValidatedIncidents AS BIT;
 
     --========================================================================================================
     --===                                       STATUS CHANGE                                              ===
@@ -35,7 +40,9 @@ BEGIN
                 GuideStatus NVARCHAR(200),
                 GuideStatusId INT,
                 GuideStatusChange DATETIME,
-				IsCountryRequired BIT
+				IsCountryRequired BIT,
+				CustomerId INT,
+				RestrictValidatedIncidents BIT
             );
             INSERT INTO @GuideStatusResponseTable
             (
@@ -44,7 +51,9 @@ BEGIN
                 GuideStatus,
                 GuideStatusId,
                 GuideStatusChange,
-				IsCountryRequired
+				IsCountryRequired,
+				CustomerId,
+				RestrictValidatedIncidents
             )
             SELECT WTQ.GuideSerie,
                    WTQ.GuideNumber,
@@ -59,7 +68,9 @@ BEGIN
                              AND DOD.StatusOrderId = WTQ.StatusOrderId
                        ORDER BY DOD.DateCreated DESC
                    ) 'GuideStatusChange',
-				   WE.IsCountryRequired
+				   WE.IsCountryRequired,
+				   WTQ.CustomerId,
+				   WE.RestrictValidatedIncidents
             FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
                 INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
                     ON WTQ.StatusOrderId = SO.StatusOrderId
@@ -72,7 +83,7 @@ BEGIN
                        AND WRBY.RowStatus = 1
             WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId;
 
-			SELECT @StatusId = GuideStatusId, @IsCountryRequired = IsCountryRequired
+			SELECT @StatusId = GuideStatusId, @IsCountryRequired = IsCountryRequired, @RestrictValidatedIncidents = RestrictValidatedIncidents
 			FROM @GuideStatusResponseTable;
 
             IF (EXISTS (SELECT 1 FROM @GuideStatusResponseTable))
@@ -210,6 +221,42 @@ BEGIN
                     ) DAP;
 
                 END;
+                ELSE IF (@StatusId IN ( 50 )) /* Incidencia validada */
+                BEGIN
+
+					SELECT 
+						GSRT.GuideSerie  AS [GuideSerie],
+						GSRT.GuideNumber  AS [GuideNumber],
+						GSRT.GuideStatus  AS [GuideStatus],
+						GSRT.GuideStatusId AS [GuideStatusId],
+						GSRT.GuideStatusChange AS [GuideStatusChange],
+						ISNULL(DAP.Path_Dry, '') AS [ImageEvidence],
+						ISNULL(DO.NameOfReceiver, '') AS [ReceiverName],
+						ISNULL(DAP.Longitude, '') AS [Longitude],
+						ISNULL(DAP.Latitude, '') AS [Latitude]
+					FROM @GuideStatusResponseTable GSRT
+					OUTER APPLY
+					(
+						SELECT TOP 1
+							   DA.Longitude AS Longitude,
+							   DA.Latitude AS Latitude,
+							   DP.Path_Dry AS Path_Dry
+						FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+						INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+							ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+						LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryProof] DP WITH (NOLOCK)
+							ON DA.ID_Proof = DP.ID
+						WHERE GSRT.GuideSerie = DA.Guide_Serie
+							  AND GSRT.GuideNumber = DA.Guide_Number
+							  AND DA.Delivered = 1
+							  AND COI.IsConfirmed = 1
+							  AND COI.StatusOrderId = @StatusId
+						ORDER BY DA.Date_Created DESC
+					) DAP
+					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+						ON GSRT.GuideSerie = DO.Guide_Serie
+					   AND GSRT.GuideNumber = DO.Guide_Number;
+                END
                 ELSE
                 BEGIN
 
