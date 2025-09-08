@@ -230,8 +230,8 @@
     <Build Include="dbo\Tables\SettlementByPickupDetail.sql" />
     <Build Include="dbo\Tables\SettlementByPickup.sql" />
     <Build Include="dbo\Tables\Settlement.sql" />
-    <Build Include="dbo\Tables\SettlementMapping.sql" />    
-    <Build Include="dbo\Tables\SetIntegrationForzaUELog.sql" />    
+    <Build Include="dbo\Tables\SettlementMapping.sql" />
+    <Build Include="dbo\Tables\SetIntegrationForzaUELog.sql" />
     <Build Include="dbo\Tables\ServicesConfig.sql" />
     <Build Include="dbo\Tables\ServiceZoneConfiguration.sql" />
     <Build Include="dbo\Tables\ServiceTownshipConfiguration.sql" />
@@ -356,7 +356,7 @@
     <Build Include="dbo\Tables\InvoiceBatchDetailLinehaul.sql" />
     <Build Include="dbo\Tables\InvoiceBatchDetail.sql" />
     <Build Include="dbo\Tables\InternalUser.sql" />
-    <Build Include="dbo\Tables\IntegrationForzaUELog.sql" />    
+    <Build Include="dbo\Tables\IntegrationForzaUELog.sql" />
     <Build Include="dbo\Tables\IncidentTypeRelation.sql" />
     <Build Include="dbo\Tables\Incident.sql" />
     <Build Include="dbo\Tables\IncidenceServices.sql" />
@@ -589,7 +589,7 @@
     <Build Include="dbo\Tables\CatArticleSAP.sql" />
     <Build Include="dbo\Tables\CatArticleCategorySAP.sql" />
     <Build Include="dbo\Tables\CatArticle.sql" />
-    <Build Include="dbo\Tables\ArticleMapping.sql" />    
+    <Build Include="dbo\Tables\ArticleMapping.sql" />
     <Build Include="dbo\Tables\CatActionByServiceType.sql" />
     <Build Include="dbo\Tables\CatAccountTypeCOD.sql" />
     <Build Include="dbo\Tables\CATLINEHAUL_BK.sql" />
@@ -766,7 +766,7 @@
     <Build Include="dbo\Stored Procedures\sps_set_finishService.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_finishDeliveryService.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_finishPickupService.sql" />
-    <Build Include="dbo\Stored Procedures\sps_set_finishReturnService.sql" />    
+    <Build Include="dbo\Stored Procedures\sps_set_finishReturnService.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_finisTransfer.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_delivery_attempt.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_cancelGuide.sql" />
@@ -2059,6 +2059,8 @@
     <Build Include="dbo\User Defined Types\TblBuyerInfo.sql" />
     <Build Include="dbo\Tables\CatTypeIdentifationDocument.sql" />
     <Build Include="dbo\Tables\InformationBuyerInvoice.sql" />
+    <Build Include="dbo\Tables\Deposit.sql" />
+    <Build Include="dbo\Tables\RelDepositManifest.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
