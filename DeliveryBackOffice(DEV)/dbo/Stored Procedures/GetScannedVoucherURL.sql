@@ -21,8 +21,7 @@ BEGIN
 	FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH(NOLOCK)
 		ON CP.IdCountry = DO.SenderCountryId
-			AND CP.Name = @ConfigParamName
 	WHERE DO.Guide_Serie = @_serie
-		AND DO.Guide_Number IS NOT NULL
-		AND DO.Guide_Number IN (SELECT Item FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@_number, ','));		
+		AND DO.Guide_Number IN (SELECT Item FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@_number, ','))
+		AND CP.Name = @ConfigParamName;		
 END
