@@ -51,12 +51,9 @@ begin
 		(
 			select ih.inv_pk_id
 			from [dbo].[invoiceHeader] ih with (nolock)
-			LEFT JOIN dbo.InvoiceBatchHeader ibh with (nolock) ON ih.inv_serieFEL = ibh.CAI
 			where ih.inv_certificationFEL = @fel
 			AND ISNULL(ih.IdCountry,'GT') = @IdCountry
 			AND ih.inv_serieFEL = @CAI
-			--AND ibh.RowStatus = 1
-			AND ibh.TypeDocument = 1
 		);
 	END
 
