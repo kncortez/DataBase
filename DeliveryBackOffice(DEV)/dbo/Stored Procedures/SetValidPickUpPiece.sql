@@ -69,7 +69,7 @@ BEGIN
         SELECT @TokenAct  = t.RowStatus,
                @hourtoken = DATEDIFF(HOUR, t.DateCreated, GETDATE())
           FROM t
-        OPTION (FAST 1);
+        OPTION (RECOMPILE);
 
         IF ((@TokenAct = 1 AND @hourtoken <= 8) OR 1 = 1)
         BEGIN
