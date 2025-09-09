@@ -479,8 +479,8 @@ BEGIN
 					DECLARE @RestrictValidatedIncidents BIT;
 
 					SELECT top 1 @TypeConnect = TypeConnectionId, @RestrictValidatedIncidents = wh.RestrictValidatedIncidents 
-					FROM WebhookEndpoint wh
-					INNER JOIN WebhookCatTypeConnection wc
+					FROM WebhookEndpoint wh WITH (NOLOCK)
+					INNER JOIN WebhookCatTypeConnection wc WITH (NOLOCK)
 						ON wh.TypeConnectionId = wc.IdCatTypeConnection
 					WHERE wh.CustomerId = @WebhookCustomerId;							
 
