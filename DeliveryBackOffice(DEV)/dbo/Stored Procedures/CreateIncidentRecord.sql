@@ -547,7 +547,8 @@ BEGIN
 									AND do.Guide_Number = dop.GuideNumber
 								INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 									ON do.IdCustomer = WHE.CustomerId
-								WHERE do.Guide_Number = @GuideNumber
+								WHERE do.Guide_Serie = @GuideSerie
+                                    AND do.Guide_Number = @GuideNumber
 									AND WHE.TypeConnectionId = 2
 								GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -580,7 +581,8 @@ BEGIN
 									AND do.Guide_Number = dop.GuideNumber
 								INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 									ON do.IdCustomer = WHE.CustomerId
-								WHERE do.Guide_Number = @GuideNumber
+								WHERE do.Guide_Serie = @GuideSerie
+                                    AND do.Guide_Number = @GuideNumber
 									AND dop.ExternalPieceId IS NOT NULL
 									AND WHE.TypeConnectionId = 2
 								GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -618,9 +620,10 @@ BEGIN
 								ON dop.GuideSerie = gpt.GuideSerie and --HOTFIX BNHL 14/11/2024 no tenía serie
 								dop.GuideNumber = gpt.GuideNumber
 							INNER JOIN @PiecesGuideRelatedTable pgt
-								ON gpt.GuideNumber = pgt.GuideNumber
-								WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-									AND WHE.TypeConnectionId = 2;							
+                                ON gpt.GuideSerie = pgt.GuideSerie
+								    AND gpt.GuideNumber = pgt.GuideNumber
+							WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
+								AND WHE.TypeConnectionId = 2;							
 
                         END
 					END
@@ -677,11 +680,11 @@ BEGIN
                        @OriginRouteId = RP.CatRouteId
                 FROM [DeliveryBackOffice].[dbo].[RoutePreparation]           RP WITH (NOLOCK)
                     INNER JOIN DeliveryBackOffice.dbo.RoutePreparationDetail RPD WITH (NOLOCK)
-                        ON RPD.Guide_Serie = @GuideSerie
-                           AND RPD.Guide_Number = @GuideNumber
-                           AND RPD.RowStatus = 1
-                           AND RP.IdRoutePreparation = RPD.RoutePreparationId
+                           ON RP.IdRoutePreparation = RPD.RoutePreparationId
                 WHERE RP.RowStatus = 1
+                        AND RPD.Guide_Serie = @GuideSerie
+                        AND RPD.Guide_Number = @GuideNumber
+                        AND RPD.RowStatus = 1
                 ORDER BY RP.DateRoutePreparation DESC;
 
                 -------- Obtener  Id de ruta de preparación del encabezado, esto si ya existe solo se inserta detalle

@@ -14,7 +14,7 @@
 -- =============================================
 -- Author:		 <Tito Garcia>
 -- Updated date: <2025-09-05>
--- Description:	 <Se agrega notificación de estado 50 (Incidencia validada)>
+-- Description:	 <Se agrega notificación de estado 50 (Incidencia validada), se elimina collate innecesario>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetWebhookDataForJSON]
     @WebhookTrackingQueueId BIGINT,
@@ -139,7 +139,7 @@ BEGIN
                                 SELECT TOP (1)
                                        [CCCOD].[IdCatConceptCOD]
                                 FROM [DeliveryBackOffice].[dbo].[CatConceptCOD] CCCOD WITH (NOLOCK)
-                                WHERE [CCCOD].[Concept] = 'PAGO DE LA GUIA' COLLATE Latin1_General_CI_AI
+                                WHERE [CCCOD].[Concept] = 'PAGO DE LA GUIA'
                             );
 
                     SELECT TOP (1)
