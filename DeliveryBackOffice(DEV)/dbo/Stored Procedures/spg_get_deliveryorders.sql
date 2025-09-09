@@ -115,6 +115,7 @@ BEGIN
 				AND CONVERT(DATE, serv.DateCreated) BETWEEN @DateIni AND @DateFin
 				AND serv.StatusOrderId <> 7 -- No guías anuladas
 				AND serv.StatusOrderId <> 15 -- No guías generadas
+    OPTION(RECOMPILE)  
 		END
 		ELSE
 		BEGIN
