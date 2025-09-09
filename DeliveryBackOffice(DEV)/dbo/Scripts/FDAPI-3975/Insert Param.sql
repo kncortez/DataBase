@@ -9,24 +9,33 @@ BEGIN TRY
         FROM [dbo].[ConfigParams] 
         WHERE [Name] = 'BaseURL'
         AND [Value] = 'https://tracking.forzadelivery.com'
+        AND IdCountry = 'GT'
     )
     BEGIN
         INSERT INTO [dbo].[ConfigParams]
-                   ([Name]
-                   ,[Description]
-                   ,[Value]
-                   ,[Status]
-                   ,[CreateDate]
-                   ,[IdCountry]
-                   ,[IdCurrencyCOD])
+                   ([Name],[Description],[Value],[Status],[CreateDate],[IdCountry],[IdCurrencyCOD])
              VALUES
-                   ('BaseURL'
-                   ,'Base para URL que muestra el comprobante de entrega escaneado'
-                   ,'https://tracking.forzadelivery.com'
-                   ,1
-                   ,GETDATE()
-                   ,NULL
-                   ,NULL)
+                   ('BaseURL','Base para URL que muestra el comprobante de entrega escaneado','https://tracking.forzadelivery.com',1,GETDATE(),'GT',NULL)
+        
+        PRINT 'Registro insertado exitosamente.'
+    END
+    ELSE
+    BEGIN
+        PRINT 'El registro ya existe. No se realizó la inserción.'
+    END
+
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM [dbo].[ConfigParams] 
+        WHERE [Name] = 'BaseURL'
+        AND [Value] = 'https://tracking.forzadelivery.com'
+        AND IdCountry = 'HN'
+    )
+    BEGIN
+        INSERT INTO [dbo].[ConfigParams]
+                   ([Name],[Description],[Value],[Status],[CreateDate],[IdCountry],[IdCurrencyCOD])
+             VALUES
+                   ('BaseURL','Base para URL que muestra el comprobante de entrega escaneado','https://tracking.forzadelivery.com',1,GETDATE(),'HN',NULL)
         
         PRINT 'Registro insertado exitosamente.'
     END
@@ -35,6 +44,26 @@ BEGIN TRY
         PRINT 'El registro ya existe. No se realizó la inserción.'
     END
     
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM [dbo].[ConfigParams] 
+        WHERE [Name] = 'BaseURL'
+        AND [Value] = 'https://tracking.forzadelivery.com'
+        AND IdCountry = 'SV'
+    )
+    BEGIN
+        INSERT INTO [dbo].[ConfigParams]
+                   ([Name],[Description],[Value],[Status],[CreateDate],[IdCountry],[IdCurrencyCOD])
+             VALUES
+                   ('BaseURL','Base para URL que muestra el comprobante de entrega escaneado','https://tracking.forzadelivery.com',1,GETDATE(),'SV',NULL)
+        
+        PRINT 'Registro insertado exitosamente.'
+    END
+    ELSE
+    BEGIN
+        PRINT 'El registro ya existe. No se realizó la inserción.'
+    END
+
     COMMIT TRANSACTION
     
 END TRY

@@ -5,7 +5,7 @@
 -- =============================================
 -- Author:		<Tito Garcia>
 -- Updated date: <11/07/2025>
--- Description:	<Se agrega la base de la URL ya que cambio la respuesta de la función>
+-- Description:	<Se agrega la base de la URL ya que cambio la respuesta de la función fn_get_document_image_url>
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHW_GetDeliveryVoucherURL]
 @GuideSerie NVARCHAR(2),
@@ -17,10 +17,12 @@ BEGIN
 
     BEGIN TRY
 		DECLARE @IsVoucherRequired INT;
-		DECLARE @URL VARCHAR(300);
-		DECLARE @URLBase VARCHAR(50);
+		DECLARE @URL NVARCHAR(300);
+		DECLARE @URLBase NVARCHAR(50);
+		DECLARE @CountryId NVARCHAR(2);
 
-		SELECT @IsVoucherRequired = c.IsVoucherRequired
+		SELECT @IsVoucherRequired = c.IsVoucherRequired,
+			@CountryId = do.SenderCountryId
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH(NOLOCK)
             ON do.IdCustomer = c.IdCustomer
@@ -31,7 +33,7 @@ BEGIN
 		
 		IF @IsVoucherRequired = 1
 		BEGIN			
-			SET @URLBase = (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams WHERE Name = 'BaseURL');
+			SET @URLBase = (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams WHERE Name = 'BaseURL' AND IdCountry = @CountryId);
 			SET @URL = CONCAT(@URLBase,(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@GuideSerie + CAST(@GuideNumber AS VARCHAR(50))) as VARCHAR(300))));
 
 			IF @URL IS NULL OR @URL = ''
