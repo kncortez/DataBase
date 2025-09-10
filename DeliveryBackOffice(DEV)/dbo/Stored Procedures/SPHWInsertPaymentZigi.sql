@@ -7,6 +7,10 @@
 -- Create date: <2025-09-03>
 -- Description:	<ZIGI - Se agrega campo de PhoneNumber por si se desea personalizar el número a donde enviar el link, y no solo al relacionado con la Guía, además sirve para casos de multiguías>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-09-09>
+-- Description:	<ZIGI - Se agrega la inserción de campos como PhoenNumber y IsGroup. Retorna el Id del registro, y devuelve el nuevo registro creado, no otro si en caso existiera>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @GuideNumber        INT,
@@ -20,10 +24,38 @@ CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @CollectValue       DECIMAL(10,2),
     @CODValue           DECIMAL(10,2),
     @Token              NVARCHAR(50),
-    @PhoneNumber NVARCHAR(20) = NULL
+    @PhoneNumber        NVARCHAR(20) = NULL,
+    @IsGroup    BIT = 0
 AS
 BEGIN
     BEGIN TRY
+
+        DECLARE @NewZigiPaymentId INT;
+
+        -- DESACTIVA REGISTRO EN CASO DE CREAR OTRO (APLICA SOLO PARA MULTIGUIAS)
+		IF @IsGroup = 1
+		BEGIN
+
+		    -- ACTUALIZACIÓN EN PaymentZigiMulti BASADA EN LOS RESULTADOS DE PaymentZigi (Guía, grupo, activo)
+                UPDATE [dbo].[PaymentZigiMulti]
+                SET RowStatus = 0
+                WHERE Id_PaymentZigi IN (
+                    SELECT ZigiPaymentId
+                    FROM [dbo].[PaymentZigi]
+                    WHERE GuideSerie = @GuideSerie
+                      AND GuideNumber = @GuideNumber
+                      AND IsGroup = 1
+                      AND RowStatus = 1
+                );
+
+		    -- Desactiva registros previos --
+		    UPDATE [dbo].[PaymentZigi] SET RowStatus = 0
+                WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber
+                        AND IsGroup = 1
+		                AND RowStatus = 1;
+		END;
+        
+        -- Inserción en la tabla PaymentZigi
         INSERT INTO [dbo].[PaymentZigi]
         (
             GuideNumber,
@@ -38,7 +70,8 @@ BEGIN
             CODValue,
             DateCreated,
             TokenCreated,
-            PhoneNumber
+            PhoneNumber,
+            IsGroup
         )
         VALUES
         (
@@ -54,10 +87,17 @@ BEGIN
             @CODValue,
             GETDATE(),
             @Token,
-            @PhoneNumber
+            @PhoneNumber,
+            @IsGroup
         );
-		SELECT 200 [IdResult],
-			'Link Creado' AS [Message],
+
+        -- Obtenemos el ID del registro recién insertado
+        SET @NewZigiPaymentId = CONVERT(INT, SCOPE_IDENTITY());
+
+        -- Devolvemos los resultados finales como confirmación
+        SELECT 200 AS [IdResult],
+            PZ.ZigiPaymentId,
+            'Link Creado' AS [Message],
 			@ZigiLink		AS [ZigiLink],
 			@GuideNumber	AS GuideNumber,
 			@GuideSerie		AS GuideSerie,
@@ -67,24 +107,26 @@ BEGIN
 			do.Receiver_Phone AS Phone,
 			DO.ReceiverCountryId AS IdCountry,
 			CC.Symbol
-			FROM DeliveryOrder DO WITH(NOLOCK)
+        FROM dbo.PaymentZigi PZ WITH (NOLOCK)
+            LEFT JOIN DeliveryOrder DO WITH(NOLOCK)
+                ON PZ.GuideSerie = DO.Guide_Serie AND PZ.GuideNumber = DO.Guide_Number
 			LEFT JOIN Cost CS WITH(NOLOCK)
 				ON CS.GuideNumber = DO.Guide_Number
 			AND CS.GuideSerie = DO.Guide_Serie
 			LEFT JOIN CatCurrencyCOD CC WITH(NOLOCK)
 				ON ISNULL(CS.CodCurrency,1) = CC.IdCatCurrencyCOD
-			WHERE DO.Guide_Number = @GuideNumber
-			AND DO.Guide_Serie = @GuideSerie
+        WHERE PZ.ZigiPaymentId = @NewZigiPaymentId;
 
-		RETURN;
+        RETURN;
+
     END TRY
     BEGIN CATCH
-        -- Capturar información del error
+        -- Manejo de errores
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
         DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
         DECLARE @ErrorState INT = ERROR_STATE();
-        
+
         RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
-        
     END CATCH;
 END;
+go
