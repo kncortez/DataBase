@@ -1,0 +1,18 @@
+alter table dbo.PaymentZigi
+    add IsGroup BIT default 0 not null
+go
+
+exec sp_addextendedproperty 'MS_Description', N'Define si este link define el pago deun grupo de guías', 'SCHEMA',
+     'dbo', 'TABLE', 'PaymentZigi', 'COLUMN', 'IsGroup'
+go
+
+
+alter table dbo.PaymentZigiMulti
+    add RowStatus BIT default 1 not null
+go
+
+exec sp_addextendedproperty 'MS_Description', N'Indicador si el registro está vigente', 'SCHEMA', 'dbo', 'TABLE',
+     'PaymentZigiMulti', 'COLUMN', 'RowStatus'
+go
+
+

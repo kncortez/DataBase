@@ -13,8 +13,11 @@
 -- Create date: <2025-09-03>
 -- Description:	<Si se recibe PhoneNumber distinto a null, se usa el recibido y se modifica en la tabla PaymentZigi para ser usado; si es null, se usa el de la tabla DeliveryOrder.>
 -- =============================================
-
-
+-- System:		<API>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-09-09>
+-- Description:	<Se discriminan las guías agrupadas>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWGetInfoZigiPaymentLink]
 (
   @GuideNumber INT
@@ -91,4 +94,7 @@ BEGIN
 		AND DC.DefaultPerCountry = 1
 		AND ZI.ZigiLinkStatus = 'CREATED'
 		AND ZI.RowStatus = 1
+        AND ZI.IsGroup != 1
 END
+go
+

@@ -25,8 +25,13 @@
 -- =============================================
 -- =============================================
 -- Author:		<Bilkar Morataya>
+-- Create date: <2025-08-22>
+-- Description:	<Se agrega el campo CODAmount.>
+-- =============================================
+-- Author:		<Bilkar Morataya>
 -- Create date: <2025-08-28>
 -- Description:	<Se agrega campos RegxMovilPhone y WhatsappNumber.>
+
 -- =============================================
 --exec [dbo].[spg_dsms_PhoneBook] 
 --@MaxDeliveryDate = '2022-03-09 17:21:42.180',@ElementId = 1001
@@ -203,7 +208,7 @@ BEGIN
        END AS InsuranceAmount,
 	   CCU.Symbol,
 	    (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) AS Amount,
-	    CO.CODAmount,
+		CO.CODAmount AS CODAmount,
         CTV.Name,
        CVE.Plate,
 	   DPC.PrefixNumber,
@@ -333,7 +338,7 @@ BEGIN
        END AS InsuranceAmount,
 	    CCU.Symbol,
 	    (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) AS Amount,
-	    CO.CODAmount,
+		CO.CODAmount AS CODAmount,
         CTV.Name,
        CVE.Plate,
 	   DPC.PrefixNumber,
@@ -455,8 +460,8 @@ BEGIN
 		,pb._InsuranceAmount
 	    ,pb._Currency
 	    ,pb._Amount
-        ,pb._CODAmount,
-         pb._VehicleType
+		,pb._CODAmount
+        ,pb._VehicleType
         ,pb._VehiclePlate
 		,pb._NirPhone
 	    ,pb._RegxMovilPhone
