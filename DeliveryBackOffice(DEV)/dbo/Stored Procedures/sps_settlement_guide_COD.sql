@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-11-25>
 -- Description:	<Registrar transacción de liquidación (cobro) de guías en área de COD>
@@ -7,6 +6,10 @@
 -- Author:		<Oscar, Rodriguez>
 -- Create date: <2020-12-12>
 -- Description:	<Se agrego actualizacion de estado COBRADO para guias COD Anticipado>
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Create date: <2025-09-10>
+-- Description:	<Se agrega información que relaciona depositos de Efectibox con los manifiestos>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
     @GuideSerie NVARCHAR(2),
@@ -22,8 +25,8 @@ CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
 	@CountryId NVARCHAR(5) = 'GT',
 	@RouteId INT = 0,
 	@TotalNumberOfPieces INT = 0,
-	@CatManifestSettlementIncidenceTypeId INT = 0
-
+	@CatManifestSettlementIncidenceTypeId INT = 0,
+	@Deposits TblDeposit READONLY
 AS
 BEGIN
     -- control transacción
@@ -388,6 +391,204 @@ BEGIN
 		BEGIN
             SET @ValidateOperation = @ValidateOperation + 1;
 	    END
+
+		--Guardar depositos y relacion con su manifiesto
+
+		IF OBJECT_ID('tempdb..#DepParam') IS NOT NULL
+			DROP TABLE #DepParam;
+
+		CREATE TABLE #DepParam
+		(
+			RowId                INT IDENTITY(1,1) PRIMARY KEY,
+			TransactionNumber    BIGINT          NOT NULL,
+			TransactionDate      DATETIME        NOT NULL,
+			TransactionCode      INT             NOT NULL,
+			Reference            NVARCHAR(15)    NOT NULL,
+			Amount               DECIMAL(19,4)   NOT NULL,
+			Balance              DECIMAL(19,4)   NOT NULL,
+			UserIdDeposit        NVARCHAR(50)    NOT NULL,
+			UserNameDeposit      NVARCHAR(50)    NOT NULL,
+			UserNickNameDeposit  NVARCHAR(50)    NOT NULL,
+			UserDocumentNumber   NVARCHAR(20)    NOT NULL,
+			CurrencyISO          NVARCHAR(10)    NOT NULL,
+			CurrencyIdExternal   INT             NOT NULL,
+			ClientIdExternal     BIGINT          NOT NULL,
+			ClientCardCode       NVARCHAR(15)    NOT NULL,
+			ClientNameExternal   NVARCHAR(500)   NOT NULL,
+			VisitPointIdExternal BIGINT          NOT NULL,
+			VisitPointName       NVARCHAR(100)   NOT NULL,
+			BankIdExternal       INT             NOT NULL,
+			BankCardCode         NVARCHAR(50)    NOT NULL,
+			BankNameExternal     NVARCHAR(50)    NOT NULL,
+			BankAccountNumber    NVARCHAR(50)    NOT NULL,
+			BankAccountIsMak     BIT             NOT NULL,
+			BankAccountIsIBAN    BIT             NOT NULL,
+			BankAccountIsSWIFT   BIT             NOT NULL,
+			TerminalId           INT             NOT NULL,
+			TerminalSerie        NVARCHAR(50)    NOT NULL
+		);
+
+		INSERT INTO #DepParam
+		(
+			TransactionNumber, TransactionDate, TransactionCode, Reference,
+			Amount, Balance, UserIdDeposit, UserNameDeposit, UserNickNameDeposit, UserDocumentNumber,
+			CurrencyISO, CurrencyIdExternal, ClientIdExternal, ClientCardCode, ClientNameExternal,
+			VisitPointIdExternal, VisitPointName, BankIdExternal, BankCardCode, BankNameExternal,
+			BankAccountNumber, BankAccountIsMak, BankAccountIsIBAN, BankAccountIsSWIFT,
+			TerminalId, TerminalSerie
+		)
+		SELECT
+			d.TransactionNumber, d.TransactionDate, d.TransactionCode, d.Reference,
+			d.Amount, d.Balance, d.UserIdDeposit, d.UserNameDeposit, d.UserNickNameDeposit, d.UserDocumentNumber,
+			d.CurrencyISO, d.CurrencyIdExternal, d.ClientIdExternal, d.ClientCardCode, d.ClientNameExternal,
+			d.VisitPointIdExternal, d.VisitPointName, d.BankIdExternal, d.BankCardCode, d.BankNameExternal,
+			d.BankAccountNumber, d.BankAccountIsMak, d.BankAccountIsIBAN, d.BankAccountIsSWIFT,
+			d.TerminalId, d.TerminalSerie
+		FROM @Deposits AS d;
+
+		DECLARE @row     INT = 1;
+		DECLARE @rowMax  INT = (SELECT MAX(RowId) FROM #DepParam);
+
+		-- Variables por fila
+		DECLARE
+			@TransactionNumber    BIGINT,
+			@TransactionDate      DATETIME,
+			@TransactionCode      INT,
+			@Reference            NVARCHAR(15),
+			@Amount               DECIMAL(19,4),
+			@BalanceParam         DECIMAL(19,4),
+			@UserIdDeposit        NVARCHAR(50),
+			@UserNameDeposit      NVARCHAR(50),
+			@UserNickNameDeposit  NVARCHAR(50),
+			@UserDocumentNumber   NVARCHAR(20),
+			@CurrencyISO          NVARCHAR(10),
+			@CurrencyIdExternal   INT,
+			@ClientIdExternal     BIGINT,
+			@ClientCardCode       NVARCHAR(15),
+			@ClientNameExternal   NVARCHAR(500),
+			@VisitPointIdExternal BIGINT,
+			@VisitPointName       NVARCHAR(100),
+			@BankIdExternal       INT,
+			@BankCardCode         NVARCHAR(50),
+			@BankNameExternal     NVARCHAR(50),
+			@BankAccountNumber    NVARCHAR(50),
+			@BankAccountIsMak     BIT,
+			@BankAccountIsIBAN    BIT,
+			@BankAccountIsSWIFT   BIT,
+			@TerminalId           INT,
+			@TerminalSerie        NVARCHAR(50),
+			@IdDeposit            BIGINT,
+			@CurrentBalance       DECIMAL(19,4),
+			@Applied              DECIMAL(19,4);
+
+		WHILE @row <= @rowMax
+		BEGIN
+
+			SELECT
+				@TransactionNumber    = TransactionNumber,
+				@TransactionDate      = TransactionDate,
+				@TransactionCode      = TransactionCode,
+				@Reference            = Reference,
+				@Amount               = Amount,
+				@BalanceParam         = Balance,
+				@UserIdDeposit        = UserIdDeposit,
+				@UserNameDeposit      = UserNameDeposit,
+				@UserNickNameDeposit  = UserNickNameDeposit,
+				@UserDocumentNumber   = UserDocumentNumber,
+				@CurrencyISO          = CurrencyISO,
+				@CurrencyIdExternal   = CurrencyIdExternal,
+				@ClientIdExternal     = ClientIdExternal,
+				@ClientCardCode       = ClientCardCode,
+				@ClientNameExternal   = ClientNameExternal,
+				@VisitPointIdExternal = VisitPointIdExternal,
+				@VisitPointName       = VisitPointName,
+				@BankIdExternal       = BankIdExternal,
+				@BankCardCode         = BankCardCode,
+				@BankNameExternal     = BankNameExternal,
+				@BankAccountNumber    = BankAccountNumber,
+				@BankAccountIsMak     = BankAccountIsMak,
+				@BankAccountIsIBAN    = BankAccountIsIBAN,
+				@BankAccountIsSWIFT   = BankAccountIsSWIFT,
+				@TerminalId           = TerminalId,
+				@TerminalSerie        = TerminalSerie
+			FROM #DepParam
+			WHERE RowId = @row;
+
+			SET @Applied = @Amount - @BalanceParam;
+			IF @Applied < 0 SET @Applied = 0;
+
+			SELECT
+				@IdDeposit      = d.IdDeposit,
+				@CurrentBalance = d.Balance
+			FROM dbo.Deposit AS d WITH (UPDLOCK)
+			WHERE d.TransactionNumber = @TransactionNumber;
+
+			IF @IdDeposit IS NOT NULL
+			BEGIN
+				UPDATE dbo.Deposit
+				   SET Balance      = CASE WHEN @CurrentBalance - @Applied < 0 THEN 0 ELSE @CurrentBalance - @Applied END,
+					   TokenUpdated = @Token,
+					   DateUpdated  = GETDATE()
+				 WHERE IdDeposit = @IdDeposit;
+			END
+			ELSE
+			BEGIN
+				INSERT INTO dbo.Deposit
+				(
+					TransactionNumber, TransactionDate, TransactionCode, Reference,
+					Amount, Balance,
+					UserIdDeposit, UserNameDeposit, UserNickNameDeposit, UserDocumentNumber,
+					CurrencyISO, CurrencyIdExternal, ClientIdExternal, ClientCardCode, ClientNameExternal,
+					VisitPointIdExternal, VisitPointName,
+					BankIdExternal, BankCardCode, BankNameExternal, BankAccountNumber,
+					BankAccountIsMak, BankAccountIsIBAN, BankAccountIsSWIFT,
+					TerminalId, TerminalSerie,
+					RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated
+				)
+				VALUES
+				(
+					@TransactionNumber, @TransactionDate, @TransactionCode, @Reference,
+					@Amount, @BalanceParam,  -- balance inicial según parámetro
+					@UserIdDeposit, @UserNameDeposit, @UserNickNameDeposit, @UserDocumentNumber,
+					@CurrencyISO, @CurrencyIdExternal, @ClientIdExternal, @ClientCardCode, @ClientNameExternal,
+					@VisitPointIdExternal, @VisitPointName,
+					@BankIdExternal, @BankCardCode, @BankNameExternal, @BankAccountNumber,
+					@BankAccountIsMak, @BankAccountIsIBAN, @BankAccountIsSWIFT,
+					@TerminalId, @TerminalSerie,
+					1, @Token, GETDATE(), NULL, NULL
+				);
+
+				SET @IdDeposit = SCOPE_IDENTITY();
+			END
+
+			INSERT INTO dbo.RelDepositManifest
+			(
+				IdDeposit,
+				DeliveryOrderBySettlementId,
+				AmountApplied,
+				RowStatus,
+				TokenCreated,
+				DateCreated,
+				TokenUpdated,
+				DateUpdated
+			)
+			VALUES
+			(
+				@IdDeposit,
+				@IdDeliveryOrderBySettlement,
+				@Applied,
+				1,
+				@Token,
+				GETDATE(),
+				NULL,
+				NULL
+			);
+
+			SET @row = @row + 1;
+		END
+
+		IF OBJECT_ID('tempdb..#DepParam') IS NOT NULL
+			DROP TABLE #DepParam;
 
     END TRY
     BEGIN CATCH
