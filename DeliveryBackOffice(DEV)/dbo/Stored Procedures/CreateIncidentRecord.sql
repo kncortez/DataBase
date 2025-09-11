@@ -198,11 +198,11 @@ BEGIN
             UPDATE [COI]
             SET [COI].[ValidGeolocationEvidence] = ISNULL(@ValidGeolocationEvidence, 0)
               , [COI].[ValidPhotographicEvidence] = ISNULL(@ValidPhotographicEvidence, 0)
-            FROM [dbo].[DeliveryOrder]                     [DO]
+            FROM [dbo].[DeliveryOrder]                     [DO] WITH (NOLOCK)
                 INNER JOIN [dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
                     ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
                        AND [DO].[Guide_Number] = [DA].[Guide_Number]
-                INNER JOIN [dbo].[ConfirmationOfIncidence] COI
+                INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                     ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
             WHERE DA.Guide_Serie = @GuideSerie
                   AND DA.Guide_Number = @GuideNumber
@@ -254,7 +254,7 @@ BEGIN
 							INNER JOIN [dbo].[DeliveryOrderDetail]     DOD WITH (NOLOCK)
 								ON DA.Guide_Serie = DOD.Guide_Serie
 								   AND DA.Guide_Number = DOD.Guide_Number
-							INNER JOIN [dbo].[CatTypeIncidence] CTP
+							INNER JOIN [dbo].[CatTypeIncidence] CTP WITH (NOLOCK)
 								ON DA.ID_Incident = CTP.IdIncidenceType
 						WHERE DA.Guide_Serie = @GuideSerie
 							  AND DA.Guide_Number = @GuideNumber
