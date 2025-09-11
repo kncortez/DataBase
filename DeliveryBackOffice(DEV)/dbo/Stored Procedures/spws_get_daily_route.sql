@@ -13,6 +13,10 @@
 -- Create date: <2024-09-04>
 -- Description:	<Se agrega validación de si fue pagado por Zigi, sin embargo, se deja comentado hasta validar si hay afectación en facturación en POD>
 -- =============================================
+-- Author:		<Tito García>
+-- Create date: <2024-09-04>
+-- Description:	<Se agrega nuevo campo en consulta de entregas y devoluciones para mostrarse en POD>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_daily_route]
     @Token VARCHAR(200) = '',
     @IdCourier BIGINT,
