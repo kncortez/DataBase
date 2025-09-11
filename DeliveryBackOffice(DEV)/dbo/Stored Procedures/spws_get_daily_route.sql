@@ -270,9 +270,9 @@ BEGIN
       , CODAmount
       , ReturnRates
     )
-    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Gu�as
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Guías
                                               , @InTime = 3                        -- Entrega
-                                              , @IsReturn = 1                      -- Devoluci�n
+                                              , @IsReturn = 1                      -- Devolución
                                               , @CodeApp = 'SIFDCECOM300720201459' -- CodeApp
                                               , @IdModule = 1
                                               , @Token = @Token;
@@ -686,7 +686,8 @@ BEGIN
                0
            ELSE
                0
-       END FlagEXP
+       END FlagEXP,
+	   DOR.IndicationsToSendDestination
           INTO #DatasetDelivery
 		FROM
 		(
@@ -799,7 +800,7 @@ BEGIN
           SELECT ServiceType,CodeOfReference,DeliveryOption,IsLastMileReturn,CAST(Id AS NVARCHAR) AS Id,TicketNumber,ServiceManagementId,Sender,[Address],
                  Sender_Phone,Phone,PiecesDry,PiecesCold,ScheduleStart,ScheduleEnd,Photo,Latitude,Longitude,[Precision],Price_COD,
                  Price,Pickup,customerName,alterName,NumImageEvidence,[Status],HighPriority,Alerts,CurrencyPrice_CodeISO,CurrencyPrice_CODSymbol,
-                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP
+                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP, IndicationsToSendDestination
             FROM #DatasetDelivery;
 
           CREATE TABLE #AllData (IdAllData NVARCHAR(70) PRIMARY KEY); -- Ajusta el tipo de dato
