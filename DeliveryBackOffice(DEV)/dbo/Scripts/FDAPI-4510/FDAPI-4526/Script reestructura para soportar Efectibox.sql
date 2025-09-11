@@ -3,7 +3,6 @@
 -- Create date: <2025-09-03>
 -- Description:	<Script que se utiliza para agregar nueva estructura de tablas para proyecto Efectibox>
 -- =============================================
-
 BEGIN TRY
     BEGIN TRANSACTION;
 
