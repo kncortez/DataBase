@@ -64,7 +64,7 @@ BEGIN
 		  SET @AccountId =
             (
                 SELECT [A].[AccIdAccount]
-                FROM [dbo].[Account] A
+                FROM [dbo].[Account] A  WITH (NOLOCK)
                 WHERE [A].[IdCustomer] = @CustomerId
             );
         DECLARE @AddedPointExpirationDate INT = 0;
@@ -150,7 +150,7 @@ BEGIN
 								 , @TaxName         = NameTax
 								 , @InvoiceEmail    = InvoiceEmail
 								 , @IsAutoRenewable = GetRenovacionAutomatica
-							FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates]
+							FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK)
 							WHERE OrderNumber = @OrderNumber;
 
 							
@@ -158,7 +158,7 @@ BEGIN
                 (
                     SELECT TOP 1
                            1
-                    FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates]
+                    FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK)
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage = 'MEMBERSHIP'
                 )
@@ -175,7 +175,7 @@ BEGIN
 							SELECT TOP 1
 								   @StatusMembershipt  = 1
 								 , @ActiveMembershipId = IdMembership
-							FROM [DeliveryBackOffice].[dbo].[Membership]
+							FROM [DeliveryBackOffice].[dbo].[Membership] WITH (NOLOCK)
 							WHERE AccountId = @IdAcount
 								  AND RowStatus = 1;
 
@@ -383,7 +383,7 @@ BEGIN
                              , @Token
                              , GETDATE()
                         FROM [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange]                     CMDR WITH (NOLOCK)
-                            INNER JOIN [DeliveryBackOffice].[dbo].RegistrationofTransactionProcessStates RT WITH (NOLOCK)
+                            INNER JOIN [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RT WITH (NOLOCK)
                                 ON CMDR.CatMembershipId = RT.IdSalePackage
                             CROSS JOIN @AuxNewMembership                                                 ANM
                         WHERE RT.OrderNumber = @OrderNumber;
@@ -452,7 +452,7 @@ BEGIN
                 (
                     SELECT TOP 1
                            1
-                    FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates]
+                    FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK)
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage != 'MEMBERSHIP'
                 )
