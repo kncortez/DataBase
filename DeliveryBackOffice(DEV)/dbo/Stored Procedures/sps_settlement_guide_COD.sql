@@ -439,6 +439,9 @@ BEGIN
 			FROM #DepParam
 			WHERE RowId = @row;
 
+			SET @IdDeposit      = NULL;
+			SET @CurrentBalance = NULL;
+
 			SET @Applied = @Amount - @BalanceParam;
 			IF @Applied < 0 SET @Applied = 0;
 
