@@ -73,15 +73,6 @@ BEGIN TRY
         WHERE IdCountry IS NULL;
     END;
 
-    IF EXISTS(SELECT TOP 1 1 FROM invoiceHeader WITH(NOLOCK) WHERE IdCountry IS NULL)
-    BEGIN
-        UPDATE invoiceHeader
-        SET IdCountry = 'GT',
-            inv_tokenUpdate = 'SYS-BPEDROZA',
-            inv_dateUpdate = GETDATE()
-        WHERE IdCountry IS NULL;
-    END;
-
     COMMIT TRANSACTION;
     PRINT 'Actualización completada exitosamente.';
 
