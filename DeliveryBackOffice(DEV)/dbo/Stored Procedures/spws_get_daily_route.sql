@@ -384,10 +384,10 @@ BEGIN
 									LEFT JOIN dbo.Province p WITH (NOLOCK)
 									    ON t.IdProvince =p.IdProvince
 				LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CP  WITH (NOLOCK)
-					ON  CP.[IdCountry] = ISNULL(vpc.CountryId,'GT')
+					ON  CP.[IdCountry] = vpc.CountryId
 						AND CP.[Name] = 'AreaCode'
 				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
-					ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
+					ON  de.Currency_IdCountry = vpc.CountryId
 					AND de.DefaultPerCountry = 1
 				LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
 					ON ce.TargetCurrency = de.IdCurrencyCOD
@@ -777,10 +777,10 @@ BEGIN
 		) DFG
 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPS   WITH (NOLOCK)
-			ON  CPS.[IdCountry] = ISNULL(dor.SenderCountryId,'GT')
+			ON  CPS.[IdCountry] = dor.SenderCountryId
 			AND CPS.[Name] = 'AreaCode'
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPR   WITH (NOLOCK)
-			ON  CPR.[IdCountry] = ISNULL(dor.ReceiverCountryId, 'GT')
+			ON  CPR.[IdCountry] = dor.ReceiverCountryId
 			AND CPR.[Name] = 'AreaCode'
 
 		WHERE	CAST(DSD.DateCreated AS DATE) = @DateRoute
