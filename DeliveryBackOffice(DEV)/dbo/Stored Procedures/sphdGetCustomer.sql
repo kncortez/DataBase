@@ -35,6 +35,10 @@
 -- Update date: <2025-08-14>
 -- Description:	<Guias Rapidas - Obtiene campos que indica si restringue uso a tarifario por articulo>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2025-08-14>
+-- Description:	<Facturacion SV - Se quita validacion isnull al consultar tabla customer>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer AS INT = -1
@@ -60,7 +64,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
@@ -75,7 +79,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
+			  AND cst.CountryID = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -146,7 +150,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
     END;
 
@@ -163,7 +167,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
@@ -177,7 +181,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
+			  AND cst.CountryID = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -249,7 +253,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-              AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+              AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
     END;
@@ -268,7 +272,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
@@ -282,7 +286,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
+			  AND cst.CountryID = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -294,7 +298,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 	END;
 
@@ -312,7 +316,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
@@ -326,7 +330,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-              AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
+              AND cst.CountryID = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -339,7 +343,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			 AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			 AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 	END;
     -- Facturacion El Salvador

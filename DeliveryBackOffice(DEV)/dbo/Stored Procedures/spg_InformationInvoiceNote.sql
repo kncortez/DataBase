@@ -7,6 +7,10 @@
 -- Modified:	<30 Julio 2025>
 -- Description:	<Facturacion SV - Obtener informacion de factura para SV>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2025-09-11>
+-- Description:	<Facturacion SV - se quita validacion isnull al consultar tabla invoiceHeader>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_InformationInvoiceNote]
     -- Add the parameters for the stored procedure here
     @fel nvarchar(100),
@@ -27,7 +31,7 @@ begin
 			select inv_pk_id
 			from [dbo].[invoiceHeader] with (nolock)
 			where inv_certificationFEL = @fel
-			AND ISNULL(IdCountry,'GT') = @IdCountry
+			AND IdCountry = @IdCountry
 		);
 	END
 	ELSE IF(@IdCountry = 'SV')
@@ -37,7 +41,7 @@ begin
 			select inv_pk_id
 			from [dbo].[invoiceHeader] with (nolock)
 			where inv_numberFEL = @fel
-			AND ISNULL(IdCountry,'GT') = @IdCountry
+			AND IdCountry = @IdCountry
 			AND CatInvoiceTypeId = @IdTypeDocument
 		);
 	END
@@ -49,10 +53,10 @@ begin
 			from [dbo].[invoiceHeader] ih with (nolock)
 			LEFT JOIN dbo.InvoiceBatchHeader ibh with (nolock) ON ih.inv_serieFEL = ibh.CAI
 			where ih.inv_certificationFEL = @fel
-			AND ISNULL(ih.IdCountry,'GT') = @IdCountry
+			AND ih.IdCountry = @IdCountry
 			AND ih.inv_serieFEL = @CAI
-			AND ibh.RowStatus = 1
-			AND ibh.TypeDocument = 1
+            AND ibh.RowStatus = 1
+            AND ibh.TypeDocument = 1
 		);
 	END
 
