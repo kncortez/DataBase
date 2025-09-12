@@ -47,7 +47,7 @@ BEGIN
     -- Detecta si una guia tiene COD
     DECLARE @IsCOD BIT;
 
-
+	
     BEGIN TRANSACTION;
 
     BEGIN TRY
@@ -310,89 +310,14 @@ BEGIN
         WHERE Quantity IS NOT NULL
               AND Quantity > 0;
 
-        IF COALESCE(@@rowcount, 0) > 0
+		IF COALESCE(@@rowcount, 0) > 0
 		BEGIN
             SET @ValidateOperation = @ValidateOperation + 1;
 		END
 
-        --Si se presenta una contingencia se registra
-        IF @IsIncident = 1
-        BEGIN
-
-			SELECT @CourierId = ID_Courier FROM DeliveryOrderBySettlement WHERE ID = @IdDeliveryOrderBySettlement
-
-            INSERT INTO [dbo].[Contingency]
-            (
-                [DeliveryOrderBySettlementId],
-                [Type],
-                [Value],
-                [Description],
-                [TokenCreated],
-                [DateCreated]
-            )
-            VALUES
-            (@IdDeliveryOrderBySettlement, @Type, @Value, @Description, @Token, GETDATE());
-
-			INSERT INTO [dbo].[ManifestSettlementIncidence]
-			   ([CatRouteId]
-			   ,[CourierId]
-			   ,[ManifestNumber]
-			   ,[TotalAmount]
-			   ,[GuidesQuantity]
-			   ,[TotalNumberOfPieces]
-			   ,[IncidenceApproved]
-			   ,[IdValidator]
-			   ,[CatManifestSettlementIncidenceTypeId]
-			   ,[IncidenceComment]
-			   ,[ResolutionComment]
-			   ,[CountryId]
-			   ,[RowStatus]
-			   ,[DateCreated]
-			   ,[TokenCreated]
-			   ,[isCOD])
-		 VALUES
-			   (@RouteId
-			   ,@CourierId
-			   ,@IdDeliveryOrderBySettlement
-			   ,@Value
-			   ,@GuideQuantityCOD
-			   ,@TotalNumberOfPieces
-			   ,0
-			   ,NULL
-			   ,@CatManifestSettlementIncidenceTypeId
-			   ,@Description
-			   ,NULL
-			   ,@CountryId
-			   ,1
-			   ,GETDATE()
-			   ,@Token
-			   ,1)
-
-            IF COALESCE(@@rowcount, 0) > 0
-			BEGIN
-                SET @ValidateOperation = @ValidateOperation + 1;
-			END
-
-        END;
-        ELSE
-        BEGIN
-            SET @ValidateOperation = @ValidateOperation + 1;
-        END;
-
-        -- Actualizar registro en control de manifiestos de despacho
-        UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
-        SET User_Received_COD = @Token,
-            Date_Received_COD = GETDATE(),
-            Guides_Received_COD = @GuideQuantityCOD,
-            Route_Received_COD = GETDATE()
-        WHERE ID = @IdDeliveryOrderBySettlement;
-
-        IF COALESCE(@@rowcount, 0) > 0
-		BEGIN
-            SET @ValidateOperation = @ValidateOperation + 1;
-	    END
-
-		--Guardar depositos y relacion con su manifiesto
+		--=================================================================
+		--======== Guardar depositos y relacion con su manifiesto =========
+		--=================================================================
 
 		IF OBJECT_ID('tempdb..#DepParam') IS NOT NULL
 			DROP TABLE #DepParam;
@@ -520,16 +445,19 @@ BEGIN
 			SELECT
 				@IdDeposit      = d.IdDeposit,
 				@CurrentBalance = d.Balance
-			FROM dbo.Deposit AS d WITH (UPDLOCK)
+			FROM DeliveryBackOffice.dbo.Deposit AS d WITH (NOLOCK)
 			WHERE d.TransactionNumber = @TransactionNumber;
 
 			IF @IdDeposit IS NOT NULL
 			BEGIN
 				UPDATE dbo.Deposit
-				   SET Balance      = CASE WHEN @CurrentBalance - @Applied < 0 THEN 0 ELSE @CurrentBalance - @Applied END,
+				   SET Balance      = CASE WHEN @BalanceParam < 0 THEN 0 ELSE @BalanceParam END,
 					   TokenUpdated = @Token,
 					   DateUpdated  = GETDATE()
 				 WHERE IdDeposit = @IdDeposit;
+
+				 SET @Applied = @CurrentBalance - @BalanceParam;
+				 IF @Applied < 0 SET @Applied = 0;
 			END
 			ELSE
 			BEGIN
@@ -548,7 +476,7 @@ BEGIN
 				VALUES
 				(
 					@TransactionNumber, @TransactionDate, @TransactionCode, @Reference,
-					@Amount, @BalanceParam,  -- balance inicial según parámetro
+					@Amount, @BalanceParam, 
 					@UserIdDeposit, @UserNameDeposit, @UserNickNameDeposit, @UserDocumentNumber,
 					@CurrencyISO, @CurrencyIdExternal, @ClientIdExternal, @ClientCardCode, @ClientNameExternal,
 					@VisitPointIdExternal, @VisitPointName,
@@ -584,15 +512,102 @@ BEGIN
 				NULL
 			);
 
+			IF COALESCE(@@rowcount, 0) > 0
+			BEGIN
+				IF @ValidateOperation < 2
+				BEGIN
+					SET @ValidateOperation = @ValidateOperation + 1;
+				END
+			END
+
 			SET @row = @row + 1;
 		END
 
 		IF OBJECT_ID('tempdb..#DepParam') IS NOT NULL
 			DROP TABLE #DepParam;
+		--=================================================================
+		--===== Fin de Guardar depositos y relacion con su manifiesto =====
+		--=================================================================
 
+        --Si se presenta una contingencia se registra
+        IF @IsIncident = 1
+        BEGIN
+
+			SELECT @CourierId = ID_Courier FROM DeliveryOrderBySettlement WHERE ID = @IdDeliveryOrderBySettlement
+
+            INSERT INTO [dbo].[Contingency]
+            (
+                [DeliveryOrderBySettlementId],
+                [Type],
+                [Value],
+                [Description],
+                [TokenCreated],
+                [DateCreated]
+            )
+            VALUES
+            (@IdDeliveryOrderBySettlement, @Type, @Value, @Description, @Token, GETDATE());
+
+			INSERT INTO [dbo].[ManifestSettlementIncidence]
+			   ([CatRouteId]
+			   ,[CourierId]
+			   ,[ManifestNumber]
+			   ,[TotalAmount]
+			   ,[GuidesQuantity]
+			   ,[TotalNumberOfPieces]
+			   ,[IncidenceApproved]
+			   ,[IdValidator]
+			   ,[CatManifestSettlementIncidenceTypeId]
+			   ,[IncidenceComment]
+			   ,[ResolutionComment]
+			   ,[CountryId]
+			   ,[RowStatus]
+			   ,[DateCreated]
+			   ,[TokenCreated]
+			   ,[isCOD])
+		 VALUES
+			   (@RouteId
+			   ,@CourierId
+			   ,@IdDeliveryOrderBySettlement
+			   ,@Value
+			   ,@GuideQuantityCOD
+			   ,@TotalNumberOfPieces
+			   ,0
+			   ,NULL
+			   ,@CatManifestSettlementIncidenceTypeId
+			   ,@Description
+			   ,NULL
+			   ,@CountryId
+			   ,1
+			   ,GETDATE()
+			   ,@Token
+			   ,1)
+
+            IF COALESCE(@@rowcount, 0) > 0
+			BEGIN
+                SET @ValidateOperation = @ValidateOperation + 1;
+			END
+
+        END;
+        ELSE
+        BEGIN
+            SET @ValidateOperation = @ValidateOperation + 1;
+        END;
+		
+        -- Actualizar registro en control de manifiestos de despacho
+        UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
+        SET User_Received_COD = @Token,
+            Date_Received_COD = GETDATE(),
+            Guides_Received_COD = @GuideQuantityCOD,
+            Route_Received_COD = GETDATE()
+        WHERE ID = @IdDeliveryOrderBySettlement;
+		
+        IF COALESCE(@@rowcount, 0) > 0
+		BEGIN
+            SET @ValidateOperation = @ValidateOperation + 1;
+	    END
     END TRY
     BEGIN CATCH
-        SELECT 0 AS 'StatusCode',
+		SELECT 0 AS 'StatusCode',
                ERROR_MESSAGE() AS 'Description',
                CONVERT(BIGINT, 0) AS 'NumTransferID';
         ROLLBACK TRANSACTION;

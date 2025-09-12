@@ -3,11 +3,10 @@
 -- Create date: <2025-09-03>
 -- Description:	<Script que se utiliza para agregar nueva estructura de tablas para proyecto Efectibox>
 -- =============================================
-
 BEGIN TRY
     BEGIN TRANSACTION;
 
-	-- DEPÓSITOS
+	-- DEPÃ“SITOS
 	CREATE TABLE Deposit (
 	  IdDeposit				BIGINT			IDENTITY PRIMARY KEY,
 	  TransactionNumber		BIGINT			NOT NULL,
@@ -48,43 +47,43 @@ BEGIN TRY
 	CREATE INDEX IX_Deposit_TerminalSerie ON dbo.Deposit (TerminalSerie);
 	CREATE INDEX IX_Deposit_TransactionDate ON dbo.Deposit(TransactionDate);
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Registro de depósitos monetarios recibidos por Efectibox.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Registro de depÃ³sitos monetarios recibidos por Efectibox.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit';
 	
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del depósito (PK).',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del depÃ³sito (PK).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'IdDeposit';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de transacción externo (único).',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'NÃºmero de transacciÃ³n externo (Ãºnico).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'TransactionNumber';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora del depósito.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora del depÃ³sito.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'TransactionDate';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Código de la transacción de Efectibox (No necesariamente único).',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'CÃ³digo de la transacciÃ³n de Efectibox (No necesariamente Ãºnico).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'TransactionCode';
 
 	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Referencia externa (routeCode).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'Reference';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Importe total del depósito.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Importe total del depÃ³sito.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'Amount';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Saldo restante del depósito (Amount menos aplicaciones a manifiestos).',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Saldo restante del depÃ³sito (Amount menos aplicaciones a manifiestos).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'Balance';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID del usuario externo que registró el depósito.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID del usuario externo que registrÃ³ el depÃ³sito.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'UserIdDeposit';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del usuario externo que registró el depósito.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del usuario externo que registrÃ³ el depÃ³sito.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'UserNameDeposit';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Alias del usuario externo que registró el depósito.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Alias del usuario externo que registrÃ³ el depÃ³sito.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'UserNickNameDeposit';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificación del usuario externo que registró el depósito.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'IdentificaciÃ³n del usuario externo que registrÃ³ el depÃ³sito.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'UserDocumentNumber';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Código de moneda externo (idealmente ISO 4217).',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'CÃ³digo de moneda externo (idealmente ISO 4217).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'CurrencyISO';
 
 	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador externo de Efectibox de la moneda asociada al monto.',
@@ -93,7 +92,7 @@ BEGIN TRY
 	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del cliente/comercio externo.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'ClientIdExternal';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Código/tarjeta del cliente externo (cardCode).',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'CÃ³digo/tarjeta del cliente externo (cardCode).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'ClientCardCode';
 
 	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del cliente/comercio externo.',
@@ -108,46 +107,46 @@ BEGIN TRY
 	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del banco externo.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'BankIdExternal';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Código/tarjeta del banco externo.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'CÃ³digo/tarjeta del banco externo.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'BankCardCode';
 
 	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del banco externo.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'BankNameExternal';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de cuenta bancaria externa.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'NÃºmero de cuenta bancaria externa.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'BankAccountNumber';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Indicador específico externo.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Indicador especÃ­fico externo.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'BankAccountIsMak';
 
 	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Indicador externo booleano de si la cuenta utiliza formato IBAN.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'BankAccountIsIBAN';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Indicador externo booleano de si la cuenta posee código SWIFT.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Indicador externo booleano de si la cuenta posee cÃ³digo SWIFT.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'BankAccountIsSWIFT';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador externo de la terminal donde se procesó la transacción.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador externo de la terminal donde se procesÃ³ la transacciÃ³n.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'TerminalId';
 
 	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Serie o etiqueta de la terminal.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'TerminalSerie';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado lógico: 1=Activo, 0=Inactivo.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado lÃ³gico: 1=Activo, 0=Inactivo.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'RowStatus';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creación.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creaciÃ³n.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'TokenCreated';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora de creación del registro.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora de creaciÃ³n del registro.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'DateCreated';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de última actualización.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de Ãºltima actualizaciÃ³n.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'TokenUpdated';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora de la última actualización.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora de la Ãºltima actualizaciÃ³n.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Deposit', @level2type=N'COLUMN',@level2name=N'DateUpdated';
 
-	-- RELACIÓN N–a–N
+	-- RELACIÃ“N Nâ€“aâ€“N
 	CREATE TABLE RelDepositManifest (
 	  IdRelDepositManifest			BIGINT			IDENTITY PRIMARY KEY,
 	  IdDeposit						BIGINT			NOT NULL,
@@ -168,34 +167,34 @@ BEGIN TRY
     CREATE INDEX IX_Rel_Deposit_Settlement ON dbo.RelDepositManifest (IdDeposit, DeliveryOrderBySettlementId)
 	INCLUDE (AmountApplied, RowStatus, DateCreated);
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla puente N–a–N entre depósitos y manifiestos.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla puente Nâ€“aâ€“N entre depÃ³sitos y manifiestos.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de la relación (PK).',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de la relaciÃ³n (PK).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest', @level2type=N'COLUMN',@level2name=N'IdRelDepositManifest';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'FK al depósito (Deposit.IdDeposit).',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'FK al depÃ³sito (Deposit.IdDeposit).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest', @level2type=N'COLUMN',@level2name=N'IdDeposit';
 
 	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'FK al manifiesto (DeliveryOrderBySettlement.ID).',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest', @level2type=N'COLUMN',@level2name=N'DeliveryOrderBySettlementId';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Importe del depósito aplicado al manifiesto.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Importe del depÃ³sito aplicado al manifiesto.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest', @level2type=N'COLUMN',@level2name=N'AmountApplied';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado lógico: 1=Activo, 0=Inactivo.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado lÃ³gico: 1=Activo, 0=Inactivo.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest', @level2type=N'COLUMN',@level2name=N'RowStatus';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creación.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creaciÃ³n.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest', @level2type=N'COLUMN',@level2name=N'TokenCreated';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora de creación del registro.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora de creaciÃ³n del registro.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest', @level2type=N'COLUMN',@level2name=N'DateCreated';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de última actualización.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de Ãºltima actualizaciÃ³n.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest', @level2type=N'COLUMN',@level2name=N'TokenUpdated';
 
-	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora de la última actualización.',
+	EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha/hora de la Ãºltima actualizaciÃ³n.',
 	 @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RelDepositManifest', @level2type=N'COLUMN',@level2name=N'DateUpdated';
     
     COMMIT TRANSACTION;
