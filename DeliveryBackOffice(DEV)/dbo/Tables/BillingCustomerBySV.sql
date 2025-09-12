@@ -13,7 +13,9 @@ CREATE TABLE [dbo].[BillingCustomerBySV]
     DateCreated DATETIME NOT NULL,
     TokenUpdated VARCHAR(50) NULL,
     DateUpdated DATETIME NULL,
-	CONSTRAINT PK_BillingCustomerBySV PRIMARY KEY (Id),
+	IdProvince INT NULL, 
+    IdTownship INT NULL, 
+    CONSTRAINT PK_BillingCustomerBySV PRIMARY KEY (Id),
     CONSTRAINT FK_BillingCustomerBySV_District 
         FOREIGN KEY (DistrictId) 
         REFERENCES dbo.DistrictByBillingSV(Id),
@@ -25,7 +27,13 @@ CREATE TABLE [dbo].[BillingCustomerBySV]
         REFERENCES dbo.Customer(IdCustomer),
 	CONSTRAINT FK_BillingCustomerBySV_Activity
 		FOREIGN KEY (ActivityId) 
-		REFERENCES dbo.CatEconomicActivityBySV(Id)
+		REFERENCES dbo.CatEconomicActivityBySV(Id),
+	CONSTRAINT FK_BillingCustomerBySV_Province
+		FOREIGN KEY (IdProvince) 
+		REFERENCES dbo.Province(IdProvince),
+	CONSTRAINT FK_BillingCustomerBySV_Township
+		FOREIGN KEY (IdTownship) 
+		REFERENCES dbo.Township(IdTownship)
 );
 
 GO
@@ -179,3 +187,22 @@ EXEC sp_addextendedproperty
 						@level0name = N'dbo', 
 						@level1type = N'TABLE', 
 						@level1name = N'BillingCustomerBySV';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id de departemento asociado a cliente(Customer) para El Salvador',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingCustomerBySV',
+    @level2type = N'COLUMN',
+    @level2name = N'IdProvince'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id de township relacionado a cliente para El Salvador',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingCustomerBySV',
+    @level2type = N'COLUMN',
+    @level2name = N'IdTownship'
