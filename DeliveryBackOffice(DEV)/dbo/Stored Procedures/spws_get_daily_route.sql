@@ -9,6 +9,10 @@
 -- Create date: <2024-11-26>
 -- Description:	<Tracking - Se realiza validación de pago de envio en guías tipo collect.>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2024-09-04>
+-- Description:	<Se agrega validación de si fue pagado por Zigi, sin embargo, se deja comentado hasta validar si hay afectación en facturación en POD>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_daily_route]
     @Token VARCHAR(200) = '',
     @IdCourier BIGINT,
@@ -411,7 +415,7 @@ BEGIN
 				 [DeliveryOption],
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
 				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id],
-				 ISNULL(DOR.Ticket_Number, '') [TicketNumber],
+				 ISNULL(REPLACE(DOR.Ticket_Number, '"', ''), '') [TicketNumber],
 				 0 [ServiceManagementId],
 				 ISNULL(
 					ISNULL(
@@ -533,6 +537,14 @@ BEGIN
 				END [Longitude],
 				CONVERT(VARCHAR, ISNULL(VPC.Accuracy, 0)) [Precision],
 				CASE
+					-- WHEN
+                    --    (SELECT TOP 1 1 -- Validamos existencia con un valor sustituto de '1'
+                    --     FROM DeliveryBackOffice.dbo.PaymentZigi ZP WITH (NOLOCK)
+                    --     WHERE ZP.GuideSerie = DOR.Guide_Serie -- Validación de Serie de Guía
+                    --       AND ZP.GuideNumber = DOR.Guide_Number -- Validación de Número de Guía
+                    --       AND ZP.ZigiLinkStatus = 'PAID' -- La condición específica de estado
+                    --    ) IS NOT NULL -- Si existe al menos un registro
+                    -- THEN 0 -- En este caso, el precio COD retorna '0' porque ya está pagado por Zigi
 					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
 					THEN 0
 					ELSE
@@ -547,6 +559,14 @@ BEGIN
 							  )
 				END [Price_COD],
 				CASE 
+					-- WHEN
+                    --    (SELECT TOP 1 1 -- Validamos existencia con un valor sustituto de '1'
+                    --     FROM DeliveryBackOffice.dbo.PaymentZigi ZP WITH (NOLOCK)
+                    --     WHERE ZP.GuideSerie = DOR.Guide_Serie -- Validación de Serie de Guía
+                    --       AND ZP.GuideNumber = DOR.Guide_Number -- Validación de Número de Guía
+                    --       AND ZP.ZigiLinkStatus = 'PAID' -- La condición específica de estado
+                    --    ) IS NOT NULL -- Si existe al menos un registro
+                    -- THEN 0 -- En este caso, el precio COD retorna '0' porque ya está pagado por Zigi
 					WHEN DOR.IdDeliveryOption = @IdDeliveryOption THEN 0
 					ELSE 
 						CASE 
@@ -827,8 +847,4 @@ BEGIN
     IF OBJECT_ID('#AllData', 'U') IS NOT NULL
         DROP TABLE #AllData;
 END;
-GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[spws_get_daily_route] TO [cixtetela]
-    AS [dbo];
 

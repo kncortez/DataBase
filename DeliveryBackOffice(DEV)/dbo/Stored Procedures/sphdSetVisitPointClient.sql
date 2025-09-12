@@ -9,6 +9,11 @@
 -- Create date: <2023-03-31>
 -- Description:	<agragar campos para configuración de tiempo de facturación y volumen de facturación>
 -- =============================================
+-- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Update date: <2025-08-14>
+-- Description:	<Guias Rapidas - Se guarda nuevo campo RestrictionByArticle, indica si restringue uso a tarifario por articulo>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     -- Add the parameters for the stored procedure here
     @IdVisitPoint AS INT,
@@ -53,8 +58,8 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
 	@AllowScheduledPickups AS BIT = NULL,
 	@CatBillingTimeId INT = 0,
 	@CatBillingVolumeId INT = 0,
-	@BillingCut_offDate AS DATE=NULL
-
+	@BillingCut_offDate AS DATE=NULL,
+	@RestrictionByArticle AS BIT = 'FALSE'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -121,7 +126,8 @@ BEGIN
 						ExcludePriceShippingCOD,
 						ExcludeCommissionCOD,
 						CatBusinessSegmentId,
-						AllowScheduledPickups
+						AllowScheduledPickups,
+						RestrictionByArticle
                     )
                     VALUES
                     (   @CodeOfReference,        -- CodeOfReference - int
@@ -153,7 +159,8 @@ BEGIN
 						@CODExcludedPriceShipping,
 						@CODExcludedCommission,
 						@CatBusinessSegmentId,
-						ISNULL(@AllowScheduledPickups, 1)
+						ISNULL(@AllowScheduledPickups, 1),
+						@RestrictionByArticle
                         )
 					DECLARE @IDVP AS INT = -1
                     SET @IDVP = SCOPE_IDENTITY()
@@ -400,7 +407,8 @@ BEGIN
 						[ExcludePriceShippingCOD] = @CODExcludedPriceShipping,
 						[ExcludeCommissionCOD] = @CODExcludedCommission,
 						[CatBusinessSegmentId] = @CatBusinessSegmentId,
-						[AllowScheduledPickups] = @AllowScheduledPickups
+						[AllowScheduledPickups] = @AllowScheduledPickups,
+						[RestrictionByArticle] = @RestrictionByArticle
                     WHERE [CodeOfReference] = @IdVisitPoint;
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 1 Affected VisitPointClient Updated - @IdVisitPoint'
