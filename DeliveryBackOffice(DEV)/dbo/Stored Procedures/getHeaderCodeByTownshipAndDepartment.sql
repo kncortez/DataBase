@@ -5,7 +5,8 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[getHeaderCodeByTownshipAndDepartment]
 	@Township AS NVARCHAR(50),
-	@Department AS NVARCHAR(50)
+	@Department AS NVARCHAR(50),
+	@IdCountry AS NVARCHAR(5)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -18,6 +19,6 @@ BEGIN
 		(
 			SELECT IdProvince
 			FROM [DeliveryBackOffice].[dbo].[Province]
-			WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(@Department)
+			WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(@Department) AND IdCountry = @IdCountry
 		)
 END;

@@ -18,6 +18,11 @@
 -- Create date: <2024-06-19>
 -- Description:	<se modifica para obtener datos de la tabla CatCurrencyCOD>
 -- =============================================
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2025-06-12>
+-- Description:	<Facturacion SV - Obtiene catalogos para facturacion de El Salvador>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCatalog]
     -- Add the parameters for the stored procedure here
     @IdCorrelative INT = -1,
@@ -34,12 +39,15 @@ BEGIN
     SET @Calalog = UPPER(@Calalog);
     DECLARE @NameOfCatalog AS NVARCHAR(50) = N'';
 
-    IF OBJECT_ID('tempdb.dbo.#Catalogs', 'U') IS NOT NULL
-        DROP TABLE #Catalogs;
+    DECLARE @Catalogs TABLE
+    (
+        IdCatalog INT,
+        NameCatalog VARCHAR(100)
+    );
 
+	INSERT INTO @Catalogs (IdCatalog,NameCatalog)
     SELECT ModuleID,
            cbm.NameCatalog
-    INTO #Catalogs
     FROM CatalogbyModule cbm
     WHERE cbm.ModuleID = @IdModule
           AND cbm.RowStatus = 'TRUE'
@@ -54,7 +62,7 @@ BEGIN
 
     DECLARE @IdMax AS INT =
             (
-                SELECT COUNT(*)FROM #Catalogs
+                SELECT COUNT(*)FROM @Catalogs
             );
 
     WHILE @count <= @IdMax
@@ -63,7 +71,7 @@ BEGIN
 
         SELECT TOP 1
                @NameOfCatalog = ctl.NameCatalog
-        FROM #Catalogs ctl;
+        FROM @Catalogs ctl;
         PRINT @NameOfCatalog;
         IF (@NameOfCatalog = 'SaleAdvisor')
         BEGIN
@@ -625,7 +633,7 @@ BEGIN
 
         SET @count = @count + 1;
         DELETE TOP (1)
-        FROM #Catalogs;
+        FROM @Catalogs;
     END;
 
 
@@ -636,14 +644,43 @@ BEGIN
     FROM [dbo].[CatBillingTime] BT with (nolock)
     WHERE BT.RowStatus = 'TRUE'
 
-
-
-
     SELECT BV.IdCatBillingVolume [IdValue],
            BV.NameBillingVolume [NameValue],
            'BillingVolume' [Catalog]
     FROM [dbo].[CatBillingVolume] BV with (nolock)
     WHERE BV.RowStatus = 'TRUE'
+
+	--facturacion El Salvador	
+    -- Consulta de distritos
+    SELECT 
+        DS.IdTownship [IdValue], 
+        DS.[TownshipName] [NameValue],	
+        DS.IdProvince [IdFilter],
+        'DistrictByBillingSV' [Catalog]
+    FROM Township DS       WITH(NOLOCK)
+    INNER JOIN Province pv WITH(NOLOCK) 
+       ON pv.IdProvince = DS.IdProvince 
+    WHERE DS.TownshipStatus = 1
+      AND pv.ProvinceStatus = 1
+      AND pv.IdCountry = 'SV'
+
+    -- Consulta de estados
+    SELECT 
+		S.[IdProvince] [IdValue],
+        S.[ProvinceName] [NameValue],
+        'StateByBillingSV' [Catalog]
+    FROM Province S WITH(NOLOCK)
+    WHERE S.IdCountry = 'SV'
+      AND s.ProvinceStatus = 1;
+
+    -- Consulta de actividades económicas
+    SELECT 
+		EA.Id [IdValue],
+        EA.CodeActivity, 
+        CONVERT(NVARCHAR(45),CONCAT(EA.[CodeActivity],' - ',EA.[Description])) [NameValue],
+        'EconomiActivity' [Catalog]
+    FROM CatEconomicActivityBySV EA WITH(NOLOCK)
+    WHERE EA.RowStatus = 1;
 
 
 END
