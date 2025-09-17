@@ -453,14 +453,21 @@ BEGIN
 
 			IF @IdDeposit IS NOT NULL
 			BEGIN
-				UPDATE dbo.Deposit
-				   SET Balance      = CASE WHEN @BalanceParam < 0 THEN 0 ELSE @BalanceParam END,
+				SET @Applied = @CurrentBalance - @BalanceParam;
+				IF @Applied < 0 SET @Applied = 0;
+				IF @Applied <= 0
+				BEGIN
+					SET @ValidateOperation = 1;
+					BREAK;
+				END
+				ELSE
+				BEGIN
+					UPDATE dbo.Deposit
+					SET Balance      = CASE WHEN @BalanceParam < 0 THEN 0 ELSE @BalanceParam END,
 					   TokenUpdated = @Token,
 					   DateUpdated  = GETDATE()
-				 WHERE IdDeposit = @IdDeposit;
-
-				 SET @Applied = @CurrentBalance - @BalanceParam;
-				 IF @Applied < 0 SET @Applied = 0;
+					WHERE IdDeposit = @IdDeposit;
+				END
 			END
 			ELSE
 			BEGIN
