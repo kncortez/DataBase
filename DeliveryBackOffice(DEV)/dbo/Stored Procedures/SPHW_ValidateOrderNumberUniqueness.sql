@@ -10,10 +10,10 @@ BEGIN
     SET NOCOUNT ON;
 
     IF EXISTS (
-        SELECT 1 FROM [dbo].[RegistrationofTransactionProcessStates] 
+        SELECT 1 FROM [dbo].[RegistrationofTransactionProcessStates] WITH(NOLOCK)
         WHERE OrderNumber = @OrderNumber
     ) OR EXISTS (
-        SELECT 1 FROM [dbo].[CreditCardTransactionByCustomer] 
+        SELECT 1 FROM [dbo].[CreditCardTransactionByCustomer] WITH(NOLOCK)
         WHERE OrderNumber = @OrderNumber
     )
     BEGIN
