@@ -323,7 +323,7 @@ BEGIN
 					--BETWEEN CAST(@StarDate AS DATE) AND CAST(@EndDate AS DATE)
 					) s1
 					ORDER BY s1.[AuthorizationDate] ASC
-					OPTION (OPTIMIZE FOR UNKNOWN)
+					--OPTION (OPTIMIZE FOR UNKNOWN)
 				END
 		
 		IF OBJECT_ID('tempdb.dbo.#TempBatchDetailCOD', 'U') IS NOT NULL
