@@ -52,7 +52,123 @@ GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del estado', @level2type = N'COLUMN', @level2name = 'StateId',@level0type = N'SCHEMA', @level0name = 'dbo', @level1type = N'TABLE',  @level1name = 'BillingProfile';
 
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Actividad económica del comprador', @level2type = N'COLUMN', @level2name = 'ActivityCode', @level0type = N'SCHEMA', @level0name = 'dbo', @level1type = N'TABLE',  @level1name = 'BillingProfile';
+
 
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del tipo de factura electrónica', @level2type = N'COLUMN', @level2name = 'ActivityCode', @level0type = N'SCHEMA', @level0name = 'dbo', @level1type = N'TABLE',  @level1name = 'BillingProfile';
+
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Codigo de actividad economica',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'ActivityCode'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'tipo de documento que se emite, referencia a tabla CatTypeDocument',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'Inv_type'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Identificador de tabla',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpIdBilling'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id de cuenta asociada, referencia a tabla Account',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpIdAccount'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Nombre del perfil',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Direccion del perfil',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpAddress'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Numero de identificacion tributario',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpTaxId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado (1 activo, 0 inactivo)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpRowStatus'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Token de creacion',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpTokenCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de creacion',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpDateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Token de actualizacion',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpTokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de actualizacion',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'BlpDateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id de cliente de cartera, referencia a VisitPointByClientPortfolio',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'BillingProfile',
+    @level2type = N'COLUMN',
+    @level2name = N'VisitPointByClientPortfolioId'

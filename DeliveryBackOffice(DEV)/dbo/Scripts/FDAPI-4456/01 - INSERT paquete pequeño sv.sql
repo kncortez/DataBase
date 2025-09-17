@@ -11,7 +11,7 @@ DECLARE @IdRate INT;
 BEGIN TRY
     BEGIN TRANSACTION;
 
-	IF NOT EXISTS(SELECT ArtId  FROM DeliveryBackOffice.dbo.CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete pequeño' AND  IdCountry = 'SV')
+	IF NOT EXISTS(SELECT AbcId FROM ArticleByCustomer with(nolock) WHERE AbcIdArticle = (SELECT ArtId FROM CatArticle with(nolock) WHERE ArtName = 'Paquete pequeño'  AND IdCountry = 'SV'))
 	BEGIN
 		SELECT @IdArticle = ArtId  FROM DeliveryBackOffice.dbo.CatArticle WITH(NOLOCK)
 		WHERE ArtName = 'Paquete pequeño' AND  IdCountry = 'SV'
