@@ -129,6 +129,7 @@ begin
     from [dbo].[invoiceDetail]  ivd with (nolock)
         left join DeliveryOrder do with (nolock)
             on ivd.dti_fk_orderNumber = do.Guide_Number
+            and ivd.dti_fk_orderSerie = do.Guide_Serie
     where dti_fk_header = @idinvoice
     order by dti_dateRegister;
 
