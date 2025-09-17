@@ -19,7 +19,7 @@ BEGIN TRY
         
         EXECUTE sp_addextendedproperty 
             @name = N'MS_Description', 
-            @value = N'Restricción de notificación de estado 50 (Incidencia validada) si es real o no, 0: envia notificacion si es real o no, 1 envia notificacion solo si es real', 
+            @value = N'Restricción de notificación de estado 50 (Incidencia validada) si es real o no, RestrictValidatedIncidents=0: envia notificacion si es real o no, 1 envia notificacion solo si es real', 
             @level0type = N'SCHEMA', 
             @level0name = N'dbo', 
             @level1type = N'TABLE', 
@@ -33,7 +33,6 @@ BEGIN TRY
     BEGIN
         PRINT 'La columna RestrictValidatedIncidents ya existe en la tabla WebhookEndpoint'
     END
-    GO
     
     COMMIT TRANSACTION
     
