@@ -6,7 +6,7 @@
 -- normal: EXEC [dbo].[sps_ddesk_ATMProvisionDetail] 'DA061222508291',5000,129322,1,'1',80834521,null,'HN',7,2,42,10,'1',5000,'VE1993255',1,5000,5000.00,0.00,'102735-emilio.orozco','ESPECIAL',null,1,null,'0',5,105239425,1,1,0,'normal';
 -- reciclyer: EXEC [dbo].[sps_ddesk_ATMProvisionDetail] 'DA061222508291',5000,129322,1,'1',80834521,null,'HN',7,2,42,10,'1',5000,'VE1993255',1,5000,5000.00,0.00,'102735-emilio.orozco','ESPECIAL',null,1,null,'0',5,105239425,1,1,0,'recycler';
 -- =============================================
-CREATE PROCEDURE [dbo].[sps_ddesk_ATMProvisionDetail]
+ALTER PROCEDURE [dbo].[sps_ddesk_ATMProvisionDetail]
 --declare
 	@bagId varchar(50) = ''--maletin de lona donde van los bines
 	,@amountBag money = 0
