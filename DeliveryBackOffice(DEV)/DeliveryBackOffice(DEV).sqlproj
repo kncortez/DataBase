@@ -1850,6 +1850,7 @@
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
     <Build Include="dbo\Functions\CantidadEnLetras.sql" />
     <Build Include="dbo\Stored Procedures\SphwGuideStatusNotification.sql" />
+	<Build Include="dbo\Stored Procedures\ReportCODSettlement.sql" />
     <Build Include="dbo\Stored Procedures\sphwLoginKiosk.sql" />
     <Build Include="dbo\Functions\GetPhone.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
