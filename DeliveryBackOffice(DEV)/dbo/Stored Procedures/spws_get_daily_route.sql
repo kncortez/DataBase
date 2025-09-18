@@ -13,6 +13,10 @@
 -- Create date: <2024-09-04>
 -- Description:	<Se agrega validación de si fue pagado por Zigi, sin embargo, se deja comentado hasta validar si hay afectación en facturación en POD>
 -- =============================================
+-- Author:		<Tito García>
+-- Create date: <2024-09-04>
+-- Description:	<Se agrega nuevo campo en consulta de entregas y devoluciones para mostrarse en POD>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_daily_route]
     @Token VARCHAR(200) = '',
     @IdCourier BIGINT,
@@ -270,9 +274,9 @@ BEGIN
       , CODAmount
       , ReturnRates
     )
-    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Gu�as
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Guías
                                               , @InTime = 3                        -- Entrega
-                                              , @IsReturn = 1                      -- Devoluci�n
+                                              , @IsReturn = 1                      -- Devolución
                                               , @CodeApp = 'SIFDCECOM300720201459' -- CodeApp
                                               , @IdModule = 1
                                               , @Token = @Token;
@@ -380,10 +384,10 @@ BEGIN
 									LEFT JOIN dbo.Province p WITH (NOLOCK)
 									    ON t.IdProvince =p.IdProvince
 				LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CP  WITH (NOLOCK)
-					ON  CP.[IdCountry] = ISNULL(vpc.CountryId,'GT')
+					ON  CP.[IdCountry] = vpc.CountryId
 						AND CP.[Name] = 'AreaCode'
 				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
-					ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
+					ON  de.Currency_IdCountry = vpc.CountryId
 					AND de.DefaultPerCountry = 1
 				LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
 					ON ce.TargetCurrency = de.IdCurrencyCOD
@@ -686,7 +690,8 @@ BEGIN
                0
            ELSE
                0
-       END FlagEXP
+       END FlagEXP,
+	   DOR.IndicationsToSendDestination
           INTO #DatasetDelivery
 		FROM
 		(
@@ -772,10 +777,10 @@ BEGIN
 		) DFG
 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPS   WITH (NOLOCK)
-			ON  CPS.[IdCountry] = ISNULL(dor.SenderCountryId,'GT')
+			ON  CPS.[IdCountry] = dor.SenderCountryId
 			AND CPS.[Name] = 'AreaCode'
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPR   WITH (NOLOCK)
-			ON  CPR.[IdCountry] = ISNULL(dor.ReceiverCountryId, 'GT')
+			ON  CPR.[IdCountry] = dor.ReceiverCountryId
 			AND CPR.[Name] = 'AreaCode'
 
 		WHERE	CAST(DSD.DateCreated AS DATE) = @DateRoute
@@ -799,7 +804,7 @@ BEGIN
           SELECT ServiceType,CodeOfReference,DeliveryOption,IsLastMileReturn,CAST(Id AS NVARCHAR) AS Id,TicketNumber,ServiceManagementId,Sender,[Address],
                  Sender_Phone,Phone,PiecesDry,PiecesCold,ScheduleStart,ScheduleEnd,Photo,Latitude,Longitude,[Precision],Price_COD,
                  Price,Pickup,customerName,alterName,NumImageEvidence,[Status],HighPriority,Alerts,CurrencyPrice_CodeISO,CurrencyPrice_CODSymbol,
-                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP
+                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP, IndicationsToSendDestination
             FROM #DatasetDelivery;
 
           CREATE TABLE #AllData (IdAllData NVARCHAR(70) PRIMARY KEY); -- Ajusta el tipo de dato
