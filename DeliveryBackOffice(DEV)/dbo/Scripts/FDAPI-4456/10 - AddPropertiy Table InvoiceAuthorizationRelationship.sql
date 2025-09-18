@@ -1,89 +1,7 @@
 BEGIN TRY
     BEGIN TRANSACTION;
-    --    1. Agregar columnas si no existen
-
-    IF COL_LENGTH('DeliveryBackOffice.dbo.BillingProfile', 'NRC') IS NULL
-        ALTER TABLE DeliveryBackOffice.dbo.BillingProfile
-        ADD NRC NVARCHAR(200) NULL;
-    ELSE
-    BEGIN
-        PRINT 'COLUMNA: NRC YA EXISTE'
-    END
-
-    IF COL_LENGTH('DeliveryBackOffice.dbo.BillingProfile', 'TypeIdentificationDocumentCode') IS NULL
-        ALTER TABLE DeliveryBackOffice.dbo.BillingProfile
-        ADD TypeIdentificationDocumentCode NVARCHAR(100) NULL;
-    ELSE
-    BEGIN
-        PRINT 'COLUMNA: TypeIdentificationDocumentCode YA EXISTE'
-    END
-
-    IF COL_LENGTH('DeliveryBackOffice.dbo.BillingProfile', 'IdDocument') IS NULL
-        ALTER TABLE DeliveryBackOffice.dbo.BillingProfile
-        ADD IdDocument NVARCHAR(20) NULL;
-    ELSE
-    BEGIN
-        PRINT 'COLUMNA: IdDocument YA EXISTE'
-    END
-
-    IF COL_LENGTH('DeliveryBackOffice.dbo.BillingProfile', 'DistrictId') IS NULL
-        ALTER TABLE DeliveryBackOffice.dbo.BillingProfile ADD DistrictId INT NULL;
-    ELSE
-    BEGIN
-        PRINT 'COLUMNA: DistrictId YA EXISTE'
-    END
-
-
-    IF COL_LENGTH('DeliveryBackOffice.dbo.BillingProfile', 'StateId') IS NULL
-        ALTER TABLE DeliveryBackOffice.dbo.BillingProfile ADD StateId INT NULL;
-    ELSE
-    BEGIN
-        PRINT 'COLUMNA: StateId YA EXISTE'
-    END
-
-    IF COL_LENGTH('DeliveryBackOffice.dbo.BillingProfile', 'ActivityCode') IS NULL
-        ALTER TABLE DeliveryBackOffice.dbo.BillingProfile
-        ADD ActivityCode NVARCHAR(100) NULL;
-    ELSE
-    BEGIN
-        PRINT 'COLUMNA: ActivityCode YA EXISTE'
-    END
-
-    IF COL_LENGTH('DeliveryBackOffice.dbo.BillingProfile', 'Inv_type') IS NULL
-        ALTER TABLE DeliveryBackOffice.dbo.BillingProfile ADD Inv_type INT NULL;
-    ELSE
-    BEGIN
-        PRINT 'COLUMNA: Inv_type YA EXISTE'
-    END
-
-
-    --  2. Agregar descripciones de tabla y columnas faltantes
-    -- Descripción de la tabla
-    IF NOT EXISTS
-    (
-        SELECT 1
-        FROM sys.extended_properties ep
-            INNER JOIN sys.tables t
-                ON t.object_id = ep.major_id
-        WHERE ep.name = 'MS_Description'
-              AND t.name = 'BillingProfile'
-              AND ep.minor_id = 0
-    )
-    BEGIN
-        EXEC sp_addextendedproperty @name = N'MS_Description',
-                                    @value = N'Tabla que almacena información de facturación favoritos, clientes individuales',
-                                    @level0type = N'SCHEMA',
-                                    @level0name = N'dbo',
-                                    @level1type = N'TABLE',
-                                    @level1name = N'BillingProfile';
-    END
-    ELSE
-    BEGIN
-        PRINT 'COLUMNA: BillingProfile YA TIENE DESCRIPCION'
-    END
-
-
-    -- NRC
+    --1. Agregar descripciones de tabla y columnas faltantes
+    -- IdInvoiceAuthorizationRelationships
     IF NOT EXISTS
     (
         SELECT 1
@@ -94,26 +12,26 @@ BEGIN TRY
             INNER JOIN sys.tables t
                 ON t.object_id = c.object_id
         WHERE ep.name = 'MS_Description'
-              AND t.name = 'BillingProfile'
-              AND c.name = 'NRC'
+              AND t.name = 'InvoiceAuthorizationRelationships'
+              AND c.name = 'IdInvoiceAuthorizationRelationships'
     )
     BEGIN
         EXEC sp_addextendedproperty @name = N'MS_Description',
-                                    @value = N'Número de Registro del Contribuyente (NRC)',
+                                    @value = N'Llave primaria de la tabla',
                                     @level0type = N'SCHEMA',
                                     @level0name = N'dbo',
                                     @level1type = N'TABLE',
-                                    @level1name = N'BillingProfile',
+                                    @level1name = N'InvoiceAuthorizationRelationships',
                                     @level2type = N'COLUMN',
-                                    @level2name = N'NRC';
+                                    @level2name = N'IdInvoiceAuthorizationRelationships';
     END
     ELSE
     BEGIN
-        PRINT 'COLUMNA: NRC YA TIENE DESCRIPCION'
+        PRINT 'COLUMNA: IdInvoiceAuthorizationRelationships YA TIENE DESCRIPCION'
     END
 
 
-    -- TypeIdentificationDocumentCode
+    -- CodeOfReference
     IF NOT EXISTS
     (
         SELECT 1
@@ -124,26 +42,26 @@ BEGIN TRY
             INNER JOIN sys.tables t
                 ON t.object_id = c.object_id
         WHERE ep.name = 'MS_Description'
-              AND t.name = 'BillingProfile'
-              AND c.name = 'TypeIdentificationDocumentCode'
+              AND t.name = 'InvoiceAuthorizationRelationships'
+              AND c.name = 'CodeOfReference'
     )
     BEGIN
         EXEC sp_addextendedproperty @name = N'MS_Description',
-                                    @value = N'Tipo de documento de identificación del comprador',
+                                    @value = N'Código del punto de venta activo para generación de facturas',
                                     @level0type = N'SCHEMA',
                                     @level0name = N'dbo',
                                     @level1type = N'TABLE',
-                                    @level1name = N'BillingProfile',
+                                    @level1name = N'InvoiceAuthorizationRelationships',
                                     @level2type = N'COLUMN',
-                                    @level2name = N'TypeIdentificationDocumentCode';
+                                    @level2name = N'CodeOfReference';
     END
     ELSE
     BEGIN
-        PRINT 'COLUMNA: TypeIdentificationDocumentCode YA TIENE DESCRIPCION'
+        PRINT 'COLUMNA: CodeOfReference YA TIENE DESCRIPCION'
     END
 
 
-    -- IdDocument
+    -- InvoiceAuthorizationHeaderId
     IF NOT EXISTS
     (
         SELECT 1
@@ -154,26 +72,26 @@ BEGIN TRY
             INNER JOIN sys.tables t
                 ON t.object_id = c.object_id
         WHERE ep.name = 'MS_Description'
-              AND t.name = 'BillingProfile'
-              AND c.name = 'IdDocument'
+              AND t.name = 'InvoiceAuthorizationRelationships'
+              AND c.name = 'InvoiceAuthorizationHeaderId'
     )
     BEGIN
         EXEC sp_addextendedproperty @name = N'MS_Description',
-                                    @value = N'Número de identificación',
+                                    @value = N'Id de la autorización asignada al punto de venta',
                                     @level0type = N'SCHEMA',
                                     @level0name = N'dbo',
                                     @level1type = N'TABLE',
-                                    @level1name = N'BillingProfile',
+                                    @level1name = N'InvoiceAuthorizationRelationships',
                                     @level2type = N'COLUMN',
-                                    @level2name = N'IdDocument';
+                                    @level2name = N'InvoiceAuthorizationHeaderId';
     END
     ELSE
     BEGIN
-        PRINT 'COLUMNA: IdDocument YA TIENE DESCRIPCION'
+        PRINT 'COLUMNA: InvoiceAuthorizationHeaderId YA TIENE DESCRIPCION'
     END
 
 
-    -- DistrictId
+    -- RowStatus
     IF NOT EXISTS
     (
         SELECT 1
@@ -184,26 +102,26 @@ BEGIN TRY
             INNER JOIN sys.tables t
                 ON t.object_id = c.object_id
         WHERE ep.name = 'MS_Description'
-              AND t.name = 'BillingProfile'
-              AND c.name = 'DistrictId'
+              AND t.name = 'InvoiceAuthorizationRelationships'
+              AND c.name = 'RowStatus'
     )
     BEGIN
         EXEC sp_addextendedproperty @name = N'MS_Description',
-                                    @value = N'Identificador del distrito',
+                                    @value = N'Estado de la fila, TRUE o FALSE.',
                                     @level0type = N'SCHEMA',
                                     @level0name = N'dbo',
                                     @level1type = N'TABLE',
-                                    @level1name = N'BillingProfile',
+                                    @level1name = N'InvoiceAuthorizationRelationships',
                                     @level2type = N'COLUMN',
-                                    @level2name = N'DistrictId';
+                                    @level2name = N'RowStatus';
     END
     ELSE
     BEGIN
-        PRINT 'COLUMNA: DistrictId YA TIENE DESCRIPCION'
+        PRINT 'COLUMNA: RowStatus YA TIENE DESCRIPCION'
     END
 
 
-    -- StateId
+    -- TokenCreated
     IF NOT EXISTS
     (
         SELECT 1
@@ -214,26 +132,26 @@ BEGIN TRY
             INNER JOIN sys.tables t
                 ON t.object_id = c.object_id
         WHERE ep.name = 'MS_Description'
-              AND t.name = 'BillingProfile'
-              AND c.name = 'StateId'
+              AND t.name = 'InvoiceAuthorizationRelationships'
+              AND c.name = 'TokenCreated'
     )
     BEGIN
         EXEC sp_addextendedproperty @name = N'MS_Description',
-                                    @value = N'Identificador del estado',
+                                    @value = N'Token que creó la fila.',
                                     @level0type = N'SCHEMA',
                                     @level0name = N'dbo',
                                     @level1type = N'TABLE',
-                                    @level1name = N'BillingProfile',
+                                    @level1name = N'InvoiceAuthorizationRelationships',
                                     @level2type = N'COLUMN',
-                                    @level2name = N'StateId';
+                                    @level2name = N'TokenCreated';
     END
     ELSE
     BEGIN
-        PRINT 'COLUMNA: StateId YA TIENE DESCRIPCION'
+        PRINT 'COLUMNA: TokenCreated YA TIENE DESCRIPCION'
     END
 
 
-    -- ActivityCode
+    -- DateCreated
     IF NOT EXISTS
     (
         SELECT 1
@@ -244,26 +162,26 @@ BEGIN TRY
             INNER JOIN sys.tables t
                 ON t.object_id = c.object_id
         WHERE ep.name = 'MS_Description'
-              AND t.name = 'BillingProfile'
-              AND c.name = 'ActivityCode'
+              AND t.name = 'InvoiceAuthorizationRelationships'
+              AND c.name = 'DateCreated'
     )
     BEGIN
         EXEC sp_addextendedproperty @name = N'MS_Description',
-                                    @value = N'Código de actividad económica del cliente',
+                                    @value = N'Fecha y hora en la que se creó la fila.',
                                     @level0type = N'SCHEMA',
                                     @level0name = N'dbo',
                                     @level1type = N'TABLE',
-                                    @level1name = N'BillingProfile',
+                                    @level1name = N'InvoiceAuthorizationRelationships',
                                     @level2type = N'COLUMN',
-                                    @level2name = N'ActivityCode';
+                                    @level2name = N'DateCreated';
     END
     ELSE
     BEGIN
-        PRINT 'COLUMNA: ActivityCode YA TIENE DESCRIPCION'
+        PRINT 'COLUMNA: DateCreated YA TIENE DESCRIPCION'
     END
 
 
-    -- Inv_type
+    -- TokenUpdated
     IF NOT EXISTS
     (
         SELECT 1
@@ -274,31 +192,58 @@ BEGIN TRY
             INNER JOIN sys.tables t
                 ON t.object_id = c.object_id
         WHERE ep.name = 'MS_Description'
-              AND t.name = 'BillingProfile'
-              AND c.name = 'Inv_type'
+              AND t.name = 'InvoiceAuthorizationRelationships'
+              AND c.name = 'TokenUpdated'
     )
     BEGIN
         EXEC sp_addextendedproperty @name = N'MS_Description',
-                                    @value = N'Tipo de factura asociada al perfil',
+                                    @value = N'Token que modificó la fila.',
                                     @level0type = N'SCHEMA',
                                     @level0name = N'dbo',
                                     @level1type = N'TABLE',
-                                    @level1name = N'BillingProfile',
+                                    @level1name = N'InvoiceAuthorizationRelationships',
                                     @level2type = N'COLUMN',
-                                    @level2name = N'Inv_type';
+                                    @level2name = N'TokenUpdated';
     END
     ELSE
     BEGIN
-        PRINT 'COLUMNA: Inv_type YA TIENE DESCRIPCION'
+        PRINT 'COLUMNA: TokenUpdated YA TIENE DESCRIPCION'
     END
 
 
+    -- DateUpdated
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM sys.extended_properties ep
+            INNER JOIN sys.columns c
+                ON ep.major_id = c.object_id
+                   AND ep.minor_id = c.column_id
+            INNER JOIN sys.tables t
+                ON t.object_id = c.object_id
+        WHERE ep.name = 'MS_Description'
+              AND t.name = 'InvoiceAuthorizationRelationships'
+              AND c.name = 'DateUpdated'
+    )
+    BEGIN
+        EXEC sp_addextendedproperty @name = N'MS_Description',
+                                    @value = N'Fecha y hora en la que se modificó la fila.',
+                                    @level0type = N'SCHEMA',
+                                    @level0name = N'dbo',
+                                    @level1type = N'TABLE',
+                                    @level1name = N'InvoiceAuthorizationRelationships',
+                                    @level2type = N'COLUMN',
+                                    @level2name = N'DateUpdated';
+    END
+    ELSE
+    BEGIN
+        PRINT 'COLUMNA: DateUpdated YA TIENE DESCRIPCION'
+    END
 
     COMMIT TRANSACTION;
-    PRINT 'Tabla BillingProfile actualizada exitosamente.';
+    PRINT 'Tabla InvoiceAuthorizationRelationships actualizada exitosamente.';
 
-
-    --3. Mostrar descripcion de columnas
+    --2. Mostrar descripcion de columnas
     SELECT t.name AS TableName,
            c.name AS ColumnName,
            ep.value AS ColumnDescription
@@ -309,7 +254,7 @@ BEGIN TRY
             ON ep.major_id = c.object_id
                AND ep.minor_id = c.column_id
                AND ep.name = 'MS_Description'
-    WHERE t.name = 'BillingProfile'
+    WHERE t.name = 'InvoiceAuthorizationRelationships'
     ORDER BY c.column_id;
 
 
