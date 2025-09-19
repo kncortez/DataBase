@@ -691,7 +691,7 @@ BEGIN
            ELSE
                0
        END FlagEXP,
-	   DOR.IndicationsToSendDestination
+	   ISNULL(REPLACE(DOR.IndicationsToSendDestination, '"', ''), '') AS IndicationsToSendDestination
           INTO #DatasetDelivery
 		FROM
 		(
@@ -804,7 +804,7 @@ BEGIN
           SELECT ServiceType,CodeOfReference,DeliveryOption,IsLastMileReturn,CAST(Id AS NVARCHAR) AS Id,TicketNumber,ServiceManagementId,Sender,[Address],
                  Sender_Phone,Phone,PiecesDry,PiecesCold,ScheduleStart,ScheduleEnd,Photo,Latitude,Longitude,[Precision],Price_COD,
                  Price,Pickup,customerName,alterName,NumImageEvidence,[Status],HighPriority,Alerts,CurrencyPrice_CodeISO,CurrencyPrice_CODSymbol,
-                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP, IndicationsToSendDestination
+                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP, ISNULL(REPLACE(IndicationsToSendDestination, '"', ''), '') AS IndicationsToSendDestination
             FROM #DatasetDelivery;
 
           CREATE TABLE #AllData (IdAllData NVARCHAR(70) PRIMARY KEY); -- Ajusta el tipo de dato
