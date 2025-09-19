@@ -8,7 +8,11 @@
 -- Update date: <2023-03-02>
 -- Description:	<Validation for visit point status>
 -- =============================================
-
+-- =============================================  
+-- Author:  <Walter Orozco>  
+-- Update date: <2025-04-02>  
+-- Description: <Agregar validaciones moneda multipaís SV>  
+-- ============================================= 
 CREATE PROCEDURE [dbo].[spws_get_login]
     -- Add the parameters for the stored procedure here
     @Username VARCHAR(200)
@@ -32,16 +36,21 @@ BEGIN
     DECLARE @CODPercentage NVARCHAR(10);
 
     
-     DECLARE @CountryIdOrigin NVARCHAR(3)=(SELECT TOP 1  
-	                                            CASE 
-												    WHEN LEFT(UsrCurrency,2)='HN' 
-									                    THEN 'HN' ELSE 'GT' END  
-						                     FROM dbo.RegisterUser WITH(NOLOCK) WHERE UsrEmail=@Username);
+     DECLARE @CountryIdOrigin NVARCHAR(3) = ( SELECT TOP 1 DC.Currency_IdCountry
+											FROM dbo.RegisterUser R WITH(NOLOCK)
+											INNER JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON ISNULL(R.UsrCurrency,'GTQ') = CCC.CodeISO
+											INNER JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+												ON CCC.IdCatCurrencyCOD = DC.IdCurrencyCOD
+											WHERE UsrEmail = @Username AND DC.DefaultPerCountry = 1);
 
 
 				
 
-	DECLARE @CodeIsoMoney NVARCHAR(3) = (SELECT TOP 1 CodeISO  FROM [dbo].[CatCurrencyCOD] WHERE CodeISO LIKE '%' + @CountryId +'%');
+	DECLARE @CodeIsoMoney NVARCHAR(3) = (   SELECT C.CodeISO FROM DeliveryBackOffice.dbo.CatCurrencyCOD C WITH(NOLOCK)
+											INNER JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK) 
+												ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
+											WHERE DC.Currency_IdCountry = @CountryId AND DC.DefaultPerCountry = 1);
 
     	SET @CODPercentage = (Select CONVERT(VARCHAR,ISNULL([Value],0)) From dbo.ConfigParams
                                       WHERE [Name] ='MinCODCommissionAmount' AND ISNULL(IdCountry,'GT') LIKE '%'+ @CountryId  + '%')
@@ -647,6 +656,8 @@ BEGIN
                                         )
                         );
 
+                            PRINT '@CodeIsoMoney'
+							PRINT @CodeIsoMoney
                             PRINT '@JsonModules'
                             PRINT @JsonModules
                             PRINT '@JsonAccounts'
