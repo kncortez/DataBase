@@ -10,7 +10,7 @@ BEGIN TRY
    -- Crear la tabla tipo deposit utilizada para Efectibox
 	CREATE TYPE dbo.TblDeposit AS TABLE
 	(
-		TransactionNumber       BIGINT          NOT NULL,
+		TransactionNumber       BIGINT          PRIMARY KEY,
 		TransactionDate         DATETIME        NOT NULL,
 		TransactionCode         INT             NOT NULL,
 		Reference               NVARCHAR(15)    NOT NULL,
