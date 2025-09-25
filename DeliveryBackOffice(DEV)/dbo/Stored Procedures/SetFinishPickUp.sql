@@ -37,6 +37,10 @@
 -- Updated date:<20-05-2025>
 -- Description:	<Recolección por referencia y contenerización flujo POD>
 -- =============================================
+-- Author:		<J. DAniel Villagrán>
+-- Updated date:<25-09-2025>
+-- Description: <Eliminación de SplitUnlimited (reducción del 99% del costo de ejecución)>   
+-- =============================================
 CREATE PROCEDURE [dbo].[SetFinishPickUp]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD22221,FD22361,FD22223,FD22359,FD22226',
@@ -215,7 +219,7 @@ BEGIN
                          ,GETDATE()
                          ,NULL
                          ,NULL
-                    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+                    FROM DeliveryBackOffice.dbo.SplitOrdinal(@InGuides, ',',1000);
                 END;
 
           IF( EXISTS (SELECT 1 FROM @ReferencesGuide))

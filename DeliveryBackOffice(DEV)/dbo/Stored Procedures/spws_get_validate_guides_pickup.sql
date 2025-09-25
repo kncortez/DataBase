@@ -15,6 +15,10 @@
 -- Mofified:    <Brandon, Pedroza>  
 -- Create date: <2025-01-13>  
 -- Description: <Contenerizacion guias - se agrega parametro para buscar guias de un contenedor asociado o referencia>  
+-- =============================================
+-- Author:		<J. DAniel Villagrán>
+-- Updated date:<25-09-2025>
+-- Description: <Eliminación de SplitUnlimited (reducción del 99% del costo de ejecución)>
 -- =============================================  
 CREATE PROCEDURE [dbo].[spws_get_validate_guides_pickup]
     -- Add the parameters for the stored procedure here
@@ -119,7 +123,7 @@ BEGIN
 								) ItemPiece,
                CHARINDEX('-', Item) charinde,
                LEN(Item) len
-        FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+        FROM DeliveryBackOffice.dbo.SplitOrdinal(@InGuides, ',',1000);
 
 		CREATE NONCLUSTERED INDEX IX_listGuides_Pickup
             ON #listGuides (ItemSerie, ItemNumber);
