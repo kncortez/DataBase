@@ -19,9 +19,13 @@ BEGIN TRY
 		SELECT @IdCurrency = IdCatCurrencyCOD FROM DeliveryBackOffice.dbo.CatCurrencyCOD WITH(NOLOCK)
 		WHERE [Name] = 'DOLAR ESTADOUNIDENSE'
 
+		--habilita opcion para insertar en posicion especifica
+		SET IDENTITY_INSERT [ArticleByCustomer] ON;
+
 		--SCRIPT AGREGAR ARTICULO POR CLIENTE DE EN ArticleByCustomer Paquete pequeño
 		INSERT INTO [dbo].[ArticleByCustomer]
-			([AbcIdArticle]
+			([AbcId]
+			,[AbcIdArticle]
 			,[AbcIdCustomer]
 			,[AbcRowStatus]
 			,[AbcTokenCreated]
@@ -38,7 +42,8 @@ BEGIN TRY
 			,[ShowDefault]
 			,[IdCurrency])
 		VALUES
-			(@IdArticle
+			(755 -- valor correcto, para poder mostrar paquetes en orden
+			,@IdArticle
 			,NULL
 			,1
 			,''
@@ -54,6 +59,9 @@ BEGIN TRY
 			,NULL
 			,NULL
 			,@IdCurrency)
+		
+		--restablece configuracion de tabla
+		SET IDENTITY_INSERT [ArticleByCustomer] OFF;
 
 		PRINT('Articulo pequeño insertado correctamente')
 	END
