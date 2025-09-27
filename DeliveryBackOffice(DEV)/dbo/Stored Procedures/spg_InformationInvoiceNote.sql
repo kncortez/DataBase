@@ -7,6 +7,10 @@
 -- Modified:	<30 Julio 2025>
 -- Description:	<Facturacion SV - Obtener informacion de factura para SV>
 -- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Modified:	<01 septiembre 2025>
+-- Description:	<Fix para generacion de notas de credito para facturas en lotes de facturacion inactivos>
+-- =============================================
 -- Author:		<Brandon Pedroza>
 -- Create date: <2025-09-11>
 -- Description:	<Facturacion SV - se quita validacion isnull al consultar tabla invoiceHeader>
@@ -51,12 +55,9 @@ begin
 		(
 			select ih.inv_pk_id
 			from [dbo].[invoiceHeader] ih with (nolock)
-			LEFT JOIN dbo.InvoiceBatchHeader ibh with (nolock) ON ih.inv_serieFEL = ibh.CAI
 			where ih.inv_certificationFEL = @fel
 			AND ih.IdCountry = @IdCountry
 			AND ih.inv_serieFEL = @CAI
-            AND ibh.RowStatus = 1
-            AND ibh.TypeDocument = 1
 		);
 	END
 
@@ -132,6 +133,7 @@ begin
     from [dbo].[invoiceDetail]  ivd with (nolock)
         left join DeliveryOrder do with (nolock)
             on ivd.dti_fk_orderNumber = do.Guide_Number
+            and ivd.dti_fk_orderSerie = do.Guide_Serie
     where dti_fk_header = @idinvoice
     order by dti_dateRegister;
 
