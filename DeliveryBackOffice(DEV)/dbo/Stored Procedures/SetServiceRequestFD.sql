@@ -17,6 +17,10 @@
 -- Create date: <2024-11-19>
 -- Description:	<Se agrego registro de informacion de poblado de origen en nuevo campo SenderIdSettlement>
 -- =============================================
+-- Author:		<Josue Villagrán>
+-- Create date: <2025-08-07>
+-- Description:	<Se elimina llamada a funcion costosa (SplitUnlimited) que utiliza XML y se reemplaza por SplitOrdinal sin XML reducción 91% del costo>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -52,24 +56,23 @@ BEGIN
   DECLARE @system INT = NULL;
   DECLARE @module INT = NULL;
 
-  IF (@SystemModule != '') 
-  BEGIN
-  --Se almacena el sistema y modulo desde donde se crea una guía
-		SET @system = (
-						SELECT SysIdSystem from CatSystem ca
-						WHERE ca.SysNameSystem = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/') 
-						WHERE id = 1)
-					   );
 
+ 
+  IF (@SystemModule != '') 
+  BEGIN  
+		--Se almacena el sistema y modulo desde donde se crea una guía
+   		SET @system = (
+						SELECT SysIdSystem from CatSystem ca
+						WHERE ca.SysNameSystem = (SELECT value FROM dbo.SplitOrdinal(@SystemModule,'/',10) WHERE ordinal = 1)						
+					   );
+					   	
 		-- Se deja la sentencia TOP 1 ya que existe dos modulos con el mismo nombre para la creación de guías en porta Web
 		-- Crear guías para usuarios individuales/Express y Crear Guías para corporativos en el flujo normal
 		SET @module = (
 						SELECT TOP 1 mo.ModIdModule from CatModule mo
-						WHERE mo.ModName = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/')
-						WHERE id = 2)
+						WHERE mo.ModName = (SELECT value FROM dbo.SplitOrdinal(@SystemModule,'/',10) WHERE ordinal = 2)	
 					   );
   END
-
 	/*********************************************************************************************/
 	/******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
 	/*********************************************************************************************/
@@ -471,28 +474,6 @@ BEGIN
 										   GETDATE()
 									FROM #GuideTable GIT
 
-									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
-									--SELECT 1,
-									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
-									--	   1,
-									--	   GDT.PriceShippment,
-									--	   1,
-									--	   @Token,
-									--	   GETDATE(),
-									--	   GDT.Guide_Serie,
-									--	   GDT.Guide_Number
-									--FROM #GuideTable GDT
-									-- SET @IdCost = @@IDENTITY; 
-
-									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
-									--SELECT @IdCost,
-									--	   'Servicio',
-									--	   GTL.PriceShippment,
-									--	   1,
-									--		@Token,
-									--		GETDATE()
-									--FROM #GuideTable GTL
-
 								END
 							ELSE
 								BEGIN
@@ -507,27 +488,6 @@ BEGIN
 										   GETDATE()
 									FROM #GuideTable GIT
 
-									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
-									--SELECT 1,
-									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
-									--	   1,
-									--	   GDT.PriceShippment,
-									--	   1,
-									--	   @Token,
-									--	   GETDATE(),
-									--	   GDT.Guide_Serie,
-									--	   GDT.Guide_Number
-									--FROM #GuideTable GDT
-									-- SET @IdCost = @@IDENTITY; 
-
-									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
-									--SELECT @IdCost,
-									--	   'Servicio',
-									--	   GTL.PriceShippment,
-									--	   1,
-									--		@Token,
-									--		GETDATE()
-									--FROM #GuideTable GTL
 							  END
 						END
 

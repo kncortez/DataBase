@@ -2064,6 +2064,7 @@
     <Build Include="dbo\Tables\CatTypeIdentifationDocument.sql" />
     <Build Include="dbo\Tables\InformationBuyerInvoice.sql" />
     <Build Include="dbo\Stored Procedures\sps_UpdateInvoiceForza.sql" />
+    <Build Include="dbo\Functions\SplitOrdinal.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
