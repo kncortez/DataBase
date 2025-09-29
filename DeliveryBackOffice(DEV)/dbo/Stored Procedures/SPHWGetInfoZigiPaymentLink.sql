@@ -15,6 +15,12 @@
 -- Create date: <2025-09-03>
 -- Description:	<Si se recibe PhoneNumber distinto a null, se usa el recibido y se modifica en la tabla PaymentZigi para ser usado; si es null, se usa el de la tabla DeliveryOrder.>
 -- =============================================
+-- =============================================
+-- System:		<API>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-09-09>
+-- Description:	<Validación de estatus de link tanto para Uniguías y Multiguías de EXC>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWGetInfoZigiPaymentLink]
 (
   @GuideNumber INT
@@ -46,8 +52,12 @@ BEGIN
 		ON DO.ReceiverCountryId = DC.Currency_IdCountry
 	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
 		ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
-	WHERE ZI.GuideNumber = @GuideNumber 
-	AND ZI.GuideSerie = @GuideSerie 
+	WHERE (
+            (ZI.GuideNumber = @GuideNumber
+                AND ZI.GuideSerie = @GuideSerie)
+            -- Para Multiguías agrupadas en un solo link Zigi: VERIFICAR SI @GuideSerie es = MFD, se evalua ZI.ZigiPaymentId con @GuideNumber
+               OR (@GuideSerie = 'MFD' AND ZI.ZigiPaymentId = @GuideNumber)
+        )
 	AND DC.DefaultPerCountry = 1
 	AND ZI.ZigiLinkStatus = 'PAID'
 	AND ZI.RowStatus = 1
@@ -85,8 +95,11 @@ BEGIN
 			ON DO.ReceiverCountryId = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
 			ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
-		WHERE ZI.GuideNumber = @GuideNumber 
-		AND ZI.GuideSerie = @GuideSerie 
+		WHERE (
+                (ZI.GuideNumber = @GuideNumber AND ZI.GuideSerie = @GuideSerie)
+		        -- Para Multiguías agrupadas en un solo link Zigi: VERIFICAR SI @GuideSerie es = MFD, se evalua ZI.ZigiPaymentId con @GuideNumber
+               OR (@GuideSerie = 'MFD' AND ZI.ZigiPaymentId = @GuideNumber)
+        )
 		AND DC.DefaultPerCountry = 1
 		AND ZI.ZigiLinkStatus = 'CREATED'
 		AND ZI.RowStatus = 1
