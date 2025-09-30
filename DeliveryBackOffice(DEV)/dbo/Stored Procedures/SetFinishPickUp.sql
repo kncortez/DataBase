@@ -211,15 +211,15 @@ BEGIN
                    ,DateUpdated
                   )
                   SELECT @IdPickup
-                         ,SUBSTRING(Item, 1, 2) AS GuideSerie
-                         ,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) AS GuideNumber
-                         ,REPLACE(SUBSTRING(Item, CHARINDEX('-', Item), LEN(Item)),'-','')  AS GuidePiece
+                         ,SUBSTRING(value, 1, 2) AS GuideSerie
+                         ,SUBSTRING(value, 3, IIF(CHARINDEX('-', value) = 0, (LEN(value)), (CHARINDEX('-', value) - 3))) AS GuideNumber
+                         ,REPLACE(SUBSTRING(value, CHARINDEX('-', value), LEN(value)),'-','')  AS GuidePiece
                          ,1
                          ,@Token
                          ,GETDATE()
                          ,NULL
                          ,NULL
-                    FROM DeliveryBackOffice.dbo.SplitOrdinal(@InGuides, ',',1000);
+                    FROM DeliveryBackOffice.dbo.SplitOrdinal(@InGuides,N',',1000);
                 END;
 
           IF( EXISTS (SELECT 1 FROM @ReferencesGuide))

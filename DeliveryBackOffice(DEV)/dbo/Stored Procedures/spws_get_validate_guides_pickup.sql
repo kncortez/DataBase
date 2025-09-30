@@ -110,19 +110,19 @@ BEGIN
 		    AND CTD.RowStatus = 1
 		    AND CT.ReferenceContainer IN (SELECT ContainerReference FROM  @ContainerReferences)
 	    UNION
-        SELECT SUBSTRING(Item, 1, 2) ItemSerie,
-               SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
+        SELECT SUBSTRING(value, 1, 2) ItemSerie,
+               SUBSTRING(value, 3, IIF(CHARINDEX('-', value) = 0, (LEN(value)), (CHARINDEX('-', value) - 3))) ItemNumber,
                ISNULL(   (CASE
-										WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))) > 1 THEN
+										WHEN LEN(SUBSTRING(value, CHARINDEX('-', value) + 1, LEN(value))) > 1 THEN
 											1
 										ELSE
-											SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))
+											SUBSTRING(value, CHARINDEX('-', value) + 1, LEN(value))
 									END
 									),
 									0
 								) ItemPiece,
-               CHARINDEX('-', Item) charinde,
-               LEN(Item) len
+               CHARINDEX('-', value) charinde,
+               LEN(value) len
         FROM DeliveryBackOffice.dbo.SplitOrdinal(@InGuides, ',',1000);
 
 		CREATE NONCLUSTERED INDEX IX_listGuides_Pickup
