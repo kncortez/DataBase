@@ -50,44 +50,48 @@ BEGIN
 
 	CREATE TABLE #Report
 	(
-		Ultimo_estado NVARCHAR(MAX),
-		Origen_de_guia NVARCHAR(MAX),
-		Cliente NVARCHAR(MAX),
-		Codigo_SAP NVARCHAR(MAX),
-		Remitente NVARCHAR(MAX),
-		Destinatario NVARCHAR(MAX),
-		Departamento_Destino NVARCHAR(MAX),
-		Municipio_Destino NVARCHAR(MAX),
+		Ultimo_estado NVARCHAR(100),
+		Origen_de_guia NVARCHAR(100),
+		Cliente NVARCHAR(300),
+		Codigo_SAP NVARCHAR(50),
+		Remitente NVARCHAR(200),
+		Destinatario NVARCHAR(150),
+		Departamento_Destino NVARCHAR(150),
+		Municipio_Destino NVARCHAR(150),
 		Fecha_solicitud_servicio DATETIME,
 		Fecha_entrega DATETIME,
 		No_Manifiesto INT,
-		Guia NVARCHAR(MAX),
+		GuideNumber INT,
+		GuideSerie NVARCHAR(3),
+		Guia NVARCHAR(15),
 		Entregado NVARCHAR(100),
-		Tipo_tarifa_aplicada NVARCHAR(MAX),
+		Tipo_tarifa_aplicada NVARCHAR(5),
 		Descripcion_bien NVARCHAR(MAX),
 		Piezas INT,
 		Tarifa_servicio DECIMAL(18,2),
 		Monto_envio DECIMAL(18,2),
 		Monto_COD DECIMAL(18,2),
-		Correo_remitente NVARCHAR(MAX),
-		Nombre_cuenta NVARCHAR(MAX),
-		Tipo_servicio NVARCHAR(MAX),
-		Collect NVARCHAR(MAX),
-		NIT_Cliente NVARCHAR(MAX),
-		Certificacion_FEL NVARCHAR(MAX),
-		Exclusion_envio NVARCHAR(MAX),
-		Codigo_socio_negocios NVARCHAR(MAX),
+		Correo_remitente NVARCHAR(300),
+		Nombre_cuenta NVARCHAR(300),
+		Tipo_servicio NVARCHAR(50),
+		Collect NVARCHAR(5),
+		NIT_Cliente NVARCHAR(25),
+		Certificacion_FEL NVARCHAR(300),
+		Exclusion_envio NVARCHAR(5),
+		Codigo_socio_negocios NVARCHAR(50),
 		Peso_total DECIMAL(18,2),
 		Tarifa_excedente_libra DECIMAL(18,2),
 		Peso_Base DECIMAL(18,2),
 		Peso_a_Facturar DECIMAL(18,2),
-		Credito_Collect NVARCHAR(MAX),
-		SaleAdvisorCode NVARCHAR(MAX),
-		BusinessSegmentName NVARCHAR(MAX),
-		KindOfVPName NVARCHAR(MAX),
-		CommercialSegmentName NVARCHAR(MAX)
+		Credito_Collect NVARCHAR(50),
+		SaleAdvisorCode NVARCHAR(50),
+		BusinessSegmentName NVARCHAR(10),
+		KindOfVPName NVARCHAR(100),
+		CommercialSegmentName NVARCHAR(100)
 	);
 
+	CREATE NONCLUSTERED INDEX #Report 
+	ON #Report ( GuideNumber, GuideSerie);
 	--==============================================================================================
 	--========================== INSERTAR DATOS A TABLA TEMP =======================================
 	--==============================================================================================
@@ -270,38 +274,43 @@ BEGIN
 						WHEN DORPD.TimePlaId = 3 THEN 'Collect'
 						WHEN DORPD.TimePlaId = 2 THEN 'Envío con cobro en recolección'
 						ELSE ''
-					END AS 'Credito/Collect',		   
-		   			SA.SaleAdvisorCode,
+					END AS 'Credito/Collect',
+					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName	   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -333,50 +342,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -558,38 +570,43 @@ BEGIN
 						WHEN DORPD.TimePlaId = 3 THEN 'Collect'
 						WHEN DORPD.TimePlaId = 2 THEN 'Envío con cobro en recolección'
 						ELSE ''
-					END AS 'Credito/Collect',		   
-		   			SA.SaleAdvisorCode,
+					END AS 'Credito/Collect',
+					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName	   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -621,50 +638,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -805,7 +825,7 @@ BEGIN
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
 					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
-					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -847,38 +867,43 @@ BEGIN
 						WHEN DORPD.TimePlaId = 3 THEN 'Collect'
 						WHEN DORPD.TimePlaId = 2 THEN 'Envío con cobro en recolección'
 						ELSE ''
-					END AS 'Credito/Collect',		   
-		   			SA.SaleAdvisorCode,
+					END AS 'Credito/Collect',
+					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName	   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -910,50 +935,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -1143,31 +1171,36 @@ BEGIN
 					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					  ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -1199,50 +1232,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -1429,35 +1465,39 @@ BEGIN
 					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName
-		   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -1489,50 +1529,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -1720,35 +1763,39 @@ BEGIN
 					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName
-		   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -1780,50 +1827,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -1968,34 +2018,39 @@ BEGIN
 					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -2027,50 +2082,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -2170,7 +2228,7 @@ BEGIN
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
 					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
-					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -2212,38 +2270,43 @@ BEGIN
 						WHEN DORPD.TimePlaId = 3 THEN 'Collect'
 						WHEN DORPD.TimePlaId = 2 THEN 'Envío con cobro en recolección'
 						ELSE ''
-					END AS 'Credito/Collect',		   
-		   			SA.SaleAdvisorCode,
+					END AS 'Credito/Collect',
+					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName	   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -2275,50 +2338,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -2457,7 +2523,7 @@ BEGIN
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
 					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
-					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -2499,38 +2565,43 @@ BEGIN
 						WHEN DORPD.TimePlaId = 3 THEN 'Collect'
 						WHEN DORPD.TimePlaId = 2 THEN 'Envío con cobro en recolección'
 						ELSE ''
-					END AS 'Credito/Collect',		   
-		   			SA.SaleAdvisorCode,
+					END AS 'Credito/Collect',
+					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName	   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -2562,50 +2633,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -2789,34 +2863,39 @@ BEGIN
 					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -2848,50 +2927,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -3029,7 +3111,7 @@ BEGIN
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
 					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
-					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -3071,38 +3153,43 @@ BEGIN
 						WHEN DORPD.TimePlaId = 3 THEN 'Collect'
 						WHEN DORPD.TimePlaId = 2 THEN 'Envío con cobro en recolección'
 						ELSE ''
-					END AS 'Credito/Collect',		   
-		   			SA.SaleAdvisorCode,
+					END AS 'Credito/Collect',
+					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName	   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -3134,50 +3221,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -3366,31 +3456,36 @@ BEGIN
 					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -3422,50 +3517,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -3651,35 +3749,39 @@ BEGIN
 					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName
-		   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -3711,50 +3813,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -3940,35 +4045,39 @@ BEGIN
 					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName
-		   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -4000,50 +4109,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -4180,7 +4292,7 @@ BEGIN
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
 					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
-					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -4222,38 +4334,43 @@ BEGIN
 						WHEN DORPD.TimePlaId = 3 THEN 'Collect'
 						WHEN DORPD.TimePlaId = 2 THEN 'Envío con cobro en recolección'
 						ELSE ''
-					END AS 'Credito/Collect',		   
-		   			SA.SaleAdvisorCode,
+					END AS 'Credito/Collect',
+					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName	   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -4285,50 +4402,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
@@ -4467,7 +4587,7 @@ BEGIN
 					ISNULL(CTM.Name, CTV.Name) 'Cliente',--SI
 					CTM.SAPCardCode 'Código SAP', --SI
 					dbo.fn_CleanText(COALESCE(DOR.Sender_FirstName, '') + ' ' + COALESCE(DOR.Sender_LastName, '')) 'Remitente', --SI
-					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI
+					dbo.fn_CleanText(COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '')) 'Destinatario', --SI, --SI
 					DOR.Receiver_Department 'Departamento Destino',--SI
 					DOR.Receiver_Town 'Municipio Destino', --SI
 					DOR.DateCreated 'Fecha de solicitud del servicio', --SI
@@ -4509,38 +4629,43 @@ BEGIN
 						WHEN DORPD.TimePlaId = 3 THEN 'Collect'
 						WHEN DORPD.TimePlaId = 2 THEN 'Envío con cobro en recolección'
 						ELSE ''
-					END AS 'Credito/Collect',		   
-		   			SA.SaleAdvisorCode,
+					END AS 'Credito/Collect',
+					SA.SaleAdvisorCode,
 					BS.BusinessSegmentName,
 					COALESCE(SC.Description, 'Portal Web') AS KindOfVPName,
-					CS.CommercialSegmentName	   
+					CS.CommercialSegmentName		   
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				-- FECHA DE ENTREGA
-				OUTER APPLY (
-					SELECT MAX(DOD4.DateCreated) AS FechaEntrega
+				LEFT JOIN (
+					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
 
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
-					WHERE DOD4.Guide_Serie = DOR.Guide_Serie
-					  AND DOD4.Guide_Number = DOR.Guide_Number
-					  AND DOD4.StatusOrderId IN (5, 22)
+					WHERE DOD4.StatusOrderId IN (5, 22)
+					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
 				) FECHAS
+				ON FECHAS.Guide_Serie = DOR.Guide_Serie
+					AND FECHAS.Guide_Number = DOR.Guide_Number
 				-- DESCRIPCIÓN DEL BIEN
-				OUTER APPLY (
-					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
+				LEFT JOIN (
+					SELECT GuideSerie, GuideNumber,
+							COALESCE(dps.Detail, 'Caja') AS DescripcionBien,
+							ROW_NUMBER() OVER (PARTITION BY GuideSerie, GuideNumber ORDER BY Detail) AS rn
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
-					WHERE dps.GuideSerie = DOR.Guide_Serie
-					  AND dps.GuideNumber = DOR.Guide_Number
-					ORDER BY dps.Detail
 				) DPS
+				ON DPS.GuideSerie = DOR.Guide_Serie
+				   AND DPS.GuideNumber = DOR.Guide_Number
+				   AND DPS.rn = 1
 				-- PESO TOTAL
-				OUTER APPLY (
-					SELECT SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
+				LEFT JOIN (
+					SELECT DOP.GuideSerie, DOP.GuideNumber,
+					SUM(IIF(COALESCE(DOP.MassWeight, 0) > COALESCE(DOP.volumetricWeight, 1),
 								   COALESCE(DOP.MassWeight, 1),
 								   COALESCE(DOP.volumetricWeight, 1))) AS PesoTotal
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
-					WHERE DOP.GuideSerie = DOR.Guide_Serie
-					  AND DOP.GuideNumber = DOR.Guide_Number
+					GROUP BY DOP.GuideSerie, DOP.GuideNumber
 				) Weights
+				ON Weights.GuideSerie = DOR.Guide_Serie
+				 AND Weights.GuideNumber = DOR.Guide_Number
 
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
@@ -4572,50 +4697,53 @@ BEGIN
 					ON STO.StatusOrderId = DOR.StatusOrderId
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] c WITH (NOLOCK)--cano
 				ON c.IdCustomer = vpc.CustomerID
-				OUTER APPLY (
-					SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
+				LEFT JOIN (
+					SELECT ec.IdCustomer,
+					CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS IsEcommerce
 					FROM DeliveryBackOffice.dbo.Ecommerce ec WITH (NOLOCK)
-					WHERE ec.IdCustomer = DOR.IdCustomer
+					GROUP BY ec.IdCustomer
 				) EC
+				ON DOR.IdCustomer = EC.IdCustomer
 				-- TARIFAS Y PESO BASE
-				OUTER APPLY (
-					SELECT TOP 1
+				LEFT JOIN (
+					SELECT
+						rac.RbcCodeOfReference,
+						rac.RbcIdCustomer,
 						COALESCE(rah.AdditionalWeightRate, 0) AS TarifaExcedente,
 						COALESCE(rah.WeightLimit, 0) AS PesoBase
 					FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 					LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
 						ON rah.RheId = rac.RbcIdRate
 					WHERE 
-						(rac.RbcCodeOfReference = VPC.CodeOfReference
-						OR (rac.RbcIdCustomer = COALESCE(CTM.IdCustomer, CTV.IdCustomer) AND rac.RbcCodeOfReference IS NULL))
+						rac.RbcCodeOfReference IS NULL
 						AND rac.RbcRowStatus = 1
-					ORDER BY rac.RbcCodeOfReference DESC
 				) RATE
-				OUTER APPLY (
-					SELECT TOP 1 CSA.SaleAdvisorCode
+				ON  RATE.RbcIdCustomer = ISNULL(ctm.IdCustomer, ctv.IdCustomer) --AND RATE.RbcCodeOfReference = ''
+				LEFT JOIN (
+					SELECT  CSA.IdSaleAdvisor,
+								CSA.SaleAdvisorCode
 					FROM DeliveryBackOffice.dbo.CatSaleAdvisor CSA WITH(NOLOCK)
-					WHERE CSA.IdSaleAdvisor = COALESCE(CTM2.SaleAdvisorID, C.SaleAdvisorID)
 				) SA
-
-				OUTER APPLY (
-					SELECT TOP 1 CBS.BusinessSegmentName
+				ON SA.IdSaleAdvisor = COALESCE(CTM.SaleAdvisorID, C.SaleAdvisorID)
+				LEFT JOIN (
+					SELECT  CBS.IdBusinessSegment,
+								CBS.BusinessSegmentName
 					FROM DeliveryBackOffice.dbo.CatBusinessSegment CBS WITH (NOLOCK)
-					WHERE CBS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
 				) BS
-
-				OUTER APPLY (
-					SELECT TOP 1 CSC.Description
+				ON BS.IdBusinessSegment = COALESCE(CTM2.BusinessSegmentID, C.BusinessSegmentID)
+				LEFT JOIN (
+					SELECT CSC.IdSalesChannel,
+								 CSC.Description
 					FROM DeliveryBackOffice.dbo.CatSalesChannel CSC WITH (NOLOCK)
-					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC2 WITH(NOLOCK) 
-						ON VPC2.CustomerID = CTM.IdCustomer
-					WHERE CSC.IdSalesChannel = COALESCE(VPC2.SaleChannelId, VPC.SaleChannelId)
 				) SC
-
-				OUTER APPLY (
-					SELECT TOP 1 CCS.CommercialSegmentName
+				ON SC.IdSalesChannel = VPC.SaleChannelId 
+					AND VPC.CustomerID = CTM.IdCustomer
+				LEFT JOIN (
+					SELECT CCS.IdCommercialSegment,
+								CCS.CommercialSegmentName
 					FROM dbo.CatCommercialSegment CCS WITH (NOLOCK)
-					WHERE CCS.IdCommercialSegment = COALESCE(C.CommercialSegmentID, CTM2.CommercialSegmentID)
 				) CS
+				ON CS.IdCommercialSegment = COALESCE(CTM.CommercialSegmentID,C.CommercialSegmentID)
 			WHERE EXISTS
 			(
 				SELECT TOP(1) 1
