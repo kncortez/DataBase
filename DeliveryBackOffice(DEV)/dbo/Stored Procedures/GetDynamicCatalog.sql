@@ -597,6 +597,7 @@ BEGIN
 									   + '"IsoCode":"' +    cpv.IsoCode + '",'
 									   + '"TokenizedToken":"' +  cpv.TokenizedToken + '",' 
 									   + '"TokenizedCVV":"' +  cpv.TokenizedCVV + '",'
+                                       + '"PaymentGateway":"' + ISNULL( cpv.PaymentGateway,'') + '",'
                                        + '"ExpirationDate":"' + ISNULL(cpv.TokenizedExpirationDate,'') + '",' 
                                        + '"Type":"' + ISNULL( cpv.[Type],'') + '",'
 									   + '}'
