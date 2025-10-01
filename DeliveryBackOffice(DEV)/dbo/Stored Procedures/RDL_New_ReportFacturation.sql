@@ -241,7 +241,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -537,7 +537,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -834,7 +834,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -1131,7 +1131,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -1428,7 +1428,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -1726,7 +1726,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -1981,7 +1981,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -2237,7 +2237,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -2532,7 +2532,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -2826,7 +2826,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -3120,7 +3120,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -3416,7 +3416,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -3712,7 +3712,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -4008,7 +4008,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -4301,7 +4301,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
@@ -4596,7 +4596,7 @@ BEGIN
 					DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía', --SI
 					'SI' 'Entregado',--SI
 					DOR.Segment 'Tipo de tarifa aplicada',--SI
-					DPS.DescripcionBien AS 'Descripcion del bien transportado',--SI
+					COALESCE(DPS.DescripcionBien, 'caja') AS 'Descripcion del bien transportado',--SI
 					COALESCE(DOR.Pieces_Dry, 0) + COALESCE(DOR.Pieces_Cold, 0) 'Piezas',--SI
 					ISNULL(DOR.PriceShippment, 0) 'Tarifa del servicio', --SI
 					DOR.PriceShippment 'Monto envío',--SI
