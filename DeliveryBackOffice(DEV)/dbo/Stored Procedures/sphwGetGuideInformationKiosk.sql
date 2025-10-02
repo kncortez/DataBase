@@ -7,11 +7,15 @@
 -- Modified:    <2024-11-21>
 -- Description: <Se agrega parametro para busqueda de estacion>
 -- =============================================
+-- =============================================
+-- Author:      <Juan Ramirez > <2025-10-02>
+-- Description: <Se ajusta el mensaje de error>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphwGetGuideInformationKiosk]
     @GuideNumber INT,
     @GuideSerie NVARCHAR(5),
     @IdCountry NVARCHAR(2),
-	@CodeOfReference INT
+    @CodeOfReference INT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -51,7 +55,8 @@ BEGIN
         BEGIN
 			ROLLBACK TRANSACTION
             SELECT 400 AS 'StatusCode',
-                   'El estado de la guia no es valido' AS 'Description'
+                   'La guía escaneada no es válida o no se reconoce. Verifica que el código ' +
+                   'de la guía sea el correcto o ingrésalo manualmente. 'AS 'Description'
             RETURN
         END
         COMMIT TRANSACTION
