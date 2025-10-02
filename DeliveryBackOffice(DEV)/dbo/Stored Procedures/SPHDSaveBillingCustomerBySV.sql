@@ -11,7 +11,9 @@ CREATE PROCEDURE [dbo].[SPHDSaveBillingCustomerBySV]
 	@NRC NVARCHAR(20) = NULL,
     @TokenUser VARCHAR(50),
 	@Nirphone NVARCHAR(5),
-	@Phone NVARCHAR(20)
+	@Phone NVARCHAR(20),
+    @IdProvince INT,
+	@IdTownship INT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -29,7 +31,9 @@ BEGIN
 				Nirphone = @Nirphone,
 				Phone = @Phone,
                 TokenUpdated = @TokenUser,
-                DateUpdated = GETDATE()
+                DateUpdated = GETDATE(),
+                IdProvince = @IdProvince,
+                IdTownship = @IdTownship
             WHERE IdCustomer = @IdCustomer;
         END
         ELSE
@@ -44,7 +48,9 @@ BEGIN
 				Phone,
                 RowStatus,
                 TokenCreated,
-                DateCreated
+                DateCreated,
+                IdProvince,
+                IdTownship
             )
             VALUES (
                 @IdCustomer,
@@ -56,7 +62,9 @@ BEGIN
 				@Phone,
                 1,
                 @TokenUser,
-                GETDATE()
+                GETDATE(),
+                @IdProvince,
+                @IdTownship
             );
         END
 		SELECT '200' AS StatusCode,
@@ -65,8 +73,8 @@ BEGIN
 	SELECT
 		BL.Id,
 		BL.IdCustomer,
-		BL. DistrictId AS [CodeDistrict],
-		BL.StateId AS [CodeState],
+		BL.IdProvince AS [IdProvince],
+		BL.IdTownship AS [IdTownship],
 		BL.ActivityId AS CodeActivity,
 		BL.NRC,
 		BL.Nirphone,
