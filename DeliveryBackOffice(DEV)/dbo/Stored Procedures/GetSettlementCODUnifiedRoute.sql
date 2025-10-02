@@ -133,11 +133,12 @@ BEGIN
            dbs.Pieces_Cold_Dispatched,
            dbs.Guides_Dispatched,
            dbs.ID_Courier,
-           ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name
+           ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name,
+           sr.CUI AS DPI
     FROM @GuidesFound gf
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs WITH (NOLOCK)
             ON gf.Id = dbs.ID
-        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
+        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
             ON sr.ID = dbs.ID_Courier;
     --LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
     --ON cs.IdStation = dbs.DispatchedStationId
