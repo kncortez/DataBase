@@ -287,10 +287,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -574,10 +575,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -862,10 +864,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -1150,10 +1153,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					  ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -1439,10 +1443,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -1729,10 +1734,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -1975,10 +1981,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -2222,10 +2229,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -2508,10 +2516,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -2793,10 +2802,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -3078,10 +3088,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -3365,10 +3376,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -3653,10 +3665,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -3941,10 +3954,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -4225,10 +4239,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
@@ -4511,10 +4526,11 @@ BEGIN
 				) FECHAS
 				-- DESCRIPCIÓN DEL BIEN
 				OUTER APPLY (
-					SELECT STRING_AGG(ISNULL(dps.Detail, 'Caja'), ', ') AS DescripcionBien
+					SELECT TOP 1 COALESCE(dps.Detail, 'Caja') AS DescripcionBien
 					FROM dbo.DeliveryOrderPiece dps WITH (NOLOCK)
 					WHERE dps.GuideSerie = DOR.Guide_Serie
 					  AND dps.GuideNumber = DOR.Guide_Number
+					ORDER BY dps.Detail
 				) DPS
 				-- PESO TOTAL
 				OUTER APPLY (
