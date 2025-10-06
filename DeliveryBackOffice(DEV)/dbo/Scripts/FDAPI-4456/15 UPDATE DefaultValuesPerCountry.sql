@@ -7,16 +7,8 @@ BEGIN TRY
    WHERE IdCountry IN ('SV');
 
    UPDATE DefaultValuesPerCountry 
-   SET CodeOfReferenceCorpForInvoice = 1378846
-   WHERE IdCountry IN ('SV');
-
-   UPDATE DefaultValuesPerCountry 
    SET RegxPassport ='^[A-Z]{3}[0-9]{6}$'
    WHERE IdCountry IN ('SV');
-
-   UPDATE AddInfoByConfigSV
-   SET [Value] = '90005000002'
-   WHERE [Name]  = 'Secuencial'
 
   	COMMIT TRANSACTION
 	print 'Campos actualizados exitosamente'
