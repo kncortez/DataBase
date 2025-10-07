@@ -1856,6 +1856,7 @@
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_ConfirmAddress.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
+	<Build Include="dbo\Stored Procedures\DMReportFac.sql" />
     <Build Include="dbo\User Defined Types\TblListGuidesWithAnticipatedCOD.sql" />
     <Build Include="dbo\Tables\DumpServiceCoverageLogGT.sql" />
     <Build Include="dbo\Tables\AnticipatedCODHeader_1.sql" />
