@@ -23,7 +23,8 @@ BEGIN
               , @Hub             AS NVARCHAR(20)
               , @StatusGuide     AS NVARCHAR(20)
               , @StatusDelivered AS INT
-              , @HubCourier      AS NVARCHAR(25);
+              , @HubCourier      AS NVARCHAR(25)
+			  , @StatusArribal AS INT;
         --Encabezados
         DECLARE @EncabezadoRastreo TABLE
         (
@@ -37,11 +38,36 @@ BEGIN
             SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Entregado'
         );
 
+		SET @StatusArribal =
+		(
+			SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Arribó a las instalaciones'
+		);
+
+         -- 1) Carga 1 fila de DeliveryOrder
+        SELECT
+          DO.Guide_Serie, DO.Guide_Number, DO.StatusOrderId, DO.Sender_FirstName, DO.Sender_LastName,
+          DO.Receiver_FirstName, DO.Receiver_LastName, DO.ReceiverIdSettlement, DO.ReceiverIdTownship,
+          DO.ReceiverCountryId, DO.DeliveryETA, DO.IdDeliveryOption, DO.IsLastMileReturn, DO.IdCustomer,
+          DO.NameOfReceiver,DO.Receiver_Phone
+        INTO #DO
+        FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+        WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber;
+
+        -- 2) Carga todo el historial de esa guía
+        SELECT DOD.Guide_Serie, DOD.Guide_Number, DOD.StatusOrderId, DOD.DateCreated, DOD.UserCreated
+        INTO #DOD
+        FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
+        WHERE DOD.Guide_Serie = @GuideSerie AND DOD.Guide_Number = @GuideNumber;
+
+        -- Opcional: índices temporales (baratos y útiles)
+        CREATE CLUSTERED INDEX IX_DOD_GuideDate ON #DOD (StatusOrderId, DateCreated DESC);
+
+
         ----NOTA EL HUB QUEDA PENDIENTE DE VALIDAR, SEGUN SEAN LOS NUEVOS REQUERIMIENTOS
         SELECT @SenderName   = CONCAT(ISNULL(DO.Sender_FirstName, ''), ' ', ISNULL(DO.Sender_LastName, ''))
              , @ReceiverName = DO.NameOfReceiver
              , @StatusGuide  = CST.NameStatusProcess
-        FROM DeliveryOrder                                DO WITH (NOLOCK)
+        FROM #DO                                DO WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
             INNER JOIN CatStatusProcess                   CST WITH (NOLOCK)
@@ -111,7 +137,7 @@ BEGIN
                                     )
                                   , ''
                                    ) AS Hub
-                    FROM dbo.DeliveryOrderDetail                      dat WITH (NOLOCK)
+                    FROM #DOD                      dat WITH (NOLOCK)
                         LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tkd WITH (NOLOCK)
                             ON tkd.SSN_IdToken = dat.UserCreated
                         LEFT JOIN dbo.InternalUser                    it WITH (NOLOCK)
@@ -163,7 +189,7 @@ BEGIN
                           )
                         , ''
                          ) AS Hub
-            FROM DeliveryOrderDetail                               DOD WITH (NOLOCK)
+            FROM #DOD                               DOD WITH (NOLOCK)
                 LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken      token WITH (NOLOCK)
                     ON DOD.UserCreated = token.SSN_IdToken
                 LEFT JOIN DenariusUser_Dev.dbo.LGN_User            duser WITH (NOLOCK)
@@ -172,7 +198,7 @@ BEGIN
                 LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl WITH (NOLOCK)
                     ON epl.IdEmployee = duser.USR_IdEmployee
                 LEFT JOIN DeliveryBackOffice.dbo.InternalUser      IU WITH (NOLOCK)
-                    ON epl.CodeEmployee = IU.IdUser
+                    ON epl.CodeEmployee = CAST(IU.IdUser AS VARCHAR(20))
                 INNER JOIN StatusOrder                             SO WITH (NOLOCK)
                     ON DOD.StatusOrderId = SO.StatusOrderId
                 INNER JOIN CatStatusProcess                        CT WITH (NOLOCK)
@@ -231,7 +257,7 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
@@ -245,7 +271,7 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
@@ -259,7 +285,7 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
@@ -273,7 +299,7 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
@@ -287,7 +313,7 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
@@ -360,7 +386,7 @@ BEGIN
                    (
                        SELECT TOP 1
                               CAST(DateCreated AS DATE)
-                       FROM DeliveryOrderDetail D WITH (NOLOCK)
+                       FROM #DOD D WITH (NOLOCK)
                        WHERE D.Guide_Serie = DO.Guide_Serie
                              AND D.Guide_Number = DO.Guide_Number
                        --AND D.StatusOrderId = @StatusDelivered
@@ -379,7 +405,7 @@ BEGIN
                    ELSE
                        IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
                END                                                                              AS DeliveryETA
-        FROM DeliveryBackOffice.dbo.DeliveryOrder         DO WITH (NOLOCK)
+        FROM #DO         DO WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
             LEFT JOIN DeliveryBackOffice.dbo.Settlement   S WITH (NOLOCK)
@@ -444,7 +470,7 @@ BEGIN
                                ELSE
                                    'true'
                            END AS 'flagRescheduleDelivery'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder         DO WITH (NOLOCK)
+                    FROM #DO         DO WITH (NOLOCK)
                         INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
                             ON DO.StatusOrderId = SO.StatusOrderId
                     WHERE Guide_Serie = @GuideSerie
@@ -477,7 +503,7 @@ BEGIN
                                ELSE
                                    'true'
                            END AS 'flagChangeAdress'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder         DO WITH (NOLOCK)
+                    FROM #DO        DO WITH (NOLOCK)
                         INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
                             ON DO.StatusOrderId = SO.StatusOrderId
                     WHERE Guide_Serie = @GuideSerie
@@ -499,7 +525,7 @@ BEGIN
                                ELSE
                                    'true'
                            END AS 'flagPayDelivery'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder                  DO WITH (NOLOCK)
+                    FROM #DO                  DO WITH (NOLOCK)
                         INNER JOIN DeliveryBackOffice.dbo.StatusOrder          SO WITH (NOLOCK)
                             ON DO.StatusOrderId = SO.StatusOrderId
                         INNER JOIN DeliveryBackOffice.dbo.Customer             CU WITH (NOLOCK)
@@ -529,7 +555,7 @@ BEGIN
                                ELSE
                                    'true'
                            END AS 'flagNotifications'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder         DO WITH (NOLOCK)
+                    FROM #DO         DO WITH (NOLOCK)
                         INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
                             ON DO.StatusOrderId = SO.StatusOrderId
                     WHERE DO.Guide_Serie = @GuideSerie
@@ -550,7 +576,7 @@ BEGIN
                                ELSE
                                    'true'
                            END AS 'flagQualify'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+                    FROM #DO DO WITH (NOLOCK)
                     WHERE DO.Guide_Serie = @GuideSerie
                           AND DO.Guide_Number = @GuideNumber
                 );
@@ -560,7 +586,8 @@ BEGIN
               , @HasDry       BIT
               , @HasCold      BIT
               , @HasLatitude  BIT
-              , @HasLongitude BIT;
+              , @HasLongitude BIT
+			  , @ConfirmGuide NVARCHAR(10);
 
         -- Consultamos los valores y asignamos las variables
         SET @HasImagePath = IIF(
@@ -569,7 +596,7 @@ BEGIN
                                     SELECT TOP 1
                                            1
                                     FROM DeliveryProof                                        dp WITH (NOLOCK)
-                                        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                        INNER JOIN #DOD dod WITH (NOLOCK)
                                             ON dp.Guide_Serie = dod.Guide_Serie
                                                AND dp.Guide_Number = dod.Guide_Number
                                     WHERE dp.Guide_Serie = @GuideSerie
@@ -595,7 +622,7 @@ BEGIN
                                   INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt     da WITH (NOLOCK)
                                       ON da.Guide_Serie = dp.Guide_Serie
                                          AND da.Guide_Number = dp.Guide_Number
-                                  INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                  INNER JOIN #DOD dod WITH (NOLOCK)
                                       ON dp.Guide_Serie = dod.Guide_Serie
                                          AND dp.Guide_Number = dod.Guide_Number
                               WHERE dp.Guide_Serie = @GuideSerie
@@ -617,7 +644,7 @@ BEGIN
                                    INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt     da WITH (NOLOCK)
                                        ON da.Guide_Serie = dp.Guide_Serie
                                           AND da.Guide_Number = dp.Guide_Number
-                                   INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                   INNER JOIN #DOD dod WITH (NOLOCK)
                                        ON dp.Guide_Serie = dod.Guide_Serie
                                           AND dp.Guide_Number = dod.Guide_Number
                                WHERE dp.Guide_Serie = @GuideSerie
@@ -636,7 +663,7 @@ BEGIN
                                    SELECT TOP 1
                                           1
                                    FROM DeliveryBackOffice.dbo.DeliveryAttempt               DA WITH (NOLOCK)
-                                       INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                       INNER JOIN #DOD dod WITH (NOLOCK)
                                            ON DA.Guide_Serie = dod.Guide_Serie
                                               AND DA.Guide_Number = dod.Guide_Number
                                    WHERE DA.Guide_Serie = @GuideSerie
@@ -655,7 +682,7 @@ BEGIN
                                     SELECT TOP 1
                                            1
                                     FROM DeliveryBackOffice.dbo.DeliveryAttempt               DA WITH (NOLOCK)
-                                        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                        INNER JOIN #DOD dod WITH (NOLOCK)
                                             ON DA.Guide_Serie = dod.Guide_Serie
                                                AND DA.Guide_Number = dod.Guide_Number
                                     WHERE DA.Guide_Serie = @GuideSerie
@@ -668,6 +695,16 @@ BEGIN
                               , 1
                               , 0);
 
+		SET @ConfirmGuide = 
+		(
+			SELECT CASE WHEN DO.StatusOrderId = @StatusArribal THEN 'true' ELSE 'false' END 
+			FROM #DO DO WITH (NOLOCK)
+			WHERE DO.Guide_Serie = @GuideSerie
+				AND DO.Guide_Number = @GuideNumber
+		);
+
+		
+
         --Banderas
         SELECT ISNULL(@f1, 'false')                                                                         AS 'flagRescheduleDelivery'
              , ISNULL(@f2, 'false')                                                                         AS 'flagChangeAdress'
@@ -676,7 +713,8 @@ BEGIN
              , IIF(@HasImagePath = 1, 'true', IIF(@HasDry = 1, 'true', IIF(@HasCold = 1, 'true', 'false'))) AS 'flagShowImage'
              , IIF(@HasLatitude = 1 AND @HasLongitude = 1, 'true', 'false')                                 AS 'flagShowMapa'
              , 'true'                                                                                       AS 'flagRequestHelp' --Esta bandera siempre va visible para frontend
-             , ISNULL(@f5, 'false')                                                                         AS 'flagQualify';
+             , ISNULL(@f5, 'false')                                                                         AS 'flagQualify'
+			 , @ConfirmGuide																				AS 'flagConfirmAdress';
 
     END TRY
     BEGIN CATCH

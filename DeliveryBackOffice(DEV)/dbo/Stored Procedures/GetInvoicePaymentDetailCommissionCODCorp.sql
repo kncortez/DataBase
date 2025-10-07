@@ -7,7 +7,8 @@ CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailCommissionCODCorp]
 (
  @LstVisitPointClient NVARCHAR(MAX),
  @CutOffDate          DATETIME,
- @IdCountry           NVARCHAR(2) = 'GT'
+ @IdCountry           NVARCHAR(2) = 'GT',
+ @Option TINYINT = 0
 )
 AS
 BEGIN
@@ -30,7 +31,7 @@ BEGIN
                  SELECT TOP 1
                         IdCatConceptCOD
                    FROM CatConceptCOD WITH(NOLOCK)
-                  WHERE Concept = 'COMISION Y ENVIO'
+                  WHERE Concept = 'PAGO DE LA GUIA'
                     AND RowStatus = 1
                 );
 
@@ -125,6 +126,8 @@ BEGIN
            AND ISNULL(vpc.ExcludeCommissionCOD, cus.ExcludeCommissionCOD) = 0
            AND bdCOD.CatConceptCODId = @IdCatConceptCOD
            AND bdCOD.RowStatus = 1
+		   AND bdCOD.Excluded = 0
+           AND bdCOD.AuthorizationNumber IS NOT NULL
            AND bdCOD.Commission > 0
            AND bdCOD.idCountry = @IdCountry
            AND CAST(bdCOD.CreditDate AS DATE) <= CAST(@CutOffDate AS DATE)
@@ -157,7 +160,6 @@ BEGIN
                  LEFT JOIN CatBillingVolume        cbv WITH (NOLOCK)
                      ON ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = cbv.IdCatBillingVolume
            WHERE gc.CreditDate <= @CutOffDate
-             AND ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = 2 --Billing Volume -> Completo;
 
             -- Validar si hay registros en la tabla temporal
             IF EXISTS (SELECT TOP 1 1
