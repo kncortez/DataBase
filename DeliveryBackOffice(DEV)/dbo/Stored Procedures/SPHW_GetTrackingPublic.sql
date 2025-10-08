@@ -10,6 +10,12 @@
 -- Create date: <2024-11-04>
 -- Description:	<Se agrega el DeliveryETA para el trackin y muestra nuevo estado en timeline >
 -- =============================================
+-- =============================================
+-- Propósito: Obtener deshabilitaido temporalmente "Recibir Alertas",
+-- Autor:     <Freddy Camposeco>
+-- Historia:  <FDAPI-4780>
+-- Fecha:     <2025-10-08>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetTrackingPublic]
     @GuideSerie NVARCHAR(4)
@@ -499,32 +505,8 @@ BEGIN
                     WHERE DO.Guide_Serie = @GuideSerie
                           AND DO.Guide_Number = @GuideNumber
                 );
-        -- BORRAR COMENTARIOS PARA HABILITARLA
-        -- "Recibir Alertas" SE DEJA DESHABILITADA "DB - FDAPI-4780", "FE - FDAPI-4778: Deshabilitación temporal de notificaciones de rastreo"
-        -- DECLARE @f4 NVARCHAR(10)
-        --     =
-        --         (
-        --             SELECT CASE
-        --                        WHEN
-        --                        (
-        --                            SELECT CatCheckpointTypeId
-        --                            FROM DeliveryBackOffice.dbo.StatusOrder WITH (NOLOCK)
-        --                            WHERE StatusOrderId = DO.StatusOrderId
-        --                        ) = @CheckpointType --NO ESTAR EN ESTADO FINAL
-        --                        OR SO.CatStatusProcessId = @StatusProcessFinal --LA GUÍA SE ENCUENTRA EN UN ESTADO ENTREGADO
-        --                 THEN
-        --                            'false'
-        --                        ELSE
-        --                            'true'
-        --                    END AS 'flagNotifications'
-        --             FROM #DO         DO WITH (NOLOCK)
-        --                 INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
-        --                     ON DO.StatusOrderId = SO.StatusOrderId
-        --             WHERE DO.Guide_Serie = @GuideSerie
-        --                   AND DO.Guide_Number = @GuideNumber
-        --         );
+                
         DECLARE @f4 NVARCHAR(10) = 'false';
-        -- "Recibir Alertas" SE DEJA DESHABILITADA "DB - FDAPI-4780", "FE - FDAPI-4778: Deshabilitación temporal de notificaciones de rastreo"
 
         DECLARE @f5 NVARCHAR(10) =
                 (
