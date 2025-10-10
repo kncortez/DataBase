@@ -49,7 +49,7 @@ BEGIN
             FROM DeliveryOrder WITH (NOLOCK)
             WHERE Guide_Serie = @GuideSerie
                   AND Guide_Number = @GuideNumber
-                  AND ISNULL(SenderCountryId, 'GT') = @IdCountry
+                  AND SenderCountryId = @IdCountry
                   AND StatusOrderId IN ( @StatusOrderSolicitado, @StatusOrderGenerado )
         )
         BEGIN
