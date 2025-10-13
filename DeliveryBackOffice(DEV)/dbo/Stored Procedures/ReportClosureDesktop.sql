@@ -8,6 +8,10 @@
 -- Create date: <2024-07-08>
 -- Description:	<Se agrega el simbolo de la moneda, segun pais de origen, para el detalle del reporte>
 -- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <10/10/2025>
+-- Description:	<Se agregan envios internacionales.>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -244,7 +248,7 @@ BEGIN
     AND ACD.RowStatus = 1
 	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
-	AND (CTS.IdTypeService NOT IN (5, 23))
+	AND (CTS.IdTypeService <> 23)
 	ORDER BY DOPD.DateCreated ASC
 	option (optimize for unknown)
 END

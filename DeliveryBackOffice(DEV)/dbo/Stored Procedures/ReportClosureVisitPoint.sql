@@ -13,6 +13,11 @@
 -- Create date: <26-07-2024>
 -- Description:	<Se optimiza la consulta ya que se tardaba 1:30seg>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <10/10/2025>
+-- Description:	<Se agregan envios internacionales.>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
     @StartDate DATETIME = NULL,
     @EndDate DATETIME = NULL,
@@ -252,7 +257,7 @@ BEGIN
                   --OR DOPD.AccountId = @IdAccount
                   )
               AND ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre
-              AND (CTS.IdTypeService NOT IN ( 5, 23 ))
+              AND (CTS.IdTypeService <> 23)
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 			 AND DOPD.[TypeofInOutMoneyId] != 8
         ORDER BY DOPD.DateCreated ASC;
@@ -459,7 +464,7 @@ BEGIN
               AND (VPC.CodeOfReference = @VisitPointId
                   --OR DOPD.AccountId = @IdAccount
                   )
-              AND (CTS.IdTypeService NOT IN ( 5, 23 ))
+              AND (CTS.IdTypeService <> 23)
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 			 AND DOPD.[TypeofInOutMoneyId] != 8
         ORDER BY ACD.AccountingClosuresHeaderId,
@@ -657,7 +662,7 @@ BEGIN
         -- FIN MODIFICACIÓN
         WHERE CONVERT(DATE, DOPD.DateCreated)
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-              AND (CTS.IdTypeService NOT IN ( 5, 23 ))
+              AND (CTS.IdTypeService <> 23)
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 			 AND DOPD.[TypeofInOutMoneyId] != 8
         ORDER BY ACD.AccountingClosuresHeaderId,

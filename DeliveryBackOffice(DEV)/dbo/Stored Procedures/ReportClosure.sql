@@ -13,6 +13,11 @@
 -- Create date: <22/07/2024>
 -- Description:	<Se optimiza la consulta en la segunda validacion, para la generacion de los cierres>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <10/10/2025>
+-- Description:	<Se agregan envios internacionales.>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosure]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -180,7 +185,7 @@ begin
 	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 		AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount) and ACD.AccountingClosuresHeaderId = @IdCierre
 		AND ACD.RowStatus = 1
-        AND (CTS.IdTypeService NOT IN (5,23))
+        AND (CTS.IdTypeService <> 23)
 			 AND DOPD.[TypeofInOutMoneyId] != 8
 	ORDER BY DOPD.DateCreated ASC
 end
@@ -303,7 +308,7 @@ begin
 				ON REU.UsrIdUser = ACH.UserId
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount)
-			AND (CTS.IdTypeService NOT IN (5,23))
+			AND (CTS.IdTypeService <> 23)
 			AND DOPD.[TypeofInOutMoneyId] != 8
             AND ACD.RowStatus = 1
 	--	ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
@@ -442,7 +447,7 @@ begin
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 				ON REU.UsrIdUser = ACH.UserId
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-			AND (CTS.IdTypeService NOT IN (5,23))
+			AND (CTS.IdTypeService <> 23)
 			 AND DOPD.[TypeofInOutMoneyId] != 8
              AND ACD.RowStatus = 1
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
