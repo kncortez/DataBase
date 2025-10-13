@@ -18,7 +18,9 @@ CREATE PROCEDURE [dbo].[spHM_setInTransitToLinehaulRoutePreparation]
 	@SecurityManCUI AS NVARCHAR(25),
 	@Tag AS NVARCHAR(25),
 	@IsInternal AS INT,
-	@TknUser AS NVARCHAR(50)
+	@TknUser AS NVARCHAR(50),
+	@IdCountry AS NVARCHAR(2) = 'GT',
+	@IdStation INT
 
 AS
 BEGIN
@@ -226,7 +228,8 @@ BEGIN
 					@Tag, 
 					1, 
 					@TknUser, 
-					SYSDATETIME());
+					SYSDATETIME(),
+					@IdStation);
 
 		-- Update LinehaulRoutePreparation set SenderReceiver and LinehaulStatus
 		UPDATE	[LinehaulRoutePreparation]
