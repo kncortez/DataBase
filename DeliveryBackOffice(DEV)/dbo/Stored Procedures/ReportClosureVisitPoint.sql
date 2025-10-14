@@ -100,8 +100,7 @@ BEGIN
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
                ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
-			   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
-
+			   ISNULL(CCC.CodeISO,'') AS CurrencySymbol 
         FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
             LEFT JOIN @TEMPLATEDETAIL IND
                 ON IND.guideserie = DOR.Guide_Serie
@@ -153,6 +152,8 @@ BEGIN
                 ON DOPD.VisitPoint = VPC.CodeOfReference
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
                 ON REU1.UsrIdUser = ACHVP.UserId
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
         -- FIN MODIFICACIÓN
 
         WHERE CONVERT(DATE, DOPD.DateCreated)
@@ -308,8 +309,7 @@ BEGIN
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
                ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
-			   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
-
+			   ISNULL(CCC.CodeISO,'') AS CurrencySymbol
         FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
             LEFT JOIN @TEMPLATEDETAIL IND
                 ON IND.guideserie = DOR.Guide_Serie
@@ -358,7 +358,8 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
                 ON REU1.UsrIdUser = ACHVP.UserId
         -- FIN MODIFICACIÓN
-
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
         WHERE CONVERT(DATE, DOPD.DateCreated)
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 
@@ -517,9 +518,7 @@ BEGIN
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
                ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
-			   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
-        --,DOPD.*
-        --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
+			   ISNULL(CCC.CodeISO,'') AS CurrencySymbol
         FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
             LEFT JOIN @TEMPLATEDETAIL IND
                 ON IND.guideserie = DOR.Guide_Serie
@@ -572,7 +571,8 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
                 ON REU1.UsrIdUser = ACHVP.UserId
         -- FIN MODIFICACIÓN
-
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
         WHERE CONVERT(DATE, DOPD.DateCreated)
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
