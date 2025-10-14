@@ -176,15 +176,14 @@ begin
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 		INNER JOIN invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
-        INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-			ON INH.inv_numberFEL = ACD.Fel 
-		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+        LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
+		LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 			ON REU.UsrIdUser = ACH.UserId
 	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 		AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount) and ACD.AccountingClosuresHeaderId = @IdCierre
-		AND ACD.RowStatus = 1
         AND (CTS.IdTypeService <> 23)
 			 AND DOPD.[TypeofInOutMoneyId] != 8
 	ORDER BY DOPD.DateCreated ASC
@@ -300,9 +299,9 @@ begin
 				ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 			INNER JOIN invoiceHeader INH WITH (NOLOCK)  
 				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
-			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-				ON INH.inv_numberFEL = ACD.Fel
-			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+			LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+				ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
+			LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 				ON REU.UsrIdUser = ACH.UserId
@@ -310,7 +309,6 @@ begin
 			AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount)
 			AND (CTS.IdTypeService <> 23)
 			AND DOPD.[TypeofInOutMoneyId] != 8
-            AND ACD.RowStatus = 1
 	--	ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 end
@@ -434,9 +432,9 @@ begin
 				ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 			INNER JOIN invoiceHeader INH WITH (NOLOCK)
 				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
-			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-				ON INH.inv_numberFEL = ACD.Fel
-			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+			LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+				ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
+			LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 
 			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
@@ -449,7 +447,6 @@ begin
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (CTS.IdTypeService <> 23)
 			 AND DOPD.[TypeofInOutMoneyId] != 8
-             AND ACD.RowStatus = 1
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 end
 END

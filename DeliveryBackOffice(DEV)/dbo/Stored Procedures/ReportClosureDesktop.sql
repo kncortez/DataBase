@@ -218,9 +218,9 @@ BEGIN
 					item
 				FROM dbo.SplitUnlimited(DOPD.Fel, '-')
 				WHERE id = 2)
-	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
-		ON INH.inv_numberFEL = ACD.Fel
-	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
+	LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
+		ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
+	LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 
 	-- MODIFICACIÓN 27/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
@@ -245,7 +245,6 @@ BEGIN
 	-- MODIFICACIÓN 23/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	AND (VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1' OR VPC.CodeOfReference IS NULL)
 	-- FIN MODIFICACIÓN
-    AND ACD.RowStatus = 1
 	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
 	AND (CTS.IdTypeService <> 23)

@@ -234,10 +234,10 @@ BEGIN
                 (
                     SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
                 )
-            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
                 ON INH.inv_numberFEL = ACD.Fel
                    AND ACD.RowStatus = 1
-            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
                 ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
                 ON REU.UsrIdUser = ACH.UserId
@@ -442,10 +442,10 @@ BEGIN
                 (
                     SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
                 )
-            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
                 ON INH.inv_numberFEL = ACD.Fel
                    AND ACD.RowStatus = 1
-            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
                 ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
                 ON REU.UsrIdUser = ACH.UserId
@@ -644,10 +644,10 @@ BEGIN
                 (
                     SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
                 )
-            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
                 ON INH.inv_numberFEL = ACD.Fel
                    AND ACD.RowStatus = 1
-            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
                 ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
                 ON REU.UsrIdUser = ACH.UserId
