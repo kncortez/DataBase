@@ -13,8 +13,8 @@ CREATE PROCEDURE [dbo].[ReportCODSettlement]
 AS
 BEGIN
     SELECT DBS.ID,
-           COALESCE(HL.HubAbbreviation, VPC.DescriptionOfClient) AS HubAbbreviation,
-           DBS.Date_Dispatched,
+           COALESCE(HL.HubAbbreviation, VPC.DescriptionOfClient) AS HUB,
+           CONVERT(DATE,DBS.Date_Dispatched) AS Date_Dispatched,
            CONCAT(SR.First_Name, ' ', SR.Last_Name) AS Piloto,
            CR.CodeRoute,
            AG.TotalCollect,
@@ -35,10 +35,10 @@ BEGIN
            AG.Efectivo,
            AG.Zigi,
            AG.TC,
-           SUM(RDM.AmountApplied) AS Efectibox
+           ISNULL(SUM(RDM.AmountApplied),0) AS Efectibox
     FROM DeliveryOrderBySettlement DBS WITH (NOLOCK)
         INNER JOIN CatStation CST WITH (NOLOCK)
-            ON DBS.DispatchedStationId = CST.IdStation
+            ON DBS.SettlementStationId = CST.IdStation
         LEFT JOIN HubLogistics HL WITH (NOLOCK)
             ON CST.HubLogisticId = HL.IdHubLogistic
         LEFT JOIN VisitPointClient VPC WITH (NOLOCK)
@@ -47,7 +47,7 @@ BEGIN
             ON DBS.ID_Courier = SR.ID
         INNER JOIN CatRoute CR WITH (NOLOCK)
             ON DBS.CatRouteId = CR.IdRoute
-        INNER JOIN RelDepositManifest RDM WITH (NOLOCK)
+        LEFT JOIN RelDepositManifest RDM WITH (NOLOCK)
             ON RDM.DeliveryOrderBySettlementId = DBS.ID
         LEFT JOIN Contingency CTG WITH (NOLOCK)
             ON CTG.DeliveryOrderBySettlementId = DBS.ID
@@ -73,8 +73,8 @@ BEGIN
                COALESCE(DT.Cash, 0) AS Efectivo,
                DPM.Efectibox,
                COALESCE(SUM(   CASE
-                                   WHEN CD.IdTypeOfMoney = 10 THEN
-                                       CO.TotalAmountPaid
+                                   WHEN CD.IdTypeOfMoney = 10 AND pz.ZigiLinkStatus = 'PAID' THEN
+                                       pz.PaidAmount
                                    ELSE
                                        0
                                END
@@ -107,6 +107,9 @@ BEGIN
             LEFT JOIN Cost CO WITH (NOLOCK)
                 ON CO.GuideNumber = DO.Guide_Number
                    AND CO.GuideSerie = DO.Guide_Serie
+            LEFT JOIN PaymentZigi pz WITH (NOLOCK)
+                ON pz.GuideNumber = DO.Guide_Number
+                   AND pz.GuideSerie = DO.Guide_Serie
             LEFT JOIN CostDetail CD WITH (NOLOCK)
                 ON cd.IdCost = CO.IdCost
         WHERE DSD.ID_DeliveryOrderBySettlement = DBS.ID
