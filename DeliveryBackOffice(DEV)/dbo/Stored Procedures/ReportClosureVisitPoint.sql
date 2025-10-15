@@ -131,8 +131,6 @@ BEGIN
                    -- MODIFICACIÓN 01/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                    AND ACD.DopId = DOPD.DopId
                    -- FIN MODIFICACIÓN
-
-                   AND ACD.RowStatus = 1
             INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
                 ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
@@ -173,6 +171,7 @@ BEGIN
 
               AND ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
+              AND ACD.RowStatus = 1
         -- ORDER BY DOPD.DateCreated ASC
         UNION ALL
         SELECT ACD.AccountingClosuresHeaderId ClosuresHeaderId,
@@ -335,8 +334,6 @@ BEGIN
                    -- MODIFICACIÓN 01/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                    AND ACD.DopId = DOPD.DopId
                    -- FIN MODIFICACIÓN
-
-                   AND ACD.RowStatus = 1
             INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
                 ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
@@ -380,6 +377,7 @@ BEGIN
               AND DOPD.AccountId > 0
               AND DOR.StatusOrderId != 7
 			  AND DOPD.[TypeofInOutMoneyId] != 8
+              AND ACD.RowStatus = 1
         -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
         UNION ALL
@@ -549,8 +547,6 @@ BEGIN
                    -- MODIFICACIÓN 01/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                    AND ACD.DopId = DOPD.DopId
                    -- FIN MODIFICACIÓN
-
-                   AND ACD.RowStatus = 1
             INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
                 ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
@@ -581,7 +577,7 @@ BEGIN
         WHERE CONVERT(DATE, DOPD.DateCreated)
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
-
+              AND ACD.RowStatus = 1
         --ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
         UNION ALL
