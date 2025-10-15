@@ -227,7 +227,6 @@ BEGIN
 	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 		--ON VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId)
 		ON DOPD.VisitPoint = VPC.CodeOfReference
-			OR (@VisitPointId = '-1' AND VPC.CodeOfReference = ACH.VisitPoint)
 	-- FIN MODIFICACIÓN
 
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
@@ -248,6 +247,88 @@ BEGIN
 	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
 	AND (CTS.IdTypeService <> 23)
+	AND @VisitPointId <> '-1'
+	UNION ALL
+	SELECT DISTINCT DOPD.AccountId,
+		ACD.AccountingClosuresHeaderId ClosuresHeaderId
+	   ,VPC.VisitPointId
+	   ,VPC.DescriptionOfClient VisitPointDescription
+	   ,ACh.UserId
+	   ,REU.UsrNickName
+	   ,DOPD.DateCreated 'DateCreated'
+	   ,INH.inv_UserName 'Client'
+	   ,INH.inv_certificationFEL 'CertificationFEL'
+	   ,INH.inv_serieFEL 'SerieFel'
+	   ,INH.inv_numberFEL 'NumberFel'
+	   ,INH.inv_SAPDocEntry 'DOCSAP'
+	   ,Status = '----'
+	   ,Guide = '----'
+	   ,Voucher = ''
+	   ,'  ' AS CurrencySymbol
+	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
+	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
+	   ,CASE
+			WHEN DOPD.TypeofInOutMoneyId = 1 THEN UPPER(ctgmon.tio_pk_name)
+			WHEN DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
+			WHEN DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
+			WHEN DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+			WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+			WHEN DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+			ELSE ''
+		END 'PaymentType'
+	   ,CTS.NameTypeService AS 'ServiceType'
+
+	   -- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+		,ACHVP.IdAccountingClosuresHeaderVisitPoint 'CierreGeneral'
+		,REU1.UsrNickName 'Encargado'
+		,ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral'
+		,ISNULL(ACHVP.Bag1, '') 'Bolsa'
+		,ISNULL(ACHVP.ClosurerPOS,'') 'CierrePOS'
+		-- FIN MODIFICACIÓN
+
+	--,DOPD.*
+	--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
+	FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
+
+	INNER JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
+		ON CTS.IdTypeService = DOPD.TypeServiceId
+	LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
+		ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+	INNER JOIN invoiceHeader INH WITH(NOLOCK)
+		ON INH.inv_numberFEL = (SELECT
+					item
+				FROM dbo.SplitUnlimited(DOPD.Fel, '-')
+				WHERE id = 2)
+	LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
+		ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
+	LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
+		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+
+	-- MODIFICACIÓN 27/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
+		--ON VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId)
+		ON VPC.CodeOfReference = ACH.VisitPoint
+	-- FIN MODIFICACIÓN
+
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
+		ON REU.UsrIdUser = ACH.UserId
+
+	-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+	LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH(NOLOCK)
+			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1 WITH(NOLOCK)
+			ON REU1.UsrIdUser = ACHVP.UserId
+	-- FIN MODIFICACIÓN
+
+	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+
+	-- MODIFICACIÓN 23/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+	AND (VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1' OR VPC.CodeOfReference IS NULL)
+	-- FIN MODIFICACIÓN
+	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
+	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
+	AND (CTS.IdTypeService <> 23)
+	AND @VisitPointId = '-1'
 	ORDER BY DOPD.DateCreated ASC
 	option (optimize for unknown)
 END
