@@ -69,6 +69,7 @@ CREATE TABLE [dbo].[Customer] (
     [IsCOD]                   INT            NULL,
     [IsVoucherRequired]       INT            CONSTRAINT [DF_Customer_IsvoucherRequired] DEFAULT ((0)) NULL,
     [CustomerUEId] [int] NULL,
+    [RestrictionByArticle] BIT NULL, 
     CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED ([IdCustomer] ASC),
     CONSTRAINT [FK_Customer_CatBankAccountType] FOREIGN KEY ([CODAccountTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
     CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),
@@ -336,3 +337,13 @@ GO
 CREATE NONCLUSTERED INDEX [idx_CatBatchFrequencyCODId]
     ON [dbo].[Customer]([CatBatchFrequencyCODId] ASC);
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Bandera que indica si se utilizará tarifario por artículo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Customer',
+    @level2type = N'COLUMN',
+    @level2name = N'RestrictionByArticle'

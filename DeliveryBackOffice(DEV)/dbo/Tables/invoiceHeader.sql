@@ -126,6 +126,10 @@ CREATE NONCLUSTERED INDEX [idx_inv_pk_id_CatInvoiceTypeId]
     ON [dbo].[invoiceHeader]( [CatInvoiceTypeId]);
 
 GO
+CREATE NONCLUSTERED INDEX IX_invoiceHeader_IdCountry_inv_numberFEL
+        ON dbo.invoiceHeader (IdCountry, inv_numberFEL ASC);
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del pais registrado para la factura', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'IdCountry';
 
 GO

@@ -53,7 +53,7 @@ BEGIN
 	  , @InvoiceEmail  = InvoiceEmail
   FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber= @OrderNumber
 
-  DECLARE @IdAccountCart INT = (SELECT   ac.AccIdAccount
+  DECLARE @IdAccountCart INT = (SELECT Top 1  ac.AccIdAccount
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
 															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
 																ON rus.RusIdUser = usr.UsrIdUser

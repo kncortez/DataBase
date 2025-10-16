@@ -14,17 +14,12 @@
     [Password]           NVARCHAR (50)  NULL,
     [Port]               INT            NULL,
     [RemoteRoute]        NVARCHAR (50)  NULL,
+    [IsCountryRequired]  BIT            DEFAULT ((0)) NOT NULL,
+    [RestrictValidatedIncidents]  BIT   DEFAULT ((0)) NOT NULL, 
     PRIMARY KEY CLUSTERED ([IdWebhookEndpoint] ASC),
     CONSTRAINT [FK_WebhookEndpoint_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_WebhookEndpoint_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType])
 );
-
-
-
-
-
-
-
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
@@ -63,8 +58,14 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se requiere notificar el país del servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint', @level2type = N'COLUMN', @level2name = N'IsCountryRequired';
+
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de endpoints para envio de webhook basado en tipo de webhook.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Restricción de notificación de Incidencia validada si es real o no', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint', @level2type = N'COLUMN', @level2name = N'RestrictValidatedIncidents';
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',

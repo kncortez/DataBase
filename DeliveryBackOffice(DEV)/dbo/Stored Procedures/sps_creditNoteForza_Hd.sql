@@ -3,12 +3,17 @@
 -- Create date: 26 Agosto 2022
 -- Description:	Registra en base de datos local nueva nota de credito correspondiente a factura enviada
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<30 Julio 2025>
+-- Description:	<Facturacion SV - Se inserta registro para nota de credito y aumenta el secuencial>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_creditNoteForza_Hd]
     -- Add the parameters for the stored procedure here
     @idInvoice INT,
     @Amount DECIMAL(18, 2) = 0,
     @motivoNotaCredito VARCHAR(2000),
-    @token VARCHAR(50)
+    @token VARCHAR(50),
+    @TblCreditNoteData TblResponseCreditNoteSV READONLY
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -18,6 +23,7 @@ BEGIN
     DECLARE @detalles AS INT;
     DECLARE @idNotaCredito AS INT = NULL;
     DECLARE @vpCodeOfReferences NVARCHAR(10);
+	DECLARE @TypeDocumentCreditNote INT = (SELECT IdRegister FROM CatTypeDocument WHERE [Name] = 'Nota de crédito')
 
     DECLARE @Country NVARCHAR(2) = 'GT';
     SET @Country =
@@ -181,6 +187,7 @@ BEGIN
         --Variables para el manejo de IVA 
         DECLARE @IdCountry AS NVARCHAR(8);
         DECLARE @IVA AS DECIMAL(18, 2) = 1.12;
+        DECLARE @secuencia BIGINT, @rowcount  INT;  
 
         --Variables para validaciones si la factura ya fue cancelada
         DECLARE @InvoideStatus INT = 0;
@@ -308,59 +315,185 @@ BEGIN
                 WHERE id.dti_fk_header = @idInvoice;
 
                 -- Inserción de encabezado de la nota de crédito
-                INSERT INTO [dbo].[invoiceHeader]
-                (
-                    [inv_vpCodeOfReferences],
-                    [inv_cmp_nit],
-                    [inv_cli_name],
-                    [inv_cli_adress],
-                    [inv_cli_nit],
-                    [inv_cli_email],
-                    [inv_date],
-                    [inv_IVA],
-                    [inv_amount],
-                    [inv_status],
-                    [inv_dateRegister],
-                    [inv_tokenRegister],
-                    [inv_type],
-                    [inv_invoiceOfCreditNote],
-                    [inv_motiveCreditNote],
-                    [inv_dateOriginDocument],
-                    [inv_documentOriginFEL],
-                    [IdCurrency],
-                    [IdCountry]
-                )
-                SELECT [inv_vpCodeOfReferences],
-                       [inv_cmp_nit],
-                       [inv_cli_name],
-                       [inv_cli_adress],
-                       [inv_cli_nit],
-                       [inv_cli_email],
-                       GETDATE(),
-                       CASE
-                           WHEN @Amount > 0 THEN
-                       (@Amount - (@Amount / @IVA))
-                           ELSE
-                               [inv_amount]
-                       END inv_IVA,
-                       CASE
-                           WHEN @Amount > 0 THEN
-                               @Amount
-                           ELSE
-                               [inv_amount]
-                       END inv_amount,
-                       [inv_status],
-                       GETDATE(),
-                       @token,
-                       2,
-                       @idInvoice,
-                       @motivoNotaCredito,
-                       inv_date,
-                       inv_certificationFEL,
-                       IdCurrency,
-                       IdCountry
-                FROM invoiceHeader WITH (NOLOCK)
-                WHERE inv_pk_id = @idInvoice;
+                IF(@IdCountry = 'SV')
+                BEGIN 
+                    INSERT INTO [dbo].[invoiceHeader]
+                    (
+                        [inv_vpCodeOfReferences],
+                        [inv_cmp_nit],
+                        [inv_cmp_name],
+                        [inv_cmp_nameComercial],
+                        [inv_cmp_adress],
+                        [inv_cli_name],
+                        [inv_cli_adress],
+                        [inv_cli_nit],
+                        [inv_cli_email],
+                        [inv_date],
+                        [inv_documentSend],
+                        [inv_documentRecieved],
+                        [inv_certificationFEL],
+                        [inv_serieFEL],
+                        [inv_numberFEL],
+                        [inv_descriptionFEL],
+                        [inv_RequestorFEL],
+                        [inv_TransactionFEL],
+                        [inv_CountryFEL],
+                        [inv_EntityFEL],
+                        [inv_UserFEL],
+                        [inv_UserName],
+                        [inv_Data1FEL],
+                        [inv_Data3FEL],
+                        [inv_MailSendFEL],
+                        [inv_subjectFEL],
+                        [inv_IVA],
+                        [inv_amount],
+                        [inv_status],
+                        [inv_dateRegister],
+                        [inv_tokenRegister],
+                        [inv_type],
+                        [inv_invoiceOfCreditNote],
+                        [inv_motiveCreditNote],
+                        [inv_dateOriginDocument],
+                        [inv_documentOriginFEL],
+                        [inv_establecimientoFEL],
+                        [inv_cmp_nameFEL],
+                        [inv_FechaHoraFEL],
+                        [systemOperation],
+                        [inv_dateFEL],
+                        [CatInvoiceTypeId],
+                        [IdCurrency],
+                        [IdCountry]
+                    )
+                    SELECT [ih].[inv_vpCodeOfReferences],
+                           [ih].[inv_cmp_nit],
+                           [ih].[inv_cmp_name],
+                           [ih].[inv_cmp_nameComercial],
+                           [ih].[inv_cmp_adress],
+                           [ih].[inv_cli_name],
+                           [ih].[inv_cli_adress],
+                           [ih].[inv_cli_nit],
+                           [ih].[inv_cli_email],
+                           GETDATE(),
+                           [ih].[inv_documentSend],
+                           cn.[ResponesJson],
+                           cn.[CertificationFel],
+                           cn.[Serial],
+                           cn.[NumberFel],
+                           [ih].[inv_descriptionFEL],
+                           [ih].[inv_RequestorFEL],
+                           [ih].[inv_TransactionFEL],
+                           [ih].[inv_CountryFEL],
+                           [ih].[inv_EntityFEL],
+                           [ih].[inv_UserFEL],
+                           [ih].[inv_UserName],
+                           [ih].[inv_Data1FEL],
+                           [ih].[inv_Data3FEL],
+                           [ih].[inv_MailSendFEL],
+                           [ih].[inv_subjectFEL],
+                           CASE
+                               WHEN @Amount > 0 THEN
+                           (@Amount - (@Amount / @IVA))
+                               ELSE
+                                   [ih].[inv_amount]
+                           END inv_IVA,
+                           CASE
+                               WHEN @Amount > 0 THEN
+                                   @Amount
+                               ELSE
+                                   [ih].[inv_amount]
+                           END inv_amount,
+                           2,
+                           GETDATE(),
+                           @token,
+                           @TypeDocumentCreditNote,
+                           @idInvoice,
+                           @motivoNotaCredito,
+                           [ih].inv_date,
+                           [ih].inv_certificationFEL,
+                           [ih].[inv_establecimientoFEL],
+                           [ih].[inv_cmp_nameFEL],
+                           cn.IssueDate,
+                           [ih].[systemOperation],
+                           GETDATE(),
+                           [ih].[CatInvoiceTypeId],
+                           [ih].IdCurrency,
+                           [ih].IdCountry
+                    FROM invoiceHeader ih WITH (NOLOCK)
+                          INNER JOIN @TblCreditNoteData cn
+                          ON ih.inv_pk_id = cn.InvoiceId
+                    WHERE inv_pk_id = @idInvoice;
+
+                    SET @rowcount = @@rowcount  
+  
+                    IF(@rowcount > 0)  
+                    BEGIN   
+                       SELECT @secuencia = [Value]  
+                        FROM AddInfoByConfigSV  WITH(NOLOCK)
+                       WHERE RowStatus = 1  
+                         AND [Name] = 'Secuencial'  
+                         AND [Node] = 'Header.AdditionalIssueDocInfo'  
+  	               
+                      UPDATE AddInfoByConfigSV  
+                         SET [Value] = @secuencia + 1  
+                       WHERE [Name] = 'Secuencial'  
+                    END  
+                END
+                ELSE
+                BEGIN
+                    INSERT INTO [dbo].[invoiceHeader]
+                    (
+                        [inv_vpCodeOfReferences],
+                        [inv_cmp_nit],
+                        [inv_cli_name],
+                        [inv_cli_adress],
+                        [inv_cli_nit],
+                        [inv_cli_email],
+                        [inv_date],
+                        [inv_IVA],
+                        [inv_amount],
+                        [inv_status],
+                        [inv_dateRegister],
+                        [inv_tokenRegister],
+                        [inv_type],
+                        [inv_invoiceOfCreditNote],
+                        [inv_motiveCreditNote],
+                        [inv_dateOriginDocument],
+                        [inv_documentOriginFEL],
+                        [IdCurrency],
+                        [IdCountry]
+                    )
+                    SELECT [inv_vpCodeOfReferences],
+                           [inv_cmp_nit],
+                           [inv_cli_name],
+                           [inv_cli_adress],
+                           [inv_cli_nit],
+                           [inv_cli_email],
+                           GETDATE(),
+                           CASE
+                               WHEN @Amount > 0 THEN
+                           (@Amount - (@Amount / @IVA))
+                               ELSE
+                                   [inv_amount]
+                           END inv_IVA,
+                           CASE
+                               WHEN @Amount > 0 THEN
+                                   @Amount
+                               ELSE
+                                   [inv_amount]
+                           END inv_amount,
+                           [inv_status],
+                           GETDATE(),
+                           @token,
+                           2,
+                           @idInvoice,
+                           @motivoNotaCredito,
+                           inv_date,
+                           inv_certificationFEL,
+                           IdCurrency,
+                           IdCountry
+                    FROM invoiceHeader WITH (NOLOCK)
+                    WHERE inv_pk_id = @idInvoice;
+                END
 
                 -- Obtener el ID de la nota de crédito recién creada
                 SET @idNotaCredito = @@IDENTITY;

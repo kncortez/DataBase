@@ -9,6 +9,14 @@
 -- Create date: <2024-11-26>
 -- Description:	<Tracking - Se realiza validación de pago de envio en guías tipo collect.>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2024-09-04>
+-- Description:	<Se agrega validación de si fue pagado por Zigi, sin embargo, se deja comentado hasta validar si hay afectación en facturación en POD>
+-- =============================================
+-- Author:		<Tito García>
+-- Create date: <2024-09-04>
+-- Description:	<Se agrega nuevo campo en consulta de entregas y devoluciones para mostrarse en POD>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_daily_route]
     @Token VARCHAR(200) = '',
     @IdCourier BIGINT,
@@ -266,9 +274,9 @@ BEGIN
       , CODAmount
       , ReturnRates
     )
-    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Gu�as
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Guías
                                               , @InTime = 3                        -- Entrega
-                                              , @IsReturn = 1                      -- Devoluci�n
+                                              , @IsReturn = 1                      -- Devolución
                                               , @CodeApp = 'SIFDCECOM300720201459' -- CodeApp
                                               , @IdModule = 1
                                               , @Token = @Token;
@@ -376,10 +384,10 @@ BEGIN
 									LEFT JOIN dbo.Province p WITH (NOLOCK)
 									    ON t.IdProvince =p.IdProvince
 				LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CP  WITH (NOLOCK)
-					ON  CP.[IdCountry] = ISNULL(vpc.CountryId,'GT')
+					ON  CP.[IdCountry] = vpc.CountryId
 						AND CP.[Name] = 'AreaCode'
 				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
-					ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
+					ON  de.Currency_IdCountry = vpc.CountryId
 					AND de.DefaultPerCountry = 1
 				LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
 					ON ce.TargetCurrency = de.IdCurrencyCOD
@@ -411,7 +419,7 @@ BEGIN
 				 [DeliveryOption],
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
 				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id],
-				 ISNULL(DOR.Ticket_Number, '') [TicketNumber],
+				 ISNULL(REPLACE(DOR.Ticket_Number, '"', ''), '') [TicketNumber],
 				 0 [ServiceManagementId],
 				 ISNULL(
 					ISNULL(
@@ -533,6 +541,14 @@ BEGIN
 				END [Longitude],
 				CONVERT(VARCHAR, ISNULL(VPC.Accuracy, 0)) [Precision],
 				CASE
+					-- WHEN
+                    --    (SELECT TOP 1 1 -- Validamos existencia con un valor sustituto de '1'
+                    --     FROM DeliveryBackOffice.dbo.PaymentZigi ZP WITH (NOLOCK)
+                    --     WHERE ZP.GuideSerie = DOR.Guide_Serie -- Validación de Serie de Guía
+                    --       AND ZP.GuideNumber = DOR.Guide_Number -- Validación de Número de Guía
+                    --       AND ZP.ZigiLinkStatus = 'PAID' -- La condición específica de estado
+                    --    ) IS NOT NULL -- Si existe al menos un registro
+                    -- THEN 0 -- En este caso, el precio COD retorna '0' porque ya está pagado por Zigi
 					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
 					THEN 0
 					ELSE
@@ -547,6 +563,14 @@ BEGIN
 							  )
 				END [Price_COD],
 				CASE 
+					-- WHEN
+                    --    (SELECT TOP 1 1 -- Validamos existencia con un valor sustituto de '1'
+                    --     FROM DeliveryBackOffice.dbo.PaymentZigi ZP WITH (NOLOCK)
+                    --     WHERE ZP.GuideSerie = DOR.Guide_Serie -- Validación de Serie de Guía
+                    --       AND ZP.GuideNumber = DOR.Guide_Number -- Validación de Número de Guía
+                    --       AND ZP.ZigiLinkStatus = 'PAID' -- La condición específica de estado
+                    --    ) IS NOT NULL -- Si existe al menos un registro
+                    -- THEN 0 -- En este caso, el precio COD retorna '0' porque ya está pagado por Zigi
 					WHEN DOR.IdDeliveryOption = @IdDeliveryOption THEN 0
 					ELSE 
 						CASE 
@@ -666,7 +690,8 @@ BEGIN
                0
            ELSE
                0
-       END FlagEXP
+       END FlagEXP,
+	   ISNULL(REPLACE(DOR.IndicationsToSendDestination, '"', ''), '') AS IndicationsToSendDestination
           INTO #DatasetDelivery
 		FROM
 		(
@@ -752,10 +777,10 @@ BEGIN
 		) DFG
 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPS   WITH (NOLOCK)
-			ON  CPS.[IdCountry] = ISNULL(dor.SenderCountryId,'GT')
+			ON  CPS.[IdCountry] = dor.SenderCountryId
 			AND CPS.[Name] = 'AreaCode'
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPR   WITH (NOLOCK)
-			ON  CPR.[IdCountry] = ISNULL(dor.ReceiverCountryId, 'GT')
+			ON  CPR.[IdCountry] = dor.ReceiverCountryId
 			AND CPR.[Name] = 'AreaCode'
 
 		WHERE	CAST(DSD.DateCreated AS DATE) = @DateRoute
@@ -779,7 +804,7 @@ BEGIN
           SELECT ServiceType,CodeOfReference,DeliveryOption,IsLastMileReturn,CAST(Id AS NVARCHAR) AS Id,TicketNumber,ServiceManagementId,Sender,[Address],
                  Sender_Phone,Phone,PiecesDry,PiecesCold,ScheduleStart,ScheduleEnd,Photo,Latitude,Longitude,[Precision],Price_COD,
                  Price,Pickup,customerName,alterName,NumImageEvidence,[Status],HighPriority,Alerts,CurrencyPrice_CodeISO,CurrencyPrice_CODSymbol,
-                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP
+                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP, ISNULL(REPLACE(IndicationsToSendDestination, '"', ''), '') AS IndicationsToSendDestination
             FROM #DatasetDelivery;
 
           CREATE TABLE #AllData (IdAllData NVARCHAR(70) PRIMARY KEY); -- Ajusta el tipo de dato
@@ -827,8 +852,4 @@ BEGIN
     IF OBJECT_ID('#AllData', 'U') IS NOT NULL
         DROP TABLE #AllData;
 END;
-GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[spws_get_daily_route] TO [cixtetela]
-    AS [dbo];
 

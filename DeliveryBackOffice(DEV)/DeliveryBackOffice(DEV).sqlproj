@@ -230,8 +230,8 @@
     <Build Include="dbo\Tables\SettlementByPickupDetail.sql" />
     <Build Include="dbo\Tables\SettlementByPickup.sql" />
     <Build Include="dbo\Tables\Settlement.sql" />
-    <Build Include="dbo\Tables\SettlementMapping.sql" />    
-    <Build Include="dbo\Tables\SetIntegrationForzaUELog.sql" />    
+    <Build Include="dbo\Tables\SettlementMapping.sql" />
+    <Build Include="dbo\Tables\SetIntegrationForzaUELog.sql" />
     <Build Include="dbo\Tables\ServicesConfig.sql" />
     <Build Include="dbo\Tables\ServiceZoneConfiguration.sql" />
     <Build Include="dbo\Tables\ServiceTownshipConfiguration.sql" />
@@ -356,10 +356,11 @@
     <Build Include="dbo\Tables\InvoiceBatchDetailLinehaul.sql" />
     <Build Include="dbo\Tables\InvoiceBatchDetail.sql" />
     <Build Include="dbo\Tables\InternalUser.sql" />
-    <Build Include="dbo\Tables\IntegrationForzaUELog.sql" />    
+    <Build Include="dbo\Tables\IntegrationForzaUELog.sql" />
     <Build Include="dbo\Tables\IncidentTypeRelation.sql" />
     <Build Include="dbo\Tables\Incident.sql" />
     <Build Include="dbo\Tables\IncidenceServices.sql" />
+    <Build Include="dbo\Tables\IncidenceStatusMapping.sql" />
     <Build Include="dbo\Tables\IncidenceDynamicQuestion.sql" />
     <Build Include="dbo\Tables\IncidenceDynamicInput.sql" />
     <Build Include="dbo\Tables\IncidenceActionByTypeIncidence.sql" />
@@ -589,7 +590,7 @@
     <Build Include="dbo\Tables\CatArticleSAP.sql" />
     <Build Include="dbo\Tables\CatArticleCategorySAP.sql" />
     <Build Include="dbo\Tables\CatArticle.sql" />
-    <Build Include="dbo\Tables\ArticleMapping.sql" />    
+    <Build Include="dbo\Tables\ArticleMapping.sql" />
     <Build Include="dbo\Tables\CatActionByServiceType.sql" />
     <Build Include="dbo\Tables\CatAccountTypeCOD.sql" />
     <Build Include="dbo\Tables\CATLINEHAUL_BK.sql" />
@@ -766,7 +767,7 @@
     <Build Include="dbo\Stored Procedures\sps_set_finishService.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_finishDeliveryService.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_finishPickupService.sql" />
-    <Build Include="dbo\Stored Procedures\sps_set_finishReturnService.sql" />    
+    <Build Include="dbo\Stored Procedures\sps_set_finishReturnService.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_finisTransfer.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_delivery_attempt.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_cancelGuide.sql" />
@@ -1564,6 +1565,7 @@
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataForJSONAeropost.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataUEForJSON.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForJSON.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
@@ -1892,7 +1894,7 @@
     <Build Include="dbo\Stored Procedures\sphd_getGuidesFromReferenceNumber_1.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RouteLastMile_1.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceRecolectCODAnticipated_1.sql" />
-    <Build Include="dbo\Stored Procedures\GetVisitPointOfClient_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetVisitPointOfClient.sql" />
     <Build Include="dbo\Stored Procedures\GetSettlementCODUnifiedRoute_1.sql" />
     <Build Include="dbo\Stored Procedures\GetResumeReportCODAnticipatedByCustomer_1.sql" />
     <Build Include="dbo\Stored Procedures\GetReportCODAnticipatedByCustomer_1.sql" />
@@ -2049,6 +2051,31 @@
     <Build Include="Security\ECS-DB-DENARIUS_deliveryreport_1.sql" />
     <Build Include="Security\Permissions.sql" />
     <Build Include="dbo\Stored Procedures\Support_AddMembershipSuscription.sql" />
+    <Build Include="dbo\Stored Procedures\ValidatePaymentZigiTracking.sql" />
+    <Build Include="dbo\Stored Procedures\sms_ZigiSend.sql" />
+    <Build Include="dbo\Tables\StateByBillingSV.sql" />
+    <Build Include="dbo\Tables\DistrictByBillingSV.sql" />
+    <Build Include="dbo\Tables\CatEconomicActivityBySV.sql" />
+    <Build Include="dbo\Tables\BillingCustomerBySV.sql" />
+    <Build Include="dbo\Tables\AddInfoByCodeOfReference.sql" />
+    <Build Include="dbo\Tables\AddInfoByConfigSV.sql" />
+    <Build Include="dbo\Tables\EntityTypeByBillingSV.sql" />
+    <Build Include="dbo\Tables\InvoiceAuthorizationRelationships.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDSaveBillingCustomerBySV.sql" />
+    <Build Include="dbo\Stored Procedures\sps_ResponseFelToInvoiceSV.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateAuthorizationInvoice.sql" />
+    <Build Include="dbo\Stored Procedures\ValidateAuthorizationInvoice.sql" />
+    <Build Include="dbo\Stored Procedures\GetAuthorizationInvoice.sql" />
+    <Build Include="dbo\Stored Procedures\getCredencialesSV.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetInfoInvoiceCancel.sql" />
+    <Build Include="dbo\Stored Procedures\sphdInsertCancelDTE.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetInvoiceInfoByNumberFEL.sql" />
+    <Build Include="dbo\User Defined Types\TblResponseCreditNoteSV.sql" />
+    <Build Include="dbo\User Defined Types\TblBuyerInfo.sql" />
+    <Build Include="dbo\Tables\CatTypeIdentifationDocument.sql" />
+    <Build Include="dbo\Tables\InformationBuyerInvoice.sql" />
+    <Build Include="dbo\Stored Procedures\sps_UpdateInvoiceForza.sql" />
+    <Build Include="dbo\Functions\SplitOrdinal.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

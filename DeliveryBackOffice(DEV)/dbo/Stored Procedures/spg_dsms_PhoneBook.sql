@@ -23,6 +23,11 @@
 -- Create date: <2025-08-06>
 -- Description:	<Se agrega el campo NirPhone.>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-08-22>
+-- Description:	<Se agrega el campo CODAmount.>
+-- =============================================
 --exec [dbo].[spg_dsms_PhoneBook] 
 --@MaxDeliveryDate = '2022-03-09 17:21:42.180',@ElementId = 1001
 
@@ -120,6 +125,7 @@ BEGIN
 	,_InsuranceAmount NVARCHAR(300)
     ,_Currency NVARCHAR(300)
 	,_Amount NVARCHAR(300)
+	,_CODAmount NVARCHAR(300)
 	,_VehicleType NVARCHAR(300)
 	,_VehiclePlate NVARCHAR(300)
 	,_NirPhone NVARCHAR(3)
@@ -195,6 +201,7 @@ BEGIN
        END AS InsuranceAmount,
 	   CCU.Symbol,
 	    (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) AS Amount,
+		CO.CODAmount AS CODAmount,
         CTV.Name,
        CVE.Plate,
 	   DPC.PrefixNumber
@@ -322,6 +329,7 @@ BEGIN
        END AS InsuranceAmount,
 	    CCU.Symbol,
 	    (DO.PriceShippment - ISNULL(CO.TotalAmountPaid, 0)) AS Amount,
+		CO.CODAmount AS CODAmount,
         CTV.Name,
        CVE.Plate,
 	   DPC.PrefixNumber
@@ -407,6 +415,7 @@ BEGIN
 	,_InsuranceAmount NVARCHAR(300)
 	,_Currency NVARCHAR(5)
 	,_Amount NVARCHAR(300)
+	,_CODAmount NVARCHAR(300)
 	,_VehicleType NVARCHAR(300)
 	,_VehiclePlate NVARCHAR(300)
 	,_NirPhone NVARCHAR(3)
@@ -438,6 +447,7 @@ BEGIN
 		,pb._InsuranceAmount
 	    ,pb._Currency
 	    ,pb._Amount
+		,pb._CODAmount,
         ,pb._VehicleType
         ,pb._VehiclePlate
 		,pb._NirPhone

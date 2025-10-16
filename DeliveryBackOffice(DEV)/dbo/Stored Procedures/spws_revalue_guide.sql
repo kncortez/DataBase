@@ -29,6 +29,11 @@
 -- Create date: <2025-03-06>
 -- Description:	<Se agrego select para devolver precio de envio de guia para creacion de guias clientes integracion>
 -- =============================================
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2025-09-10>
+-- Description:	<Se hace ajuste en longitud de headerCode origen y destino para evitar truncamiento al cotizar nuevo precio>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @GuideSerie VARCHAR(2) = 'FD'
   , @GuideNumber INT = 200307
@@ -79,8 +84,8 @@ BEGIN
     -- Variables de control
     DECLARE @IdCustomer AS INT;
     DECLARE @IdSettlement AS INT;
-    DECLARE @HeaderCodeSource VARCHAR(5);
-    DECLARE @HeaderCodeDestiny VARCHAR(5);
+    DECLARE @HeaderCodeSource VARCHAR(10);
+    DECLARE @HeaderCodeDestiny VARCHAR(10);
     DECLARE @VisitPointClient INT;
     DECLARE @VisitPointClientDestiny INT;
     DECLARE @IsCollect BIT;
