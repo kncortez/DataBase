@@ -24,6 +24,16 @@
 -- Create date: <2024-08-12>
 -- Description:	<Modificación de forma dinamica los códigos para los articulos filtrado por país.>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2025-03-06>
+-- Description:	<Se agrego select para devolver precio de envio de guia para creacion de guias clientes integracion>
+-- =============================================
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2025-09-10>
+-- Description:	<Se hace ajuste en longitud de headerCode origen y destino para evitar truncamiento al cotizar nuevo precio>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @GuideSerie VARCHAR(2) = 'FD'
   , @GuideNumber INT = 200307
@@ -74,8 +84,8 @@ BEGIN
     -- Variables de control
     DECLARE @IdCustomer AS INT;
     DECLARE @IdSettlement AS INT;
-    DECLARE @HeaderCodeSource VARCHAR(5);
-    DECLARE @HeaderCodeDestiny VARCHAR(5);
+    DECLARE @HeaderCodeSource VARCHAR(10);
+    DECLARE @HeaderCodeDestiny VARCHAR(10);
     DECLARE @VisitPointClient INT;
     DECLARE @VisitPointClientDestiny INT;
     DECLARE @IsCollect BIT;
@@ -349,12 +359,12 @@ BEGIN
                           cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
                           AND cst.GuideNumber = @GuideNumber
                       )
-                      OR
-                      (
-                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                          AND cst.GuideSerie IS NULL
-                          AND cst.GuideNumber IS NULL
-                      )
+                      --OR
+                      --(
+                      --    cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                      --    AND cst.GuideSerie IS NULL
+                      --    AND cst.GuideNumber IS NULL
+                      --)
                   )
                   AND
                   (
@@ -480,7 +490,7 @@ BEGIN
 	*/
 	IF @UseMembership=1
 	BEGIN 
-		Declare @IdAcount INT=(SELECT TOP 1 AccIdAccount FROM DBO.ACCOUNT where idCustomer=@IdCustomer and AccRowStatus=1)
+		Declare @IdAcount INT=(SELECT TOP 1 AccIdAccount FROM DBO.ACCOUNT WITH(NOLOCK) WHERE idCustomer=@IdCustomer and AccRowStatus=1)
 		Declare @TechnicalDescription NVARCHAR(50);
 
 		DECLARE  @ActiveProducts  TABLE 
@@ -496,14 +506,14 @@ BEGIN
 		EXEC ClientSubscriptionFetcher_Data @IdAccount=@IdAcount
 
 
-		SELECT Top 1 @TechnicalDescription=TechnicalDescription FROM CatProductCategory
+		SELECT Top 1 @TechnicalDescription=TechnicalDescription FROM CatProductCategory WITH(NOLOCK)
 		WHERE IdCatProductCategory= @CategoryProductId
 		and rowstatus=1
 
 		declare @NewProductId INT=NULL;
 
 		SELECT Top 1 @NewProductId=ProductId FROM @ActiveProducts 
-		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1 and (IdCountry = @ReceiverCountryId OR (IdCountry IS NULL AND @ReceiverCountryId = 'GT')))
+		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WITH(NOLOCK) WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1 and (IdCountry = @ReceiverCountryId OR (IdCountry IS NULL AND @ReceiverCountryId = 'GT')))
 	
 		IF(@NewProductId IS NULL)
 		BEGIN
@@ -526,7 +536,7 @@ BEGIN
                     WHEN MembershipId IS NOT NULL THEN 1 
                     WHEN SubscriptionId IS NOT NULL THEN 2 
                 END)
-        FROM dbo.MembershipSubscriptionLog
+        FROM dbo.MembershipSubscriptionLog WITH(NOLOCK)
         WHERE LogGuideNumber=@GuideNumber
             AND LogGuideSerie=@GuideSerie
         
@@ -622,7 +632,7 @@ BEGIN
              , @MembershipId                = MembershipId
              , @SubscriptionId              = SubscriptionId
              , @ServiceAppliedCount         = LogServiceNumber
-        FROM MembershipSubscriptionLog
+        FROM MembershipSubscriptionLog WITH(NOLOCK)
         WHERE LogGuideSerie = @GuideSerie
               AND LogGuideNumber = @GuideNumber
               AND RowStatus = 1
@@ -940,7 +950,7 @@ BEGIN
                     IF @SetUpdate = 'true'
                     BEGIN
 						DECLARE @MaxProduct INT = 0;
-					     SET @MaxProduct = (SELECT MembershipMaxServiceFixedValue FROM Membership where IdMembership = @ProductId )
+					     SET @MaxProduct = (SELECT MembershipMaxServiceFixedValue FROM Membership WITH(NOLOCK) where IdMembership = @ProductId )
                         --IF @ServiceAppliedType = 1
 						IF(@CategoryProductName = 'Membresías' AND @MaxProduct > 0)
                         BEGIN
@@ -972,14 +982,14 @@ BEGIN
 
 								IF (@NameTypeSubscrition = 'Porcentaje')
 									BEGIN
-										SET @MaxMembership = (SELECT COUNT(MembershipMaxServiceFixedValue) FROM Membership
+										SET @MaxMembership = (SELECT COUNT(MembershipMaxServiceFixedValue) FROM Membership WITH(NOLOCK)
 										WHERE IdMembership = @ProductId
 										AND MembershipMaxServiceFixedValue > 0
 										AND MembershipMaxServiceFixedValue <> 0)
 									END
 								ELSE
 									BEGIN
-										SET @MaxMembership = (SELECT COUNT(MembershipMaxServiceFixedValue) FROM Membership
+										SET @MaxMembership = (SELECT COUNT(MembershipMaxServiceFixedValue) FROM Membership WITH(NOLOCK)
 										WHERE IdMembership = @ProductId
 										AND MembershipMaxServiceFixedValue > 0
 										AND MembershipMaxServiceFixedValue > ActualServiceCount  AND MembershipMaxServiceFixedValue <> 0)
@@ -1022,9 +1032,9 @@ BEGIN
 								 )
 								 VALUES
 								 ((
-								      SELECT TOP 1 SysIdSystem FROM CatSystem WHERE SysNameSystem = 'Parser'
+								      SELECT TOP 1 SysIdSystem FROM CatSystem WITH(NOLOCK) WHERE SysNameSystem = 'Parser'
 								  ), (
-								         SELECT TOP 1 ModIdModule FROM CatModule WHERE ModPath = 'Parser'
+								         SELECT TOP 1 ModIdModule FROM CatModule WITH(NOLOCK) WHERE ModPath = 'Parser'
 								     ),IIF(@CategoryProductName = 'Membresías', @SubscriptionId, NULL), IIF(@CategoryProductName <> 'Membresías',@SubscriptionId, NULL)/*IIF(@ServiceAppliedType = 1, NULL, @SubscriptionId)*/
 								, NULL, NULL, @IdCustomer, NULL, NULL, @DecriptionDiscount, @GuideSerie
 								, @GuideNumber, @PriceShippment, @PriceShippment, 1, @Token, GETDATE(), NULL, NULL
@@ -1058,9 +1068,9 @@ BEGIN
 								 )
 								 VALUES
 								 ((
-								      SELECT TOP 1 SysIdSystem FROM CatSystem WHERE SysNameSystem = 'Parser'
+								      SELECT TOP 1 SysIdSystem FROM CatSystem WITH(NOLOCK) WHERE SysNameSystem = 'Parser'
 								  ), (
-								         SELECT TOP 1 ModIdModule FROM CatModule WHERE ModPath = 'Parser'
+								         SELECT TOP 1 ModIdModule FROM CatModule WITH(NOLOCK) WHERE ModPath = 'Parser'
 								     ), IIF(@CategoryProductName = 'Membresías', @SubscriptionId, NULL), IIF(@CategoryProductName <> 'Membresías',@SubscriptionId, NULL)
 								, NULL, NULL, @IdCustomer, NULL, NULL, @DecriptionDiscount, @GuideSerie
 								, @GuideNumber, @PriceShippment, IIF(@NewPriceShippment IS NULL,0,@NewPriceShippment), 1, @Token, GETDATE(), NULL, NULL
@@ -1255,12 +1265,12 @@ BEGIN
                           cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
                           AND cst.GuideNumber = @GuideNumber
                       )
-                      OR
-                      (
-                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                          AND cst.GuideSerie IS NULL
-                          AND cst.GuideNumber IS NULL
-                      )
+                      --OR
+                      --(
+                      --    cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                      --    AND cst.GuideSerie IS NULL
+                      --    AND cst.GuideNumber IS NULL
+                      --)
                   )
                   AND cst.RowStatus = 1
             ORDER BY cst.DateCreated DESC;
@@ -1314,8 +1324,8 @@ BEGIN
                 SET Amount = det.Amount
                   , RowStatus = det.RowStatus
                   , DateUpdated = GETDATE()
-                FROM dbo.Cost                         cs
-                    INNER JOIN dbo.BreakdownOfPayment bk
+                FROM dbo.Cost                         cs WITH(NOLOCK)
+                    INNER JOIN dbo.BreakdownOfPayment bk WITH(NOLOCK)
                         ON bk.IdCost = cs.IdCost
                     INNER JOIN @TblCost               det
                         ON det.Description = bk.Description
@@ -1331,12 +1341,17 @@ BEGIN
 					@ExchangeSender DECIMAL(12,6)
 			/******************DATOS DE MONEDA ORIGEN*************************/
 			SELECT TOP 1 
-				  @CurrencySender = C.IdCatCurrencyCOD, 
-				  @ExchangeSender = CE.ExchangeRate
-			FROM CurrencyExchangeRates CE 
-			INNER JOIN CatCurrencyCOD C  ON C.IdCatCurrencyCOD = CE.SourceCurrency
-			WHERE CodeISO LIKE ''+ @SenderCountryId +'%'
-			ORDER BY CE.ExchangeDate DESC
+				   @CurrencySender = C.IdCatCurrencyCOD, 
+				   @ExchangeSender = CE.ExchangeRate
+			  FROM CurrencyExchangeRates CE WITH(NOLOCK)
+			       INNER JOIN CatCurrencyCOD C WITH(NOLOCK)
+                      ON C.IdCatCurrencyCOD = CE.SourceCurrency
+                   INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
+                      ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
+			 WHERE DC.Currency_IdCountry = @SenderCountryId
+               AND DC.Currency_Status = 1 
+               AND DC.DefaultPerCountry = 1
+			 ORDER BY CE.ExchangeDate DESC
 			
             PRINT 'registro no existe , hay que crearlo';
 			IF @ServiceShortName = 'COD'

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SchedulePickupDuplicateLog] (
-    [IdSchedulePickupDuplicateLog] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdSchedulePickupDuplicateLog] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SchedulePickupIdOld]          BIGINT        NOT NULL,
     [SchedulePickupIdNew]          BIGINT        NOT NULL,
     [RowStatus]                    BIT           NOT NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [FK_SchedulePickupDuplicateLog_SchedulePickupIdNew] FOREIGN KEY ([SchedulePickupIdNew]) REFERENCES [dbo].[SchedulePickup] ([SchedulePickupId]),
     CONSTRAINT [FK_SchedulePickupDuplicateLog_SchedulePickupIdOld] FOREIGN KEY ([SchedulePickupIdOld]) REFERENCES [dbo].[SchedulePickup] ([SchedulePickupId])
 );
+
+
 
 
 GO

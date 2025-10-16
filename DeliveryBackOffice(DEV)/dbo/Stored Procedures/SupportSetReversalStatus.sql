@@ -22,7 +22,7 @@ BEGIN
           AND ord.Guide_Number = @GuideNumber;
 
 
-    IF @CurrentStatus IN ( 24 )
+    IF @CurrentStatus IN ( 25 )
     BEGIN
         SELECT 'Estos estados no pueden ser revertidos';
     END;
@@ -80,3 +80,20 @@ BEGIN
         END;
     END;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportSetReversalStatus] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportSetReversalStatus] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportSetReversalStatus] TO [cvaldes]
+    AS [dbo];
+

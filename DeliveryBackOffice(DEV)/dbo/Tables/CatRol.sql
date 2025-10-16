@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatRol] (
-    [RolIdRol]         INT           IDENTITY (1, 1) NOT NULL,
+    [RolIdRol]         INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RolIdSystem]      INT           NOT NULL,
     [RolName]          VARCHAR (50)  NOT NULL,
     [RolDescription]   VARCHAR (100) NOT NULL,
@@ -14,6 +14,8 @@
     PRIMARY KEY CLUSTERED ([RolIdRol] ASC),
     FOREIGN KEY ([RolIdSystem]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 
 
 GO

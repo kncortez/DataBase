@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SegmentArea] (
-    [IdSegmentArea]      INT            IDENTITY (1, 1) NOT NULL,
+    [IdSegmentArea]      INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NameSegmentOfArea]  VARCHAR (50)   NULL,
     [Abrevation]         VARCHAR (10)   NULL,
     [SegmentDescription] NVARCHAR (200) NULL,
@@ -11,6 +11,8 @@
     [IdTypeOfSegment]    INT            NULL,
     CONSTRAINT [PK_SegmentArea] PRIMARY KEY CLUSTERED ([IdSegmentArea] ASC)
 );
+
+
 
 
 GO

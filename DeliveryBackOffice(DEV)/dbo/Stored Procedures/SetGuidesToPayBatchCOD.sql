@@ -8,8 +8,12 @@
 -- Description:	<Se agregaron validaciones para COD Pagado en COD Anticipado>
 -- =============================================
 -- Author:		<Oscar, Rodriguez>
--- Create date: <2020-12-12>
+-- Create date: <2024-12-12>
 -- Description:	<Se agrego actualizacion de estado PAGADO para guias COD Anticipado>
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2024-03-17>
+-- Description:	<Se agrego optimizacion en base a indicaciones del DBA para la optimizacion del proceso de generacion de lotes COD>
 -- =============================================
 CREATE PROCEDURE [dbo].[SetGuidesToPayBatchCOD]
 -- Add the parameters for the stored procedure here
@@ -57,13 +61,16 @@ BEGIN
 			IF COALESCE(@@ROWCOUNT,0) > 0
 				SET @ValidateOperation = @ValidateOperation+1
 
-			UPDATE [dbo].[DeliveryOrderPaid]
-			SET [IdStatus] = 0,
-				[TokenUpdate] = @TokenCreated,
-				[DateUpdate] = GETDATE()
-			WHERE CONCAT([Guide_Serie], [Guide_Number]) IN (SELECT CONCAT(GuideSerie, GuideNumber)
-															FROM [dbo].[BatchDetailCOD]
-															WHERE [BatchCODId] = @BatchCODId AND [Excluded] = 0);
+			UPDATE dop
+			SET dop.[IdStatus] = 0,
+				dop.[TokenUpdate] = @TokenCreated,
+				dop.[DateUpdate] = GETDATE()
+			FROM [dbo].[DeliveryOrderPaid] dop WITH(NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH(NOLOCK) 
+			    ON bdc.GuideSerie = dop.Guide_Serie 
+				AND bdc.GuideNumber = dop.Guide_Number
+			WHERE bdc.BatchCODId = @BatchCODId
+			AND bdc.Excluded = 0;
 
 			IF ((SELECT IsAnticipatedCOD FROM DeliveryBackOffice.dbo.BatchCOD WHERE IdBatchCOD = @BatchCODId) = 1)
 			BEGIN
@@ -180,8 +187,8 @@ BEGIN
 					@WebhookCustomerTable WCT
 					ON
 						WE.CustomerId = WCT.CustomerId
-						AND
-						WE.WebhookTypeId = @GuideStatusChangeWebhook;
+			WHERE
+				WE.WebhookTypeId = @GuideStatusChangeWebhook;
 
 			DECLARE @ResponseTable AS TABLE (
 				InsertedId BIGINT

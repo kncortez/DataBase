@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Tool] (
-    [IdTool]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdTool]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatTypeToolId]   INT            NOT NULL,
     [ToolSerie]       NVARCHAR (50)  NOT NULL,
     [ToolDescription] NVARCHAR (200) NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_Tool_TypeTool] FOREIGN KEY ([CatTypeToolId]) REFERENCES [dbo].[CatTypeTool] ([IdCatTypeTool]),
     CONSTRAINT [UQ_Tool_Serie] UNIQUE NONCLUSTERED ([ToolSerie] ASC)
 );
+
+
 
 
 GO

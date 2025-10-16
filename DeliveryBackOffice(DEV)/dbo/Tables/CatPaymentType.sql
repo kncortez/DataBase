@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatPaymentType] (
-    [PayTypeId]           INT           IDENTITY (1, 1) NOT NULL,
+    [PayTypeId]           INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [PayTypeName]         VARCHAR (55)  NULL,
     [PayTypeDescriptions] VARCHAR (100) NULL,
     [PayTypeAbrev]        VARCHAR (10)  NULL,

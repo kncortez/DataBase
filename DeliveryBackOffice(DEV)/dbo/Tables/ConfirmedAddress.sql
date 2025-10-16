@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ConfirmedAddress] (
-    [IdConfirmedAddress]     BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdConfirmedAddress]     BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountId]              BIGINT         NOT NULL,
     [NirPhone]               NVARCHAR (4)   NOT NULL,
     [Phone]                  NVARCHAR (15)  NOT NULL,
@@ -31,6 +31,8 @@
     CONSTRAINT [FK_CADD_Township] FOREIGN KEY ([TownshipId]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_CADD_VP] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO

@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<Carlos, Cano>
 -- Create date: <2020-11-24>
@@ -27,24 +26,24 @@ BEGIN
 				[dod].[StatusOrderId],
 				ROW_NUMBER() OVER (PARTITION BY [dod].[Guide_Number] ORDER BY [dod].[DateCreated] DESC) AS rn
 			FROM 
-				[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] dod
+				[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] dod WITH(NOLOCK)
 			WHERE 
 				[dod].[Guide_Number] IN (
 										   SELECT [ds].[Guide_Number]
-											 FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] ds
+											 FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] ds WITH(NOLOCK)
 												 WHERE [ds].[ID_DeliveryOrderBySettlement] = @IdManifest
 				)
 		)
 		UPDATE ds
 		SET [ds].[StatusOrderId] = [lo].[StatusOrderId]
 		FROM 
-			[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] ds
+			[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] ds WITH(NOLOCK)
 		INNER JOIN 
 			[LatestOrder] lo ON [ds].[Guide_Number] = [lo].[Guide_Number]
 		WHERE 
 			[lo].[rn] = 1
 			AND [ds].[ID_DeliveryOrderBySettlement] = @IdManifest
-			AND ds.StatusOrderId NOT IN(5,8,14,20);
+			AND ds.StatusOrderId NOT IN (5,8,14,20);
 
 			-- Actualizar registro en control de manifiestos de despacho
 			UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]

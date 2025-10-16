@@ -3,7 +3,11 @@
 -- Create date: <2024-11-26>
 -- Description: <Se agrego procedimiento para registrar factura para cliente corporativo>
 -- =============================================
-ALTER PROCEDURE [dbo].[sps_RegisterInvoiceForzaCorp]
+-- Author:      <Brandon, Pedroza>
+-- Create date: <2025-07-30>
+-- Description: <Facturacion SV - se guardan datos de factura emitida para SV>
+-- =============================================
+CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForzaCorp]
 (
   @VpCodeOfReferences int
  ,@cmp_nit varchar(100)
@@ -21,6 +25,7 @@ ALTER PROCEDURE [dbo].[sps_RegisterInvoiceForzaCorp]
  ,@DescService INT = 1
  ,@TblLstDetail TblLstDetail READONLY
  ,@TblInOutOfMoneyDetail TblInOutOfMoneyDetail READONLY
+ ,@TblBuyerInfo TblBuyerInfo READONLY
 )
 AS
 BEGIN
@@ -38,8 +43,8 @@ BEGIN
                           AND ind.dti_fk_orderserie = tbd.orderSerie
                         INNER JOIN invoiceHeader inh WITH (NOLOCK)
                            ON ind.dti_fk_header = inh.inv_pk_id
-                          AND inh.CatInvoiceTypeId = @idType
                   WHERE inh.inv_certificationFEL IS NULL
+                    AND inh.CatInvoiceTypeId = @idType
                 );
 
      IF(@Guide <= 0)
@@ -156,6 +161,42 @@ BEGIN
                                    ,@tokenRegister
                                    ,GETDATE()
                               FROM @TblInOutOfMoneyDetail MD
+                      --INSERT EN TABLA LOG DE INFORMACION DEL CLIENTE CUANDO SE EMITE UNA FACTURA
+                      IF(@IdCountry = 'SV')
+                      BEGIN
+                        INSERT INTO InformationBuyerInvoice 
+                                 (
+                                  InvoiceId,
+                                  DistrictCode,
+                                  StateCode,
+                                  ActivityCode,
+								  ActivityDescription,
+                                  NRC,
+                                  TypeIdentificationDocumentCode,
+                                  IdDocument,
+                                  Phone,
+                                  Rowstatus,
+                                  TokenCreated,
+                                  DateCreated,
+                                  TokenUpdated,
+                                  DateUpdated
+                                  )
+                          SELECT @invoiceHeaderId
+                                 ,BI.DistrictCode
+                                 ,BI.StateCode
+                                 ,BI.ActivityCode
+								 ,BI.ActivityDescription
+                                 ,BI.NRC
+                                 ,BI.TypeDocument
+                                 ,BI.IdDocument
+                                 ,BI.Phone
+                                 ,1
+                                 ,@tokenRegister
+                                 ,GETDATE()
+                                 ,NULL
+                                 ,NULL
+                             FROM @TblBuyerInfo BI
+                      END
 
                     SELECT @invoiceHeaderId 'IDENTITY'
 

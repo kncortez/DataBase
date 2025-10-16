@@ -34,7 +34,7 @@ BEGIN
 		  ,w.[Active]
 		  --,do.Pieces_Dry AS Total_Pieces_Dry
 		  --,do.Pieces_Cold AS Total_Pieces_Cold
-	  FROM [DeliveryBackOffice].[dbo].[Warehouse] w
+	  FROM [DeliveryBackOffice].[dbo].[Warehouse] w WITH(NOLOCK)
 	  INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK) ON do.Guide_Serie = w.Guide_Serie AND do.Guide_Number = w.Guide_Number
 	  WHERE 
 	  ((w.Guide_Serie = @GuideSerie AND w.Guide_Number = @GuideNumber AND w.Active = 1 AND w.IsReturn = 1)
@@ -52,7 +52,7 @@ BEGIN
 		  ,w.[Active]
 		  --,do.Pieces_Dry AS Total_Pieces_Dry
 		  --,do.Pieces_Cold AS Total_Pieces_Cold
-	  FROM [DeliveryBackOffice].[dbo].[Warehouse] w
+	  FROM [DeliveryBackOffice].[dbo].[Warehouse] w WITH(NOLOCK)
 	  INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK) ON do.Guide_Serie = w.Guide_Serie AND do.Guide_Number = w.Guide_Number
 	  WHERE 
 	  ((w.Guide_Serie = @GuideSerie AND w.Guide_Number = @GuideNumber AND w.Active = 1 AND (w.IsReturn IS NULL OR w.IsReturn = 0))

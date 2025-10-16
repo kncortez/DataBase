@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RegisterUser] (
-    [UsrIdUser]               BIGINT         IDENTITY (1, 1) NOT NULL,
+    [UsrIdUser]               BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UsrIdPerson]             BIGINT         NOT NULL,
     [UsrNickName]             VARCHAR (100)  NOT NULL,
     [UsrEmail]                VARCHAR (200)  NOT NULL,
@@ -29,6 +29,10 @@
     PRIMARY KEY CLUSTERED ([UsrIdUser] ASC),
     FOREIGN KEY ([UsrIdPerson]) REFERENCES [dbo].[Person] ([PerIdPerson])
 );
+
+
+
+
 
 
 
@@ -236,4 +240,9 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
 GO
 CREATE NONCLUSTERED INDEX [IDX_UsrEmail_UsrRowStatus]
     ON [dbo].[RegisterUser]([UsrEmail] ASC, [UsrRowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_UsrLastPassword]
+    ON [dbo].[RegisterUser]([UsrLastPassword] ASC);
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatConceptCOD] (
-    [IdCatConceptCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatConceptCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Concept]         NVARCHAR (50) NOT NULL,
     [RowStatus]       BIT           CONSTRAINT [DF_CatConceptCOD_RowStatus] DEFAULT ('TRUE') NOT NULL,
     [TokenCreated]    NVARCHAR (50) NOT NULL,

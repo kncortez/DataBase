@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatExtPlatformIncidence] (
-    [IdCatExtPlatformIncidence]      INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatExtPlatformIncidence]      INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ExtPlatformId]                  INT            NOT NULL,
     [ExtPlatformInternalId]          NVARCHAR (50)  NOT NULL,
     [ExtPlatformInternalDescription] NVARCHAR (200) NULL,
@@ -11,6 +11,8 @@
     PRIMARY KEY CLUSTERED ([IdCatExtPlatformIncidence] ASC),
     CONSTRAINT [CatExtPlatformIncidence_PlatformId_FK] FOREIGN KEY ([ExtPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 GO

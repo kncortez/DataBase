@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ProcessedGuideCOD] (
-    [IdProcessedGuideCOD]    INT          IDENTITY (1, 1) NOT NULL,
+    [IdProcessedGuideCOD]    INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]             NVARCHAR (2) NOT NULL,
     [GuideNumber]            INT          NOT NULL,
     [CourierManId]           INT          NULL,
@@ -20,7 +20,7 @@
     [CollectBatch]           BIT          NULL,
     [RecolectionBatch]       BIT          NULL,
     [CODBatch]               BIT          NULL,
-    [IsCompleted]            TINYINT      DEFAULT(0) NULL,
+    [IsCompleted]            TINYINT      DEFAULT ((0)) NULL,
     [IsAnticipatedCOD]       INT          NULL,
     CONSTRAINT [PK_ProcessedGuideCOD_IdProcessedGuideCOD] PRIMARY KEY CLUSTERED ([IdProcessedGuideCOD] ASC),
     CONSTRAINT [FK_ProcessedGuideCOD_BatchCOD] FOREIGN KEY ([BatchCODId]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
@@ -30,6 +30,8 @@
     CONSTRAINT [FK_ProcessedGuideCOD_SenderReceiver] FOREIGN KEY ([CourierManId]) REFERENCES [dbo].[SenderReceiver] ([ID]),
     CONSTRAINT [UK_SERIE_GUIA] UNIQUE NONCLUSTERED ([GuideSerie] ASC, [GuideNumber] ASC)
 );
+
+
 
 
 

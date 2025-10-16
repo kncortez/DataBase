@@ -1,30 +1,29 @@
-CREATE TABLE [dbo].[RegistrationofTransactionProcessStates](
-	[IdRegistrationofTransactionProcessStates] [int] IDENTITY(1,1) NOT NULL,
-	[AccountId] [int] NULL,
-	[CustomerId] [int] NULL,
-	[OrderNumber] [nvarchar](50) NOT NULL,
-	[NameTax] [nvarchar](250) NULL,
-	[AddressTax] [nvarchar](1000) NULL,
-	[TaxId] [nvarchar](50) NULL,
-	[IsSuscription] [bit] NOT NULL,
-	[GetRenovacionAutomatica] [bit] NOT NULL,
-	[GetCardsCredit] [int] NOT NULL,
-	[TokenCreated] [nvarchar](50) NOT NULL,
-	[DateCreated] [datetime] NOT NULL,
-	[TokenUpdate] [nvarchar](50) NULL,
-	[DateUpdate] [datetime] NULL,
-	[IdSalePackage] [int] NULL,
-	[TypeSalePackage] [nvarchar](100) NULL,
-	[Vaucher] [nvarchar](25) NULL,
-	[InvoiceEmail] [nvarchar](50) NULL,
-	[ProductGiftShippingEmail] [nvarchar](50) NULL,
-	[PaymentImageURL] [nvarchar](600) NULL,
-	[PhoneNumber] [nvarchar](10) NULL,
- CONSTRAINT [PK_RegistrationofTransactionProcessStates] PRIMARY KEY CLUSTERED 
-(
-	[IdRegistrationofTransactionProcessStates] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
+﻿CREATE TABLE [dbo].[RegistrationofTransactionProcessStates] (
+    [IdRegistrationofTransactionProcessStates] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [AccountId]                                INT             NULL,
+    [CustomerId]                               INT             NULL,
+    [OrderNumber]                              NVARCHAR (50)   NOT NULL,
+    [NameTax]                                  NVARCHAR (250)  NULL,
+    [AddressTax]                               NVARCHAR (1000) NULL,
+    [TaxId]                                    NVARCHAR (50)   NULL,
+    [IsSuscription]                            BIT             NOT NULL,
+    [GetRenovacionAutomatica]                  BIT             NOT NULL,
+    [GetCardsCredit]                           INT             NOT NULL,
+    [TokenCreated]                             NVARCHAR (50)   NOT NULL,
+    [DateCreated]                              DATETIME        NOT NULL,
+    [TokenUpdate]                              NVARCHAR (50)   NULL,
+    [DateUpdate]                               DATETIME        NULL,
+    [IdSalePackage]                            INT             NULL,
+    [TypeSalePackage]                          NVARCHAR (100)  NULL,
+    [Vaucher]                                  NVARCHAR (25)   NULL,
+    [InvoiceEmail]                             NVARCHAR (50)   NULL,
+    [ProductGiftShippingEmail]                 NVARCHAR (50)   NULL,
+    [PaymentImageURL]                          NVARCHAR (600)  NULL,
+    [PhoneNumber]                              NVARCHAR (10)   NULL,
+    CONSTRAINT [PK_RegistrationofTransactionProcessStates] PRIMARY KEY CLUSTERED ([IdRegistrationofTransactionProcessStates] ASC)
+);
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tabla para guardar los datos de un proceso de pago, asociación y certificación de factura de ser fallido permitir retomarlo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'IdRegistrationofTransactionProcessStates'

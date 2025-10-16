@@ -1,17 +1,19 @@
-CREATE TABLE [dbo].[MarketplaceCartDetail](
-	[IdMarketplaceCartDetail] [int] IDENTITY(1,1) NOT NULL,
-	[MarketplaceCartId] [int] NOT NULL,
-	[CatProductId] [int] NOT NULL,
-	[RowStatus] [bit] NOT NULL,
-	[TokenCreated] [nvarchar](50) NOT NULL,
-	[DateCreated] [datetime] NOT NULL,
-	[TokenUpdated] [nvarchar](50) NULL,
-	[DateUpdated] [datetime] NULL,
-	[TypeProduct] [nvarchar](300) NULL,
- 	CONSTRAINT [PK_MarketplaceCartDetail] PRIMARY KEY CLUSTERED ([IdMarketplaceCartDetail] ASC)ON [PRIMARY],
-	CONSTRAINT [FK_MarketplaceCartDetail_CatSubscription] FOREIGN KEY([CatProductId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]),
-	CONSTRAINT [FK_MarketplaceCartDetail_MarketplaceCart] FOREIGN KEY([MarketplaceCartId]) REFERENCES [dbo].[MarketplaceCart] ([IdMarketplaceCart])
-) 
+﻿CREATE TABLE [dbo].[MarketplaceCartDetail] (
+    [IdMarketplaceCartDetail] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [MarketplaceCartId]       INT            NOT NULL,
+    [CatProductId]            INT            NOT NULL,
+    [RowStatus]               BIT            NOT NULL,
+    [TokenCreated]            NVARCHAR (50)  NOT NULL,
+    [DateCreated]             DATETIME       NOT NULL,
+    [TokenUpdated]            NVARCHAR (50)  NULL,
+    [DateUpdated]             DATETIME       NULL,
+    [TypeProduct]             NVARCHAR (300) NULL,
+    CONSTRAINT [PK_MarketplaceCartDetail] PRIMARY KEY CLUSTERED ([IdMarketplaceCartDetail] ASC),
+    CONSTRAINT [FK_MarketplaceCartDetail_CatSubscription] FOREIGN KEY ([CatProductId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]),
+    CONSTRAINT [FK_MarketplaceCartDetail_MarketplaceCart] FOREIGN KEY ([MarketplaceCartId]) REFERENCES [dbo].[MarketplaceCart] ([IdMarketplaceCart])
+);
+
+ 
 GO
 
 

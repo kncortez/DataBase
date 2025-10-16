@@ -1,6 +1,6 @@
 ﻿
 CREATE TABLE [dbo].[MarketplaceCart] (
-    [IdMarketplaceCart] INT           IDENTITY (1, 1) NOT NULL,
+    [IdMarketplaceCart] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountId]         BIGINT        NULL,
     [RowStatus]         BIT           NOT NULL,
     [TokenCreated]      NVARCHAR (50) NOT NULL,
@@ -12,6 +12,8 @@ CREATE TABLE [dbo].[MarketplaceCart] (
     CONSTRAINT [PK_MarketplaceCart] PRIMARY KEY CLUSTERED ([IdMarketplaceCart] ASC),
     CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount])
 );
+
+
 
 
 GO

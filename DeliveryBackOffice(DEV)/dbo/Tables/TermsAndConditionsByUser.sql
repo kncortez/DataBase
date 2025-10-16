@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TermsAndConditionsByUser] (
-    [IdTACByUser]  BIGINT       IDENTITY (1, 1) NOT NULL,
+    [IdTACByUser]  BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TACId]        BIGINT       NOT NULL,
     [IdAccount]    BIGINT       NOT NULL,
     [TAC]          BIT          NOT NULL,
@@ -12,6 +12,10 @@
     FOREIGN KEY ([IdAccount]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     FOREIGN KEY ([TACId]) REFERENCES [dbo].[TermsAndConditions] ([IdTAC])
 );
+
+
+
+
 
 
 
@@ -54,4 +58,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hor
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TermsAndConditionsByUser', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdAccount]
+    ON [dbo].[TermsAndConditionsByUser]([IdAccount] ASC);
 

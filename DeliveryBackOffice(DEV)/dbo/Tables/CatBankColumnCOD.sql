@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatBankColumnCOD] (
-    [IdCatBankColumnCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatBankColumnCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [BankId]             INT           NOT NULL,
     [CatColumnCODId]     INT           NOT NULL,
     [Order]              INT           NOT NULL,

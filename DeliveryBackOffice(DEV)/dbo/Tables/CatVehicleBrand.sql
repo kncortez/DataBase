@@ -1,15 +1,17 @@
 ﻿CREATE TABLE [dbo].[CatVehicleBrand] (
-    [IdCatVehicleBrand] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatVehicleBrand] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]              NVARCHAR (200) NULL,
     [RowStatus]         BIT            NOT NULL,
     [TokenCreated]      VARCHAR (50)   NOT NULL,
     [DateCreated]       DATETIME       NOT NULL,
     [TokenUpdated]      VARCHAR (50)   NULL,
     [DateUpdated]       DATETIME       NULL,
-    [IdCountry]         VARCHAR(2)     NULL,
+    [IdCountry]         VARCHAR (2)    NULL,
     PRIMARY KEY CLUSTERED ([IdCatVehicleBrand] ASC),
-    CONSTRAINT [FK_CatVehicleBrand_IdCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
+    CONSTRAINT [FK_CatVehicleBrand_IdCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO

@@ -3,6 +3,10 @@
 -- Create date: <2024-06-03>
 -- Description:	<Login - Nuevo método para login Express Center, soporta multipaís.>
 -- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego devolucion de informacion de poblado de origen para login de express center>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spGetLoginMC]
     -- Add the parameters for the stored procedure here
@@ -90,7 +94,9 @@ BEGIN
 		CodeOfReference NVARCHAR(20),
 		RolEXP NVARCHAR(MAX),
 		CurrencyEXP NVARCHAR(5),
-		Nationality NVARCHAR(50)
+		Nationality NVARCHAR(50),
+		IdSettlement NVARCHAR(50),
+		SettlementName NVARCHAR(300)
 	);
 
 	--VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN
@@ -170,7 +176,7 @@ BEGIN
 
 	IF @StationCorrect > 0
 	BEGIN
-		IF ( SELECT COUNT(*)FROM @User) > 0 -- si encuentra registros quiere decir que hay conicidencia en usuario y contraseña
+		IF EXISTS ( SELECT top 1 1 FROM @User) -- si encuentra registros quiere decir que hay conicidencia en usuario y contraseña
 		BEGIN
 			-- Validación de visit point para express center
 			IF (@VERIFYUSER > 0)
@@ -219,7 +225,7 @@ BEGIN
 								HASHBYTES('MD5', CONCAT(@Username, @Password, SYSDATETIME()))
 								, 2 ) AS token );
 
-							IF ( SELECT COUNT(*)FROM [dbo].TokenLog tkn WITH(NOLOCK) WHERE tkn.TknIdToken = @Token ) = 0 --si el token no exite crearlo 
+							IF NOT EXISTS ( SELECT TOP 1 1 FROM [dbo].TokenLog tkn WITH(NOLOCK) WHERE tkn.TknIdToken = @Token ) --si el token no exite crearlo 
 							BEGIN
 								INSERT INTO [dbo].[TokenLog]
 								(
@@ -305,16 +311,17 @@ BEGIN
 								DECLARE @CHILDSMD    VARCHAR(MAX) = ''
 									  , @CHILDSMENU  INT          = 0
 									  , @CHILDSMENU2 INT          = 1;
-								DECLARE @TBSUBMODULES2 TABLE
+								IF OBJECT_ID('tempdb..#TBSUBMODULES2') IS NOT NULL
+                                    DROP TABLE #TBSUBMODULES2;
+
+								CREATE TABLE #TBSUBMODULES2
 								(
-									ITERATOR2 INT
-								  , ModIdModuleDAD INT
-								  , ModIdModuleCHILD INT
+									ITERATOR2 INT,
+									ModIdModuleDAD INT,
+									ModIdModuleCHILD INT
 								);
 
-								DELETE @TBSUBMODULES2
-								WHERE 1 = 1;
-								INSERT INTO @TBSUBMODULES2
+								INSERT INTO #TBSUBMODULES2
 								(
 									ITERATOR2
 								  , ModIdModuleDAD
@@ -350,7 +357,7 @@ BEGIN
 									  );
 
 								SELECT @CHILDSMENU = COUNT(1)
-								FROM @TBSUBMODULES2;
+								FROM #TBSUBMODULES2;
 
 								WHILE @CHILDSMENU > 0
 								BEGIN
@@ -361,7 +368,7 @@ BEGIN
 									WHERE cmo.ModIdModule =
 									(
 										SELECT TMP.ModIdModuleCHILD
-										FROM @TBSUBMODULES2 AS TMP
+										FROM #TBSUBMODULES2 AS TMP
 										WHERE TMP.ITERATOR2 = @CHILDSMENU2
 									);
 
@@ -508,7 +515,7 @@ BEGIN
 							BEGIN
 
 							INSERT INTO @ProfileEXPTable (Name,ContactName,Phone,Email,IdTownship,TownshipName,IdProvince,
-															ProvinceName,Address,HeaderCode,CodeOfReference,RolEXP,CurrencyEXP,Nationality)
+															ProvinceName,Address,HeaderCode,CodeOfReference,RolEXP,CurrencyEXP,Nationality,IdSettlement,SettlementName)
 							SELECT 
 								DescriptionOfClient										'Name',
 								ISNULL(ContactName, '')									'ContactName',
@@ -523,7 +530,9 @@ BEGIN
 								ISNULL(CONVERT(NVARCHAR(20), VPC.CodeOfReference), '')	'CodeOfReference',
 								@RolEXP													'RolEXP',
 								ISNULL(CCC.CodeISO, 'GTQ')								'Currency',
-								ISNULL(RH.CountryId,'GT')								'Nationality'
+								ISNULL(RH.CountryId,'GT')								'Nationality',
+								ISNULL(STL.IdSettlement,'')								'IdSettlement',
+								ISNULL(STL.Settlement,'')								'SettlementName'
 							FROM DeliveryBackOffice.dbo.VisitPointClient		VPC WITH(NOLOCK)
 							INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer	RC WITH(NOLOCK)
 								ON VPC.CustomerID = RC.RbcIdCustomer
@@ -551,6 +560,7 @@ BEGIN
 								AND ru.UsrEmail = @Username
 								AND VPU.RowStatus = 1
 								AND ru.UsrRowStatus = 1
+								AND STL.SettlementSatus = 1
 
 							END;
 							IF @VERIFYUSER > 0

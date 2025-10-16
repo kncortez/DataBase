@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatClosureAccount] (
-    [IdCatClosureAccount] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [IdCatClosureAccount] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ClosureAccountId]    BIGINT       NOT NULL,
     [TypeService]         INT          NOT NULL,
     [TypeOfInOutOfMoney]  INT          NOT NULL,
@@ -15,6 +15,8 @@
     FOREIGN KEY ([TypeOfInOutOfMoney]) REFERENCES [dbo].[ctgTypeOfInOutOfMoney] ([tio_pk_id]),
     FOREIGN KEY ([TypeService]) REFERENCES [dbo].[CatTypeServiceClosure] ([IdTypeService])
 );
+
+
 
 
 GO

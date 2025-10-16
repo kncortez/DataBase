@@ -56,7 +56,7 @@ BEGIN
 					Table_A.[Deposit_Number] = @DepositNumber,
 					Table_A.[DateUpdated] = GETDATE()
 				FROM
-					DeliveryBackOffice.dbo.DeliveryOrder AS Table_A
+					DeliveryBackOffice.dbo.DeliveryOrder  AS Table_A WITH(NOLOCK)
 					INNER JOIN #listGuides AS Table_B
 						ON Table_A.Guide_Serie = Table_B.ItemSerie 
 						and Table_A.Guide_Number = Table_B.ItemNumber	
@@ -66,8 +66,8 @@ BEGIN
 		
 					set @_exist = (
 							select  isnull(count(*),0) 
-							from DeliveryBackOffice.dbo.DeliveryOrderPaid guidepaids
-							join #listGuides guides on  guidepaids.Guide_Serie = guides.ItemSerie
+							from DeliveryBackOffice.dbo.DeliveryOrderPaid guidepaids WITH(NOLOCK)
+							INNER JOIN #listGuides guides on  guidepaids.Guide_Serie = guides.ItemSerie
 													and guidepaids.Guide_Number = guides.ItemNumber
 							where guidepaids.IdStatus = 'TRUE'
 							--guidepaids.Deposit_Number = @DepositNumber
@@ -113,7 +113,7 @@ BEGIN
 						NULL,
 						NULL
 					FROM
-						DeliveryBackOffice.dbo.DeliveryOrder Table_A
+						DeliveryBackOffice.dbo.DeliveryOrder Table_A WITH(NOLOCK)
 						INNER JOIN #listGuides AS Table_B
 							ON Table_A.Guide_Serie  = Table_B.ItemSerie
 							and Table_A.Guide_Number = Table_B.ItemNumber	

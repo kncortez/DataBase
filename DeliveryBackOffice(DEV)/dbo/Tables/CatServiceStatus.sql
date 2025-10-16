@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatServiceStatus] (
-    [IdServiceStatus] INT            IDENTITY (1, 1) NOT NULL,
+    [IdServiceStatus] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]            NVARCHAR (100) NULL,
     [Description]     VARCHAR (100)  NULL,
     [RowStatus]       BIT            NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]     DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdServiceStatus] ASC)
 );
+
+
 
 
 GO

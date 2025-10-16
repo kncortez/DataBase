@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TermsAndConditionsByService] (
-    [IdTermsAndConditionsByService] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [IdTermsAndConditionsByService] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TermsAndConditionsId]          BIGINT       NOT NULL,
     [ServiceManagementId]           INT          NOT NULL,
     [IsAccepted]                    BIT          NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_TACBYSERVICE_SERVICEM] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement]),
     CONSTRAINT [FK_TACBYSERVICE_TAC] FOREIGN KEY ([TermsAndConditionsId]) REFERENCES [dbo].[TermsAndConditions] ([IdTAC])
 );
+
+
 
 
 GO

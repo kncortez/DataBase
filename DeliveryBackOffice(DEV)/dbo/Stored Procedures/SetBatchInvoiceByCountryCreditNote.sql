@@ -1,4 +1,4 @@
--- =============================================
+ï»¿-- =============================================
 -- Author:      Oscar Rodriguez
 -- Create date: 2024-08-13
 -- Description: Registra y actualiza tablas para certificacion de nota de credito para HN
@@ -23,7 +23,7 @@ BEGIN
 		   InvoiceBatchHeader
 		   status = 1 y enable = 1 es cuando el lote esta habilidado y activo
 		   status = 0 y enable = 1 es un error - no contemplado
-		   status = 1 y enable = 0 es cuando no se puede facturar, porque se detuvo facturación (Ya viene lote nuevo ejemplo)
+		   status = 1 y enable = 0 es cuando no se puede facturar, porque se detuvo facturaciÃ³n (Ya viene lote nuevo ejemplo)
 		 */
 
 		EXEC [ValidateBatchInvoice] @TypeDocument    = 6,
@@ -52,7 +52,7 @@ BEGIN
 		FROM DeliveryBackOffice.dbo.invoiceHeader ih
 		WHERE ih.inv_pk_id = @idInvoiceCreditNote
 
-		--Actualizamos el último procesado 
+		--Actualizamos el Ãºltimo procesado 
 		UPDATE InvoiceBatchHeader
 		SET Last_Process = @LastProcessed
 		WHERE Id_Lote = @Batch

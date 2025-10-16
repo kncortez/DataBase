@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeArticle] (
-    [TarId]           INT          IDENTITY (1, 1) NOT NULL,
+    [TarId]           INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TarIdPackage]    INT          NOT NULL,
     [TarName]         VARCHAR (50) NOT NULL,
     [TarRowStatus]    BIT          NOT NULL,

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatBankColumnRuleCOD] (
-    [IdCatBankColumnRuleCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatBankColumnRuleCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatBankColumnCODId]     INT           NOT NULL,
     [CatRuleCODId]           INT           NOT NULL,
     [RowStatus]              BIT           CONSTRAINT [DF_CatBankColumnRuleCOD_RowStatus] DEFAULT ('TRUE') NOT NULL,

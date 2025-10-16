@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTransactionTypeCOD] (
-    [IdCatTransactionTypeCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatTransactionTypeCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TransactionType]         NVARCHAR (10) NOT NULL,
     [Description]             NVARCHAR (50) NOT NULL,
     [BankId]                  INT           NOT NULL,

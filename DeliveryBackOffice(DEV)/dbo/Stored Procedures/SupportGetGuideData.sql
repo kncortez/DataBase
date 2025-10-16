@@ -117,6 +117,7 @@ SELECT 'Cuenta Bancaria'
      , dcb.DCBA_Nom_account
      , dcb.DCBA_BankAccountType
      , bk.Name
+	 , dcb.DCBA_Identification
 FROM dbo.DeliveryOrder                         ord
     INNER JOIN dbo.DeliveryCustomerBankAccount dcb  with (nolock)
         ON dcb.DCBA_Id = ord.DCBA_ID
@@ -192,3 +193,20 @@ where dtd.Guide_Serie = @GuideSerie
 order by dtd.DateCreated desc;
 
 END
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportGetGuideData] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportGetGuideData] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportGetGuideData] TO [cvaldes]
+    AS [dbo];
+

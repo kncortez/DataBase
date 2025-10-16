@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderPaidTemp] (
-    [IdDeliveryOrderPaid]       BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryOrderPaid]       BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Guide_Serie]               NVARCHAR (2)  NULL,
     [Guide_Number]              INT           NULL,
     [Deposit_Number]            NVARCHAR (50) NULL,

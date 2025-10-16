@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderReversalStatus] (
-    [IdReversalStatus] INT            IDENTITY (1, 1) NOT NULL,
+    [IdReversalStatus] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Guide_Serie]      NVARCHAR (2)   NOT NULL,
     [Guide_Number]     INT            NOT NULL,
     [Comment]          NVARCHAR (150) NULL,
@@ -13,6 +13,8 @@
     FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 

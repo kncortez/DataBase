@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[IncidenceServices] (
-    [IdIncidence]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdIncidence]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ServiceManagementId]  INT            NULL,
     [IncidenceTypeId]      INT            NULL,
     [DescriptionIncidence] VARCHAR (300)  NULL,
@@ -17,6 +17,10 @@
     CONSTRAINT [FKIncidentRecolection] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement]),
     CONSTRAINT [FKIncidenTypProduct] FOREIGN KEY ([IncidenceTypeId]) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType])
 );
+
+
+
+
 
 
 
@@ -75,4 +79,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'feha de cre
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'precisión', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceServices', @level2type = N'COLUMN', @level2name = N'Accuracy';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ServiceManagementId]
+    ON [dbo].[IncidenceServices]([ServiceManagementId] ASC);
 

@@ -1,19 +1,20 @@
-﻿CREATE TABLE [dbo].[DeliveryLinkProducts]
-(
-	[IdDeliveryLinkProducts] INT IDENTITY (1, 1) NOT NULL,   
-    [DeliveryLinkId] INT NOT NULL, 
-    [ProductId] INT NOT NULL, 
-    [Quantity] INT NULL, 
-    [Price] DECIMAL(14,2) NOT NULL, 
-    [RowStatus] BIT NOT NULL, 
-    [UserCreated] NVARCHAR(50) NOT NULL, 
-    [DateCreated] DATETIME NOT NULL, 
-    [UserUpdated] NVARCHAR(50) NULL, 
-    [DateUpdated] DATETIME NULL,
-	PRIMARY KEY CLUSTERED ([IdDeliveryLinkProducts] ASC),
-    CONSTRAINT FK_DeliveryLinkProducts_DeliveryLinkId FOREIGN KEY (DeliveryLinkId) REFERENCES DeliveryLink(IdDeliveryLink),
-    CONSTRAINT FK_DeliveryLinkProducts_ProductId FOREIGN KEY (ProductId) REFERENCES Product(IdProduct)
-)
+﻿CREATE TABLE [dbo].[DeliveryLinkProducts] (
+    [IdDeliveryLinkProducts] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [DeliveryLinkId]         INT             NOT NULL,
+    [ProductId]              INT             NOT NULL,
+    [Quantity]               INT             NULL,
+    [Price]                  DECIMAL (14, 2) NOT NULL,
+    [RowStatus]              BIT             NOT NULL,
+    [UserCreated]            NVARCHAR (50)   NOT NULL,
+    [DateCreated]            DATETIME        NOT NULL,
+    [UserUpdated]            NVARCHAR (50)   NULL,
+    [DateUpdated]            DATETIME        NULL,
+    PRIMARY KEY CLUSTERED ([IdDeliveryLinkProducts] ASC),
+    CONSTRAINT [FK_DeliveryLinkProducts_DeliveryLinkId] FOREIGN KEY ([DeliveryLinkId]) REFERENCES [dbo].[DeliveryLink] ([IdDeliveryLink]),
+    CONSTRAINT [FK_DeliveryLinkProducts_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Product] ([IdProduct])
+);
+
+
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',

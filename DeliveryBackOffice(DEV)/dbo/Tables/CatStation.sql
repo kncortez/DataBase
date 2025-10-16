@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatStation] (
-    [IdStation]       INT            IDENTITY (1, 1) NOT NULL,
+    [IdStation]       INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [StationName]     NVARCHAR (100) NOT NULL,
     [CountryId]       VARCHAR (2)    NOT NULL,
     [StationType]     INT            NOT NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_CatStation_HubLogistics] FOREIGN KEY ([HubLogisticId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_CatStation_VisitPointClient] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO

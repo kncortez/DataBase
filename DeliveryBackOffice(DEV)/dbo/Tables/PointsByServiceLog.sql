@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[PointsByServiceLog] (
-    [IdPointsByServiceLog] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdPointsByServiceLog] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [MembershipId]         INT             NOT NULL,
     [GuideSerie]           NVARCHAR (2)    NOT NULL,
     [GuideNumber]          INT             NOT NULL,
@@ -19,6 +19,10 @@
     CONSTRAINT [FK_PointsByService_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
     CONSTRAINT [FK_PointsByServiceLog_CatPointPromo] FOREIGN KEY ([CatPointPromoId]) REFERENCES [dbo].[CatPointPromo] ([IdPointPromo])
 );
+
+
+
+
 
 
 
@@ -93,4 +97,9 @@ CREATE NONCLUSTERED INDEX [idx_MembershipId_RowStatus]
 GO
 CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_RowStatus]
     ON [dbo].[PointsByServiceLog]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_guideserie_guidenumber]
+    ON [dbo].[PointsByServiceLog]([GuideSerie] ASC, [GuideNumber] ASC);
 

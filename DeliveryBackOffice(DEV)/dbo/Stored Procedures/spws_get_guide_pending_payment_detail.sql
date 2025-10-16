@@ -18,6 +18,11 @@
 -- Description: <Se agrega parametros para enviar información de COD anticipado.>
 -- =============================================
 -- =============================================
+-- Author:      <Cristian Suazo>
+-- Create date: <2025-01-07>
+-- Description: <Se agrega procedimiento por ticketnumber>
+-- =============================================
+-- =============================================
 -- Author:      <Tito García>
 -- Create date: <2024-12-18>
 -- Description: <Se realizan optimizaciones recomendadas por DBA>
@@ -27,7 +32,8 @@ CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @IdModuleP INT,
     @ServiceType VARCHAR(100),
     @TokenP VARCHAR(100),
-    @IdCountry VARCHAR(2) = 'GT'
+    @IdCountry VARCHAR(2) = 'GT',
+	@TicketNumber NVARCHAR(MAX) = NULL
 AS
 BEGIN
     -- Insert statements for procedure here
@@ -71,14 +77,38 @@ BEGIN
     );
     CREATE NONCLUSTERED INDEX tempGuides ON #listGuides (Guide_Serie, Guide_Number);
 
-    INSERT INTO #listGuides
-    (
-        Guide_Serie,
-        Guide_Number
-    )
-    SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
-           SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+
+	IF @InGuidesP IS NOT NULL AND @InGuidesP != ''
+	BEGIN
+	PRINT ' NORMAL '
+		INSERT INTO #listGuides
+		(
+			Guide_Serie,
+			Guide_Number
+		)
+		SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
+			   SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+	END
+	ELSE
+	BEGIN
+
+		SET @InGuidesP = ''
+		SELECT @InGuidesP = STRING_AGG(CAST(CONCAT(Guide_Serie, Guide_Number) AS VARCHAR(MAX)), ',')
+		FROM DeliveryOrder WITH (NOLOCK)
+		WHERE Ticket_Number IN ( @TicketNumber )
+
+		INSERT INTO #listGuides
+		(
+			Guide_Serie,
+			Guide_Number
+		)
+		SELECT SUBSTRING(Item, 1, 2) Guide_Serie,
+			   SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) Guide_Number
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+
+	END
+	----------------------------------------------------------------------------------------------------
 
     ---- Obtener guias que no existen ------------------------------------
     SELECT lg.Guide_Serie,
@@ -111,19 +141,19 @@ BEGIN
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
-              AND so.StatusOrderId IN ( 1, 4, 15, 16,45,50 )
+              AND so.StatusOrderId IN ( 1, 15, 50, 45 )
 			  
           )
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )			  
+              AND so.StatusOrderId IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 )			  
 			  AND COALESCE(DO.IsLastMileReturn,0) = 0
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
-              AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21,32 )
+              AND so.StatusOrderId IN ( 10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35 )
           )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
 
@@ -153,19 +183,19 @@ BEGIN
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
-              AND (so.StatusOrderId NOT IN ( 1, 4, 15, 16 )
+              AND (so.StatusOrderId NOT IN ( 1, 15, 50, 45 )
 			))
           
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND (so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+              AND (so.StatusOrderId NOT IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 )
 			  )
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
-              AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+              AND so.StatusOrderId NOT IN ( 10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35 )
 			
           )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
@@ -286,11 +316,11 @@ BEGIN
 
 		----Obtener bandera de tipo de suscripcion para enviar a sp revalorizador----
 		DECLARE @TypeSubsId INT;
-		SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId 
+		SET @TypeSubsId = (SELECT TOP 1 sb.CatTypeSubscriptionId 
         FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
 		INNER JOIN Subscription sb WITH (NOLOCK)
 		ON sbl.SubscriptionId = sb.IdSubscription
-		WHERE LogGuideNumber = @RevalueGuide)
+		WHERE sbl.LogGuideNumber = @RevalueGuide AND sbl.LogGuideSerie = @RevalueSerie )
 
 		IF(@TypeSubsId IS NULL)
 			BEGIN
@@ -393,6 +423,10 @@ BEGIN
                                                                @CodeApp = '',
                                                                @IdModule = @IdModuleP,
                                                                @Token = @TokenP;
+
+
+
+
 
     SELECT ROW_NUMBER() OVER (ORDER BY ppt.GuideNumber ASC) AS Id,
            CONCAT(ppt.GuideSerie, CAST(ppt.GuideNumber AS VARCHAR)) Guide,
@@ -526,7 +560,8 @@ BEGIN
 							),
 					'N/A'
 				)
-				)) AS TypePayment
+				)) AS TypePayment,
+	DO.IdCustomer
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
@@ -537,7 +572,7 @@ BEGIN
                AND pyt.GuideNumber = ppt.GuideNumber
 		LEFT JOIN [dbo].[CatPaymentType] cpt WITH(NOLOCK)
 			ON (cpt.PayTypeId = pyt.PayTypeId)
-   WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+   WHERE do.SenderCountryId = @IdCountry;
 
     CREATE NONCLUSTERED INDEX IX_PPTID_ID ON #PendingPaymentTempId ([Id]);
 
@@ -631,6 +666,9 @@ BEGIN
 			ON do.Guide_Serie = acd.GuideSerie AND do.Guide_Number = acd.GuideNumber
 		LEFT JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK)
 			ON do.IdCustomer = ach.CustomerId 
+            AND ISNULL(do.VisitpointClientPortfolioId, 0) = ISNULL(ach.PortfolioId, 0)
+            --Tomar en cuenta validar especificamente
+            --por portafolio cuando el cliente sea redistribuidor 10/02/2025
 		LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 			ON VPC.CodeOfReference = DO.Sender_ID
 		LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)

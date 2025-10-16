@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatCommercialSegment] (
-    [IdCommercialSegment]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdCommercialSegment]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CommercialSegmentName]        NVARCHAR (75)  NOT NULL,
     [CommercialSegmentDescription] NVARCHAR (200) NULL,
     [RowStatus]                    BIT            CONSTRAINT [DF_CatCommercialSegment_RowStatus] DEFAULT ('TRUE') NOT NULL,

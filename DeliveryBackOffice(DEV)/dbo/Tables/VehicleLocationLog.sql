@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VehicleLocationLog] (
-    [IdVehicleLocationLog] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdVehicleLocationLog] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [VehicleId]            INT           NOT NULL,
     [LocationAccuracy]     NVARCHAR (50) NULL,
     [LocationLatitude]     NVARCHAR (20) NOT NULL,
@@ -12,6 +12,8 @@
     PRIMARY KEY CLUSTERED ([IdVehicleLocationLog] ASC),
     CONSTRAINT [FK_VehicleLocation_Vehicle] FOREIGN KEY ([VehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle])
 );
+
+
 
 
 

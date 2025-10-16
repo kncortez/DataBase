@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[IncidenceActionByTypeIncidence] (
-    [IdIncidenceActionByTypeIncidence] INT          IDENTITY (1, 1) NOT NULL,
+    [IdIncidenceActionByTypeIncidence] INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IncidenceTypeId]                  INT          NOT NULL,
     [IncidenceActionId]                INT          NOT NULL,
     [RowStatus]                        BIT          NOT NULL,
@@ -10,6 +10,8 @@
     CONSTRAINT [PK__Incidenc__B4A5F10FE8CDBBD5] PRIMARY KEY CLUSTERED ([IdIncidenceActionByTypeIncidence] ASC),
     CONSTRAINT [IncidenceActionByCatTypeIncidence_FK] FOREIGN KEY ([IncidenceTypeId]) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType])
 );
+
+
 
 
 GO

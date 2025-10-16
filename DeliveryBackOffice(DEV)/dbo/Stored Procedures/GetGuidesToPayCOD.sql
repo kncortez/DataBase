@@ -71,7 +71,7 @@ FROM dbo.BatchCOD                 BT WITH(NOLOCK)
 WHERE CONVERT(DATE, BT.Date) = @Date
       AND BTD.CatConceptCODId = 1
       AND BTd.RowStatus = 1
-      AND BTD.isCompleted = 1;
+      AND BTD.IdCountry = @IdCountry --NEW BNHL;
 
 
 
@@ -170,7 +170,7 @@ WHERE CONVERT(DATE, BT.Date) = @Date
                        SELECT TOP 1
                               [IdTownship]
                        FROM [dbo].[Township] WITH(NOLOCK)
-                       WHERE UPPER(do.[Receiver_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                       WHERE UPPER(do.[Receiver_Town]) = UPPER([TownshipName])
                    )
                    ELSE
                        do.[ReceiverIdTownship]
@@ -182,7 +182,7 @@ WHERE CONVERT(DATE, BT.Date) = @Date
                        SELECT TOP 1
                               [IdTownship]
                        FROM [dbo].[Township] WITH(NOLOCK)
-                       WHERE UPPER(do.[Sender_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                       WHERE UPPER(do.[Sender_Town]) = UPPER([TownshipName])
                    )
                    ELSE
                        do.[SenderIdTownship]
@@ -246,6 +246,7 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 		--AND btc.RowStatus = 1 
 		--AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
 		AND do.SenderCountryId = @IdCountry
+        AND BTD.isCompleted = 1
 ​
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,

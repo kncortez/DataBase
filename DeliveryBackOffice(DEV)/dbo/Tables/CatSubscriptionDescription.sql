@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatSubscriptionDescription] (
-    [IdCatSubscriptionDescription] INT             IDENTITY (1, 1) NOT NULL,
+    [IdCatSubscriptionDescription] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Title]                        NVARCHAR (100)  NOT NULL,
     [Description]                  NVARCHAR (2000) NOT NULL,
     [Position]                     INT             NOT NULL,
@@ -13,6 +13,8 @@
     PRIMARY KEY CLUSTERED ([IdCatSubscriptionDescription] ASC),
     CONSTRAINT [FK_CatSubscription_CatSubscriptionDescription] FOREIGN KEY ([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
 );
+
+
 
 
 

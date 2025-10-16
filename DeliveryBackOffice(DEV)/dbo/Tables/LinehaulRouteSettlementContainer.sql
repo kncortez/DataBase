@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRouteSettlementContainer] (
-    [IdLinehaulRouteSettlementContainer] INT           IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRouteSettlementContainer] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRouteSettlementId]          INT           NOT NULL,
     [ContainerId]                        INT           NOT NULL,
     [HubId]                              INT           NOT NULL,
@@ -16,6 +16,10 @@
     CONSTRAINT [FK_LinehaulRouteSettlementContainer_Hub] FOREIGN KEY ([HubId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_LinehaulRouteSettlementContainer_RouteSettlement] FOREIGN KEY ([LinehaulRouteSettlementId]) REFERENCES [dbo].[LinehaulRouteSettlement] ([IdLinehaulRouteSettlement])
 );
+
+
+
+
 
 
 
@@ -70,4 +74,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de re
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hub destino asignado | Tabla HubLogistics', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlementContainer', @level2type = N'COLUMN', @level2name = N'HubId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ContainerId_LinehaulRouteSettlementId]
+    ON [dbo].[LinehaulRouteSettlementContainer]([ContainerId] ASC, [LinehaulRouteSettlementId] ASC);
 

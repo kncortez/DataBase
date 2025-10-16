@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[FinalStatusByModule] (
-    [IdFinalStatusByModule] INT           IDENTITY (1, 1) NOT NULL,
+    [IdFinalStatusByModule] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [StatusOrderId]         TINYINT       NOT NULL,
     [ModuleId]              INT           NOT NULL,
     [RowStatus]             BIT           NOT NULL,
@@ -10,6 +10,8 @@
     CONSTRAINT [PK_FinalStatusByModule] PRIMARY KEY CLUSTERED ([IdFinalStatusByModule] ASC),
     CONSTRAINT [FK_FinalStatusByModule_CatModule] FOREIGN KEY ([ModuleId]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
 
 
 

@@ -7,6 +7,10 @@
 -- Author:	<CRTISTIAN SUAZO>
 -- Description: Muestra el pais del punto de visita
 -- =============================================
+-- =============================================
+-- Author:	<Oscar Rodriguez>
+-- Description: Se regresa informacion de poblado asociado al punto de visita
+-- =============================================
 CREATE PROCEDURE [dbo].[sp_get_visitPointClientParser]
 @IdVisitClient AS int
 AS
@@ -20,7 +24,8 @@ BEGIN
 		   Department, 
 		   Phone, 
 		   DescriptionOfClient, 
-		   ISNULL(CountryId, 'GT') AS CountryId
+		   ISNULL(CountryId, 'GT') AS CountryId,
+		   IdSettlement
 	FROM VisitPointClient WITH(NOLOCK)
 	WHERE CodeOfReference = @IdVisitClient
 

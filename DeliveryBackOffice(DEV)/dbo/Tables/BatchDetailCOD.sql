@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[BatchDetailCOD] (
-    [IdBatchDetailCOD]        INT             IDENTITY (1, 1) NOT NULL,
+    [IdBatchDetailCOD]        INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [BatchCODId]              INT             NOT NULL,
     [GuideSerie]              NVARCHAR (2)    NOT NULL,
     [GuideNumber]             INT             NOT NULL,
@@ -40,7 +40,7 @@
     [CODDiscount]             DECIMAL (18, 2) NULL,
     [IdCountry]               VARCHAR (2)     NULL,
     [IdCurrency]              INT             NULL,
-    [IsCompleted]             TINYINT         DEFAULT(0) NULL,
+    [IsCompleted]             TINYINT         DEFAULT ((0)) NULL,
     [IsAnticipatedCOD]        INT             NULL,
     [ComisionCODAnticipated]  DECIMAL (18, 2) NULL,
     CONSTRAINT [PK_BatchDetailCOD_IdBatchDetailCOD] PRIMARY KEY CLUSTERED ([IdBatchDetailCOD] ASC),
@@ -55,6 +55,8 @@
     CONSTRAINT [FK_IdCountryBDCOD_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     CONSTRAINT [FK_IdCurrencyBDCOD_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
+
+
 
 
 

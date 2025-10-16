@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServiceProvinceConfiguration] (
-    [IdServiceProvinceConfiguration] INT           IDENTITY (1, 1) NOT NULL,
+    [IdServiceProvinceConfiguration] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatConfigurableServiceId]       INT           NOT NULL,
     [ProvinceId]                     INT           NOT NULL,
     [RowStatus]                      BIT           NOT NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [FK_ServiceProvinceConfiguration_CatConfigurableService] FOREIGN KEY ([CatConfigurableServiceId]) REFERENCES [dbo].[CatConfigurableService] ([IdCatConfigurableService]),
     CONSTRAINT [FK_ServiceProvinceConfiguration_Province] FOREIGN KEY ([ProvinceId]) REFERENCES [dbo].[Province] ([IdProvince])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRoutePreparationCustomsMark] (
-    [IdLinehaulRoutePreparationCustomsMark] INT            IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRoutePreparationCustomsMark] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRoutePreparationId]            INT            NOT NULL,
     [CustomsMarkSerie]                      NVARCHAR (100) NOT NULL,
     [RowStatus]                             BIT            DEFAULT ((1)) NOT NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [FK_LinehaulRoutePreparationCustomsMark_LinehaulRoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation]),
     CONSTRAINT [UQ_LinehaulCustomsMark_CustomsMarkSerie] UNIQUE NONCLUSTERED ([CustomsMarkSerie] ASC)
 );
+
+
 
 
 GO
