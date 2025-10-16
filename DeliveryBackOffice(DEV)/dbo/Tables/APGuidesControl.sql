@@ -2,10 +2,10 @@ CREATE TABLE [dbo].[APGuidesControl] (
     [IdAPGuidesControl]         BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ReferenceNumber]           NVARCHAR(50)    NOT NULL,
     [TrackingCode]              NVARCHAR(50)    NOT NULL,
-    [Phone]                     NVARCHAR(20)    NOT NULL,
+    [Phone]                     NVARCHAR(20)    NULL,
     [FirstName]                 NVARCHAR(100)   NOT NULL,
     [LastName]                  NVARCHAR(100)   NOT NULL,
-    [City]                      NVARCHAR(100)   NOT NULL,
+    [City]                      NVARCHAR(100)   NOT NULL,   
     [Address]                   NVARCHAR(500)   NOT NULL,
     [AddressExtra]              NVARCHAR(500)   NULL,
     [CountryCode]               CHAR(2)         NOT NULL,
@@ -13,15 +13,18 @@ CREATE TABLE [dbo].[APGuidesControl] (
     [DeliveryInstructions]      NVARCHAR(500)   NULL,
     [GuideCreatedDate]          DATETIME        NULL,
     [GuideSerie]                NVARCHAR (2)    NULL,
-    [GuideNumber]               INT             NOT NULL,
-    [Completed]                 BIT             DEFAULT ((0)) NOT NULL,
+    [GuideNumber]               INT             NULL,
+    [APServiceDate]             DATE            NOT NULL,
+    [Status]                    NVARCHAR(10)    NOT NULL,
+    [APExecutionScheduleId]   BIGINT          NOT NULL,
     [RowStatus]                 BIT             DEFAULT ((1)) NOT NULL,
     [TokenCreated]              NVARCHAR (50)   NOT NULL,
     [DateCreated]               DATETIME        NOT NULL,
     [TokenUpdated]              NVARCHAR (50)   NULL,
     [DateUpdated]               DATETIME        NULL,
     PRIMARY KEY CLUSTERED ([IdAPGuidesControl] ASC),
-    CONSTRAINT [FK_APGuidesControl_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
+    CONSTRAINT [FK_APGuidesControl_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
+    CONSTRAINT [FK_APGuidesControl_APExecutionSchedule] FOREIGN KEY ([APExecutionScheduleId]) REFERENCES [dbo].[APExecutionSchedule] ([IdAPExecutionSchedule])
 );
 
 GO
@@ -33,6 +36,17 @@ CREATE NONCLUSTERED INDEX [IDX_APGuidesControl_GuideCreatedDate]
 GO
 CREATE NONCLUSTERED INDEX [IDX_APGuidesControl_GuideSerie_GuideNumber] 
     ON [dbo].[APGuidesControl]([GuideSerie] ASC, [GuideNumber] ASC);
+
+GO
+CREATE NONCLUSTERED INDEX [IX_APGuidesControl_TrackingCode_CountryCode_APServiceDate] 
+ON [dbo].[APGuidesControl] 
+(
+    [TrackingCode] ASC,
+    [CountryCode] ASC,
+    [APServiceDate] ASC
+)
+INCLUDE ([RowStatus])
+WHERE [RowStatus] = 1;
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que almacena los servicios requeridos por Aeropost, lleva el control de las guías creadas en Hermes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl';
@@ -65,9 +79,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de cr
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Serie de la guía (relacionada con DeliveryOrder)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'GuideSerie';
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de guía (relacionada con DeliveryOrder)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'GuideNumber';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de guía (relacionada con DeliveryOrder)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'APServiceDate';
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si la guía fue creada en Hermes. (0=pendiente, 1=creada)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'Completed';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha del servicio de Aeropost', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'Status';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si la guía fue creada en Hermes. (Pending, Processing, Processed,Failed)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'Status';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del registro (1=Activo, 0=Inactivo)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'RowStatus';
 GO
