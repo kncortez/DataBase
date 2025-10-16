@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:      <Daniel Ramirez>
 -- Create date: <2024-08-07>
 -- Description: <Genera la informacion para los encabezados de la factura>
@@ -6,6 +6,9 @@
 -- Author:        <Daniel, Ramirez>
 -- Create date:   <2024-08-21>
 -- Description:   <Ajuste para obtener info para tienda virtual desde Invoice Helper>
+-- ============================================
+-- Create date:   <2024-11-07>
+-- Description:   <Obtener tipo de cliente para mostrar condiciones de pago>
 -- =============================================
 CREATE PROCEDURE [dbo].[spGetHeaderInvoice]
 (
@@ -87,7 +90,11 @@ BEGIN
           ISNULL(LTRIM(RTRIM(@CodeArea)),'') AS [CodeArea],
           ISNULL(LTRIM(RTRIM(@EmailSup)),'') AS [EmailSup],
           ISNULL(LTRIM(RTRIM(@Pbx)),'') AS [Pbx],
-          ISNULL(LTRIM(RTRIM(@VoucherPhone)),'') AS [VoucherPhone]
+          ISNULL(LTRIM(RTRIM(@VoucherPhone)),'') AS [VoucherPhone],
+          ISNULL(cus.IdCustomerType,0) AS IdCustomerType,
+          ISNULL(cust.[Description],'') AS DescriptionCustomerType, 
+          ISNULL(cus.[ConditionOfPaymentID],0) AS ConditionOfPaymentID,
+          ISNULL(cOfPay.ConditionOfPayment,'') AS ConditionOfPayment
      FROM invoiceHeader invH WITH(NOLOCK)
           INNER JOIN InvoiceBatchDetail invBD WITH(NOLOCK) 
                   ON invH.inv_pk_id = invBD.inv_pk_id 
@@ -97,6 +104,12 @@ BEGIN
                   ON parFac.dpf_VpCodeOfReference = invH.inv_vpCodeOfReferences
           INNER JOIN VisitPointClient vPointCli WITH(NOLOCK)
                   ON vPointCli.CodeOfReference = parFac.dpf_VpCodeOfReference
+          LEFT JOIN customer cus WITH(NOLOCK) 
+                  ON cus.idCustomer = vPointCli.CustomerID
+          LEFT JOIN CustomerType cust WITH(NOLOCK) 
+                  ON cus.IdCustomerType = cust.IdCustomerType
+          LEFT JOIN CatConditionOfPayment cOfPay WITH(NOLOCK) 
+                  ON cus.[ConditionOfPaymentID] = cOfPay.IdConditionOfPayment
     WHERE invH.inv_numberFEL = @CorrelativeInvoice
       AND invH.inv_pk_id = @IdInvoice
      ORDER BY 1 DESC

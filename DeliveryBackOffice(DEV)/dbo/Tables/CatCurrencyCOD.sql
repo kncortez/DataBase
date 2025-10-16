@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatCurrencyCOD] (
-    [IdCatCurrencyCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatCurrencyCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]             NVARCHAR (50) NOT NULL,
     [Symbol]           NVARCHAR (3)  NULL,
     [CodeISO]          NVARCHAR (3)  NOT NULL,

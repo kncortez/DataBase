@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[PackagesRangeCOD] (
-    [IdPackagesRangeCOD] INT             IDENTITY (1, 1) NOT NULL,
+    [IdPackagesRangeCOD] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [PackagesRangeId]    INT             NULL,
     [CatRateSegmentId]   INT             NOT NULL,
     [CODRate]            DECIMAL (12, 2) NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FK_PackagesRangeCOD_CatRateSegment] FOREIGN KEY ([CatRateSegmentId]) REFERENCES [dbo].[CatRateSegment] ([CrsId]),
     CONSTRAINT [FK_PackagesRangeCOD_PackagesRange] FOREIGN KEY ([PackagesRangeId]) REFERENCES [dbo].[PackagesRange] ([IdPackagesRange])
 );
+
+
 
 
 GO

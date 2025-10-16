@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRouteSettlementContainerDetailPiece] (
-    [IdLinehaulRouteSettlementContainerDetailPiece] INT           IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRouteSettlementContainerDetailPiece] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRouteSettlementContainerDetailId]      INT           NOT NULL,
     [PieceNumber]                                   INT           NOT NULL,
     [IsDryPiece]                                    INT           NOT NULL,
@@ -12,6 +12,10 @@
     PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlementContainerDetailPiece] ASC),
     CONSTRAINT [FK_LinehaulRouteSettlementContainerDetailPiece_RouteSettlement] FOREIGN KEY ([LinehaulRouteSettlementContainerDetailId]) REFERENCES [dbo].[LinehaulRouteSettlementContainerDetail] ([IdLinehaulRouteSettlementContainerDetail])
 );
+
+
+
+
 
 
 GO
@@ -56,4 +60,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de detalle de piezas en liquidación de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlementContainerDetailPiece';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_LinehaulRouteSettlementContainerDetailId_PieceNumber]
+    ON [dbo].[LinehaulRouteSettlementContainerDetailPiece]([LinehaulRouteSettlementContainerDetailId] ASC, [PieceNumber] ASC);
 

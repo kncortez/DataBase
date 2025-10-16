@@ -8,6 +8,8 @@
 -- Author:		<Walter,Orozco>
 -- Create date: <2024-06-24>
 -- Description:	< Agregar moneda, correo y telefono multipais. >
+-- Create date: <2025-04-03>
+-- Description:	< Agregar nombre de país. >
 -- =============================================
 CREATE PROCEDURE [dbo].[SpWsGetDataFromServiceTicket]
     @IdAccount INT = 37,
@@ -140,6 +142,7 @@ BEGIN
         BEGIN
 
             SELECT PRV.IdCountry IdCountry,
+                   ISNULL(CC.CountryNameES,'') CountryName,
                    DOR.Pieces_Cold + DOR.Pieces_Dry CountPieces,
                    @TotalWeight TotalWeight,
                    COALESCE(Collect_OnDelivery, 0) TotalValue,
@@ -164,43 +167,33 @@ BEGIN
                    Sender_Phone ToPhone,
                    COALESCE(rgu.UsrEmail, '') ToEmail,
                    Sender_Address ToAddress,
-                   CASE 
-					WHEN PRV.IdCountry IS NULL 
-						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' AND IdCountry = 'GT')
-					ELSE 
-						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry )
-					END AS VoucherEmail,
-					CASE 
-					WHEN PRV.IdCountry IS NULL 
-						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' AND IdCountry = 'GT')
-					ELSE 
-						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry )
-					END AS VoucherPhone,
+                   (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
+					WHERE [Name] = 'VoucherEmail' AND IdCountry = PRV.IdCountry ) AS VoucherEmail,
+				   (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
+					WHERE [Name] = 'VoucherPhone' AND IdCountry = PRV.IdCountry ) AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-                LEFT JOIN DeliveryBackOffice.dbo.Account ACC
+                LEFT JOIN DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                     ON ACC.IdCustomer = DOR.IdCustomer
-                LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rbu
+                LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rbu WITH (NOLOCK)
                     ON rbu.RuaIdAccount = ACC.AccIdAccount
-                LEFT JOIN DeliveryBackOffice.dbo.RegisterUser rgu
+                LEFT JOIN DeliveryBackOffice.dbo.RegisterUser rgu WITH (NOLOCK)
                     ON rgu.UsrIdUser = rbu.RuaIdUser
-                LEFT JOIN DeliveryBackOffice.dbo.Township TOW
+                LEFT JOIN DeliveryBackOffice.dbo.Township TOW WITH (NOLOCK)
                     ON TOW.IdTownship = DOR.SenderIdTownship
-                LEFT JOIN DeliveryBackOffice.dbo.Province PRV
+                LEFT JOIN DeliveryBackOffice.dbo.Province PRV WITH (NOLOCK)
                     ON PRV.IdProvince = TOW.IdProvince
                 LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IVD WITH (NOLOCK)
                     ON IVD.dti_fk_orderSerie = DOR.Guide_Serie
                        AND IVD.dti_fk_orderNumber = DOR.Guide_Number
                 LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader IVH WITH (NOLOCK)
                     ON IVH.inv_pk_id = IVD.dti_fk_header
-                LEFT JOIN DeliveryBackOffice.dbo.Township TOW2
+                LEFT JOIN DeliveryBackOffice.dbo.Township TOW2 WITH (NOLOCK)
                     ON TOW2.IdTownship = DOR.ReceiverIdTownship
-                LEFT JOIN DeliveryBackOffice.dbo.Province PRV2
+                LEFT JOIN DeliveryBackOffice.dbo.Province PRV2 WITH (NOLOCK)
                     ON PRV2.IdProvince = TOW2.IdProvince
+                LEFT JOIN DeliveryBackOffice.dbo.CatCountry CC WITH(NOLOCK)
+					ON CC.IdCountry = PRV.IdCountry
             WHERE DOR.Guide_Serie = SUBSTRING(@TrackingNumber, 1, 2)
                   AND DOR.Guide_Number = SUBSTRING(@TrackingNumber, 3, LEN(@TrackingNumber))
                   AND ACC.AccIdAccount = @IdAccount;
@@ -252,6 +245,7 @@ BEGIN
         BEGIN
 
             SELECT PRV.IdCountry IdCountry,
+                   ISNULL(CC.CountryNameES,'') CountryName,
                    DOR.Pieces_Cold + DOR.Pieces_Dry CountPieces,
                    @TotalWeight TotalWeight,
                    COALESCE(DOR.Collect_OnDelivery, 0) TotalValue,
@@ -291,41 +285,31 @@ BEGIN
                    Sender_Phone ToPhone,
                    COALESCE(DOR.Sender_Mail, '') ToEmail,
                    Sender_Address ToAddress,
-                   CASE 
-					WHEN PRV.IdCountry IS NULL 
-						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' AND IdCountry = 'GT')
-					ELSE 
-						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry )
-					END AS VoucherEmail,
-					CASE 
-					WHEN PRV.IdCountry IS NULL 
-						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' AND IdCountry = 'GT')
-					ELSE 
-						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry )
-					END AS VoucherPhone,
+                   (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
+				    WHERE [Name] = 'VoucherEmail' AND IdCountry = PRV.IdCountry ) AS VoucherEmail,
+				   (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
+					WHERE [Name] = 'VoucherPhone' AND IdCountry = PRV.IdCountry ) AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-                LEFT JOIN DeliveryBackOffice.dbo.Township TOW
+                LEFT JOIN DeliveryBackOffice.dbo.Township TOW WITH (NOLOCK)
                     ON TOW.IdTownship = DOR.SenderIdTownship
-                LEFT JOIN DeliveryBackOffice.dbo.Province PRV
+                LEFT JOIN DeliveryBackOffice.dbo.Province PRV WITH (NOLOCK)
                     ON PRV.IdProvince = TOW.IdProvince
                 LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IVD WITH (NOLOCK)
                     ON IVD.dti_fk_orderSerie = DOR.Guide_Serie
                        AND IVD.dti_fk_orderNumber = DOR.Guide_Number
                 LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader IVH WITH (NOLOCK)
                     ON IVH.inv_pk_id = IVD.dti_fk_header
-                LEFT JOIN DeliveryBackOffice.dbo.Township TOW2
+                LEFT JOIN DeliveryBackOffice.dbo.Township TOW2 WITH (NOLOCK)
                     ON TOW2.IdTownship = DOR.ReceiverIdTownship
-                LEFT JOIN DeliveryBackOffice.dbo.Province PRV2
+                LEFT JOIN DeliveryBackOffice.dbo.Province PRV2 WITH (NOLOCK)
                     ON PRV2.IdProvince = TOW2.IdProvince
-                LEFT JOIN VisitPointClient vpc
+                LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = DOR.Sender_ID
-                LEFT JOIN DeliveryBackOffice.dbo.Customer cu
+                LEFT JOIN DeliveryBackOffice.dbo.Customer cu WITH (NOLOCK)
                     ON vpc.CustomerID = cu.IdCustomer
+                LEFT JOIN DeliveryBackOffice.dbo.CatCountry CC WITH(NOLOCK)
+					ON CC.IdCountry = PRV.IdCountry
             WHERE DOR.Guide_Serie = SUBSTRING(@TrackingNumber, 1, 2)
                   AND DOR.Guide_Number = SUBSTRING(@TrackingNumber, 3, LEN(@TrackingNumber));
 

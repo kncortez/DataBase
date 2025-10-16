@@ -528,3 +528,20 @@ BEGIN
 
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[supportSetVisitPointByClientPortfolio] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[supportSetVisitPointByClientPortfolio] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[supportSetVisitPointByClientPortfolio] TO [cvaldes]
+    AS [dbo];
+

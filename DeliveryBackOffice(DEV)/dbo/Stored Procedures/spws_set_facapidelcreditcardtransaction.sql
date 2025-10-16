@@ -13,6 +13,10 @@
 -- Updated date: <2024-01-08>
 -- Description: <Integración de marketplace a estructura de BD de clubforza>
 -- =============================================
+-- Author: <Tito Garcia>
+-- Updated date: <2025-05-26>
+-- Description: <Se agrega validacion ya que @CustomerReference puede venir NULL y optimizaciones recomendadas por DBA>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
     @Type AS INT = -1
   , @System AS INT = 1
@@ -64,16 +68,7 @@ BEGIN
       , PromoId INT
     );
 
-     	DECLARE @IdCountry NVARCHAR(3)= (   
-										   Select top 1 ISNULL(B.CountryID,'GT') 
-										         From [dbo].[Account] A WITH(NOLOCK) 
-										         INNER JOIN 
-												      [dbo].[Customer] B WITH(NOLOCK)
-										         ON  A.IdCustomer = B.IdCustomer
-										   WHERE A.AccIdAccount = @AccountId)
-
-		SET @Currency = IIF(@IdCountry ='GT',  320, 340)
-
+  
 
     -- Variables para la asociación y activación de Membresías o suscripciones
     DECLARE @IdTarjeta AS INT = NULL; -- puede ser null por ex c y por credito
@@ -123,12 +118,12 @@ BEGIN
     (
         SELECT TOP 1
                CodeOfReference
-        FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-            INNER JOIN VisitPointByUser              VPU
+        FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
+            INNER JOIN VisitPointByUser              VPU WITH (NOLOCK)
                 ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-            INNER JOIN RegisterUser                  ru
+            INNER JOIN RegisterUser                  ru WITH (NOLOCK)
                 ON VPU.RegisterUserID = ru.UsrIdUser
-            INNER JOIN [dbo].[RolByUserByAccount]    rua
+            INNER JOIN [dbo].[RolByUserByAccount]    rua WITH (NOLOCK)
                 ON rua.RuaIdUser = ru.UsrIdUser
         WHERE rua.RuaIdAccount = @AccountId
               AND VPU.RowStatus = 1
@@ -247,7 +242,7 @@ BEGIN
                 VALUES
                 (   @System, @CardNumber, @TypeCardNumber, @Currency, @Ammount, @OrderNumber, @Signature
                   , CASE
-                        WHEN @CustomerReference = '' THEN
+                        WHEN @CustomerReference = '' OR @CustomerReference IS NULL THEN
                             '1'
                         ELSE
                             @CustomerReference
@@ -269,7 +264,7 @@ BEGIN
                   , OrderNumber = @OrderNumber
                   , [Signature] = @Signature
                   , CustomerReference = CASE
-                                            WHEN @CustomerReference = '' THEN
+                                            WHEN @CustomerReference = '' OR @CustomerReference IS NULL THEN
                                                 '1'
                                             ELSE
                                                 @CustomerReference
@@ -428,7 +423,7 @@ BEGIN
                             SELECT TOP 1
                                    CSPS.IdCatSalesPackageStatus
                             FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-                            WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+                            WHERE CSPS.SalesPackageStatusName = 'Activa'
                         );
 
                 DECLARE @StatusSubcription INT =
@@ -499,7 +494,7 @@ BEGIN
                            1
                     FROM dbo.RegistrationofTransactionProcessStates
                     WHERE OrderNumber = @OrderNumber
-                          AND TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+                          AND TypeSalePackage = 'MEMBERSHIP'
                 )
                    )
                 BEGIN
@@ -784,7 +779,7 @@ BEGIN
                            1
                     FROM dbo.RegistrationofTransactionProcessStates
                     WHERE OrderNumber = @OrderNumber
-                          AND TypeSalePackage != 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+                          AND TypeSalePackage != 'MEMBERSHIP'
                 )
                    )
                 BEGIN
@@ -1217,8 +1212,8 @@ BEGIN
          , ISNULL([MSL].[LogServiceNumber], 0)
     FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBCD WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder               DO WITH (NOLOCK)
-            ON CCTBCD.ProductNumber = DO.Guide_Number
-               AND CCTBCD.SerieNumber = DO.Guide_Serie
+            ON CCTBCD.SerieNumber = DO.Guide_Serie
+               AND CCTBCD.ProductNumber = DO.Guide_Number
         LEFT JOIN [dbo].[MembershipSubscriptionLog]                   MSL
             ON [CCTBCD].[ProductNumber] = [MSL].[LogGuideNumber]
                AND [CCTBCD].[SerieNumber] = [MSL].[LogGuideSerie]
@@ -1257,7 +1252,7 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
                 ON LG.ItemSerie = DO.Guide_Serie
                    AND LG.ItemNumber = DO.Guide_Number
-            LEFT JOIN [dbo].[MembershipSubscriptionLog]     MSL
+            LEFT JOIN [dbo].[MembershipSubscriptionLog]     MSL WITH (NOLOCK)
                 ON [LG].[ItemNumber] = [MSL].[LogGuideNumber]
                    AND [LG].[ItemSerie] = [MSL].[LogGuideSerie]
                    AND [MSL].[RowStatus] = 1
@@ -1561,7 +1556,7 @@ BEGIN
                                                            ELSE
                                                                0
                                                        END
-                        FROM [dbo].[PointsByServiceLog] PSL
+                        FROM [dbo].[PointsByServiceLog] PSL WITH (NOLOCK)
                             INNER JOIN @AcceptedGuides  AG
                                 ON [PSL].[GuideSerie] = [AG].[GuideSerie]
                                    AND [PSL].[GuideNumber] = [AG].[GuideNumber]
@@ -1575,7 +1570,7 @@ BEGIN
                 -- Agregar puntos a membresía
                 SET @PointsGenerated = ISNULL((
                                                   SELECT SUM([PSL].[PointsReceived])
-                                                  FROM [dbo].[PointsByServiceLog] PSL
+                                                  FROM [dbo].[PointsByServiceLog] PSL WITH (NOLOCK)
                                                   WHERE [PSL].[GuideSerie] IN
                                                         (
                                                             SELECT GuideSerie FROM @AcceptedGuides
@@ -1915,10 +1910,10 @@ BEGIN
                         SET PriceShippment = IIF(t.PriceShippment <= 0, 0, t.PriceShippment)
                           , StatusOrderId = 15
                           , IsCollect = t.IsCollect
-                        FROM dbo.DeliveryOrder                ord
+                        FROM dbo.DeliveryOrder                ord WITH (NOLOCK)
                             INNER JOIN @TblDeliveryOrdersList t
-                                ON t.Guide_Number = ord.Guide_Number
-                                   AND t.Guide_Serie = ord.Guide_Serie;
+                                ON t.Guide_Serie = ord.Guide_Serie
+                                   AND t.Guide_Number = ord.Guide_Number;
 
 
                         IF (@@ROWCOUNT > 0)
@@ -1932,11 +1927,11 @@ BEGIN
                           , PayTypeId = t.IdTypePayment
                           , TypeofInOutMoneyId = t.IdWayToPayment
                           , TimePlaId = t.IdTimePayment
-                        FROM dbo.DeliveryOrderPaymentDetail   pay
+                        FROM dbo.DeliveryOrderPaymentDetail   pay WITH (NOLOCK)
                             INNER JOIN @TblDeliveryOrdersList t
                                 ON (
-                                       t.Guide_Number = pay.GuideNumber
-                                       AND t.Guide_Serie = pay.GuideSerie
+                                       t.Guide_Serie = pay.GuideSerie
+                                       AND t.Guide_Number = pay.GuideNumber
                                    );
 
                         IF (@@ROWCOUNT > 0)
@@ -2004,9 +1999,9 @@ BEGIN
                         (
                             SELECT TOP 1
                                    1
-                            FROM [DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP
+                            FROM [DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP WITH (NOLOCK)
                             WHERE BOP.IdCost = @CostId
-                                  AND BOP.Description = @PromoName COLLATE Latin1_General_CI_AI
+                                  AND BOP.Description = @PromoName
                                   AND BOP.RowStatus = 1
                         )
                            )
@@ -2023,11 +2018,11 @@ BEGIN
                                 (
                                     SELECT TOP 1
                                            PC.IdPromoCoupon
-                                    FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC
+                                    FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
                                     WHERE PC.PromoCouponSerie = @CouponSerie
                                 )
                             WHERE IdCost = @CostId
-                                  AND Description = @PromoName COLLATE Latin1_General_CI_AI;
+                                  AND Description = @PromoName
 
                             IF (SCOPE_IDENTITY() > 0)
                                 SET @CoUpdated = 1;
@@ -2088,7 +2083,7 @@ BEGIN
                     DECLARE @ValidateTransaction INT =
                             (
                                 SELECT DopId
-                                FROM [DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
+                                FROM [DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do WITH (NOLOCK)
                                     INNER JOIN @TblDeliveryOrdersList                           tpo
                                         ON do.GuideNumber = tpo.Guide_Number
                                            AND do.GuideSerie = tpo.Guide_Serie
@@ -2105,10 +2100,10 @@ BEGIN
                             SET PriceShippment = IIF(t.PriceShippment <= 0, 0, t.PriceShippment)
                               , StatusOrderId = 15
                               , IsCollect = t.IsCollect
-                            FROM dbo.DeliveryOrder                ord
+                            FROM dbo.DeliveryOrder                ord WITH (NOLOCK)
                                 INNER JOIN @TblDeliveryOrdersList t
-                                    ON t.Guide_Number = ord.Guide_Number
-                                       AND t.Guide_Serie = ord.Guide_Serie;
+                                    ON t.Guide_Serie = ord.Guide_Serie
+                                       AND t.Guide_Number = ord.Guide_Number;
 
                         END;
 
@@ -2120,11 +2115,11 @@ BEGIN
                               , PayTypeId = t.IdTypePayment
                               , TypeofInOutMoneyId = t.IdWayToPayment
                               , TimePlaId = t.IdTimePayment
-                            FROM dbo.DeliveryOrderPaymentDetail   pay
+                            FROM dbo.DeliveryOrderPaymentDetail   pay WITH (NOLOCK)
                                 INNER JOIN @TblDeliveryOrdersList t
                                     ON (
-                                           t.Guide_Number = pay.GuideNumber
-                                           AND t.Guide_Serie = pay.GuideSerie
+                                           t.Guide_Serie = pay.GuideSerie
+                                           AND t.Guide_Number = pay.GuideNumber 
                                        );
 
                         END;

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RoutePreparationLogError] (
-    [IdRoutePreparationLogError] INT           IDENTITY (1, 1) NOT NULL,
+    [IdRoutePreparationLogError] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ErrorDescription]           VARCHAR (300) NULL,
     [ErrorNumber]                INT           NULL,
     [ErrorProcedure]             VARCHAR (100) NULL,
@@ -10,6 +10,8 @@
     [DateCreated]                DATETIME      NOT NULL,
     PRIMARY KEY CLUSTERED ([IdRoutePreparationLogError] ASC)
 );
+
+
 
 
 GO

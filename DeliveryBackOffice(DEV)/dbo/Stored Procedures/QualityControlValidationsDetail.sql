@@ -7,6 +7,11 @@
 -- Modified: <2024-08-07>
 -- Description:	<Se agrega el simbolo de moneda segun el pais de origen de la guia>
 -- =============================================
+-- =============================================
+-- Author:	 <Walter Orozco>
+-- Modified: <2025-05-02>
+-- Description:	<Mejoras de multimoneda para proyecto de SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[QualityControlValidationsDetail] 
  @StartDate DATE,
  @EndDate DATE
@@ -49,7 +54,7 @@ set arithabort on;
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						cur WITH (NOLOCK)
 			ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						curCOD WITH (NOLOCK)
-			ON ISNULL(co.CodCurrency,IIF(DO.SenderCountryId='HN',4,1)) = curCOD.IdCatCurrencyCOD 
+			ON ISNULL(co.CodCurrency,co.ShippingCurrency) = curCOD.IdCatCurrencyCOD 
         OUTER APPLY
 		(
 		 SELECT TOP 1 DOD.UserCreated FROM  DeliveryOrderDetail DOD WITH (NOLOCK)
@@ -124,7 +129,7 @@ set arithabort on;
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						cur WITH (NOLOCK)
 			ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						curCOD WITH (NOLOCK)
-			ON ISNULL(co.CodCurrency,IIF(DO.SenderCountryId='HN',4,1)) = curCOD.IdCatCurrencyCOD 
+			ON ISNULL(co.CodCurrency,co.ShippingCurrency) = curCOD.IdCatCurrencyCOD 
         OUTER APPLY
 		(
 		 SELECT TOP 1 DOD.UserCreated FROM  DeliveryOrderDetail DOD WITH (NOLOCK)

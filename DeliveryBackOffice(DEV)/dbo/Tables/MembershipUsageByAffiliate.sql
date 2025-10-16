@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[MembershipUsageByAffiliate] (
-    [IdMembershipUsageByAffiliate] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdMembershipUsageByAffiliate] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [MembershipId]                 INT             NOT NULL,
     [AffiliateId]                  BIGINT          NOT NULL,
     [InvoiceAuthorization]         NVARCHAR (200)  NULL,
@@ -20,6 +20,8 @@
     CONSTRAINT [FK_MembershipUsageByAffiliate_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
     CONSTRAINT [FK_MembershipUsageByAffiliate_RegisterUser] FOREIGN KEY ([RegisterUserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
+
+
 
 
 

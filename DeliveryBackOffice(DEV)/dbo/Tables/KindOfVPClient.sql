@@ -1,15 +1,19 @@
 ﻿CREATE TABLE [dbo].[KindOfVPClient] (
-    [IdKindOfVPClient] INT           IDENTITY (1, 1) NOT NULL,
+    [IdKindOfVPClient] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [KindOfVPName]     NVARCHAR (50) NULL,
     [KindOfVPStatus]   BIT           NULL,
     [TokenCreated]     NVARCHAR (50) NULL,
     [DateCreated]      DATETIME      NULL,
     [TokenUpdate]      NVARCHAR (50) NULL,
     [DateUpdated]      DATETIME      NULL,
-    [IdCountry]        VARCHAR(2)    NULL, 
+    [IdCountry]        VARCHAR (2)   NULL,
     CONSTRAINT [PK_KindOfVPClient] PRIMARY KEY CLUSTERED ([IdKindOfVPClient] ASC),
-    CONSTRAINT [FK_KindOfVPClient_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    CONSTRAINT [FK_KindOfVPClient_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
+
+
 
 
 GO
@@ -46,3 +50,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'KindOfVPClient',
     @level2type = N'COLUMN',
     @level2name = N'IdCountry'
+GO
+CREATE NONCLUSTERED INDEX [idx_KindOfVPName]
+    ON [dbo].[KindOfVPClient]([KindOfVPName] ASC);
+

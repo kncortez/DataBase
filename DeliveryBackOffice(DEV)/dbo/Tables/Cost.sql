@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Cost] (
-    [IdCost]                      INT             IDENTITY (1, 1) NOT NULL,
+    [IdCost]                      INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdProduct]                   INT             NULL,
     [ProductNumber]               VARCHAR (100)   NULL,
     [IdTypeCharge]                INT             NULL,
@@ -31,6 +31,12 @@
     CONSTRAINT [FKCostModule] FOREIGN KEY ([IdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
     CONSTRAINT [FKCostProduct] FOREIGN KEY ([IdProduct]) REFERENCES [dbo].[CatTypeProduct] ([IdTypeProduct])
 );
+
+
+
+
+
+
 
 
 
@@ -118,3 +124,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de mon
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio del pago del COD ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CODPaymentExchangeRate';
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RowStatus_include]
+    ON [dbo].[Cost]([RowStatus] ASC)
+    INCLUDE([ProductNumber], [DateCreated], [TotalAmountPaid], [GuideSerie], [GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSerie_INCLUDE]
+    ON [dbo].[Cost]([GuideSerie] ASC)
+    INCLUDE([TotalAmountPaid]);
+

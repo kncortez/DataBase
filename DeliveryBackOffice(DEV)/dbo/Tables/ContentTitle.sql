@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ContentTitle] (
-    [IdContentTitle]     BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdContentTitle]     BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TypeContentId]      BIGINT         NOT NULL,
     [ContentTitle]       NVARCHAR (100) NOT NULL,
     [ContentDescription] NVARCHAR (500) NULL,
@@ -12,6 +12,8 @@
     PRIMARY KEY CLUSTERED ([IdContentTitle] ASC),
     CONSTRAINT [FK_ContentTitle_CatTypeContent] FOREIGN KEY ([TypeContentId]) REFERENCES [dbo].[CatTypeContent] ([IdCatTypeContent])
 );
+
+
 
 
 

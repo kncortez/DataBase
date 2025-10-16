@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateHeader] (
-    [RheId]                INT             IDENTITY (1, 1) NOT NULL,
+    [RheId]                INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RheName]              VARCHAR (200)   NOT NULL,
     [RheShortName]         VARCHAR (3)     NOT NULL,
     [RheDescription]       VARCHAR (200)   NULL,
@@ -30,12 +30,22 @@
     [CatBusinessSegmentId] INT             NULL,
     [PackagesRangeId]      INT             NULL,
     [IdCurrency]           INT             NULL,
+    [GuideAmountCOD]       DECIMAL (18, 2) NULL,
+    [ReturnPercent]        DECIMAL (18, 2) NULL,
+    [IsOldest]             INT             NULL,
+    [MinGuidesPerMonth]    INT             NULL,
     PRIMARY KEY CLUSTERED ([RheId] ASC),
     FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
     CONSTRAINT [FK_RateHeader_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_RateHeader_CatTypeRate] FOREIGN KEY ([RateTypeId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
 );
+
+
+
+
+
+
 
 
 
@@ -147,5 +157,26 @@ GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Id de la moneda en la que se realiza la transaccion' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'IdCurrency'
 GO
 
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Monto máximo para COD anticipado por guía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'GuideAmountCOD'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Porcentaje de devolucion maximo por tarifa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'ReturnPercent'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Antiguedad en dias por cliente desde su primera guia' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'IsOldest'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Cantidad de envíos mínimos en los últimos 30 días' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'MinGuidesPerMonth'
+GO
+
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion de los tarifarios' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader'
 GO
+CREATE NONCLUSTERED INDEX [idx_RheName]
+    ON [dbo].[RateHeader]([RheName] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RheRowStatus_INCLUDE]
+    ON [dbo].[RateHeader]([RheRowStatus] ASC)
+    INCLUDE([RheName], [RateTypeId], [CountryId], [CatBusinessSegmentId]);
+

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[UnifiedRouteSettlementDetail] (
-    [IdUnifiedRouteSettlementDetail] INT             IDENTITY (1, 1) NOT NULL,
+    [IdUnifiedRouteSettlementDetail] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UnifiedRouteSettlementId]       INT             NOT NULL,
     [ServiceManagementId]            INT             NOT NULL,
     [GuideSerie]                     NVARCHAR (2)    NOT NULL,

@@ -4,6 +4,10 @@
 -- Create date: <2020-11-25>
 -- Description:	<Registrar transacción de liquidación (cobro) de guías en área de COD>
 -- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2020-12-12>
+-- Description:	<Se agrego actualizacion de estado COBRADO para guias COD Anticipado>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
     @GuideSerie NVARCHAR(2),
     @GuideNumbers NVARCHAR(MAX),
@@ -47,6 +51,17 @@ BEGIN
 
         IF OBJECT_ID('tempdb.dbo.#GuidesTemp', 'U') IS NOT NULL
             DROP TABLE #GuidesTemp;
+
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
+
+        CREATE TABLE #TempData
+        (
+         IdProcessedGuideCOD INT,
+         GuideSerie          NVARCHAR(4),
+         GuideNumber         INT
+        );
+        CREATE NONCLUSTERED INDEX INDX_sps_settlement_guide_COD_Temp ON #TempData (GuideSerie, GuideNumber);
 
         -- Convertir la lista de guías separadas por coma en una tabla
         INSERT @GuidesTable
@@ -97,7 +112,7 @@ BEGIN
             (
                 SELECT 1
                 FROM [dbo].[ProcessedGuideCOD] WITH (NOLOCK)
-                WHERE [GuideNumber] = @GuideNumber
+                WHERE GuideSerie = @GuideSerie AND  [GuideNumber] = @GuideNumber
             )
             BEGIN
                 -- se obtiene el id del courierman
@@ -120,8 +135,13 @@ BEGIN
                     [DataOriginId],
                     [Notificated],
                     [Token],
-                    CustomerId
+                    CustomerId,
+					IsAnticipatedCOD
                 )
+                OUTPUT inserted.IdProcessedGuideCOD,
+                       inserted.GuideSerie,
+                       inserted.GuideNumber
+                  INTO #TempData
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
                        @CourierId,
@@ -131,14 +151,15 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
+                WHERE do.[Guide_Serie] = @GuideSerie
+                      AND do.[Guide_Number] = @GuideNumber
                       AND do.[Collect_OnDelivery] > 0
 					 AND do.IsLastMileReturn =0
                 UNION
@@ -151,16 +172,17 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
+                WHERE do.[Guide_Serie] = @GuideSerie
+                      AND do.[Guide_Number] = @GuideNumber
                       AND do.[Collect_OnDelivery] = 0 
-                      AND do.IsCollect = 'true'
+                      AND do.IsCollect = 1
                 UNION
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
@@ -171,7 +193,8 @@ BEGIN
                        @CatModuleId,
                        0,
                        @Token,
-                       cus.IdCustomer
+                       cus.IdCustomer,
+					   0 AS 'IsAnticipatedCOD'
                 FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
@@ -180,9 +203,9 @@ BEGIN
                     INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                         ON do.Guide_Serie = DOP.GuideSerie
                            AND do.Guide_Number = DOP.GuideNumber
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
-                      AND do.IsCollect = 'false'
+                WHERE do.[Guide_Serie] = @GuideSerie
+                      AND do.[Guide_Number] = @GuideNumber
+                      AND do.IsCollect = 0
                       AND DOP.TimePlaId = 2;
             END;
 
@@ -193,21 +216,22 @@ BEGIN
                              (
                                  SELECT Collect_OnDelivery
                                  FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
-                                 WHERE Guide_Number = @GuideNumber
+                                 WHERE Guide_Serie = @GuideSerie 
+                                   AND Guide_Number = @GuideNumber
                              ) > 0 THEN
-                                 'true'
+                                 1
                              ELSE
-                                 'false'
+                                 0
                          END;
 
-            IF (@IsCOD = 'true')
+            IF (@IsCOD = 1)
             BEGIN
 
 
 			DECLARE @Isreturn bit  =0
 
 			SELECT @Isreturn = ord.IsLastMileReturn FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-			WHERE ord.Guide_Serie ='fd' AND ord.Guide_Number = @GuideNumber
+			WHERE ord.Guide_Serie = @GuideSerie AND ord.Guide_Number = @GuideNumber
 
 			IF @Isreturn = 1
 
@@ -216,7 +240,8 @@ BEGIN
                 --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET StatusOrderId = 24
-                WHERE Guide_Number = @GuideNumber;
+                WHERE Guide_Serie = @GuideSerie 
+                  AND Guide_Number = @GuideNumber;
 
                 --Actualiza es stado a "COD liquidado" en tabla DeliveryOrderDetail si la guia tuviera COD
 
@@ -231,9 +256,42 @@ BEGIN
                 VALUES
                 (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
 
-				END;
+			END;
 
             END;
+
+			-- Actualizamos guia liquidada cod anticipado a estado de balance COBRADO
+				IF EXISTS
+				(
+					SELECT 1
+					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+					WHERE	GuideSerie = @GuideSerie AND acd.GuideNumber = @GuideNumber
+				)
+				BEGIN
+					UPDATE DeliveryBackOffice.dbo.AnticipatedCODDetail
+					SET BalanceStatus = 'COBRADO',
+					DateUpdated = GETDATE(),
+					TokenUpdated = @Token
+					WHERE	GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber;
+						
+                    DECLARE @TempData TblAnticipatedCODCustomerBalance;
+
+					INSERT INTO @TempData
+					(
+						CustomerId,
+						PortfolioId
+					)
+					SELECT ach.CustomerId, ach.PortfolioId
+					FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
+					INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
+						ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
+					WHERE	ACD.GuideSerie = @GuideSerie AND acd.GuideNumber = @GuideNumber
+
+					EXEC spUpdateBalanceByIdClient @TempData
+
+                    DELETE 
+                      FROM @TempData
+				END
 
             -- se elimina la guía de la tabla temporal
             DELETE #GuidesTemp
@@ -347,6 +405,17 @@ BEGIN
                    'Registro guardado correctamente' AS 'Description',
                    @@trancount AS 'NumTransferID';
             COMMIT TRANSACTION;
+
+        UPDATE pgd 
+           SET pgd.IsCompleted = 1
+          FROM ProcessedGuideCOD pgd WITH(NOLOCK)
+               INNER JOIN #TempData tmp
+                  ON pgd.GuideSerie   = tmp.GuideSerie
+                 AND pgd.GuideNumber = tmp.GuideNumber
+                 AND pgd.IdProcessedGuideCOD = tmp.IdProcessedGuideCOD;
+
+        IF OBJECT_ID('tempdb..#TempData') IS NOT NULL
+            DROP TABLE #TempData;
         END;
         ELSE
         BEGIN

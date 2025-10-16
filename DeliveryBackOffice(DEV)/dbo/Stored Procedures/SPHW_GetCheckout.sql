@@ -3,10 +3,19 @@
 -- Create date: <2024-09-25>
 -- Description:	<Link de entregas - Obtener el resumen de la información para realizar envío.>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2024-10-31>
+-- Description:	<Link de entregas - Se agrega parametro de token y idAccount>
+-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego devolucion de poblado de direccion de origen>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetCheckout]
-@IdDeliveryLink INT,
-@OnlyProducts INT --0 checkout, 1 mis links
+@Token NVARCHAR(100),
+@OnlyProducts INT, --0 checkout, 1 mis links
+@IdAccount INT 
 AS
 BEGIN
 BEGIN TRY
@@ -23,11 +32,13 @@ BEGIN TRY
 	FROM  DeliveryBackOffice.dbo.DeliveryLinkProducts DLP WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.Product P WITH(NOLOCK)
 		ON DLP.ProductId = P.IdProduct
+	INNER JOIN DeliveryBackOffice.dbo.DeliveryLink D WITH(NOLOCK)
+		ON D.IdDeliveryLink = DLP.DeliveryLinkId
 	INNER JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 		ON P.CatCurrencyCODId = CCC.IdCatCurrencyCOD
 	LEFT JOIN DeliveryBackOffice.dbo.ProductImages P2 WITH(NOLOCK)
 		ON P.IdProduct = P2.ProductId
-	WHERE DeliveryLinkId = @IdDeliveryLink AND P.RowStatus = 1 
+	WHERE D.Token  = @Token AND P.RowStatus = 1 
 		AND P2.Position = 1 AND P2.RowStatus = 1
 
 	IF(@OnlyProducts = 0)
@@ -38,9 +49,11 @@ BEGIN TRY
 			  RU.UsrNickName AS 'Nombre remitente'
 			, ISNULL('+' + (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
 					 WHERE [Name] = 'AreaCode' AND IdCountry = ISNULL(VPC.CountryId,'GT'))
-			, '+502') + ISNULL(VPC.Phone,'') AS 'Telefono remitente'
+			, '+502') + ISNULL(RIGHT(VPC.Phone,8),'') AS 'Telefono remitente'
 			, T2.TownshipName + ' , ' + P2.ProvinceName  AS 'Direccion remitente'
 			, VPC.Email AS 'Correo remitente'
+			, VPC.IdSettlement AS 'SenderSettlement'
+			, ISNULL(S2.Settlement,'') AS 'SenderSettlementName'
 			--PARA
 			, DL.ReceiverName AS 'Nombre destinatario'
 			, ISNULL(DL.NirPhone,'') + DL.ReceiverPhone AS 'Telefono destinatario'
@@ -74,6 +87,7 @@ BEGIN TRY
 			, DFCOD.NameAccountFavCOD AS 'NameAcc'
 			, ISNULL(CCC.CodeISO,'GTQ') AS 'CurrencyISO'
 			, IIF(DL.GuideNumber IS NOT NULL AND DL.GuideNumber > 0, 'true', 'false') AS 'IsGuide'
+			, DL.IdDeliveryLink AS 'IdDeliveryLink'
 		FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
 			ON DL.ReceiverSettlementId = S.IdSettlement
@@ -91,6 +105,8 @@ BEGIN TRY
 			ON VPC.IdTownship = T2.IdTownship
 		LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH(NOLOCK)
 			ON T2.IdProvince = P2.IdProvince
+		LEFT JOIN DeliveryBackOffice.dbo.Settlement S2 WITH (NOLOCK)
+			ON S2.IdSettlement = VPC.IdSettlement
 		INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount RBUBA WITH(NOLOCK)
 			ON DL.AccountId = RBUBA.RuaIdAccount
 		INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH(NOLOCK)
@@ -103,7 +119,8 @@ BEGIN TRY
 			ON DL.DeliveryFacCODId = DFCOD.IdDeliveryFavCOD
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank DB WITH(NOLOCK)
 			ON DFCOD.IdBank = DB.Id_bank
-		WHERE DL.IdDeliveryLink = @IdDeliveryLink
+		WHERE DL.Token = @Token
+			AND DL.AccountId = @IdAccount
 	END;
 
 END TRY

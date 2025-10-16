@@ -3,9 +3,14 @@
 -- Create date: <2022-11-29>
 -- Description:	<Obtiene listado de guías que no poseen reintentos de entrega y se marcan como devolución.>
 -- =============================================
+-- Author:		<Cristian, Azurdia>
+-- Create date: <2025-05-02>
+-- Description:	<Filtrado de Incidencias par a Devolución inmediata segun el país que genera el manfiesto>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHD_ValidateDeliveryAttemps]
     -- Add the parameters for the stored procedure here
     @DeliveryOrderBySettlementId BIGINT
+   ,@CountryId NVARCHAR(4) = 'GT'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -16,6 +21,15 @@ BEGIN
     DECLARE @ReturnIncidence TABLE
     (
         IncidenceId INT
+    );
+
+    DECLARE @TblUpdatesGuides AS TABLE
+    (
+        IsLastMileReturn BIT
+      , StatusOrderId    TINYINT
+      , GuideNumber      INT
+      , GuideSerie       NVARCHAR(2)
+      , TypeService      NVARCHAR(3)
     );
 
     -- Insert statements for procedure here
@@ -32,9 +46,10 @@ BEGIN
     )
     SELECT [CTI].[IdIncidenceType]
     FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
-    WHERE [CTI].[NameIncidence] = 'Destinatario rechaza paquete' COLLATE Latin1_General_CI_AI
+    WHERE [CTI].[NameIncidence] = 'Destinatario rechaza paquete'
           AND [CTI].[RowStatus] = 1
-          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI;
+          AND [CTI].[ServiceType] = 'DELIVERY'
+          AND [CTI].[CountryId] = @CountryId;
 
     INSERT INTO @ReturnIncidence
     (
@@ -42,9 +57,10 @@ BEGIN
     )
     SELECT [CTI].[IdIncidenceType]
     FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
-    WHERE [CTI].[NameIncidence] = 'Remitente solicita devolución' COLLATE Latin1_General_CI_AI
+    WHERE [CTI].[NameIncidence] = 'Remitente solicita devolución'
           AND [CTI].[RowStatus] = 1
-          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI;
+          AND [CTI].[ServiceType] = 'DELIVERY'
+          AND [CTI].[CountryId] = @CountryId;
 
 
     DECLARE @STATUSDECLAREDRETURNED_DO INT =
@@ -88,7 +104,6 @@ BEGIN
             INNER JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
                 ON dsd.Guide_Serie = doad.GuideSerie
                    AND dsd.Guide_Number = doad.GuideNumber
-                   AND doad.RowStatus = 1
             INNER JOIN DeliveryAttempt          da WITH (NOLOCK)
                 ON dsd.Guide_Serie = da.Guide_Serie
                    AND dsd.Guide_Number = da.Guide_Number
@@ -97,10 +112,11 @@ BEGIN
                 ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
         WHERE dsd.ID_DeliveryOrderBySettlement = @DeliveryOrderBySettlementId
               AND dsd.RowStatus = 1
-              AND dsd.Guide_Returned = 1;
+              AND dsd.Guide_Returned = 1
+              AND doad.RowStatus = 1;
 
 
-        -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
+     -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
         UPDATE do
         SET do.IsLastMileReturn = 1
           , do.StatusOrderId = @STATUSDECLAREDRETURNED_DO

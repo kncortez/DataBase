@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Township] (
-    [IdTownship]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdTownship]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TownshipName]        NVARCHAR (50)  NULL,
     [TownshipDescription] NVARCHAR (50)  NULL,
     [TownshipLatitud]     DECIMAL (9, 6) NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [PK_Township] PRIMARY KEY CLUSTERED ([IdTownship] ASC),
     CONSTRAINT [FK_Township_Province] FOREIGN KEY ([IdProvince]) REFERENCES [dbo].[Province] ([IdProvince])
 );
+
+
 
 
 

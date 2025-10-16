@@ -1,4 +1,9 @@
-﻿CREATE TABLE [dbo].[DeliveryOrder] (
+﻿-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego nuevo campo SenderIdSettlement para almacenar informacion de poblado de origen>
+-- =============================================
+CREATE TABLE [dbo].[DeliveryOrder] (
     [Ticket_Number]                        NVARCHAR (150)  NULL,
     [Order_Number]                         INT             NULL,
     [Preparation_Date]                     DATETIME        NULL,
@@ -102,6 +107,7 @@
     [SenderCountryId]                      VARCHAR (2)     NULL,
     [ReceiverCountryId]                    VARCHAR (2)     NULL,
     [GuideType]                            NVARCHAR (3)    NULL,
+    [SenderIdSettlement]                   BIGINT          NULL,
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
@@ -112,12 +118,23 @@
     CONSTRAINT [FK_DeliveryOrder_ReceiverTownship] FOREIGN KEY ([ReceiverIdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_DeliveryOrder_SenderTownship] FOREIGN KEY ([SenderIdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_DeliveryOrder_ServiceRequest] FOREIGN KEY ([Manifest_Serie], [Manifest_Number]) REFERENCES [dbo].[ServiceRequest] ([Manifest_Serie], [Manifest_Number]),
+    CONSTRAINT [FK_DeliveryOrder_Settlement] FOREIGN KEY ([SenderIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
     CONSTRAINT [FK_DeliveryOrder_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId]),
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient] FOREIGN KEY ([Sender_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient1] FOREIGN KEY ([Receiver_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -246,6 +263,10 @@ GO
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar el monto COD antes de modificarlo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'LastCollectOnDelivery';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para validar poblado de origen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'SenderIdSettlement';
 
 
 GO
@@ -992,4 +1013,57 @@ CREATE NONCLUSTERED INDEX [IDX_SenderCountryId]
 GO
 CREATE NONCLUSTERED INDEX [IDX_generate_batch_SenderCountryId_IsLastMileReturn_SenderCountryId]
     ON [dbo].[DeliveryOrder]([SenderCountryId] ASC, [IsLastMileReturn] ASC, [StatusOrderId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_SenderCountryId]
+    ON [dbo].[DeliveryOrder]([SenderCountryId] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_INCLUDE]
+    ON [dbo].[DeliveryOrder]([StatusOrderId] ASC)
+    INCLUDE([Sender_ID], [DCBA_ID], [IdCustomer], [IsLastMileReturn], [SenderCountryId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdCustomer_DateCreated_Included]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC)
+    INCLUDE([StatusOrderId], [Collect_OnDelivery]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DateCreated_Included]
+    ON [dbo].[DeliveryOrder]([DateCreated] ASC)
+    INCLUDE([Sender_ID], [Sender_FirstName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Town], [Collect_OnDelivery], [IsCollect], [PriceShippment], [ReceiverIdTownship], [IdCustomer], [TypeService]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [NCI_DeliveryOrderIsReturn]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [VisitpointClientPortfolioId] ASC, [DateCreated] ASC, [IsReturn] ASC);
+
+
+GO
+CREATE COLUMNSTORE INDEX [NCI_DeliveryOrder]
+    ON [dbo].[DeliveryOrder]([IdCustomer], [VisitpointClientPortfolioId], [DateCreated]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Ticket_Number_Customer]
+    ON [dbo].[DeliveryOrder]([Ticket_Number] ASC, [IdCustomer] ASC, [Preparation_Date] ASC);
+
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Ticket_Number]
+    ON [dbo].[DeliveryOrder]([Ticket_Number] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCustomer_DateCreated_IncludedODBS]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC)
+    INCLUDE([Ticket_Number], [Shipping_Date], [Sender_ID], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Address], [Receiver_Alternant_SocialSecurity_ID], [Manifest_Serie], [Manifest_Number], [StatusOrderId], [Receiver_CUI], [NameOfReceiver]);
 

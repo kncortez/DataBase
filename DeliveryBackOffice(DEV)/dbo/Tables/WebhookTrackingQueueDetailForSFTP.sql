@@ -1,27 +1,29 @@
-CREATE TABLE [dbo].[WebhookTrackingQueueDetailForSFTP](
-	[IdWebhookTrackingQueueDetailForSFTP] [INT] IDENTITY(1,1) NOT NULL,
-	[WebhookTrackingQueueForSFTPId] [INT] NULL,
-	[CustomerId] [INT] NOT NULL,
-	[GuideSerie] [NVARCHAR](2) NOT NULL,
-	[GuideNumber] [INT] NOT NULL,
-	[GuidePiece] [BIGINT] NOT NULL,
-	[ExternalNumber] [NVARCHAR] (50) NOT NULL,
-	[ExternalPieceId] [NVARCHAR] (50) NOT NULL,
-	[StatusOrderId] [TINYINT] NOT NULL,
-	[RowStatus] [BIT] NOT NULL,
-	[DateCreated] [DATETIME] NOT NULL,
-	[TokenCreated] [NVARCHAR](50) NOT NULL,
-	[DateUpdated] [DATETIME] NULL,
-	[TokenUpdated] [NVARCHAR](50) NULL,
-	[DeliveryAttemptId] [bigint] NULL,
-	[NewDeliveryDate] [datetime] NULL,
-    CONSTRAINT [PK_IdWebhookTrackingQueueDetailForSFTP] PRIMARY KEY CLUSTERED ([IdWebhookTrackingQueueDetailForSFTP] ASC), 
-    CONSTRAINT [FK1_WebhookTrackingQueueDetailForSFTP_WebhookTrackingQueueForSFTP] FOREIGN KEY ([WebhookTrackingQueueForSFTPId]) REFERENCES [WebhookTrackingQueueForSFTP]([IdWebhookTrackingQueueForSFTP]), 
-    CONSTRAINT [FK2_WebhookTrackingQueueDetailForSFTP_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [Customer]([IdCustomer]), 
-    CONSTRAINT [FK3_WebhookTrackingQueueDetailForSFTP_DeliveryOrderPiece] FOREIGN KEY ([GuideSerie],[GuideNumber],[GuidePiece]) REFERENCES [DeliveryOrderPiece]([GuideSerie],[GuideNumber],[GuidePiece]), 
-    CONSTRAINT [FK4_WebhookTrackingQueueDetailForSFTP_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [StatusOrder]([StatusOrderId]), 
-    CONSTRAINT [FK_WebhookTrackingQueueDetailForSFTP_DeliveryAttempt] FOREIGN KEY ([DeliveryAttemptId]) REFERENCES [DeliveryAttempt]([ID]) 
-) ON [PRIMARY]
+ï»¿CREATE TABLE [dbo].[WebhookTrackingQueueDetailForSFTP] (
+    [IdWebhookTrackingQueueDetailForSFTP] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [WebhookTrackingQueueForSFTPId]       INT           NULL,
+    [CustomerId]                          INT           NOT NULL,
+    [GuideSerie]                          NVARCHAR (2)  NOT NULL,
+    [GuideNumber]                         INT           NOT NULL,
+    [GuidePiece]                          BIGINT        NOT NULL,
+    [ExternalNumber]                      NVARCHAR (50) NOT NULL,
+    [ExternalPieceId]                     NVARCHAR (50) NOT NULL,
+    [StatusOrderId]                       TINYINT       NOT NULL,
+    [RowStatus]                           BIT           NOT NULL,
+    [DateCreated]                         DATETIME      NOT NULL,
+    [TokenCreated]                        NVARCHAR (50) NOT NULL,
+    [DateUpdated]                         DATETIME      NULL,
+    [TokenUpdated]                        NVARCHAR (50) NULL,
+    [DeliveryAttemptId]                   BIGINT        NULL,
+    [NewDeliveryDate]                     DATETIME      NULL,
+    CONSTRAINT [PK_IdWebhookTrackingQueueDetailForSFTP] PRIMARY KEY CLUSTERED ([IdWebhookTrackingQueueDetailForSFTP] ASC),
+    CONSTRAINT [FK_WebhookTrackingQueueDetailForSFTP_DeliveryAttempt] FOREIGN KEY ([DeliveryAttemptId]) REFERENCES [dbo].[DeliveryAttempt] ([ID]),
+    CONSTRAINT [FK1_WebhookTrackingQueueDetailForSFTP_WebhookTrackingQueueForSFTP] FOREIGN KEY ([WebhookTrackingQueueForSFTPId]) REFERENCES [dbo].[WebhookTrackingQueueForSFTP] ([IdWebhookTrackingQueueForSFTP]),
+    CONSTRAINT [FK2_WebhookTrackingQueueDetailForSFTP_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
+    CONSTRAINT [FK3_WebhookTrackingQueueDetailForSFTP_DeliveryOrderPiece] FOREIGN KEY ([GuideSerie], [GuideNumber], [GuidePiece]) REFERENCES [dbo].[DeliveryOrderPiece] ([GuideSerie], [GuideNumber], [GuidePiece]),
+    CONSTRAINT [FK4_WebhookTrackingQueueDetailForSFTP_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
+);
+
+
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de la tabla WebhookTrackingQueueDetailForSFTP' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'IdWebhookTrackingQueueDetailForSFTP'
 GO
@@ -31,21 +33,21 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Id de cliente'
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Serie de Forza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'GuideSerie'
 GO
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de guía Forza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'GuideNumber'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nï¿½mero de guï¿½a Forza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'GuideNumber'
 GO
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de pieza Forza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'GuidePiece'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nï¿½mero de pieza Forza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'GuidePiece'
 GO
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de guía externo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'ExternalNumber'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nï¿½mero de guï¿½a externo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'ExternalNumber'
 GO
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de pieza externo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'ExternalPieceId'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nï¿½mero de pieza externo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'ExternalPieceId'
 GO
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado de la guía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'StatusOrderId'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado de la guï¿½a' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'StatusOrderId'
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'RowStatus'
 GO
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario de creación' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'TokenCreated'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario de creaciï¿½n' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'TokenCreated'
 GO
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de creación' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'DateCreated'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de creaciï¿½n' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'DateCreated'
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario que actualiza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'TokenUpdated'
 GO

@@ -17,7 +17,6 @@
 -- Author:      <Daniel, Ramirez>
 -- Update date: <2024-05-28>
 -- Description: < Se agrego filtro por pais, por defecto GT>
--- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RoutePreparationPickUp]
     @datePickUp AS DATE = '',
     @hubId INT = -1,

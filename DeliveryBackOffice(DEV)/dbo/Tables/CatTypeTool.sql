@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeTool] (
-    [IdCatTypeTool]       INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatTypeTool]       INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TypeToolName]        NVARCHAR (50)  NOT NULL,
     [TypeToolDescription] NVARCHAR (200) NULL,
     [RowStatus]           BIT            DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]         DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdCatTypeTool] ASC)
 );
+
+
 
 
 GO

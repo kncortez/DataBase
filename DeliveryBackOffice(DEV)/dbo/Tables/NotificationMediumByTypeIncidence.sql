@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[NotificationMediumByTypeIncidence] (
-    [IdNotificationMediumByTypeIncidence] INT          IDENTITY (1, 1) NOT NULL,
+    [IdNotificationMediumByTypeIncidence] INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IncidenceNotificationId]             INT          NOT NULL,
     [IncidenceActionId]                   INT          NOT NULL,
     [RowStatus]                           BIT          NOT NULL,
@@ -10,6 +10,8 @@
     CONSTRAINT [PK__Notifica__3F44AF944CF1F74F] PRIMARY KEY CLUSTERED ([IdNotificationMediumByTypeIncidence] ASC),
     CONSTRAINT [NotificationMediumByTypeIncidence_FK] FOREIGN KEY ([IdNotificationMediumByTypeIncidence]) REFERENCES [dbo].[CatIncidenceAction] ([IdCatIncidenceAction])
 );
+
+
 
 
 GO

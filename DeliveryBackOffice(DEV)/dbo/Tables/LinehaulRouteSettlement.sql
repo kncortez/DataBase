@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRouteSettlement] (
-    [IdLinehaulRouteSettlement]      INT           IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRouteSettlement]      INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRoutePreparationId]     INT           NOT NULL,
     [UserReceived]                   NVARCHAR (50) NOT NULL,
     [DateReceived]                   DATETIME      NOT NULL,
@@ -14,14 +14,16 @@
     [TokenUpdated]                   NVARCHAR (50) NULL,
     [DateUpdated]                    DATETIME      NULL,
     [HubID]                          INT           NULL,
-    [CatLinehaulStatusId]            INT           NOT NULL,    
+    [CatLinehaulStatusId]            INT           NOT NULL,
     [VehicleKms]                     INT           CONSTRAINT [DF_LinehaulRouteSettlement_VehicleKms] DEFAULT ((0)) NULL,
-    [EndDateLinehaulRouteSettlement] DATETIME      NULL,    
+    [EndDateLinehaulRouteSettlement] DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlement] ASC),
     CONSTRAINT [FK_LinehaulRouteSettlement_CatLinehaulStatus] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdCatLinehaulStatus]),
     CONSTRAINT [FK_LinehaulRouteSettlement_Hub] FOREIGN KEY ([HubID]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_LinehaulRouteSettlement_LinehaulRoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation])
 );
+
+
 
 
 

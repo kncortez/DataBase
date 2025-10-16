@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderPaymentTransaction] (
-    [DopId]                 BIGINT          IDENTITY (1, 1) NOT NULL,
+    [DopId]                 BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideNumber]           INT             NULL,
     [GuideSerie]            NVARCHAR (2)    NULL,
     [PayTypeId]             INT             NULL,
@@ -32,6 +32,8 @@
     CONSTRAINT [FK_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_CatTypeServiceClosure] FOREIGN KEY ([TypeServiceId]) REFERENCES [dbo].[CatTypeServiceClosure] ([IdTypeService])
 );
+
+
 
 
 

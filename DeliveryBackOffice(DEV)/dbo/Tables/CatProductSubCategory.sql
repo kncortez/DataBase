@@ -1,20 +1,21 @@
-﻿CREATE TABLE [dbo].[CatProductSubCategory]
-(
-	[IdCatProductSubCategory] INT IDENTITY (1, 1) NOT NULL,
-    [ProductCategoryId] INT NOT NULL,
-    [Name] NVARCHAR(100) NOT NULL,
-    [Description] NVARCHAR(200) NULL,
-    [Icon] NVARCHAR(50) NULL, 
-    [ProductSubCategoryParentId] INT NULL,
-    [RowStatus] BIT NOT NULL,
-    [UserCreated] NVARCHAR(50) NOT NULL,
-    [DateCreated] DATETIME NOT NULL,
-    [UserUpdated] NVARCHAR(50) NULL,
-    [DateUpdated] DATETIME NULL,
+﻿CREATE TABLE [dbo].[CatProductSubCategory] (
+    [IdCatProductSubCategory]    INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [ProductCategoryId]          INT            NOT NULL,
+    [Name]                       NVARCHAR (100) NOT NULL,
+    [Description]                NVARCHAR (200) NULL,
+    [Icon]                       NVARCHAR (50)  NULL,
+    [ProductSubCategoryParentId] INT            NULL,
+    [RowStatus]                  BIT            NOT NULL,
+    [UserCreated]                NVARCHAR (50)  NOT NULL,
+    [DateCreated]                DATETIME       NOT NULL,
+    [UserUpdated]                NVARCHAR (50)  NULL,
+    [DateUpdated]                DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdCatProductSubCategory] ASC),
-    CONSTRAINT FK_CatProductCategory_ProductCategoryId FOREIGN KEY (ProductCategoryId) REFERENCES CatProductCategory(IdCatProductCategory),
-    CONSTRAINT FK_ProductSubCategory_ProductSubCategoryParentId FOREIGN KEY (ProductSubCategoryParentId) REFERENCES [CatProductSubCategory](IdCatProductSubCategory)
+    CONSTRAINT [FK_CatProductCategory_ProductCategoryId] FOREIGN KEY ([ProductCategoryId]) REFERENCES [dbo].[CatProductCategory] ([IdCatProductCategory]),
+    CONSTRAINT [FK_ProductSubCategory_ProductSubCategoryParentId] FOREIGN KEY ([ProductSubCategoryParentId]) REFERENCES [dbo].[CatProductSubCategory] ([IdCatProductSubCategory])
 );
+
+
 
 
 GO

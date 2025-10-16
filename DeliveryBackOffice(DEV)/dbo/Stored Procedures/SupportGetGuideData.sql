@@ -103,9 +103,9 @@ from dbo.DeliverySettlementDetail            sdt with (nolock)
         on sdo.ID = sdt.ID_DeliveryOrderBySettlement
     inner join dbo.SenderReceiver            SR with (nolock)
         on SR.ID = sdo.ID_Courier
-    inner join dbo.CatRoute                  CR
+    inner join dbo.CatRoute                  CR  with (nolock)
         on CR.IdRoute = sdo.CatRouteId
-    inner join dbo.CatVehicle                CV
+    inner join dbo.CatVehicle                CV  with (nolock)
         on CV.IdVehicle = sdo.CatVehicleId
 where sdt.Guide_Serie = @GuideSerie
       and sdt.Guide_Number = @GuideNumber
@@ -117,10 +117,11 @@ SELECT 'Cuenta Bancaria'
      , dcb.DCBA_Nom_account
      , dcb.DCBA_BankAccountType
      , bk.Name
+	 , dcb.DCBA_Identification
 FROM dbo.DeliveryOrder                         ord
-    INNER JOIN dbo.DeliveryCustomerBankAccount dcb
+    INNER JOIN dbo.DeliveryCustomerBankAccount dcb  with (nolock)
         ON dcb.DCBA_Id = ord.DCBA_ID
-    INNER JOIN dbo.DeliveryBank                bk
+    INNER JOIN dbo.DeliveryBank                bk  with (nolock)
         ON bk.Id_bank = dcb.DCBA_Bank_Id
 WHERE ord.Guide_Serie = @GuideSerie
       AND ord.Guide_Number = @GuideNumber;
@@ -178,13 +179,13 @@ from dbo.DeliveryOrderDetail                      dtd with (nolock)
         on st.StatusOrderId = dtd.StatusOrderId
     left join DenariusUser_Dev.dbo.LGN_LogByToken tk with (nolock)
         on tk.SSN_IdToken = dtd.UserCreated
-    left join dbo.TokenLog                        TKL
+    left join dbo.TokenLog                        TKL  with (nolock)
         on TKL.TknIdToken = dtd.UserCreated
-    left join dbo.RegisterUser                    rg
+    left join dbo.RegisterUser                    rg  with (nolock)
         on rg.UsrIdUser = TKL.TknIdUser
-    left join dbo.LogTokenPOD                     TKP
+    left join dbo.LogTokenPOD                     TKP  with (nolock)
         on TKP.LogTokenPOD = dtd.UserCreated
-    left join dbo.SenderReceiver                  sr
+    left join dbo.SenderReceiver                  sr  with (nolock)
         on sr.ID = TKP.IdCourierman
 	inner join dbo.CatCheckpointType stp on stp.IdCatCheckpointType = st.CatCheckpointTypeId
 where dtd.Guide_Serie = @GuideSerie
@@ -192,3 +193,20 @@ where dtd.Guide_Serie = @GuideSerie
 order by dtd.DateCreated desc;
 
 END
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportGetGuideData] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportGetGuideData] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportGetGuideData] TO [cvaldes]
+    AS [dbo];
+

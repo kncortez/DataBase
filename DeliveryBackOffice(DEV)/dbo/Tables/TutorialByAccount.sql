@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TutorialByAccount] (
-    [IdTutorialByAccount] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdTutorialByAccount] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TutorialId]          INT           NOT NULL,
     [AccountId]           BIGINT        NOT NULL,
     [ToDisplay]           BIT           DEFAULT ((1)) NOT NULL,
@@ -12,6 +12,10 @@
     CONSTRAINT [FK_TutorialByAccount_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_TutorialByAccount_Tutorial] FOREIGN KEY ([TutorialId]) REFERENCES [dbo].[Tutorial] ([IdTutorial])
 );
+
+
+
+
 
 
 GO
@@ -48,4 +52,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que relaciona cuentas de usuarios con tutoriales.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TutorialByAccount';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountId_ToDisplay_RowStatus]
+    ON [dbo].[TutorialByAccount]([AccountId] ASC, [ToDisplay] ASC, [RowStatus] ASC);
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[BatchCOD] (
-    [IdBatchCOD]          INT             IDENTITY (1, 1) NOT NULL,
+    [IdBatchCOD]          INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [BankId]              INT             NOT NULL,
     [BatchNumber]         INT             NOT NULL,
     [Name]                NVARCHAR (50)   NULL,
@@ -7,10 +7,15 @@
     [TotalAmountIncluded] DECIMAL (18, 2) NULL,
     [BatchTimeRange]      VARCHAR (300)   NULL,
     [RowStatus]           BIT             DEFAULT ('TRUE') NOT NULL,
+    [IsAnticipatedCOD]    INT             NULL,
     CONSTRAINT [PK_BatchCOD_IdBatchCOD] PRIMARY KEY CLUSTERED ([IdBatchCOD] ASC),
     CONSTRAINT [FK_BatchCOD_DeliveryBank] FOREIGN KEY ([BankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [UK_BatchCOD_BankId_BatchNumber] UNIQUE NONCLUSTERED ([BankId] ASC, [BatchNumber] ASC)
 );
+
+
+
+
 
 
 
@@ -20,6 +25,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera que indica si una guia es de un lote cod anticipado o inmediato', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchCOD', @level2type = N'COLUMN', @level2name = N'IsAnticipatedCOD';
+
+
+GO
 CREATE NONCLUSTERED INDEX [idx_RowStatus_RowStatus]
     ON [dbo].[BatchCOD]([Date] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_BatchCOD_Date]
+    ON [dbo].[BatchCOD]([Date] ASC);
 

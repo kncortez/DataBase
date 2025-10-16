@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[NoLaborCalendar] (
-    [IdNoLaborCalendar] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdNoLaborCalendar] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NoLaborDate]       DATE          NOT NULL,
     [RowStatus]         BIT           DEFAULT ((1)) NOT NULL,
     [DateCreated]       DATETIME      NOT NULL,
@@ -10,6 +10,8 @@
     PRIMARY KEY CLUSTERED ([IdNoLaborCalendar] ASC),
     CONSTRAINT [UQ_NoLaborCalendar_Composite] UNIQUE NONCLUSTERED ([NoLaborDate] ASC, [IdCountry] ASC)
 );
+
+
 
 
 

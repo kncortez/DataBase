@@ -1,4 +1,9 @@
-﻿CREATE PROCEDURE [dbo].[GetDynamicCatalog]
+﻿-- =============================================
+-- Update:		<Edelman>
+-- Create date: <2025-07-29>
+-- Description:	<Agregar campos nuevos para pasarela de pago PAyWayOne SV>
+-- =============================================
+CREATE PROCEDURE [dbo].[GetDynamicCatalog]
     @TypeMethod VARCHAR(100) = 'GetTypePayment',
     @IdAccount INT = 1,
     @Token VARCHAR(100) = '0BE2F8F3BD53652635746ACD069954B5',
@@ -320,7 +325,7 @@ BEGIN
                                        + ISNULL(CONVERT(VARCHAR, PRV.IdProvince), '') + '",' + '"ProvinceName":"'
                                        + ISNULL(PRV.ProvinceDescription, '') + '",' + '"Address":"'
                                        + ISNULL(VPC.Address, '') + '",' + '"HeaderCode":"' + ISNULL(TWS.HeaderCode, '') + '",'
-                                       + '"SettlementDescription":"'+ ISNULL( STL.Settlement, '') + '",'
+                                       + '"SettlementDescription":"'+ CONCAT(STL.Settlement,', ',TWS.TownshipName,', ',prv.ProvinceName) + '",'
 									   + '"IdSettlement":"'+ ISNULL(CONVERT(NVARCHAR, STL.IdSettlement), '') + '",'
 									   + '"CodeOfReference":"'+ ISNULL(CONVERT(NVARCHAR, VPC.CodeOfReference), '') + '"'
                                        + '}'
@@ -333,6 +338,9 @@ BEGIN
                                         ON PRV.IdProvince = TWS.IdProvince
                                 WHERE IdKindOfVPClient = 1
 								AND VPC.StatusClient = 1
+								AND STL.SettlementSatus = 1
+								AND TWS.TownshipStatus = 1
+								AND PRV.ProvinceStatus = 1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,
@@ -446,6 +454,9 @@ BEGIN
                                           WHERE ccp.ConditionOfPayment = 'CONTADO'
                                       )*/
                                       AND RowSatus = 1
+									  AND STL.SettlementSatus = 1
+									  AND TWS.TownshipStatus = 1
+									  AND pr.ProvinceStatus = 1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,
@@ -575,12 +586,24 @@ BEGIN
         (
             SELECT STUFF(
                             (
-                                SELECT ',{"Id":"' + CONVERT(NVARCHAR, cpv.IdCustomerPaymentValue) + '",'
+                               SELECT ',{"Id":"' + CONVERT(NVARCHAR, cpv.IdCustomerPaymentValue) + '",'
                                        + '"DisplayText":"' + cpv.DisplayText + '",' 
-									   + '"IsDefault":' + IIF(cpv.IsDefault = 1, 'true','false') + ',' + '}'
-                                FROM CustomerPaymentValue cpv
+									   + '"IsDefault":' + IIF(cpv.IsDefault = 1, 'true','false') + ',' 
+									   + '"FirstName":"' + ISNULL(cpv.FirstName,'') + '",' 
+									   + '"LastName":"' +  ISNULL(cpv.LastName,'') + '",' 
+									   + '"Nirphone":"' +  ISNULL(cpv.Nirphone,'') + '",'  
+									   + '"Address":"' +   ISNULL(cpv.[Address],'') + '",'  
+									   + '"Phone":"' +     ISNULL(cpv.Phone,'') + '",'
+									   + '"IsoCode":"' +   ISNULL(cpv.IsoCode,'') + '",'
+									   + '"TokenizedToken":"' +  ISNULL( cpv.TokenizedToken,'') + '",'
+									   + '"TokenizedCVV":"' +  ISNULL(cpv.TokenizedCVV,'') + '",' 
+                                       + '"PaymentGateway":"' + ISNULL( cpv.PaymentGateway,'') + '",'
+                                       + '"ExpirationDate":"' + ISNULL(cpv.TokenizedExpirationDate,'') + '",' 
+                                       + '"Type":"' + ISNULL( cpv.[Type],'') + '",'
+									   + '}'
+                                FROM [Deliverybackoffice].[dbo].[CustomerPaymentValue] cpv WITH (NOLOCK)
 								WHERE (cpv.AccountId = @IdAccount
-								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM Account WHERE AccIdAccount = @IdAccount)))
+								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM [Deliverybackoffice].[dbo].[Account] WITH (NOLOCK) WHERE AccIdAccount = @IdAccount)))
 								AND cpv.RowStatus = 1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
@@ -648,7 +671,21 @@ BEGIN
 								     AND RowStatus = 1
                                      AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)
                                      AND SubscriptionMaxServiceFixedValue >	ActualServiceCount 
-                                     ))
+                                     )
+                                     
+                                +
+									 
+								(SELECT TOP 1 COUNT(IdSubscription)
+                                FROM [DeliveryBackOffice].[dbo].[Subscription] S WITH (NOLOCK)  
+								   INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription] SC WITH (NOLOCK)
+								   ON S.CatSubscriptionId = SC.IdCatSubscription
+                                WHERE AccountId = @IdAccount
+								     AND S.RowStatus = 1
+                                     AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)
+                                     AND SC.SubscriptionDescription ='Plan de descuentos'
+                                     )
+                                     
+                                     )
         SET @jsonResult =
         (
           SELECT STUFF(

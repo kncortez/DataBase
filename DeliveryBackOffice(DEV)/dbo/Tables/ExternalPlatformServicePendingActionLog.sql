@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ExternalPlatformServicePendingActionLog] (
-    [IdExternalPlatformServiceXLog] INT           IDENTITY (1, 1) NOT NULL,
+    [IdExternalPlatformServiceXLog] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ExternalPlatformId]            INT           NOT NULL,
     [GuideSerie]                    NVARCHAR (2)  NOT NULL,
     [GuideNumber]                   INT           NOT NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [CHK_ExternalPlatformServicePendingActionLog_Action] CHECK (isnull([IsPendingInsert],(0))>(0) AND isnull([IsPendingUpdate],(0))=(0) AND isnull([IsPendingDelete],(0))=(0) OR isnull([IsPendingInsert],(0))=(0) AND isnull([IsPendingUpdate],(0))>(0) AND isnull([IsPendingDelete],(0))=(0) OR isnull([IsPendingInsert],(0))=(0) AND isnull([IsPendingUpdate],(0))=(0) AND isnull([IsPendingDelete],(0))>(0)),
     CONSTRAINT [FK_ExternalPlatformServicePendingActionLog_CatExternalPlatform] FOREIGN KEY ([ExternalPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 

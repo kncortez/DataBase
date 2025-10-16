@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatIncidenceClasification] (
-    [IdCatIncidenceClasification] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatIncidenceClasification] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IncidenceTypeName]           NVARCHAR (50) NOT NULL,
     [RowStatus]                   BIT           NOT NULL,
     [TokenCreated]                NVARCHAR (50) NOT NULL,
@@ -8,6 +8,8 @@
     [TokenUpdated]                NVARCHAR (50) NULL,
     CONSTRAINT [PK__CatIncid__3E4FDC1E079BE122] PRIMARY KEY CLUSTERED ([IdCatIncidenceClasification] ASC)
 );
+
+
 
 
 GO

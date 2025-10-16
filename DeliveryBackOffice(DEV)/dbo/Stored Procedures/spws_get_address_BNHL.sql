@@ -1,0 +1,105 @@
+﻿
+-- =============================================
+-- Author:		<César,Aquino>
+-- Create date: <2021-01-08>
+-- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
+-- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-07-31>
+-- Description: <Obtiene le listado de direcciones asignadas en forma de datatable>
+-- =============================================
+CREATE PROCEDURE [dbo].[spws_get_address_BNHL]
+	-- Add the parameters for the stored procedure here
+	@Token VARCHAR(200),
+	@IdAccount bigint,
+	@IdAddress bigint = -1
+AS
+BEGIN
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
+
+    DECLARE @jsonResult NVARCHAR(MAX);
+
+    DECLARE @IdUser BIGINT =
+            (
+                SELECT TOP 1
+                       RuaIdUser
+                FROM dbo.RolByUserByAccount
+                WHERE RuaIdAccount = @IdAccount
+            );
+
+			 if object_id('tempdb.dbo.#TmpGetAddress', 'U') is not null
+            drop table #TmpGetAddress;
+
+	CREATE TABLE #TmpGetAddress
+        (
+			[Id] int IDENTITY(1,1),
+            [UadIdAccount] integer,
+            [UadIdAddress] nvarchar(400),
+            [UadFullName] nvarchar(400),
+            [UadAddress1] nvarchar(400),
+            [UadAddress2] nvarchar(400),
+            [UadNirPhone] nvarchar(400)            
+        );
+
+		
+        --CREATE NONCLUSTERED INDEX IX_TmpGetAddress
+        --ON #TmpGetAddress
+        --(
+        --    Id
+        --);
+
+	INSERT INTO #TmpGetAddress
+    SELECT 	
+		 1 -- ua.UadIdAccount
+         , ''-- ua.UadIdAddress
+         , ''--ua.UadFullName
+         --, ua.UadFullName
+         , ''--ua.UadAddress1
+         , ''--ua.UadAddress2
+         , ''--ua.UadNirPhone
+         --, ua.UadPhone AS Phone
+         --, REPLACE(ua.UadAdditionalInstructions, '"', '') AS AdditionalInstructions
+         --, ua.UadIdCountry AS IdCountry
+         --, prv.ProvinceName AS Province
+         --, twn.TownshipName AS TownshipName
+         --, CONVERT(VARCHAR, ua.UadIdTownship) AS IdTownship
+         --, twn.HeaderCode AS HeaderCode
+         --, CONVERT(VARCHAR, ua.CodeOfReference) AS CodeOfReference
+         --, CONVERT(VARCHAR, ISNULL(ua.IdCityPlace, 31)) AS IdCityPlace
+         --, CONVERT(VARCHAR, ctp.CityPlace) AS CityPlace
+         --, CONVERT(VARCHAR, prv.IdProvince) AS IdProvince
+         --, ISNULL(vp.Latitude, '') AS Latitude
+         --, ISNULL(vp.Longitude, '') AS Longitude
+         --, ISNULL(CAST(conf.[Zone] AS VARCHAR(2)), '') AS [Zone]
+         --, ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(conf.Neighborhood), '') AS Neighborhood
+         --, CAST(ISNULL(vp.IsOriginVisitPoint, 1) AS NVARCHAR) AS IsOrigin		
+    FROM dbo.RolByUserByAccount        rua WITH (NOLOCK)
+        INNER JOIN dbo.UserAddress     ua WITH (NOLOCK)
+            ON ua.UadIdAccount = rua.RuaIdAccount
+        INNER JOIN dbo.Township        twn WITH (NOLOCK)
+            ON twn.IdTownship = ua.UadIdTownship
+        INNER JOIN dbo.Province        prv WITH (NOLOCK)
+            ON prv.IdProvince = twn.IdProvince
+        INNER JOIN dbo.CatCityPlace    ctp WITH (NOLOCK)
+            ON ua.IdCityPlace = ctp.IdCityPlace
+               AND ctp.CityPlaceRowStatus = 'true'
+        LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+            ON vp.CodeOfReference = ua.CodeOfReference
+        LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
+            ON conf.NirPhone = ua.UadNirPhone
+          AND conf.Phone = ua.UadPhone
+          AND conf.TownshipId = vp.IdTownship
+          AND conf.[Address] = vp.[Address]
+    WHERE rua.RuaIdAccount = @IdAccount
+          AND rua.RuaIdUser = @IdUser
+          AND ua.UadRowStatus = 1
+          AND
+          (
+              ua.UadIdAddress = @IdAddress
+              OR @IdAddress = -1
+          );
+
+		  select * from #TmpGetAddress
+END

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RoutePreparation] (
-    [IdRoutePreparation]          INT           IDENTITY (1, 1) NOT NULL,
+    [IdRoutePreparation]          INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatRouteId]                  INT           NULL,
     [DateRoutePreparation]        DATE          NOT NULL,
     [GuidesQuantity]              SMALLINT      NOT NULL,
@@ -18,6 +18,12 @@
     CONSTRAINT [FK_RoutePreparation_CatVehicleId] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle]),
     CONSTRAINT [FK_RoutePreparation_DeliveryOrderBySettlementId] FOREIGN KEY ([DeliveryOrderBySettlementId]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID])
 );
+
+
+
+
+
+
 
 
 
@@ -94,4 +100,14 @@ CREATE NONCLUSTERED INDEX [IDX_CatRouteId_DateRoutePreparation_RowStatus]
 GO
 CREATE NONCLUSTERED INDEX [IDX_DateRoutePreparation]
     ON [dbo].[RoutePreparation]([DateRoutePreparation] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdRoutePreparation_RowStatus_DateRoutePreparation]
+    ON [dbo].[RoutePreparation]([IdRoutePreparation] ASC, [RowStatus] ASC, [DateRoutePreparation] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderBySettlementId_RowStatus]
+    ON [dbo].[RoutePreparation]([DeliveryOrderBySettlementId] ASC, [RowStatus] ASC);
 

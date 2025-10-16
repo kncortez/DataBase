@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatMembershipAttribute] (
-    [IdCatMembershipAttribute]           INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatMembershipAttribute]           INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatMembershipId]                    INT            NOT NULL,
     [CatAttributeId]                     INT            NOT NULL,
     [MembershipAttributeValue]           NVARCHAR (50)  NOT NULL,
@@ -15,8 +15,9 @@
     CONSTRAINT [PK_CatMembershipAttribute] PRIMARY KEY CLUSTERED ([IdCatMembershipAttribute] ASC),
     CONSTRAINT [FK_CatMembershipAttribute_CatAttribute] FOREIGN KEY ([CatAttributeId]) REFERENCES [dbo].[CatAttribute] ([IdCatAttribute]),
     CONSTRAINT [FK_CatMembershipAttribute_CatMembership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership])
-    
 );
+
+
 
 
 

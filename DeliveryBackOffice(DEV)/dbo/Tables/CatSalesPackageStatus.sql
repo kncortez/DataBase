@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatSalesPackageStatus] (
-    [IdCatSalesPackageStatus] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatSalesPackageStatus] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SalesPackageStatusName]  NVARCHAR (50) NOT NULL,
     [RowStatus]               BIT           CONSTRAINT [DF_CatSalesPackageStatus_RowStatus] DEFAULT ((1)) NOT NULL,
     [TokenCreated]            NVARCHAR (50) NOT NULL,

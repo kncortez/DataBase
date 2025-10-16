@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeConfirmationOfIncidence] (
-    [IdCatTypeConfirmationOfIncidence] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatTypeConfirmationOfIncidence] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]                             NVARCHAR (20)  NOT NULL,
     [Description]                      NVARCHAR (100) NULL,
     [RowStatus]                        BIT            CONSTRAINT [DF_CatTypeConfirmationOfIncidence_RowStatus] DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]                      DATETIME       NULL,
     CONSTRAINT [PK_CatTypeConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdCatTypeConfirmationOfIncidence] ASC)
 );
+
+
 
 
 GO

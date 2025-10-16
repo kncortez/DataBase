@@ -11,7 +11,7 @@ BEGIN
     IF EXISTS
     (
         SELECT *
-        FROM dbo.InternalUser it
+        FROM dbo.InternalUser it WITH (NOLOCK)
         WHERE it.IdUser = @InternalUser
     )
     BEGIN
@@ -44,7 +44,7 @@ BEGIN
         SELECT 'RolByUserBySystem' [Tabla]
              , RusIdUser
              , RusRowStatus
-        FROM dbo.RolByUserBySystem
+        FROM dbo.RolByUserBySystem WITH (NOLOCK)
         WHERE RusIdUser = @idRegister;
 
 
@@ -91,3 +91,20 @@ BEGIN
         SELECT 'Usuario no exite ';
     END;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportGetStatusCorporateUser] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportGetStatusCorporateUser] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportGetStatusCorporateUser] TO [cvaldes]
+    AS [dbo];
+

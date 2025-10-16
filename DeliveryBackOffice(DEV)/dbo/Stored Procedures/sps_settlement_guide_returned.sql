@@ -71,9 +71,9 @@ BEGIN
         FROM ConfirmationOfIncidence   coi
             INNER JOIN DeliveryAttempt da WITH (NOLOCK)
                 ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-                   AND da.Guide_Serie = @GuideSerie
-                   AND da.Guide_Number = @GuideNumber
-                   AND da.ID_DeliveryOrderBySettlement = @IdManifest;
+            WHERE da.Guide_Serie = @GuideSerie
+            AND da.Guide_Number = @GuideNumber
+            AND da.ID_DeliveryOrderBySettlement = @IdManifest;
         -- FIN FDAPI-1374 <Oscar Morales 2023-02-16>
 
         --FDD-1071 <Oscar Morales 2023-02-16> 
@@ -85,10 +85,10 @@ BEGIN
         FROM ConfirmationOfIncidence   coi
             INNER JOIN DeliveryAttempt da WITH (NOLOCK)
                 ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-                   AND da.Guide_Serie = @GuideSerie
-                   AND da.Guide_Number = @GuideNumber
-                   AND da.ID_DeliveryOrderBySettlement = @IdManifest
-        WHERE coi.IsActionIssued = 1;
+        WHERE coi.IsActionIssued = 1
+        AND da.Guide_Serie = @GuideSerie
+        AND da.Guide_Number = @GuideNumber
+        AND da.ID_DeliveryOrderBySettlement = @IdManifest;
         --FIN FDD-1071 <Oscar Morales 2023-02-16> 
 
         --FDD-1071 <Oscar Morales 2023-02-22> 
@@ -99,11 +99,11 @@ BEGIN
             SELECT 1
             FROM ConfirmationOfIncidence   coi
                 INNER JOIN DeliveryAttempt da WITH (NOLOCK)
-                    ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-                       AND da.Guide_Serie = @GuideSerie
-                       AND da.Guide_Number = @GuideNumber
-                       AND da.ID_DeliveryOrderBySettlement = @IdManifest
+                    ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId     
             WHERE coi.ClientConfirmsReturn = 1
+            AND da.Guide_Serie = @GuideSerie
+            AND da.Guide_Number = @GuideNumber
+            AND da.ID_DeliveryOrderBySettlement = @IdManifest
         )
         BEGIN
             DECLARE @StatusReturn TINYINT =

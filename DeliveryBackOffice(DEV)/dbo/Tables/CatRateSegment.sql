@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatRateSegment] (
-    [CrsId]           INT           IDENTITY (1, 1) NOT NULL,
+    [CrsId]           INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CrsName]         VARCHAR (100) NOT NULL,
     [CrsShortName]    VARCHAR (3)   NOT NULL,
     [CrsDescription]  VARCHAR (200) NULL,
@@ -10,6 +10,8 @@
     [CrsDateUpdated]  DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([CrsId] ASC)
 );
+
+
 
 
 GO

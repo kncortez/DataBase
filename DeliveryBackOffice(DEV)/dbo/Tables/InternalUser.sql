@@ -18,6 +18,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_ RegisterUserID]
     ON [dbo].[InternalUser]([RegisterUserID] ASC);
@@ -113,3 +115,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'InternalUser',
     @level2type = NULL,
     @level2name = NULL
+GO
+CREATE NONCLUSTERED INDEX [idx_Username]
+    ON [dbo].[InternalUser]([Username] ASC);
+

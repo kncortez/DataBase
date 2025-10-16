@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatActionByServiceType] (
-    [IdCatActionByServiceType] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatActionByServiceType] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ActionName]               NVARCHAR (50) NOT NULL,
     [ServiceType]              NVARCHAR (50) NOT NULL,
     [RowStatus]                BIT           CONSTRAINT [DF__CatAction__RowSt__4436D141] DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [TokenUpdated]             NVARCHAR (50) NULL,
     CONSTRAINT [PK__CatActio__F8540633E86F33ED] PRIMARY KEY CLUSTERED ([IdCatActionByServiceType] ASC)
 );
+
+
 
 
 GO

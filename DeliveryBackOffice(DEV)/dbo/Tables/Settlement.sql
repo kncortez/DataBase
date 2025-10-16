@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Settlement] (
-    [IdSettlement]       BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdSettlement]       BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Settlement]         NVARCHAR (100) NULL,
     [SettlementLatitud]  DECIMAL (9, 6) NULL,
     [SettlementLongitud] DECIMAL (9, 6) NULL,
@@ -13,10 +13,15 @@
     [DateCreated]        DATETIME       NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
     [DateUpdated]        DATETIME       NULL,
+    [oldSettlement]      NVARCHAR (100) NULL,
     CONSTRAINT [PK_Settlement] PRIMARY KEY CLUSTERED ([IdSettlement] ASC),
     CONSTRAINT [FK_Settlement_Province] FOREIGN KEY ([IdProvince]) REFERENCES [dbo].[Province] ([IdProvince]),
     CONSTRAINT [FK_Settlement_Township] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship])
 );
+
+
+
+
 
 
 
@@ -165,4 +170,10 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_IdTownship_Include]
     ON [dbo].[Settlement]([IdTownship] ASC)
     INCLUDE([Settlement]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_SettlementSatus_INCLUDE]
+    ON [dbo].[Settlement]([SettlementSatus] ASC)
+    INCLUDE([Settlement], [IdTownship], [IdProvince], [IdCountry]);
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatReason] (
-    [IdCatReason]  BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdCatReason]  BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]         VARCHAR (200) NOT NULL,
     [Type]         VARCHAR (200) NOT NULL,
     [RowStatus]    BIT           NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]  DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdCatReason] ASC)
 );
+
+
 
 
 GO

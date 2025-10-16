@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Membership] (
-    [IdMembership]                   INT             IDENTITY (1, 1) NOT NULL,
+    [IdMembership]                   INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatMembershipId]                INT             NOT NULL,
     [CatMembershipStatusId]          INT             NOT NULL,
     [MembershipCode]                 NVARCHAR (50)   NULL,
@@ -40,6 +40,12 @@
     CONSTRAINT [FK_Membership_MembershipStatus] FOREIGN KEY ([CatMembershipStatusId]) REFERENCES [dbo].[CatSalesPackageStatus] ([IdCatSalesPackageStatus]),
     CONSTRAINT [FK_Membership_VisitPointClient] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
+
+
+
+
 
 
 
@@ -190,4 +196,20 @@ CREATE NONCLUSTERED INDEX [IDX_RowStatus_ExpirationDate_INCLUDE]
 GO
 CREATE NONCLUSTERED INDEX [IDX_AccountId_RowStatus_CatMembershipStatusId]
     ON [dbo].[Membership]([AccountId] ASC, [RowStatus] ASC, [CatMembershipStatusId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatMembershipStatusId_RowStatus_ExpirationDate_Included]
+    ON [dbo].[Membership]([CatMembershipStatusId] ASC, [RowStatus] ASC, [ExpirationDate] ASC)
+    INCLUDE([CustomerId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatMembershipStatusId_CustomerId_RowStatus_ExpirationDate]
+    ON [dbo].[Membership]([CatMembershipStatusId] ASC, [CustomerId] ASC, [RowStatus] ASC, [ExpirationDate] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_RowStatus_CatMembershipStatusId_PointsExpirationDate]
+    ON [dbo].[Membership]([CustomerId] ASC, [RowStatus] ASC, [CatMembershipStatusId] ASC, [PointsExpirationDate] ASC);
 

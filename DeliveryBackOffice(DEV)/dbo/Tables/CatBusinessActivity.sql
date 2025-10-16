@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatBusinessActivity] (
-    [IdBusinessActivity]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdBusinessActivity]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [BusinessActivityName]        NVARCHAR (75)  NOT NULL,
     [BusinessActivityDescription] NVARCHAR (200) NULL,
     [RowStatus]                   BIT            NOT NULL,
