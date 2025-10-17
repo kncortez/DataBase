@@ -2067,6 +2067,7 @@
     <Build Include="dbo\Tables\RelDepositManifest.sql" />
     <Build Include="dbo\User Defined Types\TblDeposit.sql" />
     <Build Include="dbo\Stored Procedures\ValidateDepositBalance.sql" />
+    <Build Include="dbo\Stored Procedures\sps_UpdateInvoiceForza.sql" />
     <Build Include="dbo\Functions\SplitOrdinal.sql" />
   </ItemGroup>
   <ItemGroup>

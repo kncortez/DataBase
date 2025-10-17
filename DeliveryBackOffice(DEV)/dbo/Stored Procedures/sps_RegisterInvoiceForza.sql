@@ -15,6 +15,10 @@
 -- Create date: <2024-06-27>
 -- Description: <Se agrego parametros de factura y moneda, por defecto 1 = QTZ, 'GT'>
 -- =============================================
+-- Author:      <Brandon, Pedroza>
+-- Modified:    <2024-06-27>
+-- Description: <Facturacion SV - Se registra informacion del documento emitido>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
 	 @VpCodeOfReferences int
     ,@cmp_nit varchar(100)
@@ -31,6 +35,7 @@ CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
     ,@IdCountry  VARCHAR(2) = 'GT'
 	,@TblLstDetail TblLstDetail READONLY
 	,@TblInOutOfMoneyDetail TblInOutOfMoneyDetail READONLY
+	,@TblBuyerInfo TblBuyerInfo READONLY
 AS
 BEGIN
 	DECLARE @invoiceHeaderId bigint=-1;
@@ -167,6 +172,43 @@ BEGIN
 							,@tokenRegister
 							,GETDATE()
 					FROM @TblInOutOfMoneyDetail MD
+					
+					--INSERT EN TABLA LOG DE INFORMACION DEL CLIENTE CUANDO SE EMITE UNA FACTURA
+					IF(@IdCountry = 'SV')
+					BEGIN
+					INSERT INTO InformationBuyerInvoice 
+								(
+								InvoiceId,
+								DistrictCode,
+								StateCode,
+								ActivityCode,
+								ActivityDescription,
+								NRC,
+								TypeIdentificationDocumentCode,
+								IdDocument,
+								Phone,
+								Rowstatus,
+								TokenCreated,
+								DateCreated,
+								TokenUpdated,
+								DateUpdated
+								)
+						SELECT @invoiceHeaderId
+								,BI.DistrictCode
+								,BI.StateCode
+								,BI.ActivityCode
+								,BI.ActivityDescription
+								,BI.NRC
+								,BI.TypeDocument
+								,BI.IdDocument
+								,BI.Phone
+								,1
+								,@tokenRegister
+								,GETDATE()
+								,NULL
+								,NULL
+							FROM @TblBuyerInfo BI
+					END
 
 					SELECT @invoiceHeaderId 'IDENTITY'
 					COMMIT TRANSACTION;
