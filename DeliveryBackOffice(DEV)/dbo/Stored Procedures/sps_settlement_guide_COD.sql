@@ -26,7 +26,8 @@ CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
 	@RouteId INT = 0,
 	@TotalNumberOfPieces INT = 0,
 	@CatManifestSettlementIncidenceTypeId INT = 0,
-	@Deposits TblDeposit READONLY
+	@Deposits TblDeposit READONLY,
+    @Partialliquidation bit = 0
 AS
 BEGIN
     -- control transacción
@@ -71,22 +72,38 @@ BEGIN
         SELECT CAST(Item AS INT)
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@GuideNumbers, ',');
 
-        -- actualizar guía debido al proceso de liquidación
-        UPDATE [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]
-        SET GuideDischarged_TokenCreated = @Token,
-            GuideDischarged_DateCreated = GETDATE(),
-            Guide_Discharged = 1 -- guía liquidada en COD
-        WHERE Guide_Serie = @GuideSerie
-              AND Guide_Number IN
-                  (
-                      SELECT Guide_Number FROM @GuidesTable
-                  )
-              AND Guide_Settlement = 1; -- guía liquidada previamente en bodega
-
-        IF COALESCE(@@rowcount, 0) > 0
-		BEGIN
-            SET @ValidateOperation = @ValidateOperation + 1;
-		END
+          -- actualizar guía debido al proceso de liquidación
+        IF(@Partialliquidation=0)
+		  BEGIN
+			UPDATE [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]
+			SET GuideDischarged_TokenCreated = @Token,
+				GuideDischarged_DateCreated = GETDATE(),
+				Guide_Discharged = 1 -- guía liquidada en COD
+			WHERE Guide_Serie = @GuideSerie
+				  AND Guide_Number IN
+					  (
+						  SELECT Guide_Number FROM @GuidesTable
+					  )
+				  AND Guide_Settlement = 1; -- guía liquidada previamente en bodega
+				IF COALESCE(@@rowcount, 0) > 0
+				BEGIN
+					SET @ValidateOperation = @ValidateOperation + 1;
+				END;
+			END
+				ELSE
+				BEGIN
+					-- En caso de liquidación parcial, validar si existen guías afectadas
+					IF EXISTS (
+						SELECT 1
+						FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WITH(NOLOCK)
+						WHERE Guide_Serie = @GuideSerie
+							  AND Guide_Number IN (SELECT Guide_Number FROM @GuidesTable)
+							  AND Guide_Settlement = 1
+					)
+					BEGIN
+						SET @ValidateOperation = @ValidateOperation + 1;
+					END
+				END;
 
         -- insertar guía en la tabla de guías procesadas COD
         -- Se insertar guías en tabla temporal
@@ -237,28 +254,28 @@ BEGIN
 			WHERE ord.Guide_Serie = @GuideSerie AND ord.Guide_Number = @GuideNumber
 
 			IF @Isreturn = 1
+			BEGIN
+                IF(@Partialliquidation=0)
+		        BEGIN
+                    --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
+                    UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+                    SET StatusOrderId = 24
+                    WHERE Guide_Serie = @GuideSerie 
+                    AND Guide_Number = @GuideNumber;
 
-				BEGIN
+                    --Actualiza es stado a "COD liquidado" en tabla DeliveryOrderDetail si la guia tuviera COD
 
-                --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
-                UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-                SET StatusOrderId = 24
-                WHERE Guide_Serie = @GuideSerie 
-                  AND Guide_Number = @GuideNumber;
-
-                --Actualiza es stado a "COD liquidado" en tabla DeliveryOrderDetail si la guia tuviera COD
-
-                INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-                (
-                    Guide_Serie,
-                    Guide_Number,
-                    StatusOrderId,
-                    UserCreated,
-                    DateCreated
-                )
-                VALUES
-                (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
-
+                    INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
+                    (
+                        Guide_Serie,
+                        Guide_Number,
+                        StatusOrderId,
+                        UserCreated,
+                        DateCreated
+                    )
+                    VALUES
+                    (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
+                END;
 			END;
 
             END;
@@ -507,17 +524,31 @@ BEGIN
         END;
 		
         -- Actualizar registro en control de manifiestos de despacho
-        UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
-        SET User_Received_COD = @Token,
-            Date_Received_COD = GETDATE(),
-            Guides_Received_COD = @GuideQuantityCOD,
-            Route_Received_COD = GETDATE()
-        WHERE ID = @IdDeliveryOrderBySettlement;
-		
-        IF COALESCE(@@rowcount, 0) > 0
-		BEGIN
-            SET @ValidateOperation = @ValidateOperation + 1;
-	    END
+		IF(@Partialliquidation=0)
+		  BEGIN
+			UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
+			SET User_Received_COD = @Token,
+				Date_Received_COD = GETDATE(),
+				Guides_Received_COD = @GuideQuantityCOD,
+				Route_Received_COD = GETDATE()
+			WHERE ID = @IdDeliveryOrderBySettlement;
+			IF COALESCE(@@rowcount, 0) > 0
+			BEGIN
+				SET @ValidateOperation = @ValidateOperation + 1;
+			END
+		  END
+			ELSE
+			BEGIN
+				-- Validar si el registro existe aunque no se actualice
+				IF EXISTS (
+					SELECT 1
+					FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] WITH(NOLOCK)
+					WHERE ID = @IdDeliveryOrderBySettlement
+				)
+				BEGIN
+					SET @ValidateOperation = @ValidateOperation + 1;
+				END
+			END
     END TRY
     BEGIN CATCH
 		SELECT 0 AS 'StatusCode',
