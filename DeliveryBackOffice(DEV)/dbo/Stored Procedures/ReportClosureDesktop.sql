@@ -286,8 +286,6 @@ BEGIN
 		,ISNULL(ACHVP.ClosurerPOS,'') 'CierrePOS'
 		-- FIN MODIFICACIÓN
 
-	--,DOPD.*
-	--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
 	FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
 
 	INNER JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
