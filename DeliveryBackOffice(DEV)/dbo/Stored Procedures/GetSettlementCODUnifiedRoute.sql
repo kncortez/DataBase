@@ -112,7 +112,7 @@ BEGIN
                 ON dbs.ID = msi.ManifestNumber
             LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
                 ON cs.IdStation = dbs.DispatchedStationId
-        WHERE CAST(dbs.Date_Dispatched AS DATE) > @DateProduction
+        WHERE CAST(dbs.Date_Dispatched AS DATE) >= @DateProduction
               AND dsd.RowStatus = 1
               AND dbs.CatRouteId = @IdRoute
               AND CAST(dbs.Date_Dispatched AS DATE) < CAST(GETDATE() AS DATE)
@@ -408,14 +408,19 @@ BEGIN
            GuideNumber,
            Delivered,
            Price,
-           COD,
-           Total,
-           FEL,
+           COD,		
+           CASE 
+			WHEN Total - ISNULL(rdm.AmountApplied,0) < 0 THEN Total
+			ELSE Total - ISNULL(rdm.AmountApplied,0)
+		   END AS 'TOTAL',
+		   FEL,
            StatusOrderId,
            OrderDescription,
            StatusOrderValid,
            DescriptionStatusOrderValid
     FROM @GuidesDetail gd
+	  LEFT JOIN [DeliveryBackOffice].[dbo].[RelDepositManifest] rdm WITH (NOLOCK)
+	  ON gd.id = rdm.DeliveryOrderBySettlementId
     ORDER BY gd.id DESC;
 
 END;
