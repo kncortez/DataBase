@@ -30,7 +30,7 @@ DECLARE @DeliveryOrder TABLE (
 	OriginAdress NVARCHAR(255),
 	DestinyAddress NVARCHAR(255),
 	Delivery_Max_Date DATETIME,
-	NameOfReceiver NVARCHAR(100),
+	NameOfReceiver NVARCHAR(400),
 	Manifest_Serie NVARCHAR(50),
 	Manifest_Number INT
 );
