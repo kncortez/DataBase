@@ -3,6 +3,11 @@
 -- Create date: <2021-09-16>
 -- Description:	<Recupera información para form Billing>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian, Azurdia>
+-- Create date: <2025-09-12>
+-- Description:	<Visualizar información Billing de El Salvador>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetBillingData]
     @GuideSerie NVARCHAR(2)
   , @GuideNumber INT
@@ -102,10 +107,19 @@ BEGIN
     SELECT bp.BlpTaxId   Nit
          , bp.BlpAddress Address
          , bp.BlpName    Name
+         , bp.Inv_type
+         , bp.NRC
+         , bp.TypeIdentificationDocumentCode
+         , bp.IdDocument
+         , bp.DistrictId
+         , bp.StateId
+         , bp.ActivityCode
     FROM BillingProfile    bp WITH (NOLOCK)
         INNER JOIN Account ac WITH (NOLOCK)
             ON bp.BlpIdAccount = ac.AccIdAccount
-    WHERE ac.IdCustomer = @IdCustomer;
+    WHERE ac.IdCustomer = @IdCustomer
+      and bp.BlpRowStatus = 1
+    order by bp.IsDefault desc, bp.BlpIdBilling;
 
     SELECT @IdFEL = ih.inv_pk_id
     FROM invoiceDetail           id WITH (NOLOCK)
@@ -169,14 +183,12 @@ BEGIN
         WHERE 1 = 0;
     END;
 
-
-
     -- Table 3
     SELECT CONCAT(id.dti_fk_orderSerie, id.dti_fk_orderNumber) Guide
          , id.dti_priceUnit                                    Amount
     FROM invoiceDetail id WITH (NOLOCK)
     WHERE id.dti_fk_header = @IdFEL;
 
-
     SET NOCOUNT OFF;
-END;	
+
+END;

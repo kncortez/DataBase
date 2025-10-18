@@ -20,15 +20,18 @@ BEGIN
      DECLARE @Currency AS NVARCHAR(3)   
 		DECLARE @IdCountry NVARCHAR(3)= (   
 										   Select top 1 ISNULL(B.CountryID,'GT') 
-										         From [dbo].[Account] A WITH(NOLOCK) 
+										         FROM [dbo].[Account] A WITH(NOLOCK) 
 										         INNER JOIN 
 												      [dbo].[Customer] B WITH(NOLOCK)
 										         ON  A.IdCustomer = B.IdCustomer
 										   WHERE A.AccIdAccount =@AccoundId)
 
-		SET @Currency = (SELECT TOP 1  Symbol 
-		                       FROM [dbo].[CatCurrencyCOD] 
-							       WHERE CodeISO LIKE '%'+@IdCountry+'%')
+    SET @Currency = (SELECT TOP 1  Symbol 
+                       FROM [dbo].[CatCurrencyCOD] WITH(NOLOCK)
+                          WHERE IdCatCurrencyCOD = (SELECT IdCurrencyCOD
+                                                     FROM DeliveryCurrency WITH(NOLOCK)
+                                                    WHERE DefaultPerCountry = 1
+                                                      AND Currency_IdCountry = @IdCountry))
 
 	-- Limpieza y corrección de datos de fecha
 	IF(@EndFilterDate IS NULL)
