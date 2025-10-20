@@ -35,6 +35,13 @@ BEGIN
     DECLARE @CountFacturaCash INT;
     DECLARE @CountFacturaCard INT;
 	-- FIN MODIFICACIÓN
+	-- MODIFICACIÓN [17/10/2025] - Soporte para Zigi
+	DECLARE @TotalZigi DECIMAL(18, 5);
+	DECLARE @TotalCODZigi DECIMAL(18, 5);
+	DECLARE @CountZigi INT;
+	DECLARE @TotalFacturaZigi DECIMAL(18, 5);
+	DECLARE @CountFacturaZigi INT;
+	-- FIN MODIFICACIÓN
     DECLARE @UserId2 INT;
 
     IF OBJECT_ID('tempdb.dbo.#TempClosureDetail', 'U') IS NOT NULL
@@ -384,11 +391,131 @@ BEGIN
 		  GROUP BY DOPD.TypeofInOutMoneyId, DOPD.TypeServiceId, DOPD.amount, AccountId
     ) S1;
 
+	-- FIN MODIFICACIÓN
+
+	-- MODIFICACIÓN [17/10/2025] - Cálculo de totales para Zigi (TypeofInOutMoneyId = 10)
+	SELECT @TotalZigi = ISNULL(SUM(S1.TotalZigi), 0),
+		   @CountZigi = ISNULL(SUM(S1.CountZigi), 0),
+		   @TotalCODZigi = ISNULL(SUM(S1.TotalCODZigi), 0),
+		   @TotalFacturaZigi = ISNULL(SUM(S1.TotalFacturaZigi), 0),
+		   @CountFacturaZigi = ISNULL(SUM(S1.CountFacturaZigi), 0)
+	FROM
+	(
+		SELECT CASE
+				   WHEN DOPD.TypeofInOutMoneyId = 10 
+						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+					THEN SUM(DOPD.amount)
+				   ELSE 0
+			   END 'TotalZigi',
+			   CASE
+				   WHEN DOPD.TypeofInOutMoneyId = 10 
+						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+					THEN COUNT(DOPD.TypeofInOutMoneyId)
+				   ELSE 0
+			   END 'CountZigi',
+			   CASE
+				   WHEN DOPD.TypeofInOutMoneyId = 10 
+						AND DOPD.CODAmountProcess > 0
+					THEN SUM(DOPD.CODAmountProcess)
+				   ELSE 0
+			   END 'TotalCODZigi',
+			   CASE
+				   WHEN DOPD.TypeofInOutMoneyId = 10
+						AND DOPD.TypeServiceId IN (@Entrega,@Recepcion,@Traslado) 
+					THEN SUM(DOPD.amount)
+				   ELSE 0
+			   END 'TotalFacturaZigi',
+			   CASE
+				   WHEN DOPD.TypeofInOutMoneyId = 10
+						AND DOPD.amount != 0
+						AND DOPD.TypeServiceId IN (@Entrega,@Recepcion,@Traslado) 
+					THEN COUNT(DOPD.TypeofInOutMoneyId)
+				   ELSE 0
+			   END 'CountFacturaZigi'
+		FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+				ON DOR.Sender_ID = VPC.CodeOfReference
+			LEFT JOIN @TEMPLATEDETAIL IND
+				ON IND.guideserie = DOR.Guide_Serie
+				   AND IND.guidenumber = DOR.Guide_Number
+			LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
+				ON INH.inv_pk_id = IND.header
+			JOIN DeliveryBackOffice.dbo.StatusOrder STO
+				ON STO.StatusOrderId = DOR.StatusOrderId
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
+				ON DOPD.guideserie = DOR.Guide_Serie
+				   AND DOPD.guidenumber = DOR.Guide_Number
+				   AND DOPD.ShipmentCompleted = 1
+				   AND DOR.StatusOrderId != 7
+		WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+			  AND DOPD.AccountId = @UserId
+			  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
+			  AND NOT EXISTS
+		(
+			SELECT 1
+			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			WHERE ACD.GuideSerie = DOR.Guide_Serie
+				  AND ACD.GuideNumber = DOR.Guide_Number
+				  AND ACD.DopId = DOPD.DopId
+				  AND ACD.RowStatus = 1
+		)
+		GROUP BY DOPD.TypeofInOutMoneyId,
+				DOPD.TypeServiceId,
+				DOPD.amount,
+				DOPD.CODAmountProcess
+
+		UNION ALL
+
+		SELECT CASE
+				   WHEN DOPD.TypeofInOutMoneyId = 10 
+						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+					THEN SUM(DOPD.amount)
+				   ELSE 0
+			   END 'TotalZigi',
+			   CASE
+				   WHEN DOPD.TypeofInOutMoneyId = 10 
+						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+					THEN COUNT(DOPD.TypeofInOutMoneyId)
+				   ELSE 0
+			   END 'CountZigi',
+			   CASE
+				   WHEN DOPD.TypeofInOutMoneyId = 10 
+						AND DOPD.CODAmountProcess > 0
+					THEN SUM(DOPD.CODAmountProcess)
+				   ELSE 0
+			   END 'TotalCODZigi',
+			   0 'TotalFacturaZigi',
+			   0 'CountFacturaZigi'
+		FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+		JOIN CatTypeServiceClosure CTS
+			ON CTS.IdTypeService = DOPD.TypeServiceId
+		LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+			ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+		WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+			  AND DOPD.AccountId = @UserId
+			  AND DOPD.GuideSerie is null
+			  AND NOT EXISTS
+			  (
+				SELECT 1
+				FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+				WHERE ACD.Fel =(SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
+					  AND ACD.RowStatus = 1
+			  )
+		GROUP BY DOPD.TypeofInOutMoneyId, DOPD.TypeServiceId, DOPD.amount, DOPD.CODAmountProcess, AccountId
+	) S1;
+	
+	-- Sumar TotalZigi como la suma de TotalCODZigi + TotalFacturaZigi si TotalZigi es 0
+	IF @TotalZigi = 0
+	BEGIN
+		SET @TotalZigi = @TotalCODZigi + @TotalFacturaZigi;
+	END
+	-- FIN MODIFICACIÓN
+
     DECLARE @HeaderClosures INT = 0;
 
     BEGIN TRANSACTION;
     BEGIN TRY
-        IF ((@TotalCash + @TotalCard) >= 0) --Si existen datos para cierre
+        IF ((@TotalCash + @TotalCard + @TotalZigi) >= 0) --Si existen datos para cierre
         BEGIN
 		PRINT 'INSERTA HEADER';
             --Insertar encabezado
@@ -420,14 +547,28 @@ BEGIN
 				InvoiceAmountFacturaCash,
 				TotalAmountFacturaCard,
 				InvoiceAmountFacturaCard,
-				InvoiceAmountCOD
+				InvoiceAmountCOD,
+				-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
+				TotalAmountZigi,
+				TotalAmountZigiDeclared,
+				InvoiceAmountZigi,
+				TotalAmountCODZigi,
+				TotalAmountCODZigiDeclared,
+				TotalAmountFacturaZigi,
+				TotalAmountFacturaZigiDeclared,
+				InvoiceAmountFacturaZigi
+				-- FIN MODIFICACIÓN
             )
             VALUES
             (@UserId2, @ClosurerPOS, @TotalCash, @TotalAmountCashDeclared, @TotalCard, @TotalAmountCreditDeclared,
              @CountCash, @Countcard, @VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, @TokenCreated, GETDATE(),
              NULL, NULL, @TotalAmountCODCash, @TotalAmountCODCashDeclared, 
 			 @TotalAmountFacturaCashDeclared, @TotalAmountFacturaCardDeclared,
-			 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD);
+			 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD,
+			 -- MODIFICACIÓN [17/10/2025] - Valores para Zigi
+			 @TotalZigi, 0, @CountZigi, @TotalCODZigi, 0, @TotalFacturaZigi, 0, @CountFacturaZigi
+			 -- FIN MODIFICACIÓN
+			 );
             PRINT 'INSERTA ENCABEZADO';
             SET @HeaderClosures = SCOPE_IDENTITY();
             PRINT @HeaderClosures;

@@ -7,6 +7,12 @@
 -- Create date: <2025-09-09>
 -- Description:	<ZIGI - Se agrega la inserción de campos como PhoneNumber y IsGroup. Retorna el Id del registro, y devuelve el nuevo registro creado>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-10-15>
+-- Description:	<ZIGI - Se agrega el campo GeneratedMethod para identificar el origen de la creación del link>
+-- =============================================
+
+
 CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @GuideNumber        INT,
     @GuideSerie         NVARCHAR(2),
@@ -20,7 +26,8 @@ CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @CODValue           DECIMAL(10,2),
     @Token              NVARCHAR(50),
     @PhoneNumber        NVARCHAR(20) = NULL,
-    @IsGroup    BIT = 0
+    @IsGroup            BIT = 0,
+    @GeneratedMethod    NVARCHAR(100) = 'Whatsapp/CourierApp'
 AS
 BEGIN
     BEGIN TRY
@@ -65,7 +72,8 @@ BEGIN
             DateCreated,
             TokenCreated,
             PhoneNumber,
-            IsGroup
+            IsGroup,
+            GeneratedMethod
         )
         VALUES
         (
@@ -82,7 +90,8 @@ BEGIN
             GETDATE(),
             @Token,
             @PhoneNumber,
-            @IsGroup
+            @IsGroup,
+            @GeneratedMethod
         );
 
         -- Obtenemos el ID del registro recién insertado
@@ -125,3 +134,4 @@ BEGIN
         RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
     END CATCH;
 END;
+go
