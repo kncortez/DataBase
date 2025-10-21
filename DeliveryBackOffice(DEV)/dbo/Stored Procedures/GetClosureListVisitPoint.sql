@@ -59,7 +59,7 @@ BEGIN
 	INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 		ON REU.UsrIdUser = ACH.UserId
 	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-		ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+		ON VPC.CountryId = DC.Currency_IdCountry
 	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 		ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
 	WHERE CAST(ACH.DateCreated AS DATE) 

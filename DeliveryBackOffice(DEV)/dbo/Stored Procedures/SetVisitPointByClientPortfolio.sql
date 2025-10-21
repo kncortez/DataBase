@@ -62,7 +62,8 @@ BEGIN
                               INNER JOIN [dbo].Account ac
                                   ON ac.AccIdAccount = rua.RuaIdAccount
                                   AND ac.AccRowStatus = 1
-                              INNER join VisitPointByUser vp ON vp.RegisterUserID = usr.UsrIdUser
+                              INNER JOIN VisitPointByUser vp 
+                                  ON vp.RegisterUserID = usr.UsrIdUser
                               WHERE ac.AccIdAccount = @IdAccount)
 
         -----------------------Cliente nuevo -----------------------------------------------  
@@ -317,8 +318,8 @@ BEGIN
               ,UadIdSettlement= ni.IdSettlement
               ,UadIdDeliveryOption=ni.IdDeliveryOption
             FROM @TblAddressesList ni
-            JOIN UserAddress ud
-                on ud.UadIdAddress = ni.IdAddress
+            INNER JOIN UserAddress ud
+              ON ud.UadIdAddress = ni.IdAddress
             WHERE ni.IdAddress > 0
               AND ud.VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio
 
@@ -379,7 +380,7 @@ BEGIN
                ,BlpDateUpdated = GETDATE()
                ,VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio
             FROM @TblBillingList ni
-            JOIN BillingProfile bp
+            INNER JOIN BillingProfile bp
             ON bp.BlpIdBilling = ni.IdBilling
             WHERE ni.IdBilling > 0
             AND bp.VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio
@@ -429,7 +430,8 @@ BEGIN
                ,NumberAccFavCOD = ni.NumberAcc
                ,VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio
             FROM @TblCODList ni
-            JOIN DeliveryFavCOD df on df.IdDeliveryFavCOD = ni.Id
+            INNER JOIN DeliveryFavCOD df 
+            ON df.IdDeliveryFavCOD = ni.Id
             WHERE ni.Id > 0
             AND VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio
 

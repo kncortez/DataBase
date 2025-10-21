@@ -1,10 +1,4 @@
-﻿/*
-EXEC GetClosureList
-@VisitPointId = -1
-,@StartDate = '20210627'
-,@EndDate = '20210627'
-*/
--- =============================================
+﻿-- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-07-05>
 -- Description:	<Se agrega la moneda correspondiente al express center>
@@ -60,7 +54,7 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU
             ON REU.UsrIdUser = ACH.UserId
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-			ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+			ON VPC.CountryId = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
     WHERE CAST(ACH.DateCreated AS DATE)
