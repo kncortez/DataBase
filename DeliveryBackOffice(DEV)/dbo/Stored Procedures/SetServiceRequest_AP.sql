@@ -10,31 +10,6 @@ ALTER PROCEDURE [dbo].[SetServiceRequest_AP]
 AS
 BEGIN
 	
-	DECLARE @ParcelExists AS TABLE (RowNumber INT, Parcel NVARCHAR(20))
-
-	--CÓDIGOS DE ARTÍCULOS
-	IF @IsArticle = 1
-	BEGIN 
-
-		IF NOT EXISTS(SELECT 1 FROM @TblDeliveryOrders WHERE ParcelCode IS NULL OR ParcelCode = '')
-		BEGIN
-			INSERT INTO @ParcelExists (RowNumber, Parcel)
-			SELECT
-				ROW_NUMBER() OVER (ORDER BY (SELECT
-						0)
-				ASC) AS RowNumber
-			   ,RTRIM(LTRIM(item)) item
-			FROM SplitUnlimited((SELECT
-					STUFF((SELECT
-							', ' + ParcelCode
-						FROM @TblDeliveryOrders
-						FOR XML PATH (''))
-					,
-					1, 2, ''))
-			, ',')
-		END
-	END
-
     DECLARE @IdTransaction BIGINT = NULL;
     DECLARE @ManifestNumber INT = 0;
     DECLARE @ManifestSerie VARCHAR(2) = 'FM';
@@ -136,8 +111,6 @@ BEGIN
                [Collect_OnDelivery],
 			   [ParcelCode],
 			   [IdCountrySender],
-               -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-               --[Collect],
                [SenderIdTownship],
                NULL 'HubOriginId',
                NULL 'HubDestinationId',
@@ -148,9 +121,7 @@ BEGIN
                NULL 'IdCustomer',
                NULL 'OrderUserCreated',
                NULL 'SalePipeLineId',
-			   -- SE MANDA EL PAIS CRISTIAN SUAZO
 			   '  ' AS 'ReceiverCountryId',
-        -- FIN MODIFICACION
                [ReceiverIdTownship],
 			   [ReceiverIdSettlement],
 			   [SenderIdSettlement]
@@ -164,10 +135,6 @@ BEGIN
         /******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
         /**********************************************************************/
         SET @ManifestNumber = NEXT VALUE FOR [dbo].[NewGuideManifestSequence];
-        --(
-        --    SELECT MAX([Manifest_Number]) + 1
-        --    FROM [DeliveryBackOffice].[dbo].[ServiceRequest] WITH (NOLOCK)
-        --);
 
         INSERT INTO DeliveryBackOffice.dbo.ServiceRequest
         (
@@ -196,17 +163,9 @@ BEGIN
                [CustomerID]
         FROM @TblServiceRequest;
 
-        --SET @IdTransaction = SCOPE_IDENTITY();
-
-        --IF (@IdTransaction IS NOT NULL)
-        --BEGIN
-
-        -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
         ALTER TABLE #GuideTable ALTER COLUMN Segment NVARCHAR(10);
         ALTER TABLE #GuideTable ALTER COLUMN OrderUserCreated VARCHAR(100);
-
-        --Modifica el tipo de los campos que recibirán una cadena
-
+		
         /*****************************************************************************/
         /* REALIZA LA BÚSQUEDA DE LOS ID'S DE LOS MUNICIPIOS Y LOS AGREGA A LA TABLA */
         /*****************************************************************************/
@@ -227,7 +186,7 @@ BEGIN
             (
                 SELECT SysIdSystem
                 FROM DeliveryBackOffice.dbo.CatSystem
-                WHERE SysNameSystem = 'Parser'
+                WHERE SysNameSystem = 'Aeropost Service'
                       AND SysRowStatus = 1
             )
         FROM #GuideTable t;
@@ -253,7 +212,7 @@ BEGIN
             (
                 SELECT ModIdModule
                 FROM DeliveryBackOffice.dbo.CatModule
-                WHERE ModName = 'Parser'
+                WHERE ModName = 'Aeropost Service'
             ),
             IdCustomer =
             (
@@ -261,12 +220,7 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.VisitPointClient WITH (NOLOCK)
                 WHERE CodeOfReference = t.Sender_ID
             ),
-            SalePipeLineId =
-            (
-                SELECT IdSalePipeLine
-                FROM DeliveryBackOffice.dbo.CatSalePipelines
-                WHERE Name = 'Parser'
-            ),
+            SalePipeLineId = 0,
             OrderUserCreated =
             (
                 SELECT t.Receiver_Email
@@ -275,7 +229,6 @@ BEGIN
             (
                 SELECT DeliveryBackOffice.dbo.fn_get_segment(t.Guide_Serie, t.Guide_Number)
             ),
-		    --SE AGREGA EL DESTINO PAIS CRISTIAN SUAZO
 			ReceiverCountryId = 
 			(
 				SELECT TOP 1 IdCountry
@@ -286,13 +239,9 @@ BEGIN
 
         FROM #GuideTable t;
 
-        -- FIN MODIFICACION
-
-
         /**********************************************************************/
         /*********** GUARDAR ÓRDENES ASOCIADAS (GUÍAS ELECTRÓNICAS) ***********/
         /**********************************************************************/
-        --PRINT 'Guardar órdenes asociadas'
 
         INSERT DeliveryBackOffice.dbo.DeliveryOrder
         (
@@ -352,9 +301,6 @@ BEGIN
             [Collect_OnDelivery],
             [Guide_Collected],
             [TypeService],
-            -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-            --[IsCollect],
-
             [SenderIdTownship],
             [ReceiverIdTownship],
             [HubOriginId],
@@ -368,7 +314,6 @@ BEGIN
 			[SenderCountryId],
 			[ReceiverCountryId],
             [GuideType],
-        -- FIN MODIFICACION
 			[ReceiverIdSettlement],
 			[SenderIdSettlement]
         )
@@ -428,8 +373,6 @@ BEGIN
                GT.Collect_OnDelivery, -- Collect_OnDelivery
                0,                     -- Guide_Collected
                CASE WHEN GT.Collect_OnDelivery > 0 THEN 'COD' ELSE 'STD' END,
-                                      -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-                                      --,GT.Collect
                GT.SenderIdTownship,
                GT.ReceiverIdTownship,
                GT.HubOriginId,
@@ -443,14 +386,12 @@ BEGIN
 			   GT.IdCountrySender,
 			   GT.ReceiverCountryId,
                CASE WHEN GT.IdCountrySender = ReceiverCountryId THEN 'DOM' ELSE 'INT' END,
-        -- FIN MODIFICACION
                NULLIF(GT.ReceiverIdSettlement,0),
 			   GT.SenderIdSettlement
         FROM #GuideTable GT;
 
 		SELECT @IdCountry = IdCountrySender  FROM #GuideTable
-        -- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
-        -- INSERTAR DATA PARA MANEJO DE LANDING PAGE
+
         INSERT INTO [DeliveryBackOffice].[dbo].[ServiceDataForGuide]
         (
             [GuideSerie],
@@ -481,10 +422,7 @@ BEGIN
                   AND GT.Guide_Number = SDFG.GuideNumber
                   AND SDFG.IsDelivery = 1
         );
-        -- FIN DE MODIFICACION
 
-		-- FDAPI-1418 Oscar Morales 2023-02-23
-		-- Insertar data para manejo de inténtos de entrega/devolución
 		INSERT INTO [dbo].[DeliveryOrderAttemptData] ([GuideSerie]
 		, [GuideNumber]
 		, [GuideDeliveryAttemptCount]
@@ -505,7 +443,7 @@ BEGIN
 			   ,rh.AttemptReturn
 			   ,1
 			   ,GETDATE()
-			   ,'SYSTEM'
+			   ,'Aeropost-Service'
 			   ,NULL
 			   ,NULL
 			FROM #GuideTable GT
@@ -534,9 +472,7 @@ BEGIN
                 ON rc.RbcId = BestRate.RbcId
             INNER JOIN RateHeader rh WITH (NOLOCK)
                 ON rc.RbcIdRate = rh.RheId;
-        -- Fin FDAPI-1418 Oscar Morales 2023-02-23
 
-        -- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
         INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
         (
             [Guide_Serie],
@@ -549,94 +485,10 @@ BEGIN
         SELECT GT.Guide_Serie,
                GT.Guide_Number,
                GT.StatusOrderId,
-               'SYSTEM',
+               'Aeropost-Service',
                GETDATE(),
                GETDATE()
         FROM #GuideTable GT;
-
-
-        DECLARE @Guides AS TABLE
-        (
-            [RowNumber] [INT] IDENTITY(1, 1),
-            [Guide_Serie] NVARCHAR(2) NULL,
-            [Guide_Number] [INT] NULL,
-            [CountDry] INT,
-            [CountCold] INT
-        );
-
-        DECLARE @Pieces AS TABLE
-        (
-            [Guide_Serie] NVARCHAR(2) NULL,
-            [Guide_Number] [INT] NULL,
-            [PartNumber] INT,
-            [IsDry] BIT,
-			[ParcelCode] NVARCHAR(10) NULL
-        );
-
-        INSERT INTO @Guides
-        SELECT Guide_Serie,
-               Guide_Number,
-               Pieces_Dry,
-               Pieces_Cold
-        FROM #GuideTable;
-
-        DECLARE @i INT = 0;
-        DECLARE @elements INT =
-                (
-                    SELECT COUNT(1)FROM @Guides
-                );
-		DECLARE @z INT = 1
-        IF (@elements > 0) --insertar piezas
-        BEGIN
-            WHILE @i < @elements
-            BEGIN
-                --piezas frías
-                DECLARE @k INT = 0;
-                DECLARE @PiecesCount INT =
-                (
-                    SELECT CountCold FROM @Guides WHERE RowNumber = @i + 1
-                );
-                WHILE @k < @PiecesCount
-                BEGIN
-                    INSERT INTO @Pieces
-                    SELECT Guide_Serie,
-                           Guide_Number,
-                           @k + 1,
-                           0,
-						   pe.Parcel
-                    FROM @Guides g
-					LEFT JOIN @ParcelExists pe
-						ON pe.RowNumber = @z
-                    WHERE g.RowNumber = @i + 1;
-                    SET @k = @k + 1;
-					SET @z = @z + 1;
-                END;
-
-				--piezas secas
-                DECLARE @j INT = 0;
-                SET @PiecesCount =
-                        (
-                            SELECT CountDry FROM @Guides WHERE RowNumber = @i + 1
-                        );
-                WHILE @j < @PiecesCount
-                BEGIN
-                    INSERT INTO @Pieces
-                    SELECT Guide_Serie,
-                           Guide_Number,
-                           @j + 1 + @k,
-                           1,
-						   pe.Parcel
-                    FROM @Guides g
-					LEFT JOIN @ParcelExists pe
-						ON pe.RowNumber = @z
-                    WHERE g.RowNumber = @i + 1;
-                    SET @j = @j + 1;
-					SET @z = @z + 1;
-                END;
-
-                SET @i = @i + 1;
-            END;
-        END;
 
         INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece
         (
@@ -666,22 +518,27 @@ BEGIN
             [IsDry],
 			[ParcelCode]
         )
-        SELECT PIC.Guide_Serie,
-               PIC.Guide_Number,
+        SELECT GTB.Guide_Serie,
+               GTB.Guide_Number,
                0,
                0,
                0,
                0,
                0,
                NULL,
-               'GTQ',
+			   CASE 
+				   WHEN GTB.IdCountrySender = 'GT' THEN 'GTQ' 
+				   WHEN GTB.IdCountrySender = 'HN' THEN 'HNL' 
+				   WHEN GTB.IdCountrySender = 'SV' THEN 'USD'
+				   ELSE 'USD'
+			   END AS [Currency],
                0,
                GETDATE(),
                NULL,
                NULL,
                NULL,
                NULL,
-               PIC.PartNumber,
+               NULL,
                NULL,
                NULL,
                NULL,
@@ -689,21 +546,17 @@ BEGIN
                NULL,
                NULL,
                1,
-               PIC.IsDry,
-			   PIC.ParcelCode
-        FROM @Pieces PIC
-            INNER JOIN #GuideTable GTB
-                ON PIC.Guide_Serie = GTB.Guide_Serie
-                   AND PIC.Guide_Number = GTB.Guide_Number;
+               GTB.Pieces_Dry,
+			   NULL
+        FROM  #GuideTable GTB
 
 
         DECLARE @idcustomer INT =
                 (
-                    SELECT TOP 1
-                           CustomerID
+                    SELECT TOP 1 vpc.CustomerID
                     FROM #GuideTable
-                        INNER JOIN dbo.VisitPointClient WITH (NOLOCK)
-                            ON CodeOfReference = Sender_ID
+                        INNER JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
+                            ON vpc.CodeOfReference = Sender_ID
                 );
 
         IF @idcustomer <> -1
@@ -764,7 +617,7 @@ BEGIN
                                                                         @CalculateTaxes = 'true',
                                                                         @IdModule = 33,
                                                                         @SetUpdate = 'true',
-                                                                        @Token = 'SetServiceRequest',
+                                                                        @Token = 'SetServiceRequest_AP',
                                                                         @IsReturn = 'false';
                 SET @count = @count + 1;
 
@@ -772,8 +625,6 @@ BEGIN
             END;
         END;
 		
-		-- Proceso para registro de tiempo estimado de entrega
-		-- Andrés Ruíz - 2023-04-18
 		UPDATE
 			[DO]
 		SET
@@ -820,7 +671,6 @@ BEGIN
     --END
     END TRY
     BEGIN CATCH
-
 		
         SELECT 0 AS 'StatusCode',
                ERROR_MESSAGE() AS 'Description',
@@ -856,78 +706,17 @@ BEGIN
     BEGIN
         COMMIT TRANSACTION;
 
-			---Nuevos datos para consumir nuevo formato guía
-  	DECLARE @FranchiseVisitPointTypeId INT = 
-	(
-		SELECT 
-			TOP (1) 
-				[KOVPC].[IdKindOfVPClient] 
-		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
-		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  --COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @ExpressVisitPointTypeId INT = 
-	(
-		SELECT 
-			TOP (1) 
-				[KOVPC].[IdKindOfVPClient] 
-		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
-		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @IndividualWebSys INT =
-	(
-		SELECT 
-			TOP 1
-				[CS].[SysIdSystem]
-		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web' -- COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @ExpressWebSys INT =
-	(
-		SELECT 
-			TOP 1
-				[CS].[SysIdSystem]
-		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @CorporateWebSys INT =
-	(
-		SELECT 
-			TOP 1
-				[CS].[SysIdSystem]
-		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @ParserSys INT =
-	(
-		SELECT 
-			TOP 1
-				[CS].[SysIdSystem]
-		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-		WHERE
-			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI 
-	)
+		DECLARE @ParserSys INT =
+		(
+			SELECT TOP 1 [CS].[SysIdSystem]
+			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			WHERE [CS].[SysNameSystem] = 'Aeropost Service' 
+		)
 
-
-  --Fin Nuevos datos para consumir nuevo formato guía
-
-		-- SE AGREGO EL PAIS --CRISTIAN SUAZO
 		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
-
 
         SELECT 1 AS 'StatusCode',
                'Registros guardados correctamente' AS 'Description',
-               --@IdTransaction AS 'NumTransferID'
                @ManifestNumber AS 'NumTransferID';
         SELECT Manifest_Serie AS 'ManifestSerie',
                Manifest_Number AS 'ManifestNumber'
@@ -944,7 +733,6 @@ BEGIN
                    FROM [DeliveryBackOffice].[dbo].[HubLogistics]
                    WHERE IdHubLogistic = D.HubDestinationId
                ) AS 'HubDestination',
-               -- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                (
                    SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID, D.IdCustomer)
                ) AS 'Attempts',
@@ -954,7 +742,6 @@ BEGIN
 					ELSE 'E'
 					END) 'Priority',
 
-			  -- IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
 			   CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			   (CASE
 					WHEN 
@@ -967,7 +754,6 @@ BEGIN
 						''
 					END
 				)'Icon'
-        --FIN MODIFICACIÓN
 
 		, D.TypeService  'TypeService',
 		(FORMAT(ISNULL([D].[DeliveryETA], DATEADD(DAY,5,GETDATE())), 'ddMM'))'DeliveryETA',
@@ -983,12 +769,6 @@ BEGIN
 
 			(
 					CASE
-						WHEN vpct.[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
-						WHEN vpct.[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
-						WHEN [vpori].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
-						WHEN D.[CatSystemId] = @IndividualWebSys THEN 'WEB'
-						WHEN D.[CatSystemId] = @ExpressWebSys THEN 'EXC'
-						WHEN D.[CatSystemId] = @CorporateWebSys THEN 'COR'
 						WHEN D.[CatSystemId] = @ParserSys THEN 'PAR'
 						WHEN D.[CatSystemId] IS NULL THEN 'API'
 						ELSE 'API'
