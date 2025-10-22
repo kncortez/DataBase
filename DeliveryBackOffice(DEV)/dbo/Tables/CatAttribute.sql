@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatAttribute] (
-    [IdCatAttribute] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatAttribute] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AttributeName]  NVARCHAR (50) NOT NULL,
     [RowStatus]      BIT           NOT NULL,
     [TokenCreated]   NVARCHAR (50) NOT NULL,

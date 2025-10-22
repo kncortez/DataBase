@@ -1,5 +1,5 @@
-CREATE TABLE [dbo].[CatSalesChannel] (
-    [IdSalesChannel] INT           IDENTITY (1, 1) NOT NULL,
+﻿CREATE TABLE [dbo].[CatSalesChannel] (
+    [IdSalesChannel] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Description]    NVARCHAR (50) NOT NULL,
     [TokenCreated]   NVARCHAR (50) NOT NULL,
     [DateCreated]    DATETIME      NOT NULL,
@@ -8,6 +8,8 @@ CREATE TABLE [dbo].[CatSalesChannel] (
     [RowStatus]      BIT           NOT NULL,
     CONSTRAINT [PK_CatSalesChannel] PRIMARY KEY CLUSTERED ([IdSalesChannel] ASC)
 );
+
+
 
 
 GO

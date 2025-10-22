@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatLinehaulStatus] (
-    [IdCatLinehaulStatus] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatLinehaulStatus] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [StatusName]          NVARCHAR (50)  NOT NULL,
     [StatusDescription]   NVARCHAR (200) NULL,
     [RowStatus]           BIT            DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]         DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdCatLinehaulStatus] ASC)
 );
+
+
 
 
 

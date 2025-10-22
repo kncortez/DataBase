@@ -117,3 +117,14 @@ BEGIN
              , ERROR_NUMBER();
     END CATCH;
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportCreateSttlement] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportCreateSttlement] TO [cvaldes]
+    AS [dbo];
+

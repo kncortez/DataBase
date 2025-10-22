@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatRouteCluster] (
-    [IdCatRouteCluster]   BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdCatRouteCluster]   BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ClusterName]         NVARCHAR (50)  NOT NULL,
     [ClusterDescription]  NVARCHAR (200) NOT NULL,
     [ClusterAbbreviation] NVARCHAR (10)  NOT NULL,
@@ -10,6 +10,8 @@
     [TokenUpdated]        NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdCatRouteCluster] ASC)
 );
+
+
 
 
 GO

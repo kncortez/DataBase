@@ -24,7 +24,7 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    DECLARE @jsonResult NVARCHAR(MAX);
+ --   DECLARE @jsonResult NVARCHAR(MAX);  
 
     DECLARE @IdUser BIGINT =
             (
@@ -70,7 +70,7 @@ BEGIN
 		ON prv.IdProvince = twn.IdProvince
 	INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
 		ON ua.IdCityPlace = ctp.IdCityPlace
-		   AND ctp.CityPlaceRowStatus = 'true'
+  --   AND ctp.CityPlaceRowStatus = 'true'  
 	LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 		ON vp.CodeOfReference = ua.CodeOfReference
 	LEFT JOIN dbo.Settlement st WITH (NOLOCK)
@@ -88,7 +88,7 @@ BEGIN
               ua.UadIdAddress = @IdAddress
               OR @IdAddress = -1
           )
+     AND ctp.CityPlaceRowStatus = 'true'  
 	ORDER BY ua.UadFavorite DESC;
 END
-
 

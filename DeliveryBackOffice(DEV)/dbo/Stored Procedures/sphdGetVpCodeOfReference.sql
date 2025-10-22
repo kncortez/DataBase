@@ -64,6 +64,11 @@ BEGIN
             SET @VpCodeOfReference = 341648 --Por definir
         END
 
-	SELECT @VpCodeOfReference VpCodeOfReference, @StationId StationId,@StationName StationName,@StationDetail StationDetail
- 	   
+        IF @StationType = 1 
+           AND @Country = 'SV'
+        BEGIN
+            SET @VpCodeOfReference = 1378846 --Por definir
+        END
+
+        SELECT @VpCodeOfReference VpCodeOfReference, @StationId StationId,@StationName StationName,@StationDetail StationDetail
 END

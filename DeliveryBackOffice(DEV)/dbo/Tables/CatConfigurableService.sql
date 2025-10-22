@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatConfigurableService] (
-    [IdCatConfigurableService]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatConfigurableService]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatConfigurableServiceName]        NVARCHAR (50)  NOT NULL,
     [CatConfigurableServiceDescription] NVARCHAR (200) NULL,
     [RowStatus]                         BIT            NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]                       DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdCatConfigurableService] ASC)
 );
+
+
 
 
 GO

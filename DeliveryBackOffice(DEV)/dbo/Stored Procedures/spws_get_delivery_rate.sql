@@ -26,6 +26,18 @@
 -- Author:		<Walter Orozco>
 -- Create date: <2024-06-21>
 -- Description:	<Se agrega configuracion para multipais y multimoneda en EXC>
+-- Create date: <2025-04-10>
+-- Description:	<Mejoras para multipais.>
+-- =============================================
+-- =============================================
+-- Author:		<Brandon,Pedroza>
+-- Create date: <2025-03-21>
+-- Description:	<Cotizador - Se agrega configuracion para tarifas locales por medio de coberturas>
+-- =============================================
+-- =============================================
+-- Author:		<Cristian Azurdia>
+-- Create date: <2025-05-12>
+-- Description:	<Id Segmen multipais, asi como funcion fnt_IVA_Calculator>
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @CodApp AS NVARCHAR(50) = ''
@@ -191,7 +203,7 @@ BEGIN
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Promo Paquetequiero'
+                WHERE RH.RheName = 'Tarifario de servicio interfer'
                       AND CountryId = @Country
             );
     DECLARE @NewRateGeneralDiscount INT =
@@ -275,9 +287,10 @@ BEGIN
 
     DECLARE @DefaultCurrency AS INT =
             (
-                SELECT IdCatCurrencyCOD
-                FROM DeliveryBackOffice.dbo.CatCurrencyCOD
-                WHERE CodeISO = 'GTQ'
+                SELECT CCC.IdCatCurrencyCOD FROM DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
+				WHERE DC.Currency_IdCountry = @Country AND DC.DefaultPerCountry = 1
             );
 
 
@@ -474,9 +487,6 @@ BEGIN
               AND CSPSM.SalesPackageStatusName = 'Activa'
               AND SC.CatTypeSubscriptionId = ISNULL(@TypeSubscriptionId, 2)
         ORDER BY SC.ExpirationDate ASC;
-
-
-
 
 
         IF (ISNULL(@CustomerHasActiveSubscription, 0) > 0)
@@ -876,76 +886,50 @@ BEGIN
     END;
     DECLARE @IdSegment INT;
 
-    -- HeaderCodes Iguales - LOC
-    IF (@HeaderCodeSource = @HeaderCodeDestiny)
+    -- HeaderCodes  - revisar tabla
+    IF (@CustomerType != 1)
     BEGIN
-        IF @Country = 'HN'
-        BEGIN
-            PRINT @Country;
 
-            SELECT TOP 1
-                   @IdSegment = sg.CrsId
-            FROM dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsShortName = 'LOH';
+        PRINT '@HeaderCodeSource';
+        PRINT @HeaderCodeSource;
 
-        END;
-        ELSE
-        BEGIN
-            SELECT TOP 1
-                   @IdSegment = sg.CrsId
-            FROM dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsShortName = 'LOC';
-        END;
+        PRINT '@HeaderCodeDestiny';
+        PRINT @HeaderCodeDestiny;
+        SELECT TOP 1
+               @IdSegment = RTC.SegmentTypeId
+        FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)
+                ON RTC.TownshipSourceId = TwnSource.IdTownship
+            INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)
+                ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
+        WHERE RTC.RateId = @IdRate
+              AND (TwnSource.HeaderCode = @HeaderCodeSource)
+              AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+              AND RTC.RowStatus = 1;
+
+        PRINT 'segment';
+        PRINT @IdSegment;
     END;
-    -- HeaderCodes diferentes - revisar tabla
     ELSE
     BEGIN
-        IF (@CustomerType != 1)
-        BEGIN
-
-            PRINT '@HeaderCodeSource';
-            PRINT @HeaderCodeSource;
-
-            PRINT '@HeaderCodeDestiny';
-            PRINT @HeaderCodeDestiny;
-            SELECT TOP 1
-                   @IdSegment = RTC.SegmentTypeId
-            FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)
-                    ON RTC.TownshipSourceId = TwnSource.IdTownship
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)
-                    ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
-            WHERE RTC.RateId = @IdRate
-                  AND (TwnSource.HeaderCode = @HeaderCodeSource)
-                  AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
-                  AND RTC.RowStatus = 1;
-
-            PRINT 'segment';
-            PRINT @IdSegment;
-        END;
-        ELSE
-        BEGIN
-            SELECT TOP 1
-                   @IdSegment = CTC.SegmentTypeId
-            FROM [DeliveryBackOffice].[dbo].[CorporateTownshipCoverage] CTC WITH (NOLOCK)
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]        TwnSource WITH (NOLOCK)
-                    ON CTC.TownshipSourceId = TwnSource.IdTownship
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]        TwnDestiny WITH (NOLOCK)
-                    ON CTC.TownshipDestinyId = TwnDestiny.IdTownship
-            WHERE (TwnSource.HeaderCode = @HeaderCodeSource)
-                  AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
-                  AND CTC.RowStatus = 1;
-        END;
-
+        SELECT TOP 1
+               @IdSegment = CTC.SegmentTypeId
+        FROM [DeliveryBackOffice].[dbo].[CorporateTownshipCoverage] CTC WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[Township]        TwnSource WITH (NOLOCK)
+                ON CTC.TownshipSourceId = TwnSource.IdTownship
+            INNER JOIN [DeliveryBackOffice].[dbo].[Township]        TwnDestiny WITH (NOLOCK)
+                ON CTC.TownshipDestinyId = TwnDestiny.IdTownship
+        WHERE (TwnSource.HeaderCode = @HeaderCodeSource)
+              AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+              AND CTC.RowStatus = 1;
     END;
 
     IF @IdSegment IS NULL -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
     BEGIN
-
         SELECT TOP 1
                @IdSegment = sg.CrsId
-        FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-        WHERE sg.CrsShortName = 'FOR';
+          FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
+         WHERE sg.CrsShortName = 'FOR';
     END;
 
     --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
@@ -1144,7 +1128,6 @@ BEGIN
     PRINT '@IdRateGroup';
     PRINT @IdRateGroup;
 
-
     IF @IdTypeRate = 1 -- tarifas estandar
     BEGIN
         --print 'aqui van las tarifas standar'
@@ -1338,9 +1321,6 @@ BEGIN
         --ELSE
         SET @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded); -- todos los demas clientes se les cobra por pieza
 
-
-        --
-        --print @IdRateGroup
         INSERT INTO @TempRate
         SELECT ISNULL(cr.Name, '')                                                       TypeRate
              , ISNULL(sg.CrsShortName, '')                                               Segment
@@ -1434,37 +1414,25 @@ BEGIN
                )
             BEGIN
                 -- Cálculo de segmento - nuevas tarifas
-                -- HeaderCodes Iguales - LOC
-                IF (@HeaderCodeSource = @HeaderCodeDestiny)
-                BEGIN
-                    SELECT TOP 1
-                           @IdSegment = sg.CrsId
-                    FROM dbo.CatRateSegment sg WITH (NOLOCK)
-                    WHERE sg.CrsShortName = IIF(@Country ='HN','LOH','LOC');
-                END;
-                -- HeaderCodes diferentes - revisar tabla
-                ELSE
-                BEGIN
-                    SELECT TOP 1
-                           @IdSegment = RTC.SegmentTypeId
-                    FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
-                        INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)
-                            ON RTC.TownshipSourceId = TwnSource.IdTownship
-                        INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)
-                            ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
-                    WHERE RTC.RateId = @IdRate
-                          AND (TwnSource.HeaderCode = @HeaderCodeSource)
-                          AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
-                          AND RTC.RowStatus = 1;
-
-                END;
+                -- HeaderCodes  - revisar tabla
+                SELECT TOP 1
+                       @IdSegment = RTC.SegmentTypeId
+                FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)
+                        ON RTC.TownshipSourceId = TwnSource.IdTownship
+                    INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)
+                        ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
+                WHERE RTC.RateId = @IdRate
+                      AND (TwnSource.HeaderCode = @HeaderCodeSource)
+                      AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+                      AND RTC.RowStatus = 1;
 
                 IF (@IdSegment IS NULL) -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
                 BEGIN
-                    SELECT TOP 1
-                           @IdSegment = sg.CrsId
-                    FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-                    WHERE sg.CrsShortName = 'FOR';
+                     SELECT TOP 1
+                            @IdSegment = sg.CrsId
+                       FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
+                      WHERE sg.CrsShortName = 'FOR';
                 END;
 
                 -- Cálculo de precios
@@ -2519,7 +2487,7 @@ BEGIN
                                                                DECIMAL(12, 2)
                                                              , dbo.fnt_Iva_Calculator(
                                                                                          @CalculateTaxes
-                                                                                       , 'GT'
+                                                                                       , @Country
                                                                                        , tr.BaseRate
                                                                                          + tr.IrregularPieceRate
                                                                                        , 'false'
@@ -2529,7 +2497,7 @@ BEGIN
                                                                  DECIMAL(12, 2)
                                                                , (dbo.fnt_Iva_Calculator(
                                                                                             @CalculateTaxes
-                                                                                          , 'GT'
+                                                                                          , @Country
                                                                                           , (tr.Discount * -1)
                                                                                           , 'false'
                                                                                         )
@@ -2539,7 +2507,7 @@ BEGIN
                                                                  DECIMAL(12, 2)
                                                                , dbo.fnt_Iva_Calculator(
                                                                                            @CalculateTaxes
-                                                                                         , 'GT'
+                                                                                         , @Country
                                                                                          , tr.FragilRate
                                                                                          , 'false'
                                                                                        )
@@ -2548,7 +2516,7 @@ BEGIN
                                                                  DECIMAL(12, 2)
                                                                , dbo.fnt_Iva_Calculator(
                                                                                            @CalculateTaxes
-                                                                                         , 'GT'
+                                                                                         , @Country
                                                                                          , tr.CollectedRate
                                                                                          , 'false'
                                                                                        )
@@ -2559,7 +2527,7 @@ BEGIN
                                                                             DECIMAL(12, 2)
                                                                           , dbo.fnt_Iva_Calculator(
                                                                                                       @CalculateTaxes
-                                                                                                    , 'GT'
+                                                                                                    , @Country
                                                                                                     , tr.InsuranceRate
                                                                                                     , 'false'
                                                                                                   )
@@ -2569,7 +2537,7 @@ BEGIN
                                                                  VARCHAR(20)
                                                                , dbo.fnt_Iva_Calculator(
                                                                                            @CalculateTaxes
-                                                                                         , 'GT'
+                                                                                         , @Country
                                                                                          , tr.CreditCardRate
                                                                                          , 'false'
                                                                                        )
@@ -2580,7 +2548,7 @@ BEGIN
                                                                             DECIMAL(12, 2)
                                                                           , dbo.fnt_Iva_Calculator(
                                                                                                       @CalculateTaxes
-                                                                                                    , 'GT'
+                                                                                                    , @Country
                                                                                                     , tr.OverWeightRate
                                                                                                     , 'false'
                                                                                                   )
@@ -2590,7 +2558,7 @@ BEGIN
                                                                  DECIMAL(12, 2)
                                                                , dbo.fnt_Iva_Calculator(
                                                                                            @CalculateTaxes
-                                                                                         , 'GT'
+                                                                                         , @Country
                                                                                          , (CONVERT(
                                                                                                        DECIMAL(12, 2)
                                                                                                      , tr.BaseRate
@@ -2635,7 +2603,7 @@ BEGIN
                                                                DECIMAL(12, 2)
                                                              , dbo.fnt_Iva_Calculator(
                                                                                          @CalculateTaxes
-                                                                                       , 'GT'
+                                                                                       , @Country
                                                                                        , tr.BaseRate
                                                                                          + tr.IrregularPieceRate
                                                                                        , 'false'
@@ -2650,7 +2618,7 @@ BEGIN
                                                                      DECIMAL(12, 2)
                                                                    , dbo.fnt_Iva_Calculator(
                                                                                                @CalculateTaxes
-                                                                                             , 'GT'
+                                                                                             , @Country
                                                                                              , tr.FragilRate
                                                                                              , 'false'
                                                                                            )
@@ -2665,7 +2633,7 @@ BEGIN
                                                                      DECIMAL(12, 2)
                                                                    , dbo.fnt_Iva_Calculator(
                                                                                                @CalculateTaxes
-                                                                                             , 'GT'
+                                                                                             , @Country
                                                                                              , tr.InsuranceRate
                                                                                              , 'false'
                                                                                            )
@@ -2680,7 +2648,7 @@ BEGIN
                                                                      DECIMAL(12, 2)
                                                                    , dbo.fnt_Iva_Calculator(
                                                                                                @CalculateTaxes
-                                                                                             , 'GT'
+                                                                                             , @Country
                                                                                              , tr.CollectedRate
                                                                                              , 'false'
                                                                                            )
@@ -2695,7 +2663,7 @@ BEGIN
                                                                      DECIMAL(12, 2)
                                                                    , dbo.fnt_Iva_Calculator(
                                                                                                @CalculateTaxes
-                                                                                             , 'GT'
+                                                                                             , @Country
                                                                                              , tr.OverWeightRate
                                                                                              , 'false'
                                                                                            )
@@ -2708,7 +2676,7 @@ BEGIN
                                                           VARCHAR(20)
                                                         , dbo.fnt_Iva_Calculator(
                                                                                     @CalculateTaxes
-                                                                                  , 'GT'
+                                                                                  , @Country
                                                                                   , tr.CreditCardRate
                                                                                   , 'false'
                                                                                 )
@@ -2722,7 +2690,7 @@ BEGIN
                                                                      DECIMAL(12, 2)
                                                                    , (dbo.fnt_Iva_Calculator(
                                                                                                 @CalculateTaxes
-                                                                                              , 'GT'
+                                                                                              , @Country
                                                                                               , (tr.Discount * -1)
                                                                                               , 'false'
                                                                                             )
@@ -2733,7 +2701,7 @@ BEGIN
                                        + IIF((ISNULL(
                                                         dbo.fnt_Iva_Calculator(
                                                                                   @CalculateTaxes
-                                                                                , 'GT'
+                                                                                , @Country
                                                                                 , (CONVERT(DECIMAL(12, 2), tr.BaseRate)
                                                                                    - CONVERT(
                                                                                                 DECIMAL(12, 2)
@@ -2776,7 +2744,7 @@ BEGIN
                                                                      DECIMAL(12, 2)
                                                                    , dbo.fnt_Iva_Calculator(
                                                                                                @CalculateTaxes
-                                                                                             , 'GT'
+                                                                                             , @Country
                                                                                              , (CONVERT(
                                                                                                            DECIMAL(12, 2)
                                                                                                          , tr.BaseRate
@@ -2849,18 +2817,18 @@ BEGIN
              , IIF(@PriceWithCreditCard = 1
                  , (tr.BaseRate - tr.Discount + tr.IrregularPieceRate + tr.CreditCardRate)
                  , (tr.BaseRate - tr.Discount + tr.IrregularPieceRate))                      AS Price --  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.BaseRate, 'false')           AS BaseRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', (tr.Discount * -1), 'false')    AS DiscountValue
+             , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.BaseRate, 'false')           AS BaseRate
+             , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, (tr.Discount * -1), 'false')    AS DiscountValue
              , tr.DiscountName
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.FragilRate, 'false')         AS FragilRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.CollectedRate, 'false')      AS CollectedRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.InsuranceRate, 'false')      AS InsuranceRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.OverWeightRate, 'false')     AS OverWeightRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.IrregularPieceRate, 'false') AS IrregularPieceRate
-             , dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.CreditCardRate, 'false')     AS CreditCardRate
+             , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.FragilRate, 'false')         AS FragilRate
+             , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.CollectedRate, 'false')      AS CollectedRate
+             , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.InsuranceRate, 'false')      AS InsuranceRate
+             , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.OverWeightRate, 'false')     AS OverWeightRate
+             , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.IrregularPieceRate, 'false') AS IrregularPieceRate
+             , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.CreditCardRate, 'false')     AS CreditCardRate
              , dbo.fnt_Iva_Calculator(
                                          @CalculateTaxes
-                                       , 'GT'
+                                       , @Country
                                        , (tr.BaseRate - tr.Discount + tr.FragilRate + tr.CollectedRate
                                           + tr.InsuranceRate + tr.CreditCardRate + tr.OverWeightRate
                                           + tr.IrregularPieceRate

@@ -11,11 +11,19 @@
 -- Create date: <2023-03-10>
 -- Description:	<Al procesar guías en proceso de recolección desde la CourierApp, si durante el proceso de verificación de montos se detecta una guía en estado terminal, debe impedir el proceso indicando las guías y los estados de estas.>
 -- =============================================
+-- =============================================  
+-- Mofified:    <Brandon, Pedroza>  
+-- Create date: <2025-01-13>  
+-- Description: <Contenerizacion guias - se agrega parametro para buscar guias de un contenedor asociado o referencia>  
+-- =============================================  
 CREATE PROCEDURE [dbo].[spws_get_validate_guides_pickup]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD138515,FD138513,FD13852,FD138514,FD138545,FD135539',
     @IdPickup BIGINT = 120,
-    @Token NVARCHAR(50)
+    @Token NVARCHAR(50),
+    @ReferencesGuide TblReferencesList READONLY,  
+	@ContainerReferences TblContainerList READONLY,  
+	@IdCountry NVARCHAR(2)= 'GT' 
 AS
 BEGIN
 
@@ -38,7 +46,11 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#ErrorGuides', 'U') IS NOT NULL
             DROP TABLE #ErrorGuides;
 
+        DECLARE @StatusContainerPickUp INT;
 
+	    SET @StatusContainerPickUp = (SELECT IdCatStatus
+									    FROM CatShipContainerStatus WITH(NOLOCK)
+									    WHERE [Name]= 'Creado');
 
 			 CREATE TABLE #listGuides
                 (
@@ -48,18 +60,63 @@ BEGIN
 					charinde NVARCHAR(10),
 					Item INT
                 );
-
-				INSERT INTO #listGuides
-				(
-				    ItemSerie,
-				    ItemNumber,
-				    ItemPiece,
-					charinde,
-					Item
-				)
+            -- BUSCAR GUIAS POR REFERENCIA Y CONTENEDOR  
+        WITH CTE_Ranked AS (
+		        SELECT  DOP.GuideSerie, 
+			            DOP.GuideNumber, 
+			            DOP.NoPiece,
+			            DO.Ticket_Number,
+			            ROW_NUMBER() OVER (PARTITION BY DO.Ticket_Number ORDER BY DOP.GuideSerie DESC, DOP.GuideNumber DESC) AS RowNum,
+			            DO.DateCreated
+		        FROM DeliveryOrder DO WITH (NOLOCK)
+		        INNER JOIN DeliveryOrderPiece DOP WITH(NOLOCK)
+			        ON DO.Guide_Serie = DOP.GuideSerie
+			        AND DO.Guide_Number = DOP.GuideNumber
+		        WHERE DO.Ticket_Number IN (SELECT ReferenceGuide FROM @ReferencesGuide WHERE ReferenceGuide NOT IN ('','0'))
+			        AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry
+	    )
+		INSERT INTO #listGuides
+		(
+			ItemSerie,
+			ItemNumber,
+			ItemPiece,
+			charinde,
+			Item
+		)
+       SELECT   GuideSerie, 
+		        GuideNumber, 
+		        NoPiece,
+		        '',
+		        1
+	    FROM CTE_Ranked
+	    WHERE RowNum = 1
+	    UNION
+	    SELECT  DOP.GuideSerie, 
+			    DOP.GuideNumber, 
+			    DOP.NoPiece, 
+			    '',
+			    1
+	    FROM ShippingContainer CT WITH (NOLOCK)
+	    INNER JOIN ShippingContainerDetail CTD WITH (NOLOCK)
+		    ON CT.IdContainer = CTD.IdContainer
+	    INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
+		    ON CTD.GuideSerie = DOP.GuideSerie
+		    AND CTD.GuideNumber = DOP.GuideNumber
+	    WHERE CT.IdStatusContainer = @StatusContainerPickUp
+		    AND CTD.RowStatus = 1
+		    AND CT.ReferenceContainer IN (SELECT ContainerReference FROM  @ContainerReferences)
+	    UNION
         SELECT SUBSTRING(Item, 1, 2) ItemSerie,
                SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
-               SUBSTRING(Item, CHARINDEX('-', Item), LEN(Item)) ItemPiece,
+               ISNULL(   (CASE
+										WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))) > 1 THEN
+											1
+										ELSE
+											SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))
+									END
+									),
+									0
+								) ItemPiece,
                CHARINDEX('-', Item) charinde,
                LEN(Item) len
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');

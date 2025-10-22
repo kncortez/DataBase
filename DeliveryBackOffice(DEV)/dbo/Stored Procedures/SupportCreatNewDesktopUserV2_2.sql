@@ -1,11 +1,17 @@
+﻿
 -- =============================================
 -- Author:        <Bidcar Herrera>
 -- Create date:   <2024-05-15>
 -- Description:   <Crear un nuevo usuario en Hermes Desktop, debe estar previamente creado en Denarius considerando multipais>
 -- =============================================
+-- Author:      <Cristian Azurdia>
+-- Create date: <2025-04-22>
+-- Description: <Actualizacion para manejo de multipais en roles y estaciones>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[SupportCreatNewDesktopUserV2]
 (
-  @Code INT
+  @Code NVARCHAR(20)
  ,@User NVARCHAR(50)
  ,@Token NVARCHAR(50)
  ,@rol INT
@@ -15,14 +21,28 @@ AS
 BEGIN
     DECLARE @IdCountry NVARCHAR(2) = 'GT',
             @IDPerson INT = 0,
-            @IdRegisterUser INT = 0;
+            @IdRegisterUser INT = 0,
+            @Demonym NVARCHAR(20),
+            @CodeArea NVARCHAR(4),
+            @Currency NVARCHAR(4);
 
     BEGIN TRY
         BEGIN TRANSACTION;
 
         SELECT @IdCountry= CountryId 
-          FROM dbo.CatStation
-         WHERE IdStation = @idStation
+        FROM dbo.CatStation
+        WHERE IdStation = @idStation
+
+        SELECT @Demonym = CountryNationality
+        FROM dbo.CatCountry
+        WHERE IdCountry= @IdCountry
+
+        SELECT @Currency = ccc.CodeISO
+         FROM DeliveryCurrency dc
+        INNER JOIN CatCurrencyCOD ccc
+        ON ccc.IdCatCurrencyCOD = dc.IdCurrencyCOD
+        WHERE Currency_IdCountry = @IdCountry
+          and DefaultPerCountry = 1
 
         INSERT INTO DeliveryBackOffice.dbo.Person
         (
@@ -45,7 +65,7 @@ BEGIN
              , emp.Sex
              , CONVERT(DATE, emp.DateBrith)
              , ISNULL(emp.DPI, '')
-             , IIF(@IdCountry = 'HN','Hondureño','Guatemalteco')
+             , @Demonym 
              , 1
              , @Token
              , GETDATE()
@@ -53,7 +73,7 @@ BEGIN
              , NULL
              , @IdCountry
           FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee emp
-         WHERE emp.CodeEmployee =  CONVERT(NVARCHAR(20), @Code);
+         WHERE emp.CodeEmployee =  @Code;
 
         SELECT @IDPerson = SCOPE_IDENTITY();
 
@@ -94,7 +114,7 @@ BEGIN
              , GETDATE() + 100
              , 'ES'
              , 'DESKTOP'
-             , IIF(@IdCountry = 'GT','QTZ','HNL')
+             , @Currency
              , NULL
              , NULL
              , 1
@@ -102,7 +122,7 @@ BEGIN
              , GETDATE()
              , NULL
              , NULL
-             , IIF(@IdCountry='GT','+502','+504')
+             , @CodeArea
              , ''
              , NULL --UrlFacebook
              , NULL --UrlInstagram
@@ -113,7 +133,7 @@ BEGIN
              , NULL --VerifiedPhone
              , NULL --ChangePassword
         FROM DenariusUser_Dev.dbo.LGN_User usr
-       WHERE usr.USR_IdUser = @Code
+       WHERE usr.USR_IdUser =   @Code
          AND usr.USR_Username = @User;
 
          SET @IdRegisterUser = SCOPE_IDENTITY();
@@ -206,3 +226,20 @@ BEGIN
              , ERROR_STATE();
     END CATCH;
 END;
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportCreatNewDesktopUserV2] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportCreatNewDesktopUserV2] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportCreatNewDesktopUserV2] TO [cvaldes]
+    AS [dbo];
+

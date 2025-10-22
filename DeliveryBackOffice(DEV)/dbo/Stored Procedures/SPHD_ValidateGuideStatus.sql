@@ -17,6 +17,10 @@
 -- Create date: <2024-06-24>
 -- Description:	<Se agrega validacion para saber si la guia es domestica o internacional>
 -- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <2025-02-19>
+-- Description:	<Contenerizacion / Referencias - Devuelve el ticketnumber de la guia consultada>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHD_ValidateGuideStatus] @Guide AS NVARCHAR(20),
 	@IdCountry AS NVARCHAR(2)='GT'
 AS
@@ -180,7 +184,11 @@ BEGIN
 
                 SELECT [Result] = 6,
                        @StatusName 'Status',
-                       CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus'; /* Estados Devuelto*/
+                       CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus', /* Estados Devuelto*/
+					   Ticket_Number 
+					   FROM DeliveryOrder WITH(NOLOCK)
+					   WHERE Guide_Serie = @GuideSerie 
+					   AND Guide_Number = @GuideNumber;
 
             END;
             ELSE
@@ -190,7 +198,11 @@ BEGIN
 				         ELSE
 				         0 END [Result],
                        @StatusName 'Status',
-                       CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus';
+                       CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus',
+					   Ticket_Number 
+					   FROM DeliveryOrder WITH(NOLOCK)
+					   WHERE Guide_Serie = @GuideSerie 
+					   AND Guide_Number = @GuideNumber;
             END;
 
         END;

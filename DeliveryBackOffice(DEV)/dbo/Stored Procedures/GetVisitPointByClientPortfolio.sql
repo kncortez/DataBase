@@ -26,11 +26,12 @@ BEGIN
                 ON rua.RuaIdUser = usr.UsrIdUser
                    AND rua.RuaRowStatus = 1
             INNER JOIN [dbo].Account ac WITH (NOLOCK)
-                ON ac.AccIdAccount = rua.RuaIdAccount
-                   AND ac.AccRowStatus = 1
+                ON ac.AccIdAccount = rua.RuaIdAccount                   
             INNER JOIN VisitPointByUser vp WITH (NOLOCK)
                 ON vp.RegisterUserID = usr.UsrIdUser
         WHERE ac.AccIdAccount = @IdAccount
+		AND vp.RowStatus = 1
+		AND ac.AccRowStatus = 1
     );
 
 		--SET STATISTICS TIME ON; 
@@ -388,13 +389,16 @@ BEGIN
                                                    FROM DeliveryBackOffice.dbo.UserAddress SUB WITH (NOLOCK)
                                                        LEFT JOIN DeliveryBackOffice.dbo.Township tw WITH (NOLOCK)
                                                            ON tw.IdTownship = SUB.UadIdTownship
+														   AND tw.TownshipStatus = 1
                                                        LEFT JOIN DeliveryBackOffice.dbo.Province pr WITH (NOLOCK)
                                                            ON pr.IdProvince = tw.IdProvince
+														   AND pr.ProvinceStatus = 1
                                                        LEFT JOIN DeliveryBackOffice.dbo.Settlement st WITH (NOLOCK)
                                                            ON st.IdSettlement = SUB.UadIdSettlement
-                                                              AND st.SettlementSatus = 1
+                                                              AND st.SettlementSatus = 1															 
                                                        LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)
                                                            ON cdo.IdDeliveryOption = SUB.UadIdDeliveryOption
+														   AND cdo.RowStatus = 1
                                                        LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc WITH (NOLOCK)
                                                            ON dsc.IdSettlement = st.IdSettlement
                                                               AND dsc.RowStatus = 1
@@ -411,11 +415,13 @@ BEGIN
                             FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)
                                 LEFT JOIN DeliveryBackOffice.dbo.UserAddress uad WITH (NOLOCK)
                                     ON uad.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-                                       AND uad.UadRowStatus = 1
+                                       AND uad.UadRowStatus = 1									   
                                 LEFT JOIN DeliveryBackOffice.dbo.DeliveryFavCOD dfc WITH (NOLOCK)
                                     ON dfc.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
+									AND dfc.StatusFavCOD = 1
                                 LEFT JOIN DeliveryBackOffice.dbo.BillingProfile bp WITH (NOLOCK)
                                     ON bp.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
+									AND bp.BlpRowStatus = 1
                             WHERE vcp.RowStatus = 1
                                   AND vcp.VisitPointId = @VisitPointId
                             FOR XML PATH(''), TYPE

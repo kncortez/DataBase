@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryAttempt] (
-    [ID]                           BIGINT        IDENTITY (1, 1) NOT NULL,
+    [ID]                           BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Guide_Serie]                  NVARCHAR (2)  NOT NULL,
     [Guide_Number]                 INT           NOT NULL,
     [Dry]                          BIT           NOT NULL,
@@ -30,6 +30,10 @@
     CONSTRAINT [FK_DeliveryAttempt_DeliveryProof] FOREIGN KEY ([ID_Proof]) REFERENCES [dbo].[DeliveryProof] ([ID]),
     CONSTRAINT [FK_DeliveryAttempt_IDCourier] FOREIGN KEY ([ID_Courier]) REFERENCES [dbo].[SenderReceiver] ([ID])
 );
+
+
+
+
 
 
 
@@ -122,4 +126,9 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_Date_Created_ConfirmationOfIncidenceId]
     ON [dbo].[DeliveryAttempt]([Date_Created] ASC, [ConfirmationOfIncidenceId] ASC)
     INCLUDE([Guide_Number], [ID_DeliveryOrderBySettlement]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Guide_Serie_Guide_Number_Date_Created]
+    ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC, [Date_Created] ASC);
 

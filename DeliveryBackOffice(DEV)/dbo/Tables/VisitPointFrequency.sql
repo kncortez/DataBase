@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointFrequency] (
-    [IdVPFrequency]     BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdVPFrequency]     BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [VPConfigurationID] BIGINT        NOT NULL,
     [SeasonID]          INT           NULL,
     [VisitsOnSunday]    TINYINT       NULL,
@@ -20,6 +20,8 @@
     CONSTRAINT [FK_VisitPointFrequency_HubLogistics] FOREIGN KEY ([HubLogisticID]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_VisitPointFrequency_VisitPointConfiguration] FOREIGN KEY ([VPConfigurationID]) REFERENCES [dbo].[VisitPointConfiguration] ([IdVPConfiguration])
 );
+
+
 
 
 

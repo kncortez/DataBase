@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatGeneralLabel] (
-    [IdLabel]          BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdLabel]          BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LabelCode]        NVARCHAR (100) NOT NULL,
     [LabelDescription] NVARCHAR (200) NOT NULL,
     [LanguageId]       INT            NOT NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [PK_CatGeneralLabel] PRIMARY KEY CLUSTERED ([IdLabel] ASC),
     CONSTRAINT [UC_CatGeneralLabel] UNIQUE NONCLUSTERED ([LabelCode] ASC, [LanguageId] ASC)
 );
+
+
 
 
 GO

@@ -49,7 +49,7 @@ BEGIN
 				DateUpdated = GETDATE(), 
 				IsReturn = 1 -- guía retornada en bodega
 				from DeliveryBackOffice.dbo.SettlementByPickup stp
-				join DeliveryBackOffice.dbo.SettlementByPickupDetail spd on stp.Id = spd.SettlementByPickupId
+				inner join DeliveryBackOffice.dbo.SettlementByPickupDetail spd on stp.Id = spd.SettlementByPickupId
 				where stp.SequenceCode = @IdManifest and stp.SubTypeServiceManagmentId = @Subtipe and 
 				spd.GuideNumber = @GuideNumber and spd.GuideSerie = @GuideSerie and spd.NoPiece = @NoPiece 
 
@@ -130,7 +130,3 @@ BEGIN
 				@Amount AS 'Amount',
 				0 AS 'SubStatusCode'
 END
-
-
-
-

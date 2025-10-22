@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AccountingClosuresDetail] (
-    [IdAccountingClosuresDetail] INT            IDENTITY (1, 1) NOT NULL,
+    [IdAccountingClosuresDetail] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountingClosuresHeaderId] INT            NOT NULL,
     [GuideSerie]                 NVARCHAR (2)   NULL,
     [GuideNumber]                INT            NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_AccountingClosuresDetail_AccountingClosuresHeader] FOREIGN KEY ([AccountingClosuresHeaderId]) REFERENCES [dbo].[AccountingClosuresHeader] ([IdAccountingClosuresHeader]),
     CONSTRAINT [FK_AccountingClosuresDetail_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 

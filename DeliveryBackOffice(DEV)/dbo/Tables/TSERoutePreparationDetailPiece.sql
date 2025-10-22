@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TSERoutePreparationDetailPiece] (
-    [IdTSERoutePreparationDetailPiece] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdTSERoutePreparationDetailPiece] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TSERoutePreparationDetailId]      INT           NOT NULL,
     [PieceNumber]                      INT           NOT NULL,
     [RowStatus]                        BIT           DEFAULT ((1)) NOT NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [FK_TSERoutePreparationDetailPiece_TSERoutePreparationDetail] FOREIGN KEY ([TSERoutePreparationDetailId]) REFERENCES [dbo].[TSERoutePreparationDetail] ([IDTSERoutePreparationDetail]),
     UNIQUE NONCLUSTERED ([TSERoutePreparationDetailId] ASC, [PieceNumber] ASC)
 );
+
+
 
 
 GO

@@ -41,3 +41,20 @@ BEGIN
     ELSE
         SELECT 'esto ya existe';
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[SupportInsertSalesAdvisorCode] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[SupportInsertSalesAdvisorCode] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[SupportInsertSalesAdvisorCode] TO [cvaldes]
+    AS [dbo];
+

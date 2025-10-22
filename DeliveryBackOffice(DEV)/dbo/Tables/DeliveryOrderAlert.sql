@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderAlert] (
-    [IdDeliveryOrderAlert] INT            IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryOrderAlert] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]           VARCHAR (2)    NULL,
     [GuideNumber]          INT            NULL,
     [AlertDescription]     NVARCHAR (200) NOT NULL,
@@ -16,6 +16,8 @@
     CONSTRAINT [FK_DeliveryOrderAlert_TypeAlertId] FOREIGN KEY ([AlertTypeId]) REFERENCES [dbo].[CatTypeAlert] ([IdCatTypeAlert]),
     CONSTRAINT [FK_DOA_ServiceManagement] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement])
 );
+
+
 
 
 

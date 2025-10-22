@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeOfImage] (
-    [IdTypeOfImage]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdTypeOfImage]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TypeOfImageName]        NVARCHAR (50)  NOT NULL,
     [TypeOfImageDescription] NVARCHAR (200) NULL,
     [RowStatus]              BIT            DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [DateUpdated]            DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdTypeOfImage] ASC)
 );
+
+
 
 
 GO

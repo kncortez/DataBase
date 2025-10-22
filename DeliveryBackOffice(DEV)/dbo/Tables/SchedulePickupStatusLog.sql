@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SchedulePickupStatusLog] (
-    [IdSchedulePickupStatusLog] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdSchedulePickupStatusLog] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SchedulePickupId]          BIGINT        NOT NULL,
     [SchedulePickupStatus]      BIT           NOT NULL,
     [RowStatus]                 BIT           CONSTRAINT [df_SchedulePickupStatusLog_RowStatus] DEFAULT ('TRUE') NOT NULL,
@@ -10,6 +10,8 @@
     CONSTRAINT [PK_SchedulePickupStatusLog_IdSchedulePickupStatusLog] PRIMARY KEY CLUSTERED ([IdSchedulePickupStatusLog] ASC),
     CONSTRAINT [FK_SchedulePickupStatusLog_SchedulePickupId] FOREIGN KEY ([SchedulePickupId]) REFERENCES [dbo].[SchedulePickup] ([SchedulePickupId])
 );
+
+
 
 
 GO

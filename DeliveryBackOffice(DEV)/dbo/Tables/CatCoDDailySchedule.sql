@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatCoDDailySchedule] (
-    [IdCatCoDDailySchedule] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatCoDDailySchedule] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CoDProcessName]        NVARCHAR (100) NOT NULL,
     [DeliveryBankId]        INT            NOT NULL,
     [ExecutionTime]         TIME (7)       NOT NULL,
@@ -9,9 +9,12 @@
     [DateCreated]           DATETIME       NOT NULL,
     [TokenUpdated]          NVARCHAR (50)  NULL,
     [DateUpdated]           DATETIME       NULL,
+    [IsCodAnticipated]      INT            NULL,
     PRIMARY KEY CLUSTERED ([IdCatCoDDailySchedule] ASC),
     CONSTRAINT [FK_CatCoDDailySchedule_DeliveryBank] FOREIGN KEY ([DeliveryBankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank])
 );
+
+
 
 
 GO
@@ -52,6 +55,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre que 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCoDDailySchedule', @level2type = N'COLUMN', @level2name = N'IdCatCoDDailySchedule';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para identificar horarios de ejecucion que pertenecen al servicio de cod anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCoDDailySchedule', @level2type = N'COLUMN', @level2name = N'IsCodAnticipated';
 
 
 GO

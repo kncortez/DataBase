@@ -11,7 +11,6 @@
 -- Author:      <Daniel, Ramirez>
 -- Update date: <2024-05-28>
 -- Description: < Adicion de filtros por pais, por defect GT >
--- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteServiceAssigment]
 		@idRoute AS INT,
 		@dateRoute AS DATE,
@@ -43,5 +42,5 @@ BEGIN
     WHERE rat.IdRoute = @idRoute
           AND rat.DateOfRoute = @dateRoute
           AND spu.AssigmentStatus = '1'
-          AND IIF(snr.IdCountry IS NULL, 'GT', snr.IdCountry) = @IdCountry;
+          AND (rat.IdCurrierMan is null OR ISNULL(snr.IdCountry, 'GT') = @IdCountry);
 END;

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TownshipByHubLogistic] (
-    [IdTownshipHub]      INT          IDENTITY (1, 1) NOT NULL,
+    [IdTownshipHub]      INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdTownship]         INT          NULL,
     [IdHublogistic]      INT          NULL,
     [StatusTownshipHub]  BIT          NULL,
@@ -14,6 +14,8 @@
     CONSTRAINT [FK_TownshipByHubLogistic_Township] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FKHubRateSegment] FOREIGN KEY ([IdRateSegment]) REFERENCES [dbo].[CatRateSegment] ([CrsId])
 );
+
+
 
 
 GO

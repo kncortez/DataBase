@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[GeneratedTokens] (
-    [TokenId]            BIGINT        IDENTITY (1, 1) NOT NULL,
+    [TokenId]            BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UserId]             BIGINT        NULL,
     [UserName]           VARCHAR (200) NOT NULL,
     [GeneratedToken]     VARCHAR (200) NULL,
@@ -14,4 +14,15 @@
     [IdSystem]           INT           NULL,
     CONSTRAINT [PK_ResetPasswordVerification] PRIMARY KEY CLUSTERED ([TokenId] ASC)
 );
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_UserId_VerificationStatus]
+    ON [dbo].[GeneratedTokens]([UserId] ASC, [VerificationStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GeneratedToken_INCLUDE]
+    ON [dbo].[GeneratedTokens]([GeneratedToken] ASC)
+    INCLUDE([VerificationStatus]);
 

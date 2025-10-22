@@ -1,6 +1,4 @@
-﻿
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Oscar,Morales>
 -- Create date: <2021-12-29>
 -- Description:	<Guarda información del despacho de entregas.>
@@ -15,9 +13,11 @@
 -- Create date: <2022-08-05>
 -- Description:	< Cambio para uso de orden como decimal y ETA de servicio.>
 -- =============================================
-
+-- Author:		<Tito García>
+-- Updated date: <2025-08-29>
+-- Description:	<Se elimina validación de encolamiento de notificación ya registradas ya que se necesita que mande una segunda notificación en el segundo intento de entrega>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetSettlementDispatched]
-    -- Add the parameters for the stored procedure here
 	@IdRoute INT,
 	@IdRoutePreparation INT,
 	@Date DATE,
@@ -62,16 +62,16 @@ BEGIN
 				,rpdp.TokenUpdated = @Token
 				,rpdp.DateUpdated = GETDATE()
 			FROM RoutePreparationDetailPiece rpdp WITH(NOLOCK) 
-			inner JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
+			INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
 				ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
-				and rpd.RowStatus = 1
 			WHERE rpd.RoutePreparationId = @IdRoutePreparation
-			AND NOT EXISTS (
-				SELECT 1 
-				FROM @ListGuides lg
-				WHERE lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
-			)
-			AND rpdp.RowStatus = 1
+				AND NOT EXISTS (
+					SELECT 1 
+					FROM @ListGuides lg
+					WHERE lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
+				)
+				AND rpdp.RowStatus = 1
+				AND rpd.RowStatus = 1;
 			
 			--Desactivar filas en RoutePreparationDetail si no están incluídas
 			UPDATE rpd
@@ -120,101 +120,97 @@ BEGIN
 			IF COALESCE(@@ROWCOUNT,0) > 0
 				SET @ValidateOperation = @ValidateOperation + 1
 
-			--BNHL
 			---------------------WEBHOOK.INI--------------------------------
-                DECLARE @WebhookCustomerTable AS TABLE
-                (
-                    CustomerId INT,
-                    CustomerEndpointId BIGINT,
-                    WebhookType INT,
-                    GuideSerie NVARCHAR(2),
-                    GuideNumber INT,
-                    GuideStatusId TINYINT
-                );
-                BEGIN TRY
-                    DECLARE @GuideStatusChangeWebhook INT =
-                            (
-                                SELECT TOP 1
-                                       WT.IdWebhookType
-                                FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
-                                      AND WT.RowStatus = 1
-                            );
+			DECLARE @WebhookCustomerTable AS TABLE
+			(
+				CustomerId INT,
+				CustomerEndpointId BIGINT,
+				WebhookType INT,
+				GuideSerie NVARCHAR(2),
+				GuideNumber INT,
+				GuideStatusId TINYINT
+			);
+			BEGIN TRY
+				DECLARE @GuideStatusChangeWebhook INT =
+						(
+							SELECT TOP 1
+									WT.IdWebhookType
+							FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
+							WHERE WT.WebhookName = 'GuideStatusChange'
+									AND WT.RowStatus = 1
+						);
 
-                    -- Clientes de las guías por procesar
-                    INSERT INTO @WebhookCustomerTable
-                    (
-                        CustomerId,
-                        GuideSerie,
-                        GuideNumber,
-                        GuideStatusId
-                    )
-                    SELECT DISTINCT
-                           DO.IdCustomer,
-                           TLG.Guide_Serie,
-                           TLG.Guide_Number,
-                           DO.StatusOrderId
-                    FROM @ListGuides TLG
-                        INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                            ON TLG.Guide_Number = DO.Guide_Number
-                               AND TLG.Guide_Serie = DO.Guide_Serie;
-					
-                    -- Ingresar endpoints de cliente
-                    UPDATE @WebhookCustomerTable
-                    SET CustomerEndpointId = WE.IdWebhookEndpoint,
-                        WebhookType = @GuideStatusChangeWebhook
-                    FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
-                        INNER JOIN @WebhookCustomerTable WCT
-                            ON WE.CustomerId = WCT.CustomerId
-                               AND WE.WebhookTypeId = @GuideStatusChangeWebhook;
-
-
-                    DECLARE @ResponseTable AS TABLE
-                    (
-                        InsertedId BIGINT
-                    );
-
-					
+				-- Clientes de las guías por procesar
+				INSERT INTO @WebhookCustomerTable
+				(
+					CustomerId,
+					GuideSerie,
+					GuideNumber,
+					GuideStatusId
+				)
+				SELECT DISTINCT
+						DO.IdCustomer,
+						TLG.Guide_Serie,
+						TLG.Guide_Number,
+						DO.StatusOrderId
+				FROM @ListGuides TLG
+					INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+						ON DO.Guide_Serie = TLG.Guide_Serie
+							AND DO.Guide_Number = TLG.Guide_Number;
 				
-                    INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-                    (
-                        [GuideSerie],
-                        [GuideNumber],
-                        [CustomerId],
-                        [StatusOrderId],
-                        [WebhookEndpointId],
-                        [HasNotified],
-                        [TokenCreated],
-                        [DateCreated]
-                    )
-                    OUTPUT inserted.IdWebhookTrackingQueue
-                    INTO @ResponseTable
-                    (
-                        InsertedId
-                    )
+				-- Ingresar endpoints de cliente
+				UPDATE @WebhookCustomerTable
+				SET CustomerEndpointId = WE.IdWebhookEndpoint,
+					WebhookType = @GuideStatusChangeWebhook
+				FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
+					INNER JOIN @WebhookCustomerTable WCT
+						ON WE.CustomerId = WCT.CustomerId
+				WHERE WE.WebhookTypeId = @GuideStatusChangeWebhook;
 
-                    SELECT WCT.GuideSerie,
-                           WCT.GuideNumber,
-                           WCT.CustomerId,
-                           WCT.GuideStatusId,
-                           WCT.CustomerEndpointId,
-                           0,
-                           @Token,
-                           GETDATE()
-                    FROM @WebhookCustomerTable WCT
-                        LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH (NOLOCK)
-                            ON WCT.CustomerId = WRBU.CustomerId
-                               AND WCT.GuideStatusId = WRBU.StatusOrderId
-                               AND WCT.WebhookType = WRBU.WebhookTypeId
-						INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE
-							ON WRBU.CustomerId = WHE.CustomerId
-                        LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
-                            ON WCT.GuideSerie = WTQ.GuideSerie
-                               AND WCT.GuideNumber = WTQ.GuideNumber
-                               AND WCT.GuideStatusId = WTQ.StatusOrderId
-                    WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
-                          AND WTQ.IdWebhookTrackingQueue IS NULL
-						  AND WHE.TypeConnectionId = 1
+
+				DECLARE @ResponseTable AS TABLE
+				(
+					InsertedId BIGINT
+				);					
+			
+				INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+				(
+					[GuideSerie],
+					[GuideNumber],
+					[CustomerId],
+					[StatusOrderId],
+					[WebhookEndpointId],
+					[HasNotified],
+					[TokenCreated],
+					[DateCreated]
+				)
+				OUTPUT inserted.IdWebhookTrackingQueue
+				INTO @ResponseTable
+				(
+					InsertedId
+				)
+
+				SELECT WCT.GuideSerie,
+						WCT.GuideNumber,
+						WCT.CustomerId,
+						WCT.GuideStatusId,
+						WCT.CustomerEndpointId,
+						0,
+						@Token,
+						GETDATE()
+				FROM @WebhookCustomerTable WCT
+					LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH (NOLOCK)
+						ON WCT.CustomerId = WRBU.CustomerId
+							AND WCT.GuideStatusId = WRBU.StatusOrderId
+							AND WCT.WebhookType = WRBU.WebhookTypeId
+					INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE WITH (NOLOCK)
+						ON WRBU.CustomerId = WHE.CustomerId
+					LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
+						ON WCT.GuideSerie = WTQ.GuideSerie
+							AND WCT.GuideNumber = WTQ.GuideNumber
+							AND WCT.GuideStatusId = WTQ.StatusOrderId
+				WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
+						AND WHE.TypeConnectionId = 1
 
 					--Agregar datos en cola de webhooks de cliente DHL---INI
 				DECLARE @GuidePiecesTable AS TABLE
@@ -239,9 +235,9 @@ BEGIN
 						NumberPieces
 						)
 						SELECT  wct.CustomerId,
-						dop.GuideSerie,dop.GuideNumber, 
-						wct.GuideStatusId,
-						Count(dop.GuideNumber)
+							dop.GuideSerie,dop.GuideNumber, 
+							wct.GuideStatusId,
+							Count(dop.GuideNumber)
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
 							ON dop.GuideSerie = wct.GuideSerie
@@ -251,14 +247,14 @@ BEGIN
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
 							ON dop.GuideSerie = do.Guide_Serie
 							AND dop.GuideNumber = do.Guide_Number
-							WHERE do.IdCustomer = wct.CustomerId
+						WHERE do.IdCustomer = wct.CustomerId
 							AND WHE.TypeConnectionId = 2
-							GROUP BY wct.CustomerId,
+						GROUP BY wct.CustomerId,
 						dop.GuideSerie,dop.GuideNumber, 
 						wct.GuideStatusId
 
 
-				   DECLARE @PiecesGuideRelatedTable AS TABLE
+				DECLARE @PiecesGuideRelatedTable AS TABLE
                 (
                     CustomerId INT,
                     CustomerEndpointId BIGINT,
@@ -270,7 +266,7 @@ BEGIN
 					
                 );
 
-				INSERT INTO @PiecesGuideRelatedTable 
+						INSERT INTO @PiecesGuideRelatedTable 
 							( 
 						CustomerId,
                         GuideSerie,
@@ -291,14 +287,14 @@ BEGIN
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
 							ON dop.GuideSerie = do.Guide_Serie
 							AND dop.GuideNumber = do.Guide_Number
-							WHERE do.IdCustomer = wct.CustomerId
+						WHERE do.IdCustomer = wct.CustomerId
 							AND WHE.TypeConnectionId = 2
 							AND dop.ExternalPieceId IS NOT NULL
-							GROUP BY wct.CustomerId,
+						GROUP BY wct.CustomerId,
 						dop.GuideSerie,dop.GuideNumber, 
 						wct.GuideStatusId
 	
-				INSERT INTO WebhookTrackingQueueDetailForSFTP 
+						INSERT INTO WebhookTrackingQueueDetailForSFTP 
 							(CustomerId,
 							GuideSerie,
 							GuideNumber,
@@ -327,7 +323,7 @@ BEGIN
 						INNER JOIN @PiecesGuideRelatedTable pgt
 						    ON gpt.GuideSerie = pgt.GuideSerie
 							AND gpt.GuideNumber = pgt.GuideNumber
-							WHERE do.IdCustomer = wct.CustomerId
+						WHERE do.IdCustomer = wct.CustomerId
 							AND WHE.TypeConnectionId = 2
 							AND gpt.NumberPieces = pgt.NumberRelatedPieces
 
@@ -336,38 +332,33 @@ BEGIN
                 BEGIN CATCH
 
                 END CATCH;
+				-- Activar bandera de proceso de SMS
+				IF((SELECT TOP 1 ue.UpdateStatus
+							FROM [DeliveryBackOffice].[dbo].[SMS_UpdatedElements] ue WITH(NOLOCK) 
+							WHERE ue.RowStatus=1
+								AND ue.ElementId=1001)=0)
+				BEGIN
+					UPDATE [DeliveryBackOffice].[dbo].[SMS_UpdatedElements]
+					SET UpdateStatus=1, UpdateDateTime=GETDATE()
+					WHERE RowStatus=1
+						AND ElementId=1001
+				END
 
+				-- Insertar nuevo estado de guía en tabla histórica
+				INSERT INTO DeliveryOrderDetail (
+					[Guide_Serie]
+					,[Guide_Number]
+					,[StatusOrderId]
+					,[UserCreated]
+					,[DateCreated]
+					,[DateCreatedInSystem])
+				SELECT Guide_Serie, Guide_Number, 4, @Token, GETDATE(), GETDATE()
+				FROM @ListGuides
 
-			-- Activar bandera de proceso de SMS
-			IF((select top 1 ue.UpdateStatus
-						from [DeliveryBackOffice].[dbo].[SMS_UpdatedElements] ue WITH(NOLOCK) 
-						where ue.RowStatus=1
-						and ue.ElementId=1001)=0)
-			BEGIN
-				update [DeliveryBackOffice].[dbo].[SMS_UpdatedElements]
-				set UpdateStatus=1, UpdateDateTime=GETDATE()
-				where RowStatus=1
-				and ElementId=1001
-			END
+				--operation 2
+				IF COALESCE(@@ROWCOUNT,0) > 0
+					SET @ValidateOperation = @ValidateOperation + 1				
 
-			-- Insertar nuevo estado de guía en tabla histórica
-			INSERT INTO DeliveryOrderDetail (
-				[Guide_Serie]
-				,[Guide_Number]
-				,[StatusOrderId]
-				,[UserCreated]
-				,[DateCreated]
-				,[DateCreatedInSystem])
-			SELECT Guide_Serie, Guide_Number, 4, @Token, GETDATE(), GETDATE()
-			FROM @ListGuides
-
-			--operation 2
-			IF COALESCE(@@ROWCOUNT,0) > 0
-				SET @ValidateOperation = @ValidateOperation + 1
-			
-
-			----------------------------------------------------------
-				----------------
 				--INICIO --CREANDO ALERTA POR CADA GUÍA QUE HAYA SIDO PUESTO EN RUTA 2 O MAS VECES Y QUE NO POSEAN ALERTA	
 				
 				IF @iduser IS NOT NULL 
@@ -378,33 +369,33 @@ BEGIN
 					DECLARE @CatTypeAlertId INT = (SELECT IdCatTypeAlert FROM CatTypeAlert WHERE AlertName='Prioritario')
 
 					INSERT INTO @GuidesTableWithRetries
-						SELECT
-							lg.Guide_Serie
-						   ,lg.Guide_Number
-						   ,(CASE
+					SELECT
+						lg.Guide_Serie
+						,lg.Guide_Number
+						,(CASE
+							WHEN do.IsLastMileReturn = 1 THEN @SubTypeReturn
+							ELSE @SubTypeDelivery
+						END)
+						,(CASE
+							WHEN do.IsLastMileReturn = 1 THEN doad.GuideReturnAttemptCount
+							ELSE doad.GuideDeliveryAttemptCount
+						END)
+					FROM @ListGuides lg
+					INNER JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
+						ON lg.Guide_Serie = doad.GuideSerie
+							AND lg.Guide_Number = doad.GuideNumber
+					INNER JOIN DeliveryOrder do WITH (NOLOCK)
+						ON lg.Guide_Serie = do.Guide_Serie
+							AND lg.Guide_Number = do.Guide_Number
+					LEFT JOIN DeliveryOrderAlert doa WITH (NOLOCK)
+						ON lg.Guide_Serie = doa.GuideSerie
+							AND lg.Guide_Number = doa.GuideNumber
+							AND doa.AlertTypeId = (CASE
 								WHEN do.IsLastMileReturn = 1 THEN @SubTypeReturn
 								ELSE @SubTypeDelivery
 							END)
-							,(CASE
-								WHEN do.IsLastMileReturn = 1 THEN doad.GuideReturnAttemptCount
-								ELSE doad.GuideDeliveryAttemptCount
-							END)
-						FROM @ListGuides lg
-						INNER JOIN DeliveryOrderAttemptData doad
-							ON lg.Guide_Serie = doad.GuideSerie
-								AND lg.Guide_Number = doad.GuideNumber
-						INNER JOIN DeliveryOrder do WITH (NOLOCK)
-							ON lg.Guide_Serie = do.Guide_Serie
-								AND lg.Guide_Number = do.Guide_Number
-						LEFT JOIN DeliveryOrderAlert doa WITH (NOLOCK)
-							ON lg.Guide_Serie = doa.GuideSerie
-								AND lg.Guide_Number = doa.GuideNumber
-								AND doa.AlertTypeId = (CASE
-									WHEN do.IsLastMileReturn = 1 THEN @SubTypeReturn
-									ELSE @SubTypeDelivery
-								END)
-								AND doa.RowStatus = 1
-						WHERE (do.IsLastMileReturn = 1
+							AND doa.RowStatus = 1
+					WHERE (do.IsLastMileReturn = 1
 						AND doad.GuideReturnAttemptCount > 0)
 						OR (do.IsLastMileReturn <> 1
 						AND doad.GuideDeliveryAttemptCount > 0)
@@ -418,16 +409,16 @@ BEGIN
 					RowStatus,
 					TokenCreated,
 					DateCreated)
-						SELECT
-							gtwr.GuideSerie
-						   ,gtwr.GuideNumber
-						   ,gtwr.SubTypeServiceManagmentId
-						   ,'Entrega prioritaria'
-						   ,@CatTypeAlertId
-						   ,1
-						   ,@Token
-						   ,GETDATE()
-						FROM @GuidesTableWithRetries gtwr
+					SELECT
+						gtwr.GuideSerie
+						,gtwr.GuideNumber
+						,gtwr.SubTypeServiceManagmentId
+						,'Entrega prioritaria'
+						,@CatTypeAlertId
+						,1
+						,@Token
+						,GETDATE()
+					FROM @GuidesTableWithRetries gtwr
 
 					INSERT INTO DBO.DeliveryOrderAlertDetail (author,
 					username,
@@ -436,25 +427,23 @@ BEGIN
 					RowStatus,
 					TokenCreated,
 					DateCreated)
-						SELECT
-							@iduser
-						   ,@username
-						   ,'ALERTA: El paquete ya ha salido a ruta ' + CONVERT(NVARCHAR, gtwr.RetriesMade) + ' veces'
-						   ,doa.IdDeliveryOrderAlert
-						   ,1
-						   ,@Token
-						   ,GETDATE()
-						FROM @GuidesTableWithRetries gtwr
-						LEFT JOIN DeliveryOrderAlert doa WITH (NOLOCK)
-							ON doa.GuideSerie = gtwr.GuideSerie
-								AND doa.GuideNumber = gtwr.GuideNumber
-						WHERE doa.AlertTypeId = gtwr.SubTypeServiceManagmentId
+					SELECT
+						@iduser
+						,@username
+						,'ALERTA: El paquete ya ha salido a ruta ' + CONVERT(NVARCHAR, gtwr.RetriesMade) + ' veces'
+						,doa.IdDeliveryOrderAlert
+						,1
+						,@Token
+						,GETDATE()
+					FROM @GuidesTableWithRetries gtwr
+					LEFT JOIN DeliveryOrderAlert doa WITH (NOLOCK)
+						ON doa.GuideSerie = gtwr.GuideSerie
+							AND doa.GuideNumber = gtwr.GuideNumber
+					WHERE doa.AlertTypeId = gtwr.SubTypeServiceManagmentId
 						AND doa.RowStatus = 1
 					
 				END
 				--FIN --CREANDO ALERTA POR CADA GUÍA QUE HAYA SIDO PUESTO EN RUTA 2 O MAS VECES Y QUE NO POSEAN ALERTA				
-				------------------------------------------------------------------------
-			-----------------------------------------------------------
 
 			-- Insertar registro en control de manifiestos de despacho
 			INSERT INTO [dbo].[DeliveryOrderBySettlement]
@@ -560,8 +549,10 @@ BEGIN
 			SELECT @ID_Manifest,lg.Guide_Serie,lg.Guide_Number,lg.Guide_Order, lg.Guide_ETA,GETDATE(),@Token
 			FROM @ListGuides lg
 			INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
-				ON lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
-				AND rpd.RoutePreparationId = @IdRoutePreparation AND rpd.RowStatus = 1
+				ON lg.Guide_Serie = rpd.Guide_Serie 
+				AND lg.Guide_Number = rpd.Guide_Number
+			WHERE rpd.RoutePreparationId = @IdRoutePreparation 
+				AND rpd.RowStatus = 1
 
 			--operation 5
 			IF COALESCE(@@ROWCOUNT,0) > 0

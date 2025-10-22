@@ -1,17 +1,18 @@
-﻿CREATE TABLE [dbo].[TagByProduct]
-(
-	[Id]INT IDENTITY (1, 1) NOT NULL,   
-    [TagId] INT NOT NULL, 
-    [ProductId] INT NOT NULL, 
-    [RowStatus] BIT NOT NULL, 
-    [UserCreated] NVARCHAR(50) NOT NULL, 
-    [DateCreated] DATETIME NOT NULL, 
-    [UserUpdated] NVARCHAR(50) NULL, 
-    [DateUpdated] DATETIME NULL ,
-	PRIMARY KEY CLUSTERED ([Id] ASC),
-    CONSTRAINT FK_TagByProduct_TagId FOREIGN KEY (TagId) REFERENCES CatProductTag(IdCatProductTag),
-    CONSTRAINT FK_TagByProduct_ProductId FOREIGN KEY (ProductId) REFERENCES Product(IdProduct)
-)
+﻿CREATE TABLE [dbo].[TagByProduct] (
+    [Id]          INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [TagId]       INT           NOT NULL,
+    [ProductId]   INT           NOT NULL,
+    [RowStatus]   BIT           NOT NULL,
+    [UserCreated] NVARCHAR (50) NOT NULL,
+    [DateCreated] DATETIME      NOT NULL,
+    [UserUpdated] NVARCHAR (50) NULL,
+    [DateUpdated] DATETIME      NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FK_TagByProduct_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Product] ([IdProduct]),
+    CONSTRAINT [FK_TagByProduct_TagId] FOREIGN KEY ([TagId]) REFERENCES [dbo].[CatProductTag] ([IdCatProductTag])
+);
+
+
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',

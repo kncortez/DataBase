@@ -23,6 +23,10 @@
 
 
 
+
+
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_TokenLog_TknTokenCreated]
     ON [dbo].[TokenLog]([TknTokenCreated] ASC);
@@ -37,4 +41,14 @@ CREATE NONCLUSTERED INDEX [idx_TknRowStatus_TknDateCreated_include]
 GO
 CREATE NONCLUSTERED INDEX [IDX_TknIdUser_TknRowStatus_TknDateCreated]
     ON [dbo].[TokenLog]([TknIdUser] ASC, [TknRowStatus] ASC, [TknDateCreated] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_TknIdUser]
+    ON [dbo].[TokenLog]([TknIdUser] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_TknIdSystem]
+    ON [dbo].[TokenLog]([TknIdSystem] ASC);
 

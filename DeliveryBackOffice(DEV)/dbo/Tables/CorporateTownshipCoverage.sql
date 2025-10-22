@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CorporateTownshipCoverage] (
-    [IdCorporateTownshipCoverage] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCorporateTownshipCoverage] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TownshipSourceId]            INT           NOT NULL,
     [TownshipDestinyId]           INT           NOT NULL,
     [SegmentTypeId]               INT           NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FK_CorporateTownshipCoverage_TownshipDest] FOREIGN KEY ([TownshipDestinyId]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_CorporateTownshipCoverage_TownshipOrig] FOREIGN KEY ([TownshipSourceId]) REFERENCES [dbo].[Township] ([IdTownship])
 );
+
+
 
 
 

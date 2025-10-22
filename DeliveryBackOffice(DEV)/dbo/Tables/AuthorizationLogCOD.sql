@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AuthorizationLogCOD] (
-    [IdAuthorizationLogCOD] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdAuthorizationLogCOD] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]            VARCHAR (4)     NOT NULL,
     [GuideNumber]           INT             NOT NULL,
     [Voucher]               NVARCHAR (800)  NULL,
@@ -14,6 +14,8 @@
     [DateUpdated]           DATETIME        NULL,
     PRIMARY KEY CLUSTERED ([IdAuthorizationLogCOD] ASC)
 );
+
+
 
 
 

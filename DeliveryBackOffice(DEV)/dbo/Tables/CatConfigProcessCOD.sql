@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatConfigProcessCOD] (
-    [IdCatConfigProcessCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatConfigProcessCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatProcessCODId]       INT           NOT NULL,
     [CatScheduleCODId]      INT           NOT NULL,
     [RowStatus]             BIT           CONSTRAINT [DF_CatConfigProcessCOD_RowStatus] DEFAULT ('TRUE') NOT NULL,

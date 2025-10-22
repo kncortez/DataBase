@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTransportCompany] (
-    [IdTransportCompany]          INT           IDENTITY (1, 1) NOT NULL,
+    [IdTransportCompany]          INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TransportCompanyName]        NVARCHAR (50) NULL,
     [TransportCompanyDescription] VARCHAR (200) NULL,
     [TansportCompanyAbbreviation] NVARCHAR (10) NULL,

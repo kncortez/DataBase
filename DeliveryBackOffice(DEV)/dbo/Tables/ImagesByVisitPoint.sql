@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ImagesByVisitPoint] (
-    [IdImage]         INT           IDENTITY (1, 1) NOT NULL,
+    [IdImage]         INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CodeOfReference] INT           NULL,
     [PathImage]       VARCHAR (200) NULL,
     [RowStatus]       BIT           NULL,
@@ -10,6 +10,8 @@
     PRIMARY KEY CLUSTERED ([IdImage] ASC),
     CONSTRAINT [FKCodeOfReference] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

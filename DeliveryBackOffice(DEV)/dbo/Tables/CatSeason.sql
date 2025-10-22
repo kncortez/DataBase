@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatSeason] (
-    [IdSeason]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdSeason]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SeasonName]        NVARCHAR (50)  NULL,
     [SeasonDescription] NVARCHAR (200) NULL,
     [RowStatus]         BIT            NULL,

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[NotificationQueue] (
-    [IdNotificationQueue]     BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdNotificationQueue]     BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatNotificationMediumId] INT            NOT NULL,
     [CatNotificationTypeId]   BIGINT         NOT NULL,
     [CustomerId]              INT            NULL,
@@ -21,6 +21,8 @@
     CONSTRAINT [FK_NotificationQueue_CatNotificationType] FOREIGN KEY ([CatNotificationTypeId]) REFERENCES [dbo].[CatNotificationType] ([IdCatNotificationType]),
     CONSTRAINT [FK_NotificationQueue_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
+
+
 
 
 

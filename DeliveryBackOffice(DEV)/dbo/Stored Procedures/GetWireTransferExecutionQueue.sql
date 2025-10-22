@@ -9,6 +9,11 @@
 -- Modification date: <2024-06-26>
 -- Description:	< Filtrar cola de ejcucion de procesos por pais para el servicio HermesWireTransfer >
 -- =============================================
+-- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Modification date: <2024-12-02>
+-- Description:	< Filtrar cola de ejcucion de procesos por tipo de servicio, COD Inmediato >
+-- =============================================
 CREATE PROCEDURE [dbo].[GetWireTransferExecutionQueue]
 	@IdCountrySender NVARCHAR(2)= 'GT'
 AS
@@ -50,10 +55,13 @@ BEGIN
 				1 
 		FROM 
 			[DeliveryBackOffice].[dbo].[CoDDailyExecution] CDE WITH(NOLOCK) 
+			INNER JOIN DeliveryBackOffice.dbo.CatCoDDailySchedule CCDS WITH(NOLOCK) ON CCDS.IdCatCODDailySchedule = CDE.CODDailyScheduleId
 		WHERE 
 			CDE.ExecutionDate = CAST(GETDATE() AS DATE) 
 			AND 
 			CDE.RowStatus = 1
+			AND
+			CCDS.IsCODAnticipated = 0
 			AND
 			CDE.IdCountry = @IdCountrySender
 	),0)
@@ -109,6 +117,7 @@ BEGIN
 			WHERE
 				CCDS.RowStatus = 1
 				AND	db.Id_Country = @IdCountrySender
+				AND (CCDS.IsCodAnticipated = 0 OR CCDS.IsCodAnticipated IS NULL)
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @DailyExecutionQueue) )
 			BEGIN

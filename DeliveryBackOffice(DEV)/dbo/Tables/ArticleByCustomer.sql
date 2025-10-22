@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ArticleByCustomer] (
-    [AbcId]            INT             IDENTITY (1, 1) NOT NULL,
+    [AbcId]            INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AbcIdArticle]     INT             NOT NULL,
     [AbcIdCustomer]    INT             NULL,
     [AbcRowStatus]     BIT             NOT NULL,
@@ -15,13 +15,11 @@
     [MassWeight]       DECIMAL (18, 2) NULL,
     [VolumetricWeight] DECIMAL (18, 2) NULL,
     [ShowDefault]      BIT             NULL,
-    [IdCurrency] INT NULL, 
+    [IdCurrency]       INT             NULL,
     PRIMARY KEY CLUSTERED ([AbcId] ASC),
+    CONSTRAINT [FK_ArticleByCustomer_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD]),
     CONSTRAINT [FKArticleCustom] FOREIGN KEY ([AbcIdArticle]) REFERENCES [dbo].[CatArticle] ([ArtId]),
     CONSTRAINT [FKCustomArticle] FOREIGN KEY ([AbcIdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
-    CONSTRAINT [AK_Password] UNIQUE NONCLUSTERED ([Code] ASC),
-    CONSTRAINT [FK_ArticleByCustomer_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
+    CONSTRAINT [AK_Password] UNIQUE NONCLUSTERED ([Code] ASC)
 );
-
-
 

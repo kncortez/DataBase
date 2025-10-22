@@ -23,7 +23,7 @@ END
 
 select Guide_Serie,Guide_Number,StatusOrderId,DateCreated 
 into #ListRoutes
-from DeliveryBackOffice.dbo.DeliveryOrderDetail
+from DeliveryBackOffice.dbo.DeliveryOrderDetail with (nolock)
 where StatusOrderId = 4
 and CONVERT(VARCHAR, DateCreated, 23) >= CONVERT(VARCHAR, @StartDate, 23)
 and CONVERT(VARCHAR, DateCreated, 23) <= CONVERT(VARCHAR, @EndDate, 23)
@@ -36,7 +36,7 @@ select CONVERT(DATE, lstr.DateCreated, 23) DateCreated
 ,coalesce(case when Att.Delivered = 1 then 1 else 0 end,0) Delivered
 ,coalesce(case when Accepted = 1 then 1 else 0 end ,0) Accepted
 into #ListAttempt
-from DeliveryBackOffice.dbo.DeliveryAttempt Att
+from DeliveryBackOffice.dbo.DeliveryAttempt Att with (nolock)
 inner join #ListRoutes lstr on Att.Guide_Serie = lstr.Guide_Serie
 and Att.Guide_Number = lstr.Guide_Number
 inner join DeliveryBackOffice.dbo.SenderReceiver Sender

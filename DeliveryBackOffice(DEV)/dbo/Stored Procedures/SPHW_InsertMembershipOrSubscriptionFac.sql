@@ -1,4 +1,4 @@
-
+﻿
 -- =============================================
 -- =============================================
 -- Author:		<Edelman Vásquez>
@@ -53,7 +53,7 @@ BEGIN
 	  , @InvoiceEmail  = InvoiceEmail
   FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber= @OrderNumber
 
-  DECLARE @IdAccountCart INT = (SELECT   ac.AccIdAccount
+  DECLARE @IdAccountCart INT = (SELECT Top 1  ac.AccIdAccount
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
 															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
 																ON rus.RusIdUser = usr.UsrIdUser
@@ -515,6 +515,18 @@ BEGIN
              , @inv_vpCodeOfReferences inv_vpCodeOfReferences
              , ISNULL(@inv_cli_name,'') inv_cli_name;
 
+        DECLARE @parameters VARCHAR(300) = CONCAT(
+                                                   '-',LTRIM(RTRIM(@OrderNumber)),'-'
+                                                  ,@IdCountry,'-'
+                                                  ,@IdAccountCart,'-'
+                                                  ,@inv_vpCodeOfReferences,'-'
+                                                  ,LTRIM(RTRIM(@inv_cmp_nit)),'-'
+                                                  ,LTRIM(RTRIM(@inv_cli_name)),'-'
+                                                  ,LTRIM(RTRIM(@inv_cli_adress)),'-'
+                                                  ,LTRIM(RTRIM(@inv_cli_nit)),'-'
+                                                  ,LTRIM(RTRIM(@inv_cli_email))
+                                                 )
+
         INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
         (
             [ErrorDescription]
@@ -527,7 +539,7 @@ BEGIN
           , [DateCreated]
         )
         VALUES
-        (   CAST(ERROR_MESSAGE() AS NVARCHAR(300)) -- ErrorDescription - varchar(300)
+        (   CONCAT(CAST(ERROR_MESSAGE() AS NVARCHAR(300)), @parameters)  -- ErrorDescription - varchar(300)
           , ERROR_NUMBER()                         -- ErrorNumber - int
           , ERROR_PROCEDURE()                      -- ErrorProcedure - varchar(100)
           , ERROR_LINE()                           -- ErrorLine - int

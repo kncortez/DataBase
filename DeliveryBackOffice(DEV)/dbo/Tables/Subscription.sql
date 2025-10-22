@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Subscription] (
-    [IdSubscription]                   INT             IDENTITY (1, 1) NOT NULL,
+    [IdSubscription]                   INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [MembershipId]                     INT             NULL,
     [CatSubscriptionId]                INT             NOT NULL,
     [CatSubscriptionStatusId]          INT             NOT NULL,
@@ -32,6 +32,10 @@
     CONSTRAINT [FK_Subscription_CatTypeSubscription] FOREIGN KEY ([CatTypeSubscriptionId]) REFERENCES [dbo].[CatTypeSubscription] ([IdCatTypeSubscription]),
     CONSTRAINT [FK_Subscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
+
+
+
+
 
 
 GO
@@ -68,4 +72,9 @@ CREATE NONCLUSTERED INDEX [idx_CatSubscriptionId]
 GO
 CREATE NONCLUSTERED INDEX [IDX_CustomerId_RowStatus_CatTypeSubscriptionId_ExpirationDate]
     ON [dbo].[Subscription]([CustomerId] ASC, [RowStatus] ASC, [CatTypeSubscriptionId] ASC, [ExpirationDate] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountId_RowStatus_CatTypeSubscriptionId_ExpirationDate]
+    ON [dbo].[Subscription]([AccountId] ASC, [RowStatus] ASC, [CatTypeSubscriptionId] ASC, [ExpirationDate] ASC);
 
