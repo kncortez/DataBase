@@ -27,6 +27,13 @@ go
 ---------------------------------------------------------------
 
 
+
+------------------ SUGERENCIA IMPORTANTE ----------------------
+-- Revisar el SP GetDataForClosure, tiene variaciones        --
+-- a lo versionado y la BBDD de DEV, revisar y actualizar    --
+---------------------------------------------------------------
+
+
 -- Modificación a tabla PaymentZigi --
 
 alter table dbo.PaymentZigi

@@ -1,11 +1,4 @@
-﻿
--- =============================================
--- Author:		<Alejandro Rodríguez>
--- Create date: <2022-03-28>
--- Description:	<SP para generar el cierre de los express center por punto de visita>
--- =============================================
-
-CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
+﻿CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
     @VisitPointId INT = 4246,
     @UserId INT,
     @TokenCreated NVARCHAR(50),
@@ -18,7 +11,12 @@ CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
     @TotalAmountCreditDeclared DECIMAL(18, 5),
 	@TotalAmountCODCashDeclared DECIMAL(18, 5),
 	@TotalAmountFacturaCashDeclared DECIMAL(18,5),
-	@TotalAmountFacturaCardDeclared DECIMAL(18,5)
+	@TotalAmountFacturaCardDeclared DECIMAL(18,5),
+	-- MODIFICACIÓN [2025-10-17] - Parámetros declarados para Zigi
+	@TotalAmountZigiDeclared DECIMAL(18, 5) = 0,
+	@TotalAmountCODZigiDeclared DECIMAL(18, 5) = 0,
+	@TotalAmountFacturaZigiDeclared DECIMAL(18, 5) = 0
+	-- FIN MODIFICACIÓN
 AS
 BEGIN
 
@@ -33,6 +31,13 @@ BEGIN
 	DECLARE @InvoiceAmountFacturaCash INT;
 	DECLARE @InvoiceAmountFacturaCard INT;
 	DECLARE @InvoiceAmountCOD INT;
+	-- MODIFICACIÓN [2025-10-17] - Variables para Zigi
+	DECLARE @TotalAmountZigi DECIMAL(18, 5);
+	DECLARE @TotalAmountCODZigi DECIMAL(18, 5);
+	DECLARE @TotalAmountFacturaZigi DECIMAL(18, 5);
+	DECLARE @InvoiceAmountZigi INT;
+	DECLARE @InvoiceAmountFacturaZigi INT;
+	-- FIN MODIFICACIÓN
 
 	SET @UserId2 =
 		(
@@ -59,7 +64,14 @@ BEGIN
 		@InvoiceAmountCredit = ISNULL(SUM(InvoiceAmountCredit), 0),
 		@InvoiceAmountFacturaCash = ISNULL(SUM(InvoiceAmountFacturaCash), 0),
 		@InvoiceAmountFacturaCard = ISNULL(SUM(InvoiceAmountFacturaCard), 0),
-		@InvoiceAmountCOD = ISNULL(SUM(InvoiceAmountCOD), 0)
+		@InvoiceAmountCOD = ISNULL(SUM(InvoiceAmountCOD), 0),
+		-- MODIFICACIÓN [2025-10-17] - Totales para Zigi
+		@TotalAmountZigi = ISNULL(SUM(TotalAmountZigi), 0),
+		@TotalAmountCODZigi = ISNULL(SUM(TotalAmountCODZigi), 0),
+		@TotalAmountFacturaZigi = ISNULL(SUM(TotalAmountFacturaZigi), 0),
+		@InvoiceAmountZigi = ISNULL(SUM(InvoiceAmountZigi), 0),
+		@InvoiceAmountFacturaZigi = ISNULL(SUM(InvoiceAmountFacturaZigi), 0)
+		-- FIN MODIFICACIÓN
 	FROM AccountingClosuresHeader ACH
 	WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 		AND ACH.VisitPoint = @VisitPointId
@@ -83,7 +95,13 @@ BEGIN
 			TotalAmountFacturaCard, TotalAmountFacturaCardDeclared,
 			InvoiceAmountCash, InvoiceAmountCredit,
 			InvoiceAmountFacturaCash, InvoiceAmountFacturaCard,
-			InvoiceAmountCOD
+			InvoiceAmountCOD,
+			-- MODIFICACIÓN [2025-10-17] - Campos para Zigi
+			TotalAmountZigi, TotalAmountZigiDeclared,
+			TotalAmountCODZigi, TotalAmountCODZigiDeclared,
+			TotalAmountFacturaZigi, TotalAmountFacturaZigiDeclared,
+			InvoiceAmountZigi, InvoiceAmountFacturaZigi
+			-- FIN MODIFICACIÓN
 		)
 		VALUES
 		(
@@ -98,7 +116,13 @@ BEGIN
 			@TotalAmountFacturaCard, @TotalAmountFacturaCardDeclared,
 			@InvoiceAmountCash, @InvoiceAmountCredit,
 			@InvoiceAmountFacturaCash, @InvoiceAmountFacturaCard,
-			@InvoiceAmountCOD
+			@InvoiceAmountCOD,
+			-- MODIFICACIÓN [2025-10-17] - Valores para Zigi
+			@TotalAmountZigi, @TotalAmountZigiDeclared,
+			@TotalAmountCODZigi, @TotalAmountCODZigiDeclared,
+			@TotalAmountFacturaZigi, @TotalAmountFacturaZigiDeclared,
+			@InvoiceAmountZigi, @InvoiceAmountFacturaZigi
+			-- FIN MODIFICACIÓN
 		);
 
 		-- Variable que obtiene el ID del cierre generado
