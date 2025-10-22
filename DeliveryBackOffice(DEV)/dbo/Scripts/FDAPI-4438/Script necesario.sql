@@ -17,23 +17,6 @@ exec sp_addextendedproperty 'MS_Description',
 go
 
 
------------------- SUGERENCIA IMPORTANTE ----------------------
--- Revisar la estructura de la tabla DefaultValuesPerCountry --
--- parece no estar actualizada en el entorno de desarrollo   --
--- el archivo tables/DefaultValuesPerCountry.sql no contiene --
--- la estructura correcta a lo que está en la base de datos  --
--- revisar y actualizar el archivo según sea necesario.      --
--- no se incluye el cambio, no es parte del alcance.         --
----------------------------------------------------------------
-
-
-
------------------- SUGERENCIA IMPORTANTE ----------------------
--- Revisar el SP GetDataForClosure, tiene variaciones        --
--- a lo versionado y la BBDD de DEV, revisar y actualizar    --
----------------------------------------------------------------
-
-
 -- Modificación a tabla PaymentZigi --
 
 alter table dbo.PaymentZigi
@@ -95,4 +78,51 @@ ADD TotalAmountZigi DECIMAL(18, 5) NOT NULL DEFAULT 0.00,
 INSERT INTO DeliveryBackOffice.dbo.ClosureAccount 
     (AccountNumber, Name, Description, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated, IdCountry) VALUES
     (N'749', N'Cuenta Zigi', N'Cuenta Zigi', 1, N'SYS-BMORATAYA', N'2025-10-19 18:46:26.000', null, null, N'GT');
+
+------------------ SUGERENCIA IMPORTANTE ----------------------
+-- Revisar la estructura de la tabla DefaultValuesPerCountry --
+-- parece no estar actualizada en el entorno de desarrollo   --
+-- el archivo tables/DefaultValuesPerCountry.sql no contiene --
+-- la estructura correcta a lo que está en la base de datos  --
+-- revisar y actualizar el archivo según sea necesario.      --
+-- no se incluye el cambio, no es parte del alcance.         --
+---------------------------------------------------------------
+
+
+
+------------------ SUGERENCIA IMPORTANTE ----------------------
+-- Revisar el SP GetDataForClosure, tiene variaciones        --
+-- a lo versionado y la BBDD de DEV, revisar y actualizar    --
+---------------------------------------------------------------
+
+
+------------------ SUGERENCIA IMPORTANTE ----------------------
+-- Revisar el SP ReportClosureDesktop, tiene variaciones     --
+-- a lo versionado y la BBDD de DEV, revisar y actualizar    --
+-- es posible que ya esté actualizado con los cambios        --
+-- en la Base de datos de DEV, es necesario cambiar este bloque --
+--
+--            WHEN DOPD.TypeofInOutMoneyId = 1 THEN UPPER(ctgmon.tio_pk_name) --
+--            WHEN DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name) --
+--            WHEN DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name) --
+--            WHEN DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name) --
+--            WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta') --
+--            WHEN DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name) --
+--            ELSE '' END 'PaymentType'
+--
+-- por este otro bloque modificado:
+--
+--            -- Modificación 21/10/2025
+--            WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 10) THEN UPPER(ctgmon.tio_pk_name)
+--            WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+--            ELSE '' END 'PaymentType'
+--            -- Fin de modificación                               --
+--
+-- Se recomienda revisar todo el SP para asegurar que todos los cambios
+-- estén aplicados correctamente. Se sabe que hay más bloques similares.
+-- y arreglos que no estaban en la rama develop por arreglos en otras épicas
+---------------------------------------------------------------
+
+
+
 

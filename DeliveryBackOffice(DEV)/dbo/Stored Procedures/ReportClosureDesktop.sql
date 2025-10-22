@@ -8,6 +8,11 @@
 -- Create date: <2024-07-08>
 -- Description:	<Se agrega el simbolo de la moneda, segun pais de origen, para el detalle del reporte>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <21/10/2025>
+-- Description:	<Se agrega método de pago mediante Zigi>
+-- ============================================
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -89,13 +94,11 @@ BEGIN
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE
-			WHEN DOPD.TypeofInOutMoneyId = 1 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+			-- Modificación 21/10/2025
+	        WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 10) THEN UPPER(ctgmon.tio_pk_name)
 			WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-			WHEN DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
 			ELSE ''
+	        -- Fin de modificación
 		END 'PaymentType'
 	   ,CTS.NameTypeService AS 'ServiceType'
 
@@ -183,13 +186,11 @@ BEGIN
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE
-			WHEN DOPD.TypeofInOutMoneyId = 1 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+			-- Modificación 21/10/2025
+	        WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 10) THEN UPPER(ctgmon.tio_pk_name)
 			WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-			WHEN DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
 			ELSE ''
+	        -- Fin de modificación
 		END 'PaymentType'
 	   ,CTS.NameTypeService AS 'ServiceType'
 
