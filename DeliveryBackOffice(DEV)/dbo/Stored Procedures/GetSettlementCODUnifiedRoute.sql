@@ -402,25 +402,32 @@ BEGIN
     SELECT SUM(Total) AS COD_Manifest
     FROM @GuidesDetail;
 
-    SELECT id,
-           Guide,
-           GuideSerie,
-           GuideNumber,
-           Delivered,
-           Price,
-           COD,		
-           CASE 
-			WHEN Total - ISNULL(rdm.AmountApplied,0) < 0 THEN Total
-			ELSE Total - ISNULL(rdm.AmountApplied,0)
-		   END AS 'TOTAL',
-		   FEL,
-           StatusOrderId,
-           OrderDescription,
-           StatusOrderValid,
-           DescriptionStatusOrderValid
-    FROM @GuidesDetail gd
-	  LEFT JOIN [DeliveryBackOffice].[dbo].[RelDepositManifest] rdm WITH (NOLOCK)
-	  ON gd.id = rdm.DeliveryOrderBySettlementId
-    ORDER BY gd.id DESC;
+      SELECT 
+			gd.id,
+			gd.Guide,
+			gd.GuideSerie,
+			gd.GuideNumber,
+			gd.Delivered,
+			gd.Price,
+			gd.COD,
+			CASE 
+				WHEN gd.Total > ISNULL(rdm.TotalApplied, 0) 
+					THEN gd.Total - ISNULL(rdm.TotalApplied, 0)
+				ELSE gd.Total
+			END AS TOTAL,
+			gd.FEL,
+			gd.StatusOrderId,
+			gd.OrderDescription,
+			gd.StatusOrderValid,
+			gd.DescriptionStatusOrderValid
+		FROM @GuidesDetail gd
+            LEFT JOIN (
+                SELECT 
+                    DeliveryOrderBySettlementId,
+                    SUM(AmountApplied) AS TotalApplied
+                FROM [DeliveryBackOffice].[dbo].[RelDepositManifest] WITH (NOLOCK)
+                GROUP BY DeliveryOrderBySettlementId
+            ) rdm ON gd.id = rdm.DeliveryOrderBySettlementId
+		ORDER BY gd.id DESC;
 
 END;
