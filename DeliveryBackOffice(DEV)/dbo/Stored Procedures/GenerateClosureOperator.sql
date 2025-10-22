@@ -5,6 +5,10 @@
 -- Description:	<SP para generar el cierre de los express center>
 -- Nota: Es una copia de GenerateClosure pero se agregaron validaciones
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-10-17>
+-- Description:	<Se agrega el método de pago Zigi en los totales>
+-- ===========================================
 
 CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
@@ -21,7 +25,12 @@ CREATE PROCEDURE [dbo].[GenerateClosureOperator]
 	@TotalAmountCODCashDeclared DECIMAL(18, 5),
 	@TotalAmountFacturaCashDeclared DECIMAL(18,5),
 	@TotalAmountFacturaCardDeclared DECIMAL(18,5),
-	@TotalCOD INT
+	@TotalCOD INT,
+	-- MODIFICACIÓN [2025-10-17] - Parámetros declarados para Zigi
+	@TotalAmountZigiDeclared DECIMAL(18, 5) = 0,
+	@TotalAmountCODZigiDeclared DECIMAL(18, 5) = 0,
+	@TotalAmountFacturaZigiDeclared DECIMAL(18, 5) = 0
+	-- FIN MODIFICACIÓN
 AS
 BEGIN
 
@@ -35,7 +44,7 @@ BEGIN
     DECLARE @CountFacturaCash INT;
     DECLARE @CountFacturaCard INT;
 	-- FIN MODIFICACIÓN
-	-- MODIFICACIÓN [17/10/2025] - Soporte para Zigi
+	-- MODIFICACIÓN [2025-10-17] - Soporte para Zigi
 	DECLARE @TotalZigi DECIMAL(18, 5);
 	DECLARE @TotalCODZigi DECIMAL(18, 5);
 	DECLARE @CountZigi INT;
@@ -393,7 +402,7 @@ BEGIN
 
 	-- FIN MODIFICACIÓN
 
-	-- MODIFICACIÓN [17/10/2025] - Cálculo de totales para Zigi (TypeofInOutMoneyId = 10)
+	-- MODIFICACIÓN [2025-10-17] - Cálculo de totales para Zigi (TypeofInOutMoneyId = 10)
 	SELECT @TotalZigi = ISNULL(SUM(S1.TotalZigi), 0),
 		   @CountZigi = ISNULL(SUM(S1.CountZigi), 0),
 		   @TotalCODZigi = ISNULL(SUM(S1.TotalCODZigi), 0),
@@ -548,7 +557,7 @@ BEGIN
 				TotalAmountFacturaCard,
 				InvoiceAmountFacturaCard,
 				InvoiceAmountCOD,
-				-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
+				-- MODIFICACIÓN [2025-10-17] - Campos para Zigi
 				TotalAmountZigi,
 				TotalAmountZigiDeclared,
 				InvoiceAmountZigi,
@@ -557,7 +566,6 @@ BEGIN
 				TotalAmountFacturaZigi,
 				TotalAmountFacturaZigiDeclared,
 				InvoiceAmountFacturaZigi
-				-- FIN MODIFICACIÓN
             )
             VALUES
             (@UserId2, @ClosurerPOS, @TotalCash, @TotalAmountCashDeclared, @TotalCard, @TotalAmountCreditDeclared,
@@ -565,8 +573,7 @@ BEGIN
              NULL, NULL, @TotalAmountCODCash, @TotalAmountCODCashDeclared, 
 			 @TotalAmountFacturaCashDeclared, @TotalAmountFacturaCardDeclared,
 			 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD,
-			 -- MODIFICACIÓN [17/10/2025] - Valores para Zigi
-			 @TotalZigi, 0, @CountZigi, @TotalCODZigi, 0, @TotalFacturaZigi, 0, @CountFacturaZigi
+			 @TotalZigi, @TotalAmountZigiDeclared, @CountZigi, @TotalCODZigi, @TotalAmountCODZigiDeclared, @TotalFacturaZigi, @TotalAmountFacturaZigiDeclared, @CountFacturaZigi
 			 -- FIN MODIFICACIÓN
 			 );
             PRINT 'INSERTA ENCABEZADO';
