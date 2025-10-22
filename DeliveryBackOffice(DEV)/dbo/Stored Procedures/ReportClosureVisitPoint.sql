@@ -13,6 +13,12 @@
 -- Create date: <26-07-2024>
 -- Description:	<Se optimiza la consulta ya que se tardaba 1:30seg>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <21/10/2025>
+-- Description:	<Se agrega método de pago mediante Zigi>
+-- ============================================
+
 CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
     @StartDate DATETIME = NULL,
     @EndDate DATETIME = NULL,
@@ -71,21 +77,11 @@ BEGIN
                ISNULL(DOPD.amount, 0) 'PriceShippment',
                ISNULL(DOPD.CODAmountProcess, 0) 'COD',
                CASE
-                   WHEN DOPD.TypeofInOutMoneyId = 1 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 2 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 3 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 4 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 6 THEN
-                       UPPER('pago con tarjeta')
-                   WHEN DOPD.TypeofInOutMoneyId = 7 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   ELSE
+                    -- Modificación 21/10/2025
+                    WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+                    WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+                    -- Fin de modificación
+                ELSE
                        ''
                END 'PaymentType',
                CTS.NameTypeService AS 'ServiceType',
@@ -185,21 +181,11 @@ BEGIN
                ISNULL(DOPD.amount, 0) 'PriceShippment',
                ISNULL(DOPD.CODAmountProcess, 0) 'COD',
                CASE
-                   WHEN DOPD.TypeofInOutMoneyId = 1 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 2 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 3 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 4 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 6 THEN
-                       UPPER('pago con tarjeta')
-                   WHEN DOPD.TypeofInOutMoneyId = 7 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   ELSE
+                    -- Modificación 21/10/2025
+                    WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+                    WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+                    -- Fin de modificación
+                ELSE
                        ''
                END 'PaymentType',
                CTS.NameTypeService AS 'ServiceType',
@@ -277,20 +263,10 @@ BEGIN
                ISNULL(DOPD.amount, 0) 'PriceShippment',
                ISNULL(DOPD.CODAmountProcess, 0) 'COD',
                CASE
-                   WHEN DOPD.TypeofInOutMoneyId = 1 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 2 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 3 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 4 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 6 THEN
-                       UPPER('pago con tarjeta')
-                   WHEN DOPD.TypeofInOutMoneyId = 7 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
-                       UPPER(ctgmon.tio_pk_name)
+                   -- Modificación 21/10/2025
+                    WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+                    WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+                    -- Fin de modificación
                    ELSE
                        ''
                END 'PaymentType',
@@ -390,20 +366,10 @@ BEGIN
                ISNULL(DOPD.amount, 0) 'PriceShippment',
                ISNULL(DOPD.CODAmountProcess, 0) 'COD',
                CASE
-                   WHEN DOPD.TypeofInOutMoneyId = 1 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 2 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 3 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 4 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 6 THEN
-                       UPPER('pago con tarjeta')
-                   WHEN DOPD.TypeofInOutMoneyId = 7 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
-                       UPPER(ctgmon.tio_pk_name)
+                   -- Modificación 21/10/2025
+                    WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+                    WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+                    -- Fin de modificación
                    ELSE
                        ''
                END 'PaymentType',
@@ -481,20 +447,10 @@ BEGIN
                ISNULL(DOPD.amount, 0) 'PriceShippment',
                ISNULL(DOPD.CODAmountProcess, 0) 'COD',
                CASE
-                   WHEN DOPD.TypeofInOutMoneyId = 1 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 2 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 3 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 4 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 6 THEN
-                       UPPER('pago con tarjeta')
-                   WHEN DOPD.TypeofInOutMoneyId = 7 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
-                       UPPER(ctgmon.tio_pk_name)
+                   -- Modificación 21/10/2025
+                    WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+                    WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+                    -- Fin de modificación
                    ELSE
                        ''
                END 'PaymentType',
@@ -584,21 +540,11 @@ BEGIN
                Voucher = '',
                ISNULL(DOPD.amount, 0) 'PriceShippment',
                ISNULL(DOPD.CODAmountProcess, 0) 'COD',
-               CASE
-                   WHEN DOPD.TypeofInOutMoneyId = 1 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 2 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 3 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 4 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 6 THEN
-                       UPPER('pago con tarjeta')
-                   WHEN DOPD.TypeofInOutMoneyId = 7 THEN
-                       UPPER(ctgmon.tio_pk_name)
-                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
-                       UPPER(ctgmon.tio_pk_name)
+              CASE
+                   -- Modificación 21/10/2025
+                    WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+                    WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+                    -- Fin de modificación
                    ELSE
                        ''
                END 'PaymentType',
