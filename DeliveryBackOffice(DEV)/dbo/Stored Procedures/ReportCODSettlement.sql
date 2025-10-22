@@ -118,7 +118,7 @@ BEGIN
     ) AG
     WHERE HL.HubAbbreviation = @Hub
           AND CAST(DBS.Date_Dispatched AS DATE) >= @DateIni
-          AND CAST(DBS.Date_Dispatched AS DATE) < @DateFin
+          AND CAST(DBS.Date_Dispatched AS DATE) <= @DateFin
     GROUP BY DBS.ID,
              HL.HubAbbreviation,
              VPC.DescriptionOfClient,
