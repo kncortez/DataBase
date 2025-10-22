@@ -4,6 +4,11 @@
 -- Create date: <2024-07-02>
 -- Description:	<Se agrega el filtro por pais y el nombre de las cuentas asignadas por pais>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-10-21>
+-- Description:	<Se agrega la opción a mostrar que el pago fue con Zigi>
+-- ==============================================
 CREATE PROCEDURE [dbo].[GetDataForClosure]
     @VisitPointId INT = 4246,
     @IdAccount INT = 0,
@@ -126,6 +131,10 @@ BEGIN
                    ctgmon.tio_pk_name
                WHEN DOPD.TypeofInOutMoneyId = 8 THEN
                    'credito'
+                --- MODIFICACIÓN 21/10/2025, se agrega la opción de Zigi
+               WHEN DOPD.TypeofInOutMoneyId = 10 THEN
+                   'Pago con Zigi'
+               -- Fin modificación
                ELSE
                    ''
            END 'PaymentType',
@@ -226,6 +235,10 @@ BEGIN
                    ctgmon.tio_pk_name
                WHEN DOPD.TypeofInOutMoneyId = 8 THEN
                    'credito'
+                --- MODIFICACIÓN 21/10/2025, se agrega la opción de Zigi
+               WHEN DOPD.TypeofInOutMoneyId = 10 THEN
+                   'Pago con Zigi'
+               -- Fin modificación
                ELSE
                    ''
            END 'PaymentType',
