@@ -9,7 +9,7 @@
 -- =============================================
 -- Author:		<Freddy, Camposeco>
 -- Create date: <2025-10-17>
--- Description:	<>
+-- Description:	<Se agrega campo TotalVouchers para mostrar el total de vouchers Efectibox aplicados al manifiesto de liquidación.>
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_settlement_cod]
 		@IdManifest INT

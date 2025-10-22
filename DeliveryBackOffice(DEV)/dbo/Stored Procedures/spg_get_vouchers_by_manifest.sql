@@ -1,7 +1,7 @@
 -- =============================================
--- Author:		Freddy Camposeco
+-- Author:      Freddy Camposeco
 -- Create date: 2025-10-17
--- Description:	Obtiene la lista de vouchers Efectibox aplicados a un manifiesto de liquidación COD
+-- Description: Obtiene la lista de vouchers Efectibox aplicados a un manifiesto de liquidación COD
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_get_vouchers_by_manifest] @IdManifest INT
 AS
