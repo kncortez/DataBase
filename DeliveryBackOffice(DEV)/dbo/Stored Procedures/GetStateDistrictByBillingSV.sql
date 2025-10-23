@@ -12,7 +12,9 @@ AS
 BEGIN    
     
     select sbsv.Code         StateCode,    
-           dbsv.CodeDistrict DistrictCode    
+           dbsv.CodeDistrict DistrictCode,
+           dbsv.StateId      IdState,
+           dbsv.Id           IdDistrict
       From TownshipDistrictByBillingSV tdbsv    WITH(NOLOCK)
            inner Join DistrictByBillingSV dbsv  WITH(NOLOCK)
               on dbsv.Id = tdbsv.DistrictId    
