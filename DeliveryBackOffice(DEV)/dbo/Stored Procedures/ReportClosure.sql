@@ -13,6 +13,10 @@
 -- Create date: <22/07/2024>
 -- Description:	<Se optimiza la consulta en la segunda validacion, para la generacion de los cierres>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <21/10/2025>
+-- Description:	<Se agrega método de pago mediante Zigi>
+-- ============================================
 CREATE PROCEDURE [dbo].[ReportClosure]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -68,14 +72,11 @@ begin
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
-			when DOPD.TypeofInOutMoneyId  = 1 THEN UPPER(ctgmon.tio_pk_name)
-			when DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-			when DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-			when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
-			when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
-			when DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
-			 else '' end 'PaymentType'
+			-- Modificación 21/10/2025
+            when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+            when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+			else '' end 'PaymentType'
+            -- Fin modificación
 		,CTS.NameTypeService as 'ServiceType'
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
 		LEFT JOIN @TEMPLATEDETAIL IND
@@ -146,14 +147,11 @@ begin
 			,isnull(DOPD.amount, 0)'PriceShippment'
 			,isnull(DOPD.CODAmountProcess,0) 'COD'
 			, case 
-				when DOPD.TypeofInOutMoneyId  = 1 THEN UPPER(ctgmon.tio_pk_name)
-				when DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-				when DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-				when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+				-- Modificación 21/10/2025
+				when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
 				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
-				WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
-				 else '' end 'PaymentType'
+				else '' end 'PaymentType'
+				-- Fin modificación
 			,CTS.NameTypeService as 'ServiceType'
 		
     --,DOPD.*
@@ -207,14 +205,11 @@ begin
 			,isnull(DTP.amount, 0)'PriceShippment'
 			,isnull(DTP.CODAmountProcess,0) 'COD'
 			, case 
-				when DTP.TypeofInOutMoneyId  = 1 THEN UPPER(ctgmon.tio_pk_name)
-				when DTP.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-				when DTP.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-				when DTP.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+				-- Modificación 21/10/2025
+				when DTP.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
 				when DTP.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-				when DTP.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
-				WHEN DTP.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
-				 else '' end 'PaymentType'
+				else '' end 'PaymentType'
+				-- Fin modificación
 			,CTS.NameTypeService as 'ServiceType'
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
 			INNER JOIN @TEMPLATEDETAIL IND 
@@ -270,14 +265,11 @@ begin
 			,isnull(DOPD.amount, 0)'PriceShippment'
 			,isnull(DOPD.CODAmountProcess,0) 'COD'
 			, case 
-				when DOPD.TypeofInOutMoneyId  = 1 THEN UPPER(ctgmon.tio_pk_name)
-				when DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-				when DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-				when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+				-- Modificación 21/10/2025
+				when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
 				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
-				WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
-				 else '' end 'PaymentType'
+				else '' end 'PaymentType'
+				-- Fin modificación
 			,CTS.NameTypeService as 'ServiceType'
 		
 		--,DOPD.*
@@ -332,14 +324,11 @@ begin
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
-			when DOPD.TypeofInOutMoneyId  = 1 THEN UPPER(ctgmon.tio_pk_name)
-			when DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-			when DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-			when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
-			when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
-			 else '' end 'PaymentType'
+			-- Modificación 21/10/2025
+            when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+            when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+			else '' end 'PaymentType'
+            -- Fin modificación
 		,CTS.NameTypeService as 'ServiceType'
 --,DOPD.*
 --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
@@ -410,14 +399,11 @@ begin
 			,isnull(DOPD.amount, 0)'PriceShippment'
 			,isnull(DOPD.CODAmountProcess,0) 'COD'
 			, case 
-				when DOPD.TypeofInOutMoneyId  = 1 THEN UPPER(ctgmon.tio_pk_name)
-				when DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-				when DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-				when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+				-- Modificación 21/10/2025
+				when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
 				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
-				WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
-				 else '' end 'PaymentType'
+				else '' end 'PaymentType'
+				-- Fin modificación
 			,CTS.NameTypeService as 'ServiceType'
 		
     --,DOPD.*
