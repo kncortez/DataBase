@@ -108,7 +108,6 @@ begin
 			AND ACD.DopId = DOPD.DopId 
 			-- FIN MODIFICACIÓN
 
-			AND ACD.RowStatus = 1
 		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
@@ -124,8 +123,8 @@ begin
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
-	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) 
-		AND CONVERT(DATE, @EndDate)
+	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		AND ACD.RowStatus = 1
 		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId)
 		AND ACD.AccountingClosuresHeaderId = @IdCierre
 	-- ORDER BY DOPD.DateCreated ASC
@@ -378,7 +377,6 @@ begin
 			AND ACD.DopId = DOPD.DopId
 			-- FIN MODIFICACIÓN
 
-			AND ACD.RowStatus = 1
 		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
@@ -394,6 +392,7 @@ begin
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		  AND ACD.RowStatus = 1
 
 --ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 

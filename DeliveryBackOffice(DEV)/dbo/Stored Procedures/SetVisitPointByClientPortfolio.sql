@@ -61,10 +61,10 @@ BEGIN
                                   AND rua.RuaRowStatus = 1
                               INNER JOIN [dbo].Account ac
                                   ON ac.AccIdAccount = rua.RuaIdAccount
-                                  AND ac.AccRowStatus = 1
                               INNER JOIN VisitPointByUser vp 
                                   ON vp.RegisterUserID = usr.UsrIdUser
-                              WHERE ac.AccIdAccount = @IdAccount)
+                              WHERE ac.AccIdAccount = @IdAccount
+                                AND ac.AccRowStatus = 1)
 
         -----------------------Cliente nuevo -----------------------------------------------  
         IF( @IdVisitPointByClientPortfolio = 0 and @VisitPointId > 0)  
@@ -381,9 +381,9 @@ BEGIN
                ,VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio
             FROM @TblBillingList ni
             INNER JOIN BillingProfile bp
-            ON bp.BlpIdBilling = ni.IdBilling
-            WHERE ni.IdBilling > 0
+            ON  bp.BlpIdBilling = ni.IdBilling
             AND bp.VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio
+            WHERE ni.IdBilling > 0
 
             INSERT INTO DeliveryFavCOD(
                                        [AliasFavCOD]
@@ -432,8 +432,8 @@ BEGIN
             FROM @TblCODList ni
             INNER JOIN DeliveryFavCOD df 
             ON df.IdDeliveryFavCOD = ni.Id
-            WHERE ni.Id > 0
             AND VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio
+            WHERE ni.Id > 0
 
         END
 

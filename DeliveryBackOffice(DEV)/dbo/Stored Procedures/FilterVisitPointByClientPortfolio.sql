@@ -22,13 +22,13 @@ BEGIN
         FROM [dbo].RegisterUser usr WITH (NOLOCK)  
             LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)  
                 ON rua.RuaIdUser = usr.UsrIdUser  
-                   AND rua.RuaRowStatus = 1  
             INNER JOIN [dbo].Account ac WITH (NOLOCK)  
                 ON ac.AccIdAccount = rua.RuaIdAccount  
                    AND ac.AccRowStatus = 1  
             INNER JOIN VisitPointByUser vp WITH (NOLOCK)  
                 ON vp.RegisterUserID = usr.UsrIdUser  
         WHERE ac.AccIdAccount = @IdAccount  
+          AND rua.RuaRowStatus = 1  
           AND vp.RowStatus = 1  
     );  
   
@@ -124,11 +124,11 @@ BEGIN
     FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)  
         INNER JOIN DeliveryBackOffice.dbo.DeliveryFavCOD SUB WITH (NOLOCK)  
             ON SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio  
-        INNER JOIN dbo.DeliveryBank DB WITH (NOLOCK)   
-            ON  SUB.StatusFavCOD = 1  
-            AND DB.Id_bank = SUB.IdBank  
-    WHERE vcp.RowStatus = 1  
-      AND vcp.VisitPointId = @VisitPointId  
+        INNER JOIN dbo.DeliveryBank DB WITH (NOLOCK)
+            ON DB.Id_bank = SUB.IdBank  
+    WHERE vcp.RowStatus = 1
+      AND vcp.VisitPointId = @VisitPointId
+      AND  SUB.StatusFavCOD = 1
       AND (  
            CONCAT(  
                      vcp.FirstName,  
@@ -143,7 +143,7 @@ BEGIN
            OR vcp.Phone LIKE CONCAT('%', @TextFilter, '%')  
            OR vcp.Email LIKE CONCAT('%', @TextFilter, '%')  
           )  
-  
+
     -- Addresses  
     SELECT DISTINCT  
                   'ADDRESSES'  
