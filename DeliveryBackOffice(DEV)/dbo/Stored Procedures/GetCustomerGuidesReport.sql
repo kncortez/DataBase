@@ -11,6 +11,11 @@
 -- Create date: <2025-09-11>
 -- Description: <Se agrega el valor: Instrucciones adicioneles para el reporte Excel>
 -- =============================================
+-- =============================================
+-- Author:      <Walter Orozco>
+-- Create date: <2025-10-09>
+-- Description: <Se agrega InternalCode para clientes cartera de corporativo>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetCustomerGuidesReport]
     @AccountId INT
   , @DateStart DATETIME = NULL
@@ -305,6 +310,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
              , DO.IndicationsToSendDestination                                    'Instrucciones adicionales'  
+             , ISNULL(VPCP.InternalCode,'')										  'InternalCode'
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
@@ -327,6 +333,8 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 OR (DO.ReceiverIdTownship IS NULL AND DO.Receiver_Town = TwnId.TownshipName COLLATE Latin1_General_CI_AI)
             LEFT JOIN #HubsByHeaderCode                                       DSC
                 ON TwnId.HeaderCode = DSC.HeaderCode
+            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointByClientPortfolio] VPCP WITH(NOLOCK)
+				ON	DO.VisitpointClientPortfolioId = VPCP.IdVisitPointByClientPortfolio
         WHERE DO.DateCreated
               BETWEEN @DateStartParam AND @DateFinishParam
               AND DO.IdCustomer = @CustomerId
