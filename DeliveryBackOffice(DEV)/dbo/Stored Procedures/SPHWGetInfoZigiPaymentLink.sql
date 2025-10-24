@@ -33,14 +33,19 @@ BEGIN
 			SELECT  201 AS IdResult,
 			'Guia ha sido pagada' AS [Message],
 			ZI.ZigiLink,
-			ZI.GuideNumber,
-			ZI.GuideSerie,
+			CASE WHEN @GuideSerie = 'MFD' THEN ZI.ZigiPaymentId ELSE ZI.GuideNumber END AS GuideNumber,
+			CASE WHEN @GuideSerie = 'MFD' THEN @GuideSerie ELSE ZI.GuideSerie END AS GuideSerie,
 			ZI.PaidAmount AS Amount,
 			IIF(DO.Receiver_FirstName = '',DO.Receiver_Alternant_FullName,DO.Receiver_FirstName) AS ReceiverName,
 			DO.Receiver_LastName AS ReceiverLastName,
 			DO.Receiver_Phone AS Phone,
 			DO.ReceiverCountryId AS IdCountry,
-			CC.Symbol 
+			CC.Symbol,
+			1 AS IsPay,
+			ZI.ZigiTransactionId AS ZigiTransactionId,
+			ZI.ZigiReference AS ZigiReference,
+			ZI.IsGroup AS IsGroup,
+			ZI.GeneratedMethod AS GeneratedMethod
 	FROM PaymentZigi ZI WITH(NOLOCK)
 	INNER JOIN DeliveryOrder DO WITH(NOLOCK)
 	ON ZI.GuideNumber = DO.Guide_Number
@@ -77,14 +82,19 @@ BEGIN
 	SELECT  200 AS IdResult,
 				'Guia tiene link asociado' AS [Message],
 				ZI.ZigiLink,
-				ZI.GuideNumber,
-				ZI.GuideSerie,
+				CASE WHEN @GuideSerie = 'MFD' THEN ZI.ZigiPaymentId ELSE ZI.GuideNumber END AS GuideNumber,
+				CASE WHEN @GuideSerie = 'MFD' THEN @GuideSerie ELSE ZI.GuideSerie END AS GuideSerie,
 				ZI.PaidAmount AS Amount,
 				IIF(DO.Receiver_FirstName = '',DO.Receiver_Alternant_FullName,DO.Receiver_FirstName) AS ReceiverName,
 				DO.Receiver_LastName AS ReceiverLastName,
 				ISNULL(ZI.PhoneNumber, DO.Receiver_Phone) AS Phone,
 				DO.ReceiverCountryId AS IdCountry,
-				CC.Symbol 
+				CC.Symbol,
+				0 AS IsPay,
+				ZI.ZigiTransactionId AS ZigiTransactionId,
+				ZI.ZigiReference AS ZigiReference,
+				ZI.IsGroup AS IsGroup,
+				ZI.GeneratedMethod AS GeneratedMethod
 		FROM PaymentZigi ZI WITH(NOLOCK)
 		INNER JOIN DeliveryOrder DO WITH(NOLOCK)
 		ON ZI.GuideNumber = DO.Guide_Number
