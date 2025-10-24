@@ -10,6 +10,12 @@
 -- Create date: <2024-11-04>
 -- Description:	<Se agrega el DeliveryETA para el trackin y muestra nuevo estado en timeline >
 -- =============================================
+-- =============================================
+-- Propósito: Obtener deshabilitaido temporalmente "Recibir Alertas",
+-- Autor:     <Freddy Camposeco>
+-- Historia:  <FDAPI-4780>
+-- Fecha:     <2025-10-08>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetTrackingPublic]
     @GuideSerie NVARCHAR(4)
@@ -74,45 +80,6 @@ BEGIN
                 ON SO.CatStatusProcessId = CST.IdStatusProcess
         WHERE DO.Guide_Serie = @GuideSerie
               AND DO.Guide_Number = @GuideNumber;
-
-
-        ----CALCULO DEL HUB---------
-        --SET @Hub =
-        --(
-        --	SELECT TOP 1 TB.Hub
-        --	FROM(
-        --		SELECT dat.DateCreated,
-        --			COALESCE(
-        --			(
-        --				SELECT TOP 1
-        --					ISNULL(HSB.HubName, VP.DescriptionOfClient) StationName
-        --				FROM dbo.RolByUserBySystem rua WITH (NOLOCK)
-        --					INNER JOIN dbo.CatStation ct WITH (NOLOCK)
-        --						ON ct.IdStation = rua.StationId
-        --					LEFT JOIN dbo.HubLogistics HSB WITH (NOLOCK)
-        --						ON HSB.IdHubLogistic = ct.HubLogisticId
-        --					LEFT JOIN dbo.VisitPointClient VP WITH (NOLOCK)
-        --						ON VP.CodeOfReference = ct.CodeOfReference
-        --				WHERE rua.RusIdUser = rg.UsrIdUser
-        --			), hb.HubName) AS Hub
-        --		FROM dbo.DeliveryOrderDetail dat WITH (NOLOCK)
-        --			LEFT JOIN dbo.TokenLog tk WITH (NOLOCK)
-        --				ON tk.TknIdToken = dat.UserCreated
-        --			LEFT JOIN dbo.RegisterUser rg WITH (NOLOCK)
-        --				ON rg.UsrIdUser = tk.TknIdUser
-        --			LEFT JOIN dbo.LogTokenPOD tpd WITH (NOLOCK)
-        --				ON tpd.LogTokenPOD = dat.UserCreated
-        --			LEFT JOIN dbo.SenderReceiver sr WITH (NOLOCK)
-        --				ON sr.ID = tpd.IdCourierman
-        --			LEFT JOIN dbo.HubLogistics hb WITH (NOLOCK)
-        --				ON hb.IdHubLogistic = sr.HubLogisticId
-        --		WHERE DAT.Guide_Number = @GuideNumber
-        --		  AND DAT.Guide_Serie = @GuideSerie
-        --		--ORDER BY daT.DateCreated DESC
-        --	) AS TB
-        --	WHERE TB.Hub IS NOT NULL
-        --	ORDER BY TB.DateCreated DESC
-        --)
 
         IF (@Hub IS NULL)
         BEGIN
@@ -538,29 +505,8 @@ BEGIN
                     WHERE DO.Guide_Serie = @GuideSerie
                           AND DO.Guide_Number = @GuideNumber
                 );
-
-        DECLARE @f4 NVARCHAR(10)
-            =
-                (
-                    SELECT CASE
-                               WHEN
-                               (
-                                   SELECT CatCheckpointTypeId
-                                   FROM DeliveryBackOffice.dbo.StatusOrder WITH (NOLOCK)
-                                   WHERE StatusOrderId = DO.StatusOrderId
-                               ) = @CheckpointType --NO ESTAR EN ESTADO FINAL
-                               OR SO.CatStatusProcessId = @StatusProcessFinal --LA GUÍA SE ENCUENTRA EN UN ESTADO ENTREGADO
-                        THEN
-                                   'false'
-                               ELSE
-                                   'true'
-                           END AS 'flagNotifications'
-                    FROM #DO         DO WITH (NOLOCK)
-                        INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
-                            ON DO.StatusOrderId = SO.StatusOrderId
-                    WHERE DO.Guide_Serie = @GuideSerie
-                          AND DO.Guide_Number = @GuideNumber
-                );
+                
+        DECLARE @f4 NVARCHAR(10) = 'false';
 
         DECLARE @f5 NVARCHAR(10) =
                 (
