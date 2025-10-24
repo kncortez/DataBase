@@ -24,10 +24,10 @@ BEGIN
                 ON rua.RuaIdUser = usr.UsrIdUser  
             INNER JOIN [dbo].Account ac WITH (NOLOCK)  
                 ON ac.AccIdAccount = rua.RuaIdAccount  
-                   AND ac.AccRowStatus = 1  
             INNER JOIN VisitPointByUser vp WITH (NOLOCK)  
                 ON vp.RegisterUserID = usr.UsrIdUser  
-        WHERE ac.AccIdAccount = @IdAccount  
+        WHERE  ac.AccRowStatus = 1  
+          AND  ac.AccIdAccount = @IdAccount  
           AND rua.RuaRowStatus = 1  
           AND vp.RowStatus = 1  
     );  
