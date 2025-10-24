@@ -4,8 +4,6 @@ CREATE TABLE [dbo].[APGuidesControlLogs] (
     [ProcessName]               NVARCHAR(100)   NOT NULL,
     [ErrorMessage]              NVARCHAR(1000)  NOT NULL,
     [ErrorDetails]              NVARCHAR(1000)  NULL,
-    [RequestData]               NVARCHAR(1000)  NULL,
-    [ResponseData]              NVARCHAR(1000)  NULL,
     [RowStatus]                 BIT             DEFAULT ((1)) NOT NULL,
     [TokenCreated]              NVARCHAR (50)   NOT NULL,
     [DateCreated]               DATETIME        NOT NULL,
@@ -36,10 +34,6 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Mensaje de error descriptivo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControlLogs', @level2type = N'COLUMN', @level2name = N'ErrorMessage';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Detalles técnicos del error (stack trace, etc.)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControlLogs', @level2type = N'COLUMN', @level2name = N'ErrorDetails';
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Datos de la request que generó el error', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControlLogs', @level2type = N'COLUMN', @level2name = N'RequestData';
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Datos de la response (si aplica)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControlLogs', @level2type = N'COLUMN', @level2name = N'ResponseData';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del registro (1=Activo, 0=Inactivo)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControlLogs', @level2type = N'COLUMN', @level2name = N'RowStatus';
 GO

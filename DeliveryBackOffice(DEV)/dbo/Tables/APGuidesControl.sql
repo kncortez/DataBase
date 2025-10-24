@@ -6,6 +6,7 @@ CREATE TABLE [dbo].[APGuidesControl] (
     [FirstName]                 NVARCHAR(100)   NOT NULL,
     [LastName]                  NVARCHAR(100)   NOT NULL,
     [City]                      NVARCHAR(100)   NOT NULL,   
+    [Region]                      NVARCHAR(100)   NOT NULL,   
     [Address]                   NVARCHAR(500)   NOT NULL,
     [AddressExtra]              NVARCHAR(500)   NULL,
     [CountryCode]               CHAR(2)         NOT NULL,
@@ -16,7 +17,7 @@ CREATE TABLE [dbo].[APGuidesControl] (
     [GuideNumber]               INT             NULL,
     [APServiceDate]             DATE            NOT NULL,
     [Status]                    NVARCHAR(10)    NOT NULL,
-    [APExecutionScheduleId]   BIGINT          NOT NULL,
+    [APExecutionScheduleId]     INT             NOT NULL,
     [RowStatus]                 BIT             DEFAULT ((1)) NOT NULL,
     [TokenCreated]              NVARCHAR (50)   NOT NULL,
     [DateCreated]               DATETIME        NOT NULL,
@@ -64,6 +65,8 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Apellido del destinatario', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'LastName';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Ciudad de destino', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'City';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Departamento de destino', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'Region';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Dirección de entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'Address';
 GO
