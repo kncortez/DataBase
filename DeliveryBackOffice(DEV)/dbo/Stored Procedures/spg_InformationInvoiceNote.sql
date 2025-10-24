@@ -11,6 +11,10 @@
 -- Modified:	<01 septiembre 2025>
 -- Description:	<Fix para generacion de notas de credito para facturas en lotes de facturacion inactivos>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2025-09-11>
+-- Description:	<Facturacion SV - se quita validacion isnull al consultar tabla invoiceHeader>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_InformationInvoiceNote]
     -- Add the parameters for the stored procedure here
     @fel nvarchar(100),
@@ -31,7 +35,7 @@ begin
 			select inv_pk_id
 			from [dbo].[invoiceHeader] with (nolock)
 			where inv_certificationFEL = @fel
-			AND ISNULL(IdCountry,'GT') = @IdCountry
+			AND IdCountry = @IdCountry
 		);
 	END
 	ELSE IF(@IdCountry = 'SV')
@@ -41,7 +45,7 @@ begin
 			select inv_pk_id
 			from [dbo].[invoiceHeader] with (nolock)
 			where inv_numberFEL = @fel
-			AND ISNULL(IdCountry,'GT') = @IdCountry
+			AND IdCountry = @IdCountry
 			AND CatInvoiceTypeId = @IdTypeDocument
 		);
 	END
@@ -52,7 +56,7 @@ begin
 			select ih.inv_pk_id
 			from [dbo].[invoiceHeader] ih with (nolock)
 			where ih.inv_certificationFEL = @fel
-			AND ISNULL(ih.IdCountry,'GT') = @IdCountry
+			AND ih.IdCountry = @IdCountry
 			AND ih.inv_serieFEL = @CAI
 		);
 	END
