@@ -56,8 +56,7 @@ BEGIN
 										  WHERE [OrderDescription] = 'Incidencia Validada' );
 
 		-- Verificar estado
-		IF (@Status IN (@GuideInRoute,@GuideInReturnRoute,@IncidenceInRoute,@FailedDeliveryAttempt) 
-			AND @Status NOT IN ( SELECT StatusOrderId FROM dbo.StatusOrder SO  WITH(NOLOCK) WHERE CatCheckpointTypeId = 3 ))
+		IF (@Status NOT IN (@GuideInRoute,@GuideInReturnRoute,@IncidenceInRoute,@FailedDeliveryAttempt))
 		BEGIN
 			SELECT
 				  500																										[IdResult]
