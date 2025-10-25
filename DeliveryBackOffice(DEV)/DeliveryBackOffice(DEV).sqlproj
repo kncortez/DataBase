@@ -2066,6 +2066,7 @@
     <Build Include="dbo\Stored Procedures\sps_UpdateInvoiceForza.sql" />
     <Build Include="dbo\Functions\SplitOrdinal.sql" />
     <Build Include="dbo\Stored Procedures\SLGuideReception.sql" />
+    <Build Include="dbo\Stored Procedures\SLGuideReturn.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
