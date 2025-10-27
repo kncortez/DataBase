@@ -42,15 +42,15 @@ BEGIN
 
 
 	SET @STATUS_GENERATED = (SELECT [CLS].[IdCatLinehaulStatus]
-							FROM	[dbo].[CatLinehaulStatus] CLS
+							FROM	[dbo].[CatLinehaulStatus] CLS WITH (NOLOCK)
 							WHERE	[CLS].[StatusName] = 'GENERATED');
 
 	SET @STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
-							FROM	[dbo].[StatusOrder] SO
+							FROM	[dbo].[StatusOrder] SO WITH (NOLOCK)
 							WHERE	[SO].[OrderDescription] = 'En Tránsito');
 
 	SET @STATUS_LINEHAUL_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
-								FROM	[dbo].[CatLinehaulStatus] CLS
+								FROM	[dbo].[CatLinehaulStatus] CLS WITH (NOLOCK)
 								WHERE	[CLS].[StatusName] = 'IN TRANSIT');
 
 	-- Vehicle validations
@@ -90,13 +90,13 @@ BEGIN
 
 	-- Check if there is an active record in LinehaulRoutePreparation
 	SET @EXISTING_LRP = (SELECT	COUNT([LRP].[IdLinehaulRoutePreparation]) AS IdLinehaulRoutePreparation
-						 FROM	[dbo].[LinehaulRoutePreparation] LRP
+						 FROM	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 						 WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
 							AND	[LRP].[CatLinehaulStatusId] = @STATUS_GENERATED);
 
 	-- Check if there is an 'IN TRANSIT' record in LinehaulRoutePreparation
 	SET @EXISTING_LRP_TRANSIT = (SELECT	COUNT([LRP].[IdLinehaulRoutePreparation]) AS IdLinehaulRoutePreparation
-								 FROM	[dbo].[LinehaulRoutePreparation] LRP
+								 FROM	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 								 WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
 									AND	[LRP].[CatLinehaulStatusId] = @STATUS_LINEHAUL_ID);
 
@@ -124,19 +124,19 @@ BEGIN
 					[LRP].[RowStatus],
 					[LRP].[TokenCreated],
 					[LRP].[DateCreated]
-			FROM	[dbo].[LinehaulRoutePreparation] LRP
+			FROM	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 			WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
 
 			RETURN;
 		END
 
 	SET @EXISTING_TAG = (SELECT COUNT([LCM].[IdLinehaulRoutePreparationCustomsMark]) AS IdLinehaulRoutePreparationCustomsMark
-						 FROM	[dbo].[LinehaulRoutePreparationCustomsMark] LCM
+						 FROM	[dbo].[LinehaulRoutePreparationCustomsMark] LCM WITH (NOLOCK)
 						 WHERE	[LCM].[CustomsMarkSerie] = @Tag
 							AND [LCM].[RowStatus] = 1);
 
 	SET @EXISTING_SR = (SELECT COUNT([SR].[ID]) AS ID
-						FROM [dbo].[SenderReceiver] SR
+						FROM [dbo].[SenderReceiver] SR WITH (NOLOCK)
 						WHERE [SR].[CUI] = @SenderReceiverCUI);
 
 	IF (@EXISTING_SR = 0 AND @IsInternal = 1)
@@ -148,7 +148,7 @@ BEGIN
 	IF (@EXISTING_SR > 0)
 		BEGIN
 			SET @EXISTING_SR = (SELECT TOP 1 [SR].[ID]
-								FROM [dbo].[SenderReceiver] SR
+								FROM [dbo].[SenderReceiver] SR WITH (NOLOCK)
 								WHERE [SR].[CUI] = @SenderReceiverCUI);
 		END
 	ELSE 
@@ -170,7 +170,7 @@ BEGIN
 		END
 
 	SET @EXISTING_EMPTY_CONTAINERS = (SELECT	COUNT([LRPC].[IdLinehaulRoutePreparationContainer]) AS CONT
-									  FROM		[dbo].[LinehaulRoutePreparationContainer] LRPC
+									  FROM		[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 									  WHERE		[LRPC].[GuideQuantity] = 0
 										AND		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
 										AND		[LRPC].[RowStatus] = 1);
@@ -183,10 +183,10 @@ BEGIN
 						[LRPC].[ContainerId],
 						[CTC].[TypeContainerSerie] AS ContainerSerie,
 						[C].[ContainerNumber]
-			FROM		[dbo].[LinehaulRoutePreparationContainer] LRPC
-			INNER JOIN	[dbo].[Container] C
+			FROM		[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
+			INNER JOIN	[dbo].[Container] C WITH (NOLOCK)
 				ON		[LRPC].[ContainerId] = [C].[IdContainer]
-			INNER JOIN	[dbo].[CatTypeContainer] CTC
+			INNER JOIN	[dbo].[CatTypeContainer] CTC WITH (NOLOCK)
 				ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
 			WHERE		[LRPC].[GuideQuantity] = 0
 					AND	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
@@ -228,8 +228,7 @@ BEGIN
 					@Tag, 
 					1, 
 					@TknUser, 
-					SYSDATETIME(),
-					@IdStation);
+					SYSDATETIME());
 
 		-- Update LinehaulRoutePreparation set SenderReceiver and LinehaulStatus
 		UPDATE	[LinehaulRoutePreparation]
@@ -286,13 +285,13 @@ BEGIN
 		-- UPDATE STATUS IN DELIVERY ORDER
 		UPDATE		[DO]
 		SET			[DO].[StatusOrderId] = @STATUS_ORDER_ID
-		FROM		[dbo].[DeliveryOrder] DO
-		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+		FROM		[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie]
 			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
-		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
+		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
 		WHERE  [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
 		AND	   [LRPCD].[RowStatus] = 1; 
@@ -301,15 +300,15 @@ BEGIN
 		UPDATE		[DOP]
 		SET			[DOP].[StatusOrderId] = @STATUS_ORDER_ID
 		FROM		[dbo].[DeliveryOrderPiece] DOP
-		INNER JOIN	[dbo].[DeliveryOrder] DO
+		INNER JOIN	[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 			ON		[DOP].[GuideSerie] = [DO].[Guide_Serie]
 			AND		[DOP].[GuideNumber] = [DO].[Guide_Number]
-		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie]
 			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
-		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
+		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
 			  WHERE 
 			       [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
@@ -323,14 +322,16 @@ BEGIN
 					 [UserCreated],
 					 [DateCreated], 
 					 [DateCreatedInSystem],
-					 [RowStatus])
+					 [RowStatus],
+					 [StationId])
 		(SELECT		 [LRPCD].[GuideSerie], 
 					 [LRPCD].[GuideNumber], 
 					 @STATUS_ORDER_ID, 
 					 @TknUser,
 					 SYSDATETIME(),
 					 SYSDATETIME(),
-					 1
+					 1,
+					 @IdStation
 		FROM		 [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 		INNER JOIN	 [dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 			ON		 [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
@@ -344,12 +345,12 @@ BEGIN
 		-- UPDATE LINEHAUL ROUTE PREPARATION CONTAINER DETAIL
 		UPDATE	[LRPCDP]
 		SET		[LRPCDP].[CatLinehaulStatusId] = @STATUS_LINEHAUL_ID
-		FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+		FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP WITH (NOLOCK)
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
+		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
 		     WHERE    
 			      [LRPCD].[GuideNumber] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)

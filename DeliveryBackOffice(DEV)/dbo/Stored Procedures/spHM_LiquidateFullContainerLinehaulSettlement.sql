@@ -164,7 +164,7 @@ BEGIN
 		INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 			ON		[LRSCD].[GuideSerie] = [LRPCD].[GuideSerie]
 			AND		[LRSCD].[GuideNumber] = [LRPCD].[GuideNumber]
-			AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC
+		WHERE		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC
 			
 
 		-- UPDATE SETTLEMENT CONTAINER COUNTERS
@@ -208,7 +208,7 @@ BEGIN
 										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 											ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-											AND		[LRSC].[RowStatus] = 1
+										WHERE		[LRSC].[RowStatus] = 1
 											AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 		SET @COUNT_PIECES_RECEIVED = (SELECT		SUM([LRSCD].[PiecesReceived]) AS CONT
@@ -223,7 +223,7 @@ BEGIN
 										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 											ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-											AND [LRSC].[RowStatus] = 1
+										WHERE [LRSC].[RowStatus] = 1
 											AND [LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 		UPDATE	[LinehaulRouteSettlement]
@@ -248,7 +248,7 @@ BEGIN
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie]
 			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
-			AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
+		WHERE		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
 			AND		[LRPCD].[RowStatus] = 1 ;
 
 		-- INSERT LOG IN DELIVERY ORDER DETAIL
@@ -284,7 +284,7 @@ BEGIN
 			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-			AND		[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_CONTAINER_LRPC;
+		WHERE		[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_CONTAINER_LRPC;
 
 
 		SELECT 1 [spResult], 'Container has been liquidated successfully' [spMessage];
