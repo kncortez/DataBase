@@ -1,9 +1,13 @@
--- =============================================
--- Author:	<Tito García>
--- Description: <SP que crea guías del servicio de Aeropost>
--- Date Created: <14/10/2025>
--- =============================================
-ALTER PROCEDURE [dbo].[SetServiceRequest_AP]
+/* =================================================
+   SP:        [dbo].[SetServiceRequest_AP]
+   Propósito: <SP que crea guías del servicio de Aeropost, se toma como base SetServiceRequest>
+   Autor:     <Tito Garcia>
+   Historia:  <FDAPI-4562> 
+   Fecha:     2025-10-14
+==============================================
+=== CHANGELOG ================================
+=========================================== */
+CREATE PROCEDURE [dbo].[SetServiceRequest_AP]
     @TblServiceRequest AS TblServiceRequest3 READONLY,
     @TblDeliveryOrders AS TblDeliveryOrders_AP READONLY,
 	@IsArticle BIT = 0
@@ -220,7 +224,6 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.VisitPointClient WITH (NOLOCK)
                 WHERE CodeOfReference = t.Sender_ID
             ),
-            SalePipeLineId = 0,
             OrderUserCreated =
             (
                 SELECT t.Receiver_Email
