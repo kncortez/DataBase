@@ -374,18 +374,6 @@ BEGIN
             (
                 SELECT TOP 1 Description FROM @StatusOrderValid
             )
-        /*,OrderDescription =
-            (
-                SELECT so.OrderDescription
-                FROM StatusOrder so  WITH(NOLOCK) 
-                WHERE so.StatusOrderId =
-                (
-                    SELECT StatusOrderId
-                    FROM @GuidesDetail
-                    WHERE GuideSerie = @GuideSerie
-                          AND GuideNumber = @GuideNumber
-                )
-            )*/
         WHERE GuideSerie = @GuideSerie
               AND GuideNumber = @GuideNumber;
 
