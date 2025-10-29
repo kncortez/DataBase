@@ -123,6 +123,7 @@ BEGIN
 				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
 			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
+                AND DC.DefaultPerCountry = 1
         WHERE CONVERT(DATE, ACH.DateCreated)
         BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
         GROUP BY VPC.CountryId, CCC.CodeISO
