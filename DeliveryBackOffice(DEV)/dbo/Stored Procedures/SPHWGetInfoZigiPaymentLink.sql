@@ -27,78 +27,69 @@ CREATE PROCEDURE [dbo].[SPHWGetInfoZigiPaymentLink]
 )
 AS
 BEGIN
+    SET NOCOUNT ON;
 
-	IF EXISTS(SELECT 1 FROM PaymentZigi WHERE GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie AND ZigiLinkStatus = 'PAID')
-	BEGIN
-			SELECT  201 AS IdResult,
-			'Guia ha sido pagada' AS [Message],
-			ZI.ZigiLink,
-			ZI.GuideNumber,
-			ZI.GuideSerie,
-			ZI.PaidAmount AS Amount,
-			IIF(DO.Receiver_FirstName = '',DO.Receiver_Alternant_FullName,DO.Receiver_FirstName) AS ReceiverName,
-			DO.Receiver_LastName AS ReceiverLastName,
-			DO.Receiver_Phone AS Phone,
-			DO.ReceiverCountryId AS IdCountry,
-			CC.Symbol 
-	FROM PaymentZigi ZI WITH(NOLOCK)
-	INNER JOIN DeliveryOrder DO WITH(NOLOCK)
-	ON ZI.GuideNumber = DO.Guide_Number
-	AND ZI.GuideSerie = DO.Guide_Serie
-	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-		ON DO.ReceiverCountryId = DC.Currency_IdCountry
-	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
-		ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
-	WHERE (
-            (ZI.GuideNumber = @GuideNumber
-                AND ZI.GuideSerie = @GuideSerie)
-            -- Para Multiguías agrupadas en un solo link Zigi: VERIFICAR SI @GuideSerie es = MFD, se evalua ZI.ZigiPaymentId con @GuideNumber
-               OR (@GuideSerie = 'MFD' AND ZI.ZigiPaymentId = @GuideNumber)
-        )
-	AND DC.DefaultPerCountry = 1
-	AND ZI.ZigiLinkStatus = 'PAID'
-	AND ZI.RowStatus = 1
-	RETURN
-	END
+    -- =============================================
+    -- 1. Actualizar banderas y teléfono si aplica
+    -- =============================================
+    UPDATE DeliveryBackOffice.dbo.PaymentZigi
+    SET LinkRequestSent = 0,
+        DateUpdated = GETDATE(),
+        TokenUpdated = @Token
+    WHERE RowStatus = 1 
+      AND LinkRequestSent = 1 
+      AND PaymentConfirmSent = 0 
+      AND ZigiLinkStatus = 'CREATED'
+      AND GuideNumber = @GuideNumber 
+      AND GuideSerie = @GuideSerie;
 
-	-- Actualizar bandera para envio de mensaje por WhatsApp
-	UPDATE DeliveryBackOffice.dbo.PaymentZigi
-	SET LinkRequestSent = 0, DateUpdated = GETDATE(), TokenUpdated = @Token
-	WHERE RowStatus = 1 AND LinkRequestSent = 1 AND PaymentConfirmSent = 0 AND ZigiLinkStatus = 'CREATED' 
-	AND GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie;
+    UPDATE DeliveryBackOffice.dbo.PaymentZigi
+    SET PhoneNumber = @PhoneNumber
+    WHERE RowStatus = 1 
+      AND PaymentConfirmSent = 0 
+      AND ZigiLinkStatus = 'CREATED'
+      AND GuideNumber = @GuideNumber 
+      AND GuideSerie = @GuideSerie;
 
-	-- ACTUALIZAR PhoneNumber en la tabla PaymentZigi, aunque no se haya enviado, esto favorece el flujo de Zigi desde EXC
-	UPDATE DeliveryBackOffice.dbo.PaymentZigi
-	SET PhoneNumber = @PhoneNumber
-	WHERE RowStatus = 1 AND PaymentConfirmSent = 0 AND ZigiLinkStatus = 'CREATED' 
-	AND GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie;
-
-
-	SELECT  200 AS IdResult,
-				'Guia tiene link asociado' AS [Message],
-				ZI.ZigiLink,
-				ZI.GuideNumber,
-				ZI.GuideSerie,
-				ZI.PaidAmount AS Amount,
-				IIF(DO.Receiver_FirstName = '',DO.Receiver_Alternant_FullName,DO.Receiver_FirstName) AS ReceiverName,
-				DO.Receiver_LastName AS ReceiverLastName,
-				ISNULL(ZI.PhoneNumber, DO.Receiver_Phone) AS Phone,
-				DO.ReceiverCountryId AS IdCountry,
-				CC.Symbol 
-		FROM PaymentZigi ZI WITH(NOLOCK)
-		INNER JOIN DeliveryOrder DO WITH(NOLOCK)
-		ON ZI.GuideNumber = DO.Guide_Number
-		AND ZI.GuideSerie = DO.Guide_Serie
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-			ON DO.ReceiverCountryId = DC.Currency_IdCountry
-		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
-			ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
-		WHERE (
-                (ZI.GuideNumber = @GuideNumber AND ZI.GuideSerie = @GuideSerie)
-		        -- Para Multiguías agrupadas en un solo link Zigi: VERIFICAR SI @GuideSerie es = MFD, se evalua ZI.ZigiPaymentId con @GuideNumber
-               OR (@GuideSerie = 'MFD' AND ZI.ZigiPaymentId = @GuideNumber)
-        )
-		AND DC.DefaultPerCountry = 1
-		AND ZI.ZigiLinkStatus = 'CREATED'
-		AND ZI.RowStatus = 1
-END
+    -- =============================================
+    -- 2. Seleccionar la información del link (único flujo para uni guía o multi guía)
+    -- =============================================
+    SELECT  
+        CASE 
+            WHEN ZI.ZigiLinkStatus = 'PAID' THEN 201
+            ELSE 200
+        END AS IdResult,
+        CASE 
+            WHEN ZI.ZigiLinkStatus = 'PAID' THEN 'Guía ha sido pagada'
+            ELSE 'Guía tiene link asociado'
+        END AS [Message],
+        ZI.ZigiLink,
+        CASE WHEN @GuideSerie = 'MFD' THEN ZI.ZigiPaymentId ELSE ZI.GuideNumber END AS GuideNumber,
+        CASE WHEN @GuideSerie = 'MFD' THEN @GuideSerie ELSE ZI.GuideSerie END AS GuideSerie,
+        ZI.PaidAmount AS Amount,
+        IIF(DO.Receiver_FirstName = '', DO.Receiver_Alternant_FullName, DO.Receiver_FirstName) AS ReceiverName,
+        DO.Receiver_LastName AS ReceiverLastName,
+        ISNULL(ZI.PhoneNumber, DO.Receiver_Phone) AS Phone,
+        DO.ReceiverCountryId AS IdCountry,
+        CC.Symbol,
+        CASE WHEN ZI.ZigiLinkStatus = 'PAID' THEN 1 ELSE 0 END AS IsPay,
+        ZI.ZigiTransactionId,
+        ZI.ZigiReference,
+        ZI.IsGroup,
+        ZI.GeneratedMethod
+    FROM PaymentZigi ZI WITH(NOLOCK)
+    INNER JOIN DeliveryOrder DO WITH(NOLOCK)
+        ON ZI.GuideNumber = DO.Guide_Number
+       AND ZI.GuideSerie = DO.Guide_Serie
+    LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+        ON DO.ReceiverCountryId = DC.Currency_IdCountry
+    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
+        ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
+    WHERE (
+            (ZI.GuideNumber = @GuideNumber AND ZI.GuideSerie = @GuideSerie)
+            OR (@GuideSerie = 'MFD' AND ZI.ZigiPaymentId = @GuideNumber)
+          )
+      AND DC.DefaultPerCountry = 1
+      AND ZI.RowStatus = 1
+      AND ZI.ZigiLinkStatus IN ('CREATED', 'PAID');
+END;
