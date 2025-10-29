@@ -284,7 +284,6 @@ BEGIN
 							ON CTI.CatPartyResponsibleId = CPR.IdCatPartyResponsible
 						WHERE GSRT.GuideSerie = DA.Guide_Serie
 							  AND GSRT.GuideNumber = DA.Guide_Number
-							  AND DA.Delivered = 1
                               AND CTI.RowStatus = 1
 							  AND CPR.RowStatus = 1
 						ORDER BY DA.Date_Created DESC
