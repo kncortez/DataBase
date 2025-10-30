@@ -52,12 +52,12 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
                isnull(sum(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard),0) 'TotalGeneral',
                -- FIN MODIFICACIÓN
-               ISNULL(CCC.CodeISO,'') AS CurrencySymbol
+               CCC.CodeISO AS CurrencySymbol
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+				ON VPC.CountryId = DC.Currency_IdCountry
                 AND DC.DefaultPerCountry = 1
 			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
@@ -85,12 +85,12 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
                isnull(sum(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard),0) 'TotalGeneral',
                -- FIN MODIFICACIÓN
-               ISNULL(CCC.CodeISO,'') AS CurrencySymbol
+               CCC.CodeISO AS CurrencySymbol
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+				ON VPC.CountryId = DC.Currency_IdCountry
                 AND DC.DefaultPerCountry = 1
 			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
@@ -117,12 +117,12 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
                isnull(sum(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard),0) 'TotalGeneral',
                -- FIN MODIFICACIÓN
-               ISNULL(CCC.CodeISO,'') AS CurrencySymbol
+               CCC.CodeISO AS CurrencySymbol
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN VisitPointClient VPC WITH (NOLOCK)
                 ON ACH.VisitPoint = VPC.IdVisitPointClient
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+				ON VPC.CountryId = DC.Currency_IdCountry
                 AND DC.DefaultPerCountry = 1
 			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
