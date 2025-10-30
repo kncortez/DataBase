@@ -9,6 +9,16 @@
 -- Create date: <10-07-2024>
 -- Description:	<Se agrega la moneda y las cuentas para mostrar en el reporte>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <08-04-2025>
+-- Description:	<Mejoras de multipaís para moneda en SV.>
+-- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-10-28>
+-- Description:	<Se agrega campos de nuevo método de Zigi>
+-- =============================================
 CREATE PROCEDURE  [dbo].[ReportClosureTotalVisitPoint] 
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -19,7 +29,8 @@ BEGIN
 
     DECLARE @IdCountry NVARCHAR(2),
             @Account NVARCHAR(30),
-            @AccountCOD NVARCHAR(30);
+            @AccountCOD NVARCHAR(30),
+            @AccountZigi NVARCHAR(30);
 
     SELECT @IdCountry = CountryId
     FROM VisitPointClient
@@ -33,6 +44,11 @@ BEGIN
     SELECT @AccountCOD = Name + ' ' + '(' + AccountNumber + ')'
     FROM dbo.ClosureAccount
     WHERE Description = 'Cuenta Área COD'
+          AND ISNULL(IdCountry, 'GT') = @IdCountry
+    
+    SELECT @AccountZigi = Name + ' ' + '(' + AccountNumber + ')'
+    FROM dbo.ClosureAccount
+    WHERE Description = 'Cuenta Zigi'
           AND ISNULL(IdCountry, 'GT') = @IdCountry
 
     if (@VisitPointId > 0 and @IdCierre > 0)
@@ -50,22 +66,34 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               isnull(sum(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard),0) 'TotalGeneral',
+               @AccountZigi AS AccountZigi,
+               ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
+               ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+               ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
+               ISNULL(
+                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
+                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
+                          + ACH.TotalAmountZigi + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                            ),
+                         0
+                     ) 'TotalGeneral',
                -- FIN MODIFICACIÓN
-               CASE
-                   WHEN ISNULL(VPC.CountryId, 'GT') = 'GT' THEN
-                       'GTQ.'
-                   ELSE
-                       'HNL.'
-               END AS CurrencySymbol
+               ISNULL(CCC.CodeISO,'') AS CurrencySymbol
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
         WHERE CONVERT(DATE, ACH.DateCreated)
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
           AND ACH.IdAccountingClosuresHeaderVisitPoint = @IdCierre
           AND VPC.CodeOfReference = @VisitPointId
-        GROUP BY VPC.CountryId
+        GROUP BY VPC.CountryId,CCC.CodeISO
     end
 
     if (@VisitPointId > 0 and (@IdCierre <= 0 or @IdCierre is null))
@@ -83,22 +111,34 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               isnull(sum(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard),0) 'TotalGeneral',
+               @AccountZigi AS AccountZigi,
+               ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
+               ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+               ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
+               ISNULL(
+                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
+                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
+                          + ACH.TotalAmountZigi + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                            ),
+                         0
+                     ) 'TotalGeneral',
                -- FIN MODIFICACIÓN
-               CASE
-                   WHEN ISNULL(VPC.CountryId, 'GT') = 'GT' THEN
-                       'GTQ.'
-                   ELSE
-                       'HNL.'
-               END AS CurrencySymbol
+               ISNULL(CCC.CodeISO,'') AS CurrencySymbol
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
         WHERE CONVERT(DATE, ACH.DateCreated)
         BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
           AND VPC.CodeOfReference = @VisitPointId
         GROUP BY VisitPoint,
-                 VPC.CountryId
+                 VPC.CountryId,CCC.CodeISO
     end
 
     if (@VisitPointId = -1 and (@IdCierre <= 0 or @IdCierre is null))
@@ -116,20 +156,32 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               isnull(sum(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard),0) 'TotalGeneral',
+               @AccountZigi AS AccountZigi,
+               ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
+               ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+               ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
+               ISNULL(
+                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
+                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
+                          + ACH.TotalAmountZigi + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                            ),
+                         0
+                     ) 'TotalGeneral',
                -- FIN MODIFICACIÓN
-               CASE
-                   WHEN ISNULL(VPC.CountryId, 'GT') = 'GT' THEN
-                       'GTQ.'
-                   ELSE
-                       'HNL.'
-               END AS CurrencySymbol
+               ISNULL(CCC.CodeISO,'') AS CurrencySymbol
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN VisitPointClient VPC WITH (NOLOCK)
                 ON ACH.VisitPoint = VPC.IdVisitPointClient
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
         WHERE CONVERT(DATE, ACH.DateCreated)
         BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-        GROUP BY VPC.CountryId
+        GROUP BY VPC.CountryId,CCC.CodeISO
     end
 
 END
