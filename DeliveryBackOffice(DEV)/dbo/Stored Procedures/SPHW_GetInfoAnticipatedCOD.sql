@@ -215,7 +215,6 @@ BEGIN TRY
 					ELSE 'TRUE'
 				 END													AS 'FlagDelivery'
 				, ACH.DailyAmount										AS 'Amount'
-				, CCC.Symbol											AS 'Currency'
 				, ACH.ReturnPercent										AS 'Devolution'
 				, CASE
 					WHEN ACH.ReturnPercent > ISNULL(RH.ReturnPercent,CP2.Value) 
@@ -230,10 +229,6 @@ BEGIN TRY
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
 				ON DO.VisitpointClientPortfolioId = ACH.PortfolioId
-			LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
-				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
-			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-				ON C.CodCurrency = CCC.IdCatCurrencyCOD
 			LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
 				ON DO.IdCustomer = RBC.RbcIdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
@@ -254,7 +249,8 @@ BEGIN TRY
 			BEGIN
 
 				SELECT
-					  DO.Collect_OnDelivery								AS 'AmountCOD'
+					  CCC.Symbol                                        AS 'Currency'
+					, DO.Collect_OnDelivery								AS 'AmountCOD'
 					, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
 					, 
 					CASE
@@ -284,8 +280,8 @@ BEGIN TRY
 								ELSE
 									CAST(CPv3.value AS DECIMAL)
 							END
-					END													AS 'ComisionCODAnticipated'
-					, ISNULL(RH.GuideAmountCOD,0)						AS 'MaxAmountCODAnticipated'
+					END													        AS 'ComisionCODAnticipated'
+					, ISNULL(RH.GuideAmountCOD,CAST(CPV4.value AS DECIMAL))		AS 'MaxAmountCODAnticipated'
 					, CASE
 						WHEN VPC.ExcludePriceShippingCOD = 1 OR C.ExcludePriceShippingCOD = 1
 						THEN
@@ -294,6 +290,11 @@ BEGIN TRY
 							DO.PriceShippment
 					  END												AS 'Shipping'
 				FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+				LEFT JOIN DeliveryBackOffice.dbo.Cost CO WITH(NOLOCK)
+					ON DO.Guide_Serie = CO.GuideSerie 
+					AND DO.Guide_Number = CO.GuideNumber
+				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON CO.CodCurrency = CCC.IdCatCurrencyCOD
 				LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 					ON VPC.CodeOfReference = DO.Sender_ID
 				LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
@@ -320,6 +321,8 @@ BEGIN TRY
 					ON CPv2.IdCountry = DO.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'
 				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)
 					ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
+				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPV4 WITH(NOLOCK)
+					ON CPV4.IdCountry = DO.ReceiverCountryId AND CPV4.Name = 'GuideAmountCODAnticipatedParam'
 				WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 			END;
 
@@ -373,7 +376,6 @@ BEGIN TRY
 					ELSE 'TRUE'
 				 END													AS 'FlagDelivery'
 				, ACH.DailyAmount										AS 'Amount'
-				, CCC.Symbol											AS 'Currency'
 				, ACH.ReturnPercent										AS 'Devolution'
 				, CASE
 					WHEN ACH.ReturnPercent > ISNULL(RH.ReturnPercent,CP2.Value) 
@@ -388,10 +390,6 @@ BEGIN TRY
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
 				ON DO.IdCustomer = ACH.CustomerId
-			LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
-				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
-			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-				ON C.CodCurrency = CCC.IdCatCurrencyCOD
 			LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
 				ON DO.IdCustomer = RBC.RbcIdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
@@ -411,7 +409,8 @@ BEGIN TRY
 			IF(@FlagCreation = 1)
 			BEGIN
 				SELECT
-					  DO.Collect_OnDelivery								AS 'AmountCOD'
+					  CCC.Symbol                                        AS 'Currency'
+					, DO.Collect_OnDelivery								AS 'AmountCOD'
 					, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
 					, 
 					CASE
@@ -441,8 +440,8 @@ BEGIN TRY
 								ELSE
 									CAST(CPv3.value AS DECIMAL)
 							END
-					END													AS 'ComisionCODAnticipated'
-					, ISNULL(RH.GuideAmountCOD,0)						AS 'MaxAmountCODAnticipated'
+					END													        AS 'ComisionCODAnticipated'
+					, ISNULL(RH.GuideAmountCOD,CAST(CPV4.value AS DECIMAL))		AS 'MaxAmountCODAnticipated'
 					, CASE
 						WHEN VPC.ExcludePriceShippingCOD = 1 OR C.ExcludePriceShippingCOD = 1
 						THEN
@@ -451,6 +450,11 @@ BEGIN TRY
 							DO.PriceShippment
 					  END												AS 'Shipping'
 				FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+				LEFT JOIN DeliveryBackOffice.dbo.Cost CO WITH(NOLOCK)
+					ON DO.Guide_Serie = CO.GuideSerie 
+					AND DO.Guide_Number = CO.GuideNumber
+				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON CO.CodCurrency = CCC.IdCatCurrencyCOD
 				LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 					ON VPC.CodeOfReference = DO.Sender_ID
 				LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
@@ -477,6 +481,8 @@ BEGIN TRY
 					ON CPv2.IdCountry = DO.ReceiverCountryId AND CPv2.Name = 'ValueCODComisison2Param'
 				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPv3 WITH(NOLOCK)
 					ON CPv3.IdCountry = DO.ReceiverCountryId AND CPv3.Name = 'ValueCODComisison3Param'
+				LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CPV4 WITH(NOLOCK)
+					ON CPV4.IdCountry = DO.ReceiverCountryId AND CPV4.Name = 'GuideAmountCODAnticipatedParam'
 				WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 			END;
 
