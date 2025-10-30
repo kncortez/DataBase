@@ -58,9 +58,9 @@ BEGIN
                 ON VPC.CodeOfReference = ACH.VisitPoint
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+                AND DC.DefaultPerCountry = 1
 			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-                AND DC.DefaultPerCountry = 1
         WHERE CONVERT(DATE, ACH.DateCreated)
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
           AND ACH.IdAccountingClosuresHeaderVisitPoint = @IdCierre
@@ -91,9 +91,9 @@ BEGIN
                 ON VPC.CodeOfReference = ACH.VisitPoint
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+                AND DC.DefaultPerCountry = 1
 			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-                AND DC.DefaultPerCountry = 1
         WHERE CONVERT(DATE, ACH.DateCreated)
         BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
           AND VPC.CodeOfReference = @VisitPointId
@@ -123,9 +123,9 @@ BEGIN
                 ON ACH.VisitPoint = VPC.IdVisitPointClient
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+                AND DC.DefaultPerCountry = 1
 			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-                AND DC.DefaultPerCountry = 1
         WHERE CONVERT(DATE, ACH.DateCreated)
         BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
         GROUP BY VPC.CountryId, CCC.CodeISO
