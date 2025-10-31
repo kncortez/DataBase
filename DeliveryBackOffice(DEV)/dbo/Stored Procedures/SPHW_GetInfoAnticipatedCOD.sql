@@ -215,6 +215,7 @@ BEGIN TRY
 					ELSE 'TRUE'
 				 END													AS 'FlagDelivery'
 				, ACH.DailyAmount										AS 'Amount'
+				, CCC.Symbol											AS 'Currency'
 				, ACH.ReturnPercent										AS 'Devolution'
 				, CASE
 					WHEN ACH.ReturnPercent > ISNULL(RH.ReturnPercent,CP2.Value) 
@@ -229,6 +230,10 @@ BEGIN TRY
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
 				ON DO.VisitpointClientPortfolioId = ACH.PortfolioId
+			LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON C.CodCurrency = CCC.IdCatCurrencyCOD
 			LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
 				ON DO.IdCustomer = RBC.RbcIdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
@@ -376,6 +381,7 @@ BEGIN TRY
 					ELSE 'TRUE'
 				 END													AS 'FlagDelivery'
 				, ACH.DailyAmount										AS 'Amount'
+				, CCC.Symbol											AS 'Currency'
 				, ACH.ReturnPercent										AS 'Devolution'
 				, CASE
 					WHEN ACH.ReturnPercent > ISNULL(RH.ReturnPercent,CP2.Value) 
@@ -390,6 +396,10 @@ BEGIN TRY
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ACH WITH(NOLOCK)
 				ON DO.IdCustomer = ACH.CustomerId
+			LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON C.CodCurrency = CCC.IdCatCurrencyCOD
 			LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
 				ON DO.IdCustomer = RBC.RbcIdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
