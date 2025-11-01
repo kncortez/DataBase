@@ -154,9 +154,9 @@ BEGIN
     WHERE pz.ZigiLinkStatus = 'PAID';
 
     -- 2. Agregar guías pagadas a los excluidos (Rejects)
-    INSERT INTO #listGuidesExcluded (Guide_Serie, Guide_Number, StatusOrderId, Description)
-    SELECT Guide_Serie, Guide_Number, 999, 'Guía pagada en Zigi'
-    FROM #listGuidesPaidZigi;
+    -- INSERT INTO #listGuidesExcluded (Guide_Serie, Guide_Number, StatusOrderId, Description)
+    -- SELECT Guide_Serie, Guide_Number, 999, 'Guía pagada en Zigi'
+    -- FROM #listGuidesPaidZigi;
 
 
 
@@ -261,10 +261,10 @@ BEGIN
          OR (UPPER(@ServiceType) = 'RETURN' AND so.StatusOrderId IN (10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35))
     )
     AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
-    AND NOT EXISTS (
-          SELECT 1 FROM #listGuidesPaidZigi paid
-          WHERE paid.Guide_Serie = lg.Guide_Serie AND paid.Guide_Number = lg.Guide_Number
-    )
+    -- AND NOT EXISTS (
+          -- SELECT 1 FROM #listGuidesPaidZigi paid
+          -- WHERE paid.Guide_Serie = lg.Guide_Serie AND paid.Guide_Number = lg.Guide_Number
+    -- )
     AND NOT EXISTS (
           SELECT 1 FROM #listGuidesExcluded ex
           WHERE ex.Guide_Serie = lg.Guide_Serie AND ex.Guide_Number = lg.Guide_Number
@@ -902,4 +902,3 @@ BEGIN
 
     SELECT @Output FormatJson;
 END;
-

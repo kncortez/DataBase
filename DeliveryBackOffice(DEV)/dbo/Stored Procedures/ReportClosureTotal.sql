@@ -8,6 +8,11 @@
 -- Create date: <09/07/2024>
 -- Description:	<Se agrega el simbolo de la moneda y las cuentas correspondientes al pais para el encabezado del reporte>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-10-28>
+-- Description:	<Se agrega campos de nuevo método de Zigi>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureTotal]
     @StartDate DATETIME = NULL,
     @EndDate DATETIME = NULL,
@@ -42,12 +47,22 @@ BEGIN
                ISNULL(SUM(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                ISNULL(SUM(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                ISNULL(SUM(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
+               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
+               @AccountZigi AS AccountZigi,
+               ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
+               ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+               ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
                ISNULL(
                          SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
                              + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
+                          + ACH.TotalAmountZigi + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
                             ),
                          0
                      ) 'TotalGeneral',
+                -- FIN DE MODIFICACIÓN
 			   CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'GTQ' ELSE 'HNL' END AS CurrencySymbol 
         -- FIN MODIFICACIÓN
         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
@@ -75,12 +90,22 @@ BEGIN
                ISNULL(SUM(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                ISNULL(SUM(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                ISNULL(SUM(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
+               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
+               @AccountZigi AS AccountZigi,
+               ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
+               ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+               ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
                ISNULL(
                          SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
                              + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
+                          + ACH.TotalAmountZigi + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
                             ),
                          0
                      ) 'TotalGeneral',
+                -- FIN DE MODIFICACIÓN
 			  CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'GTQ' ELSE 'HNL' END AS CurrencySymbol
         -- FIN MODIFICACIÓN
         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
@@ -107,12 +132,22 @@ BEGIN
                ISNULL(SUM(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                ISNULL(SUM(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                ISNULL(SUM(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
+               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
+               @AccountZigi AS AccountZigi,
+               ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
+               ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+               ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
                ISNULL(
                          SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
                              + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
+                          + ACH.TotalAmountZigi + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
                             ),
                          0
                      ) 'TotalGeneral',
+                -- FIN DE MODIFICACIÓN
 			  CASE WHEN ISNULL(VPC.CountryId, 'GT') = 'GT' THEN 'GTQ' ELSE 'HNL' END AS CurrencySymbol
         -- FIN MODIFICACIÓN
         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
