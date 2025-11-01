@@ -3,7 +3,7 @@ alter table dbo.DefaultValuesPerCountry
     add RegxMovilPhone NVARCHAR(50)
 go
 
-exec sp_addextendedproperty 'MS_Description', N'Expresión regular para tléfonos móviles del país', 'SCHEMA', 'dbo',
+exec sp_addextendedproperty 'MS_Description', N'Expresión regular para teléfonos móviles del país', 'SCHEMA', 'dbo',
     'TABLE', 'DefaultValuesPerCountry', 'COLUMN', 'RegxMovilPhone'
 go
 
@@ -17,6 +17,12 @@ exec sp_addextendedproperty 'MS_Description',
 go
 
 
+-- Modificación a tabla DefaultValuesPerCountry --
+UPDATE DeliveryBackOffice.dbo.DefaultValuesPerCountry SET RegxMovilPhone = N'^502[3-7]\d{7}$', WhatsappNumber = N'50223775302' WHERE IdCountry = N'GT';
+UPDATE DeliveryBackOffice.dbo.DefaultValuesPerCountry SET RegxMovilPhone = N'^504[389]\d{7}$', WhatsappNumber = N'50223775302' WHERE IdCountry = N'HN';
+UPDATE DeliveryBackOffice.dbo.DefaultValuesPerCountry SET RegxMovilPhone = N'^503[79]\d{7}$', WhatsappNumber = N'50223775302' WHERE IdCountry = N'SV';
+
+
 -- Modificación a tabla PaymentZigi --
 
 alter table dbo.PaymentZigi
@@ -24,7 +30,7 @@ alter table dbo.PaymentZigi
 go
 
 exec sp_addextendedproperty 'MS_Description',
-    N'En cao que se requira enviar a otro númer de tléfono y no necesariamente asignado a la Guía, sirve mucho pra multiguía',
+    N'En caso que se requira enviar a otro número de teléfono y no necesariamente asignado a la Guía, sirve mucho para multiguía',
     'SCHEMA', 'dbo', 'TABLE', 'PaymentZigi', 'COLUMN', 'PhoneNumber'
 go
 
@@ -32,9 +38,8 @@ alter table dbo.PaymentZigi
     add IsGroup BIT DEFAULT 0 NOT NULL
 go
 
-exec sp_addextendedproperty 'MS_Description',
-    N'Indica si el pago es parte de un grupo de pagos.',
-    'SCHEMA', 'dbo', 'TABLE', 'PaymentZigi', 'COLUMN', 'IsGroup'
+exec sp_addextendedproperty 'MS_Description', N'Define si este link define el pago de un grupo de guías', 'SCHEMA',
+     'dbo', 'TABLE', 'PaymentZigi', 'COLUMN', 'IsGroup'
 go
 
 alter table dbo.PaymentZigi
@@ -45,13 +50,64 @@ exec sp_addextendedproperty 'MS_Description', N'Método de generación del link'
     'COLUMN', 'GeneratedMethod'
 go
 
+-- Creación y Modificación a tabla PaymentZigiMulti --
+create table PaymentZigiMulti
+(
+    Id             int identity
+        primary key,
+    Id_PaymentZigi int                      not null
+        constraint FK_PaymentZigi
+            references PaymentZigi,
+    GuideSerie     nvarchar(50)             not null,
+    GuideNumber    nvarchar(50)             not null,
+    Amount         decimal(10, 2) default 0.00,
+    exclude_COD    bit            default 0,
+    IsPay          bit            default 0,
+    CODValue       decimal(10, 2),
+    CollectValue   decimal(10, 2),
+    RowStatus      bit            default 1 not null
+)
+go
 
--- Modificación a tabla DefaultValuesPerCountry --
+exec sp_addextendedproperty 'MS_Description', N'Identificador único del registro en la tabla', 'SCHEMA', 'dbo', 'TABLE',
+     'PaymentZigiMulti', 'COLUMN', 'Id'
+go
 
+exec sp_addextendedproperty 'MS_Description', N'Id de relación con la tabla PaymentZigi ', 'SCHEMA', 'dbo', 'TABLE',
+     'PaymentZigiMulti', 'COLUMN', 'Id_PaymentZigi'
+go
 
-UPDATE DeliveryBackOffice.dbo.DefaultValuesPerCountry SET RegxMovilPhone = N'^502[3-7]\d{7}$', WhatsappNumber = N'50223775302' WHERE IdCountry = N'GT';
-UPDATE DeliveryBackOffice.dbo.DefaultValuesPerCountry SET RegxMovilPhone = N'^504[389]\d{7}$', WhatsappNumber = N'50223775302' WHERE IdCountry = N'HN';
-UPDATE DeliveryBackOffice.dbo.DefaultValuesPerCountry SET RegxMovilPhone = N'^503[79]\d{7}$', WhatsappNumber = N'50223775302' WHERE IdCountry = N'SV';
+exec sp_addextendedproperty 'MS_Description', N'Serie de la guía', 'SCHEMA', 'dbo', 'TABLE', 'PaymentZigiMulti',
+     'COLUMN', 'GuideSerie'
+go
+
+exec sp_addextendedproperty 'MS_Description', N'Número d Guía', 'SCHEMA', 'dbo', 'TABLE', 'PaymentZigiMulti', 'COLUMN',
+     'GuideNumber'
+go
+
+exec sp_addextendedproperty 'MS_Description', 'Monto a pagar completo', 'SCHEMA', 'dbo', 'TABLE', 'PaymentZigiMulti',
+     'COLUMN', 'Amount'
+go
+
+exec sp_addextendedproperty 'MS_Description', N'Exclusión de COD', 'SCHEMA', 'dbo', 'TABLE', 'PaymentZigiMulti',
+     'COLUMN', 'exclude_COD'
+go
+
+exec sp_addextendedproperty 'MS_Description', N'Indicador si desde portal EXC se indica que está pagado', 'SCHEMA',
+     'dbo', 'TABLE', 'PaymentZigiMulti', 'COLUMN', 'IsPay'
+go
+
+exec sp_addextendedproperty 'MS_Description', 'Valor de pago correspondiente a COD', 'SCHEMA', 'dbo', 'TABLE',
+     'PaymentZigiMulti', 'COLUMN', 'CODValue'
+go
+
+exec sp_addextendedproperty 'MS_Description', 'Valor correspondiente al servicio Collect', 'SCHEMA', 'dbo', 'TABLE',
+     'PaymentZigiMulti', 'COLUMN', 'CollectValue'
+go
+
+exec sp_addextendedproperty 'MS_Description', N'Indicador si el registro está vigente', 'SCHEMA', 'dbo', 'TABLE',
+     'PaymentZigiMulti', 'COLUMN', 'RowStatus'
+go
 
 
 --- Modificación de tabla AccountingClosuresHeader
@@ -122,7 +178,3 @@ INSERT INTO DeliveryBackOffice.dbo.ClosureAccount
 -- estén aplicados correctamente. Se sabe que hay más bloques similares.
 -- y arreglos que no estaban en la rama develop por arreglos en otras épicas
 ---------------------------------------------------------------
-
-
-
-
