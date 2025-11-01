@@ -66,6 +66,7 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
+               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
                @AccountZigi AS AccountZigi,
                ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
                ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
@@ -111,6 +112,7 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
+               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
                @AccountZigi AS AccountZigi,
                ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
                ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
@@ -155,6 +157,7 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
+               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
                @AccountZigi AS AccountZigi,
                ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
                ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
