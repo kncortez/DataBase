@@ -2,14 +2,14 @@
    SP:        [dbo].[GetVisitPointOfClient]
    Propósito: Devolver los puntos de visita relacionados a un cliente corporativo.
    Autor:     Daniel Ramirez
-   Historia:  HR-2103
-   Fecha:     2024-11-19
+   Historia:  FDD-1424
+   Fecha:     2024-11-25
 ===== CHANGELOG ============================
 2025-11-03 | Historia/épica: FDAPI-4922 | Autor: Cristian |
-2025-06-12 | Historia/épica: FDAPI-4083 | Autor: Brandon Pedroza |
-2024-11-28 | Historia/épica: FDD-1441 | Autor: Tito García  |
-2024-11-19 | Historia/épica: FDD-4021 | Autor: Daniel Ramirez  |
-2024-11-19 | Historia/épica: FDD-1433 | Autor: Daniel Ramirez  |
+2025-08-05 | Historia/épica: FDAPI-4191 | Autor: Cristian |
+2025-06-12 | Historia/épica: FDAPI-4028 | Autor: Brandon Pedroza |
+2024-11-28 | Historia/épica: FDD-1422 | Autor: Tito García  |
+2024-11-25 | Historia/épica: FDD-1424 | Autor: Daniel Ramirez  |
 =========================================== */
 
 CREATE PROCEDURE [dbo].[GetVisitPointOfClient]
