@@ -1,6 +1,4 @@
-﻿
--- =============================================
--- =============================================
+﻿-- =============================================
 -- Author:		<Edelman Vásquez>
 -- Create date: <2020-01-08>
 -- Description:	<Integración de marketplace  a estrcutura club forza para facturación usuarios logueados y no logueados>
@@ -13,14 +11,17 @@
 -- Create date: <2024-08-26>
 -- Description: < Ajustes por tienda virtual para Facturar>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2025-11-04>
+-- Description:	<Validar filtro de código de transacción para que se tome el mas reciente,ya que se esta duplicando el OrderNumber>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionFac]
  @OrderNumber AS NVARCHAR(25),
  @IdCountry   AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
-
     -- Datos cliente Cabecera de factura   
-
     DECLARE @idType INT = 0;
     DECLARE @TypeSalePackage AS NVARCHAR(50)
     DECLARE @IdSalePackage INT
@@ -32,12 +33,12 @@ BEGIN
     DECLARE @FiscalAddress NVARCHAR(200) = 'Guatemala'
     DECLARE @TaxName NVARCHAR(100) = 'Consumidor Final'
     DECLARE @InvoiceEmail NVARCHAR(50) =''
-	DECLARE @Vaucher NVARCHAR(50) =''
+	  DECLARE @Vaucher NVARCHAR(50) =''
     DECLARE @Iva DECIMAL(12,6) = 1.12
     DECLARE @IdCurrency INT 
 
-    SELECT @Iva = ISNULL([Value],1.12)
-      FROM ConfigParams
+     SELECT @Iva = ISNULL([Value],1.12)
+      FROM [DeliveryBackOffice].[dbo].[ConfigParams]
      WHERE [Name] = 'TaxPercentage'
        AND IdCountry = @IdCountry
 
@@ -51,24 +52,24 @@ BEGIN
 	  , @FiscalAddress =AddressTax
 	  , @TaxName =  NameTax
 	  , @InvoiceEmail  = InvoiceEmail
-  FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber= @OrderNumber
+  FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK)
+  Where OrderNumber= @OrderNumber
+  ORDER BY IdRegistrationofTransactionProcessStates DESC
 
   DECLARE @IdAccountCart INT = (SELECT Top 1  ac.AccIdAccount
-														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
-															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
-																ON rus.RusIdUser = usr.UsrIdUser
-															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
-																ON res.UstIdUser = rus.RusIdUser
-																   AND res.UstIdSystem = rus.RusIdSystem
-															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
-																ON rua.RuaIdUser = usr.UsrIdUser
-                                                                   AND rua.RuaRowStatus = 1
-															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
-																ON ac.AccIdAccount = rua.RuaIdAccount
-														WHERE usr.UsrEmail = @InvoiceEmail AND rus.RusIdSystem = 1
-                                                             AND ac.AccRowStatus = 1
-														     AND res.UstStatus  ='ACTIVE')
-
+                                    FROM [DeliveryBackOffice].[dbo].[RegisterUser] usr WITH (NOLOCK)
+                                      INNER JOIN [DeliveryBackOffice].[dbo].[RolByUserBySystem] rus WITH (NOLOCK)
+                                        ON rus.RusIdUser = usr.UsrIdUser
+                                      LEFT JOIN  [DeliveryBackOffice].[dbo].[UserSystemRestriction] res WITH (NOLOCK)
+                                        ON res.UstIdUser = rus.RusIdUser
+                                          AND res.UstIdSystem = rus.RusIdSystem
+                                      LEFT JOIN  [DeliveryBackOffice].[dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+                                        ON rua.RuaIdUser = usr.UsrIdUser
+                                          AND rua.RuaRowStatus = 1
+                                      INNER JOIN [DeliveryBackOffice].[dbo].[Account]              ac WITH (NOLOCK)
+                                        ON ac.AccIdAccount = rua.RuaIdAccount
+                                    WHERE usr.UsrEmail = @InvoiceEmail AND rus.RusIdSystem = 1
+                                          AND ac.AccRowStatus = 1 AND res.UstStatus  ='ACTIVE');
 
     DECLARE @inv_vpCodeOfReferences AS INT =
             (
@@ -82,7 +83,7 @@ BEGIN
     DECLARE @inv_cmp_nit AS VARCHAR(100) =
             (
                 SELECT dpf_FELEntity
-                FROM [dbo].[del_ParametrosFactura] WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[del_ParametrosFactura] WITH (NOLOCK)
                 WHERE dpf_VpCodeOfReference = @inv_vpCodeOfReferences
             );
     DECLARE @inv_cli_name AS VARCHAR(200);
@@ -98,7 +99,6 @@ BEGIN
     DECLARE @typeMoneyId AS INT;
     ------------------------------------------------------------------------------------
     ------------------------------------------------------------------------------------
-
     SELECT TOP 1
            @inv_cli_name   = InvoiceName
          , @inv_cli_nit    = TaxIdNumber
@@ -120,7 +120,7 @@ BEGIN
             (
               SELECT TOP 1
                      [Description]
-                FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA'
                   AND ISNULL(IdCountry,'GT') = @IdCountry
             );
@@ -132,7 +132,7 @@ BEGIN
             (
                 SELECT TOP 1
                        SAPCode
-                FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA'
                   AND ISNULL(IdCountry,'GT') = @IdCountry
             );
@@ -148,96 +148,82 @@ BEGIN
     (
         SELECT TOP 1
                ISNULL(SubscriptionName, '')
-        FROM [dbo].[CatSubscription] WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].[CatSubscription] WITH (NOLOCK)
         WHERE IdCatSubscription = @IdSalePackage
           AND ISNULL(IdCountry,'GT') = @IdCountry
     );
-
     IF (
            @SuscriptionDesc = 'Plan Básico'
-           AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+           AND @TypeSalePackage <> 'MEMBERSHIP' 
        )
-        SET @dti_description =
-    (
-        SELECT TOP 1
-               [Description]
-        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL A'
-          AND ISNULL(IdCountry,'GT') = @IdCountry
-    )   ;
+        SET @dti_description =(
+                                SELECT TOP 1
+                                      [Description]
+                                FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
+                                WHERE [Name] = 'SUSCRIPCION MENSUAL A'
+                                  AND ISNULL(IdCountry,'GT') = @IdCountry
+                              );
     ELSE IF (
                 @SuscriptionDesc = 'Plan Básico +'
-                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+                AND @TypeSalePackage <> 'MEMBERSHIP' 
             )
-        SET @dti_description =
-    (
-        SELECT TOP 1
-               [Description]
-        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL B'
-          AND ISNULL(IdCountry,'GT') = @IdCountry
-    )   ;
+        SET @dti_description =(
+                                SELECT TOP 1
+                                      [Description]
+                                FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
+                                WHERE [Name] = 'SUSCRIPCION MENSUAL B'
+                                  AND ISNULL(IdCountry,'GT') = @IdCountry
+                             );
     ELSE IF (
                 @SuscriptionDesc = 'Plan Gold'
-                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+                AND @TypeSalePackage <> 'MEMBERSHIP' 
             )
-        SET @dti_description =
-    (
-        SELECT TOP 1
-               [Description]
-          FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-         WHERE [Name] = 'SUSCRIPCION MENSUAL C'
-           AND ISNULL(IdCountry,'GT') = @IdCountry
-    )   ;
+        SET @dti_description =(
+                                SELECT TOP 1
+                                      [Description]
+                                  FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
+                                WHERE [Name] = 'SUSCRIPCION MENSUAL C'
+                                  AND ISNULL(IdCountry,'GT') = @IdCountry
+                              );
     ELSE IF (
                 @SuscriptionDesc = 'Plan Corporativo'
-                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+                AND @TypeSalePackage <> 'MEMBERSHIP' 
             )
-        SET @dti_description =
-    (
-        SELECT TOP 1
-               [Description]
-        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL D'
-          AND ISNULL(IdCountry,'GT') = @IdCountry
-    )   ;
+        SET @dti_description =(
+                                SELECT TOP 1
+                                      [Description]
+                                FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
+                                WHERE [Name] = 'SUSCRIPCION MENSUAL D'
+                                  AND ISNULL(IdCountry,'GT') = @IdCountry
+                              );
     ELSE IF (
                 @SuscriptionDesc = 'Plan Diamante'
-                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+                AND @TypeSalePackage <> 'MEMBERSHIP' 
             )
-        SET @dti_description =
-    (
-        SELECT TOP 1
-               [Description]
-        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'MEMBRESIA DIAMANTE'
-          AND ISNULL(IdCountry,'GT') = @IdCountry
-    )   ;
-
+        SET @dti_description =(
+                                SELECT TOP 1
+                                      [Description]
+                                FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
+                                WHERE [Name] = 'MEMBRESIA DIAMANTE'
+                                  AND ISNULL(IdCountry,'GT') = @IdCountry
+                              );
     IF (@InvoiceEmail = '')
     BEGIN
-
         SET @InvoiceEmail =
         (
             SELECT TOP 1
                    InvoiceEmail
-            FROM [DeliveryBackOffice].[dbo].[Membership] M
+            FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
             WHERE [M].[AccountId] = @IdAccountCart
                   AND [M].[RowStatus] = 1
         );
-
     END;
-
-	
-
-
     BEGIN TRANSACTION;
     BEGIN TRY
 
-        IF (Exists(SELECT Top 1 1 FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber = @OrderNumber 
-                AND TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI))
+        IF (Exists(SELECT Top 1 1 FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK) Where OrderNumber = @OrderNumber 
+                AND TypeSalePackage = 'MEMBERSHIP'))
         BEGIN
-
             SELECT TOP 1
                    @inv_amount            = M.MembershipCost
                  , @inv_cli_email         = M.InvoiceEmail
@@ -249,27 +235,23 @@ BEGIN
                  , @IdMemberOrSuscription = M.IdMembership
                  , @MembershipId          = M.IdMembership
             FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
-                INNER JOIN [dbo].[CatMembership]         CM WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
                     ON M.CatMembershipId = CM.IdCatMembership
-				INNER JOIN 
-					[dbo].[RegistrationofTransactionProcessStates] RTP WITH (NOLOCK)
-					ON M.CatMembershipId = RTP.IdSalePackage
-            WHERE-- M.AccountId = @IdAccount
-                --  AND M.RowStatus = 1
-				   RTP.OrderNumber = @OrderNumber 
-            ORDER BY M.DateCreated DESC;
+                INNER JOIN [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTP WITH (NOLOCK)
+                    ON M.CatMembershipId = RTP.IdSalePackage
+                WHERE-- M.AccountId = @IdAccount
+                     -- AND M.RowStatus = 1
+				          RTP.OrderNumber = @OrderNumber 
+                ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
             SELECT @Authorizacion = MOL.[TransactionOrder]
                  , @typeMoneyId   = MOL.TypeOfInOutOfMoneyId
-            FROM [dbo].[MembershipPaymentLog] MOL WITH (NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].[MembershipPaymentLog] MOL WITH (NOLOCK)
             WHERE MembershipId = @IdMemberOrSuscription
             ORDER BY MOL.DateCreated DESC;
-
-
         END
-       
-	    IF (Exists(SELECT Top 1 1 FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber = @OrderNumber 
-                AND TypeSalePackage != 'MEMBERSHIP' COLLATE Latin1_General_CI_AI))
+	    IF (Exists(SELECT Top 1 1 FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK) Where OrderNumber = @OrderNumber 
+                AND TypeSalePackage != 'MEMBERSHIP'))
             BEGIN
                 SELECT TOP 1
                        @inv_amount            = S.SubscriptionCost
@@ -281,24 +263,20 @@ BEGIN
                      , @Descriptionp          = CS.SubscriptionName
                      , @IdMemberOrSuscription = S.IdSubscription
                      , @SubscriptionId        = [S].[IdSubscription]
-                FROM [dbo].[Subscription] S WITH (NOLOCK)
-
-                    INNER JOIN dbo.CatSubscription  CS
+                FROM [DeliveryBackOffice].[dbo].[Subscription] S WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription]  CS  WITH (NOLOCK)
                         ON S.CatSubscriptionId = CS.IdCatSubscription
-					INNER JOIN 
-					[dbo].[RegistrationofTransactionProcessStates] RTP WITH (NOLOCK)
-					ON CS.IdCatSubscription = RTP.IdSalePackage
+					          INNER JOIN [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTP WITH (NOLOCK)
+					              ON CS.IdCatSubscription = RTP.IdSalePackage
                 WHERE --S.AccountId = @IdAccount
                       --AND S.RowStatus = 1
                        RTP.OrderNumber = @OrderNumber 
-                ORDER BY S.DateCreated DESC;
-
-                --SET @dti_description = @dti_description + ' ' + @Descriptionp;
+                 ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                 SELECT TOP 1
                        @Authorizacion = SOL.TransactionOrder
                      , @typeMoneyId   = SOL.TypeOfInOutOfMoneyId
-                FROM [dbo].[SubscriptionPaymentLog] SOL WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog] SOL WITH (NOLOCK)
                 WHERE SubscriptionId = @IdMemberOrSuscription
                 ORDER BY SOL.DateCreated DESC;
 
@@ -309,39 +287,34 @@ BEGIN
                       , TaxIdNumber = @TaxId
                       , InvoiceEmail = @InvoiceEmail
                       , FiscalAddress = @FiscalAddress
-                    FROM [DeliveryBackOffice].[dbo].[Membership] M
+                    FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
                     WHERE [M].[AccountId] = @IdAccountCart
                           AND [M].[RowStatus] = 1;
                 END;
-
             END;
             
-
-
-		
           SELECT 
                  @inv_amount =    SUM(  ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ) ,
                 @inv_IVA =      SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / @Iva))
-			 FROM  [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTPS WITH (NOLOCK)
+			    FROM  [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTPS WITH (NOLOCK)
 		          LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			      ON CS.IdCatSubscription = RTPS.IdSalePackage
-				  AND RTPS.TypeSalePackage !='MEMBERSHIP' 
-				  LEFT JOIN [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
-				  ON  CM.IdCatMembership =  RTPS.IdSalePackage
-				    AND RTPS.TypeSalePackage ='MEMBERSHIP' 
-			WHERE RTPS.OrderNumber = @OrderNumber
+				      AND RTPS.TypeSalePackage !='MEMBERSHIP' 
+				      LEFT JOIN [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
+				    ON  CM.IdCatMembership =  RTPS.IdSalePackage
+				      AND RTPS.TypeSalePackage ='MEMBERSHIP' 
+			    WHERE RTPS.OrderNumber = @OrderNumber
 
         SET @systemOrigen = (
                              SELECT TOP 1 SysIdSystem
-                               FROM DeliveryBackOffice.dbo.CatSystem
+                               FROM [DeliveryBackOffice].[dbo].[CatSystem] WITH (NOLOCK)
                               WHERE SysNameSystem = 'Tienda Virtual'
-                            )
-
+                            );
         SET @idType = (SELECT IdCatInvoiceType
-                         FROM CatInvoiceType 
-                        WHERE Name = 'Otros')
+                         FROM [DeliveryBackOffice].[dbo].[CatInvoiceType]  WITH (NOLOCK)
+                        WHERE Name = 'Otros');
 
-        INSERT INTO [dbo].[invoiceHeader]
+        INSERT INTO [DeliveryBackOffice].[dbo].[invoiceHeader]
         (
             inv_vpCodeOfReferences
           , inv_cmp_nit
@@ -363,11 +336,9 @@ BEGIN
         (@inv_vpCodeOfReferences, @inv_cmp_nit, ISNULL(@inv_cli_name,'CF'), @inv_cli_adress, @inv_cli_nit, @inv_cli_email, @inv_date
        , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1, @systemOrigen, @idType);
 
-
-
         SET @dti_fk_header = SCOPE_IDENTITY();
-        
-      INSERT INTO [dbo].[invoiceDetail]
+
+       INSERT INTO [DeliveryBackOffice].[dbo].[invoiceDetail]
         (
             dti_fk_header
           , dti_identification
@@ -386,85 +357,80 @@ BEGIN
           , SubscriptionId
         )
 			SELECT 
-		   @dti_fk_header,
-		   @dti_identification,
-		   @dti_category,
-		   @dti_quantity,
-		   @dti_measurement,
-		    (CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	
-		   ,CS.SubscriptionName	
-		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / @Iva)
-		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))
-		   ,@dti_dateRegister
-		   ,@dti_tokenRegister
-		   ,@SAPCode
-		   ,@SendToInvoice
-		   ,NULL IdMembership
-           ,S.IdSubscription	
-		FROM [dbo].[Subscription] S WITH (NOLOCK)
-                    INNER JOIN dbo.CatSubscription  CS
-                        ON S.CatSubscriptionId = CS.IdCatSubscription
-					INNER JOIN 
-					[dbo].[SubscriptionPaymentLog] SPL WITH (NOLOCK)
-					ON  S.IdSubscription = SPL.SubscriptionId
-					  WHERE 
-                       SPL.[Authorization] = @OrderNumber
+           @dti_fk_header
+          ,@dti_identification
+          ,@dti_category
+          ,@dti_quantity
+          ,@dti_measurement
+          ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	
+          ,CS.SubscriptionName	
+          ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / @Iva)
+          ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))
+          ,@dti_dateRegister
+          ,@dti_tokenRegister
+          ,@SAPCode
+          ,@SendToInvoice
+          ,NULL IdMembership
+          ,S.IdSubscription	
+		  FROM [DeliveryBackOffice].[dbo].[Subscription] S WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription]  CS WITH (NOLOCK)
+                ON S.CatSubscriptionId = CS.IdCatSubscription
+					  INNER JOIN [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog] SPL WITH (NOLOCK)
+					      ON  S.IdSubscription = SPL.SubscriptionId
+					  WHERE SPL.[Authorization] = @OrderNumber
         UNION ALL
 			SELECT 
-		   @dti_fk_header,
-		   @dti_identification,
-		   @dti_category,
-		   @dti_quantity,
-		   @dti_measurement,
-		   CS.MembershipCost	
-		   ,CS.MembershipName	
-		   ,CS.MembershipCost -((CS.MembershipCost) / @Iva)
-		   ,CS.MembershipCost
-		   ,@dti_dateRegister
-		   ,@dti_tokenRegister
-		   ,@SAPCode
-		   ,@SendToInvoice
-		   ,S.IdMembership
-           ,NULL IdSubscription	 
-		 FROM [dbo].[Membership] S WITH (NOLOCK)
-                    INNER JOIN dbo.CatMembership  CS
-                        ON S.CatMembershipId = CS.IdCatMembership
+          @dti_fk_header,
+          @dti_identification,
+          @dti_category,
+          @dti_quantity,
+          @dti_measurement,
+          CS.MembershipCost	
+          ,CS.MembershipName	
+          ,CS.MembershipCost -((CS.MembershipCost) / @Iva)
+          ,CS.MembershipCost
+          ,@dti_dateRegister
+          ,@dti_tokenRegister
+          ,@SAPCode
+          ,@SendToInvoice
+          ,S.IdMembership
+          ,NULL IdSubscription	 
+		 FROM [DeliveryBackOffice].[dbo].[Membership] S WITH (NOLOCK)
+          INNER JOIN dbo.CatMembership  CS
+            ON S.CatMembershipId = CS.IdCatMembership
 					INNER JOIN 
-					[dbo].[MembershipPaymentLog] SPL WITH (NOLOCK)
-					ON  S.IdMembership = SPL.MembershipId
-				
-                WHERE 
-                       SPL.[Authorization] = @OrderNumber
+					[DeliveryBackOffice].[dbo].[MembershipPaymentLog] SPL WITH (NOLOCK)
+					  ON S.IdMembership = SPL.MembershipId
+     WHERE SPL.[Authorization] = @OrderNumber
 
         SELECT @IdCountry = T.IdCountry,
                @IdCurrency = T.IdCatCurrencyCOD
           FROM (
                 SELECT IdCountry,
                        IdCatCurrencyCOD
-                  FROM [dbo].[Subscription] S WITH (NOLOCK)
-                       INNER JOIN dbo.CatSubscription  CS
+                  FROM [DeliveryBackOffice].[dbo].[Subscription] S WITH (NOLOCK)
+                       INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription]  CS WITH (NOLOCK)
                           ON S.CatSubscriptionId = CS.IdCatSubscription
-                       INNER JOIN [dbo].[SubscriptionPaymentLog] SPL WITH (NOLOCK)
+                       INNER JOIN [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog] SPL WITH (NOLOCK)
                           ON  S.IdSubscription = SPL.SubscriptionId
                   WHERE SPL.[Authorization] = @OrderNumber
                   UNION
                  SELECT IdCountry,
                         IdCatCurrencyCOD
-                   FROM [dbo].[Membership] S WITH (NOLOCK)
-                        INNER JOIN dbo.CatMembership  CS
+                   FROM [DeliveryBackOffice].[dbo].[Membership] S WITH (NOLOCK)
+                        INNER JOIN [DeliveryBackOffice].[dbo].[CatMembership]  CS WITH (NOLOCK)
                            ON S.CatMembershipId = CS.IdCatMembership
-                        INNER JOIN [dbo].[MembershipPaymentLog] SPL WITH (NOLOCK)
+                        INNER JOIN [DeliveryBackOffice].[dbo].[MembershipPaymentLog] SPL WITH (NOLOCK)
                            ON  S.IdMembership = SPL.MembershipId
                         WHERE SPL.[Authorization] = @OrderNumber
                ) AS T
 
-        UPDATE [invoiceHeader]
+        UPDATE [DeliveryBackOffice].[dbo].[invoiceHeader]
            SET IdCountry = @IdCountry,
                IdCurrency = @IdCurrency
-         WHERE inv_pk_id = @dti_fk_header
+         WHERE inv_pk_id = @dti_fk_header;
 
-
-        INSERT INTO [dbo].[InOutOfMoneyDetail]
+        INSERT INTO [DeliveryBackOffice].[dbo].[InOutOfMoneyDetail]
         (
             [io_type]
           , [io_vpCodeOfReferences]
@@ -479,22 +445,21 @@ BEGIN
         (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token
        , GETDATE());
 
-	     DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccountCart ORDER BY DateCreated DESC)
+	     DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from [DeliveryBackOffice].[dbo].[MarketplaceCart] where AccountId = @IdAccountCart ORDER BY DateCreated DESC)
 
-		 UPDATE  [dbo].[MarketplaceCartDetail]
+		 UPDATE [DeliveryBackOffice].[dbo].[MarketplaceCartDetail]
 			  SET RowStatus = 0,
 				  TokenUpdated = @Token,
 				  DateUpdated  = GETDATE()
-			  WHERE  MarketplaceCartId = @IdCart
+			WHERE  MarketplaceCartId = @IdCart;
 
-			UPDATE  [dbo].[MarketplaceCart]
+		 UPDATE [DeliveryBackOffice].[dbo].[MarketplaceCart]
 			  SET RowStatus = 0,
 				  TokenUpdated = @Token,
 				  DateUpdated  = GETDATE()
-			  WHERE IdMarketplaceCart = @IdCart
+			WHERE IdMarketplaceCart = @IdCart
 
         COMMIT TRANSACTION;
-
         SELECT Result                = 1
              , 'Transacción exitosa' AS 'Description'
              , @dti_fk_header        IdInvoice
@@ -525,7 +490,7 @@ BEGIN
                                                   ,LTRIM(RTRIM(@inv_cli_adress)),'-'
                                                   ,LTRIM(RTRIM(@inv_cli_nit)),'-'
                                                   ,LTRIM(RTRIM(@inv_cli_email))
-                                                 )
+                                                 );
 
         INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
         (
