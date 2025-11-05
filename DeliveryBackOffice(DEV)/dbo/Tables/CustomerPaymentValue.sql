@@ -15,6 +15,13 @@
     [TokenUpdated]            NVARCHAR (50)  NULL,
     [DateUpdated]             DATETIME       NULL,
     [Holder]                  NVARCHAR (50)  NULL,
+    [FirstName] [nvarchar](50) NULL,
+	[LastName] [nvarchar](50) NULL,
+	[Nirphone] [nvarchar](5) NULL,
+	[Address] [nvarchar](150) NULL,
+	[Phone] [nvarchar](15) NULL,
+	[IsoCode] [nvarchar](3) NULL,
+	[PaymentGateway] [nvarchar](25) NULL,
     CONSTRAINT [PK_CustomerPaymentValue] PRIMARY KEY CLUSTERED ([IdCustomerPaymentValue] ASC),
     CONSTRAINT [FK_CustomerPaymentValue_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_CustomerPaymentValue_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
@@ -83,7 +90,32 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de la ta
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de la tabla Account', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'AccountId';
 
+GO
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre de tarjeta para pasarela de pago PayWayOne' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'FirstName'
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar datos de TC de clientes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue';
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Apellido de tarjeta para pasarela de pago PayWayOne' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'LastName'
+
+GO
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Area de teléfono  ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'Nirphone'
+
+GO
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Dirección para campo obligatorio de pasarela de pago ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'Address'
+
+GO
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Teléfono de tarjeta de crédito' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'Phone'
+
+GO
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'código de país ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'IsoCode'
+
+GO
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Pasarela de pago que se útiliza ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'PaymentGateway'
+
+GO
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla para almacenar datos de TC de clientes' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue'
+
+
+
+
+
 

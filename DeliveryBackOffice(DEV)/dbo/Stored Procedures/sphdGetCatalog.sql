@@ -23,6 +23,11 @@
 -- Create date: <2025-06-12>
 -- Description:	<Facturacion SV - Obtiene catalogos para facturacion de El Salvador>
 -- =============================================
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2025-08-14>
+-- Description:	<Facturacion SV - Se quita validacion isnull al consultar catalogos>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCatalog]
     -- Add the parameters for the stored procedure here
     @IdCorrelative INT = -1,
@@ -133,7 +138,7 @@ BEGIN
                   AND
                   (
                       @IdFilter = ''
-                      OR ISNULL(CBS.IdCountry,'GT') = @IdFilter
+                      OR CBS.IdCountry = @IdFilter
                   )
             ORDER BY CBS.[BusinessSegmentName];
         END;
@@ -235,7 +240,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR CBA.IdBankAccountType = @IdCorrelative
                   )
-				  AND IIF(CBA.IdCountry IS NULL, 'GT',CBA.IdCountry) = @IdFilter;
+				  AND CBA.IdCountry = @IdFilter;
 
         END;
 
@@ -272,7 +277,7 @@ BEGIN
                       @IdParentFilter = -1
                       OR hr.RateTypeId = @IdParentFilter
                   )
-				  AND IIF(hr.CountryId IS NULL, 'GT',hr.CountryId) = @IdFilter;
+				  AND hr.CountryId = @IdFilter;
         --AND hr.IsTemplate = 'TRUE' --no hay forma de mostrar cuando es clonable y cuando no es clonable
         END;
 
@@ -401,7 +406,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR kbs.IdKindOfVPBusiness = @IdCorrelative
                   )
-				  AND IIF(kbs.IdCountry IS NULL, 'GT',kbs.IdCountry) = @IdFilter
+				  AND kbs.IdCountry = @IdFilter
             ORDER BY kbs.KindOfVPNameBussiness;
         END;
 
@@ -419,7 +424,7 @@ BEGIN
                   )
                   AND koc.IdKindOfVPClient NOT IN ( 5 ) --estos son los puntos (bodegas dinamicas) que hace los clientes integrados
             --AND koc.DateCreated >= '2021-08-19'
-                  AND IIF(koc.IdCountry IS NULL, 'GT',koc.IdCountry) = @IdFilter
+                  AND koc.IdCountry = @IdFilter
             ORDER BY koc.KindOfVPName;
         END;
 
@@ -445,7 +450,7 @@ BEGIN
                       @IdParentFilter = -1
                       OR crt.IdTypeRoute = @IdParentFilter
                   )
-                  AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdFilter;
+                  AND pr.IdCountry = @IdFilter;
         END;
 
 
@@ -476,7 +481,7 @@ BEGIN
                 LEFT JOIN dbo.CatTypeArticle ta
                     ON ta.TarId = ca.ArtIdTypeArticle
             WHERE ac.AbcRowStatus = 'TRUE'
-            AND IIF(ca.IdCountry IS NULL, 'GT',ca.IdCountry)= @IdFilter;
+            AND ca.IdCountry= @IdFilter;
         END;
 
         IF (@NameOfCatalog = 'SalesChannel')
@@ -491,7 +496,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR CSC.IdSalesChannel = @IdCorrelative
                   )
-				  --AND IIF(CSC.IdCountry IS NULL, 'GT',CSC.IdCountry)= @IdFilter
             ORDER BY CSC.Description;
         END;
 
@@ -532,7 +536,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR cu.IdCustomer = @IdCorrelative
                   )
-				  --AND IIF(cbt.IdCountry IS NULL, 'GT',cbt.IdCountry) = @IdFilter
             GROUP BY cbt.CatBatchTypeCODId,
                      cbt.Name
             ORDER BY cbt.Name;
@@ -627,7 +630,7 @@ BEGIN
 					ON prCOD.CatRateSegmentId = crs2.CrsId
 				WHERE pr.RowStatus = 1
 				AND prd.RowStatus = 1
-                AND IIF(cbs.IdCountry IS NULL, 'GT', cbs.IdCountry) = @IdFilter
+                AND cbs.IdCountry = @IdFilter
 				ORDER BY cts.CtsShortName DESC, pr.[Order]
 			END
 
