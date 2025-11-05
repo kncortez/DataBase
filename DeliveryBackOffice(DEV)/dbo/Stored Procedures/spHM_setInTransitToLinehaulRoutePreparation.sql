@@ -19,7 +19,6 @@ CREATE PROCEDURE [dbo].[spHM_setInTransitToLinehaulRoutePreparation]
 	@Tag AS NVARCHAR(25),
 	@IsInternal AS INT,
 	@TknUser AS NVARCHAR(50),
-	@IdCountry AS NVARCHAR(2) = 'GT',
 	@IdStation INT
 
 AS
