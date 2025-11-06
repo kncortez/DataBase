@@ -3,6 +3,11 @@
 -- Create date: <24-08-2022>
 -- Description:	<End settlement process>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian, Suazo>
+-- Create date: <05-11-2025>
+-- Description:	<Se actualizan a estado en revision las guias multipiezas que no han sido escaneadas por completo>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_EndLinehaulRouteSettlement]
 	@LinehaulRouteSettlementId AS INT,
 	@TknUser AS NVARCHAR(50)
@@ -16,6 +21,7 @@ BEGIN
 	DECLARE @PIECES_MISSING_IN_SETTLEMENT AS INT;	-- LinehaulRouteSettlement
 	DECLARE @LIQUIDATED_STATUS_ID AS INT;			-- CatLinehaulStatus
 	DECLARE @IN_TRANSIT_STATUS_ID AS INT;			-- CatLinehaulStatus
+	DECLARE @Status INT
 
 	SET @LIQUIDATED_STATUS_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
 								FROM	[dbo].[CatLinehaulStatus] CLS
@@ -33,6 +39,9 @@ BEGIN
 	SET @LRP_ID = (SELECT	[LRS].[LinehaulRoutePreparationId]
 					FROM	[dbo].[LinehaulRouteSettlement] LRS
 					WHERE	[LRS].[IdLinehaulRouteSettlement] = @LinehaulRouteSettlementId);
+
+
+	SET @Status = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'En Revisión')
 
 	SET @PIECES_MISSING_IN_SETTLEMENT = (SELECT		COUNT([CTC].[TypeContainerSerie]) AS CONT
 										FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
@@ -60,10 +69,69 @@ BEGIN
 
 	IF (@PIECES_MISSING_IN_SETTLEMENT > 0)
 		-- PIECES MISSING IN SETTLEMENT
-		BEGIN
-			SELECT 0 [spResult], 'Hay piezas que deben ser liquidadas antes de finalizar este manifiesto' [spMessage];
+	BEGIN
+		BEGIN TRY
+			BEGIN TRAN; 
+
+			DECLARE @Guides TABLE (GuideSerie NVARCHAR(3), GuideNumber INT);
+			-- SE PASAN A ESTADO EN REVISION LAS GUIAS MULTIPIEZAS NO ESCANEADAS
+			INSERT INTO @Guides (GuideSerie, GuideNumber)
+			SELECT DISTINCT
+				LRPCD.GuideSerie,
+				LRPCD.GuideNumber
+			FROM dbo.LinehaulRoutePreparationContainerDetailPiece LRPCDP
+			INNER JOIN dbo.LinehaulRoutePreparationContainerDetail LRPCD
+				ON LRPCDP.LinehaulRoutePreparationContainerDetailId = LRPCD.IdLinehaulRoutePreparationContainerDetail
+			INNER JOIN dbo.LinehaulRoutePreparationContainer LRPC
+				ON LRPCD.LinehaulRoutePreparationContainerId = LRPC.IdLinehaulRoutePreparationContainer
+			INNER JOIN dbo.LinehaulRoutePreparation LRP
+				ON LRPC.LinehaulRoutePreparationId = LRP.IdLinehaulRoutePreparation
+			INNER JOIN dbo.Container C
+				ON LRPC.ContainerId = C.IdContainer
+			INNER JOIN dbo.CatTypeContainer CTC
+				ON C.CatTypeContainerId = CTC.IdCatTypeContainer
+			WHERE LRPCDP.CatLinehaulStatusId = @IN_TRANSIT_STATUS_ID
+			  AND LRPCDP.ActCode IS NULL
+			  AND LRPCD.RowStatus = 1
+			  AND LRP.IdLinehaulRoutePreparation = @LRP_ID;
+
+			 --CREAMOS LOG DE CAMBIO DE ESTADO
+			 INSERT INTO DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus)
+			 SELECT G.GuideSerie,
+					G.GuideNumber,
+					@Status,
+					'spHM_EndLinehaulRouteSettlement',
+					GETDATE(),
+					GETDATE(),
+					1
+			 FROM @Guides G
+
+			UPDATE DO
+			SET DO.StatusOrderId = @Status
+			FROM dbo.DeliveryOrder DO
+			INNER JOIN @Guides T
+				ON DO.Guide_Serie = T.GuideSerie
+			   AND DO.Guide_Number = T.GuideNumber
+			WHERE ISNULL(DO.StatusOrderId, 0) <> @Status;
+			
+			COMMIT TRAN;
+
+		END TRY
+		BEGIN CATCH
+			IF XACT_STATE() <> 0
+				ROLLBACK TRAN;
+
+			SELECT
+				0 AS spResult,
+				ERROR_NUMBER() AS ErrorNumber,
+				ERROR_SEVERITY() AS ErrorSeverity,
+				ERROR_STATE() AS ErrorState,
+				ERROR_PROCEDURE() AS ErrorProcedure,
+				ERROR_LINE() AS ErrorLine,
+				ERROR_MESSAGE() AS spMessage;
 			RETURN;
-		END 
+		END CATCH
+	END 
 
 	BEGIN TRANSACTION
 	BEGIN TRY
