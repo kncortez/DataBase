@@ -596,7 +596,7 @@ BEGIN
                             ON CM.IdCatMembership = RTP.IdSalePackage
                     WHERE RTP.OrderNumber = @OrderNumber
                           AND RTP.TypeSalePackage = 'MEMBERSHIP'
-                    ORDER BY RT.IdRegistrationofTransactionProcessStates DESC;
+                    ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                     DECLARE @RandomLettersM CHAR(1);
 
