@@ -195,7 +195,9 @@ BEGIN
             SELECT @IdTransaction = ISNULL([IdTransaction], 0)
             FROM [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH (NOLOCK)
             WHERE [CCTBC].OrderNumber = @OrderNumber
-                  AND CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
+                  AND DateCreated >= @DateCreated
+                  AND DateCreated < DATEADD(DAY, 1, @DateCreated);
+
             IF (@IdTransaction = 0)
             BEGIN
                 INSERT INTO [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer]
@@ -268,7 +270,9 @@ BEGIN
                 WHERE IdTransaction = @IdTransaction
                       AND OrderNumber = @OrderNumber
                       AND StatusSend <> 1
-                      AND CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
+                      AND DateCreated >= @DateCreated
+                      AND DateCreated < DATEADD(DAY, 1, @DateCreated);
+
 
             END;
 
@@ -725,7 +729,8 @@ BEGIN
                     FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH(NOLOCK)
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage != 'MEMBERSHIP'
-                          AND CAST(DateCreated AS DATE)=CAST(@DateCreated AS DATE)
+                          AND DateCreated >= @DateCreated
+                        AND DateCreated < DATEADD(DAY, 1, @DateCreated)
                 )
                    )
                 BEGIN
@@ -1049,7 +1054,9 @@ BEGIN
             SELECT @IdTransaction = ISNULL([IdTransaction], 0)
             FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH (NOLOCK)
             WHERE OrderNumber = @OrderNumber
-                  AND CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
+                  AND DateCreated >= @DateCreated
+                  AND DateCreated < DATEADD(DAY, 1, @DateCreated);
+
 
             IF (@IdTransaction = 0)
             BEGIN
@@ -1099,7 +1106,9 @@ BEGIN
                 WHERE IdTransaction = @IdTransaction
                       AND OrderNumber = @OrderNumber
                       AND StatusSend <> 1
-                      AND CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
+                      AND DateCreated >= @DateCreated
+                      AND DateCreated < DATEADD(DAY, 1, @DateCreated)
+
 
             END;
 
