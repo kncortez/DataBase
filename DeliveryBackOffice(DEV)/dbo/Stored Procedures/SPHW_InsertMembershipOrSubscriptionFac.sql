@@ -36,7 +36,7 @@ BEGIN
 	  DECLARE @Vaucher NVARCHAR(50) =''
     DECLARE @Iva DECIMAL(12,6) = 1.12
     DECLARE @IdCurrency INT 
-
+    DECLARE @DateCreated DATE = GETDATE();
      SELECT @Iva = ISNULL([Value],1.12)
       FROM [DeliveryBackOffice].[dbo].[ConfigParams]
      WHERE [Name] = 'TaxPercentage'
@@ -249,7 +249,9 @@ BEGIN
     BEGIN TRY
 
         IF (Exists(SELECT Top 1 1 FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK) Where OrderNumber = @OrderNumber 
-                AND TypeSalePackage = 'MEMBERSHIP'))
+                AND TypeSalePackage = 'MEMBERSHIP'
+                AND DateCreated >= @DateCreated
+                AND DateCreated < DATEADD(DAY, 1, @DateCreated)))
         BEGIN
             SELECT TOP 1
                    @inv_amount            = M.MembershipCost
@@ -278,7 +280,9 @@ BEGIN
             ORDER BY MOL.DateCreated DESC;
         END
 	    IF (Exists(SELECT Top 1 1 FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK) Where OrderNumber = @OrderNumber 
-                AND TypeSalePackage != 'MEMBERSHIP'))
+                AND TypeSalePackage != 'MEMBERSHIP'
+                AND DateCreated >= @DateCreated
+                AND DateCreated < DATEADD(DAY, 1, @DateCreated)))
             BEGIN
                 SELECT TOP 1
                        @inv_amount            = S.SubscriptionCost
@@ -322,7 +326,7 @@ BEGIN
             
           SELECT 
                  @inv_amount =    SUM(  ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ) ,
-                @inv_IVA =      SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / @Iva))
+                 @inv_IVA =      SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / @Iva))
 			    FROM  [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTPS WITH (NOLOCK)
 		          LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			      ON CS.IdCatSubscription = RTPS.IdSalePackage
@@ -405,6 +409,8 @@ BEGIN
 					  INNER JOIN [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog] SPL WITH (NOLOCK)
 					      ON  S.IdSubscription = SPL.SubscriptionId
 					  WHERE SPL.[Authorization] = @OrderNumber
+                  AND SPL.DateCreated >= @DateCreated
+                  AND SPL.DateCreated < DATEADD(DAY, 1, @DateCreated)
         UNION ALL
 			SELECT 
           @dti_fk_header,
@@ -429,6 +435,8 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[MembershipPaymentLog] SPL WITH (NOLOCK)
 					  ON S.IdMembership = SPL.MembershipId
      WHERE SPL.[Authorization] = @OrderNumber
+           AND SPL.DateCreated >= @DateCreated
+           AND SPL.DateCreated < DATEADD(DAY, 1, @DateCreated)
 
         SELECT @IdCountry = T.IdCountry,
                @IdCurrency = T.IdCatCurrencyCOD
@@ -441,6 +449,8 @@ BEGIN
                        INNER JOIN [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog] SPL WITH (NOLOCK)
                           ON  S.IdSubscription = SPL.SubscriptionId
                   WHERE SPL.[Authorization] = @OrderNumber
+                        AND SPL.[DateCreated] >= @DateCreated
+                        AND SPL.[DateCreated] < DATEADD(DAY, 1, @DateCreated)
                   UNION
                  SELECT IdCountry,
                         IdCatCurrencyCOD
@@ -450,6 +460,8 @@ BEGIN
                         INNER JOIN [DeliveryBackOffice].[dbo].[MembershipPaymentLog] SPL WITH (NOLOCK)
                            ON  S.IdMembership = SPL.MembershipId
                         WHERE SPL.[Authorization] = @OrderNumber
+                              AND SPL.[DateCreated] >= @DateCreated
+                              AND SPL.[DateCreated] < DATEADD(DAY, 1, @DateCreated)
                ) AS T
 
         UPDATE [DeliveryBackOffice].[dbo].[invoiceHeader]

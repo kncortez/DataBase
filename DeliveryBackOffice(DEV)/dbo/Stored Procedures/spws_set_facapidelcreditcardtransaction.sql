@@ -449,6 +449,8 @@ BEGIN
                     FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK)
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage = 'MEMBERSHIP'
+                          AND DateCreated >= @DateCreated
+                          AND DateCreated < DATEADD(DAY, 1, @DateCreated)
                 )
                    )
                 BEGIN
@@ -596,6 +598,8 @@ BEGIN
                             ON CM.IdCatMembership = RTP.IdSalePackage
                     WHERE RTP.OrderNumber = @OrderNumber
                           AND RTP.TypeSalePackage = 'MEMBERSHIP'
+                          AND RTP.DateCreated >= @DateCreated
+                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated)
                     ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                     DECLARE @RandomLettersM CHAR(1);
@@ -667,6 +671,8 @@ BEGIN
                                 ON CMDR.CatMembershipId = RT.IdSalePackage
                             CROSS JOIN @AuxNewMembership                                                 ANM
                         WHERE RT.OrderNumber = @OrderNumber
+                        AND RT.DateCreated >= @DateCreated
+                        AND RT.DateCreated < DATEADD(DAY, 1, @DateCreated)
                         ORDER BY RT.IdRegistrationofTransactionProcessStates DESC;
 
                         ---- Log de pago de membresia
@@ -864,6 +870,8 @@ BEGIN
                             ON CS.IdCatSubscription = RTP.IdSalePackage
                     WHERE RTP.OrderNumber = @OrderNumber
                           AND RTP.TypeSalePackage != 'MEMBERSHIP'
+                          AND RTP.DateCreated >= @DateCreated
+                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated)
                     ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                     DECLARE @RandomLetterS CHAR(1);
@@ -953,13 +961,15 @@ BEGIN
                          , @Token                           -- TokenCreated
                          , SYSDATETIME()                    -- DateCreated
                     FROM [dbo].[CatSubscriptionDiscountRange]                   CSDR WITH (NOLOCK)
-                        INNER JOIN [dbo].RegistrationofTransactionProcessStates RTS WITH (NOLOCK)
+                        INNER JOIN [dbo].[RegistrationofTransactionProcessStates] RTS WITH (NOLOCK)
                             ON [CSDR].[CatSubscriptionId] = RTS.IdSalePackage
-                        INNER JOIN [dbo].Subscription                           S WITH (NOLOCK)
+                        INNER JOIN [dbo].[Subscription]                           S WITH (NOLOCK)
                             ON [CSDR].[CatSubscriptionId] = S.CatSubscriptionId
                         INNER JOIN @AuxNewSubscriptions                         ANS
                             ON ANS.IdNewSubscriptions = S.IdSubscription
                     WHERE RTS.OrderNumber = @OrderNumber
+                    AND   RTS.DateCreated >= @DateCreated
+                    AND   RTS.DateCreated < DATEADD(DAY, 1, @DateCreated)
                     ORDER BY RTS.IdRegistrationofTransactionProcessStates DESC;
                     --- Insert tabla dbo.Cost
                     INSERT INTO [dbo].[Cost]
