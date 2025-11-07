@@ -3,11 +3,17 @@
 -- Create date: <20-07-2022>
 -- Description:	<Update DeliveryOrder Status>
 -- =============================================
+-- Propósito: Agregar parámetro @IdStation para rastrear estación en escala
+-- Autor:     <Freddy Camposeco>
+-- Historia:  <FDAPI-4723>
+-- Fecha:     <2025-10-15>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_updateDeliveryOrderStatus]
 	@GuideSerie AS NVARCHAR(25),
 	@GuideNumber AS NVARCHAR(50),
 	@IsSettlement AS INT,
-	@TknUser AS NVARCHAR(50)
+	@TknUser AS NVARCHAR(50),
+	@IdStation AS INT = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -43,14 +49,16 @@ BEGIN
 							 [UserCreated],
 							 [DateCreated],
 							 [DateCreatedInSystem],
-							 [RowStatus])
+							 [RowStatus],
+							 [StationId])
 					VALUES	(@GuideSerie,
 							 @GuideNumber,
 							 @NEW_STATUS_ID,
 							 @TknUser,
 							 SYSDATETIME(),
 							 SYSDATETIME(),
-							 1);
+							 1,
+							 @IdStation);
 
 				UPDATE	[DeliveryOrder]
 				SET		[StatusOrderId] = @NEW_STATUS_ID,
