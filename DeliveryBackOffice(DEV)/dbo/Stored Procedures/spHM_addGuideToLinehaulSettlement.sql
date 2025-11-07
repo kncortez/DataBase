@@ -87,12 +87,12 @@ BEGIN
                  
             INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
                 ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                   AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-                   AND [LRPC].[RowStatus] = 1
         WHERE [LRPCDP].[PieceNumber] = @GuidePiece
 		  AND [LRPCD].[RowStatus] = 1
                    AND [LRPCD].[GuideSerie] = @GuideSerie
                    AND [LRPCD].[GuideNumber] = @GuideNumber
+                    AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+                   AND [LRPC].[RowStatus] = 1
     );
 
     SET @EXISTING_LRPCDP =

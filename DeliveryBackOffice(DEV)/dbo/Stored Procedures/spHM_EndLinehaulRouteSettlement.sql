@@ -51,14 +51,14 @@ BEGIN
 											ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 											AND		[LRPCD].[RowStatus] = 1
 										INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
-											ON		[LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
-											AND		[LRP].[IdLinehaulRoutePreparation] = @LRP_ID
+											ON		[LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]											
 										INNER JOIN	[dbo].[Container] C
 											ON		[LRPC].[ContainerId] = [C].[IdContainer]
 										INNER JOIN	[dbo].[CatTypeContainer] CTC
 											ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
 										WHERE		[LRPCDP].[CatLinehaulStatusId] = @IN_TRANSIT_STATUS_ID
-											AND		[LRPCDP].[ActCode] IS NULL);
+											AND		[LRPCDP].[ActCode] IS NULL
+											AND		[LRP].[IdLinehaulRoutePreparation] = @LRP_ID);
 
 	IF (@EXISTING_LRS = 0)
 		-- SETTLEMENT DOESN'T EXIST
