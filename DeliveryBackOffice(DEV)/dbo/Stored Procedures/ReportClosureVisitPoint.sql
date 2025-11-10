@@ -1,25 +1,4 @@
-﻿-- =============================================
--- Author:		<Alejandro Rodríguez>
--- Create date: <30/03/2022>
--- Description:	<SP para consulta de cierres generales en reporte de reporting services>
--- Nota: Es una copia de ReportClosure
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <10-07-2024>
--- Description:	<Se agrega la moneda y las cuentas para mostrar en el detalle del reporte>
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <26-07-2024>
--- Description:	<Se optimiza la consulta ya que se tardaba 1:30seg>
--- =============================================
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <21/10/2025>
--- Description:	<Se agrega método de pago mediante Zigi>
--- ============================================
-
-CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
+﻿CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
     @StartDate DATETIME = NULL,
     @EndDate DATETIME = NULL,
     @VisitPointId INT = NULL,
@@ -135,7 +114,7 @@ BEGIN
                    AND costd.Amount > 0
                    AND
                    (
-                       DOPD.TypeofInOutMoneyId = 6
+                       DOPD.TypeofInOutMoneyId IN (6, 10)
                        AND costd.Voucher != ''
                    )
             LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
@@ -317,7 +296,7 @@ BEGIN
                    AND costd.Amount > 0
                    AND
                    (
-                       DOPD.TypeofInOutMoneyId = 6
+                       DOPD.TypeofInOutMoneyId IN (6, 10)
                        AND costd.Voucher != ''
                    )
             LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
@@ -412,7 +391,6 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
                 ON REU1.UsrIdUser = ACHVP.UserId
         -- FIN MODIFICACIÓN
-
         WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
               AND ACD.RowStatus = 1
               AND (VPC.CodeOfReference = @VisitPointId
@@ -503,7 +481,7 @@ BEGIN
                    AND costd.Amount > 0
                    AND
                    (
-                       DOPD.TypeofInOutMoneyId = 6
+                       DOPD.TypeofInOutMoneyId IN (6, 10)
                        AND costd.Voucher != ''
                    )
             LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP

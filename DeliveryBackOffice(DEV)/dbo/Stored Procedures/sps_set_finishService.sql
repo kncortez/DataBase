@@ -1013,7 +1013,7 @@ BEGIN
                             SELECT ct.IdCost
                                 , @IdTypeOfMoney
                                 , ct.TotalAmountPaid
-                                , IIF(@IdTypeOfMoney = 6, @Voucher, '')
+                                , IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '')
                                 , 1 -- crear registro activo por default
                                 , @TokenP
                                 , GETDATE()
@@ -1034,7 +1034,7 @@ BEGIN
 							UPDATE CD
 								SET CD.Amount = ct.TotalAmountPaid
 								, CD.IdTypeOfMoney = @IdTypeOfMoney
-								, CD.Voucher = IIF(@IdTypeOfMoney = 6, @Voucher, '')
+								, CD.Voucher = IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '')
 								, CD.TokenUpdated = @TokenP
 								, CD.DateUpdated = GETDATE()
                             FROM Cost                                              ct WITH(NOLOCK)

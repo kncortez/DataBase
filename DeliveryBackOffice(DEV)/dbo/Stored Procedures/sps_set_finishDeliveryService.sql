@@ -3,6 +3,10 @@
 -- Create date: <2025-06-23>
 -- Description:	<Confirma servicio de entrega de guía en express center>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-11-06>
+-- Description:	<Se guarda el parámetro @Voucher si es para tarjeta o para Zigi, caso contrario solo ''>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_finishDeliveryService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
@@ -268,7 +272,6 @@ BEGIN
 						AND lge.Guide_Number = dot.Guide_Number
 				WHERE lge.ExcludeCOD = 1
 				AND dot.StatusOrderId = 22;
-
 				
 				-- ==============================================================================
 				-- SECCIÓN 6: INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA ENTREGA Y SEA COD
@@ -424,7 +427,6 @@ BEGIN
 					ON DOPD.GuideSerie = CG.GuideSerie
 					AND DOPD.GuideNumber = CG.GuideNumber;
 
-
 				-- =====================================================================
 				-- SECCIÓN 7: REGISTRO DE COSTOS Y PAGOS
 				-- =====================================================================
@@ -534,7 +536,7 @@ BEGIN
 						ct.IdCost,
 						@IdTypeOfMoney,
 						ct.TotalAmountPaid,
-						IIF(@IdTypeOfMoney = 6, @Voucher, '') AS Voucher,
+						IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '') AS Voucher,
 						1 AS IsActive,
 						@TokenP AS Token,
 						GETDATE() AS DateCreated,
@@ -553,7 +555,7 @@ BEGIN
 					UPDATE CD
 						SET CD.Amount = ct.TotalAmountPaid
 						, CD.IdTypeOfMoney = @IdTypeOfMoney
-						, CD.Voucher = IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, CD.Voucher = IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '')
 						, CD.TokenUpdated = @TokenP
 						, CD.DateUpdated = GETDATE()
 					FROM Cost                                              ct WITH(NOLOCK)
@@ -813,7 +815,7 @@ BEGIN
                     );
 
 				END;
-				
+
 				-- =====================================================================
 				-- SECCIÓN 9: SERVICIO WEBHOOK
 				-- =====================================================================

@@ -35,7 +35,7 @@ BEGIN
 
 	SELECT @AccountZigi = Name +' '+ '(' +AccountNumber +')' 
 	FROM ClosureAccount 
-	WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
+	WHERE Name = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
 
     IF (@VisitPointId > 0 AND @IdCierre > 0)
     BEGIN
@@ -61,19 +61,20 @@ BEGIN
                ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
                ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
                ISNULL(
-                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
-                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
-                          + ACH.TotalAmountZigi + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit +
+                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + ACH.TotalAmountCODCash +
+                            ACH.TotalAmountFacturaZigi + ACH.TotalAmountCODZigi
                             ),
                          0
                      ) 'TotalGeneral',
+                -- FIN DE MODIFICACIÓN
                CCC.CodeISO CurrencySymbol
         -- FIN MODIFICACIÓN
         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-				ON VPC.CountryId = DC.Currency_IdCountry
+				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
                 AND DC.DefaultPerCountry = 1
 			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
@@ -81,7 +82,7 @@ BEGIN
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
               AND ACH.IdAccountingClosuresHeader = @IdCierre
               AND VPC.CodeOfReference = @VisitPointId
-		GROUP BY VPC.CountryId, CCC.CodeISO;
+		GROUP BY VisitPoint, VPC.CountryId, CCC.CodeISO;
     END;
 
     IF (@VisitPointId > 0 AND (@IdCierre <= 0 OR @IdCierre IS NULL))
@@ -108,15 +109,16 @@ BEGIN
                ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
                ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
                ISNULL(
-                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
-                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
-                          + ACH.TotalAmountZigi + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit +
+                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + ACH.TotalAmountCODCash +
+                            ACH.TotalAmountFacturaZigi + ACH.TotalAmountCODZigi
                             ),
                          0
                      ) 'TotalGeneral',
-			   CCC.CodeISO CurrencySymbol
+                -- FIN DE MODIFICACIÓN
+               CCC.CodeISO CurrencySymbol
         -- FIN MODIFICACIÓN
-        FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
+          FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
@@ -154,15 +156,16 @@ BEGIN
                ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
                ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
                ISNULL(
-                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
-                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
-                          + ACH.TotalAmountZigi + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit +
+                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + ACH.TotalAmountCODCash +
+                            ACH.TotalAmountFacturaZigi + ACH.TotalAmountCODZigi
                             ),
                          0
                      ) 'TotalGeneral',
-			   CCC.CodeISO CurrencySymbol
+                -- FIN DE MODIFICACIÓN
+               CCC.CodeISO CurrencySymbol
         -- FIN MODIFICACIÓN
-        FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
+         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
 		INNER JOIN VisitPointClient VPC WITH (NOLOCK)
 			ON ACH.VisitPoint = VPC.IdVisitPointClient
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)

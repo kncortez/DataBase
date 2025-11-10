@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alejandro Rodríguez>
 -- Create date: <2022-03-28>
 -- Description:	<SP para obtener la lista de guías que se procesaron en un express center>
@@ -10,12 +9,10 @@
 -- Description:	<Se agrega las cuentas y el simbolo de la moneda correspondiente>
 -- =============================================
 -- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-10-17>
--- Description:	<Se agrega el método de pago Zigi en los totales>
--- Important:	<Algunos elementos del SP parece que no estaban versionados>
+-- Author:        <Bilkar Morataya>
+-- Create date: <2025-11-03>
+-- Description:    <Se agrega el método de pago Zigi en los totales>
 -- =============================================
-
 CREATE PROCEDURE [dbo].[GetDataForClosureVisitPoint]
 @VisitPointId int = 4246,
 @IdAccount int = 0
@@ -25,7 +22,7 @@ BEGIN
 	DECLARE @IdCountry NVARCHAR(2),
 		    @Account NVARCHAR(30),
 			@AccountCOD NVARCHAR(30),
-	        @AccountZigi NVARCHAR(30);
+			@AccountZigi NVARCHAR(30);
 
 	SELECT @IdCountry = CountryId 
 	FROM VisitPointClient 
@@ -39,11 +36,10 @@ BEGIN
 	FROM dbo.ClosureAccount 
 	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
 
-	-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
-	SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
-	FROM dbo.ClosureAccount
-	WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
-	
+	-- MODIFICACIÓN [2025-11-03] - Campos para Zigi
+    SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
+    FROM dbo.ClosureAccount
+    WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
 
 	SELECT	UsrIdUser 'UserId', UsrNickName 'UserNickName', DateCreated, IdAccountingClosuresHeader 'IdCierre',
 		ISNULL(SUM(S1.TotalAmountCash), 0) 'TotalAmountCash',
@@ -56,14 +52,14 @@ BEGIN
 		ISNULL(SUM(S1.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
 		ISNULL(SUM(S1.TotalAmountCODCash), 0) 'TotalAmountCODCash',
 		ISNULL(SUM(S1.TotalAmountCODCashDeclared), 0) 'TotalAmountCODCashDeclared',
-		-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
-		ISNULL(SUM(S1.TotalAmountZigi), 0) 'TotalAmountZigi',
-		ISNULL(SUM(S1.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
-		ISNULL(SUM(S1.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
-		ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
-		ISNULL(SUM(S1.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
-		ISNULL(SUM(S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-		-- FIN MODIFICACIÓN
+		-- MODIFICACIÓN [2025-11-03] - Campos para Zigi
+        ISNULL(SUM(S1.TotalAmountZigi), 0) 'TotalAmountZigi',
+        ISNULL(SUM(S1.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
+        ISNULL(SUM(S1.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
+        ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
+        ISNULL(SUM(S1.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+        ISNULL(SUM(S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
+        -- FIN MODIFICACIÓN
 		S1.CurrencySymbolDetail
 	FROM 
 	(
@@ -72,12 +68,12 @@ BEGIN
 				TotalAmountFacturaCash, TotalAmountFacturaCashDeclared, InvoiceAmountFacturaCash,
 				TotalAmountFacturaCard, TotalAmountFacturaCardDeclared, InvoiceAmountFacturaCard,
 				TotalAmountCODCash, TotalAmountCODCashDeclared, InvoiceAmountCOD,
-				-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
-				TotalAmountZigi, TotalAmountZigiDeclared, InvoiceAmountZigi,
-				TotalAmountFacturaZigi, TotalAmountFacturaZigiDeclared, InvoiceAmountFacturaZigi,
-				TotalAmountCODZigi, TotalAmountCODZigiDeclared,
-				-- FIN MODIFICACIÓN
 				RU.UsrNickName, RU.UsrIdUser, ACH.DateCreated, ACH.IdAccountingClosuresHeader,
+				-- MODIFICACIÓN [2025-11-03] - Campos para Zigi
+                TotalAmountZigi, TotalAmountZigiDeclared, InvoiceAmountZigi,
+                TotalAmountFacturaZigi, TotalAmountFacturaZigiDeclared, InvoiceAmountFacturaZigi,
+                TotalAmountCODZigi, TotalAmountCODZigiDeclared,
+                -- FIN MODIFICACIÓN
 				ISNULL(CCC.Symbol,'') AS 'CurrencySymbolDetail'
 		FROM AccountingClosuresHeader ACH
 		INNER JOIN RegisterUser RU
@@ -108,7 +104,12 @@ BEGIN
 		@AccountCOD AS 'AccountCOD',
 		ISNULL(SUM(TotalAmountCODCash), 0) 'TotalAmountCODCash',
 		ISNULL(SUM(TotalAmountCODCashDeclared), 0) 'TotalAmountCODCashDeclared',
-		-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
+		ISNULL(SUM(InvoiceAmountCash), 0) 'InvoiceAmountCash',
+		ISNULL(SUM(InvoiceAmountCredit), 0) 'InvoiceAmountCredit',
+		ISNULL(SUM(InvoiceAmountFacturaCash), 0) 'InvoiceAmountFacturaCash',
+		ISNULL(SUM(InvoiceAmountFacturaCard), 0) 'InvoiceAmountFacturaCard',
+		ISNULL(SUM(InvoiceAmountCOD), 0) 'InvoiceAmountCOD',
+		-- MODIFICACIÓN [2025-11-03] - Campos para Zigi
 		@AccountZigi as 'AccountZigi',
 		ISNULL(SUM(TotalAmountZigi), 0) 'TotalAmountZigi',
 		ISNULL(SUM(TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
@@ -116,13 +117,6 @@ BEGIN
 		ISNULL(SUM(TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
 		ISNULL(SUM(TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
 		ISNULL(SUM(TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-		-- FIN MODIFICACIÓN
-		ISNULL(SUM(InvoiceAmountCash), 0) 'InvoiceAmountCash',
-		ISNULL(SUM(InvoiceAmountCredit), 0) 'InvoiceAmountCredit',
-		ISNULL(SUM(InvoiceAmountFacturaCash), 0) 'InvoiceAmountFacturaCash',
-		ISNULL(SUM(InvoiceAmountFacturaCard), 0) 'InvoiceAmountFacturaCard',
-		ISNULL(SUM(InvoiceAmountCOD), 0) 'InvoiceAmountCOD',
-		-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
 		ISNULL(SUM(InvoiceAmountZigi), 0) 'InvoiceAmountZigi',
 		ISNULL(SUM(InvoiceAmountFacturaZigi), 0) 'InvoiceAmountFacturaZigi',
 		-- FIN MODIFICACIÓN
