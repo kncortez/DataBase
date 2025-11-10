@@ -433,13 +433,13 @@ BEGIN
                           WHERE inv_pk_id = @idInvoice;
 
                         SELECT @Establishment = [Value]
-                          FROM DeliveryBackOffice.dbo.AddInfoByCodeOfReference
+                          FROM DeliveryBackOffice.dbo.AddInfoByCodeOfReference WITH (NOLOCK)
                          WHERE RowStatus = 1
                            AND CodeOfReference = @vpCodeOfReferences
                            AND [Name] = 'CodEstablecimientoMH'
 
                         SELECT @secuencia = CAST(A1.[Sequence] AS INT)
-                          FROM dbo.InvoiceSequenceByEstablishment A1
+                          FROM dbo.InvoiceSequenceByEstablishment A1 WITH (NOLOCK)
                          WHERE A1.RowStatus = 1
                            AND A1.Establishment = @Establishment
                            AND A1.TypeDocument = 2
