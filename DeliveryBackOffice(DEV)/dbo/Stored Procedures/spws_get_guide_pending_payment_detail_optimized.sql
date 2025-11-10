@@ -17,7 +17,7 @@ BEGIN
     SELECT 
         SUBSTRING(Item, 1, 2),
         TRY_CONVERT(INT, SUBSTRING(Item, 3, LEN(Item)))
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',') WITH(NOLOCK);
 
     -- =====================================
     -- Subconsultas pre-agrupadas (1 ejecución)
@@ -144,7 +144,7 @@ BEGIN
         ON rcod.RateId = rate.RateId
     LEFT JOIN PaymentAgg pyt
         ON pyt.GuideSerie = ord.Guide_Serie AND pyt.GuideNumber = ord.Guide_Number
-    LEFT JOIN dbo.CatPaymentType cpt_pay
+    LEFT JOIN dbo.CatPaymentType cpt_pay WITH(NOLOCK)
         ON cpt_pay.PayTypeId = pyt.PayTypeId
     OUTER APPLY (
         SELECT TOP 1 ccc.Symbol
