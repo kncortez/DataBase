@@ -42,7 +42,10 @@ BEGIN
         IsPayZigi_COD BIT,
         IsPayZigi_COD_Exclude BIT,
         ZigiTransactionId INT NULL,
-        GuidesRelated NVARCHAR(MAX) NULL
+        GuidesRelated NVARCHAR(MAX) NULL,
+        OriginalServicePrice DECIMAL(18, 2) NULL,
+        OriginalCODAmount DECIMAL(18, 2) NULL,
+        OriginalAmountToCollect DECIMAL(18, 2) NULL
     );
 
     -- =============================================
@@ -61,9 +64,14 @@ BEGIN
         CASE WHEN pz.ZigiLinkStatus = 'PAID' AND pz.CODValue > 0 THEN 1 ELSE 0 END AS IsPayZigi_COD,
         CASE WHEN pz.CODValue > 0 THEN 0 ELSE 1 END AS IsPayZigi_COD_Exclude,
         pz.ZigiTransactionId,
-        NULL AS GuidesRelated
-    FROM PaymentZigi pz
+        NULL AS GuidesRelated,
+        ISNULL(do.PriceShippment, 0) AS OriginalServicePrice,
+        ISNULL(do.Collect_OnDelivery, 0) AS OriginalCODAmount,
+        (ISNULL(do.PriceShippment, 0) + ISNULL(do.Collect_OnDelivery, 0)) AS OriginalAmountToCollect
+    FROM PaymentZigi pz WITH(NOLOCK)
     INNER JOIN @GuideTable GTBL ON CONCAT(pz.GuideSerie, pz.GuideNumber) = GTBL.GuideSerieNumber
+    LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+        ON pz.GuideSerie = do.Guide_Serie AND pz.GuideNumber = do.Guide_Number
     WHERE pz.RowStatus = 1;
 
     -- =============================================
@@ -82,14 +90,19 @@ BEGIN
         CASE WHEN pz.ZigiLinkStatus = 'PAID' AND pzm.CODValue > 0 THEN 1 ELSE 0 END AS IsPayZigi_COD,
         CASE WHEN pzm.CODValue > 0 THEN 0 ELSE 1 END AS IsPayZigi_COD_Exclude,
         pz.ZigiTransactionId,
-        NULL AS GuidesRelated
-    FROM PaymentZigiMulti pzm
-    INNER JOIN PaymentZigi pz ON pz.ZigiPaymentId = pzm.Id_PaymentZigi
+        NULL AS GuidesRelated,
+        ISNULL(do.PriceShippment, 0) AS OriginalServicePrice,
+        ISNULL(do.Collect_OnDelivery, 0) AS OriginalCODAmount,
+        (ISNULL(do.PriceShippment, 0) + ISNULL(do.Collect_OnDelivery, 0)) AS OriginalAmountToCollect
+    FROM PaymentZigiMulti pzm WITH(NOLOCK)
+    INNER JOIN PaymentZigi pz WITH(NOLOCK) ON pz.ZigiPaymentId = pzm.Id_PaymentZigi
     INNER JOIN @GuideTable GTBL ON CONCAT(pzm.GuideSerie, pzm.GuideNumber) = GTBL.GuideSerieNumber
+    LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+        ON pzm.GuideSerie = do.Guide_Serie AND pzm.GuideNumber = do.Guide_Number
     WHERE pzm.RowStatus = 1
       AND NOT EXISTS (
           SELECT 1
-          FROM PaymentZigi pz_check
+          FROM PaymentZigi pz_check WITH(NOLOCK)
           WHERE CONCAT(pz_check.GuideSerie, pz_check.GuideNumber) = CONCAT(pzm.GuideSerie, pzm.GuideNumber)
       );
 
@@ -155,7 +168,10 @@ BEGIN
         r.IsPayZigi_COD,
         r.IsPayZigi_COD_Exclude,
         r.ZigiTransactionId,
-        r.GuidesRelated
+        r.GuidesRelated,
+        r.OriginalServicePrice,
+        r.OriginalCODAmount,
+        r.OriginalAmountToCollect
     FROM @Result r
     INNER JOIN @GuideTable GTBL ON r.GuideSerieNumber = GTBL.GuideSerieNumber
     ORDER BY CHARINDEX(r.GuideSerieNumber, @InGuidesP);
