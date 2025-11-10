@@ -8,10 +8,9 @@
 -- Create date: <2024-07-04>
 -- Description:	<Se agrega las cuentas y el simbolo de la moneda correspondiente>
 -- =============================================
--- =============================================
--- Author:        <Bilkar Morataya>
--- Create date: <2025-11-03>
--- Description:    <Se agrega el método de pago Zigi en los totales>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-11-06>
+-- Description:	<Se agrega la opción a mostrar que el pago fue con Zigi>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetDataForClosureVisitPoint]
 @VisitPointId int = 4246,
@@ -52,14 +51,15 @@ BEGIN
 		ISNULL(SUM(S1.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
 		ISNULL(SUM(S1.TotalAmountCODCash), 0) 'TotalAmountCODCash',
 		ISNULL(SUM(S1.TotalAmountCODCashDeclared), 0) 'TotalAmountCODCashDeclared',
-		-- MODIFICACIÓN [2025-11-03] - Campos para Zigi
-        ISNULL(SUM(S1.TotalAmountZigi), 0) 'TotalAmountZigi',
-        ISNULL(SUM(S1.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
-        ISNULL(SUM(S1.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
-        ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
-        ISNULL(SUM(S1.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
-        ISNULL(SUM(S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-        -- FIN MODIFICACIÓN
+		-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
+		-- TotalAmountZigi debe ser la suma de Facturas + COD:
+		ISNULL(SUM(S1.TotalAmountFacturaZigi + S1.TotalAmountCODZigi), 0) 'TotalAmountZigi',
+		ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared + S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountZigiDeclared',
+		ISNULL(SUM(S1.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
+		ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
+		ISNULL(SUM(S1.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+		ISNULL(SUM(S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
+		-- FIN MODIFICACIÓN
 		S1.CurrencySymbolDetail
 	FROM 
 	(
@@ -67,7 +67,19 @@ BEGIN
 				TotalAmountCredit, TotalAmountCreditDeclared, InvoiceAmountCredit,
 				TotalAmountFacturaCash, TotalAmountFacturaCashDeclared, InvoiceAmountFacturaCash,
 				TotalAmountFacturaCard, TotalAmountFacturaCardDeclared, InvoiceAmountFacturaCard,
-				TotalAmountCODCash, TotalAmountCODCashDeclared, InvoiceAmountCOD,
+				-- COD Cash desde subconsulta agrupada:
+				ISNULL(CODCashCalc.TotalCODCash, 0) AS TotalAmountCODCash,
+				ACH.TotalAmountCODCashDeclared,
+				ACH.InvoiceAmountCOD,
+				-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
+				ACH.TotalAmountFacturaZigi,
+				ACH.TotalAmountFacturaZigiDeclared,
+				ACH.InvoiceAmountZigi,
+				ACH.InvoiceAmountFacturaZigi,
+				-- COD Zigi desde subconsulta agrupada:
+				ISNULL(CODZigiCalc.TotalCODZigi, 0) AS TotalAmountCODZigi,
+				ACH.TotalAmountCODZigiDeclared,
+				-- FIN MODIFICACIÓN
 				RU.UsrNickName, RU.UsrIdUser, ACH.DateCreated, ACH.IdAccountingClosuresHeader,
 				-- MODIFICACIÓN [2025-11-03] - Campos para Zigi
                 TotalAmountZigi, TotalAmountZigiDeclared, InvoiceAmountZigi,
@@ -80,6 +92,30 @@ BEGIN
 			ON ACH.UserId = RU.UsrIdUser
 		INNER JOIN VisitPointClient VP WITH (NOLOCK)
 			ON ACH.VisitPoint = VP.CodeOfReference
+		-- AQUÍ ESTÁN LAS SUBCONSULTAS
+		-- Subconsulta para COD Cash (evitar duplicados):
+		LEFT JOIN (
+			SELECT ACD.AccountingClosuresHeaderId,
+				   SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
+			FROM AccountingClosuresDetail ACD WITH (NOLOCK)
+			LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+				ON DOPT.GuideSerie = ACD.GuideSerie
+				AND DOPT.GuideNumber = ACD.GuideNumber
+				AND DOPT.DopId = ACD.DopId
+			GROUP BY ACD.AccountingClosuresHeaderId
+		) CODCashCalc ON CODCashCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
+		-- Subconsulta para COD Zigi (evitar duplicados):
+		LEFT JOIN (
+			SELECT ACD.AccountingClosuresHeaderId,
+				   SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
+			FROM AccountingClosuresDetail ACD WITH (NOLOCK)
+			LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+				ON DOPT.GuideSerie = ACD.GuideSerie
+				AND DOPT.GuideNumber = ACD.GuideNumber
+				AND DOPT.DopId = ACD.DopId
+			GROUP BY ACD.AccountingClosuresHeaderId
+		) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
+		-- AQUÍ TERMINAN LAS SUBCONSULTAS
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
@@ -92,7 +128,7 @@ BEGIN
 	GROUP BY UsrIdUser, UsrNickName, DateCreated, IdAccountingClosuresHeader, CurrencySymbolDetail
 
 
-	SELECT @Account AS 'AccountExp',	
+	SELECT @Account AS 'AccountExp',
 		ISNULL(SUM(TotalAmountCash), 0) 'TotalAmountCash',
 		ISNULL(SUM(TotalAmountCashDeclared), 0) 'TotalAmountCashDeclared',
 		ISNULL(SUM(TotalAmountCredit), 0) 'TotalAmountCredit',
@@ -102,7 +138,8 @@ BEGIN
 		ISNULL(SUM(TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
 		ISNULL(SUM(TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
 		@AccountCOD AS 'AccountCOD',
-		ISNULL(SUM(TotalAmountCODCash), 0) 'TotalAmountCODCash',
+		-- COD Cash desde transacciones agrupadas:
+		ISNULL(SUM(CODCashCalc.TotalCODCash), 0) 'TotalAmountCODCash',
 		ISNULL(SUM(TotalAmountCODCashDeclared), 0) 'TotalAmountCODCashDeclared',
 		ISNULL(SUM(InvoiceAmountCash), 0) 'InvoiceAmountCash',
 		ISNULL(SUM(InvoiceAmountCredit), 0) 'InvoiceAmountCredit',
@@ -111,11 +148,13 @@ BEGIN
 		ISNULL(SUM(InvoiceAmountCOD), 0) 'InvoiceAmountCOD',
 		-- MODIFICACIÓN [2025-11-03] - Campos para Zigi
 		@AccountZigi as 'AccountZigi',
-		ISNULL(SUM(TotalAmountZigi), 0) 'TotalAmountZigi',
-		ISNULL(SUM(TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
+		-- TotalAmountZigi: Solo facturas (del header):
+		ISNULL(SUM(TotalAmountFacturaZigi), 0) 'TotalAmountZigi',
+		ISNULL(SUM(TotalAmountFacturaZigiDeclared), 0) 'TotalAmountZigiDeclared',
 		ISNULL(SUM(TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
 		ISNULL(SUM(TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
-		ISNULL(SUM(TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+		-- COD Zigi desde transacciones agrupadas:
+		ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountCODZigi',
 		ISNULL(SUM(TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
 		ISNULL(SUM(InvoiceAmountZigi), 0) 'InvoiceAmountZigi',
 		ISNULL(SUM(InvoiceAmountFacturaZigi), 0) 'InvoiceAmountFacturaZigi',
@@ -124,6 +163,28 @@ BEGIN
 	FROM AccountingClosuresHeader ACH
 	INNER JOIN VisitPointClient VP WITH (NOLOCK)
 		ON ACH.VisitPoint = VP.CodeofReference
+	-- Subconsulta para COD Cash (evitar duplicados):
+	LEFT JOIN (
+		SELECT ACD.AccountingClosuresHeaderId,
+			   SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
+		FROM AccountingClosuresDetail ACD WITH (NOLOCK)
+		LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+			ON DOPT.GuideSerie = ACD.GuideSerie
+			AND DOPT.GuideNumber = ACD.GuideNumber
+			AND DOPT.DopId = ACD.DopId
+		GROUP BY ACD.AccountingClosuresHeaderId
+	) CODCashCalc ON CODCashCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
+	-- Subconsulta para COD Zigi (evitar duplicados):
+	LEFT JOIN (
+		SELECT ACD.AccountingClosuresHeaderId,
+			   SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
+		FROM AccountingClosuresDetail ACD WITH (NOLOCK)
+		LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+			ON DOPT.GuideSerie = ACD.GuideSerie
+			AND DOPT.GuideNumber = ACD.GuideNumber
+			AND DOPT.DopId = ACD.DopId
+		GROUP BY ACD.AccountingClosuresHeaderId
+	) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
 	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 		ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
 	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)

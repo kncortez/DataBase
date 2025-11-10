@@ -16,7 +16,7 @@
 -- =============================================
 -- =============================================
 -- Author:		<Bilkar Morataya>
--- Create date: <2025-10-28>
+-- Create date: <2025-11-07>
 -- Description:	<Se agrega campos de nuevo método de Zigi>
 -- =============================================
 CREATE PROCEDURE  [dbo].[ReportClosureTotalVisitPoint]
@@ -59,29 +59,30 @@ BEGIN
                isnull(sum(ACH.TotalAmountCashDeclared), 0) 'TotalCashDeclared',
                isnull(sum(ACH.TotalAmountCreditDeclared), 0) 'TotalCreditDeclared',
 			   @AccountCOD AS AccountCOD,
-               isnull(sum(ACH.TotalAmountCODCash), 0) 'TotalCODCash',
-               -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+               -- MODIFICACIÓN 07/11/2025: Calcular COD Cash desde transacciones
+               isnull(sum(CODCashCalc.TotalCODCash), 0) 'TotalCODCash',
                isnull(sum(ACH.TotalAmountCODCashDeclared), 0) 'TotalCODCashDeclared',
+               -- FIN MODIFICACIÓN
                isnull(sum(ACH.TotalAmountFacturaCash), 0) 'TotalAmountFacturaCash',
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               isnull(SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
-                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
-                            + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
-                            ),0) 'TotalGeneral',
-               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
+               -- MODIFICACIÓN 07/11/2025: Separar correctamente Zigi
                @AccountZigi AS AccountZigi,
-               ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
-               ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
-               ISNULL(SUM(ACH.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+               -- TotalAmountZigi debe ser la suma de Facturas + COD Zigi:
+               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) + ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountZigi',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) + ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountZigiDeclared',
+               -- COD Zigi calculado desde transacciones:
+               ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountCODZigi',
                ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
                ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
                ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
+               -- Total General corregido:
                ISNULL(
-                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
-                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
-                            + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + 
+                             ISNULL(CODCashCalc.TotalCODCash, 0) +
+                             ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard +
+                             ISNULL(CODZigiCalc.TotalCODZigi, 0) + ACH.TotalAmountFacturaZigi
                             ),
                          0
                      ) 'TotalGeneral',
@@ -90,6 +91,36 @@ BEGIN
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
+            -- Subconsulta para COD Cash (evitar duplicados):
+            LEFT JOIN (
+                SELECT ACHVP.IdAccountingClosuresHeaderVisitPoint,
+                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
+                FROM AccountingClosuresHeader ACHeader WITH (NOLOCK)
+                LEFT JOIN AccountingClosuresDetail ACD WITH (NOLOCK)
+                    ON ACD.AccountingClosuresHeaderId = ACHeader.IdAccountingClosuresHeader
+                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+                    ON DOPT.GuideSerie = ACD.GuideSerie
+                    AND DOPT.GuideNumber = ACD.GuideNumber
+                    AND DOPT.DopId = ACD.DopId
+                INNER JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH (NOLOCK)
+                    ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACHeader.AccountingClosuresHeaderVisitPointId
+                GROUP BY ACHVP.IdAccountingClosuresHeaderVisitPoint
+            ) CODCashCalc ON CODCashCalc.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
+            -- Subconsulta para COD Zigi (evitar duplicados):
+            LEFT JOIN (
+                SELECT ACHVP.IdAccountingClosuresHeaderVisitPoint,
+                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
+                FROM AccountingClosuresHeader ACHeader WITH (NOLOCK)
+                LEFT JOIN AccountingClosuresDetail ACD WITH (NOLOCK)
+                    ON ACD.AccountingClosuresHeaderId = ACHeader.IdAccountingClosuresHeader
+                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+                    ON DOPT.GuideSerie = ACD.GuideSerie
+                    AND DOPT.GuideNumber = ACD.GuideNumber
+                    AND DOPT.DopId = ACD.DopId
+                INNER JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH (NOLOCK)
+                    ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACHeader.AccountingClosuresHeaderVisitPointId
+                GROUP BY ACHVP.IdAccountingClosuresHeaderVisitPoint
+            ) CODZigiCalc ON CODZigiCalc.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 				ON VPC.CountryId = DC.Currency_IdCountry
                 AND DC.DefaultPerCountry = 1
@@ -110,25 +141,30 @@ BEGIN
                isnull(sum(ACH.TotalAmountCashDeclared), 0) 'TotalCashDeclared',
                isnull(sum(ACH.TotalAmountCreditDeclared), 0) 'TotalCreditDeclared',
 			   @AccountCOD AS AccountCOD,
-               isnull(sum(ACH.TotalAmountCODCash), 0) 'TotalCODCash',
-               -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+               -- MODIFICACIÓN 07/11/2025: Calcular COD Cash desde transacciones
+               isnull(sum(CODCashCalc.TotalCODCash), 0) 'TotalCODCash',
                isnull(sum(ACH.TotalAmountCODCashDeclared), 0) 'TotalCODCashDeclared',
+               -- FIN MODIFICACIÓN
                isnull(sum(ACH.TotalAmountFacturaCash), 0) 'TotalAmountFacturaCash',
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
+               -- MODIFICACIÓN 07/11/2025: Separar correctamente Zigi
                @AccountZigi AS AccountZigi,
-               ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
-               ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
-               ISNULL(SUM(ACH.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+               -- TotalAmountZigi debe ser la suma de Facturas + COD Zigi:
+               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) + ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountZigi',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) + ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountZigiDeclared',
+               -- COD Zigi calculado desde transacciones:
+               ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountCODZigi',
                ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
                ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
                ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
+               -- Total General corregido:
                ISNULL(
-                        SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
-                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
-                            + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                        SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + 
+                            ISNULL(CODCashCalc.TotalCODCash, 0) +
+                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard +
+                            ISNULL(CODZigiCalc.TotalCODZigi, 0) + ACH.TotalAmountFacturaZigi
                             ),
                          0
                      ) 'TotalGeneral',
@@ -136,6 +172,36 @@ BEGIN
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
+            -- Subconsulta para COD Cash (evitar duplicados):
+            LEFT JOIN (
+                SELECT ACHVP.IdAccountingClosuresHeaderVisitPoint,
+                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
+                FROM AccountingClosuresHeader ACHeader WITH (NOLOCK)
+                LEFT JOIN AccountingClosuresDetail ACD WITH (NOLOCK)
+                    ON ACD.AccountingClosuresHeaderId = ACHeader.IdAccountingClosuresHeader
+                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+                    ON DOPT.GuideSerie = ACD.GuideSerie
+                    AND DOPT.GuideNumber = ACD.GuideNumber
+                    AND DOPT.DopId = ACD.DopId
+                INNER JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH (NOLOCK)
+                    ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACHeader.AccountingClosuresHeaderVisitPointId
+                GROUP BY ACHVP.IdAccountingClosuresHeaderVisitPoint
+            ) CODCashCalc ON CODCashCalc.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
+            -- Subconsulta para COD Zigi (evitar duplicados):
+            LEFT JOIN (
+                SELECT ACHVP.IdAccountingClosuresHeaderVisitPoint,
+                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
+                FROM AccountingClosuresHeader ACHeader WITH (NOLOCK)
+                LEFT JOIN AccountingClosuresDetail ACD WITH (NOLOCK)
+                    ON ACD.AccountingClosuresHeaderId = ACHeader.IdAccountingClosuresHeader
+                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+                    ON DOPT.GuideSerie = ACD.GuideSerie
+                    AND DOPT.GuideNumber = ACD.GuideNumber
+                    AND DOPT.DopId = ACD.DopId
+                INNER JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH (NOLOCK)
+                    ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACHeader.AccountingClosuresHeaderVisitPointId
+                GROUP BY ACHVP.IdAccountingClosuresHeaderVisitPoint
+            ) CODZigiCalc ON CODZigiCalc.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 				ON VPC.CountryId = DC.Currency_IdCountry
                 AND DC.DefaultPerCountry = 1
@@ -155,25 +221,30 @@ BEGIN
                isnull(sum(ACH.TotalAmountCashDeclared), 0) 'TotalCashDeclared',
                isnull(sum(ACH.TotalAmountCreditDeclared), 0) 'TotalCreditDeclared',
 			   @AccountCOD AS AccountCOD,
-               isnull(sum(ACH.TotalAmountCODCash), 0) 'TotalCODCash',
-               -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+               -- MODIFICACIÓN 07/11/2025: Calcular COD Cash desde transacciones
+               isnull(sum(CODCashCalc.TotalCODCash), 0) 'TotalCODCash',
                isnull(sum(ACH.TotalAmountCODCashDeclared), 0) 'TotalCODCashDeclared',
+               -- FIN MODIFICACIÓN
                isnull(sum(ACH.TotalAmountFacturaCash), 0) 'TotalAmountFacturaCash',
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
+               -- MODIFICACIÓN 07/11/2025: Separar correctamente Zigi
                @AccountZigi AS AccountZigi,
-               ISNULL(SUM(ACH.TotalAmountZigi), 0) 'TotalAmountZigi',
-               ISNULL(SUM(ACH.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
-               ISNULL(SUM(ACH.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
+               -- TotalAmountZigi debe ser la suma de Facturas + COD Zigi:
+               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) + ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountZigi',
+               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) + ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountZigiDeclared',
+               -- COD Zigi calculado desde transacciones:
+               ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountCODZigi',
                ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
                ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
                ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
+               -- Total General corregido:
                ISNULL(
-                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
-                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
-                            + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + 
+                             ISNULL(CODCashCalc.TotalCODCash, 0) +
+                             ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard +
+                             ISNULL(CODZigiCalc.TotalCODZigi, 0) + ACH.TotalAmountFacturaZigi
                             ),
                          0
                      ) 'TotalGeneral',
@@ -181,6 +252,36 @@ BEGIN
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN VisitPointClient VPC WITH (NOLOCK)
                 ON ACH.VisitPoint = VPC.IdVisitPointClient
+            -- Subconsulta para COD Cash (evitar duplicados):
+            LEFT JOIN (
+                SELECT ACHVP.IdAccountingClosuresHeaderVisitPoint,
+                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
+                FROM AccountingClosuresHeader ACHeader WITH (NOLOCK)
+                LEFT JOIN AccountingClosuresDetail ACD WITH (NOLOCK)
+                    ON ACD.AccountingClosuresHeaderId = ACHeader.IdAccountingClosuresHeader
+                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+                    ON DOPT.GuideSerie = ACD.GuideSerie
+                    AND DOPT.GuideNumber = ACD.GuideNumber
+                    AND DOPT.DopId = ACD.DopId
+                INNER JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH (NOLOCK)
+                    ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACHeader.AccountingClosuresHeaderVisitPointId
+                GROUP BY ACHVP.IdAccountingClosuresHeaderVisitPoint
+            ) CODCashCalc ON CODCashCalc.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
+            -- Subconsulta para COD Zigi (evitar duplicados):
+            LEFT JOIN (
+                SELECT ACHVP.IdAccountingClosuresHeaderVisitPoint,
+                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
+                FROM AccountingClosuresHeader ACHeader WITH (NOLOCK)
+                LEFT JOIN AccountingClosuresDetail ACD WITH (NOLOCK)
+                    ON ACD.AccountingClosuresHeaderId = ACHeader.IdAccountingClosuresHeader
+                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+                    ON DOPT.GuideSerie = ACD.GuideSerie
+                    AND DOPT.GuideNumber = ACD.GuideNumber
+                    AND DOPT.DopId = ACD.DopId
+                INNER JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH (NOLOCK)
+                    ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACHeader.AccountingClosuresHeaderVisitPointId
+                GROUP BY ACHVP.IdAccountingClosuresHeaderVisitPoint
+            ) CODZigiCalc ON CODZigiCalc.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 				ON VPC.CountryId = DC.Currency_IdCountry
                 AND DC.DefaultPerCountry = 1

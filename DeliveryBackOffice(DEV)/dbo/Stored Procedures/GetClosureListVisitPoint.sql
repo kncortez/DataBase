@@ -67,17 +67,6 @@ BEGIN
 		,ACH.TotalAmountFacturaCashDeclared
 		,ACH.TotalAmountFacturaCard
 		,ACH.TotalAmountFacturaCardDeclared
-<<<<<<< HEAD
-		-- MODIFICACIÓN 17/10/2025 Bilkar Morataya
-		,ACH.TotalAmountZigi
-		,ACH.TotalAmountZigiDeclared
-		,ACH.TotalAmountCODZigi
-		,ACH.TotalAmountCODZigiDeclared
-		,ACH.TotalAmountFacturaZigi
-		,ACH.TotalAmountFacturaZigiDeclared
-		,ISNULL(CCC.Symbol,'') CunrrencySymbol
-		-- FIN MODIFICACIÓN
-=======
 	     -- MODIFICACIÓN 17/10/2025 Bilkar Morataya
        ,ACH.TotalAmountZigi
        ,ACH.TotalAmountZigiDeclared
@@ -87,18 +76,13 @@ BEGIN
        ,ACH.TotalAmountFacturaZigiDeclared
 	     -- FIN MODIFICACIÓN
 		,ISNULL(CCC.Symbol,'') CunrrencySymbol
->>>>>>> e54eacaf (FDAPI-4438: Modificaciones a SPs de cierres, y reportes, leves arreglos a los Set_Finish)
 	FROM DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint ACH
 	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 		ON ACH.VisitPoint = VPC.CodeOfReference
 	INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 		ON REU.UsrIdUser = ACH.UserId
 	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-<<<<<<< HEAD
-		ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
-=======
 		ON VPC.CountryId = DC.Currency_IdCountry
->>>>>>> e54eacaf (FDAPI-4438: Modificaciones a SPs de cierres, y reportes, leves arreglos a los Set_Finish)
 	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 		ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
 	WHERE CAST(ACH.DateCreated AS DATE) 
