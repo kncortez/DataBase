@@ -15,7 +15,7 @@ DECLARE @IdRate			INT = (SELECT RheId from RateHeader WITH(NOLOCK) where RheName
 		@TypeServiceCOD INT = (SELECT CtsId FROM CatTypeService WITH(NOLOCK) WHERE CtsShortName = 'COD');--6
 
 
-DECLARE @IdPeq INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Pequeño' and IdCountry = 'HN')) ,
+DECLARE @IdPeq INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete PequeÃ±o' and IdCountry = 'HN')) ,
 		@IdMed INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Mediano' and IdCountry = 'HN')),
 		@IdGrand INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Grande' and IdCountry = 'HN')),
 		@IdExt INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Extra Grande' and IdCountry = 'HN')),
@@ -2211,12 +2211,12 @@ AND TypeServiceId = @TypeServiceCOD --COD
  ( @IdRate,@TypeServiceCOD,@IdSegmentForGracias,NULL,NULL,@IdSob,540,1,'SYS-BPEDROZA',GETDATE(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
  COMMIT TRANSACTION
-    PRINT 'Actualización realizada correctamente.'
+    PRINT 'ActualizaciÃ³n realizada correctamente.'
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION
 
-    PRINT 'Ocurrió un error al ejecutar la actualización.'
+    PRINT 'OcurriÃ³ un error al ejecutar la actualizaciÃ³n.'
     PRINT ERROR_MESSAGE()
 END CATCH
