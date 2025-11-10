@@ -7,6 +7,10 @@
 -- Author:		<Cristian, Suazo>
 -- Create date: <05-11-2025>
 -- Description:	<Se quita la restriccion de escanear todas las piezas de una guia>
+-- Propósito: Agregar parámetro @IdStation para rastrear estación en escala
+-- Autor:     <Freddy Camposeco>
+-- Historia:  <FDAPI-4723>
+-- Fecha:     <2025-10-15>
 -- =============================================
 
 CREATE PROCEDURE [dbo].[spHM_addGuideToLinehaulSettlement]
@@ -20,7 +24,8 @@ CREATE PROCEDURE [dbo].[spHM_addGuideToLinehaulSettlement]
     @GuidePiece AS INT,
     @IsOpenProcess AS INT,
     @GuideReceived AS INT,
-    @TknUser AS NVARCHAR(50)
+    @TknUser AS NVARCHAR(50),
+    @IdStation AS INT = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -518,14 +523,16 @@ BEGIN
                         [StatusOrderId],
                         [UserCreated],
                         [DateCreated],
-                        [DateCreatedInSystem]
+                        [DateCreatedInSystem],
+                        [StationId]
                     )
                     SELECT [LRPCD].[GuideSerie],
                            [LRPCD].[GuideNumber],
                            @SETTLEMENT_STATUS_ORDER_ID,
                            @TknUser,
                            SYSDATETIME(),
-                           SYSDATETIME()
+                           SYSDATETIME(),
+                           @IdStation
                     FROM [dbo].[LinehaulRouteSettlementContainerDetail] LRPCD
                     WHERE [LRPCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
                           AND [LRPCD].[GuideNumber] = @GuideNumber
