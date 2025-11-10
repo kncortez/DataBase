@@ -3,6 +3,11 @@
 -- Create date: <11-08-2022>
 -- Description:	<Add a guide into LinehaulRouteSettlementContainerDetail and LinehaulRouteSettlementContainerDetailPiece>
 -- =============================================
+-- Propósito: Agregar parámetro @IdStation para rastrear estación en escala
+-- Autor:     <Freddy Camposeco>
+-- Historia:  <FDAPI-4723>
+-- Fecha:     <2025-10-15>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spHM_addGuideToLinehaulSettlement]
     @LinehaulRouteSettlementId AS INT,
@@ -15,7 +20,8 @@ CREATE PROCEDURE [dbo].[spHM_addGuideToLinehaulSettlement]
     @GuidePiece AS INT,
     @IsOpenProcess AS INT,
     @GuideReceived AS INT,
-    @TknUser AS NVARCHAR(50)
+    @TknUser AS NVARCHAR(50),
+    @IdStation AS INT = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -80,13 +86,13 @@ BEGIN
                 ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
                  
             INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
-                ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                   AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-                   AND [LRPC].[RowStatus] = 1
+                ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]                  
         WHERE [LRPCDP].[PieceNumber] = @GuidePiece
 		  AND [LRPCD].[RowStatus] = 1
                    AND [LRPCD].[GuideSerie] = @GuideSerie
                    AND [LRPCD].[GuideNumber] = @GuideNumber
+				   AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+                   AND [LRPC].[RowStatus] = 1
     );
 
     SET @EXISTING_LRPCDP =
@@ -903,14 +909,16 @@ BEGIN
                         [StatusOrderId],
                         [UserCreated],
                         [DateCreated],
-                        [DateCreatedInSystem]
+                        [DateCreatedInSystem],
+                        [StationId]
                     )
                     SELECT [LRPCD].[GuideSerie],
                            [LRPCD].[GuideNumber],
                            @SETTLEMENT_STATUS_ORDER_ID,
                            @TknUser,
                            SYSDATETIME(),
-                           SYSDATETIME()
+                           SYSDATETIME(),
+                           @IdStation
                     FROM [dbo].[LinehaulRouteSettlementContainerDetail] LRPCD
                     WHERE [LRPCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
                           AND [LRPCD].[GuideNumber] = @GuideNumber
