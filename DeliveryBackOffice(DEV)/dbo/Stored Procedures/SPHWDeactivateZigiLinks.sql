@@ -37,7 +37,7 @@ BEGIN
     SET RowStatus = 0
     WHERE Id_PaymentZigi IN (
         SELECT ZigiPaymentId
-        FROM PaymentZigi
+        FROM PaymentZigi WITH(NOLOCK)
         WHERE ZigiReference IN (SELECT ZigiReference FROM @Refs)
           AND ZigiLinkStatus = 'CANCELLED'
           AND RowStatus = 0
@@ -45,7 +45,7 @@ BEGIN
 
     -- Retornar los ZigiPaymentId desactivados
     SELECT ZigiPaymentId
-    FROM PaymentZigi
+    FROM PaymentZigi WITH(NOLOCK)
     WHERE ZigiReference IN (SELECT ZigiReference FROM @Refs)
       AND ZigiLinkStatus = 'CANCELLED'
       AND RowStatus = 0;

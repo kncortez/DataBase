@@ -117,8 +117,8 @@ BEGIN
         r.IsPayZigi_COD = ISNULL(pm.CODValue, r.IsPayZigi_COD),
         r.IsPayZigi_COD_Exclude = IIF(pm.CODValue > 0, 0, 1)
     FROM @Result r
-    INNER JOIN PaymentZigi pz ON CONCAT(pz.GuideSerie, pz.GuideNumber) = r.GuideSerieNumber
-    INNER JOIN PaymentZigiMulti pm ON pz.ZigiPaymentId = pm.Id_PaymentZigi
+    INNER JOIN PaymentZigi pz WITH(NOLOCK) ON CONCAT(pz.GuideSerie, pz.GuideNumber) = r.GuideSerieNumber
+    INNER JOIN PaymentZigiMulti pm WITH(NOLOCK) ON pz.ZigiPaymentId = pm.Id_PaymentZigi
     WHERE pz.IsGroup = 1 AND pz.RowStatus = 1 AND pm.RowStatus = 1;
 
     -- =============================================
@@ -143,7 +143,7 @@ BEGIN
             SELECT ',' + g.GuideSerieNumber
             FROM (
                 SELECT CONCAT(pm.GuideSerie, pm.GuideNumber) AS GuideSerieNumber
-                FROM PaymentZigiMulti pm
+                FROM PaymentZigiMulti pm WITH(NOLOCK)
                 WHERE pm.Id_PaymentZigi = r.IdGroup
                   AND pm.RowStatus = 1
             ) AS g
