@@ -67,10 +67,12 @@ BEGIN
              OUTER APPLY (
              SELECT [Value] AS [Value]
                FROM DeliveryBackOffice.dbo.AddInfoByCodeOfReference
-              WHERE CodeOfReference = @VpCodeOfReference
+              WHERE RowStatus = 1
+                AND CodeOfReference = @VpCodeOfReference
                 AND [Name] = 'CodEstablecimientoMH'
              ) AS Establishment
-       WHERE A1.Establishment = Establishment.[Value]
+       WHERE A1.RowStatus = 1
+         AND A1.Establishment = Establishment.[Value]
          AND A1.TypeDocument = @typeDocument
 
       SELECT ISNULL(@Address  ,'')            AS [Address],

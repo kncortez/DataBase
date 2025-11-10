@@ -87,12 +87,15 @@ BEGIN
 
 	-- Obtener datos adicionales de configuración
 	SELECT [Name], [Value]
-	FROM AddInfoByCodeOfReference WITH(NOLOCK)
-	WHERE [Node] = 'CancelDTE'
-      AND CodeOfReference = @CodeOfReference;
+	  FROM AddInfoByCodeOfReference WITH(NOLOCK)
+	 WHERE RowStatus = 1 
+       AND [Node] = 'CancelDTE'
+       AND CodeOfReference = @CodeOfReference;
 
 	SELECT	[Name],[Value] 
 	FROM AddInfoByConfigSV WITH(NOLOCK)
-	WHERE [Node] = 'CreateDTE' AND [Name] = 'USERNAME'
+	WHERE RowStatus = 1
+      AND [Node] = 'CreateDTE' 
+      AND [Name] = 'USERNAME'
 
 END;

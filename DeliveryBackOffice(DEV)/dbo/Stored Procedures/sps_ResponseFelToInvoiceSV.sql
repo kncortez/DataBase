@@ -82,7 +82,8 @@ BEGIN
 
           SELECT @Establishment = [Value]
             FROM DeliveryBackOffice.dbo.AddInfoByCodeOfReference WITH(NOLOCK)
-           WHERE CodeOfReference = @CodeOfReference
+           WHERE RowStatus = 1
+             AND CodeOfReference = @CodeOfReference
              AND [Name] = 'CodEstablecimientoMH';
 
         SELECT @secuencia = [Sequence]

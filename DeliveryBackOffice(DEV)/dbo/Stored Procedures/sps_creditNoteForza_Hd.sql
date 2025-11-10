@@ -434,19 +434,21 @@ BEGIN
 
                         SELECT @Establishment = [Value]
                           FROM DeliveryBackOffice.dbo.AddInfoByCodeOfReference
-                         WHERE CodeOfReference = @vpCodeOfReferences
+                         WHERE RowStatus = 1
+                           AND CodeOfReference = @vpCodeOfReferences
                            AND [Name] = 'CodEstablecimientoMH'
 
                         SELECT @secuencia = CAST(A1.[Sequence] AS INT)
-                            FROM dbo.InvoiceSequenceByEstablishment A1
-                        WHERE A1.Establishment = @Establishment
-                          AND A1.TypeDocument = 2
+                          FROM dbo.InvoiceSequenceByEstablishment A1
+                         WHERE A1.RowStatus = 1
+                           AND A1.Establishment = @Establishment
+                           AND A1.TypeDocument = 2
 
                         UPDATE DeliveryBackOffice.dbo.InvoiceSequenceByEstablishment
-                        SET [Sequence] = @secuencia + 1
-                        WHERE RowStatus = 1
-                        AND TypeDocument = 2
-                        AND Establishment = @Establishment
+                           SET [Sequence] = @secuencia + 1
+                         WHERE RowStatus = 1
+                           AND TypeDocument = 2
+                           AND Establishment = @Establishment
                     END  
                 END
                 ELSE
