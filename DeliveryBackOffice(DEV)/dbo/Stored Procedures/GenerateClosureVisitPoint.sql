@@ -1,4 +1,14 @@
-﻿CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
+﻿-- =============================================
+-- Author:		<Alejandro Rodríguez>
+-- Create date: <2022-03-28>
+-- Description:	<SP para generar el cierre de los express center por punto de visita>
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-11-04>
+-- Description:	<Se agrega al cierre los elementos de pago mediante Zigi>
+-- =============================================
+
+CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
     @VisitPointId INT = 4246,
     @UserId INT,
     @TokenCreated NVARCHAR(50),
@@ -12,7 +22,7 @@
 	@TotalAmountCODCashDeclared DECIMAL(18, 5),
 	@TotalAmountFacturaCashDeclared DECIMAL(18,5),
 	@TotalAmountFacturaCardDeclared DECIMAL(18,5),
-	-- MODIFICACIÓN [2025-10-17] - Parámetros declarados para Zigi
+	-- MODIFICACIÓN [2025-11-04] - Parámetros declarados para Zigi
 	@TotalAmountZigiDeclared DECIMAL(18, 5) = 0,
 	@TotalAmountCODZigiDeclared DECIMAL(18, 5) = 0,
 	@TotalAmountFacturaZigiDeclared DECIMAL(18, 5) = 0
@@ -31,7 +41,7 @@ BEGIN
 	DECLARE @InvoiceAmountFacturaCash INT;
 	DECLARE @InvoiceAmountFacturaCard INT;
 	DECLARE @InvoiceAmountCOD INT;
-	-- MODIFICACIÓN [2025-10-17] - Variables para Zigi
+	-- MODIFICACIÓN [2025-11-04] - Variables para Zigi
 	DECLARE @TotalAmountZigi DECIMAL(18, 5);
 	DECLARE @TotalAmountCODZigi DECIMAL(18, 5);
 	DECLARE @TotalAmountFacturaZigi DECIMAL(18, 5);
@@ -65,7 +75,7 @@ BEGIN
 		@InvoiceAmountFacturaCash = ISNULL(SUM(InvoiceAmountFacturaCash), 0),
 		@InvoiceAmountFacturaCard = ISNULL(SUM(InvoiceAmountFacturaCard), 0),
 		@InvoiceAmountCOD = ISNULL(SUM(InvoiceAmountCOD), 0),
-		-- MODIFICACIÓN [2025-10-17] - Totales para Zigi
+		-- MODIFICACIÓN [2025-11-04] - Totales para Zigi
 		@TotalAmountZigi = ISNULL(SUM(TotalAmountZigi), 0),
 		@TotalAmountCODZigi = ISNULL(SUM(TotalAmountCODZigi), 0),
 		@TotalAmountFacturaZigi = ISNULL(SUM(TotalAmountFacturaZigi), 0),
@@ -82,78 +92,89 @@ BEGIN
 
 	BEGIN TRANSACTION
 	BEGIN TRY
-		INSERT INTO DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint
-		(
-			UserId, ClosurerPOS,
-			TotalAmountCash, TotalAmountCashDeclared,
-			TotalAmountCredit, TotalAmountCreditDeclared,
-			VisitPoint, Voucher1, Bag1, Voucher2, Bag2, RowStatus,
-			TokenCreated, DateCreated,
-			TokenUpdated, DateUpdated,
-			TotalAmountCODCash, TotalAmountCODCashDeclared,
-			TotalAmountFacturaCash, TotalAmountFacturaCashDeclared,
-			TotalAmountFacturaCard, TotalAmountFacturaCardDeclared,
-			InvoiceAmountCash, InvoiceAmountCredit,
-			InvoiceAmountFacturaCash, InvoiceAmountFacturaCard,
-			InvoiceAmountCOD,
-			-- MODIFICACIÓN [2025-10-17] - Campos para Zigi
-			TotalAmountZigi, TotalAmountZigiDeclared,
-			TotalAmountCODZigi, TotalAmountCODZigiDeclared,
-			TotalAmountFacturaZigi, TotalAmountFacturaZigiDeclared,
-			InvoiceAmountZigi, InvoiceAmountFacturaZigi
-			-- FIN MODIFICACIÓN
-		)
-		VALUES
-		(
-			@UserId2, @ClosurerPOS, 
-			@TotalAmountCash, @TotalAmountCashDeclared, 
-			@TotalAmountCredit, @TotalAmountCreditDeclared,
-			@VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, 
-			@TokenCreated, GETDATE(),
-			NULL, NULL, 
-			@TotalAmountCODCash, @TotalAmountCODCashDeclared, 
-			@TotalAmountFacturaCash, @TotalAmountFacturaCashDeclared, 
-			@TotalAmountFacturaCard, @TotalAmountFacturaCardDeclared,
-			@InvoiceAmountCash, @InvoiceAmountCredit,
-			@InvoiceAmountFacturaCash, @InvoiceAmountFacturaCard,
-			@InvoiceAmountCOD,
-			-- MODIFICACIÓN [2025-10-17] - Valores para Zigi
-			@TotalAmountZigi, @TotalAmountZigiDeclared,
-			@TotalAmountCODZigi, @TotalAmountCODZigiDeclared,
-			@TotalAmountFacturaZigi, @TotalAmountFacturaZigiDeclared,
-			@InvoiceAmountZigi, @InvoiceAmountFacturaZigi
-			-- FIN MODIFICACIÓN
-		);
+		-- Validar que existan datos para generar el cierre
+		IF ((@TotalAmountCash + @TotalAmountCredit + @TotalAmountFacturaCash + @TotalAmountFacturaCard + @TotalAmountCODCash + @TotalAmountZigi + @TotalAmountCODZigi + @TotalAmountFacturaZigi) > 0)
+		BEGIN
+			INSERT INTO DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint
+			(
+				UserId, ClosurerPOS,
+				TotalAmountCash, TotalAmountCashDeclared,
+				TotalAmountCredit, TotalAmountCreditDeclared,
+				VisitPoint, Voucher1, Bag1, Voucher2, Bag2, RowStatus,
+				TokenCreated, DateCreated,
+				TokenUpdated, DateUpdated,
+				TotalAmountCODCash, TotalAmountCODCashDeclared,
+				TotalAmountFacturaCash, TotalAmountFacturaCashDeclared,
+				TotalAmountFacturaCard, TotalAmountFacturaCardDeclared,
+				InvoiceAmountCash, InvoiceAmountCredit,
+				InvoiceAmountFacturaCash, InvoiceAmountFacturaCard,
+				InvoiceAmountCOD,
+				-- MODIFICACIÓN [2025-11-04] - Campos para Zigi
+				TotalAmountZigi, TotalAmountZigiDeclared,
+				TotalAmountCODZigi, TotalAmountCODZigiDeclared,
+				TotalAmountFacturaZigi, TotalAmountFacturaZigiDeclared,
+				InvoiceAmountZigi, InvoiceAmountFacturaZigi
+				-- FIN MODIFICACIÓN
+			)
+			VALUES
+			(
+				@UserId2, @ClosurerPOS, 
+				@TotalAmountCash, @TotalAmountCashDeclared, 
+				@TotalAmountCredit, @TotalAmountCreditDeclared,
+				@VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, 
+				@TokenCreated, GETDATE(),
+				NULL, NULL, 
+				@TotalAmountCODCash, @TotalAmountCODCashDeclared, 
+				@TotalAmountFacturaCash, @TotalAmountFacturaCashDeclared, 
+				@TotalAmountFacturaCard, @TotalAmountFacturaCardDeclared,
+				@InvoiceAmountCash, @InvoiceAmountCredit,
+				@InvoiceAmountFacturaCash, @InvoiceAmountFacturaCard,
+				@InvoiceAmountCOD,
+				-- MODIFICACIÓN [2025-11-04] - Valores para Zigi
+				@TotalAmountZigi, @TotalAmountZigiDeclared,
+				@TotalAmountCODZigi, @TotalAmountCODZigiDeclared,
+				@TotalAmountFacturaZigi, @TotalAmountFacturaZigiDeclared,
+				@InvoiceAmountZigi, @InvoiceAmountFacturaZigi
+				-- FIN MODIFICACIÓN
+			);
 
-		-- Variable que obtiene el ID del cierre generado
-		SET @IdClosure =  SCOPE_IDENTITY();
+			-- Variable que obtiene el ID del cierre generado
+			SET @IdClosure =  SCOPE_IDENTITY();
 
-		-- Inserta el ID del cierre de VisitPoint en los cierres que se hicieron durante el día
-		UPDATE [dbo].[AccountingClosuresHeader]
-		SET AccountingClosuresHeaderVisitPointId = @IdClosure
-		WHERE CAST(DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-			AND VisitPoint = @VisitPointId
-			AND AccountingClosuresHeaderVisitPointId IS NULL;
+			-- Inserta el ID del cierre de VisitPoint en los cierres que se hicieron durante el día
+			UPDATE [dbo].[AccountingClosuresHeader]
+			SET AccountingClosuresHeaderVisitPointId = @IdClosure
+			WHERE CAST(DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+				AND VisitPoint = @VisitPointId
+				AND AccountingClosuresHeaderVisitPointId IS NULL;
 
+			SELECT 200 IdResult,
+					   'Cierre generado exitosamente' Message,
+					   Value 'URL',
+					   @IdClosure 'IdCierre'
+			FROM ConfigParams
+			WHERE Name = 'ClosureExpressCenter';
+		END
+		ELSE
+		BEGIN
+			SELECT 500 IdResult,
+				   'No existen datos para generar cierre' Message;
+		END
 
-
-		SELECT 200 IdResult,
-                   'Cierre generado exitosamente' Message,
-                   Value 'URL',
-                   @IdClosure 'IdCierre'
-        FROM ConfigParams
-        WHERE Name = 'ClosureExpressCenter';
+		COMMIT TRANSACTION;
 	END TRY
 
 	BEGIN CATCH
 		PRINT 'SE HIZO ROLLBACK';
         ROLLBACK TRANSACTION;
-	END CATCH
 
+		SELECT 409 IdResult,
+			   ERROR_MESSAGE() Message;
+	END CATCH
+	
 	IF @@TRANCOUNT > 0
     BEGIN
         COMMIT TRANSACTION;
     END;
-	
-   
-END;
+    
+END

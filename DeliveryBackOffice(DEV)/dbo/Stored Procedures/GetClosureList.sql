@@ -1,10 +1,4 @@
-﻿/*
-EXEC GetClosureList
-@VisitPointId = -1
-,@StartDate = '20210627'
-,@EndDate = '20210627'
-*/
--- =============================================
+﻿-- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-07-05>
 -- Description:	<Se agrega la moneda correspondiente al express center>
@@ -13,10 +7,8 @@ EXEC GetClosureList
 -- Author:		<Bilkar Morataya>
 -- Create date: <2025-10-17>
 -- Description:	<Se agrega el método de pago Zigi en los totales>
--- Important:	<Algunos elementos del SP parece que no estaban versionados>
 -- =============================================
-
-CREATE PROCEDURE [dbo].[GetClosureList] 
+CREATE PROCEDURE [dbo].[GetClosureList]
     @VisitPointId INT,
     @StartDate DATETIME,
     @EndDate DATETIME
@@ -27,16 +19,16 @@ BEGIN
 			@AccountCOD NVARCHAR(30),
             @AccountZigi NVARCHAR(30);
 
-	SELECT @IdCountry = CountryId 
-	FROM VisitPointClient 
+	SELECT @IdCountry = CountryId
+	FROM VisitPointClient
 	WHERE CodeOfReference = @VisitPointId
 
-	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
 	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
-	
-	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
+
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
 	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
 
     -- MODIFICACIÓN [17/10/2025] - Campos para Zigi
@@ -72,6 +64,7 @@ BEGIN
            ACH.TotalAmountCODZigiDeclared,
            ACH.TotalAmountFacturaZigi,
            ACH.TotalAmountFacturaZigiDeclared,
+           -- FIN MODIFICACIÓN
 		   ISNULL(CCC.Symbol,'') AS CurrencySymbol
     -- FIN MODIFICACIÓN
     FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
@@ -80,12 +73,12 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU
             ON REU.UsrIdUser = ACH.UserId
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-			ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+			ON VPC.CountryId = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
     WHERE CAST(ACH.DateCreated AS DATE)
           BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)
-		  AND DC.DefaultPerCountry = 1
+          AND DC.DefaultPerCountry = 1
           AND
           (
               @VisitPointId = ACH.VisitPoint
@@ -94,7 +87,6 @@ BEGIN
 
     SELECT @Account AS AccounExp,
 		   @AccountCOD AS AccountCOD,
-		   @AccountZigi AS AccountZigi,
 		  Value 'URL'
     FROM ConfigParams
     WHERE Name = 'ClosureExpressCenter';

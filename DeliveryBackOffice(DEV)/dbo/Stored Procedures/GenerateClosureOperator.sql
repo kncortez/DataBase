@@ -1,16 +1,4 @@
-﻿
--- =============================================
--- Author:		<Alejandro Rodríguez>
--- Create date: <2022-03-17>
--- Description:	<SP para generar el cierre de los express center>
--- Nota: Es una copia de GenerateClosure pero se agregaron validaciones
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-10-17>
--- Description:	<Se agrega el método de pago Zigi en los totales>
--- ===========================================
-
-CREATE PROCEDURE [dbo].[GenerateClosureOperator]
+﻿CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
     @UserId INT,
     @TokenCreated NVARCHAR(50),
@@ -518,13 +506,17 @@ BEGIN
 	BEGIN
 		SET @TotalZigi = @TotalCODZigi + @TotalFacturaZigi;
 	END
+	ELSE
+	BEGIN
+		SET @TotalZigi = @TotalZigi + @TotalCODZigi + @TotalFacturaZigi;
+	END
 	-- FIN MODIFICACIÓN
 
     DECLARE @HeaderClosures INT = 0;
 
     BEGIN TRANSACTION;
     BEGIN TRY
-        IF ((@TotalCash + @TotalCard + @TotalZigi) >= 0) --Si existen datos para cierre
+        IF ((@TotalCash + @TotalCard + @TotalFacturaCash + @TotalFacturaCard + @TotalAmountCODCash + @TotalZigi + @TotalCODZigi + @TotalFacturaZigi) >= 0) --Si existen datos para cierre
         BEGIN
 		PRINT 'INSERTA HEADER';
             --Insertar encabezado

@@ -3,6 +3,10 @@
 -- Create date: <2025-06-23>
 -- Description:	<Confirma servicio de recepción de guía en express center>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-11-06>
+-- Description:	<Se guarda el parámetro @Voucher si es para tarjeta o para Zigi, caso contrario solo ''>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_finishPickupService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
@@ -497,7 +501,7 @@ BEGIN
 					SELECT ct.IdCost
 						, @IdTypeOfMoney
 						, ct.TotalAmountPaid
-						, IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '') AS Voucher
 						, 1 -- crear registro activo por default
 						, @TokenP
 						, GETDATE()
@@ -518,7 +522,7 @@ BEGIN
 					UPDATE CD
 						SET CD.Amount = ct.TotalAmountPaid
 						, CD.IdTypeOfMoney = @IdTypeOfMoney
-						, CD.Voucher = IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, CD.Voucher = IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '')
 						, CD.TokenUpdated = @TokenP
 						, CD.DateUpdated = GETDATE()
 					FROM Cost                                              ct WITH(NOLOCK)

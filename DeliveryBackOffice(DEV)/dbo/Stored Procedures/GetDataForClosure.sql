@@ -1,14 +1,18 @@
-﻿--EXEC GetDataForClosure
--- =============================================
+﻿-- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-07-02>
 -- Description:	<Se agrega el filtro por pais y el nombre de las cuentas asignadas por pais>
 -- =============================================
 -- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-07>
+-- Description:	<Mejoras de multipaís en moneda para SV.>
+-- =============================================
+-- =============================================
 -- Author:		<Bilkar Morataya>
--- Create date: <2025-10-21>
--- Description:	<Se agrega la opción a mostrar que el pago fue con Zigi>
--- ==============================================
+-- Create date: <2025-11-03>
+-- Description:	<Se agregan elementos para el método de pago de Zigi>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDataForClosure]
     @VisitPointId INT = 4246,
     @IdAccount INT = 0,
@@ -26,15 +30,18 @@ BEGIN
     DECLARE @Internacional INT;
 	DECLARE @AccountCOD NVARCHAR(30);
 	DECLARE @Account NVARCHAR(30);
+    DECLARE @AccountZigi NVARCHAR(30);
 	DECLARE @CountryId NVARCHAR(2)
-	
-	SELECT @CountryId = CountryId 
-	FROM VisitPointClient 
+
+	SELECT @CountryId = CountryId
+	FROM VisitPointClient
 	WHERE CodeOfReference = @VisitPointId
 
 	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @CountryId
 	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @CountryId
-
+     -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
+    SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @CountryId
+    -- Fin Modificación
     SET @Estandar =
     (
         SELECT IdTypeService
@@ -114,30 +121,20 @@ BEGIN
            ISNULL(costd.Voucher, '') 'Voucher',
            ISNULL(DOPD.amount, 0) 'PriceShippment',
            ISNULL(DOR.Collect_OnDelivery, 0) 'COD',
-		   CASE WHEN ISNULL(DOR.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END 'CurrencySymbol',
+		   ISNULL(CCC.Symbol, '') 'CurrencySymbol',
            ISNULL(DOPD.CODAmountProcess, 0) 'ProcessedCOD',
+           -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
            CASE
-               WHEN DOPD.TypeofInOutMoneyId = 1 THEN
-                   ctgmon.tio_pk_name
-               WHEN DOPD.TypeofInOutMoneyId = 2 THEN
-                   ctgmon.tio_pk_name
-               WHEN DOPD.TypeofInOutMoneyId = 3 THEN
-                   ctgmon.tio_pk_name
-               WHEN DOPD.TypeofInOutMoneyId = 4 THEN
-                   ctgmon.tio_pk_name
-               WHEN DOPD.TypeofInOutMoneyId = 6 THEN
-                   'pago con tarjeta'
-               WHEN DOPD.TypeofInOutMoneyId = 7 THEN
-                   ctgmon.tio_pk_name
-               WHEN DOPD.TypeofInOutMoneyId = 8 THEN
-                   'credito'
-                --- MODIFICACIÓN 21/10/2025, se agrega la opción de Zigi
-               WHEN DOPD.TypeofInOutMoneyId = 10 THEN
-                   'Pago con Zigi'
-               -- Fin modificación
-               ELSE
-                   ''
-           END 'PaymentType',
+                WHEN DOPD.TypeofInOutMoneyId = 6 THEN
+                    'pago con tarjeta'
+                WHEN DOPD.TypeofInOutMoneyId = 8 THEN
+                    'credito'
+                WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 10) THEN
+                    ctgmon.tio_pk_name
+                ELSE
+                    ''
+            END 'PaymentType',
+            --- FIN MODIFICACION
            CTS.NameTypeService AS 'ServiceType'
     FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
@@ -152,14 +149,14 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
             ON DOPD.GuideSerie = DOR.Guide_Serie
                AND DOPD.GuideNumber = DOR.Guide_Number
-               
+
         INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
         LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
            -- ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
-		   ON COST.GuideSerie = DOR.Guide_Serie AND COST.GuideNumber = DOR.Guide_Number 
+		   ON COST.GuideSerie = DOR.Guide_Serie AND COST.GuideNumber = DOR.Guide_Number
         OUTER APPLY (
 		  SELECT TOP 1 costd.IdCost,Voucher  FROM DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
             WHERE costd.IdCost = cost.IdCost
@@ -172,12 +169,13 @@ BEGIN
              --  AND
              --  (
                   -- DOPD.TypeofInOutMoneyId = 6
-                  -- AND 
+                  -- AND
 				   --costd.Voucher != ''
             --  )
-              
+        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
+			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-	
+
 	AND DOR.StatusOrderId != 7
           AND DOPD.AccountId = @IdAccount
           AND
@@ -198,7 +196,7 @@ BEGIN
 
               AND ACD.RowStatus = 1
     )
-    
+
         AND DOPD.ShipmentCompleted = 1
         AND DOPD.AccountId = @IdAccount
         AND DOPD.AccountId > 0
@@ -220,28 +218,18 @@ BEGIN
            COD = 0,
 		   '' AS 'CurrencySymbol',
            ISNULL(DOPD.CODAmountProcess, 0) 'ProcessedCOD',
+           -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
            CASE
-               WHEN DOPD.TypeofInOutMoneyId = 1 THEN
-                   ctgmon.tio_pk_name
-               WHEN DOPD.TypeofInOutMoneyId = 2 THEN
-                   ctgmon.tio_pk_name
-               WHEN DOPD.TypeofInOutMoneyId = 3 THEN
-                   ctgmon.tio_pk_name
-               WHEN DOPD.TypeofInOutMoneyId = 4 THEN
-                   ctgmon.tio_pk_name
                WHEN DOPD.TypeofInOutMoneyId = 6 THEN
                    'pago con tarjeta'
-               WHEN DOPD.TypeofInOutMoneyId = 7 THEN
-                   ctgmon.tio_pk_name
                WHEN DOPD.TypeofInOutMoneyId = 8 THEN
                    'credito'
-                --- MODIFICACIÓN 21/10/2025, se agrega la opción de Zigi
-               WHEN DOPD.TypeofInOutMoneyId = 10 THEN
-                   'Pago con Zigi'
-               -- Fin modificación
+               WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 10) THEN
+                   ctgmon.tio_pk_name
                ELSE
                    ''
            END 'PaymentType',
+            -- FIN MODIFICACION
            CTS.NameTypeService AS 'ServiceType'
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
         INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
@@ -270,6 +258,10 @@ BEGIN
     ORDER BY DOPD.DateCreated DESC;
     DECLARE @TOTALAMOUNTCOD DECIMAL(18, 2);
     DECLARE @TOTALCOD INT;
+    DECLARE @TOTALAMOUNTCODCASH DECIMAL(18, 2);
+    DECLARE @TOTALCODCASH INT;
+    DECLARE @TOTALAMOUNTCODZIGI DECIMAL(18, 2);
+    DECLARE @TOTALCODZIGI INT;
 
     SELECT @TOTALAMOUNTCOD = ISNULL(SUM(dpd.CODAmountProcess), 0),
            @TOTALCOD = COUNT(dpd.CODAmountProcess)
@@ -294,14 +286,61 @@ BEGIN
     )
         AND dpd.CODAmountProcess > 0
         AND DOR.StatusOrderId != 7;
-    WITH ROWCTE (TotalCash, AccountExp, CountCash, TotalCard, CountCard, CurrencySymbolExp, TotalCredit,  CountCredit, AccountCOD, TotalFacturaCash,
-                 CountFacturaCash, TotalFacturaCard, CountFacturaCard, CurrencySymbolCOD, IdAccount
+
+    SELECT @TOTALAMOUNTCODCASH = ISNULL(SUM(dpd.CODAmountProcess), 0),
+           @TOTALCODCASH = COUNT(dpd.CODAmountProcess)
+    FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
+            ON DOR.Guide_Number = dpd.GuideNumber
+               AND DOR.Guide_Serie = dpd.GuideSerie
+    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+          AND AccountId = @IdAccount
+          AND dpd.TypeofInOutMoneyId = 1
+          AND NOT EXISTS
+    (
+        SELECT 1
+        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
+        WHERE ACD.GuideSerie = DOR.Guide_Serie
+              AND ACD.GuideNumber = DOR.Guide_Number
+              AND ACD.DopId = dpd.DopId
+              AND ACD.RowStatus = 1
+    )
+        AND dpd.CODAmountProcess > 0
+        AND DOR.StatusOrderId != 7;
+
+    SELECT @TOTALAMOUNTCODZIGI = ISNULL(SUM(dpd.CODAmountProcess), 0),
+           @TOTALCODZIGI = COUNT(dpd.CODAmountProcess)
+    FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
+            ON DOR.Guide_Number = dpd.GuideNumber
+               AND DOR.Guide_Serie = dpd.GuideSerie
+    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+          AND AccountId = @IdAccount
+          AND dpd.TypeofInOutMoneyId = 10
+          AND NOT EXISTS
+    (
+        SELECT 1
+        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
+        WHERE ACD.GuideSerie = DOR.Guide_Serie
+              AND ACD.GuideNumber = DOR.Guide_Number
+              AND ACD.DopId = dpd.DopId
+              AND ACD.RowStatus = 1
+    )
+        AND dpd.CODAmountProcess > 0
+        AND DOR.StatusOrderId != 7;
+
+    -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
+    WITH ROWCTE (TotalCash, AccountExp, CountCash, TotalCard, CountCard, AccountZigi, TotalZigi, CountZigi, CurrencySymbolExp, TotalCredit,  CountCredit, AccountCOD, TotalFacturaCash,
+                 CountFacturaCash, TotalFacturaCard, CountFacturaCard, TotalFacturaZigi, CountFacturaZigi, CurrencySymbolCOD, IdAccount
                 )
     AS (SELECT ISNULL(SUM(S1.TotalCash), 0) 'TotalCash',
 				@Account AS 'AccountExp',
                ISNULL(SUM(S1.CountCash), 0) 'CountCash',
                ISNULL(SUM(S1.TotalCard), 0) 'TotalCard',
                ISNULL(SUM(S1.CountCard), 0) 'CountCard',
+               @AccountZigi AS 'AccountZigi',
+               ISNULL(SUM(S1.TotalZigi), 0) 'TotalZigi',
+               ISNULL(SUM(S1.CountZigi), 0) 'CountZigi',
 			   S1.CurrencySymbolExp,
                ISNULL(SUM(S1.TotalCredit), 0) 'TotalCredit',
                ISNULL(SUM(S1.CountCredit), 0) 'CountCredit',
@@ -311,6 +350,8 @@ BEGIN
                ISNULL(SUM(S1.CountFacturaCash), 0) 'CountFacturaCash',
                ISNULL(SUM(S1.TotalFacturaCard), 0) 'TotalFacturaCard',
                ISNULL(SUM(S1.CountFacturaCard), 0) 'CountFacturaCard',
+               ISNULL(SUM(S1.TotalFacturaZigi), 0) 'TotalFacturaZigi',
+               ISNULL(SUM(S1.CountFacturaZigi), 0) 'CountFacturaZigi',
 			   S1.CurrencySymbolCOD,
                -- FIN MODIFICACIÓN
                IdAccount
@@ -375,7 +416,35 @@ BEGIN
                        ELSE
                            0
                    END 'CountCard',
-				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolExp',
+                 -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
+                    CASE
+                       -- CUENTA DE EXPRESS CENTER
+                       WHEN DOPD.TypeofInOutMoneyId = 10
+                            AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion ) THEN
+                           /*SUM(   CASE
+                                      WHEN DOR.IsCollect = 1 THEN
+                                          DOR.PriceShippment
+                                      ELSE
+                                          DOPD.amount
+                                  END
+                              )*/
+                           SUM(DOPD.amount)
+                       ELSE
+                           0
+                   END 'TotalZigi',
+                   CASE
+                       WHEN
+                       (
+                           DOPD.TypeofInOutMoneyId = 10
+                           AND DOPD.amount != 0
+                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion )
+                       ) THEN
+                           COUNT(DOPD.TypeofInOutMoneyId)
+                       ELSE
+                           0
+                   END 'CountZigi',
+                -- Fin modificación
+				   ISNULL(CCC.Symbol, '') 'CurrencySymbolExp',
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 8 THEN
                            /*SUM(   CASE
@@ -454,8 +523,35 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard',
-				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolCOD',
-                   --FIN MODIFICACIÓN 
+            -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
+                CASE
+                       WHEN DOPD.TypeofInOutMoneyId = 10
+                            AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion, @Traslado ) THEN
+                           /*SUM(   CASE
+                                      WHEN DOR.IsCollect = 1 THEN
+                                          DOR.PriceShippment
+                                      ELSE
+                                          DOPD.amount
+                                  END
+                              )*/
+                           SUM(DOPD.amount)
+                       ELSE
+                           0
+                   END 'TotalFacturaZigi',
+                   CASE
+                       WHEN
+                       (
+                           DOPD.TypeofInOutMoneyId = 10
+                           AND DOPD.amount != 0
+                           AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion, @Traslado )
+                       ) THEN
+                           COUNT(DOPD.TypeofInOutMoneyId)
+                       ELSE
+                           0
+                   END 'CountFacturaZigi',
+            -- Fin modificación
+				   ISNULL(CCC.Symbol, '') 'CurrencySymbolCOD',
+                   --FIN MODIFICACIÓN
 
                    DOPD.AccountId IdAccount
             FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
@@ -471,6 +567,10 @@ BEGIN
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
                     ON DOPD.GuideSerie = DOR.Guide_Serie
                        AND DOPD.GuideNumber = DOR.Guide_Number
+				LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+					ON C.GuideNumber = DOR.Guide_Number AND C.GuideSerie = DOR.Guide_Serie
+				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                   AND DOPD.AccountId = @IdAccount
                   AND
@@ -498,7 +598,8 @@ BEGIN
                      DOPD.TypeServiceId,
                      DOPD.amount,
                      AccountId,
-					 DOR.SenderCountryId
+					 DOR.SenderCountryId,
+					 CCC.Symbol
             UNION ALL
             SELECT CASE
                        WHEN DOPD.TypeofInOutMoneyId = 1
@@ -540,7 +641,27 @@ BEGIN
                        ELSE
                            0
                    END 'CountCard',
-				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolExp',
+             -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
+                CASE
+                       WHEN DOPD.TypeofInOutMoneyId = 10
+                            AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional ) THEN
+                           SUM(DOPD.amount)
+                       ELSE
+                           0
+                   END 'TotalZigi',
+                   CASE
+                       WHEN
+                       (
+                           DOPD.TypeofInOutMoneyId = 10
+                           AND DOPD.amount != 0
+                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional )
+                       ) THEN
+                           COUNT(DOPD.TypeofInOutMoneyId)
+                       ELSE
+                           0
+                   END 'CountZigi',
+            -- Fin modificación
+				   ISNULL(CCC.Symbol, '') 'CurrencySymbolExp',
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 8 THEN
                            SUM(DOPD.amount)
@@ -595,7 +716,27 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard',
-				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolCOD',
+                -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
+                    CASE
+                       WHEN DOPD.TypeofInOutMoneyId = 10
+                            AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion, @Traslado ) THEN
+                           SUM(DOPD.amount)
+                       ELSE
+                           0
+                   END 'TotalFacturaZigi',
+                   CASE
+                       WHEN
+                       (
+                           DOPD.TypeofInOutMoneyId = 10
+                           AND DOPD.amount != 0
+                           AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion, @Traslado )
+                       ) THEN
+                           COUNT(DOPD.TypeofInOutMoneyId)
+                       ELSE
+                           0
+                   END 'CountFacturaZigi',
+                -- Fin modificación
+				   ISNULL(CCC.Symbol, '') 'CurrencySymbolCOD',
                    -- FIN MODIFICACIÓN
 
                    DOPD.AccountId IdAccount
@@ -607,6 +748,10 @@ BEGIN
                     ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 				INNER JOIN DeliveryOrder DOR WITH (NOLOCK)
 					ON DOR.Guide_Number = DOPD.GuideNumber AND DOR.Guide_Serie = DOPD.GuideSerie
+				LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+					ON C.GuideNumber = DOR.Guide_Number AND C.GuideSerie = DOR.Guide_Serie
+				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                   AND DOPD.AccountId = @IdAccount
 			 AND DOPD.[TypeofInOutMoneyId] != 8
@@ -625,13 +770,20 @@ BEGIN
                      DOPD.TypeServiceId,
                      DOPD.amount,
                      AccountId,
-					 DOR.SenderCountryId
+					 DOR.SenderCountryId,
+					 CCC.Symbol
 
         ) S1
         GROUP BY IdAccount, CurrencySymbolExp, CurrencySymbolCOD)
     SELECT *,
            @TOTALAMOUNTCOD 'TotalAmountCOD',
-           @TOTALCOD 'TotalCOD'
+           @TOTALCOD 'TotalCOD',
+           -- MODIFICACIÓN 2025-11-05 - Campos adicionales de COD por método de pago
+           @TOTALAMOUNTCODCASH 'TotalAmountCODCash',
+           @TOTALCODCASH 'TotalCODCash',
+           @TOTALAMOUNTCODZIGI 'TotalAmountCODZigi',
+           @TOTALCODZIGI 'TotalCODZigi'
+           -- Fin modificación
     FROM ROWCTE
 	--option (optimize for UNKNOWN)
 
