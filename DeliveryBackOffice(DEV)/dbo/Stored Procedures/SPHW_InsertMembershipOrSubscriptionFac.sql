@@ -78,10 +78,8 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
                 WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA'
                       AND VPC.[StatusClient] = 1                      
-                      AND (
-                            VPC.CountryId = @IdCountry
-                            OR (VPC.CountryId IS NULL AND 'GT' = @IdCountry)
-                          )
+                      AND  VPC.CountryId = @IdCountry
+                            
             );
     DECLARE @inv_cmp_nit AS VARCHAR(100) =
             (
@@ -125,10 +123,9 @@ BEGIN
                      [Description]
                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA'                
-                  AND (
+                  AND 
                           IdCountry = @IdCountry
-                          OR (IdCountry IS NULL AND 'GT' = @IdCountry)
-                        )
+                          
             );
     DECLARE @dti_IVA MONEY;
     DECLARE @dti_amount MONEY;
@@ -140,10 +137,9 @@ BEGIN
                        SAPCode
                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA'
-                   AND (
+                   AND 
                           IdCountry = @IdCountry
-                          OR (IdCountry IS NULL AND 'GT' = @IdCountry)
-                        )
+                         
             );
     DECLARE @SendToInvoice BIT = 1;
     DECLARE @Descriptionp AS NVARCHAR(500);
@@ -159,10 +155,9 @@ BEGIN
                ISNULL(SubscriptionName, '')
         FROM [DeliveryBackOffice].[dbo].[CatSubscription] WITH (NOLOCK)
         WHERE IdCatSubscription = @IdSalePackage
-          AND (
+          AND
                 IdCountry = @IdCountry
-                OR (IdCountry IS NULL AND 'GT' = @IdCountry)
-              )
+                
     );
     IF (
            @SuscriptionDesc = 'Plan Básico'
@@ -173,10 +168,9 @@ BEGIN
                                       [Description]
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL A'
-                                   AND (
+                                   AND 
                                         IdCountry = @IdCountry
-                                        OR (IdCountry IS NULL AND 'GT' = @IdCountry)
-                                       )
+                                       
                               );
     ELSE IF (
                 @SuscriptionDesc = 'Plan Básico +'
@@ -187,10 +181,9 @@ BEGIN
                                       [Description]
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL B'
-                                   AND (
+                                   AND 
                                           IdCountry = @IdCountry
-                                          OR (IdCountry IS NULL AND 'GT' = @IdCountry)
-                                        )
+                                         
                              );
     ELSE IF (
                 @SuscriptionDesc = 'Plan Gold'
@@ -201,10 +194,9 @@ BEGIN
                                       [Description]
                                   FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL C'
-                                   AND (
+                                   AND 
                                         IdCountry = @IdCountry
-                                        OR (IdCountry IS NULL AND 'GT' = @IdCountry)
-                                      )
+                                        
                               );
     ELSE IF (
                 @SuscriptionDesc = 'Plan Corporativo'
@@ -215,10 +207,9 @@ BEGIN
                                       [Description]
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL D'
-                                   AND (
+                                   AND 
                                           IdCountry = @IdCountry
-                                          OR (IdCountry IS NULL AND 'GT' = @IdCountry)
-                                      )
+                                       
                               );
     ELSE IF (
                 @SuscriptionDesc = 'Plan Diamante'
@@ -229,10 +220,7 @@ BEGIN
                                       [Description]
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'MEMBRESIA DIAMANTE'
-                                   AND (
-                                          IdCountry = @IdCountry
-                                          OR (IdCountry IS NULL AND 'GT' = @IdCountry)
-                                        )
+                                   AND IdCountry = @IdCountry
                               );
     IF (@InvoiceEmail = '')
     BEGIN
