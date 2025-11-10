@@ -5,7 +5,8 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[getCredencialesSV]
 (
-  @VpCodeOfReference as varchar(100) = '1162393'
+  @VpCodeOfReference as varchar(100) = '1162393',
+  @typeDocument  AS INT
 )
 AS
 BEGIN
@@ -27,7 +28,8 @@ BEGIN
             @dpf_FELUserName             AS NVARCHAR(200),
             @dpf_FELData3                AS NVARCHAR(200),
             @dpf_FELAsuntoCorreoFactura  AS NVARCHAR(200),
-            @dpf_FELEstablecimiento      AS NVARCHAR(200);
+            @dpf_FELEstablecimiento      AS NVARCHAR(200),
+            @dpf_Sequence                AS NVARCHAR(200);
 
      SELECT @Address = vpc.[Address], --@Address = 
             @IdCountry = vpc.[CountryId], --@IdCountry
@@ -60,6 +62,17 @@ BEGIN
        FROM del_ParametrosFactura dp WITH(NOLOCK)
       WHERE dp.dpf_VpCodeOfReference = @VpCodeOfReference
 
+      SELECT @dpf_Sequence = A1.[Sequence]
+        FROM dbo.InvoiceSequenceByEstablishment A1
+             OUTER APPLY (
+             SELECT [Value] AS [Value]
+               FROM DeliveryBackOffice.dbo.AddInfoByCodeOfReference
+              WHERE CodeOfReference = @VpCodeOfReference
+                AND [Name] = 'CodEstablecimientoMH'
+             ) AS Establishment
+       WHERE A1.Establishment = Establishment.[Value]
+         AND A1.TypeDocument = @typeDocument
+
       SELECT ISNULL(@Address  ,'')            AS [Address],
              ISNULL(@IdCountry,'')            AS IdCountry,
              ISNULL(@CodeISO  ,'')            AS CodeISO,
@@ -75,8 +88,8 @@ BEGIN
              ISNULL(@dpf_FELUserName           ,'') AS dpf_FELUserName,
              ISNULL(@dpf_FELData3              ,'') AS dpf_FELData3,
              ISNULL(@dpf_FELAsuntoCorreoFactura,'') AS dpf_FELAsuntoCorreoFactura,
-             ISNULL(@dpf_FELEstablecimiento    ,'') AS dpf_FELEstablecimiento
-
+             ISNULL(@dpf_FELEstablecimiento    ,'') AS dpf_FELEstablecimiento,
+             ISNULL(@dpf_Sequence    ,'')  AS dpf_Sequence;
 
      SELECT CodeOfReference
             , aibc.[Node]
