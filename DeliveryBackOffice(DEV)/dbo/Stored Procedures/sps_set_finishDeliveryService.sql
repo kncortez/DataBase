@@ -13,7 +13,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishDeliveryService]
   , @CUI VARCHAR(100)
   , @Name VARCHAR(100)
   , @TblListGuides AS TblListGuidesWithAnticipatedCOD READONLY
-  , @TblDetail AS TblPaymentList READONLY
+  , @TblDetail AS TblPaymentList READONLY	
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
 AS
@@ -97,6 +97,7 @@ BEGIN
 			WHERE lg.Guide_Serie = do.Guide_Serie 
 				AND lg.Guide_Number = do.Guide_Number
 		);	
+
 
 		-- Si hay guías que no existen, terminar el proceso con error
 		IF ((SELECT COUNT(1) FROM #listGuidesNotExist) > 0)
@@ -216,6 +217,7 @@ BEGIN
 					, tlg.ExcludeCOD
 			FROM #TblListGuidesTwo tlg
 			WHERE tlg.ExcludeCOD = 0;
+
 
 			DECLARE @TotalGuidesInclude DECIMAL(18, 2);
 			SET @TotalGuidesInclude =
@@ -565,6 +567,7 @@ BEGIN
 						INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
 							ON ct.IdCost = CD.IdCost
 					WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0;
+
 				END;
 				-- FIN Guardar Costos
 		

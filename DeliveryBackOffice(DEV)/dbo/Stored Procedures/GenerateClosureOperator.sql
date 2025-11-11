@@ -1,4 +1,15 @@
-﻿CREATE PROCEDURE [dbo].[GenerateClosureOperator]
+﻿-- =============================================
+-- Author:		<Alejandro Rodríguez>
+-- Create date: <2022-03-17>
+-- Description:	<SP para generar el cierre de los express center>
+-- Nota: Es una copia de GenerateClosure pero se agregaron validaciones
+-- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2022-11-06>
+-- Description:	<Se agrega control de método de pago Zigi>
+-- =============================================
+CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
     @UserId INT,
     @TokenCreated NVARCHAR(50),

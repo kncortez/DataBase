@@ -1,4 +1,23 @@
-﻿CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
+﻿-- =============================================
+-- Author:		<Alejandro Rodríguez>
+-- Create date: <30/03/2022>
+-- Description:	<SP para consulta de cierres generales en reporte de reporting services>
+-- Nota: Es una copia de ReportClosure
+-- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <10-07-2024>
+-- Description:	<Se agrega la moneda y las cuentas para mostrar en el detalle del reporte>
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <26-07-2024>
+-- Description:	<Se optimiza la consulta ya que se tardaba 1:30seg>
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <26-07-2024>
+-- Description:	<Aceptación de Voucher en pagos con Zigi>
+-- =============================================
+CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
     @StartDate DATETIME = NULL,
     @EndDate DATETIME = NULL,
     @VisitPointId INT = NULL,

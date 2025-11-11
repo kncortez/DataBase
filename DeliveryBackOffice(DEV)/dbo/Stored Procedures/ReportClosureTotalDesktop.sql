@@ -132,4 +132,3 @@ BEGIN
         GROUP BY ACH.IdAccountingClosuresHeader, VPC.CountryId, CCC.CodeISO) X
     GROUP BY CurrencySymbol
 END
-go

@@ -17,6 +17,11 @@
 -- Update date: <2025-06-16>
 -- Description: <Se elimina el recalculo de montos ya que se enviaran desde frontend>
 -- =============================================
+-- =============================================
+-- Author:      <Bilkar Morataya>
+-- Update date: <2025-11-06>
+-- Description: <Se aprovecha el campo de Voucher para método de pago Zigi>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_finishService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
