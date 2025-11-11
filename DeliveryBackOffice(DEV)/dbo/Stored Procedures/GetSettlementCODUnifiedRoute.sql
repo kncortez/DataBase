@@ -7,12 +7,17 @@
 -- Create date: <2025-04-25>
 -- Description:	<ZIGI - Se descartan guias pagadas con zigi en liquidacion ultima milla desktop>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2025-10-02>
+-- Description:	<Obtener DPI del piloto y filtrar por día actual los manifiestos liquidados y pendientes>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetSettlementCODUnifiedRoute] @IdRoute INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @DateProduction AS DATE = '2024-10-01'; -- Fecha de deploy a producción
+    DECLARE @DateProduction AS DATE = CAST(GETDATE() AS DATE); -- Fecha actual, para mostrar manifiestos liquidados y oendientes del día actual
 
     DECLARE @GuideSerie NVARCHAR(2);
     DECLARE @GuideNumber INT;
@@ -86,7 +91,17 @@ BEGIN
                dsd.Guide_Serie,
                dsd.Guide_Number,
                msi.CatManifestSettlementIncidenceTypeId [Status],
-               'Pendiente' [StatusDescription]
+               CASE
+                   WHEN msi.CatManifestSettlementIncidenceTypeId IS NOT NULL
+                        AND msi.CatManifestSettlementIncidenceTypeId > 0
+                        AND msi.isCOD = 1 THEN
+                       'Liquidado con Incidencia'
+                   WHEN dbs.User_Received_COD IS NOT NULL
+                        AND dbs.Date_Received_COD IS NOT NULL THEN
+                       'Liquidado'
+                   ELSE
+                       'Pendiente'
+               END AS [StatusDescription]
         FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                 ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
@@ -97,11 +112,9 @@ BEGIN
                 ON dbs.ID = msi.ManifestNumber
             LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
                 ON cs.IdStation = dbs.DispatchedStationId
-        WHERE CAST(dbs.Date_Dispatched AS DATE) > @DateProduction
+        WHERE CAST(dbs.Date_Dispatched AS DATE) >= @DateProduction
               AND dsd.RowStatus = 1
               AND dbs.CatRouteId = @IdRoute
-              AND dbs.Date_Received_COD IS NULL
-              AND dbs.User_Received_COD IS NULL
               AND CAST(dbs.Date_Dispatched AS DATE) < CAST(GETDATE() AS DATE)
               AND dsd.Guide_Settlement = 1
               AND dsd.Guide_Delivered = 1
@@ -133,11 +146,12 @@ BEGIN
            dbs.Pieces_Cold_Dispatched,
            dbs.Guides_Dispatched,
            dbs.ID_Courier,
-           ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name
+           ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name,
+           sr.CUI AS DPI
     FROM @GuidesFound gf
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs WITH (NOLOCK)
             ON gf.Id = dbs.ID
-        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
+        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
             ON sr.ID = dbs.ID_Courier;
     --LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
     --ON cs.IdStation = dbs.DispatchedStationId
@@ -360,18 +374,6 @@ BEGIN
             (
                 SELECT TOP 1 Description FROM @StatusOrderValid
             )
-        /*,OrderDescription =
-            (
-                SELECT so.OrderDescription
-                FROM StatusOrder so  WITH(NOLOCK) 
-                WHERE so.StatusOrderId =
-                (
-                    SELECT StatusOrderId
-                    FROM @GuidesDetail
-                    WHERE GuideSerie = @GuideSerie
-                          AND GuideNumber = @GuideNumber
-                )
-            )*/
         WHERE GuideSerie = @GuideSerie
               AND GuideNumber = @GuideNumber;
 
@@ -388,20 +390,32 @@ BEGIN
     SELECT SUM(Total) AS COD_Manifest
     FROM @GuidesDetail;
 
-    SELECT id,
-           Guide,
-           GuideSerie,
-           GuideNumber,
-           Delivered,
-           Price,
-           COD,
-           Total,
-           FEL,
-           StatusOrderId,
-           OrderDescription,
-           StatusOrderValid,
-           DescriptionStatusOrderValid
-    FROM @GuidesDetail gd
-    ORDER BY gd.id DESC;
+      SELECT 
+			gd.id,
+			gd.Guide,
+			gd.GuideSerie,
+			gd.GuideNumber,
+			gd.Delivered,
+			gd.Price,
+			gd.COD,
+			CASE 
+				WHEN gd.Total > ISNULL(rdm.TotalApplied, 0) 
+					THEN gd.Total - ISNULL(rdm.TotalApplied, 0)
+				ELSE gd.Total
+			END AS TOTAL,
+			gd.FEL,
+			gd.StatusOrderId,
+			gd.OrderDescription,
+			gd.StatusOrderValid,
+			gd.DescriptionStatusOrderValid
+		FROM @GuidesDetail gd
+            LEFT JOIN (
+                SELECT 
+                    DeliveryOrderBySettlementId,
+                    SUM(AmountApplied) AS TotalApplied
+                FROM [DeliveryBackOffice].[dbo].[RelDepositManifest] WITH (NOLOCK)
+                GROUP BY DeliveryOrderBySettlementId
+            ) rdm ON gd.id = rdm.DeliveryOrderBySettlementId
+		ORDER BY gd.id DESC;
 
 END;
