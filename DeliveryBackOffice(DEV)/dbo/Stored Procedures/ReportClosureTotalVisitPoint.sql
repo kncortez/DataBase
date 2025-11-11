@@ -67,7 +67,11 @@ BEGIN
                isnull(sum(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
                isnull(sum(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
                isnull(sum(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               -- MODIFICACIÓN 07/11/2025: Separar correctamente Zigi
+               isnull(SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash
+                             + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard
+                            + ACH.TotalAmountCODZigi + ACH.TotalAmountFacturaZigi
+                            ),0) 'TotalGeneral',
+               -- MODIFICACIÓN 28/10/2025 BILKAR MORATAYA
                @AccountZigi AS AccountZigi,
                -- TotalAmountZigi debe ser la suma de Facturas + COD Zigi:
                ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) + ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountZigi',

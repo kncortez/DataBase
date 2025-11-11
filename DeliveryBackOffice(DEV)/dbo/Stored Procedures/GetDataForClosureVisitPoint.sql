@@ -1,7 +1,7 @@
 -- =============================================
--- Author:		<Alejandro RodrÌguez>
+-- Author:		<Alejandro Rodr√≠guez>
 -- Create date: <2022-03-28>
--- Description:	<SP para obtener la lista de guÌas que se procesaron en un express center>
+-- Description:	<SP para obtener la lista de gu√≠as que se procesaron en un express center>
 -- =============================================
 -- =============================================
 -- Author:		<Cristian Suazo>
@@ -10,34 +10,37 @@
 -- =============================================
 -- Author:		<Bilkar Morataya>
 -- Create date: <2025-11-06>
--- Description:	<Se agrega la opciÛn a mostrar que el pago fue con Zigi>
--- =============================================
--- Author:        <Bilkar Morataya>
--- Create date: <2025-11-03>
--- Description:    <Se agrega el mÈtodo de pago Zigi en los totales>
+-- Description:	<Se agrega la opci√≥n a mostrar que el pago fue con Zigi>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetDataForClosureVisitPoint]
 @VisitPointId int = 4246,
 @IdAccount int = 0
 AS
 BEGIN
+
 	DECLARE @IdCountry NVARCHAR(2),
 		    @Account NVARCHAR(30),
 			@AccountCOD NVARCHAR(30),
-			@AccountZigi NVARCHAR(30);
+	        @AccountZigi NVARCHAR(30);
+
 	SELECT @IdCountry = CountryId 
 	FROM VisitPointClient 
 	WHERE CodeOfReference = @VisitPointId
+
 	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
 	FROM dbo.ClosureAccount 
 	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+	
 	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
 	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta ¡rea COD' AND ISNULL(IdCountry,'GT') = @IdCountry
-	-- MODIFICACI”N [2025-11-03] - Campos para Zigi
-    SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
-    FROM dbo.ClosureAccount
-    WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
+	WHERE Description = 'Cuenta √Årea COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+
+	-- MODIFICACI√ìN [17/10/2025] - Campos para Zigi
+	SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
+	WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
+	
+
 	SELECT	UsrIdUser 'UserId', UsrNickName 'UserNickName', DateCreated, IdAccountingClosuresHeader 'IdCierre',
 		ISNULL(SUM(S1.TotalAmountCash), 0) 'TotalAmountCash',
 		ISNULL(SUM(S1.TotalAmountCashDeclared), 0) 'TotalAmountCashDeclared',
@@ -49,7 +52,7 @@ BEGIN
 		ISNULL(SUM(S1.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
 		ISNULL(SUM(S1.TotalAmountCODCash), 0) 'TotalAmountCODCash',
 		ISNULL(SUM(S1.TotalAmountCODCashDeclared), 0) 'TotalAmountCODCashDeclared',
-		-- MODIFICACI”N [17/10/2025] - Campos para Zigi
+		-- MODIFICACI√ìN [17/10/2025] - Campos para Zigi
 		-- TotalAmountZigi debe ser la suma de Facturas + COD:
 		ISNULL(SUM(S1.TotalAmountFacturaZigi + S1.TotalAmountCODZigi), 0) 'TotalAmountZigi',
 		ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared + S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountZigiDeclared',
@@ -57,15 +60,7 @@ BEGIN
 		ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
 		ISNULL(SUM(S1.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
 		ISNULL(SUM(S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-		-- FIN MODIFICACI”N
-		-- MODIFICACI”N [2025-11-03] - Campos para Zigi
-        ISNULL(SUM(S1.TotalAmountZigi), 0) 'TotalAmountZigi',
-        ISNULL(SUM(S1.TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
-        ISNULL(SUM(S1.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
-        ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
-        ISNULL(SUM(S1.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
-        ISNULL(SUM(S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-        -- FIN MODIFICACI”N
+		-- FIN MODIFICACI√ìN
 		S1.CurrencySymbolDetail
 	FROM 
 	(
@@ -77,7 +72,7 @@ BEGIN
 				ISNULL(CODCashCalc.TotalCODCash, 0) AS TotalAmountCODCash,
 				ACH.TotalAmountCODCashDeclared,
 				ACH.InvoiceAmountCOD,
-				-- MODIFICACI”N [17/10/2025] - Campos para Zigi
+				-- MODIFICACI√ìN [17/10/2025] - Campos para Zigi
 				ACH.TotalAmountFacturaZigi,
 				ACH.TotalAmountFacturaZigiDeclared,
 				ACH.InvoiceAmountZigi,
@@ -85,21 +80,15 @@ BEGIN
 				-- COD Zigi desde subconsulta agrupada:
 				ISNULL(CODZigiCalc.TotalCODZigi, 0) AS TotalAmountCODZigi,
 				ACH.TotalAmountCODZigiDeclared,
-				-- FIN MODIFICACI”N
-				TotalAmountCODCash, TotalAmountCODCashDeclared, InvoiceAmountCOD,
+				-- FIN MODIFICACI√ìN
 				RU.UsrNickName, RU.UsrIdUser, ACH.DateCreated, ACH.IdAccountingClosuresHeader,
-				-- MODIFICACI”N [2025-11-03] - Campos para Zigi
-                TotalAmountZigi, TotalAmountZigiDeclared, InvoiceAmountZigi,
-                TotalAmountFacturaZigi, TotalAmountFacturaZigiDeclared, InvoiceAmountFacturaZigi,
-                TotalAmountCODZigi, TotalAmountCODZigiDeclared,
-                -- FIN MODIFICACI”N
 				ISNULL(CCC.Symbol,'') AS 'CurrencySymbolDetail'
 		FROM AccountingClosuresHeader ACH
 		INNER JOIN RegisterUser RU
 			ON ACH.UserId = RU.UsrIdUser
 		INNER JOIN VisitPointClient VP WITH (NOLOCK)
 			ON ACH.VisitPoint = VP.CodeOfReference
-		-- AQUÕ EST¡N LAS SUBCONSULTAS
+		-- AQU√ç EST√ÅN LAS SUBCONSULTAS
 		-- Subconsulta para COD Cash (evitar duplicados):
 		LEFT JOIN (
 			SELECT ACD.AccountingClosuresHeaderId,
@@ -122,7 +111,7 @@ BEGIN
 				AND DOPT.DopId = ACD.DopId
 			GROUP BY ACD.AccountingClosuresHeaderId
 		) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-		-- AQUÕ TERMINAN LAS SUBCONSULTAS
+		-- AQU√ç TERMINAN LAS SUBCONSULTAS
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
@@ -133,6 +122,8 @@ BEGIN
 			AND DC.DefaultPerCountry = 1
 	) S1
 	GROUP BY UsrIdUser, UsrNickName, DateCreated, IdAccountingClosuresHeader, CurrencySymbolDetail
+
+
 	SELECT @Account AS 'AccountExp',
 		ISNULL(SUM(TotalAmountCash), 0) 'TotalAmountCash',
 		ISNULL(SUM(TotalAmountCashDeclared), 0) 'TotalAmountCashDeclared',
@@ -146,12 +137,7 @@ BEGIN
 		-- COD Cash desde transacciones agrupadas:
 		ISNULL(SUM(CODCashCalc.TotalCODCash), 0) 'TotalAmountCODCash',
 		ISNULL(SUM(TotalAmountCODCashDeclared), 0) 'TotalAmountCODCashDeclared',
-		ISNULL(SUM(InvoiceAmountCash), 0) 'InvoiceAmountCash',
-		ISNULL(SUM(InvoiceAmountCredit), 0) 'InvoiceAmountCredit',
-		ISNULL(SUM(InvoiceAmountFacturaCash), 0) 'InvoiceAmountFacturaCash',
-		ISNULL(SUM(InvoiceAmountFacturaCard), 0) 'InvoiceAmountFacturaCard',
-		ISNULL(SUM(InvoiceAmountCOD), 0) 'InvoiceAmountCOD',
-		-- MODIFICACI”N [2025-11-03] - Campos para Zigi
+		-- MODIFICACI√ìN [17/10/2025] - Campos para Zigi
 		@AccountZigi as 'AccountZigi',
 		-- TotalAmountZigi: Solo facturas (del header):
 		ISNULL(SUM(TotalAmountFacturaZigi), 0) 'TotalAmountZigi',
@@ -160,15 +146,17 @@ BEGIN
 		ISNULL(SUM(TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
 		-- COD Zigi desde transacciones agrupadas:
 		ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountCODZigi',
-		ISNULL(SUM(TotalAmountZigi), 0) 'TotalAmountZigi',
-		ISNULL(SUM(TotalAmountZigiDeclared), 0) 'TotalAmountZigiDeclared',
-		ISNULL(SUM(TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
-		ISNULL(SUM(TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
-		ISNULL(SUM(TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
 		ISNULL(SUM(TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
+		-- FIN MODIFICACI√ìN
+		ISNULL(SUM(InvoiceAmountCash), 0) 'InvoiceAmountCash',
+		ISNULL(SUM(InvoiceAmountCredit), 0) 'InvoiceAmountCredit',
+		ISNULL(SUM(InvoiceAmountFacturaCash), 0) 'InvoiceAmountFacturaCash',
+		ISNULL(SUM(InvoiceAmountFacturaCard), 0) 'InvoiceAmountFacturaCard',
+		ISNULL(SUM(InvoiceAmountCOD), 0) 'InvoiceAmountCOD',
+		-- MODIFICACI√ìN [17/10/2025] - Campos para Zigi
 		ISNULL(SUM(InvoiceAmountZigi), 0) 'InvoiceAmountZigi',
 		ISNULL(SUM(InvoiceAmountFacturaZigi), 0) 'InvoiceAmountFacturaZigi',
-		-- FIN MODIFICACI”N
+		-- FIN MODIFICACI√ìN
 		ISNULL(CCC.Symbol,'') AS 'CurrencySymbol'
 	FROM AccountingClosuresHeader ACH
 	INNER JOIN VisitPointClient VP WITH (NOLOCK)
@@ -196,24 +184,12 @@ BEGIN
 		GROUP BY ACD.AccountingClosuresHeaderId
 	) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
 	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-		ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
-	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-		ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
+			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
 	WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 		AND ACH.VisitPoint = @VisitPointId
 		AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
 		AND DC.DefaultPerCountry = 1
 	GROUP BY VP.CountryId, CCC.Symbol
-		FROM AccountingClosuresHeader ACH
-		INNER JOIN VisitPointClient VP WITH (NOLOCK)
-			ON ACH.VisitPoint = VP.CodeofReference
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
-		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-		WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-			AND ACH.VisitPoint = @VisitPointId
-			AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
-			AND DC.DefaultPerCountry = 1
-		GROUP BY VP.CountryId, CCC.Symbol
 END;

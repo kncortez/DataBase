@@ -1,296 +1,445 @@
 ﻿-- =============================================
--- Author:		<Author,Freddy Monterroso>
--- Create date: <Create Date,27-01-2022>
--- Description:	<Description, SP para mostrar totales en reporte>
+-- Author:		<Freddy Monterroso>
+-- Create date: <19/01/2022>
+-- Description:	<SP para consulta de cierres en reporte de reporting services>
 -- =============================================
 -- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <09/07/2024>
--- Description:	<Se agrega el simbolo de la moneda y las cuentas correspondientes al pais para el encabezado del reporte>
+-- Description:	<Se agrega el simbolo de la moneda y las cuentas correspondientes al pais>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <22/07/2024>
+-- Description:	<Se optimiza la consulta en la segunda validacion, para la generacion de los cierres>
 -- =============================================
 -- Author:		<Bilkar Morataya>
--- Create date: <2025-10-28>
--- Description:	<Se agrega campos de nuevo método de Zigi>
--- =============================================
-    @StartDate DATETIME = NULL,
-    @EndDate DATETIME = NULL,
-    @VisitPointId INT = NULL,
-    @IdCierre INT = NULL
+-- Create date: <2025-11-04>
+-- Description:	<Se agrega método de pago mediante Zigi>
+-- ============================================
+CREATE PROCEDURE [dbo].[ReportClosure]
+@StartDate datetime = null,
+@EndDate datetime = null,
+@VisitPointId INT = null,
+@IdCierre INT = null,
+@IdAccount INT = null
 AS
 BEGIN
-	DECLARE @AccountExp NVARCHAR(30),
-			@AccountCOD NVARCHAR(30),
-			@AccountZigi NVARCHAR(30);
-	DECLARE @IdCountry NVARCHAR(2) = (SELECT CountryId FROM VisitPointClient WHERE CodeOfReference = @VisitPointId)
 
-	SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')' 
-	FROM ClosureAccount 
-	WHERE Name = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+DECLARE @TEMPLATEDETAIL TABLE
+    (
+        guideserie NVARCHAR(MAX),
+        guidenumber BIGINT,
+        header BIGINT
+    );
 
-	SELECT @AccountCOD = Name +' '+ '(' +AccountNumber +')' 
-	FROM ClosureAccount 
-	WHERE Name = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+    INSERT INTO @TEMPLATEDETAIL
+    (
+        guideserie,
+        guidenumber,
+        header
+    )
+    SELECT IND.dti_fk_orderSerie,
+           IND.dti_fk_orderNumber,
+           MAX(IND.dti_fk_header) 'dti_fk_header'
+	FROM invoiceDetail IND WITH (NOLOCK)
+	INNER JOIN DeliveryOrderPaymentTransaction DPT
+		ON IND.dti_fk_orderSerie = DPT.GuideSerie
+		   AND IND.dti_fk_orderNumber = DPT.GuideNumber
+	WHERE CONVERT(DATE, DPT.DateCreated) >= CONVERT(DATE, @StartDate) AND CONVERT(DATE, DPT.DateCreated) <= CONVERT(DATE, @EndDate)
+		GROUP BY IND.dti_fk_orderSerie,
+			     IND.dti_fk_orderNumber
 
-	SELECT @AccountZigi = Name +' '+ '(' +AccountNumber +')' 
-	FROM ClosureAccount 
-	WHERE Name = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
 
-    IF (@VisitPointId > 0 AND @IdCierre > 0)
-    BEGIN
-        SELECT @AccountExp AS AccountExp,
-			   ISNULL(SUM(ACH.TotalAmountCash), 0) 'TotalCash',
-               ISNULL(SUM(ACH.TotalAmountCredit), 0) 'TotalCredit',
-               ISNULL(SUM(ACH.TotalAmountCashDeclared), 0) 'TotalCashDeclared',
-               ISNULL(SUM(ACH.TotalAmountCreditDeclared), 0) 'TotalCreditDeclared',
-			   @AccountCOD AS AccountCOD,
-               -- MODIFICACIÓN 07/11/2025: Calcular COD Cash desde transacciones
-               ISNULL(SUM(CODCashCalc.TotalCODCash), 0) 'TotalCODCash',
-               ISNULL(SUM(ACH.TotalAmountCODCashDeclared), 0) 'TotalCODCashDeclared',
-               -- FIN MODIFICACIÓN
-               ISNULL(SUM(ACH.TotalAmountFacturaCash), 0) 'TotalAmountFacturaCash',
-               ISNULL(SUM(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
-               ISNULL(SUM(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
-               ISNULL(SUM(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               -- MODIFICACIÓN 07/11/2025: Separar correctamente Zigi
-               @AccountZigi AS AccountZigi,
-               -- TotalAmountZigi debe ser la suma de Facturas + COD Zigi:
-               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) + ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountZigi',
-               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) + ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountZigiDeclared',
-               -- COD Zigi calculado desde transacciones:
-               ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountCODZigi',
-               ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
-               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
-               -- Total General corregido:
-               ISNULL(
-                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit +
-<<<<<<< Updated upstream
-                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + 
-                            ISNULL(CODCashCalc.TotalCODCash, 0) +
-                            ACH.TotalAmountFacturaZigi + ISNULL(CODZigiCalc.TotalCODZigi, 0)
-                            ),
-                         0
-                     ) 'TotalGeneral',
-                -- FIN DE MODIFICACIÓN
-			   CCC.CodeISO CurrencySymbol
-        FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
-            INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
-                ON VPC.CodeOfReference = ACH.VisitPoint
-<<<<<<< Updated upstream
-            -- Subconsulta para COD Cash (evitar duplicados):
-            LEFT JOIN (
-                SELECT ACD.AccountingClosuresHeaderId,
-                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
-                FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
-                    ON DOPT.GuideSerie = ACD.GuideSerie
-                    AND DOPT.GuideNumber = ACD.GuideNumber
-                    AND DOPT.DopId = ACD.DopId
-                GROUP BY ACD.AccountingClosuresHeaderId
-            ) CODCashCalc ON CODCashCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-            -- Subconsulta para COD Zigi (evitar duplicados):
-            LEFT JOIN (
-                SELECT ACD.AccountingClosuresHeaderId,
-                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
-                FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
-                    ON DOPT.GuideSerie = ACD.GuideSerie
-                    AND DOPT.GuideNumber = ACD.GuideNumber
-                    AND DOPT.DopId = ACD.DopId
-                GROUP BY ACD.AccountingClosuresHeaderId
-            ) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-            LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
-                AND DC.DefaultPerCountry = 1
+
+if(@VisitPointId > 0 and @IdCierre > 0)
+begin
+	SELECT DISTINCT ACD.AccountingClosuresHeaderId ClosuresHeaderId
+		,VPC.VisitPointId
+		,VPC.DescriptionOfClient VisitPointDescription
+		,ACh.UserId
+		,REU.UsrNickName
+		,DOPD.DateCreated 'DateCreated'
+		,DOR.Sender_FirstName + ' ' + DOR.Sender_LastName 'Client'
+		,INH.inv_certificationFEL 'CertificationFEL'
+		,INH.inv_serieFEL 'SerieFel'
+		,INH.inv_numberFEL 'NumberFel'
+		,INH.inv_SAPDocEntry 'DOCSAP'
+		,STO.OrderDescription 'Status'
+		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
+		,isnull(costd.Voucher,'') 'Voucher'
+		,isnull(CCC.CodeISO,'') AS CurrencySymbol
+		,isnull(DOPD.amount, 0)'PriceShippment'
+		,isnull(DOPD.CODAmountProcess,0) 'COD'
+		, case
+			-- Modificación 2025-11-04
+            when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+            when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+			else '' end 'PaymentType'
+            -- Fin modificación
+		,CTS.NameTypeService as 'ServiceType'
+	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+		LEFT JOIN @TEMPLATEDETAIL IND
+			ON IND.guideserie = DOR.Guide_Serie
+			AND IND.guidenumber = DOR.Guide_Number
+		LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
+			ON INH.inv_pk_id = IND.header
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO
+			ON STO.StatusOrderId = DOR.StatusOrderId
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
+			 ON DOPD.GuideSerie = DOR.Guide_Serie
+			 AND DOPD.GuideNumber = DOR.Guide_Number
+			 AND dopd.ShipmentCompleted = 1
+			 AND DOPD.AccountId > 0
+			 AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+			ON DOPD.VisitPoint = VPC.CodeOfReference
+		-- FIN MODIFICACIÓN
+
+		INNER JOIN CatTypeServiceClosure CTS
+			ON CTS.IdTypeService = DOPD.TypeServiceId
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			on ACD.GuideSerie = DOR.Guide_Serie
+			AND ACD.GuideNumber = DOR.Guide_Number
+
+			-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			AND ACD.DopId = DOPD.DopId
+			-- FIN MODIFICACIÓN
+
+			AND ACD.RowStatus = 1
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
+			ON REU.UsrIdUser = ACH.UserId
+		left join DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+			on ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
+			on cost.GuideNumber = DOR.Guide_Number
+            AND cost.GuideSerie = DOR.Guide_Serie
+		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
+			on costd.IdCost = cost.IdCost
+			AND costd.Amount > 0
+			AND (DOPD.TypeofInOutMoneyId IN (6, 10) AND costd.Voucher != '')
+	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
+	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		AND ACD.RowStatus = 1
+		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId)
+		AND ACD.AccountingClosuresHeaderId = @IdCierre
+	-- ORDER BY DOPD.DateCreated ASC
+	UNION ALL
+		SELECT ACD.AccountingClosuresHeaderId ClosuresHeaderId
+			,VPC.VisitPointId
+			,VPC.DescriptionOfClient VisitPointDescription
+			,ACh.UserId
+			,REU.UsrNickName
+			,DOPD.DateCreated 'DateCreated'
+			,INH.inv_UserName 'Client'
+			,INH.inv_certificationFEL 'CertificationFEL'
+			,INH.inv_serieFEL 'SerieFel'
+			,INH.inv_numberFEL 'NumberFel'
+			,INH.inv_SAPDocEntry 'DOCSAP'
+			,Status='----'
+			,Guide='----'
+			,Voucher=''
+			,'' AS CurrencySymbol
+			,isnull(DOPD.amount, 0)'PriceShippment'
+			,isnull(DOPD.CODAmountProcess,0) 'COD'
+			, case
+				-- Modificación 2025-11-04
+				when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+				else '' end 'PaymentType'
+				-- Fin modificación
+			,CTS.NameTypeService as 'ServiceType'
+
+    --,DOPD.*
+    --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
+    FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+			ON DOPD.VisitPoint = VPC.CodeOfReference
+		-- FIN MODIFICACIÓN
+
+        INNER JOIN CatTypeServiceClosure CTS
+            ON CTS.IdTypeService = DOPD.TypeServiceId
+        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+            ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+		INNER JOIN invoiceHeader INH WITH (NOLOCK)
+			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
+        INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			ON INH.inv_numberFEL = ACD.Fel
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
+			ON REU.UsrIdUser = ACH.UserId
+	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount) and ACD.AccountingClosuresHeaderId = @IdCierre
+		AND ACD.RowStatus = 1
+        AND (CTS.IdTypeService NOT IN (5,23))
+			 AND DOPD.[TypeofInOutMoneyId] != 8
+	ORDER BY DOPD.DateCreated ASC
+end
+
+
+if(@VisitPointId > 0 and (@IdCierre <= 0 or @IdCierre is null) )
+begin
+	SELECT DISTINCT ACD.AccountingClosuresHeaderId ClosuresHeaderId
+			,VP.VisitPointId
+			,VP.DescriptionOfClient VisitPointDescription
+			,ACh.UserId
+			,REU.UsrNickName
+			,DTP.DateCreated 'DateCreated'
+			,DOR.Sender_FirstName + ' ' + DOR.Sender_LastName 'Client'
+			--,vpc.DescriptionOfClient,DOR.Sender_ID,DOR.IsCollect,DOPD.PayTypeId
+			,INH.inv_certificationFEL 'CertificationFEL'
+			,INH.inv_serieFEL 'SerieFel'
+			,INH.inv_numberFEL 'NumberFel'
+			,INH.inv_SAPDocEntry 'DOCSAP'
+			,STO.OrderDescription 'Status'
+			,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
+			,isnull(CD.Voucher,'') 'Voucher'
+			,ISNULL(CCC.CodeISO,'') AS CurrencySymbol
+			,isnull(DTP.amount, 0)'PriceShippment'
+			,isnull(DTP.CODAmountProcess,0) 'COD'
+			, case
+				-- Modificación 2025-11-04
+				when DTP.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+				when DTP.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+				else '' end 'PaymentType'
+				-- Fin modificación
+			,CTS.NameTypeService as 'ServiceType'
+	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+			INNER JOIN @TEMPLATEDETAIL IND
+				ON IND.guideserie = DOR.Guide_Serie
+				AND IND.guidenumber = DOR.Guide_Number
+			INNER JOIN DeliveryOrderPaymentTransaction DTP WITH (NOLOCK)
+				ON DTP.GuideSerie = IND.guideserie
+				AND DTP.GuideNumber = IND.guidenumber
+			INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
+				ON INH.inv_pk_id = IND.header
+			INNER JOIN StatusOrder STO WITH (NOLOCK)
+				ON DOR.StatusOrderId = STO.StatusOrderId
+			INNER JOIN VisitPointClient VP WITH (NOLOCK)
+				ON DTP.VisitPoint = VP.CodeOfReference
+			INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+				ON CTS.IdTypeService = DTP.TypeServiceId
+			INNER JOIN AccountingClosuresDetail ACD WITH (NOLOCK)
+				ON ACD.GuideSerie = DOR.Guide_Serie
+				AND ACD.GuideNumber = DOR.Guide_Number
+				AND ACD.DopId = DTP.DopId
+			INNER JOIN AccountingClosuresHeader ACH WITH (NOLOCK)
+				ON ACD.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
+			INNER JOIN  RegisterUser REU WITH (NOLOCK)
+				ON ACH.UserId = REU.UsrIdUser
+			INNER JOIN ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
+				ON ctgmon.tio_pk_id = DTP.TypeofInOutMoneyId
+			INNER JOIN Cost CO WITH (NOLOCK)
+				ON CO.GuideSerie = DOR.Guide_Serie
+				AND CO.GuideNumber = dor.Guide_Number
+			INNER JOIN CostDetail CD WITH (NOLOCK)
+				ON CD.IdCost = CO.IdCost
 			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-        WHERE CONVERT(DATE, ACH.DateCreated)
-              BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-              AND ACH.IdAccountingClosuresHeader = @IdCierre
-              AND VPC.CodeOfReference = @VisitPointId
-		GROUP BY VisitPoint, VPC.CountryId, CCC.CodeISO;
-    END;
+				ON CO.ShippingCurrency = CCC.IdCatCurrencyCOD
+	WHERE CONVERT(DATE, DTP.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+	AND (DTP.AccountId = @IdAccount OR DTP.VisitPoint = @VisitPointId) AND DTP.ShipmentCompleted = 1
+	AND DTP.AccountId > 0 AND DOR.StatusOrderId != 7 AND DTP.TypeofInOutMoneyId != 8 AND ACD.RowStatus = 1
+-- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
-    IF (@VisitPointId > 0 AND (@IdCierre <= 0 OR @IdCierre IS NULL))
-    BEGIN
-        SELECT @AccountExp AS AccountExp,
-		       ISNULL(SUM(ACH.TotalAmountCash), 0) 'TotalCash',
-               ISNULL(SUM(ACH.TotalAmountCredit), 0) 'TotalCredit',
-               ISNULL(SUM(ACH.TotalAmountCashDeclared), 0) 'TotalCashDeclared',
-               ISNULL(SUM(ACH.TotalAmountCreditDeclared), 0) 'TotalCreditDeclared',
-			    @AccountCOD AS AccountCOD,
-               -- MODIFICACIÓN 07/11/2025: Calcular COD Cash desde transacciones
-               ISNULL(SUM(CODCashCalc.TotalCODCash), 0) 'TotalCODCash',
-               ISNULL(SUM(ACH.TotalAmountCODCashDeclared), 0) 'TotalCODCashDeclared',
-               -- FIN MODIFICACIÓN
-               ISNULL(SUM(ACH.TotalAmountFacturaCash), 0) 'TotalAmountFacturaCash',
-               ISNULL(SUM(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
-               ISNULL(SUM(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
-               ISNULL(SUM(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               -- MODIFICACIÓN 07/11/2025: Separar correctamente Zigi
-               @AccountZigi AS AccountZigi,
-               -- TotalAmountZigi debe ser la suma de Facturas + COD Zigi:
-               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) + ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountZigi',
-               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) + ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountZigiDeclared',
-               -- COD Zigi calculado desde transacciones:
-               ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountCODZigi',
-               ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
-               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
-               -- Total General corregido:
-               ISNULL(
-                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit +
-<<<<<<< Updated upstream
-                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + 
-                            ISNULL(CODCashCalc.TotalCODCash, 0) +
-                            ACH.TotalAmountFacturaZigi + ISNULL(CODZigiCalc.TotalCODZigi, 0)
-=======
-                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + ACH.TotalAmountCODCash +
-                            ACH.TotalAmountFacturaZigi + ACH.TotalAmountCODZigi
->>>>>>> Stashed changes
-                            ),
-                         0
-                     ) 'TotalGeneral',
-                -- FIN DE MODIFICACIÓN
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-               CCC.CodeISO CurrencySymbol
-        -- FIN MODIFICACIÓN
-=======
-			  CCC.CodeISO CurrencySymbol
->>>>>>> de3ff128 (FDAPI-4438: Cambios finales en SPs para eliminar duplicidades y que sea comportamiento de COD separados (efectivo y Zigi))
-          FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
-            INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
-                ON VPC.CodeOfReference = ACH.VisitPoint
-            -- Subconsulta para COD Cash (evitar duplicados):
-            LEFT JOIN (
-                SELECT ACD.AccountingClosuresHeaderId,
-                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
-                FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
-                    ON DOPT.GuideSerie = ACD.GuideSerie
-                    AND DOPT.GuideNumber = ACD.GuideNumber
-                    AND DOPT.DopId = ACD.DopId
-                GROUP BY ACD.AccountingClosuresHeaderId
-            ) CODCashCalc ON CODCashCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-            -- Subconsulta para COD Zigi (evitar duplicados):
-            LEFT JOIN (
-                SELECT ACD.AccountingClosuresHeaderId,
-                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
-                FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
-                    ON DOPT.GuideSerie = ACD.GuideSerie
-                    AND DOPT.GuideNumber = ACD.GuideNumber
-                    AND DOPT.DopId = ACD.DopId
-                GROUP BY ACD.AccountingClosuresHeaderId
-            ) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-=======
-			  CCC.CodeISO CurrencySymbol
-        -- FIN MODIFICACIÓN
-          FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
-            INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
-                ON VPC.CodeOfReference = ACH.VisitPoint
->>>>>>> Stashed changes
-            LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
-                AND DC.DefaultPerCountry = 1
-			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-        WHERE CONVERT(DATE, ACH.DateCreated)
-        BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-        AND VPC.CodeOfReference = @VisitPointId
-        GROUP BY VisitPoint, VPC.CountryId, CCC.CodeISO;
-    END;
+	UNION ALL
+		SELECT DISTINCT ACD.AccountingClosuresHeaderId ClosuresHeaderId
+			,VPC.VisitPointId
+			,VPC.DescriptionOfClient VisitPointDescription
+			,ACh.UserId
+			,REU.UsrNickName
+			,DOPD.DateCreated 'DateCreated'
+			,INH.inv_UserName 'Client'
+			,INH.inv_certificationFEL 'CertificationFEL'
+			,INH.inv_serieFEL 'SerieFel'
+			,INH.inv_numberFEL 'NumberFel'
+			,INH.inv_SAPDocEntry 'DOCSAP'
+			,Status='----'
+			,Guide='----'
+			,Voucher=''
+			,CurrencySymbol = ''
+			,isnull(DOPD.amount, 0)'PriceShippment'
+			,isnull(DOPD.CODAmountProcess,0) 'COD'
+			, case
+				-- Modificación 2025-11-04
+				when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+				else '' end 'PaymentType'
+				-- Fin modificación
+			,CTS.NameTypeService as 'ServiceType'
 
-    IF (@VisitPointId = -1 AND (@IdCierre <= 0 OR @IdCierre IS NULL))
-    BEGIN
-        SELECT @AccountExp AS AccountExp,
-		       ISNULL(SUM(ACH.TotalAmountCash), 0) 'TotalCash',
-               ISNULL(SUM(ACH.TotalAmountCredit), 0) 'TotalCredit',
-               ISNULL(SUM(ACH.TotalAmountCashDeclared), 0) 'TotalCashDeclared',
-               ISNULL(SUM(ACH.TotalAmountCreditDeclared), 0) 'TotalCreditDeclared',
-			    @AccountCOD AS AccountCOD,
-               -- MODIFICACIÓN 07/11/2025: Calcular COD Cash desde transacciones
-               ISNULL(SUM(CODCashCalc.TotalCODCash), 0) 'TotalCODCash',
-               ISNULL(SUM(ACH.TotalAmountCODCashDeclared), 0) 'TotalCODCashDeclared',
-               -- FIN MODIFICACIÓN
-               ISNULL(SUM(ACH.TotalAmountFacturaCash), 0) 'TotalAmountFacturaCash',
-               ISNULL(SUM(ACH.TotalAmountFacturaCard), 0) 'TotalAmountFacturaCard',
-               ISNULL(SUM(ACH.TotalAmountFacturaCashDeclared), 0) 'TotalAmountFacturaCashDeclared',
-               ISNULL(SUM(ACH.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
-               -- MODIFICACIÓN 07/11/2025: Separar correctamente Zigi
-               @AccountZigi AS AccountZigi,
-               -- TotalAmountZigi debe ser la suma de Facturas + COD Zigi:
-               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) + ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountZigi',
-               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) + ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountZigiDeclared',
-               -- COD Zigi calculado desde transacciones:
-               ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountCODZigi',
-               ISNULL(SUM(ACH.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-               ISNULL(SUM(ACH.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
-               ISNULL(SUM(ACH.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
-               -- Total General corregido:
-               ISNULL(
-                         SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit +
-<<<<<<< Updated upstream
-                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + 
-                            ISNULL(CODCashCalc.TotalCODCash, 0) +
-                            ACH.TotalAmountFacturaZigi + ISNULL(CODZigiCalc.TotalCODZigi, 0)
-=======
-                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + ACH.TotalAmountCODCash +
-                            ACH.TotalAmountFacturaZigi + ACH.TotalAmountCODZigi
->>>>>>> Stashed changes
-                            ),
-                         0
-                     ) 'TotalGeneral',
-                -- FIN DE MODIFICACIÓN
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-               CCC.CodeISO CurrencySymbol
-        -- FIN MODIFICACIÓN
-=======
-			  CCC.CodeISO CurrencySymbol
->>>>>>> de3ff128 (FDAPI-4438: Cambios finales en SPs para eliminar duplicidades y que sea comportamiento de COD separados (efectivo y Zigi))
-         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
-		INNER JOIN VisitPointClient VPC WITH (NOLOCK)
-			ON ACH.VisitPoint = VPC.IdVisitPointClient
-            -- Subconsulta para COD Cash (evitar duplicados):
-            LEFT JOIN (
-                SELECT ACD.AccountingClosuresHeaderId,
-                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
-                FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
-                    ON DOPT.GuideSerie = ACD.GuideSerie
-                    AND DOPT.GuideNumber = ACD.GuideNumber
-                    AND DOPT.DopId = ACD.DopId
-                GROUP BY ACD.AccountingClosuresHeaderId
-            ) CODCashCalc ON CODCashCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-            -- Subconsulta para COD Zigi (evitar duplicados):
-            LEFT JOIN (
-                SELECT ACD.AccountingClosuresHeaderId,
-                       SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
-                FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-                LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
-                    ON DOPT.GuideSerie = ACD.GuideSerie
-                    AND DOPT.GuideNumber = ACD.GuideNumber
-                    AND DOPT.DopId = ACD.DopId
-                GROUP BY ACD.AccountingClosuresHeaderId
-            ) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-=======
-			  CCC.CodeISO CurrencySymbolol
-        -- FIN MODIFICACIÓN
-         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
-		INNER JOIN VisitPointClient VPC WITH (NOLOCK)
-			ON ACH.VisitPoint = VPC.IdVisitPointClient
->>>>>>> Stashed changes
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-			ON VPC.CountryId = DC.Currency_IdCountry
-            AND DC.DefaultPerCountry = 1
+		--,DOPD.*
+		--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
+		FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+				ON DOPD.VisitPoint = VPC.CodeOfReference
+			-- FIN MODIFICACIÓN
+
+			INNER JOIN CatTypeServiceClosure CTS
+				ON CTS.IdTypeService = DOPD.TypeServiceId
+			LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+				ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+			INNER JOIN invoiceHeader INH WITH (NOLOCK)
+				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
+			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+				ON INH.inv_numberFEL = ACD.Fel
+			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
+				ON REU.UsrIdUser = ACH.UserId
+		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+			AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount)
+			AND (CTS.IdTypeService NOT IN (5,23))
+			AND DOPD.[TypeofInOutMoneyId] != 8
+            AND ACD.RowStatus = 1
+	--	ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
+
+end
+
+
+if(@VisitPointId = -1  and (@IdCierre <= 0 or @IdCierre is null))
+begin
+	SELECT DISTINCT ACD.AccountingClosuresHeaderId ClosuresHeaderId
+		,VPC.VisitPointId
+		,VPC.DescriptionOfClient VisitPointDescription
+		,ACh.UserId
+		,REU.UsrNickName
+		,DOPD.DateCreated 'DateCreated'
+		,DOR.Sender_FirstName + ' ' + DOR.Sender_LastName 'Client'
+		--,vpc.DescriptionOfClient,DOR.Sender_ID,DOR.IsCollect,DOPD.PayTypeId
+		,INH.inv_certificationFEL 'CertificationFEL'
+		,INH.inv_serieFEL 'SerieFel'
+		,INH.inv_numberFEL 'NumberFel'
+		,INH.inv_SAPDocEntry 'DOCSAP'
+		,STO.OrderDescription 'Status'
+		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
+		,isnull(costd.Voucher,'') 'Voucher'
+		,isnull(CCC.CodeISO,'') AS CurrencySymbol
+		,isnull(DOPD.amount, 0)'PriceShippment'
+		,isnull(DOPD.CODAmountProcess,0) 'COD'
+		, case
+			-- Modificación 2025-11-04
+            when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+            when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+			else '' end 'PaymentType'
+            -- Fin modificación
+		,CTS.NameTypeService as 'ServiceType'
+--,DOPD.*
+--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
+	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+		LEFT JOIN @TEMPLATEDETAIL IND
+			ON IND.guideserie = DOR.Guide_Serie
+			AND IND.guidenumber = DOR.Guide_Number
+		LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
+			ON INH.inv_pk_id = IND.header
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO
+			ON STO.StatusOrderId = DOR.StatusOrderId
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
+			ON DOPD.GuideSerie = DOR.Guide_Serie
+			AND DOPD.GuideNumber = DOR.Guide_Number
+			AND dopd.ShipmentCompleted = 1
+			AND DOPD.AccountId > 0
+			AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+			ON DOPD.VisitPoint = VPC.CodeOfReference
+		-- FIN MODIFICACIÓN
+
+		INNER JOIN CatTypeServiceClosure CTS
+			ON CTS.IdTypeService = DOPD.TypeServiceId
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			on ACD.GuideSerie = DOR.Guide_Serie
+			AND ACD.GuideNumber = DOR.Guide_Number
+
+			-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			AND ACD.DopId = DOPD.DopId
+			-- FIN MODIFICACIÓN
+
+			AND ACD.RowStatus = 1
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
+			ON REU.UsrIdUser = ACH.UserId
+		left join DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+			on ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
+			on cost.GuideSerie = DOR.Guide_Serie
+            AND cost.GuideNumber = DOR.Guide_Number
+		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
+			on costd.IdCost = cost.IdCost AND costd.Amount > 0
+			AND (DOPD.TypeofInOutMoneyId IN (6, 10) AND costd.Voucher != '')
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-        WHERE CONVERT(DATE, ACH.DateCreated)
-        BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-		GROUP BY VPC.CountryId, CCC.CodeISO;
-    END;
+			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
+	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		AND ACD.RowStatus = 1
 
-END;
+--ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
+
+	UNION ALL
+		SELECT DISTINCT ACD.AccountingClosuresHeaderId ClosuresHeaderId
+			,VPC.VisitPointId
+			,VPC.DescriptionOfClient VisitPointDescription
+			,ACh.UserId
+			,REU.UsrNickName
+			,DOPD.DateCreated 'DateCreated'
+			,INH.inv_UserName 'Client'
+			,INH.inv_certificationFEL 'CertificationFEL'
+			,INH.inv_serieFEL 'SerieFel'
+			,INH.inv_numberFEL 'NumberFel'
+			,INH.inv_SAPDocEntry 'DOCSAP'
+			,Status='----'
+			,Guide='----'
+			,Voucher=''
+			,CurrencySymbol = ''
+			,isnull(DOPD.amount, 0)'PriceShippment'
+			,isnull(DOPD.CODAmountProcess,0) 'COD'
+			, case
+				-- Modificación 2025-11-04
+				when DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 8, 10) THEN UPPER(ctgmon.tio_pk_name)
+				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+				else '' end 'PaymentType'
+				-- Fin modificación
+			,CTS.NameTypeService as 'ServiceType'
+
+    --,DOPD.*
+    --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
+		FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
+			INNER JOIN CatTypeServiceClosure CTS
+				ON CTS.IdTypeService = DOPD.TypeServiceId
+			LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+				ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+			INNER JOIN invoiceHeader INH WITH (NOLOCK)
+				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
+			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+				ON INH.inv_numberFEL = ACD.Fel
+			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+
+			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+				ON DOPD.VisitPoint = VPC.CodeOfReference
+			-- FIN MODIFICACIÓN
+
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
+				ON REU.UsrIdUser = ACH.UserId
+		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+			AND (CTS.IdTypeService NOT IN (5,23))
+			 AND DOPD.[TypeofInOutMoneyId] != 8
+             AND ACD.RowStatus = 1
+		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
+end
+END
+go
+
