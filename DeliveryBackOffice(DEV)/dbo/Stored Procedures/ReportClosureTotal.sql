@@ -65,6 +65,7 @@ BEGIN
                -- Total General corregido:
                ISNULL(
                          SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit +
+<<<<<<< Updated upstream
                             ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + 
                             ISNULL(CODCashCalc.TotalCODCash, 0) +
                             ACH.TotalAmountFacturaZigi + ISNULL(CODZigiCalc.TotalCODZigi, 0)
@@ -72,15 +73,11 @@ BEGIN
                          0
                      ) 'TotalGeneral',
                 -- FIN DE MODIFICACIÓN
-<<<<<<< HEAD
-               CCC.CodeISO CurrencySymbol
-        -- FIN MODIFICACIÓN
-=======
 			   CCC.CodeISO CurrencySymbol
->>>>>>> de3ff128 (FDAPI-4438: Cambios finales en SPs para eliminar duplicidades y que sea comportamiento de COD separados (efectivo y Zigi))
         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
+<<<<<<< Updated upstream
             -- Subconsulta para COD Cash (evitar duplicados):
             LEFT JOIN (
                 SELECT ACD.AccountingClosuresHeaderId,
@@ -144,13 +141,19 @@ BEGIN
                -- Total General corregido:
                ISNULL(
                          SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit +
+<<<<<<< Updated upstream
                             ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + 
                             ISNULL(CODCashCalc.TotalCODCash, 0) +
                             ACH.TotalAmountFacturaZigi + ISNULL(CODZigiCalc.TotalCODZigi, 0)
+=======
+                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + ACH.TotalAmountCODCash +
+                            ACH.TotalAmountFacturaZigi + ACH.TotalAmountCODZigi
+>>>>>>> Stashed changes
                             ),
                          0
                      ) 'TotalGeneral',
                 -- FIN DE MODIFICACIÓN
+<<<<<<< Updated upstream
 <<<<<<< HEAD
                CCC.CodeISO CurrencySymbol
         -- FIN MODIFICACIÓN
@@ -182,6 +185,13 @@ BEGIN
                     AND DOPT.DopId = ACD.DopId
                 GROUP BY ACD.AccountingClosuresHeaderId
             ) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
+=======
+			  CCC.CodeISO CurrencySymbol
+        -- FIN MODIFICACIÓN
+          FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
+            INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
+                ON VPC.CodeOfReference = ACH.VisitPoint
+>>>>>>> Stashed changes
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
                 AND DC.DefaultPerCountry = 1
@@ -222,13 +232,19 @@ BEGIN
                -- Total General corregido:
                ISNULL(
                          SUM(ACH.TotalAmountCash + ACH.TotalAmountCredit +
+<<<<<<< Updated upstream
                             ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + 
                             ISNULL(CODCashCalc.TotalCODCash, 0) +
                             ACH.TotalAmountFacturaZigi + ISNULL(CODZigiCalc.TotalCODZigi, 0)
+=======
+                            ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard + ACH.TotalAmountCODCash +
+                            ACH.TotalAmountFacturaZigi + ACH.TotalAmountCODZigi
+>>>>>>> Stashed changes
                             ),
                          0
                      ) 'TotalGeneral',
                 -- FIN DE MODIFICACIÓN
+<<<<<<< Updated upstream
 <<<<<<< HEAD
                CCC.CodeISO CurrencySymbol
         -- FIN MODIFICACIÓN
@@ -260,6 +276,13 @@ BEGIN
                     AND DOPT.DopId = ACD.DopId
                 GROUP BY ACD.AccountingClosuresHeaderId
             ) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
+=======
+			  CCC.CodeISO CurrencySymbolol
+        -- FIN MODIFICACIÓN
+         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
+		INNER JOIN VisitPointClient VPC WITH (NOLOCK)
+			ON ACH.VisitPoint = VPC.IdVisitPointClient
+>>>>>>> Stashed changes
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 			ON VPC.CountryId = DC.Currency_IdCountry
             AND DC.DefaultPerCountry = 1

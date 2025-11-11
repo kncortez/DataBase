@@ -74,7 +74,7 @@ BEGIN
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
                ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
-               ISNULL(CCC.CodeISO,'') AS CurrencySymbol 
+            ISNULL(CCC.CodeISO,'') AS CurrencySymbol
         FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
             LEFT JOIN @TEMPLATEDETAIL IND
                 ON IND.guideserie = DOR.Guide_Serie
@@ -129,7 +129,7 @@ BEGIN
                 ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
         -- FIN MODIFICACIÓN
 
-        WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+            WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
               AND ACD.RowStatus = 1
               -- MODIFICACIÓN 25/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
               AND

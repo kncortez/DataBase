@@ -441,5 +441,3 @@ begin
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 end
 END
-go
-
