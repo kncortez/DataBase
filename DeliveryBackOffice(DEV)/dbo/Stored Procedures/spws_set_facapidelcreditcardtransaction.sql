@@ -186,6 +186,8 @@ BEGIN
           BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
     ORDER BY [CPP].[PointPromoWeight] DESC;
 
+    DECLARE @DateCreated2 DATE = CAST(@DateCreated AS DATE); 
+
     IF (@Type = 1)
     BEGIN
         -- Transacción para ingreso de proceso con tarjeta
@@ -195,8 +197,8 @@ BEGIN
             SELECT @IdTransaction = ISNULL([IdTransaction], 0)
             FROM [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH (NOLOCK)
             WHERE [CCTBC].OrderNumber = @OrderNumber
-                  AND DateCreated >= @DateCreated
-                  AND DateCreated < DATEADD(DAY, 1, @DateCreated);
+                  AND DateCreated >= @DateCreated2
+                  AND DateCreated < DATEADD(DAY, 1, @DateCreated2);
 
             IF (@IdTransaction = 0)
             BEGIN
@@ -270,8 +272,8 @@ BEGIN
                 WHERE IdTransaction = @IdTransaction
                       AND OrderNumber = @OrderNumber
                       AND StatusSend <> 1
-                      AND DateCreated >= @DateCreated
-                      AND DateCreated < DATEADD(DAY, 1, @DateCreated);
+                      AND DateCreated >= @DateCreated2
+                      AND DateCreated < DATEADD(DAY, 1, @DateCreated2);
 
 
             END;
@@ -449,8 +451,8 @@ BEGIN
                     FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK)
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage = 'MEMBERSHIP'
-                          AND DateCreated >= @DateCreated
-                          AND DateCreated < DATEADD(DAY, 1, @DateCreated)
+                          AND DateCreated >= @DateCreated2
+                          AND DateCreated < DATEADD(DAY, 1, @DateCreated2)
                 )
                    )
                 BEGIN
@@ -735,8 +737,8 @@ BEGIN
                     FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH(NOLOCK)
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage != 'MEMBERSHIP'
-                          AND DateCreated >= @DateCreated
-                        AND DateCreated < DATEADD(DAY, 1, @DateCreated)
+                          AND DateCreated >= @DateCreated2
+                        AND DateCreated < DATEADD(DAY, 1, @DateCreated2)
                 )
                    )
                 BEGIN
@@ -870,8 +872,8 @@ BEGIN
                             ON CS.IdCatSubscription = RTP.IdSalePackage
                     WHERE RTP.OrderNumber = @OrderNumber
                           AND RTP.TypeSalePackage != 'MEMBERSHIP'
-                          AND RTP.DateCreated >= @DateCreated
-                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated)
+                          AND RTP.DateCreated >= @DateCreated2
+                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated2)
                     ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                     DECLARE @RandomLetterS CHAR(1);
@@ -968,8 +970,8 @@ BEGIN
                         INNER JOIN @AuxNewSubscriptions                         ANS
                             ON ANS.IdNewSubscriptions = S.IdSubscription
                     WHERE RTS.OrderNumber = @OrderNumber
-                    AND   RTS.DateCreated >= @DateCreated
-                    AND   RTS.DateCreated < DATEADD(DAY, 1, @DateCreated)
+                    AND   RTS.DateCreated >= @DateCreated2
+                    AND   RTS.DateCreated < DATEADD(DAY, 1, @DateCreated2)
                     ORDER BY RTS.IdRegistrationofTransactionProcessStates DESC;
                     --- Insert tabla dbo.Cost
                     INSERT INTO [dbo].[Cost]
@@ -1064,8 +1066,8 @@ BEGIN
             SELECT @IdTransaction = ISNULL([IdTransaction], 0)
             FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH (NOLOCK)
             WHERE OrderNumber = @OrderNumber
-                  AND DateCreated >= @DateCreated
-                  AND DateCreated < DATEADD(DAY, 1, @DateCreated);
+                  AND DateCreated >= @DateCreated2
+                  AND DateCreated < DATEADD(DAY, 1, @DateCreated2);
 
 
             IF (@IdTransaction = 0)
@@ -1116,8 +1118,8 @@ BEGIN
                 WHERE IdTransaction = @IdTransaction
                       AND OrderNumber = @OrderNumber
                       AND StatusSend <> 1
-                      AND DateCreated >= @DateCreated
-                      AND DateCreated < DATEADD(DAY, 1, @DateCreated)
+                      AND DateCreated >= @DateCreated2
+                      AND DateCreated < DATEADD(DAY, 1, @DateCreated2)
 
 
             END;
@@ -1212,6 +1214,7 @@ BEGIN
                    AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
             LEFT JOIN [dbo].[Membership]                    M
                 ON [MSL].[MembershipId] = [M].[IdMembership];
+                
 
         IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
             DROP TABLE #listGuides;
