@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<Freddy Monterroso>
 -- Create date: <19/01/2022>
 -- Description:	<SP para consulta de cierres en reporte de reporting services>
