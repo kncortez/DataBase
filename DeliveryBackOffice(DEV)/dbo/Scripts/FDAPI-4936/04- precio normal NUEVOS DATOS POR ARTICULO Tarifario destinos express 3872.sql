@@ -16,11 +16,12 @@ DECLARE @IdRate			INT = (SELECT RheId from RateHeader WITH(NOLOCK) where RheName
 
 
 
-DECLARE @IdPeq INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Pequeño' and IdCountry = 'HN')) ,
-		@IdMed INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Mediano' and IdCountry = 'HN')),
-		@IdGrand INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Grande' and IdCountry = 'HN')),
-		@IdExt INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Extra Grande' and IdCountry = 'HN')),
-		@IdSob INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Sobredimensionado' and IdCountry = 'HN'));
+DECLARE @IdPeq INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Pequeño' and IdCountry = 'HN') AND Code = 'EXPHN076') ,
+		@IdMed INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Mediano' and IdCountry = 'HN') AND Code ='EXPHN077'),
+		@IdGrand INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Grande' and IdCountry = 'HN') AND Code ='EXPHN078'),
+		@IdExt INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Extra Grande' and IdCountry = 'HN') AND Code ='EXPHN079'),
+		@IdSob INT =(SELECT AbcId FROM ArticleByCustomer WITH(NOLOCK) WHERE AbcIdArticle =(SELECT ArtId FROM CatArticle WITH(NOLOCK) WHERE ArtName = 'Paquete Sobredimensionado' and IdCountry = 'HN') AND Code ='EXPHN080');
+
 
 
  --*********************

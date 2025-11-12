@@ -6,6 +6,12 @@ BEGIN TRY
     *********************************************/
     DECLARE @TokenCreated NVARCHAR(20) = 'SYS-TGARCIA';
     DECLARE @Country CHAR(2) = 'HN';
+    DECLARE @IdCurrency INT = (SELECT CCC.IdCatCurrencyCOD 
+                               FROM DeliveryCurrency DC
+                               INNER JOIN CatCurrencyCOD CCC
+                               ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
+                               WHERE DC.DefaultPerCountry = 1
+                               AND DC.Currency_IdCountry =@Country);
 
     -- Validar si ya existe la suscripción
     IF NOT EXISTS (
@@ -37,11 +43,10 @@ BEGIN TRY
             [Tag],
             [Position],
             [IdCountry],
-            [IdCatCurrencyCOD],
-            [LinkImage]
+            [IdCatCurrencyCOD]
         ) 
         VALUES (
-            N'Paquete MICRO', N'15 envíos L93.48 c/u', 1402.20, 0, 15, 6, 5, 1, @TokenCreated, GETDATE(), NULL, NULL, N'hwa-planMicroIcon', N'bannerSubsPlan4.png', NULL, NULL, NULL, 2, 2, N'NOVEDADES', 1, @Country, 1,N'https://forzadelivery.com/images/Tienda/sliderh01-992-200.jpg'
+            N'Paquete MICRO', N'15 envíos L93.48 c/u', 1402.20, 0, 15, 6, 5, 1, @TokenCreated, GETDATE(), NULL, NULL, N'hwa-planMicroIcon', N'bannerSubsPlan4.png', NULL, NULL, NULL, 2, 2, N'NOVEDADES', 1, @Country, @IdCurrency
         );
     END;
 
