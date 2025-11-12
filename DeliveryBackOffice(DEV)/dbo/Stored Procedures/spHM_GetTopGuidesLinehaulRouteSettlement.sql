@@ -23,18 +23,6 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @DOP_PIECES INT,
-			@GuideSerie NVARCHAR(3),
-			@GuideNumber INT
-
-	SELECT TOP 1
-		@GuideSerie = LRSCD.GuideSerie,
-		@GuideNumber = LRSCD.GuideNumber
-	FROM dbo.LinehaulRouteSettlementContainerDetail LRSCD WITH (NOLOCK)
-	INNER JOIN dbo.LinehaulRouteSettlementContainer LRSC WITH (NOLOCK)
-		ON LRSCD.LinehaulRouteSettlementContainerId = LRSC.IdLinehaulRouteSettlementContainer
-	WHERE LRSC.LinehaulRouteSettlementId = @LinehaulRouteSettlementId;
-
 	SELECT TOP 20
 		LRSCD.GuideSerie,
 		LRSCD.GuideNumber,
