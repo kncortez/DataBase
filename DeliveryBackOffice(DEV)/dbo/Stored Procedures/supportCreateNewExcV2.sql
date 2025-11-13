@@ -15,7 +15,7 @@ CREATE PROCEDURE [dbo].[supportCreateNewExcV2]
     @DescriptionOfClient NVARCHAR(100),
     @TokenSupport NVARCHAR(50),
     @Address NVARCHAR(600),
-    @IdTownship INT,
+    @IdSettlement INT,
     @zone INT = 0,
     @Phone NVARCHAR(10),
     @ContactName NVARCHAR(100),
@@ -60,8 +60,12 @@ BEGIN
             FROM dbo.Township tw WITH (NOLOCK)
                 INNER JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
-            WHERE  tw.IdTownship = @IdTownship
-			AND pr.IdCountry = @IdCountry
+				INNER JOIN dbo.Settlement st WITH(NOLOCK)
+					ON st.IdProvince = pr.IdProvince
+					AND st.IdTownship = tw.IdTownship
+            WHERE  st.IdSettlement = @IdSettlement
+			AND st.IdCountry = @IdCountry
+			AND st.SettlementSatus = 1
 		)
 		BEGIN
 			RAISERROR('El municipio no pertene al pais especificado', 16, 1);
