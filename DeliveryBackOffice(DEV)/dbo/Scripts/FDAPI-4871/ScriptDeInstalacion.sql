@@ -106,6 +106,27 @@ BEGIN TRY
         PRINT 'La columna CatPartyResponsibleId ya existe en dbo.CatTypeIncidence.';
     END
 
+	IF COL_LENGTH('dbo.WebhookEndpoint', 'IsPartyResponsibleRequired') IS NULL
+    BEGIN
+        ALTER TABLE dbo.WebhookEndpoint 
+        ADD IsPartyResponsibleRequired BIT DEFAULT ((0)) NOT NULL;
+
+        EXEC sp_addextendedproperty 
+            @name = N'MS_Description',
+            @value = N'El cliente requiere o no el campo de responsabilidad de incidencia',
+            @level0type = N'SCHEMA',
+            @level0name = N'dbo',
+            @level1type = N'TABLE',
+            @level1name = N'WebhookEndpoint',
+            @level2type = N'COLUMN',
+            @level2name = N'IsPartyResponsibleRequired';
+
+    END
+    ELSE
+    BEGIN
+        PRINT 'La columna IsPartyResponsibleRequired ya existe en dbo.WebhookEndpoint.';
+    END
+
     IF NOT EXISTS (
         SELECT 1 
         FROM sys.foreign_keys 
@@ -158,7 +179,7 @@ BEGIN TRY
     UPDATE CatTypeIncidence 
     SET CatPartyResponsibleId = @IdCatPartyResponsibleForza 
     WHERE IdIncidenceType IN (79,82,84,134,135,137,195,196,198);
-
+	   
     PRINT 'Actualizacion completada exitosamente.';
 END TRY
 BEGIN CATCH
