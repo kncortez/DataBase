@@ -6,9 +6,12 @@ CREATE TABLE [dbo].[APGuidesControl] (
     [FirstName]                 NVARCHAR(100)   NOT NULL,
     [LastName]                  NVARCHAR(100)   NOT NULL,
     [City]                      NVARCHAR(100)   NOT NULL,   
-    [Region]                      NVARCHAR(100)   NOT NULL,   
+    [Region]                    NVARCHAR(100)   NOT NULL, 
     [Address]                   NVARCHAR(500)   NOT NULL,
     [AddressExtra]              NVARCHAR(500)   NULL,
+    [HeaderCode]                NVARCHAR(5)     NULL, 
+    [ReceiverIdTownship]        INT             NULL, 
+    [ReceiverIdSettlement]      INT             NULL, 
     [CountryCode]               CHAR(2)         NOT NULL,
     [PostalCode]                NVARCHAR(20)    NULL,
     [DeliveryInstructions]      NVARCHAR(500)   NULL,
@@ -25,7 +28,9 @@ CREATE TABLE [dbo].[APGuidesControl] (
     [DateUpdated]               DATETIME        NULL,
     PRIMARY KEY CLUSTERED ([IdAPGuidesControl] ASC),
     CONSTRAINT [FK_APGuidesControl_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-    CONSTRAINT [FK_APGuidesControl_APExecutionSchedule] FOREIGN KEY ([APExecutionScheduleId]) REFERENCES [dbo].[APExecutionSchedule] ([IdAPExecutionSchedule])
+    CONSTRAINT [FK_APGuidesControl_APExecutionSchedule] FOREIGN KEY ([APExecutionScheduleId]) REFERENCES [dbo].[APExecutionSchedule] ([IdAPExecutionSchedule]),
+    CONSTRAINT [FK_APGuidesControl_Township] FOREIGN KEY ([ReceiverIdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
+    CONSTRAINT [FK_APGuidesControl_Settlement] FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement])
 );
 
 GO
@@ -71,6 +76,12 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Dirección de entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'Address';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Información adicional de la dirección', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'AddressExtra';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Header code del municipio de recepción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'HeaderCode';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del municipio de recepción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'ReceiverIdTownship';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del poblado de recepción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'ReceiverIdSettlement';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código de país (ej: HN)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APGuidesControl', @level2type = N'COLUMN', @level2name = N'CountryCode';
 GO

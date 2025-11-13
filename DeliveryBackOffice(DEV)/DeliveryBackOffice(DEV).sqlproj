@@ -619,6 +619,7 @@
     <Build Include="dbo\Tables\APGuidesControlLogs.sql" />
     <Build Include="dbo\Tables\APExecutionSchedule.sql" />
     <Build Include="dbo\Tables\APExecutionServiceLog.sql" />
+    <Build Include="dbo\Tables\APRegionGuides.sql" />
     <Build Include="dbo\Tables\CatStatusGuideByContainer.sql" />
     <Build Include="dbo\Tables\DefaultValuesPerCountry.sql" />
     <Build Include="dbo\Tables\FinishPickUpContainerDetail.sql" />

@@ -42,5 +42,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token del u
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de última actualización del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionServiceLog', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Llave foránea que referencia la tabla APExecutionSchedule', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionServiceLog', @level2type = N'CONSTRAINT', @level2name = N'FK_ExecutionLog_Schedule';
-GO
