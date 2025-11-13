@@ -100,7 +100,7 @@ BEGIN
 			 SELECT G.GuideSerie,
 					G.GuideNumber,
 					@Status,
-					'spHM_EndLinehaulRouteSettlement',
+					@TknUser,
 					GETDATE(),
 					GETDATE(),
 					1
