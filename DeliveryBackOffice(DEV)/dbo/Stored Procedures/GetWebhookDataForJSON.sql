@@ -1,21 +1,19 @@
-﻿-- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-09-13>
--- Description:	< Obtener datos de guía para  >
--- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2022-10-24>
--- Description:	<Agregar flujo de respuesta de los diferentes estados de una guía>
--- =============================================
--- Author:		 <Tito Garcia>
--- Updated date: <2025-08-12>
--- Description:	 <Se elimina variable @StatusChange innecesaria, se quita el collete, se agrega parámetro country en info de notificaciones de entrega, 
---                se cambia consulta repetitiva que obtiene el statusid, se agrega validación para clientes que requieren el país>
--- =============================================
--- Author:		 <Tito Garcia>
--- Updated date: <2025-09-05>
--- Description:	 <Se agrega notificación de estado 50 (Incidencia validada), se elimina collate innecesario>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[GetWebhookDataForJSON]
+   Propósito: <Obtener datos de los estados de las guias para las notificaciones webhook>
+   Autor:     <Andres Ruiz>
+   Historia:  <> 
+   Fecha:     <2022-09-13>
+============================================
+=== CHANGELOG ================================
+2022-10-24 | Historia/épica:  | Autor: <Edelman Vasquez> |
+-------------------------------
+2025-08-13 | Historia/épica:  | Autor: <Tito Garcia>  |
+-------------------------------
+2025-09-05 | Historia/épica:  | Autor: <Tito Garcia>  |
+-------------------------------
+2025-10-28 | Historia/épica: <FDAPI-4871> | Autor: <Tito Garcia>  |
+=========================================== */
 CREATE PROCEDURE [dbo].[GetWebhookDataForJSON]
     @WebhookTrackingQueueId BIGINT,
     @WebhookTypeId INT,
@@ -24,6 +22,7 @@ AS
 BEGIN
     DECLARE @StatusId AS INT;
     DECLARE @IsCountryRequired AS BIT;
+    DECLARE @IsPartyResponsibleRequired AS BIT;
     DECLARE @RestrictValidatedIncidents AS BIT;
 
     --========================================================================================================
@@ -41,6 +40,7 @@ BEGIN
                 GuideStatusId INT,
                 GuideStatusChange DATETIME,
 				IsCountryRequired BIT,
+				IsPartyResponsibleRequired BIT,
 				CustomerId INT,
 				RestrictValidatedIncidents BIT
             );
@@ -52,6 +52,7 @@ BEGIN
                 GuideStatusId,
                 GuideStatusChange,
 				IsCountryRequired,
+				IsPartyResponsibleRequired,
 				CustomerId,
 				RestrictValidatedIncidents
             )
@@ -69,6 +70,7 @@ BEGIN
                        ORDER BY DOD.DateCreated DESC
                    ) 'GuideStatusChange',
 				   WE.IsCountryRequired,
+				   WE.IsPartyResponsibleRequired,
 				   WTQ.CustomerId,
 				   WE.RestrictValidatedIncidents
             FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
@@ -83,7 +85,7 @@ BEGIN
                        AND WRBY.RowStatus = 1
             WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId;
 
-			SELECT @StatusId = GuideStatusId, @IsCountryRequired = IsCountryRequired, @RestrictValidatedIncidents = RestrictValidatedIncidents
+			SELECT @StatusId = GuideStatusId, @IsCountryRequired = IsCountryRequired, @RestrictValidatedIncidents = RestrictValidatedIncidents, @IsPartyResponsibleRequired = IsPartyResponsibleRequired
 			FROM @GuideStatusResponseTable;
 
             IF (EXISTS (SELECT 1 FROM @GuideStatusResponseTable))
@@ -256,6 +258,36 @@ BEGIN
 					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 						ON GSRT.GuideSerie = DO.Guide_Serie
 					   AND GSRT.GuideNumber = DO.Guide_Number;
+                END                
+                ELSE IF (@StatusId IN (45)) /* Incidencia en ruta */
+                BEGIN
+
+					SELECT 
+						GSRT.GuideSerie  AS [GuideSerie],
+						GSRT.GuideNumber  AS [GuideNumber],
+						GSRT.GuideStatus  AS [GuideStatus],
+						GSRT.GuideStatusId AS [GuideStatusId],
+						GSRT.GuideStatusChange AS [GuideStatusChange],
+						CASE 
+                            WHEN @IsPartyResponsibleRequired = 1 THEN DAP.PartyResponsibleName
+                            ELSE NULL
+						END AS [PartyResponsibleName]						
+					FROM @GuideStatusResponseTable GSRT
+					OUTER APPLY
+					(
+						SELECT TOP 1
+							CPR.PartyResponsibleName
+						FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)						
+						INNER JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
+							ON DA.ID_Incident = CTI.IdIncidenceType
+						INNER JOIN [DeliveryBackOffice].[dbo].[CatPartyResponsible] CPR
+							ON CTI.CatPartyResponsibleId = CPR.IdCatPartyResponsible
+						WHERE GSRT.GuideSerie = DA.Guide_Serie
+							  AND GSRT.GuideNumber = DA.Guide_Number
+                              AND CTI.RowStatus = 1
+							  AND CPR.RowStatus = 1
+						ORDER BY DA.Date_Created DESC
+					) DAP
                 END
                 ELSE
                 BEGIN
