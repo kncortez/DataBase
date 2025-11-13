@@ -3,16 +3,13 @@
 -- Create date: <2025-11-12>
 -- Description:	<Obtiene el estado más reciente de una guía por serie y número>
 -- =============================================
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE OR ALTER PROCEDURE [dbo].[spws_get_latest_guide_status]
     @GuideSerie NVARCHAR(50),
     @GuideNumber INT
 AS
 BEGIN
+    SET ANSI_NULLS ON
+    SET QUOTED_IDENTIFIER ON
     SET NOCOUNT ON;
 
     SELECT TOP (1)
