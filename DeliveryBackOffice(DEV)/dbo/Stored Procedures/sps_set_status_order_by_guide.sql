@@ -19,7 +19,8 @@ CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide]
     @courierName AS NVARCHAR(200) = '',
     @iduser AS INT = NULL,
     @username NVARCHAR(50) = NULL,
-	@IdCountry NVARCHAR(2) = 'GT'
+	@IdCountry NVARCHAR(2) = 'GT',
+	@StationId INT
 AS
 BEGIN
     DECLARE @ValidateOperation BIGINT = 0;
@@ -123,7 +124,8 @@ BEGIN
                 [DateCreated],
                 [DateCreatedInSystem],
                 [Observations],
-                [Temperature_Celsius]
+                [Temperature_Celsius],
+				[StationId]
             )
             SELECT @Guide_Serie,
                    it.Guide_Number,
@@ -132,7 +134,8 @@ BEGIN
                    @DateOfStatus,
                    GETDATE(),
                    @Observations,
-                   @Temperature_Celsius
+                   @Temperature_Celsius,
+				   @StationId
             FROM @ItemsTable it;
             SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
             -----------------------------
