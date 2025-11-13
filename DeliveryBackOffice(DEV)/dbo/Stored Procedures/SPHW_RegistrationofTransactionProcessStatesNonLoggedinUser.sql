@@ -25,10 +25,10 @@ BEGIN
     BEGIN TRAN
 	BEGIN TRY
 		SET NOCOUNT ON; 
-		SET @PhoneNumber = (
-	                    SELECT RIGHT(LTRIM(REPLACE(@PhoneNumber, '+', '')), 8) AS PhoneDigits
-			            );
+		
 	DECLARE  @isSuscription AS BIT 
+	DECLARE  @PhoneNumber2 AS NVARCHAR(10);
+	SET @PhoneNumber2 =RIGHT(LTRIM(REPLACE(@PhoneNumber, '+','')), 8);
 	INSERT INTO [dbo].[RegistrationofTransactionProcessStates]
 	(
 	  AccountId,
@@ -273,7 +273,7 @@ BEGIN
 					  THEN NULL
 					  ELSE T.ProductGiftShippingEmail
 					  END,
-		@PhoneNumber
+		@PhoneNumber2
     FROM @TblSalePackageMarketPlace AS T;
 
 	COMMIT TRAN
