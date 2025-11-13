@@ -217,6 +217,7 @@ BEGIN
                 SELECT ModIdModule
                 FROM DeliveryBackOffice.dbo.CatModule
                 WHERE ModName = 'Aeropost Service'
+                    AND ModRowStatus = 1
             ),
             IdCustomer =
             (
@@ -714,6 +715,7 @@ BEGIN
 			SELECT TOP 1 [CS].[SysIdSystem]
 			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 			WHERE [CS].[SysNameSystem] = 'Aeropost Service' 
+                AND SysRowStatus = 1
 		)
 
 		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
