@@ -3,6 +3,9 @@
 -- Create date:	<2025-11-10>
 -- Description:	<Obtiene las guias en estado "En Revision" con filtros opcionales>
 -- =============================================
+USE [DeliveryBackOffice]
+GO
+
 CREATE PROCEDURE [dbo].[spHM_GetGuidesInRevision]
     @CountryId NVARCHAR(5) = 'GT',
     @RouteId INT = NULL,
@@ -11,12 +14,15 @@ CREATE PROCEDURE [dbo].[spHM_GetGuidesInRevision]
     @Guide NVARCHAR(20) = NULL
 AS
 BEGIN
+    SET ANSI_NULLS ON
+    SET QUOTED_IDENTIFIER ON
     SET NOCOUNT ON;
 
     DECLARE @StatusRevision INT = (
-        SELECT TOP 1 SO.StatusOrderId
-        FROM StatusOrder SO WITH (NOLOCK)
-        WHERE SO.OrderDescription = 'En Revisión'
+        SELECT TOP 1
+        SO.StatusOrderId
+    FROM StatusOrder SO WITH (NOLOCK)
+    WHERE SO.OrderDescription = 'En Revisión'
     );
 
     DECLARE @GuideSerie NVARCHAR(2);
@@ -42,63 +48,90 @@ BEGIN
     END
 
     IF (
+        @Guide IS NOT NULL
+        AND (
+            @GuideSerie IS NULL
+        OR @GuideNumber IS NULL
+        )
+    )
+    BEGIN
+        RETURN;
+    END
+
+    DECLARE @Sql NVARCHAR(MAX) = N'
+        SELECT
+            DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR(20)) AS Guia,
+            CR.CodeRoute AS Ruta,
+            DO.Courier_Name AS Piloto,
+            HL.HubName + '', '' + HL.HubAbbreviation AS HubDestino,
+            DO.DateCreated AS Fecha,
+            DOP.NoPiece AS Pieza,
+            SO.OrderDescription AS Estado
+        FROM DeliveryOrder DO WITH (NOLOCK)
+        INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
+            ON DO.Guide_Serie = DOP.GuideSerie
+            AND DO.Guide_Number = DOP.GuideNumber
+        INNER JOIN CatRoute CR WITH (NOLOCK)
+            ON DO.Courier_Route = CR.CodeRoute
+        LEFT JOIN HubLogistics HL WITH (NOLOCK)
+            ON DO.HubDestinationId = HL.IdHubLogistic
+        INNER JOIN StatusOrder SO WITH (NOLOCK)
+            ON DO.StatusOrderId = SO.StatusOrderId
+        WHERE DO.StatusOrderId = @StatusRevision
+            AND ISNULL(CR.CountryId, ''GT'') = @CountryId';
+
+    IF (
         @GuideSerie IS NOT NULL
         AND @GuideNumber IS NOT NULL
     )
     BEGIN
-        SELECT
-            DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR(20)) AS Guia,
-            CR.CodeRoute AS Ruta,
-            DO.Courier_Name AS Piloto,
-            HL.HubName + ', ' + HL.HubAbbreviation AS HubDestino,
-            DO.DateCreated AS Fecha,
-            DOP.NoPiece AS Pieza,
-            SO.OrderDescription AS Estado
-        FROM DeliveryOrder DO WITH (NOLOCK)
-        INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
-            ON DO.Guide_Serie = DOP.GuideSerie
-            AND DO.Guide_Number = DOP.GuideNumber
-        INNER JOIN CatRoute CR WITH (NOLOCK)
-            ON DO.Courier_Route = CR.CodeRoute
-        LEFT JOIN HubLogistics HL WITH (NOLOCK)
-            ON DO.HubDestinationId = HL.IdHubLogistic
-        INNER JOIN StatusOrder SO WITH (NOLOCK)
-            ON DO.StatusOrderId = SO.StatusOrderId
-        WHERE DO.StatusOrderId = @StatusRevision
-            AND ISNULL(CR.CountryId, 'GT') = @CountryId
-            AND (@RouteId IS NULL OR CR.IdRoute = @RouteId)
-            AND (@CourierName IS NULL OR DO.Courier_Name LIKE '%' + @CourierName + '%')
-            AND (@HubId IS NULL OR HL.IdHubLogistic = @HubId)
+        SET @Sql += N'
             AND DO.Guide_Serie = @GuideSerie
-            AND DO.Guide_Number = @GuideNumber
-        ORDER BY DO.DateCreated DESC;
+            AND DO.Guide_Number = @GuideNumber';
     END
-    ELSE IF (@Guide IS NULL)
+
+    IF (@RouteId IS NOT NULL)
     BEGIN
-        SELECT
-            DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR(20)) AS Guia,
-            CR.CodeRoute AS Ruta,
-            DO.Courier_Name AS Piloto,
-            HL.HubName + ', ' + HL.HubAbbreviation AS HubDestino,
-            DO.DateCreated AS Fecha,
-            DOP.NoPiece AS Pieza,
-            SO.OrderDescription AS Estado
-        FROM DeliveryOrder DO WITH (NOLOCK)
-        INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
-            ON DO.Guide_Serie = DOP.GuideSerie
-            AND DO.Guide_Number = DOP.GuideNumber
-        INNER JOIN CatRoute CR WITH (NOLOCK)
-            ON DO.Courier_Route = CR.CodeRoute
-        LEFT JOIN HubLogistics HL WITH (NOLOCK)
-            ON DO.HubDestinationId = HL.IdHubLogistic
-        INNER JOIN StatusOrder SO WITH (NOLOCK)
-            ON DO.StatusOrderId = SO.StatusOrderId
-        WHERE DO.StatusOrderId = @StatusRevision
-            AND ISNULL(CR.CountryId, 'GT') = @CountryId
-            AND (@RouteId IS NULL OR CR.IdRoute = @RouteId)
-            AND (@CourierName IS NULL OR DO.Courier_Name LIKE '%' + @CourierName + '%')
-            AND (@HubId IS NULL OR HL.IdHubLogistic = @HubId)
-        ORDER BY DO.DateCreated DESC;
+        SET @Sql += N'
+            AND CR.IdRoute = @RouteId';
     END
+
+    IF (@CourierName IS NOT NULL)
+    BEGIN
+        SET @Sql += N'
+            AND DO.Courier_Name LIKE @CourierNamePattern';
+    END
+
+    IF (@HubId IS NOT NULL)
+    BEGIN
+        SET @Sql += N'
+            AND HL.IdHubLogistic = @HubId';
+    END
+
+    SET @Sql += N'
+        ORDER BY DO.DateCreated DESC;';
+
+    DECLARE @CourierNamePattern NVARCHAR(202);
+    IF (@CourierName IS NOT NULL)
+    BEGIN
+        SET @CourierNamePattern = '%' + @CourierName + '%';
+    END
+
+    EXEC sp_executesql
+        @Sql,
+        N'@StatusRevision INT,
+          @CountryId NVARCHAR(5),
+          @RouteId INT,
+          @CourierNamePattern NVARCHAR(202),
+          @HubId INT,
+          @GuideSerie NVARCHAR(2),
+          @GuideNumber INT',
+        @StatusRevision = @StatusRevision,
+        @CountryId = @CountryId,
+        @RouteId = @RouteId,
+        @CourierNamePattern = @CourierNamePattern,
+        @HubId = @HubId,
+        @GuideSerie = @GuideSerie,
+        @GuideNumber = @GuideNumber;
 END
 GO
