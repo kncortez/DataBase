@@ -42,15 +42,18 @@ begin
     begin transaction;
     begin try
         -------------------------------------------------------------------------------------------------------------------------
-        declare @phon int =
-                (
-                    SELECT	TOP 1
-							ID
-                    FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] with (nolock)
-                    WHERE	ISNULL(IdCountry, 'GT') = @IdCountry
-						AND	Phone like '%' + @Phone + '%'
-                        AND Estatus = 1
-                );
+        declare @phon int,
+				@StationId NVARCHAR(5)
+
+                SELECT	TOP 1
+						@phon = ID,
+						@StationId = HL.IdStation
+                FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] SR with (nolock)
+				LEFT JOIN HubLogistics HL WITH (NOLOCK)
+					ON SR.HubLogisticId = HL.IdHubLogistic
+                WHERE	ISNULL(SR.IdCountry, 'GT') = @IdCountry
+					AND	Phone like '%' + @Phone + '%'
+                    AND Estatus = 1
 
         declare @TokenInavt varchar(max) =
                 (
@@ -148,7 +151,8 @@ begin
                                            + '"BillingEmail":"' + isnull(convert(varchar(50), @DefaultEmail), 'N/A')
                                            + '",' + '"PickUpManifestEmail":"'
                                            + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
-                                           + '"Token":"' + isnull(LogTokenPOD, '') + +'"}'
+                                           + '"Token":"' + isnull(LogTokenPOD, '') + +'",'
+										   + '"StationId":"'+ @StationId + '"}'
                                     from LogTokenPOD						pod with (nolock)
                                         inner join SenderReceiver			sr with (nolock)
                                             on (sr.ID = pod.IdCourierman)
