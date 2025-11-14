@@ -2068,6 +2068,7 @@
     <Build Include="dbo\Stored Procedures\SLGuideReception.sql" />
     <Build Include="dbo\Stored Procedures\SLGuideReturn.sql" />
     <Build Include="dbo\Stored Procedures\SLGuideDelivery.sql" />
+    <Build Include="dbo\Stored Procedures\SLGuideReturnPickUp.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
