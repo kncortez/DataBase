@@ -13,7 +13,8 @@ CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
     @GuidePiece SMALLINT,
     @Token NVARCHAR(100),
     @Route VARCHAR(100),
-    @CountryId VARCHAR(2) = 'GT'
+    @CountryId VARCHAR(2) = 'GT',
+	@StationId INT
 AS
 BEGIN
 
@@ -276,10 +277,11 @@ BEGIN
 				[DateCreatedInSystem],
 				[Observations],
 				[Temperature_Celsius],
-				[PieceId]
+				[PieceId],
+				[StationId]
 			)
 			VALUES
-			(@GuideSerie, @GuideNumber, 2, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece);
+			(@GuideSerie, @GuideNumber, 2, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece, @StationId);
 
 			-----------------WEBHOOK.INI RECOLECCION-----------------------		
 						DECLARE @WebhookCustomerIdRec INT = -1;
@@ -474,10 +476,11 @@ BEGIN
 				[DateCreatedInSystem],
 				[Observations],
 				[Temperature_Celsius],
-				[PieceId]
+				[PieceId],
+				[StationId]
 			)
 			VALUES
-			(@GuideSerie, @GuideNumber, @stattus, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece);
+			(@GuideSerie, @GuideNumber, @stattus, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece, @StationId);
 
 			SET @RModified2 = @@rowcount;
 
