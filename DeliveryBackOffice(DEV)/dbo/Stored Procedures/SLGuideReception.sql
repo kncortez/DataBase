@@ -87,7 +87,7 @@ BEGIN
 
 		-- Actualizar registro de la orden
         UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-        SET StatusOrderId = @GuideReceptionInSL
+        SET StatusOrderId = @GuideReceptionInSL, DateUpdated = GETDATE(), TokenUpdated = @Token
         WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber;
 
 		-- Actualizar registros del detalle de manifiestos de entrega
