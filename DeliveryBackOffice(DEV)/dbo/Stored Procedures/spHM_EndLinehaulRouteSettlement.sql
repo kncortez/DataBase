@@ -49,7 +49,6 @@ BEGIN
 											ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
 										INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 											ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-											AND		[LRPCD].[RowStatus] = 1
 										INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
 											ON		[LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]											
 										INNER JOIN	[dbo].[Container] C
@@ -58,6 +57,7 @@ BEGIN
 											ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
 										WHERE		[LRPCDP].[CatLinehaulStatusId] = @IN_TRANSIT_STATUS_ID
 											AND		[LRPCDP].[ActCode] IS NULL
+											AND		[LRPCD].[RowStatus] = 1
 											AND		[LRP].[IdLinehaulRoutePreparation] = @LRP_ID);
 
 	IF (@EXISTING_LRS = 0)
