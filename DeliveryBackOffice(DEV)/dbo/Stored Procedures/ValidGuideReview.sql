@@ -21,12 +21,12 @@ BEGIN
 
     SELECT 
         @StatusInventory = so.StatusOrderId
-    FROM StatusOrder so
+    FROM StatusOrder so WITH (NOLOCK)
     WHERE so.OrderDescription = 'En Inventario';
 
     SELECT 
         @StatusReview = so.StatusOrderId
-    FROM StatusOrder so
+    FROM StatusOrder so WITH (NOLOCK)
     WHERE so.OrderDescription = 'En Revisión';
 
     SELECT 
