@@ -3,6 +3,10 @@
 -- Create date: <2024-06-11>
 -- Description:	<Crear Guias - Crear nuevo método en lugar de Catalog/GetDynamicCatalog para carga de Artículos.>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2025-09-26>
+-- Description:	<Portal Individual - Se modifica informacion de paquetes que se muestra para El Salvador >
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spGetCatalogTypePieceMC]
     -- Add the parameters for the stored procedure here
@@ -27,11 +31,11 @@ BEGIN
 
 INSERT INTO @DescriptionAritcle (Id, Description, Country, Main,Label,Width2,Dim,IsOversized)
 VALUES
-	('Paquete pequeño', 'Si el lado más largo es menor o igual a 28 cm - Peso: 1 a 10 lbs.', 'SV',1,'Pequeño','60%','Máx: 28cm o 10lbs',0),
+	('Paquete pequeño', 'Si el lado más largo es menor o igual a 28 cm - Peso: 1 a 30 lbs.', 'SV',1,'Pequeño','60%','Máx: 28cm o 30lbs',0),
     ('Paquete mediano', 'Si el lado más largo mide entre 28.1 y 36 cm - Peso: 10.1 a 20 lbs.', 'SV',0,'Mediano','70%','Máx: 36cm o 20lbs',0),
     ('Paquete grande', 'Si el lado más largo mide entre 36.1 y 47 cm - Peso: 20.1 a 40 lbs.', 'SV',0,'Grande','80%','Máx: 47cm o 40lbs',0),
     ('Paquete extra grande', 'Si el lado más largo mide entre 47.1 y 51 cm - Peso: 40.1 a 59 lbs.', 'SV',0,'Extra Grande','90%','Máx: 51cm o 59lbs',0),
-    ('Paquete sobredimensionado', 'Si el lado más largo es mayor a 51 cm - Peso: 60 lbs en adelante.', 'SV',0,'Sobredimensionado','100%','Min: 60lbs',1),
+    ('Paquete sobredimensionado', 'Si el lado más largo es mayor a 51 cm - Peso: 31 lbs en adelante.', 'SV',0,'Sobredimensionado','100%','Min: 31lbs',1),
     ('Paquete pequeño', 'Si el lado más largo es menor o igual a 28 cm - Peso: 1 a 10 lbs.', 'HN',1,'Pequeño','60%','Máx: 28cm o 10lbs',0),
     ('Paquete mediano', 'Si el lado más largo mide entre 28.1 y 36 cm - Peso: 10.1 a 20 lbs.', 'HN',0,'Mediano','70%','Máx: 36cm o 20lbs',0),
     ('Paquete grande', 'Si el lado más largo mide entre 36.1 y 47 cm - Peso: 20.1 a 40 lbs.', 'HN',0,'Grande','80%','Máx: 47cm o 40lbs',0),
@@ -46,9 +50,9 @@ VALUES
 	IF (@pType = 'GetTypePiece') --CARGA DE ARTICULOS
 	BEGIN
 
-		DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' AND RH.CountryId = @pCountryId COLLATE Latin1_General_CI_AI);
-		DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' AND RH.CountryId = @pCountryId COLLATE Latin1_General_CI_AI);
-		DECLARE @NewAutoSalesMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' AND RH.CountryId = @pCountryId COLLATE Latin1_General_CI_AI);
+		DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' AND RH.CountryId = @pCountryId);
+		DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' AND RH.CountryId = @pCountryId);
+		DECLARE @NewAutoSalesMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' AND RH.CountryId = @pCountryId);
 		DECLARE @Others INT =(SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio interfer' AND RH.CountryId = @pCountryId)
 
 

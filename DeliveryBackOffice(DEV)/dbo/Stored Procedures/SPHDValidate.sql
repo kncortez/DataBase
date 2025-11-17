@@ -8,6 +8,16 @@
 -- Create date: <2024-08-23>
 -- Description:	<Se agrega el IdCountry de la factura en la respuesta>
 -- =============================================
+-- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2025-07-18>
+-- Description:	<Facturacion SV - se obtiene factura por numberfel para SV>
+-- =============================================
+-- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2025-09-11>
+-- Description:	<Facturacion SV - se quita validacion isnull al consultar tabla invoiceHeader>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHDValidate]
 @Guide     Nvarchar(25)=null,
 @DateOf    Datetime=null,
@@ -16,7 +26,8 @@ CREATE PROCEDURE [dbo].[SPHDValidate]
 @Membership int=null,
 @Subscription INT=null,
 @TipoEnvio AS INT =0,
-@TipoComisionCOD AS INT=0
+@TipoComisionCOD AS INT=0,
+@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -48,7 +59,7 @@ If (@Guide IS NOT NULL)
 Begin
 
 
-     Select Top 1 @dti_fk_header = dti_fk_header From [dbo].[invoiceDetail]
+     Select Top 1 @dti_fk_header = dti_fk_header From [dbo].[invoiceDetail]	WITH(NOLOCK)
 								Where dti_fk_orderSerie + Cast(dti_fk_orderNumber as varchar)  = @Guide
 								
 
@@ -66,7 +77,7 @@ Begin
 				IH.inv_numberFEL,
 				IH.inv_certificationFEL,
 				IH.inv_cli_name,
-				ISNULL(IH.IdCountry, 'GT') AS IdCountry
+				IH.IdCountry
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
@@ -91,7 +102,7 @@ Begin
 				IH.inv_numberFEL,
 				IH.inv_certificationFEL,
 				IH.inv_cli_name,
-				ISNULL(IH.IdCountry, 'GT') AS IdCountry
+				IH.IdCountry
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
@@ -116,7 +127,7 @@ Begin
 				IH.inv_numberFEL,
 				IH.inv_certificationFEL,
 				IH.inv_cli_name,
-				ISNULL(IH.IdCountry, 'GT') AS IdCountry
+				IH.IdCountry
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
@@ -141,7 +152,7 @@ Begin
 				IH.inv_numberFEL,
 				IH.inv_certificationFEL,
 				IH.inv_cli_name,
-				ISNULL(IH.IdCountry, 'GT') AS IdCountry
+				IH.IdCountry
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
@@ -164,27 +175,46 @@ ELSE IF (@NumberFel IS NOT NULL)
 BEGIN
 
 
-Select  ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
-	    ID.dti_description,
-		IH.inv_pk_id,
-        IH.inv_serieFEL,
-		IH.inv_numberFEL,
-		IH.inv_certificationFEL,
-		IH.inv_cli_name,
-		ISNULL(IH.IdCountry, 'GT') AS IdCountry
-		         FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
-                     INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
-					 ON IH.inv_pk_id = ID.dti_fk_header
-					 WHERE 
-					 IH.inv_invoiceOfCreditNote IS NULL AND inv_certificationFEL = @NumberFel
-					  AND IH.inv_creditNote IS NULL
-					  AND  IH.inv_invoiceOfCreditNote IS  NULL
-					 ORDER BY IH.inv_pk_id DESC
-					 
-						
+	IF(@IdCountry ='SV')
+	BEGIN
+		DECLARE @TypeCF INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Comprobante Crédito Fiscal');
+		DECLARE @TypeInvoice INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Factura');
 
-   
-
+		Select  0 'HaveaCreditNote',  
+				ID.dti_description,  
+				IH.inv_pk_id,  
+				IH.inv_serieFEL,  
+				IH.inv_numberFEL,  
+				IH.inv_certificationFEL,  
+				IH.inv_cli_name,  
+				IH.IdCountry 
+		FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)  
+			INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)  
+			ON IH.inv_pk_id = ID.dti_fk_header  
+			WHERE   
+			inv_numberFEL = @NumberFel  
+			AND IH.inv_type in (@TypeInvoice,@TypeCF)
+			ORDER BY IH.inv_pk_id DESC  
+	END
+	ELSE
+	BEGIN
+		Select  ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
+			ID.dti_description,
+			IH.inv_pk_id,
+			IH.inv_serieFEL,
+			IH.inv_numberFEL,
+			IH.inv_certificationFEL,
+			IH.inv_cli_name,
+			IH.IdCountry
+					 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
+						 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
+						 ON IH.inv_pk_id = ID.dti_fk_header
+						 WHERE 
+						 IH.inv_invoiceOfCreditNote IS NULL AND inv_certificationFEL = @NumberFel
+						  AND IH.inv_creditNote IS NULL
+						  AND  IH.inv_invoiceOfCreditNote IS  NULL
+						 ORDER BY IH.inv_pk_id DESC
+	END
 
 END
 ELSE IF (@Membership IS NOT NULL)
@@ -197,7 +227,7 @@ BEGIN
 			IH.inv_numberFEL,
 			IH.inv_certificationFEL,
 			IH.inv_cli_name,
-			ISNULL(IH.IdCountry, 'GT') AS IdCountry
+			IH.IdCountry
 					 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 						 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 						 ON IH.inv_pk_id = ID.dti_fk_header
@@ -222,7 +252,7 @@ Select ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
 		IH.inv_numberFEL,
 		IH.inv_certificationFEL,
 		IH.inv_cli_name,
-		ISNULL(IH.IdCountry, 'GT') AS IdCountry
+		IH.IdCountry
 		         FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
                      INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 					 ON IH.inv_pk_id = ID.dti_fk_header

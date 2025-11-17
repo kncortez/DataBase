@@ -68,6 +68,8 @@ CREATE TABLE [dbo].[Customer] (
     [NumImgEvidence]          INT            NULL,
     [IsCOD]                   INT            NULL,
     [IsVoucherRequired]       INT            CONSTRAINT [DF_Customer_IsvoucherRequired] DEFAULT ((0)) NULL,
+    [CustomerUEId] [int] NULL,
+    [RestrictionByArticle] BIT NULL, 
     CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED ([IdCustomer] ASC),
     CONSTRAINT [FK_Customer_CatBankAccountType] FOREIGN KEY ([CODAccountTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
     CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),
@@ -321,6 +323,9 @@ GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identifica si con el cliente desplegara o no constancia de Entrega' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IsVoucherRequired'
 GO
 
+EXECUTE   sp_addextendedproperty @name=N'MS_Description', @value=N'Código de identificación de clientes Ultraentregas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CustomerUEId'
+GO
+
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'La tabla Cliente almacena informacon relacionada con los clientes de la empresa Forza Delivery' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer'
 GO
 CREATE NONCLUSTERED INDEX [idx_RowSatus_INCLUDE]
@@ -332,3 +337,13 @@ GO
 CREATE NONCLUSTERED INDEX [idx_CatBatchFrequencyCODId]
     ON [dbo].[Customer]([CatBatchFrequencyCODId] ASC);
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Bandera que indica si se utilizará tarifario por artículo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Customer',
+    @level2type = N'COLUMN',
+    @level2name = N'RestrictionByArticle'

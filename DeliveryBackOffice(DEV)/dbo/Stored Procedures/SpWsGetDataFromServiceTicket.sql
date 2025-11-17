@@ -167,10 +167,10 @@ BEGIN
                    Sender_Phone ToPhone,
                    COALESCE(rgu.UsrEmail, '') ToEmail,
                    Sender_Address ToAddress,
-                   (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-					WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry ) AS VoucherEmail,
-				   (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-					WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry ) AS VoucherPhone,
+                   (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
+					WHERE [Name] = 'VoucherEmail' AND IdCountry = PRV.IdCountry ) AS VoucherEmail,
+				   (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
+					WHERE [Name] = 'VoucherPhone' AND IdCountry = PRV.IdCountry ) AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                 LEFT JOIN DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
@@ -285,10 +285,10 @@ BEGIN
                    Sender_Phone ToPhone,
                    COALESCE(DOR.Sender_Mail, '') ToEmail,
                    Sender_Address ToAddress,
-                   (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-				    WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry ) AS VoucherEmail,
-				   (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-					WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry ) AS VoucherPhone,
+                   (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
+				    WHERE [Name] = 'VoucherEmail' AND IdCountry = PRV.IdCountry ) AS VoucherEmail,
+				   (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
+					WHERE [Name] = 'VoucherPhone' AND IdCountry = PRV.IdCountry ) AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                 LEFT JOIN DeliveryBackOffice.dbo.Township TOW WITH (NOLOCK)

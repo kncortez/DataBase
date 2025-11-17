@@ -48,7 +48,7 @@ BEGIN
             DeliveryBackOffice.dbo.del_ParametrosFactura FAC WITH(NOLOCK)
             ON VPC.CodeOfReference = FAC.dpf_VpCodeOfReference 
         WHERE 
-            VPC.IdKindOfVPBusiness IN (8, 21) -- EXPRESS CENTER
+            VPC.IdKindOfVPBusiness IN (8, 21, 23) -- EXPRESS CENTER
             AND VPC.StatusClient = 1
             AND FAC.KioskCode = @KioskCode
             AND CAT.CountryId = @IdCountry
