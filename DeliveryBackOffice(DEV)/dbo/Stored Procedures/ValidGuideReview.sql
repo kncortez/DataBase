@@ -54,5 +54,5 @@ BEGIN
         RETURN;
     END;
 
-    SELECT 0 AS StatusCode, 'No procede' AS Message;
+    SELECT 1 AS StatusCode, 'Procede: la guía no está en estado de Revisión.' AS Message;
 END;
