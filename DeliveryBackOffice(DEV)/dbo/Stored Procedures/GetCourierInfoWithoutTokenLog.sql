@@ -3,6 +3,11 @@
 -- Create date: <2024-04-08>
 -- Description:	<Consultar datos de courier con solo mandar numero de telefono>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2025-11-17>
+-- Description:	<Se agrega el station Id a la respuesta del Json>
+-- =============================================
 
 
 CREATE procedure [dbo].[GetCourierInfoWithoutTokenLog]
@@ -45,15 +50,18 @@ begin
     begin transaction;
     begin try
         -------------------------------------------------------------------------------------------------------------------------
-		declare @phon int =
-                (
+        declare @phon int,
+				@StationId NVARCHAR(5)
+
                     SELECT	TOP 1
-							ID
-                    FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] with (nolock)
-                    WHERE	ISNULL(IdCountry, 'GT') = @IdCountry
+						@phon = ID,
+						@StationId = HL.IdStation
+					FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] SR with (nolock)
+					LEFT JOIN HubLogistics HL WITH (NOLOCK)
+						ON SR.HubLogisticId = HL.IdHubLogistic
+					WHERE	ISNULL(SR.IdCountry, 'GT') = @IdCountry
 						AND	Phone like '%' + @Phone + '%'
-                        AND Estatus = 1
-                );
+						AND Estatus = 1
 
         declare @TokenInavt varchar(max) =
                 (
@@ -87,7 +95,7 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegex' collate Latin1_General_CI_AI
+                where CP.[Name] = 'GuideRegex' 
             );
 
 			declare @GuideRegexScannerData nvarchar(500) =
@@ -95,7 +103,7 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegexScanner' collate Latin1_General_CI_AI
+                where CP.[Name] = 'GuideRegexScanner' 
             );
 
             --CONVERT(varchar,@Existingdate,3) as [DD/MM/YY]
@@ -133,7 +141,8 @@ begin
                                            + '"BillingEmail":"' + isnull(convert(varchar(50), @DefaultEmail), 'N/A')
                                            + '",' + '"PickUpManifestEmail":"'
                                            + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
-                                           + '"Token":"' + isnull(LogTokenPOD, '') + +'"}'
+                                           + '"Token":"' + isnull(LogTokenPOD, '') + +'",'
+										   + '"StationId":"'+ @StationId + '"}'
                                     from LogTokenPOD                 pod with (nolock)
                                         inner join SenderReceiver    sr with (nolock)
                                             on (sr.ID = pod.IdCourierman)
