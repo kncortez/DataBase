@@ -43,7 +43,7 @@ BEGIN
     INSERT INTO @tblVisitPointId
     SELECT
         SUBSTRING(Item, 1, LEN(Item)) ItemNumber
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@VisitPointId, ',') WITH (NOLOCK)
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@VisitPointId, ',')
 
     DECLARE @tblIdCierre TABLE(
         CierreId int
@@ -52,7 +52,7 @@ BEGIN
     INSERT INTO @tblIdCierre
     SELECT
         SUBSTRING(Item, 1, LEN(Item)) ItemNumber
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@IdCierre, ',') WITH (NOLOCK)
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@IdCierre, ',')
 
     DECLARE @tblIdAccount TABLE(
         AccountId int
@@ -61,7 +61,7 @@ BEGIN
     INSERT INTO @tblIdAccount
     SELECT
         SUBSTRING(Item, 1, LEN(Item)) ItemNumber
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@IdAccount, ',') WITH (NOLOCK)
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@IdAccount, ',')
 
 
     SELECT

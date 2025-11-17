@@ -17,7 +17,7 @@ BEGIN
     SELECT 
         SUBSTRING(Item, 1, 2),
         TRY_CONVERT(INT, SUBSTRING(Item, 3, LEN(Item)))
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',') WITH(NOLOCK);
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuidesP, ',');
 
     -- =====================================
     -- Subconsultas pre-agrupadas (1 ejecución)
