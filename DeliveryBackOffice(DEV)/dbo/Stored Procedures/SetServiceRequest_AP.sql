@@ -61,6 +61,10 @@ BEGIN
         FROM gen
         OPTION (MAXRECURSION 10000);
 
+        
+        DECLARE @Segment NVARCHAR(10) ='';
+        DECLARE @OrderUserCreated VARCHAR(100) = '';
+
         /*****************************************************************************************************************************/
         /******** TABLA TEMPORAL #GUIDETABLE PARA UNIR REGISTROS RECIBIDOS DE DELIVERYORDERS Y CORRELATIVOS AUTOGENERADOS ************/
         /*****************************************************************************************************************************/
@@ -120,16 +124,15 @@ BEGIN
                NULL 'HubDestinationId',
                NULL 'SourceSystemId',
                NULL 'CatSystemId',
-               NULL 'Segment',
                NULL 'CatModuleId',
                NULL 'IdCustomer',
-               NULL 'OrderUserCreated',
                NULL 'SalePipeLineId',
 			   '  ' AS 'ReceiverCountryId',
                [ReceiverIdTownship],
 			   [ReceiverIdSettlement],
-			   [SenderIdSettlement]
-
+			   [SenderIdSettlement],
+               @Segment AS 'Segment',
+               @OrderUserCreated AS 'OrderUserCreated'
         INTO #GuideTable
         FROM @TblDeliveryOrders
             LEFT JOIN @CorrelativeTable C
@@ -167,8 +170,6 @@ BEGIN
                [CustomerID]
         FROM @TblServiceRequest;
 
-        ALTER TABLE #GuideTable ALTER COLUMN Segment NVARCHAR(10);
-        ALTER TABLE #GuideTable ALTER COLUMN OrderUserCreated VARCHAR(100);
 		
         /*****************************************************************************/
         /* REALIZA LA BÚSQUEDA DE LOS ID'S DE LOS MUNICIPIOS Y LOS AGREGA A LA TABLA */
@@ -661,8 +662,8 @@ BEGIN
 		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) 
                                 FROM DeliveryOrder do WITH (NOLOCK)
 		                            INNER JOIN @CorrelativeTable ct
-		                                ON do.Guide_Number = ct.Guide_Number
-                                        AND do.Guide_Serie = ct.Guide_Serie
+		                                ON do.Guide_Serie = ct.Guide_Serie
+                                        AND do.Guide_Number = ct.Guide_Number
 		                            INNER JOIN Membership mb
 		                                ON do.IdCustomer = mb.CustomerId
 		                        WHERE mb.CatMembershipStatusId = 3
