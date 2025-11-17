@@ -564,6 +564,7 @@
     <Build Include="dbo\Tables\CatDataLinkStatus.sql" />
     <Build Include="dbo\Tables\CatCurrencyCOD.sql" />
     <Build Include="dbo\Tables\CatCountry.sql" />
+    <Build Include="dbo\Tables\CatPartyResponsible.sql" />
     <Build Include="dbo\Tables\CatCorrelativeCOD.sql" />
     <Build Include="dbo\Tables\CatContainerSubtype.sql" />
     <Build Include="dbo\Tables\CatConfigurableService.sql" />
