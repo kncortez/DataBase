@@ -296,7 +296,7 @@ BEGIN
            ord.Guide_Number
     INTO #RevalueGuides
     FROM #listGuidesIncluded lst
-        JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
             ON ord.Guide_Number = lst.Guide_Number
                AND ord.Guide_Serie = lst.Guide_Serie
 		LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)

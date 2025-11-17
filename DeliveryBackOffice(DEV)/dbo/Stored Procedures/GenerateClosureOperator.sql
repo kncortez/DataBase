@@ -108,7 +108,7 @@ BEGIN
 
     INTO #TempClosureDetail
     FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
-        JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
             ON DOR.Sender_ID = VPC.CodeOfReference
         LEFT JOIN @TEMPLATEDETAIL IND
             ON IND.guideserie = DOR.Guide_Serie
@@ -146,7 +146,7 @@ BEGIN
 
     FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
          
-        JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+        INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
@@ -308,14 +308,14 @@ BEGIN
                            0
                    END 'CountFacturaCard'
         FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
-            JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON DOR.Sender_ID = VPC.CodeOfReference
             LEFT JOIN @TEMPLATEDETAIL IND
                 ON IND.guideserie = DOR.Guide_Serie
                    AND IND.guidenumber = DOR.Guide_Number
             LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
                 ON INH.inv_pk_id = IND.header
-            JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
                 ON STO.StatusOrderId = DOR.StatusOrderId
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
                 ON DOPD.guideserie = DOR.Guide_Serie
@@ -381,7 +381,7 @@ BEGIN
 			   0 'CountFacturaCard'
 			FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
          
-        JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+        INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
@@ -441,7 +441,7 @@ BEGIN
 				   ELSE 0
 			   END 'CountFacturaZigi'
 		FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
-			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
 				ON DOR.Sender_ID = VPC.CodeOfReference
 			LEFT JOIN @TEMPLATEDETAIL IND
 				ON IND.guideserie = DOR.Guide_Serie
@@ -495,7 +495,7 @@ BEGIN
 			   0 'TotalFacturaZigi',
 			   0 'CountFacturaZigi'
 		FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
-		JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+		INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
 			ON CTS.IdTypeService = DOPD.TypeServiceId
 		LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
 			ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
