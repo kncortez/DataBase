@@ -28,18 +28,18 @@ BEGIN
 	DECLARE @AccountExp NVARCHAR(30),
 			@AccountCOD NVARCHAR(30),
             @AccountZigi NVARCHAR(30);
-	DECLARE @IdCountry NVARCHAR(2) = (SELECT CountryId FROM VisitPointClient WHERE CodeOfReference = @VisitPointId)
+	DECLARE @IdCountry NVARCHAR(2) = (SELECT CountryId FROM VisitPointClient WITH (NOLOCK) WHERE CodeOfReference = @VisitPointId)
 
 	SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')' 
-	FROM ClosureAccount 
+	FROM ClosureAccount WITH (NOLOCK)
 	WHERE Name = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
 
 	SELECT @AccountCOD = Name +' '+ '(' +AccountNumber +')' 
-	FROM ClosureAccount 
+	FROM ClosureAccount WITH (NOLOCK)
 	WHERE Name = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
 
     SELECT @AccountZigi = Name +' '+ '(' +AccountNumber +')' 
-    FROM ClosureAccount 
+    FROM ClosureAccount WITH (NOLOCK)
     WHERE Name = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
 
     IF (@VisitPointId > 0 AND @IdCierre > 0)

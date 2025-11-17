@@ -33,21 +33,21 @@ BEGIN
             @AccountZigi NVARCHAR(30);
 
     SELECT @IdCountry = CountryId
-    FROM VisitPointClient
+    FROM VisitPointClient WITH (NOLOCK)
     WHERE CodeOfReference = @VisitPointId
 
     SELECT @Account = Name + ' ' + '(' + AccountNumber + ')'
-    FROM dbo.ClosureAccount
+    FROM dbo.ClosureAccount WITH (NOLOCK)
     WHERE Description = 'Cuenta Express Center'
           AND ISNULL(IdCountry, 'GT') = @IdCountry
 
     SELECT @AccountCOD = Name + ' ' + '(' + AccountNumber + ')'
-    FROM dbo.ClosureAccount
+    FROM dbo.ClosureAccount WITH (NOLOCK)
     WHERE Description = 'Cuenta Área COD'
           AND ISNULL(IdCountry, 'GT') = @IdCountry
 
     SELECT @AccountZigi = Name + ' ' + '(' + AccountNumber + ')'
-    FROM dbo.ClosureAccount
+    FROM dbo.ClosureAccount WITH (NOLOCK)
     WHERE Description = 'Cuenta Zigi'
           AND ISNULL(IdCountry, 'GT') = @IdCountry
 
@@ -88,7 +88,7 @@ BEGIN
                      ) 'TotalGeneral',
                -- FIN MODIFICACIÓN
                CCC.CodeISO AS CurrencySymbol
-        FROM dbo.AccountingClosuresHeaderVisitPoint ACH
+        FROM dbo.AccountingClosuresHeaderVisitPoint ACH WITH (NOLOCK)
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
             -- Subconsulta para COD Cash (evitar duplicados):
@@ -169,7 +169,7 @@ BEGIN
                          0
                      ) 'TotalGeneral',
                CCC.CodeISO AS CurrencySymbol
-        FROM dbo.AccountingClosuresHeaderVisitPoint ACH
+        FROM dbo.AccountingClosuresHeaderVisitPoint ACH WITH (NOLOCK)
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
             -- Subconsulta para COD Cash (evitar duplicados):
@@ -249,7 +249,7 @@ BEGIN
                          0
                      ) 'TotalGeneral',
                CCC.CodeISO AS CurrencySymbol
-        FROM dbo.AccountingClosuresHeaderVisitPoint ACH
+        FROM dbo.AccountingClosuresHeaderVisitPoint ACH WITH (NOLOCK)
             INNER JOIN VisitPointClient VPC WITH (NOLOCK)
                 ON ACH.VisitPoint = VPC.IdVisitPointClient
             -- Subconsulta para COD Cash (evitar duplicados):

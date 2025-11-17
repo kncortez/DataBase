@@ -34,48 +34,48 @@ BEGIN
 	DECLARE @CountryId NVARCHAR(2)
 
 	SELECT @CountryId = CountryId
-	FROM VisitPointClient
+	FROM VisitPointClient WITH (NOLOCK)
 	WHERE CodeOfReference = @VisitPointId
 
-	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @CountryId
-	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @CountryId
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @CountryId
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @CountryId
      -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
-    SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @CountryId
+    SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @CountryId
     -- Fin Modificación
     SET @Estandar =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure
+        FROM CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Estándar'
     );
     SET @Entrega =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure
+        FROM CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Entrega'
     );
     SET @Recepcion =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure
+        FROM CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Recepción'
     );
     SET @Devolucion =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure
+        FROM CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Devolución'
     );
     SET @Traslado =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure
+        FROM CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Traslado'
     );
     SET @Internacional =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure
+        FROM CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Internacional'
     );
     -- FIN MODIFICACIÓN
@@ -163,15 +163,6 @@ BEGIN
 			 AND costd.Amount > 0
 			 ORDER BY costd.IdCostDetail desc
 		)costd
-		--LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
-  --          ON costd.IdCost = cost.IdCost
-		--	 AND costd.Amount > 0
-             --  AND
-             --  (
-                  -- DOPD.TypeofInOutMoneyId = 6
-                  -- AND
-				   --costd.Voucher != ''
-            --  )
         LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
 			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
@@ -248,7 +239,7 @@ BEGIN
           AND NOT EXISTS
     (
         SELECT 1
-        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
         WHERE ACD.Fel =
         (
             SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
@@ -391,13 +382,6 @@ BEGIN
                                 OR DOPD.TypeofInOutMoneyId = 2
                             )
                             AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion ) THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -470,13 +454,6 @@ BEGIN
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 1
                             AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion, @Traslado ) THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -498,13 +475,6 @@ BEGIN
                                 OR DOPD.TypeofInOutMoneyId = 2
                             )
                             AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion ) THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -527,13 +497,6 @@ BEGIN
                 CASE
                        WHEN DOPD.TypeofInOutMoneyId = 10
                             AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion, @Traslado ) THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -581,7 +544,7 @@ BEGIN
                   AND NOT EXISTS
             (
                 SELECT 1
-                FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+                FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
                 WHERE ACD.GuideSerie = DOR.Guide_Serie
                       AND ACD.GuideNumber = DOR.Guide_Number
 

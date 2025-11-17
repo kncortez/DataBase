@@ -134,7 +134,7 @@ BEGIN
         ON cst.GuideSerie = ord.Guide_Serie AND cst.GuideNumber = ord.Guide_Number
     LEFT JOIN InvoiceAgg ind
         ON ind.GuideSerie = ord.Guide_Serie AND ind.GuideNumber = ord.Guide_Number
-    LEFT JOIN dbo.invoiceHeader inh
+    LEFT JOIN dbo.invoiceHeader inh WITH (NOLOCK)
         ON inh.inv_pk_id = ind.HeaderId AND inh.inv_invoiceOfCreditNote IS NULL
     LEFT JOIN AnticipatedAgg ach
         ON ach.CustomerId = ord.IdCustomer

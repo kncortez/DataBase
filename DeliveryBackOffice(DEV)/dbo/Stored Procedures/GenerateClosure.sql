@@ -236,7 +236,7 @@ BEGIN
                END 'CountZigi'
 			FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
          
-        INNER JOIN CatTypeServiceClosure CTS 
+        INNER JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
@@ -330,7 +330,7 @@ BEGIN
                    'Cierre generado exitosamente' Message,
                    Value 'URL',
                    @HeaderClosures 'IdCierre'
-            FROM ConfigParams
+            FROM ConfigParams WITH(NOLOCK)
             WHERE Name = 'ClosureExpressCenter';
 
 			select * from #TempClosureDetail;

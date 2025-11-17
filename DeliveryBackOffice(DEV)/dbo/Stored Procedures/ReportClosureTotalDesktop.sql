@@ -22,18 +22,18 @@ BEGIN
     DECLARE @AccountExp NVARCHAR(30),
             @AccountCOD NVARCHAR(30),
             @AccountZigi NVARCHAR(30);
-    DECLARE @IdCountry NVARCHAR(2) = (SELECT CountryId FROM VisitPointClient WHERE CodeOfReference = @VisitPointId)
+    DECLARE @IdCountry NVARCHAR(2) = (SELECT CountryId FROM VisitPointClient WITH (NOLOCK) WHERE CodeOfReference = @VisitPointId)
 
     SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')' 
-    FROM ClosureAccount 
+    FROM ClosureAccount WITH (NOLOCK)
     WHERE Name = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
 
     SELECT @AccountCOD = Name +' '+ '(' +AccountNumber +')' 
-    FROM ClosureAccount 
+    FROM ClosureAccount WITH (NOLOCK)
     WHERE Name = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
 
     SELECT @AccountZigi = Name +' '+ '(' +AccountNumber +')' 
-    FROM ClosureAccount 
+    FROM ClosureAccount WITH (NOLOCK)
     WHERE Name = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
 
     DECLARE @tblVisitPointId TABLE(
@@ -43,7 +43,7 @@ BEGIN
     INSERT INTO @tblVisitPointId
     SELECT
         SUBSTRING(Item, 1, LEN(Item)) ItemNumber
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@VisitPointId, ',')
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@VisitPointId, ',') WITH (NOLOCK)
 
     DECLARE @tblIdCierre TABLE(
         CierreId int
@@ -52,7 +52,7 @@ BEGIN
     INSERT INTO @tblIdCierre
     SELECT
         SUBSTRING(Item, 1, LEN(Item)) ItemNumber
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@IdCierre, ',')
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@IdCierre, ',') WITH (NOLOCK)
 
     DECLARE @tblIdAccount TABLE(
         AccountId int
@@ -61,7 +61,7 @@ BEGIN
     INSERT INTO @tblIdAccount
     SELECT
         SUBSTRING(Item, 1, LEN(Item)) ItemNumber
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@IdAccount, ',')
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@IdAccount, ',') WITH (NOLOCK)
 
 
     SELECT
