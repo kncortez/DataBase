@@ -55,7 +55,8 @@ CREATE PROCEDURE [dbo].[SetFinishPickUp]
     @PickupEmail NVARCHAR(50) = '',
     @ReferencesGuide TblReferencesList READONLY,  
 	  @ContainerReferences TblContainerList READONLY,
-	  @IdCountry NVARCHAR(2)= 'GT'
+	  @IdCountry NVARCHAR(2)= 'GT',
+   @StationId INT
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -170,6 +171,7 @@ BEGIN
                    ,DateCreated
                    ,TokenUpdated
                    ,DateUpdated
+				   ,StationId
                   )
                   VALUES
                   (
@@ -190,6 +192,7 @@ BEGIN
                     ,GETDATE()
                     ,NULL
                     ,NULL
+					,@StationId
                   )
                
                IF(@InGuides <>'')
