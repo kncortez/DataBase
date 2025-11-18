@@ -178,12 +178,12 @@ BEGIN
         SET SenderIdTownship =
             (
                 SELECT IdTownship
-                FROM [DeliveryBackOffice].[dbo].[Township]
+                FROM [DeliveryBackOffice].[dbo].[Township] WITH(NOLOCK)
                 WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Town)
                       AND IdProvince =
                       (
                           SELECT IdProvince
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH(NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
                       )
             ),
@@ -237,7 +237,7 @@ BEGIN
 			ReceiverCountryId = 
 			(
 				SELECT TOP 1 IdCountry
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH(NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
 			)
 			----------------------------------------------
@@ -495,7 +495,7 @@ BEGIN
                GETDATE()
         FROM #GuideTable GT;
 
-        INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece
+        INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece 
         (
             [GuideSerie],
             [GuideNumber],
@@ -521,40 +521,40 @@ BEGIN
             [CategoryCheck],
             [StatusOrderId],
             [IsDry],
-			[ParcelCode]
+            [ParcelCode]
         )
-        SELECT GTB.Guide_Serie,
-               GTB.Guide_Number,
-               0,
-               0,
-               0,
-               0,
-               0,
-               NULL,
-			   CASE 
-				   WHEN GTB.IdCountrySender = 'GT' THEN 'GTQ' 
-				   WHEN GTB.IdCountrySender = 'HN' THEN 'HNL' 
-				   WHEN GTB.IdCountrySender = 'SV' THEN 'USD'
-				   ELSE 'USD'
-			   END AS [Currency],
-               0,
-               GETDATE(),
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               1,
-               GTB.Pieces_Dry,
-			   NULL
-        FROM  #GuideTable GTB
-
+        SELECT
+            GTB.Guide_Serie,
+            GTB.Guide_Number,
+            0,
+            0,
+            0,
+            0,
+            0,
+            NULL,
+            CC.CodeISO AS Currency,
+            0,
+            GETDATE(),
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            1,
+            GTB.Pieces_Dry,
+            NULL
+        FROM #GuideTable GTB
+        LEFT JOIN DeliveryCurrency DC
+            ON DC.Currency_IdCountry = GTB.IdCountrySender
+            AND DC.Currency_Status = 1
+        LEFT JOIN CatCurrencyCOD CC
+            ON CC.IdCatCurrencyCOD = DC.IdCurrencyCOD;
 
         DECLARE @idcustomer INT =
                 (
