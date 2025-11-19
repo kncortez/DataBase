@@ -1,6 +1,6 @@
-/* =================================================
+ï»¿/* =================================================
    Script:    Ajuste de tarifas de Honduras
-   Propósito: Script para modificar las tarifas de envios en los portales en Honduras, por cambio de jerarquia.
+   PropÃ³sito: Script para modificar las tarifas de envios en los portales en Honduras, por cambio de jerarquia.
    Autor:     Walter Orozco
    Historia:  FDAPI-4781 [FDAPI-5031]
    Fecha:     2025-11-19
@@ -15,7 +15,7 @@ BEGIN TRY
 	DECLARE @TownDC INT = (SELECT IdTownship FROM DeliveryBackOffice.dbo.Township WITH(NOLOCK) WHERE TownshipName = 'DISTRITO CENTRAL' ) --Tegucigalpa , Comayaguela
 	DECLARE @SegmentTypeMetro INT = (SELECT CrsId FROM DeliveryBackOffice.dbo.CatRateSegment WITH(NOLOCK) WHERE CrsName = 'METRO HN')
 
-	--Actualizar clasificación de NACIONAL HN a METRO HN
+	--Actualizar clasificaciÃ³n de NACIONAL HN a METRO HN
 	UPDATE  RTC
 	SET SegmentTypeId = @SegmentTypeMetro
 	FROM DeliveryBackOffice.dbo.RateTownshipCoverage RTC WITH(NOLOCK)
