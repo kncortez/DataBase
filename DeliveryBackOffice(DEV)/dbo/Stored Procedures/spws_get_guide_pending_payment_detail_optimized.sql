@@ -130,19 +130,19 @@ BEGIN
     FROM #listGuides lg
     INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
         ON ord.Guide_Serie = lg.Guide_Serie AND ord.Guide_Number = lg.Guide_Number
-    LEFT JOIN CostAgg cst
+    LEFT JOIN CostAgg cst WITH (NOLOCK)
         ON cst.GuideSerie = ord.Guide_Serie AND cst.GuideNumber = ord.Guide_Number
-    LEFT JOIN InvoiceAgg ind
+    LEFT JOIN InvoiceAgg ind WITH (NOLOCK)
         ON ind.GuideSerie = ord.Guide_Serie AND ind.GuideNumber = ord.Guide_Number
     LEFT JOIN dbo.invoiceHeader inh WITH (NOLOCK)
         ON inh.inv_pk_id = ind.HeaderId AND inh.inv_invoiceOfCreditNote IS NULL
-    LEFT JOIN AnticipatedAgg ach
+    LEFT JOIN AnticipatedAgg ach WITH (NOLOCK)
         ON ach.CustomerId = ord.IdCustomer
-    LEFT JOIN RateAgg rate
+    LEFT JOIN RateAgg rate WITH (NOLOCK)
         ON rate.IdCustomer = ord.IdCustomer
-    LEFT JOIN RateCODAgg rcod
+    LEFT JOIN RateCODAgg rcod WITH (NOLOCK)
         ON rcod.RateId = rate.RateId
-    LEFT JOIN PaymentAgg pyt
+    LEFT JOIN PaymentAgg pyt WITH (NOLOCK)
         ON pyt.GuideSerie = ord.Guide_Serie AND pyt.GuideNumber = ord.Guide_Number
     LEFT JOIN dbo.CatPaymentType cpt_pay WITH(NOLOCK)
         ON cpt_pay.PayTypeId = pyt.PayTypeId

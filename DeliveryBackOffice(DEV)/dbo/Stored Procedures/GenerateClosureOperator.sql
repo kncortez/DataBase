@@ -65,10 +65,9 @@ BEGIN
                    AND rua.RuaRowStatus = 1
             INNER JOIN [dbo].Account ac WITH (NOLOCK)
                 ON ac.AccIdAccount = rua.RuaIdAccount
-                   AND ac.AccRowStatus = 1
             INNER JOIN VisitPointByUser vp WITH (NOLOCK)
                 ON vp.RegisterUserID = usr.UsrIdUser
-        WHERE ac.AccIdAccount = @UserId
+        WHERE ac.AccIdAccount = @UserId AND ac.AccRowStatus = 1
     );
 
 
@@ -150,7 +149,7 @@ BEGIN
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		JOIN invoiceHeader INH WITH (NOLOCK)
+		INNER JOIN invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
         
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
