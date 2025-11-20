@@ -1,18 +1,15 @@
-﻿-- =============================================
--- Author:		<Morales, Oscar>
--- Create date: <2021-11-03>
--- Description:	<Recupera información detallada de la guía a facturar>
--- =============================================
--- =============================================
--- Author:		<Ruiz, Andres>
--- Create date: <2022-05-31>
--- Description:	< Adicion de manejo de cupones para que la información de la factura sea correcta >
--- =============================================
--- =============================================
--- Author:		<Jerson Ochoa>
--- Create date: <2022-05-31>
--- Description:	< Actualización para manejo de membresías y suscripciones >
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[supportCreateNewExcV2]
+   Propósito: Recupera información detallada de la guía a facturar
+   Autor:     Morales, Oscar
+   Historia:  ---
+   Fecha:     2021-11-03
+
+=== CHANGELOG ============================
+2022-05-31 | Historia/épica:            | Autor: Ruiz, Andres    |
+2022-05-31 | Historia/épica:            | Autor: Jerson Ochoa    |
+2025-11-19 | Historia/épica: FDAPI-4961 | Autor: Brandon Pedroza |
+=========================================== */
 CREATE PROCEDURE [dbo].[GetBillingGuideDetail]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT
@@ -35,6 +32,7 @@ BEGIN
     DECLARE @CountryByGuide NVARCHAR(2);
 
     DECLARE @CostId INT;
+    DECLARE @IdTypeOfMoney INT = 1;
 
     -- Valores si cupon fue aplicado
     DECLARE @AppliedCoupon INT = 0;
@@ -79,14 +77,14 @@ BEGIN
     );
 	DECLARE @DescriptionReturn NVARCHAR(MAX);
 
-    SET @CostId =
-    (
-        SELECT TOP 1
-               Co.IdCost
-        FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
-        WHERE Co.ProductNumber = @ProductNumber
-        ORDER BY IdCost DESC
-    );
+    SELECT TOP 1
+       @CostId        = Co.IdCost,
+       @IdTypeOfMoney = ISNULL(CD.IdTypeOfMoney,1)
+    FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
+       LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+       ON Co.IdCost = CD.IdCost
+    WHERE Co.ProductNumber = @ProductNumber
+    ORDER BY Co.IdCost DESC;
 	
 	IF @TypeService IS NULL
 		SET @TypeService = 'STD'
@@ -459,7 +457,7 @@ BEGIN
                    1
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticle
-              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
+              AND ca.IdCountry = @CountryByGuide;
 			
         IF @AmountCollect IS NOT NULL
            AND @AmountCollect > 0
@@ -472,7 +470,7 @@ BEGIN
                    1
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticleCollect
-              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
+              AND ca.IdCountry = @CountryByGuide;
 
         IF @AmountWeight IS NOT NULL
            AND @AmountWeight > 0
@@ -485,7 +483,7 @@ BEGIN
                    1
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticleWeight
-              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
+              AND ca.IdCountry = @CountryByGuide;
 
         IF @AmountSecure IS NOT NULL
            AND @AmountSecure > 0
@@ -498,7 +496,7 @@ BEGIN
                    1
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticleSecure
-              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
+              AND ca.IdCountry = @CountryByGuide;
     END;
 
 		
@@ -510,7 +508,8 @@ BEGIN
 			   Else [Description] End [Description] ,
 			Price,
 			Category,
-			SendToInvoice
+			SendToInvoice,
+			@IdTypeOfMoney AS TypeMoneyPayment
 	FROM @GuideDetail;
 
 	SET NOCOUNT OFF;
