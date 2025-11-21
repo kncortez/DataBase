@@ -6,7 +6,8 @@ IF OBJECT_ID('dbo.GuideStationStaging', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.GuideStationStaging
     (
-        Guide_Serie NVARCHAR(10) NOT NULL,
+        GuideStationStagin BIGINT PRIMARY KEY IDENTITY(1,1),
+		Guide_Serie NVARCHAR(10) NOT NULL,
         Guide_Number BIGINT NOT NULL,
         IdStation INT NOT NULL,
         CONSTRAINT UX_GuideStationStaging UNIQUE (Guide_Serie, Guide_Number) 
@@ -78,7 +79,7 @@ BEGIN TRY
     -------------------------------------------------------
     -- SELECCIONAOS LA CANTIDAD DE REGISTROS POR LOTE PARA PROCESARLAS
     -------------------------------------------------------
-    DECLARE @BatchSize INT = 5000; -- AJUSTA según pruebas: 500,1000,2000...
+    DECLARE @BatchSize INT = 5000; 
     DECLARE @RowsAffected INT = 1;
     DECLARE @BatchesDone INT = 0;
 

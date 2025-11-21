@@ -1,12 +1,14 @@
-﻿-- =============================================
--- Author:		<Hugo, Gomez>
--- Create date: <2020-03-04>
--- Description:	<Cambia de estado de recolectado a ingreso a instalaciones>
--- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-06-11>
--- Description: <Se agrega validacion para consulta de guia existente pero que no pertenece al pais logueado>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[spws_set_route_settlement_status]
+   Propósito: <Cambia de estado de recolectado a ingreso a instalaciones>
+   Autor:     <Hugo, Gomez>
+   Historia:  <>  
+   Fecha:     2020-03-04
+============================================
+=== CHANGELOG ================================
+--  2024-06-11 | Historia/épica:  | Autor: Daniel, Ramirez |
+=========================================== */
+
 CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
@@ -170,14 +172,6 @@ BEGIN
                @Token,
                GETDATE()
         FROM DeliveryOrderPiece ord WITH (NOLOCK)
-        --LEFT JOIN DeliveryOrderPaymentDetail dopd
-        --    ON dopd.GuideSerie = @GuideSerie
-        --       AND dopd.GuideNumber = @GuideNumber
-        --LEFT JOIN ServiceManagement sm
-        --    ON sm.IdSchedulePickup = dopd.IdHeaderRecolection
-        --LEFT JOIN RouteAssigment ra
-        --    ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
-        --AND ra.IdRoute = @IdRoute
         WHERE (
                   ord.GuideNumber = @GuideNumber
                   AND ord.GuideSerie = @GuideSerie
@@ -188,18 +182,6 @@ BEGIN
                       OR ord.StatusOrderId IS NULL
                   )
               );
-        --AND --YA NO APLICA PORQUE EN LIQUIDACIÓN DE RECOLECCIÓN SE PUEDE LIQUIDAR GUÍAS QUE NO TIENEN
-        --ASOCIADAS RECOLECCIONES
-        --(
-        --    dopd.DopId IS NULL -- No tiene asociada una solicitud de recolección, Ej. generada
-        --    OR
-        --    (
-        --        dopd.DopId IS NOT NULL -- tiene una solicitud de recolección
-        --        --AND ra.IdRouteAssigment IS NOT NULL --pero no tiene ruta asignada
-        --    )
-        --    OR dopd.IdHeaderRecolection IS NULL -- la guía se generó pero no se solicitó recolección
-        --);
-
 		
 
         SET @RModified3 = @@rowcount;
@@ -214,24 +196,11 @@ BEGIN
                       ord.GuideNumber = @GuideNumber
                       AND ord.GuideSerie = @GuideSerie
                       AND ord.NoPiece = @GuidePiece
-                  --Se comenta porque es la misma validación que se hace anteriormente
-                  --AND
-                  --(
-                  --    ord.StatusOrderId NOT IN ( 7, 11, 5 )
-                  --    OR ord.StatusOrderId IS NULL
-                  --)
                   );
-            --inner join dbo.DeliveryOrderPaymentDetail dop on (ord.GuideNumber = dop.GuideNumber and ord.GuideSerie = dop.GuideSerie and  (ord.StatusOrderId = 15 and dop.ShipmentCompleted = 1))
+
 
             SET @RModified = @@rowcount;
         END;
-        --end
-        --else
-        --begin 
-        --		update  dbo.DeliveryOrderPiece set StatusOrderId =  @stattus
-        --		from dbo.DeliveryOrderPiece ord
-        --		 inner join #listGuides ls on (ord.GuideNumber = ls.ItemNumber and ord.GuideSerie = ls.ItemSerie)
-        --end
         ---variable que cuenta cuantas piezas estan asociadas a las guias.
         DECLARE @val INT =
                 (
@@ -250,7 +219,6 @@ BEGIN
                           AND StatusOrderId = @stattus
                 );
 
-        --declare @value int = (select count (GuideNumber) from DeliveryOrderPiece where GuideNumber in (select ItemNumber from #listGuides))
 
         ---	 insertar checkpoint de recolectado.	
 		IF( 
@@ -523,7 +491,7 @@ BEGIN
 					DECLARE @GuideCurrentStatus INT = -1;
 
 					BEGIN TRY
-						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
 						SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
 						SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);

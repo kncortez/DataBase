@@ -62,8 +62,8 @@ BEGIN
 	SELECT @BelongConuntry = MAX(X.Number)
 	FROM (
 		SELECT CASE
-				WHEN IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry
-					OR IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry THEN
+				WHEN SenderCountryId = @IdCountry
+					OR ReceiverCountryId = @IdCountry THEN
 					1
 				ELSE
 					0
@@ -614,6 +614,7 @@ BEGIN
                                             AND dop.GuideSerie = gpt.GuideSerie
 										INNER JOIN @PiecesGuideRelatedTable pgt
 										    ON gpt.GuideNumber = pgt.GuideNumber
+											AND pgt.GuideSerie = gpt.GuideSerie
 											AND gpt.NumberPieces = pgt.NumberRelatedPieces
 										WHERE WHE.TypeConnectionId = 2
 

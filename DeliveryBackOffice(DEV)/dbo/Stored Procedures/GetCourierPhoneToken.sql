@@ -1,9 +1,14 @@
 ﻿
--- =============================================
--- Author:		<Hugo,Gomez>
--- Create date: <2021-02-11>
--- Description:	<Recotizacion>
--- =============================================
+/* =================================================
+   SP:        [dbo].[GetCourierPhoneToken]
+   Propósito: <Recotizacion>
+   Autor:     <ugo,Gomez>
+   Historia:  <>   
+   Fecha:     2021-02-11
+============================================
+=== CHANGELOG ================================
+-- 2025-11-17 | Historia/épica: FDAPI-4976 | Autor: Cristian Suazo |
+=========================================== */
 
 
 CREATE PROCEDURE [dbo].[GetCourierPhoneToken]
@@ -43,17 +48,17 @@ begin
     begin try
         -------------------------------------------------------------------------------------------------------------------------
         declare @phon int,
-				@StationId NVARCHAR(5)
+				@StationId INT
 
                 SELECT	TOP 1
-						@phon = ID,
+						@phon = SR.ID,
 						@StationId = HL.IdStation
                 FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] SR with (nolock)
 				LEFT JOIN HubLogistics HL WITH (NOLOCK)
 					ON SR.HubLogisticId = HL.IdHubLogistic
-                WHERE	ISNULL(SR.IdCountry, 'GT') = @IdCountry
-					AND	Phone like '%' + @Phone + '%'
-                    AND Estatus = 1
+                WHERE	SR.IdCountry = @IdCountry
+					AND	SR.Phone like '%' + @Phone + '%'
+                    AND SR.Estatus = 1
 
         declare @TokenInavt varchar(max) =
                 (
@@ -152,7 +157,7 @@ begin
                                            + '",' + '"PickUpManifestEmail":"'
                                            + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
                                            + '"Token":"' + isnull(LogTokenPOD, '') + +'",'
-										   + '"StationId":"'+ @StationId + '"}'
+										   + '"StationId":"'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'N/A') + '"}'
                                     from LogTokenPOD						pod with (nolock)
                                         inner join SenderReceiver			sr with (nolock)
                                             on (sr.ID = pod.IdCourierman)
