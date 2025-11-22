@@ -1,20 +1,16 @@
-﻿/*
--- =============================================
--- Author:		Luis Fernando Coti Itzep
--- Create date: 7 Octubre 2020
--- Description:	Inserta encabezado de factura
--- =============================================
--- =============================================
--- Author:		Cristian Suazo
--- Create date: 12-08-2024 
--- Description:	Se calcula y se inserta la moneda y el pais en InvoiceHeader
--- =============================================
--- =============================================
--- Author:		<Brandon Pedroza>
--- Create date: <30 Julio 2025>
--- Description:	<Facturacion SV - Se guardan datos de factura emitida para SV>
--- =============================================
-*/
+﻿/* =================================================
+   SP:        [dbo].[sps_headerInvoice]
+   Propósito: Inserta encabezado de factura
+   Autor:     Luis Fernando Coti Itzep
+   Historia:  ---
+   Fecha:     2020-10-07
+
+=== CHANGELOG ============================
+
+2024-08-12 | Historia/épica: ---          | Autor: Cristian Suazo  |
+2025-11-21 | Historia/épica: FDAPI-4961   | Autor: Brandon Pedroza |
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_headerInvoice]
 	-- Add the parameters for the stored procedure here
 	 @VpCodeOfReferences int
@@ -118,7 +114,8 @@ END
                         TokenCreated,
                         DateCreated,
                         TokenUpdated,
-                        DateUpdated
+                        DateUpdated,
+                        OperationConditionCode
                         )
                 SELECT @invoiceHeaderId
                         ,BI.DistrictCode
@@ -134,6 +131,7 @@ END
                         ,GETDATE()
                         ,NULL
                         ,NULL
+                        ,BI.OperationConditionCode
                     FROM @TblBuyerInfo BI
             END
         

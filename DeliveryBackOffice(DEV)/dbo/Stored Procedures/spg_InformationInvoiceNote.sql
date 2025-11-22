@@ -1,20 +1,17 @@
-﻿-- =============================================
--- Author:		Eduardo López
--- Create date: 22 Agost 2022
--- Description:	Retorna informacion de la factura para la creacion de Nota de Credito
--- =============================================
--- Author:		<Brandon Pedroza>
--- Modified:	<30 Julio 2025>
--- Description:	<Facturacion SV - Obtener informacion de factura para SV>
--- =============================================
--- Author:		<Oscar Rodriguez>
--- Modified:	<01 septiembre 2025>
--- Description:	<Fix para generacion de notas de credito para facturas en lotes de facturacion inactivos>
--- =============================================
--- Author:		<Brandon Pedroza>
--- Create date: <2025-09-11>
--- Description:	<Facturacion SV - se quita validacion isnull al consultar tabla invoiceHeader>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[spg_InformationInvoiceNote]
+   Propósito: Retorna información de la factura para la creación de Nota de Crédito
+   Autor:     Eduardo López
+   Historia:  ---
+   Fecha:     2022-08-22
+
+=== CHANGELOG ============================
+
+2025-07-30 | Historia/épica: ---        | Autor: Brandon Pedroza
+2025-09-01 | Historia/épica: ---        | Autor: Oscar Rodriguez 
+
+=========================================== */
+
 CREATE PROCEDURE [dbo].[spg_InformationInvoiceNote]
     -- Add the parameters for the stored procedure here
     @fel nvarchar(100),
@@ -46,7 +43,7 @@ begin
 			from [dbo].[invoiceHeader] with (nolock)
 			where inv_numberFEL = @fel
 			AND IdCountry = @IdCountry
-			AND CatInvoiceTypeId = @IdTypeDocument
+			AND inv_type = @IdTypeDocument
 		);
 	END
 	ELSE
