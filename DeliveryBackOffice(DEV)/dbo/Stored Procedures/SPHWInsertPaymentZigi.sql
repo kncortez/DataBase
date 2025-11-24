@@ -15,7 +15,10 @@ CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @PaidAmount         DECIMAL(10,2),
     @CollectValue       DECIMAL(10,2),
     @CODValue           DECIMAL(10,2),
-    @Token              NVARCHAR(50)
+    @Token              NVARCHAR(50),
+    @PhoneNumber        NVARCHAR(20) = NULL,
+    @IsGroup            BIT = 0,
+    @GeneratedMethod    NVARCHAR(100) = 'Identificación pendiente'
 AS
 BEGIN
     BEGIN TRY
