@@ -68,7 +68,7 @@ BEGIN
 			AND st.SettlementSatus = 1
 		)
 		BEGIN
-			RAISERROR('El municipio no pertene al pais especificado', 16, 1);
+			RAISERROR('El poblado no pertene al pais especificado o esta inhabilitado', 16, 1);
 			RETURN;
 		END
 
@@ -127,20 +127,20 @@ BEGIN
             DECLARE @IdProvice INT;
             DECLARE @ProvinceName NVARCHAR(100);
             DECLARE @TownshipName NVARCHAR(100);
-            DECLARE @IdSettlement INT;
+            DECLARE @IdTownship INT;
 
 
             SELECT TOP 1
 					@IdProvice = pr.IdProvince,
 					@ProvinceName = pr.ProvinceName,
 					@TownshipName = tw.TownshipName,
-					@IdSettlement = se.IdSettlement
+					@IdTownship = tw.IdTownship
             FROM dbo.Township tw WITH (NOLOCK)
                 INNER JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
 				INNER JOIN dbo.Settlement se WITH (NOLOCK)
 					ON se.IdProvince = pr.IdProvince AND se.IdTownship = tw.IdTownship
-            WHERE tw.IdTownship = @IdTownship;
+            WHERE se.IdSettlement = @IdSettlement;
 
 
             INSERT INTO dbo.VisitPointClient
@@ -441,20 +441,4 @@ BEGIN
     END CATCH;
 
 END;
-GO
-GRANT VIEW DEFINITION
-    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
-    AS [dbo];
-
-
-GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [ebarrios]
-    AS [dbo];
-
-
-GO
-GRANT ALTER
-    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
-    AS [dbo];
 
