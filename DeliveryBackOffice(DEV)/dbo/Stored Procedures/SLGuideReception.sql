@@ -15,16 +15,23 @@ AS
 BEGIN
 	BEGIN TRY
 		-- Variables
-		DECLARE @Status INT = 0;
+		DECLARE @Status INT = 0, 
+				@TypeService NVARCHAR(5) = NULL,
+				@IdKindOfVPC INT = NULL, 
+				@ExpectedKindOfVPCName NVARCHAR(100) = 'Smart Locker Extern';
 
 		-- Referencia
 		IF (@TicketNumber IS NOT NULL AND @GuideNumber <= 0)
 		BEGIN
 			SELECT
-				 @GuideSerie  = Guide_Serie
-				,@GuideNumber = Guide_Number
-				,@Status      = StatusOrderId
-			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+				  @GuideSerie  = DO.Guide_Serie
+				, @GuideNumber = DO.Guide_Number
+				, @Status      = DO.StatusOrderId
+				, @TypeService = DO.TypeService
+				, @IdKindOfVPC = VPC.IdKindOfVPClient
+			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+			LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
+				ON DO.Receiver_ID = VPC.CodeOfReference
 			WHERE Ticket_Number = @TicketNumber
 		END;
 
@@ -38,8 +45,14 @@ BEGIN
 
 		IF (@Status <= 0)
 		BEGIN
-			SET @Status =  ( SELECT StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) 
-                             WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber );
+			SELECT 
+				  @Status = DO.StatusOrderId
+				, @TypeService = DO.TypeService
+				, @IdKindOfVPC = VPC.IdKindOfVPClient
+			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK) 
+			LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
+				ON DO.Receiver_ID = VPC.CodeOfReference
+            WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber;
 		END;
 
 		-- Estados permitidos para registro de Smart Locker
@@ -61,6 +74,25 @@ BEGIN
 			SELECT
 				  500																										[IdResult]
 				, 'La guía se encuentra en un estado no permitido, asegurese de que se encuentre asignada a una ruta.'		[Message]
+			RETURN;
+		END;
+
+		--Verificar tipo de servicio STD
+		IF (@TypeService != 'STD')
+		BEGIN
+			SELECT
+				  500																								[IdResult]
+				, 'No se puede procesar la guía porque el tipo de servicio enviado no corresponde a estándar.'		[Message]
+			RETURN;
+		END
+
+		--Verificar que el destino de la guía sea hacia un smart locker
+		IF NOT EXISTS (	SELECT 1 FROM DeliveryBackOffice.dbo.KindOfVPClient WITH(NOLOCK) 
+						WHERE KindOfVPName = @ExpectedKindOfVPCName AND KindOfVPStatus = 1 AND IdKindOfVPClient = @IdKindOfVPC )
+		BEGIN
+			SELECT
+				  500																							[IdResult]
+				, 'El tipo de punto de visita no es válido para la dirección destino asociada a la guía.'		[Message]
 			RETURN;
 		END;
 
