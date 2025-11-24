@@ -1,5 +1,5 @@
 ﻿/* =================================================
-   SP:        [dbo].[supportCreateNewExcV2]
+   SP:        [dbo].[GetBillingGuideDetail]
    Propósito: Recupera información detallada de la guía a facturar
    Autor:     Morales, Oscar
    Historia:  ---
@@ -207,7 +207,7 @@ BEGIN
                          ),
            @DiscountType = N'TOT'
     FROM [dbo].[MembershipSubscriptionLog] MSL WITH (NOLOCK)
-        INNER JOIN [dbo].[Membership] M
+        INNER JOIN [dbo].[Membership] M WITH (NOLOCK)
             ON [MSL].[MembershipId] = [M].[IdMembership]
     WHERE [MSL].[LogGuideSerie] = @GuideSerie
           AND [MSL].[LogGuideNumber] = @GuideNumber
@@ -263,7 +263,7 @@ BEGIN
                          ),
            @DiscountType = N'TOT'
     FROM [dbo].[MembershipSubscriptionLog] MSL WITH (NOLOCK)
-        INNER JOIN [dbo].[Subscription] S
+        INNER JOIN [dbo].[Subscription] S WITH (NOLOCK)
             ON [MSL].[SubscriptionId] = [S].[IdSubscription]
     WHERE [MSL].[LogGuideSerie] = @GuideSerie
           AND [MSL].[LogGuideNumber] = @GuideNumber
@@ -455,7 +455,7 @@ BEGIN
                    @Amount,
                    ca.Category,
                    1
-            FROM CatArticleSAP ca
+            FROM CatArticleSAP ca WITH (NOLOCK)
             WHERE ca.Name = @NameArticle
               AND ca.IdCountry = @CountryByGuide;
 			
@@ -468,7 +468,7 @@ BEGIN
                    @AmountCollect,
                    ca.Category,
                    1
-            FROM CatArticleSAP ca
+            FROM CatArticleSAP ca WITH (NOLOCK)
             WHERE ca.Name = @NameArticleCollect
               AND ca.IdCountry = @CountryByGuide;
 
@@ -481,7 +481,7 @@ BEGIN
                    @AmountWeight,
                    ca.Category,
                    1
-            FROM CatArticleSAP ca
+            FROM CatArticleSAP ca WITH (NOLOCK)
             WHERE ca.Name = @NameArticleWeight
               AND ca.IdCountry = @CountryByGuide;
 
@@ -494,7 +494,7 @@ BEGIN
                    @AmountSecure,
                    ca.Category,
                    1
-            FROM CatArticleSAP ca
+            FROM CatArticleSAP ca WITH (NOLOCK)
             WHERE ca.Name = @NameArticleSecure
               AND ca.IdCountry = @CountryByGuide;
     END;
