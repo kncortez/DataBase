@@ -153,9 +153,6 @@ BEGIN
             ON gf.Id = dbs.ID
         INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
             ON sr.ID = dbs.ID_Courier;
-    --LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
-    --ON cs.IdStation = dbs.DispatchedStationId
-    --WHERE dbs.CATRouteId = @IdRoute;
 
     DECLARE @GuidesDetail TABLE
     (
