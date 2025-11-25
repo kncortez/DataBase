@@ -1,42 +1,17 @@
-﻿-- =============================================
--- Author:		<Hugo,Gomez>
--- Create date: <2021-02-06>
--- Description:	<Finaliza el proceso de recoleccion insertando informacion en las tablas de costos>
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-01-27>
--- Description:	< Actualización de logica para registro de pagos en efectivo desde CourierApp >
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-02-10>
--- Description:	< Manejo correcto de voucher y registro de pago >
--- =============================================
--- =============================================
--- Author:		<Michael,Espinoza>
--- Create date: <2022-02-10>
--- Description:	< Integracion de logica que permitira generar un manifiesto de piezas escaneada >
--- =============================================
--- =============================================
--- Author:		<Edelman,Vásquez>
--- Create date: <2022-06-20>
--- Description:	<Agregar filtro para validar que no tiene pagos de TC o Datafono, en dbo.CostDetail>
--- =============================================
--- Author:		<Tito Garcia>
--- Updated date:<18-11-2024>
--- Description:	<Se agrega nueva validación IsCompleted>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Updated date:<20-03-2025>
--- Description:	<Se pasa a entidades el Json>
--- =============================================
--- =============================================
--- Author:		<Edelman>
--- Updated date:<20-05-2025>
--- Description:	<Recolección por referencia y contenerización flujo POD>
--- =============================================
+﻿
+/* =================================================
+   SP:        [dbo].[SetFinishPickUp]
+   Propósito: <Recotizacion>
+   Autor:     <Hugo,Gomez>
+   Historia:  <>   
+   Fecha:     2021-02-06
+============================================
+=== CHANGELOG ================================
+-- 2025-11-25 | Historia/épica: FDAPI-4733 | Autor: Cristian Suazo |
+-- 20-05-2025 | Historia/épica: -- | Autor: Edelman |
+-- 20-03-2025 | Historia/épica: -- | Autor: Cristian Suazo |
+=========================================== */
+
 CREATE PROCEDURE [dbo].[SetFinishPickUp]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD22221,FD22361,FD22223,FD22359,FD22226',
@@ -55,7 +30,8 @@ CREATE PROCEDURE [dbo].[SetFinishPickUp]
     @PickupEmail NVARCHAR(50) = '',
     @ReferencesGuide TblReferencesList READONLY,  
 	  @ContainerReferences TblContainerList READONLY,
-	  @IdCountry NVARCHAR(2)= 'GT'
+	  @IdCountry NVARCHAR(2)= 'GT',
+   @StationId INT
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -170,6 +146,7 @@ BEGIN
                    ,DateCreated
                    ,TokenUpdated
                    ,DateUpdated
+				   ,StationId
                   )
                   VALUES
                   (
@@ -190,6 +167,7 @@ BEGIN
                     ,GETDATE()
                     ,NULL
                     ,NULL
+					,@StationId
                   )
                
                IF(@InGuides <>'')
