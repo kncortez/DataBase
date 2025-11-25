@@ -1,15 +1,17 @@
-﻿-- =============================================
--- Author:        <Cristian Suazo>
--- Updated date:<21-02-2025>
--- Description:    <Se crea sp para manejo de recolecciones en servicio PickupProcessingService>
--- =============================================
--- =============================================
--- Author:        <Edelman>
--- Updated date:<02-05-2025>
--- Description:    <Actualizar tablas de referencia y contenedores que se hayan procesado en el servicio recolección POD>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SetFinishPickUpBatch]
+   Propósito: <Consultar datos de courier con solo mandar numero de telefono>
+   Autor:     <Cristian Suazo>
+   Historia:  --    
+   Fecha:     2025-02-21
+============================================
+=== CHANGELOG ================================
+-- 2025-11-25 | Historia/épica: FDAPI-4733 | Autor: Cristian Suazo |
+-- 2025-05-25 | Historia/épica: -- | Autor: Edelman |
+=========================================== */
 
-CREATE PROCEDURE [dbo].[SetFinishPickUpBatch]
+
+CREATE PROCEDURE [dbo].[SetFinishPickUpBatch] 
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX),
     @IdPickup INT,
@@ -40,6 +42,7 @@ BEGIN
 
     DECLARE @CodeOfReference INT;
     DECLARE @CourierID INT;
+	DECLARE @StationId INT;
 
     -- insertar en tabla temporal posbibles mensajes de respuesta
     --IF OBJECT_ID('tempdb.dbo.#UpdateNow', 'U') IS NOT NULL DROP TABLE #UpdateNow;
@@ -161,6 +164,12 @@ BEGIN
         SET @FixedLongitude = NULL;
     END CATCH;
 
+		SET @StationId = 
+		(
+			SELECT StationId 
+			FROM FinishPickUpHeader WITH (NOLOCK)
+			WHERE SchedulePickupId = @IdPickup
+		)
 
         CREATE TABLE #Temp
         (
@@ -356,7 +365,8 @@ BEGIN
                     [DateCreated],
                     [DateCreatedInSystem],
                     [Observations],
-                    [Temperature_Celsius]
+                    [Temperature_Celsius],
+					[StationId]
                 )
                 SELECT ni.ItemSerie,
                        ni.ItemNumber,
@@ -365,7 +375,8 @@ BEGIN
                        GETDATE(),
                        GETDATE(),
                        NULL,
-                       NULL
+                       NULL,
+					   @StationId
                 FROM #listGuides ni;
 
                 -------------------------- Drop la tabla temporal -------------------------------------------------------------------
