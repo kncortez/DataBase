@@ -387,8 +387,16 @@ BEGIN
 
     END;
 
-    SELECT SUM(Total) AS COD_Manifest
-    FROM @GuidesDetail;
+     SELECT SUM(Total) - ISNULL(rdm.TotalApplied,0) AS COD_Manifest
+    FROM @GuidesDetail gd
+	LEFT JOIN (
+			SELECT 
+				DeliveryOrderBySettlementId,
+				SUM(AmountApplied) AS TotalApplied
+			FROM [DeliveryBackOffice].[dbo].[RelDepositManifest] WITH (NOLOCK)
+			GROUP BY DeliveryOrderBySettlementId
+		) rdm ON gd.id = rdm.DeliveryOrderBySettlementId
+		GROUP BY rdm.TotalApplied;
 
       SELECT 
 			gd.id,
@@ -398,11 +406,7 @@ BEGIN
 			gd.Delivered,
 			gd.Price,
 			gd.COD,
-			CASE 
-				WHEN gd.Total > ISNULL(rdm.TotalApplied, 0) 
-					THEN gd.Total - ISNULL(rdm.TotalApplied, 0)
-				ELSE gd.Total
-			END AS TOTAL,
+			gd.Total AS TOTAL,
 			gd.FEL,
 			gd.StatusOrderId,
 			gd.OrderDescription,
