@@ -553,6 +553,7 @@ BEGIN
         LEFT JOIN DeliveryCurrency DC
             ON DC.Currency_IdCountry = GTB.IdCountrySender
             AND DC.Currency_Status = 1
+            AND DC.DefaultPerCountry = 1
         LEFT JOIN CatCurrencyCOD CC
             ON CC.IdCatCurrencyCOD = DC.IdCurrencyCOD;
 
