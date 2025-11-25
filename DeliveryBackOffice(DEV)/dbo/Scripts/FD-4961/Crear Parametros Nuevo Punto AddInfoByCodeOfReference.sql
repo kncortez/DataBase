@@ -19,8 +19,8 @@ BEGIN TRY
         RowStatus
     ) VALUES
     (@codeOfReferenceNew, 'Seller'                       , 'NRC'                      , NULL                , '3111898'            ,  1                   , GETDATE(), 'JRAMIREZ-SYS',1),
-    (@codeOfReferenceNew, 'Seller'                       , 'CodigoActividad'          , NULL                , '52220'              , 1, GETDATE(), 'JRAMIREZ-SYS',1),
-    (@codeOfReferenceNew, 'Seller'                       , 'DescActividad'            , NULL                , 'Servicios para el transporte acuático', 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (@codeOfReferenceNew, 'Seller'                       , 'CodigoActividad'          , NULL                , '52219'              , 1, GETDATE(), 'JRAMIREZ-SYS',1),
+    (@codeOfReferenceNew, 'Seller'                       , 'DescActividad'            , NULL                , 'Servicios para el transporte por vía terrestre n.c.p.', 1, GETDATE(), 'JRAMIREZ-SYS',1),
     (@codeOfReferenceNew, 'Seller'                       , 'NombreComercial'          , NULL                , 'DELIVERY EXPRESS EL SALVADOR S.A. DE C.V.', 1, GETDATE(), 'JRAMIREZ-SYS',1),
     (@codeOfReferenceNew, 'Seller'                       , 'TipoEstablecimiento'      , NULL                , '01'                 , 1, GETDATE(), 'JRAMIREZ-SYS',1),
     (@codeOfReferenceNew, 'Seller'                       , 'CodEstablecimientoMH'     , NULL                , 'B001'               , 1, GETDATE(), 'JRAMIREZ-SYS',1),  --Establecimiento
