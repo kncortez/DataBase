@@ -416,12 +416,23 @@ BEGIN
             WHERE vp.CodeOfReference = @CodeOfReference;
 
 
-            SELECT *
+            SELECT dpf_VpCodeOfReference
+                  ,dpf_FELRequestor
+                  ,dpf_FELTransaction
+                  ,dpf_FELCountry
+                  ,dpf_FELEntity
+                  ,dpf_FELUser
+                  ,dpf_FELCorreo
             FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
             WHERE pr.dpf_VpCodeOfReference = @CodeOfReference;
 
-            SELECT *
-            FROM CatStation 
+            SELECT IdStation
+                  ,StationName
+                  ,CountryId
+                  ,StationType
+                  ,HubLogisticId
+                  ,CodeOfReference
+            FROM CatStation WITH (NOLOCK)
             WHERE CodeOfReference = @CodeOfReference
 
         END;
