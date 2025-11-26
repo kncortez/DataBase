@@ -16,14 +16,12 @@ CREATE procedure [dbo].[GetCourierInfoWithoutTokenLog]
     @Phone nvarchar(20) = '48119415'
   , @Token varchar(max) = '21a31fd231as23d1f21ads'
   , @IdCountry nvarchar(8)	= 'GT'
-as
-begin
+AS
+BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
 
     set nocount on;
-
-    declare @jsonResult nvarchar(max);
 
     -- insertar en tabla temporal posbibles mensajes de respuesta
 
@@ -33,54 +31,51 @@ begin
         [Id] VARCHAR(20)
     );
 
-    --if object_id('tempdb.dbo.#responsemessage', 'U') is not null
-        --drop table #responsemessage;
-    insert into @responsemessage
-    select *    
-    from
+    INSERT INTO @responsemessage
+    SELECT *    
+    FROM
     (
-        select 200                              as IdResult
-             , 'Estado  cambiado correctamente' as Message
-             , 'OK'                             as Id
-        union
-        select 500                                       as IdResult
-             , 'Error faltal intente de nuevo mas tarde' as Message
-             , 'Transac'                                 as Id
-    ) as errror;
+        SELECT 200                              AS IdResult
+             , 'Estado  cambiado correctamente' AS Message
+             , 'OK'                             AS Id
+        UNION
+        SELECT 500                                       AS IdResult
+             , 'Error faltal intente de nuevo mas tarde' AS Message
+             , 'Transac'                                 AS Id
+    ) AS error;
 
-    begin transaction;
-    begin try
+    BEGIN TRANSACTION;
+    BEGIN TRY
         -------------------------------------------------------------------------------------------------------------------------
-        declare @phon int,
+        DECLARE @phon INT,
 				@StationId INT
 
                     SELECT	TOP 1
 						@phon = SR.ID,
 						@StationId = HL.IdStation
-					FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] SR with (nolock)
-					LEFT JOIN HubLogistics HL WITH (NOLOCK)
+					FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] SR WITH (NOLOCK)
+					LEFT JOIN DeliveryBackOffice.dbo.HubLogistics HL WITH (NOLOCK)
 						ON SR.HubLogisticId = HL.IdHubLogistic
 					WHERE	SR.IdCountry = @IdCountry
 						AND	SR.Phone like '%' + @Phone + '%'
 						AND SR.Estatus = 1
 
-        declare @TokenInavt varchar(max) =
+        DECLARE @TokenInavt VARCHAR(MAX) =
                 (
-                    select top 1
+                    SELECT TOP 1
                            LogTokenPOD
-                    from LogTokenPOD with (nolock)
-                    where IdCourierman = @phon
-                          and RowStatus = 1
-                    order by DateCreated desc
+                    FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
+                    WHERE IdCourierman = @phon
+                          AND RowStatus = 1
+                    ORDER BY DateCreated DESC
                 );
 
-        update LogTokenPOD
-        set RowStatus = 0
-        where LogTokenPOD = @TokenInavt;
+        UPDATE LogTokenPOD
+        SET RowStatus = 0
+        WHERE LogTokenPOD = @TokenInavt;
         ------------------------------------------------------------------------------------------------------------------------
-        declare @jsonResult1 nvarchar(max);
 
-            insert into dbo.LogTokenPOD
+            INSERT INTO dbo.LogTokenPOD
             (
                 LogTokenPOD
               , IdCourierman
@@ -88,53 +83,53 @@ begin
               , DateCreated
               , DateUpdate
             )
-            values
-            (@Token, @phon, 1, getdate(), null);
+            VALUES
+            (@Token, @phon, 1, GETDATE(), null);
 
-			declare @GuideRegexData nvarchar(500) =
+			DECLARE @GuideRegexData NVARCHAR(500) =
             (
-                select top 1
+                SELECT TOP 1
                        CP.[Value]
-                from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegex' 
+                FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH (NOLOCK)
+                WHERE CP.[Name] = 'GuideRegex' 
             );
 
-			declare @GuideRegexScannerData nvarchar(500) =
+			DECLARE @GuideRegexScannerData NVARCHAR(500) =
             (
-                select top 1
+                SELECT TOP 1
                        CP.[Value]
-                from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegexScanner' 
+                FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH (NOLOCK)
+                WHERE CP.[Name] = 'GuideRegexScanner' 
             );
 
             --CONVERT(varchar,@Existingdate,3) as [DD/MM/YY]
-            declare @DefaultEmail nvarchar(50) =
+            DECLARE @DefaultEmail NVARCHAR(50) =
                     (
-                        select isnull(cf.Value, '')
-                        from dbo.ConfigParams cf
-                        where cf.Name = 'BillingEmailCAPP'
+                        SELECT ISNULL(cf.Value, '')
+                        FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
+                        WHERE cf.Name = 'BillingEmailCAPP'
                     );
 
-            declare @DefaultPickupManifestEmail nvarchar(50) =
+            DECLARE @DefaultPickupManifestEmail nvarchar(50) =
                     (
-                        select isnull(cf.Value, '')
-                        from dbo.ConfigParams cf
-                        where cf.Name = 'PickUpManifestEmailCAPP'
+                        SELECT isnull(cf.Value, '')
+                        FROM dbo.ConfigParams cf WITH (NOLOCK)
+                        WHERE cf.Name = 'PickUpManifestEmailCAPP'
                     );
 			IF EXISTS 
 			(
 				SELECT TOP 1 1
-				from LogTokenPOD   pod with (nolock)
-                inner join SenderReceiver    sr with (nolock)
-                    on (sr.ID = pod.IdCourierman)
-                left join dbo.RouteAssigment ras with (nolock)
-                    on ras.IdCurrierMan = sr.ID
-                        and DateOfRoute = convert(date, getdate())
-                left join dbo.CatVehicle     vh with (nolock)
-                    on vh.IdVehicle = ras.IdVehicle
-                left join dbo.CatRoute       cr with (nolock)
-                    on cr.IdRoute = ras.IdRoute
-				where pod.LogTokenPOD = @Token
+				FROM DeliveryBackOffice.dbo.LogTokenPOD   pod WITH (NOLOCK)
+                INNER JOIN SenderReceiver    sr WITH (NOLOCK)
+                    ON (sr.ID = pod.IdCourierman)
+                LEFT JOIN DeliveryBackOffice.dbo.RouteAssigment ras WITH (NOLOCK)
+                    ON ras.IdCurrierMan = sr.ID
+                        and DateOfRoute = CONVERT(DATE, GETDATE())
+                LEFT JOIN DeliveryBackOffice.dbo.CatVehicle     vh WITH (NOLOCK)
+                    ON vh.IdVehicle = ras.IdVehicle
+                LEFT JOIN DeliveryBackOffice.dbo.CatRoute       cr WITH (NOLOCK)
+                    ON cr.IdRoute = ras.IdRoute
+				WHERE pod.LogTokenPOD = @Token
 					AND pod.RowStatus = 1
 			)
 			BEGIN
@@ -143,23 +138,23 @@ begin
 						sr.First_Name AS FirstName,
 						sr.Last_Name AS LastName,
 						vh.Plate AS Vehicle,
-						 cr.CodeRoute AS Route,
+						cr.CodeRoute AS Route,
 						@GuideRegexData AS GuideRegex,
-						 @GuideRegexScannerData AS GuideRegexEscaner,
-						 @DefaultEmail AS BillingEmail,
-						 @DefaultPickupManifestEmail AS PickUpManifestEmail,
-						 LogTokenPOD AS Token,
-						 @StationId AS StationId
-				from LogTokenPOD   pod with (nolock)
-                inner join SenderReceiver    sr with (nolock)
-                    on (sr.ID = pod.IdCourierman)
-                left join dbo.RouteAssigment ras with (nolock)
-                    on ras.IdCurrierMan = sr.ID
-                        and DateOfRoute = convert(date, getdate())
-                left join dbo.CatVehicle     vh with (nolock)
-                    on vh.IdVehicle = ras.IdVehicle
-                left join dbo.CatRoute       cr with (nolock)
-                    on cr.IdRoute = ras.IdRoute
+						@GuideRegexScannerData AS GuideRegexEscaner,
+						@DefaultEmail AS BillingEmail,
+						@DefaultPickupManifestEmail AS PickUpManifestEmail,
+						LogTokenPOD AS Token,
+						@StationId AS StationId
+				FROM DeliveryBackOffice.dbo.LogTokenPOD   pod WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.SenderReceiver    sr WITH (NOLOCK)
+                    ON (sr.ID = pod.IdCourierman)
+                LEFT JOIN DeliveryBackOffice.dbo.RouteAssigment ras WITH (NOLOCK)
+                    ON ras.IdCurrierMan = sr.ID
+                        AND DateOfRoute = CONVERT(DATE, GETDATE())
+                LEFT JOIN DeliveryBackOffice.dbo.CatVehicle     vh WITH (NOLOCK)
+                    ON vh.IdVehicle = ras.IdVehicle
+                LEFT JOIN DeliveryBackOffice.dbo.CatRoute       cr WITH (NOLOCK)
+                    ON cr.IdRoute = ras.IdRoute
 				where pod.LogTokenPOD = @Token
 					AND pod.RowStatus = 1
 
@@ -175,20 +170,20 @@ begin
 			END
 
         
-    end try
-    begin catch
-        rollback transaction;
-        select error_message();
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        SELECT ERROR_MESSAGE();
         -- retornar mensaje de error
 		SELECT IdResult,
 			   ERROR_MESSAGE() AS Message
 		FROM @responsemessage
 
-    end catch;
-    if @@trancount > 0
-    begin
-        commit transaction;
+    END CATCH;
+    IF @@TRANCOUNT > 0
+    BEGIN
+        COMMIT TRANSACTION;
 
-    end;
+    END;
 
-end;
+END;
