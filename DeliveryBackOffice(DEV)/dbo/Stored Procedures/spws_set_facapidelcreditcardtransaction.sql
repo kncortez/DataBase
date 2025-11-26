@@ -600,8 +600,8 @@ BEGIN
                             ON CM.IdCatMembership = RTP.IdSalePackage
                     WHERE RTP.OrderNumber = @OrderNumber
                           AND RTP.TypeSalePackage = 'MEMBERSHIP'
-                          AND RTP.DateCreated >= @DateCreated
-                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated)
+                          AND RTP.DateCreated >= @DateCreated2
+                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated2)
                     ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                     DECLARE @RandomLettersM CHAR(1);
