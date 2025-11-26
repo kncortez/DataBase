@@ -24,7 +24,7 @@ BEGIN
 	WITH RecicleIDs AS (
 		SELECT STSM.IdSubTypeServiceManagment AS id, STSM.Name AS idName
 		FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
-		WHERE STSM.Name IN (N'Devoluci髇', N'Entrega', N'Recolecci髇')
+		WHERE STSM.Name IN (N'Devoluci贸n', N'Entrega', N'Recolecci贸n')
 		AND STSM.RowStatus = 1
 		UNION ALL
 		SELECT TOP 1 IdDeliveryOption AS id, Name AS idName
@@ -32,16 +32,16 @@ BEGIN
 		WHERE [Name] = 'Express Center'
 	)
 	SELECT
-		@PickUpTypeId = MAX(CASE WHEN idName = 'Recolecci髇' THEN id END),
+		@PickUpTypeId = MAX(CASE WHEN idName = 'Recolecci贸n' THEN id END),
 		@DeliveryTypeId = MAX(CASE WHEN idName = 'Entrega' THEN id END),
-		@ReturnTypeId = MAX(CASE WHEN idName = 'Devoluci髇' THEN id END),
+		@ReturnTypeId = MAX(CASE WHEN idName = 'Devoluci贸n' THEN id END),
 		@IdDeliveryOption = MAX(CASE WHEN idName = 'Express Center' THEN id END)
 	FROM RecicleIDs;
-	SELECT @PickUpTypeId AS id, 'Recolecci髇' AS idName
+	SELECT @PickUpTypeId AS id, 'Recolecci贸n' AS idName
 	UNION
 	SELECT @DeliveryTypeId AS id, 'Entrega' AS idName
 	UNION 
-	SELECT @ReturnTypeId AS id, 'Devoluci髇' AS idName
+	SELECT @ReturnTypeId AS id, 'Devoluci贸n' AS idName
 	UNION
 	SELECT @IdDeliveryOption AS id, 'Express Center' AS idName
 -- =========================== FIN IDS ==========================================
