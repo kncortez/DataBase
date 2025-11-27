@@ -563,6 +563,7 @@
     <Build Include="dbo\Tables\CatDataLinkStatus.sql" />
     <Build Include="dbo\Tables\CatCurrencyCOD.sql" />
     <Build Include="dbo\Tables\CatCountry.sql" />
+    <Build Include="dbo\Tables\CatPartyResponsible.sql" />
     <Build Include="dbo\Tables\CatCorrelativeCOD.sql" />
     <Build Include="dbo\Tables\CatContainerSubtype.sql" />
     <Build Include="dbo\Tables\CatConfigurableService.sql" />
@@ -2063,6 +2064,10 @@
     <Build Include="dbo\User Defined Types\TblBuyerInfo.sql" />
     <Build Include="dbo\Tables\CatTypeIdentifationDocument.sql" />
     <Build Include="dbo\Tables\InformationBuyerInvoice.sql" />
+    <Build Include="dbo\Tables\Deposit.sql" />
+    <Build Include="dbo\Tables\RelDepositManifest.sql" />
+    <Build Include="dbo\User Defined Types\TblDeposit.sql" />
+    <Build Include="dbo\Stored Procedures\ValidateDepositBalance.sql" />
     <Build Include="dbo\Stored Procedures\sps_UpdateInvoiceForza.sql" />
     <Build Include="dbo\Functions\SplitOrdinal.sql" />
     <Build Include="dbo\Stored Procedures\SLGuideReception.sql" />
