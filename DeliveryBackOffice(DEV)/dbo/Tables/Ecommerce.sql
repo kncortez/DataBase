@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Ecommerce] (
-    [IdEcommerce]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdEcommerce]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [EcomerceName]         VARCHAR (50)   NULL,
     [EcommerceDescription] NVARCHAR (200) NULL,
     [IsPaymentGateway]     BIT            NULL,
@@ -22,6 +22,8 @@
     CONSTRAINT [PK_Ecommerce] PRIMARY KEY CLUSTERED ([IdEcommerce] ASC),
     CONSTRAINT [FK_Ecommerce_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
+
+
 
 
 

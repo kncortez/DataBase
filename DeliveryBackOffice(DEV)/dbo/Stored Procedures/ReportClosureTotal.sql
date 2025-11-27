@@ -48,16 +48,21 @@ BEGIN
                             ),
                          0
                      ) 'TotalGeneral',
-			   CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'GTQ' ELSE 'HNL' END AS CurrencySymbol 
+               CCC.CodeISO CurrencySymbol
         -- FIN MODIFICACIÓN
         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
-                   AND VPC.CodeOfReference = @VisitPointId
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+				ON VPC.CountryId = DC.Currency_IdCountry
+                AND DC.DefaultPerCountry = 1
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
         WHERE CONVERT(DATE, ACH.DateCreated)
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
               AND ACH.IdAccountingClosuresHeader = @IdCierre
-		GROUP BY VPC.CountryId;
+              AND VPC.CodeOfReference = @VisitPointId
+		GROUP BY VPC.CountryId, CCC.CodeISO;
     END;
 
     IF (@VisitPointId > 0 AND (@IdCierre <= 0 OR @IdCierre IS NULL))
@@ -81,15 +86,20 @@ BEGIN
                             ),
                          0
                      ) 'TotalGeneral',
-			  CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'GTQ' ELSE 'HNL' END AS CurrencySymbol
+			   CCC.CodeISO CurrencySymbol
         -- FIN MODIFICACIÓN
         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
-                   AND VPC.CodeOfReference = @VisitPointId
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+				ON ISNULL(VPC.CountryId,'GT') = DC.Currency_IdCountry
+                AND DC.DefaultPerCountry = 1
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
         WHERE CONVERT(DATE, ACH.DateCreated)
         BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-        GROUP BY VisitPoint, VPC.CountryId;
+        AND VPC.CodeOfReference = @VisitPointId
+        GROUP BY VisitPoint, VPC.CountryId, CCC.CodeISO;
     END;
 
     IF (@VisitPointId = -1 AND (@IdCierre <= 0 OR @IdCierre IS NULL))
@@ -113,14 +123,19 @@ BEGIN
                             ),
                          0
                      ) 'TotalGeneral',
-			  CASE WHEN ISNULL(VPC.CountryId, 'GT') = 'GT' THEN 'GTQ' ELSE 'HNL' END AS CurrencySymbol
+			   CCC.CodeISO CurrencySymbol
         -- FIN MODIFICACIÓN
         FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
 		INNER JOIN VisitPointClient VPC WITH (NOLOCK)
 			ON ACH.VisitPoint = VPC.IdVisitPointClient
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+			ON VPC.CountryId = DC.Currency_IdCountry
+            AND DC.DefaultPerCountry = 1
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
         WHERE CONVERT(DATE, ACH.DateCreated)
         BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-		GROUP BY VPC.CountryId;
+		GROUP BY VPC.CountryId, CCC.CodeISO;
     END;
 
 END;

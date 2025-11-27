@@ -25,7 +25,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Devuelto'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'Devuelto' 
 	)
 	DECLARE @ReturnEXCStatusId INT = (
 		SELECT 
@@ -34,7 +34,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Devuelto en express center'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'Devuelto en express center'  
 	)
 
 	-- Manejo de fechas
@@ -159,14 +159,13 @@ BEGIN
 			ON
 				[DOD].[Guide_Serie] = [DOPD].[GuideSerie]
 				AND
-				[DOD].[Guide_Number] = [DOPD].[GuideNumber]
-				AND
-				[DOPD].[TimePlaId] <> 4
+				[DOD].[Guide_Number] = [DOPD].[GuideNumber]				
 	WHERE
 		[DOD].[DateCreated] BETWEEN @StartDate AND @EndDate
 		AND
 		[DOD].[StatusOrderId] = @ReturnStatusId
 		AND ISNULL(DO.SenderCountryId,'GT') = @IdCountry
+		AND [DOPD].[TimePlaId] <> 4
 	
 	-- Guías en estado devuelto en express center
 	INSERT INTO [#PreFilteredGuide]
@@ -200,14 +199,13 @@ BEGIN
 			ON
 				[DOD].[Guide_Serie] = [DOPD].[GuideSerie]
 				AND
-				[DOD].[Guide_Number] = [DOPD].[GuideNumber]
-				AND
-				[DOPD].[TimePlaId] <> 4
+				[DOD].[Guide_Number] = [DOPD].[GuideNumber]				
 	WHERE
 		[DOD].[DateCreated] BETWEEN @StartDate AND @EndDate
 		AND
 		[DOD].[StatusOrderId] = @ReturnEXCStatusId
 		AND ISNULL(DO.SenderCountryId,'GT') = @IdCountry
+		AND [DOPD].[TimePlaId] <> 4
 
 	------ Guías en estado devuelto
 	INSERT INTO [#FilteredGuide]
@@ -251,7 +249,7 @@ BEGIN
 		INNER JOIN
 			[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
 			ON
-				[DO].[Sender_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+				[DO].[Sender_Department] = [Prv].[ProvinceName]  
 		LEFT JOIN
 			[DeliveryBackOffice].[dbo].[Township] TwnByCode  WITH(NOLOCK) 
 			ON
@@ -261,7 +259,7 @@ BEGIN
 		LEFT JOIN
 			[DeliveryBackOffice].[dbo].[Township] TwnByName  WITH(NOLOCK) 
 			ON
-				[TwnByName].[TownshipName] = DO.[Sender_Town]  COLLATE Latin1_General_CI_AI 
+				[TwnByName].[TownshipName] = DO.[Sender_Town] 
 				AND
 				[Prv].[IdProvince] = [TwnByName].[IdProvince]
 		LEFT JOIN

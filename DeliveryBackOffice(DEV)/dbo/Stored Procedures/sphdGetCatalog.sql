@@ -18,6 +18,16 @@
 -- Create date: <2024-06-19>
 -- Description:	<se modifica para obtener datos de la tabla CatCurrencyCOD>
 -- =============================================
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2025-06-12>
+-- Description:	<Facturacion SV - Obtiene catalogos para facturacion de El Salvador>
+-- =============================================
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2025-08-14>
+-- Description:	<Facturacion SV - Se quita validacion isnull al consultar catalogos>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCatalog]
     -- Add the parameters for the stored procedure here
     @IdCorrelative INT = -1,
@@ -34,12 +44,15 @@ BEGIN
     SET @Calalog = UPPER(@Calalog);
     DECLARE @NameOfCatalog AS NVARCHAR(50) = N'';
 
-    IF OBJECT_ID('tempdb.dbo.#Catalogs', 'U') IS NOT NULL
-        DROP TABLE #Catalogs;
+    DECLARE @Catalogs TABLE
+    (
+        IdCatalog INT,
+        NameCatalog VARCHAR(100)
+    );
 
+	INSERT INTO @Catalogs (IdCatalog,NameCatalog)
     SELECT ModuleID,
            cbm.NameCatalog
-    INTO #Catalogs
     FROM CatalogbyModule cbm
     WHERE cbm.ModuleID = @IdModule
           AND cbm.RowStatus = 'TRUE'
@@ -54,7 +67,7 @@ BEGIN
 
     DECLARE @IdMax AS INT =
             (
-                SELECT COUNT(*)FROM #Catalogs
+                SELECT COUNT(*)FROM @Catalogs
             );
 
     WHILE @count <= @IdMax
@@ -63,7 +76,7 @@ BEGIN
 
         SELECT TOP 1
                @NameOfCatalog = ctl.NameCatalog
-        FROM #Catalogs ctl;
+        FROM @Catalogs ctl;
         PRINT @NameOfCatalog;
         IF (@NameOfCatalog = 'SaleAdvisor')
         BEGIN
@@ -121,6 +134,11 @@ BEGIN
                   (
                       @IdCorrelative = -1
                       OR CBS.IdBusinessSegment = @IdCorrelative
+                  )
+                  AND
+                  (
+                      @IdFilter = ''
+                      OR CBS.IdCountry = @IdFilter
                   )
             ORDER BY CBS.[BusinessSegmentName];
         END;
@@ -222,7 +240,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR CBA.IdBankAccountType = @IdCorrelative
                   )
-				  AND IIF(CBA.IdCountry IS NULL, 'GT',CBA.IdCountry) = @IdFilter;
+				  AND CBA.IdCountry = @IdFilter;
 
         END;
 
@@ -259,7 +277,7 @@ BEGIN
                       @IdParentFilter = -1
                       OR hr.RateTypeId = @IdParentFilter
                   )
-				  AND IIF(hr.CountryId IS NULL, 'GT',hr.CountryId) = @IdFilter;
+				  AND hr.CountryId = @IdFilter;
         --AND hr.IsTemplate = 'TRUE' --no hay forma de mostrar cuando es clonable y cuando no es clonable
         END;
 
@@ -315,7 +333,7 @@ BEGIN
                    prov.ProvinceAbbreviation [Asssitant],
                    prov.IdCountry [IdFilter],
                    'Province' [Catalog]
-            FROM dbo.Province prov
+            FROM dbo.Province prov 
             WHERE prov.ProvinceStatus = 'TRUE'
                   AND
                   (
@@ -336,7 +354,9 @@ BEGIN
                    UPPER(twn.TownshipName) [NameValue],
                    twn.IdProvince [IdFilter],
                    'Township' [Catalog]
-            FROM dbo.Township twn
+            FROM dbo.Township twn WITH(NOLOCK)
+				INNER JOIN Province PR WITH(NOLOCK)
+				ON twn.IdProvince = PR.IdProvince
             WHERE twn.TownshipStatus = 'TRUE'
                   AND
                   (
@@ -348,6 +368,7 @@ BEGIN
                       @IdParentFilter = -1
                       OR twn.IdProvince = @IdParentFilter
                   )
+				  AND PR.IdCountry = @IdFilter
             ORDER BY twn.TownshipName;
         END;
 
@@ -369,6 +390,7 @@ BEGIN
                       @IdParentFilter = -1
                       OR setl.IdTownship = @IdParentFilter
                   )
+                  AND setl.IdCountry = @IdFilter
             ORDER BY setl.Settlement;
         END;
 
@@ -384,7 +406,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR kbs.IdKindOfVPBusiness = @IdCorrelative
                   )
-				  AND IIF(kbs.IdCountry IS NULL, 'GT',kbs.IdCountry) = @IdFilter
+				  AND kbs.IdCountry = @IdFilter
             ORDER BY kbs.KindOfVPNameBussiness;
         END;
 
@@ -402,7 +424,7 @@ BEGIN
                   )
                   AND koc.IdKindOfVPClient NOT IN ( 5 ) --estos son los puntos (bodegas dinamicas) que hace los clientes integrados
             --AND koc.DateCreated >= '2021-08-19'
-                  AND IIF(koc.IdCountry IS NULL, 'GT',koc.IdCountry) = @IdFilter
+                  AND koc.IdCountry = @IdFilter
             ORDER BY koc.KindOfVPName;
         END;
 
@@ -428,7 +450,7 @@ BEGIN
                       @IdParentFilter = -1
                       OR crt.IdTypeRoute = @IdParentFilter
                   )
-                  AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdFilter;
+                  AND pr.IdCountry = @IdFilter;
         END;
 
 
@@ -459,7 +481,7 @@ BEGIN
                 LEFT JOIN dbo.CatTypeArticle ta
                     ON ta.TarId = ca.ArtIdTypeArticle
             WHERE ac.AbcRowStatus = 'TRUE'
-            AND IIF(ca.IdCountry IS NULL, 'GT',ca.IdCountry)= @IdFilter;
+            AND ca.IdCountry= @IdFilter;
         END;
 
         IF (@NameOfCatalog = 'SalesChannel')
@@ -474,7 +496,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR CSC.IdSalesChannel = @IdCorrelative
                   )
-				  --AND IIF(CSC.IdCountry IS NULL, 'GT',CSC.IdCountry)= @IdFilter
             ORDER BY CSC.Description;
         END;
 
@@ -515,7 +536,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR cu.IdCustomer = @IdCorrelative
                   )
-				  --AND IIF(cbt.IdCountry IS NULL, 'GT',cbt.IdCountry) = @IdFilter
             GROUP BY cbt.CatBatchTypeCODId,
                      cbt.Name
             ORDER BY cbt.Name;
@@ -610,13 +630,13 @@ BEGIN
 					ON prCOD.CatRateSegmentId = crs2.CrsId
 				WHERE pr.RowStatus = 1
 				AND prd.RowStatus = 1
-                AND IIF(cbs.IdCountry IS NULL, 'GT', cbs.IdCountry) = @IdFilter
+                AND cbs.IdCountry = @IdFilter
 				ORDER BY cts.CtsShortName DESC, pr.[Order]
 			END
 
         SET @count = @count + 1;
         DELETE TOP (1)
-        FROM #Catalogs;
+        FROM @Catalogs;
     END;
 
 
@@ -627,14 +647,43 @@ BEGIN
     FROM [dbo].[CatBillingTime] BT with (nolock)
     WHERE BT.RowStatus = 'TRUE'
 
-
-
-
     SELECT BV.IdCatBillingVolume [IdValue],
            BV.NameBillingVolume [NameValue],
            'BillingVolume' [Catalog]
     FROM [dbo].[CatBillingVolume] BV with (nolock)
     WHERE BV.RowStatus = 'TRUE'
+
+	--facturacion El Salvador	
+    -- Consulta de distritos
+    SELECT 
+        DS.IdTownship [IdValue], 
+        DS.[TownshipName] [NameValue],	
+        DS.IdProvince [IdFilter],
+        'DistrictByBillingSV' [Catalog]
+    FROM Township DS       WITH(NOLOCK)
+    INNER JOIN Province pv WITH(NOLOCK) 
+       ON pv.IdProvince = DS.IdProvince 
+    WHERE DS.TownshipStatus = 1
+      AND pv.ProvinceStatus = 1
+      AND pv.IdCountry = 'SV'
+
+    -- Consulta de estados
+    SELECT 
+		S.[IdProvince] [IdValue],
+        S.[ProvinceName] [NameValue],
+        'StateByBillingSV' [Catalog]
+    FROM Province S WITH(NOLOCK)
+    WHERE S.IdCountry = 'SV'
+      AND s.ProvinceStatus = 1;
+
+    -- Consulta de actividades económicas
+    SELECT 
+		EA.Id [IdValue],
+        EA.CodeActivity, 
+        CONVERT(NVARCHAR(45),CONCAT(EA.[CodeActivity],' - ',EA.[Description])) [NameValue],
+        'EconomiActivity' [Catalog]
+    FROM CatEconomicActivityBySV EA WITH(NOLOCK)
+    WHERE EA.RowStatus = 1;
 
 
 END

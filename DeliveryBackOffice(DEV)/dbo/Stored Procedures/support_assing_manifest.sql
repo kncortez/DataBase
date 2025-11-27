@@ -3,6 +3,11 @@
 -- Create date: <2023-04-03>
 -- Description:	<Traslado de manifiesto entre courierman>
 -- =============================================
+-- =============================================
+-- Author:		<Carlos Valdes>
+-- Create date: <2025-06-05>
+-- Description:	<Traslado de manifiesto entre courierman>
+-- =============================================
 CREATE PROCEDURE [dbo].[support_assing_manifest]
     @manifiesto INT,  -- Id de maniefiesto de última milla
     @DPI NVARCHAR(25) -- dpi de courierman que se va a asignar
@@ -14,7 +19,7 @@ BEGIN
     IF EXISTS
     (
         SELECT 1
-        FROM dbo.DeliveryOrderBySettlement st
+        FROM dbo.DeliveryOrderBySettlement st WITH (NOLOCK)
         WHERE st.ID = @manifiesto
               AND CONVERT(DATE, st.Date_Dispatched) = CONVERT(DATE, GETDATE())
     )
@@ -23,7 +28,8 @@ BEGIN
         DECLARE @IdCourierman INT = 0;
         SET @IdCourierman =
         (
-            SELECT TOP 1 sr.ID FROM dbo.SenderReceiver sr WHERE sr.CUI = @DPI
+            SELECT TOP 1 sr.ID FROM dbo.SenderReceiver sr WITH (NOLOCK)
+			WHERE sr.CUI = @DPI
         );
 
         IF @IdCourierman > 0
@@ -69,3 +75,20 @@ BEGIN
 
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[support_assing_manifest] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[support_assing_manifest] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[support_assing_manifest] TO [cvaldes]
+    AS [dbo];
+

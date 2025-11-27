@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatNotificationMedium] (
-    [IdCatNotificationMedium] INT          IDENTITY (1, 1) NOT NULL,
+    [IdCatNotificationMedium] INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NotificationMediumName]  VARCHAR (50) NOT NULL,
     [RowStatus]               BIT          NOT NULL,
     [TokenCreated]            VARCHAR (50) NOT NULL,
@@ -8,6 +8,8 @@
     [DateUpdated]             DATETIME     NULL,
     CONSTRAINT [PK__CatNotif__6DFB8750C51EF4B8] PRIMARY KEY CLUSTERED ([IdCatNotificationMedium] ASC)
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Tutorial] (
-    [IdTutorial]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdTutorial]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TutorialName]        NVARCHAR (50)  NOT NULL,
     [TutorialDescription] NVARCHAR (200) NULL,
     [RowStatus]           BIT            DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,8 @@
     [TokenUpdated]        NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdTutorial] ASC)
 );
+
+
 
 
 GO

@@ -1,10 +1,22 @@
-
+﻿
 -- =============================================
 -- Author:		<Cristian Azurdia>
 -- Create date: <2024-04-25>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
 -- =============================================
-
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-11-26>
+-- Description:	<Tracking - Se realiza validación de pago de envio en guías tipo collect.>
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2024-09-04>
+-- Description:	<Se agrega validación de si fue pagado por Zigi, sin embargo, se deja comentado hasta validar si hay afectación en facturación en POD>
+-- =============================================
+-- Author:		<Tito García>
+-- Create date: <2024-09-04>
+-- Description:	<Se agrega nuevo campo en consulta de entregas y devoluciones para mostrarse en POD>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_daily_route]
     @Token VARCHAR(200) = '',
     @IdCourier BIGINT,
@@ -16,6 +28,15 @@ BEGIN
 
 	DECLARE @TokenAct INT = 1;
     DECLARE @hourtoken INT = 5;
+
+    IF OBJECT_ID('#DatasetPickup', 'U') IS NOT NULL
+        DROP TABLE  #DatasetPickup;
+
+    IF OBJECT_ID('#DatasetDelivery', 'U') IS NOT NULL
+        DROP TABLE #DatasetDelivery;
+
+    IF OBJECT_ID('#AllData', 'U') IS NOT NULL
+        DROP TABLE #AllData;
 
 	/******************************************************************************************************************************
 	****************************************************** OBTENER TIPOS DE ALERTAS ***********************************************
@@ -253,9 +274,9 @@ BEGIN
       , CODAmount
       , ReturnRates
     )
-    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Gu�as
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Guías
                                               , @InTime = 3                        -- Entrega
-                                              , @IsReturn = 1                      -- Devoluci�n
+                                              , @IsReturn = 1                      -- Devolución
                                               , @CodeApp = 'SIFDCECOM300720201459' -- CodeApp
                                               , @IdModule = 1
                                               , @Token = @Token;
@@ -268,9 +289,9 @@ BEGIN
 		******************************************************************************************************************************************/
 
         SELECT 'Pickup' [ServiceType],
-				ISNULL(vpc.CodeOfReference, 0) [CodeOfReference],
+				ISNULL(CAST(vpc.CodeOfReference AS NVARCHAR(500)), '0') [CodeOfReference],
 				ISNULL(spk.SchedulePickupId, '-1') [Id],
-				ISNULL(sma.IdServiceManagement, -1) [ServiceManagementId],
+				ISNULL(CAST(sma.IdServiceManagement AS NVARCHAR), '-1') [ServiceManagementId],
 				ISNULL(cpt.TimePlaName, 'N/A') [ServicePaymentTime],
 				dbo.fnt_String_Escape(ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A'),'json') [Sender],
 				dbo.fnt_String_Escape(
@@ -307,7 +328,7 @@ BEGIN
                                                          , 0
                                                           )[PiecesCold],
 				SUBSTRING(CONVERT(VARCHAR, spk.StartDate, 8), 0, 6) [ScheduleStart],
-				SUBSTRING(CONVERT(VARCHAR, ISNULL(spk.EndDate, DATEADD( HOUR, 19, CAST(CAST(spk.StartDate AS DATE) AS DATETIME) ) ),8 ), 0, 6) [ScheduleEnd'],
+				SUBSTRING(CONVERT(VARCHAR, ISNULL(spk.EndDate, DATEADD( HOUR, 19, CAST(CAST(spk.StartDate AS DATE) AS DATETIME) ) ),8 ), 0, 6) [ScheduleEnd],
 				ISNULL((
                                                     SELECT TOP 1
                                                            vpi.PathImage
@@ -348,6 +369,7 @@ BEGIN
 				 ccc.Symbol[CurrencyPriceSymbol],
                  ccc.CodeISO[PickupPriceCodeISO],
                  ccc.Symbol[PickupPriceSymbol]
+            INTO #DatasetPickup -- Crea y llena la tabla temporal
             FROM dbo.RouteAssigment             ras WITH (NOLOCK)
                 INNER JOIN dbo.ServiceManagement sma WITH (NOLOCK)
                     ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
@@ -362,10 +384,10 @@ BEGIN
 									LEFT JOIN dbo.Province p WITH (NOLOCK)
 									    ON t.IdProvince =p.IdProvince
 				LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CP  WITH (NOLOCK)
-					ON  CP.[IdCountry] = ISNULL(vpc.CountryId,'GT')
+					ON  CP.[IdCountry] = vpc.CountryId
 						AND CP.[Name] = 'AreaCode'
 				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
-					ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
+					ON  de.Currency_IdCountry = vpc.CountryId
 					AND de.DefaultPerCountry = 1
 				LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
 					ON ce.TargetCurrency = de.IdCurrencyCOD
@@ -378,6 +400,8 @@ BEGIN
                         )
 					AND ISNULL(sma.SubTypeServiceManagmentId,1)=1
 		
+
+          CREATE CLUSTERED INDEX IX_ID_Dataset1 ON #DatasetPickup (CodeOfReference);
 
 		/*****************************************************************************************************************************************
 		**************************************** CONSULTA PARA DESPLEGAR LAS ENTREGAS Y SUS ALERTAS **********************************************
@@ -394,7 +418,8 @@ BEGIN
 				 ,0)
 				 [DeliveryOption],
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
-				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id], 
+				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id],
+				 ISNULL(REPLACE(DOR.Ticket_Number, '"', ''), '') [TicketNumber],
 				 0 [ServiceManagementId],
 				 ISNULL(
 					ISNULL(
@@ -416,9 +441,9 @@ BEGIN
 							, dbo.fnt_String_Escape(VPC.DescriptionOfClient, 'json')
 							) , 'N/A'
 					)[Sender],
-				IIF(
+				REPLACE(IIF(
 					kvp.KindOfVPName = 'Express Center',
-					dbo.fnt_String_Escape(ISNULL(VPr.[Address], ''),'json'),
+					dbo.fnt_String_Escape(ISNULL(REPLACE(VPr.[Address],'"',''), ''),'json'),
 					ISNULL
 					(
 						ISNULL(
@@ -436,20 +461,20 @@ BEGIN
 							   ),
 						'N/A'
 					)	
-				   ) [Address],
+				   ),'"','') [Address],
 				CASE
 				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
-				THEN  REPLACE(REPLACE(REPLACE(REPLACE([DOR].[Sender_Phone],' ', ''), '+', ''), '(', ''), '(', '')
+				THEN  REPLACE(REPLACE(REPLACE(REPLACE( IIF(LEN([DOR].[Sender_Phone]) > 7 AND LEN([DOR].[Sender_Phone]) < 10 , CONCAT([CPS].[Value], [DOR].[Sender_Phone]), ISNULL([DOR].[Sender_Phone], 'N/A') ),' ', ''), '+', ''), '(', ''), '(', '')
 				ELSE ''
 				END [Sender_Phone],				
 				ISNULL(
 						IIF(DOR.IsLastMileReturn = 1
-						, REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(DOR.Sender_Phone, 'N/A'),' ', ''), '+', ''), '(', ''), '(', '')
-						, REPLACE(REPLACE(REPLACE(REPLACE(
+						,  REPLACE(REPLACE(REPLACE(REPLACE( IIF(LEN([DOR].[Sender_Phone]) > 7 AND LEN([DOR].[Sender_Phone]) < 10 , CONCAT([CPS].[Value], [DOR].[Sender_Phone]), ISNULL(DOR.Sender_Phone, 'N/A') ) ,' ', ''), '+', ''), '(', ''), '(', '')
+						,  REPLACE(REPLACE(REPLACE(REPLACE(
 								ISNULL
 									(
-									  DOR.Receiver_Phone
-									, DOR.Receiver_Alternant_Phone
+									  IIF(LEN([DOR].[Receiver_Phone]) > 7 AND LEN([DOR].[Receiver_Phone]) < 10 , CONCAT([CPR].[Value], [DOR].[Receiver_Phone]), DOR.Receiver_Phone )
+									, IIF(LEN([DOR].[Receiver_Alternant_Phone]) > 7 AND LEN([DOR].[Receiver_Alternant_Phone]) < 10 , CONCAT([CPR].[Value], [DOR].[Receiver_Alternant_Phone]), DOR.Receiver_Alternant_Phone)
 									)
 							,' ', ''), '+', ''), '(', ''), '(', '')
 						), 'N/A'
@@ -516,6 +541,14 @@ BEGIN
 				END [Longitude],
 				CONVERT(VARCHAR, ISNULL(VPC.Accuracy, 0)) [Precision],
 				CASE
+					-- WHEN
+                    --    (SELECT TOP 1 1 -- Validamos existencia con un valor sustituto de '1'
+                    --     FROM DeliveryBackOffice.dbo.PaymentZigi ZP WITH (NOLOCK)
+                    --     WHERE ZP.GuideSerie = DOR.Guide_Serie -- Validación de Serie de Guía
+                    --       AND ZP.GuideNumber = DOR.Guide_Number -- Validación de Número de Guía
+                    --       AND ZP.ZigiLinkStatus = 'PAID' -- La condición específica de estado
+                    --    ) IS NOT NULL -- Si existe al menos un registro
+                    -- THEN 0 -- En este caso, el precio COD retorna '0' porque ya está pagado por Zigi
 					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
 					THEN 0
 					ELSE
@@ -529,24 +562,41 @@ BEGIN
 									)
 							  )
 				END [Price_COD],
-				CASE
-					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
-					THEN 0
-					ELSE
-						IIF(
-								kvp.KindOfVPName = 'Express Center', 
-								'0', 
-								IIF(
-										DOR.IsLastMileReturn = 1, 
-										TRPreturns.AmountToPay , 
-										IIF(
-												ISNULL(DOR.IsCollect, 0) = 1, 
-												ISNULL( DOR.PriceShippment, 0), 
-												0
-											)
-								   )
-							 )
-				END [Price],
+				CASE 
+					-- WHEN
+                    --    (SELECT TOP 1 1 -- Validamos existencia con un valor sustituto de '1'
+                    --     FROM DeliveryBackOffice.dbo.PaymentZigi ZP WITH (NOLOCK)
+                    --     WHERE ZP.GuideSerie = DOR.Guide_Serie -- Validación de Serie de Guía
+                    --       AND ZP.GuideNumber = DOR.Guide_Number -- Validación de Número de Guía
+                    --       AND ZP.ZigiLinkStatus = 'PAID' -- La condición específica de estado
+                    --    ) IS NOT NULL -- Si existe al menos un registro
+                    -- THEN 0 -- En este caso, el precio COD retorna '0' porque ya está pagado por Zigi
+					WHEN DOR.IdDeliveryOption = @IdDeliveryOption THEN 0
+					ELSE 
+						CASE 
+							WHEN kvp.KindOfVPName = 'Express Center' THEN 0
+							ELSE 
+								CASE 
+									WHEN DOR.IsLastMileReturn = 1 THEN TRPreturns.AmountToPay
+									ELSE 
+										CASE 
+											WHEN ISNULL(DOR.IsCollect, 0) = 1 THEN 
+												CASE 
+													WHEN 
+													(SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)
+													INNER JOIN [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH(NOLOCK)
+															ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number)
+																AND CCTBC.ReasonCode = '00'
+													where	DOR.Guide_Serie = DAT.Guide_Serie
+															AND	DOR.Guide_Number = DAT.Guide_Number) = 1
+													THEN 0
+													ELSE ISNULL(DOR.PriceShippment, 0)
+												END
+											ELSE 0
+										END
+								END
+						END
+				END AS [Price],
 				CASE
 					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
 					THEN 0
@@ -600,7 +650,7 @@ BEGIN
 						) IS NOT NULL , 
 						(
 							SELECT NumImgEvidence AS num
-							FROM Customer
+							FROM Customer WITH (NOLOCK)
 							WHERE IdCustomer = DOR.IdCustomer
 						), 1
 					) [NumImageEvidence],
@@ -632,7 +682,17 @@ BEGIN
 		TRPreturns.CurrencyPrice_CODCodeISO [CurrencyPrice_CodeISO],
         TRPreturns.CurrencyPrice_CODSymbol  [CurrencyPrice_CODSymbol],
 		TRPreturns.CurrencyPriceCodeISO		[CurrencyPriceCodeISO],
-		TRPreturns.CurrencyPriceSymbol		[CurrencyPriceSymbol]
+		TRPreturns.CurrencyPriceSymbol		[CurrencyPriceSymbol],
+		CASE
+           WHEN kvp.IdKindOfVPClient = 1 THEN
+               1
+           WHEN kvp.IdKindOfVPClient IS NULL THEN
+               0
+           ELSE
+               0
+       END FlagEXP,
+	   ISNULL(REPLACE(DOR.IndicationsToSendDestination, '"', ''), '') AS IndicationsToSendDestination
+          INTO #DatasetDelivery
 		FROM
 		(
 			SELECT  MAX(ID_DeliveryOrderBySettlement) ID_DeliveryOrderBySettlement,
@@ -663,6 +723,8 @@ BEGIN
 			AND DOR.Guide_Number = TRPreturns.GuideNumber
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]			VPC WITH (NOLOCK)
 			ON VPC.CodeOfReference = DOR.Sender_ID
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]						C	WITH(NOLOCK)
+			ON DOR.Guide_Serie = C.GuideSerie AND DOR.Guide_Number = C.GuideNumber
         LEFT JOIN
         (
             SELECT EPSA.GuideSerie
@@ -715,27 +777,61 @@ BEGIN
 		) DFG
 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPS   WITH (NOLOCK)
-			ON  CPS.[IdCountry] = ISNULL(dor.SenderCountryId,'GT')
+			ON  CPS.[IdCountry] = dor.SenderCountryId
 			AND CPS.[Name] = 'AreaCode'
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPR   WITH (NOLOCK)
-			ON  CPR.[IdCountry] = ISNULL(dor.ReceiverCountryId, 'GT')
+			ON  CPR.[IdCountry] = dor.ReceiverCountryId
 			AND CPR.[Name] = 'AreaCode'
 
 		WHERE	CAST(DSD.DateCreated AS DATE) = @DateRoute
           AND DSD.RowStatus = 1
           AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48, 50 )
           AND DSD.RowStatus = 1
-
+          
+       CREATE CLUSTERED INDEX IX_ID_Dataset2 ON #DatasetDelivery ([Id]);
+       
 		/******************************************************************************************************************************
 		****************************************** CONSULTA PARA MOSTRAR LAS ALERTAS DISPONIBLES **************************************
 		*******************************************************************************************************************************/
 
-		SELECT 
-				TMAP.ServiceManagementId,
-				TMAP.TypeAlert,
-				dbo.fnt_String_Escape(TMAP.DescriptionAlert,'json') DescriptionAlert,
-				TMAP.DateCreated
-		FROM	#TmpAlertList TMAP
+          -- Retorna el Dataset 1 al cliente
+          SELECT ServiceType,CodeOfReference,Id,CAST(ServiceManagementId AS NVARCHAR) AS ServiceManagementId,ServicePaymentTime,Sender,[Address],Phone,PiecesDry,
+                 PiecesCold,ScheduleStart,ScheduleEnd,Photo,Latitude,Longitude,[Precision],Price,Pickup,customerName,alterName,
+                 HighPriority,Alerts,[Status],CurrencyPriceCodeISO,CurrencyPriceSymbol,PickupPriceCodeISO,PickupPriceSymbol 
+            FROM #DatasetPickup
+
+          -- Retorna el Dataset 2 al cliente
+          SELECT ServiceType,CodeOfReference,DeliveryOption,IsLastMileReturn,CAST(Id AS NVARCHAR) AS Id,TicketNumber,ServiceManagementId,Sender,[Address],
+                 Sender_Phone,Phone,PiecesDry,PiecesCold,ScheduleStart,ScheduleEnd,Photo,Latitude,Longitude,[Precision],Price_COD,
+                 Price,Pickup,customerName,alterName,NumImageEvidence,[Status],HighPriority,Alerts,CurrencyPrice_CodeISO,CurrencyPrice_CODSymbol,
+                 CurrencyPriceCodeISO,CurrencyPriceSymbol,FlagEXP, ISNULL(REPLACE(IndicationsToSendDestination, '"', ''), '') AS IndicationsToSendDestination
+            FROM #DatasetDelivery;
+
+          CREATE TABLE #AllData (IdAllData NVARCHAR(70) PRIMARY KEY); -- Ajusta el tipo de dato
+
+          INSERT INTO #AllData (IdAllData)
+          SELECT CodeOfReference 
+            FROM #DatasetPickup
+           UNION -- UNION elimina duplicados automáticamente
+          SELECT Id 
+            FROM #DatasetDelivery;
+
+          -- Sobre tabla completa
+          CREATE INDEX IX_ID_Filtrar ON #AllData (IdAllData);
+
+          SELECT CAST(T3.ServiceManagementId AS INT) AS ServiceManagementId,
+                 T3.TypeAlert,
+                 T3.DescriptionAlert,
+                 T3.DateCreated
+            FROM
+                (
+                 SELECT CAST(TMAP.ServiceManagementId AS NVARCHAR)  AS ServiceManagementId,
+                        TMAP.TypeAlert,
+                        dbo.fnt_String_Escape(TMAP.DescriptionAlert,'json') DescriptionAlert,
+                        TMAP.DateCreated
+                   FROM #TmpAlertList TMAP
+                ) AS T3
+            INNER JOIN #AllData AS TIF ON TIF.IdAllData = T3.ServiceManagementId;
 
 		SELECT 200 [IdResult], 'Se encontraron registros' [Message];
 
@@ -746,4 +842,14 @@ BEGIN
 		SELECT '403' [IdResult], 'Token Inválido' [DescriptionError];
         
 	END;
+
+    IF OBJECT_ID('#DatasetPickup', 'U') IS NOT NULL
+        DROP TABLE  #DatasetPickup;
+
+    IF OBJECT_ID('#DatasetDelivery', 'U') IS NOT NULL
+        DROP TABLE #DatasetDelivery;
+
+    IF OBJECT_ID('#AllData', 'U') IS NOT NULL
+        DROP TABLE #AllData;
 END;
+

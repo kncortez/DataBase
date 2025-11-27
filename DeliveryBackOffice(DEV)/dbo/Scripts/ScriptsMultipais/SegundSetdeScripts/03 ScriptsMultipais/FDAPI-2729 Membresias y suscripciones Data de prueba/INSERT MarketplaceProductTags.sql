@@ -7,6 +7,6 @@ INSERT INTO MarketplaceProductTags (MarketplaceProductTagsName,
 									TokenCreated, 
 									DateCreated, 
 									IdCountry)
-		VALUES('LO M�S VENDIDO','En esta secci�n, encontrar�s una selecci�n de los productos m�s populares entre nuestros clientes',1,1,'SYS-BHERRERA',GETDATE(),'HN'),
-			  ('NOVEDADES','En esta secci�n, encontrar�s lo m�s reciente de nuestra tienda virtual',2,1,'SYS-BHERRERA',GETDATE(),'HN'),
-			  ('TODOS LOS PRODUCTOS','Desde membres�as, planes con descuento hasta gu�as prepago con tarifa �nica todo destino',3,1,'SYS-BHERRERA',GETDATE(),'HN')
+		VALUES('LO MÁS VENDIDO','En esta sección, encontrarás una selección de los productos más populares entre nuestros clientes',1,1,'SYS-BHERRERA',GETDATE(),'HN'),
+			  ('NOVEDADES','En esta sección, encontrarás lo más reciente de nuestra tienda virtual',2,1,'SYS-BHERRERA',GETDATE(),'HN'),
+			  ('TODOS LOS PRODUCTOS','Desde membresías, planes con descuento hasta guías prepago con tarifa única todo destino',3,1,'SYS-BHERRERA',GETDATE(),'HN')

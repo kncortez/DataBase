@@ -106,8 +106,8 @@ BEGIN
             ON [CMA].[CatMembershipId] = [CM].[IdCatMembership]
         INNER JOIN [dbo].[Membership]    M
             ON [CM].[IdCatMembership] = [M].[CatMembershipId]
-               AND [M].[IdMembership] = @MEMBERSHIP_ID
     WHERE [CMA].[RowStatus] = 1
+      AND [M].[IdMembership] = @MEMBERSHIP_ID
     ORDER BY [CMA].[MembershipAttributePosition] ASC;
 
     -- Membership history
@@ -140,7 +140,6 @@ BEGIN
         INNER JOIN [dbo].[DeliveryOrder]   DO WITH (NOLOCK)
             ON [MSL].[LogGuideSerie] = [DO].[Guide_Serie]
                AND [MSL].[LogGuideNumber] = [DO].[Guide_Number]
-               AND [DO].[StatusOrderId] NOT IN ( @NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER )
         INNER JOIN [dbo].[StatusOrder]     SO
             ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
         LEFT JOIN [dbo].[Membership] M
@@ -152,6 +151,7 @@ BEGIN
     WHERE [MSL].[CustomerId] = @CUSTOMER_ID
          -- AND [MSL].[MembershipId] = @MEMBERSHIP_ID
           AND [MSL].[SubscriptionId] IS NULL
+          AND [DO].[StatusOrderId] NOT IN ( @NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER )
           AND [MSL].[RowStatus] = 1
        --   AND [MSL].[SalesPackageStatusId] = @MEMBERSHIP_STATUS_ACTIVE_ID;
 
@@ -249,7 +249,6 @@ BEGIN
         INNER JOIN [dbo].[DeliveryOrder]   DO WITH (NOLOCK)
             ON [MSL].[LogGuideSerie] = [DO].[Guide_Serie]
                AND [MSL].[LogGuideNumber] = [DO].[Guide_Number]
-               AND [DO].[StatusOrderId] NOT IN ( @NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER )
         INNER JOIN [dbo].[StatusOrder]     SO
             ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
         LEFT JOIN [dbo].[Membership] M
@@ -261,6 +260,7 @@ BEGIN
     WHERE --[MSL].[MembershipId] = @MEMBERSHIP_ID
            [MSL].[SubscriptionId] IS NOT NULL
           AND [MSL].[RowStatus] = 1
+          AND [DO].[StatusOrderId] NOT IN ( @NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER )
 		    AND [MSL].CustomerId= @CUSTOMER_ID
     ORDER BY [MSL].[SubscriptionId]
            , [MSL].[LogServiceNumber];

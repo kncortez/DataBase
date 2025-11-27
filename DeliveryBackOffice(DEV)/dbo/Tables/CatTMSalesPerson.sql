@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTMSalesPerson] (
-    [IdCatTMSalesPerson] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatTMSalesPerson] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Code]               NVARCHAR (25)  NOT NULL,
     [FirstName]          NVARCHAR (100) NOT NULL,
     [LastName]           NVARCHAR (100) NOT NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_CatTMSalesPerson_CatSaleAdvisor] FOREIGN KEY ([CatSaleAdvisorId]) REFERENCES [dbo].[CatSaleAdvisor] ([IdSaleAdvisor]),
     CONSTRAINT [FK_CatTMSalesPerson_RegisterUser] FOREIGN KEY ([RegisterUserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
+
+
 
 
 

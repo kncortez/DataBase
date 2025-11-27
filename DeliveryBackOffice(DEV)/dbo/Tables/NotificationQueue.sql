@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[NotificationQueue] (
-    [IdNotificationQueue]     BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdNotificationQueue]     BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatNotificationMediumId] INT            NOT NULL,
     [CatNotificationTypeId]   BIGINT         NOT NULL,
     [CustomerId]              INT            NULL,
@@ -21,6 +21,10 @@
     CONSTRAINT [FK_NotificationQueue_CatNotificationType] FOREIGN KEY ([CatNotificationTypeId]) REFERENCES [dbo].[CatNotificationType] ([IdCatNotificationType]),
     CONSTRAINT [FK_NotificationQueue_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
+
+
+
+
 
 
 GO
@@ -89,4 +93,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para registro de cola de notificaciones', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'NotificationQueue';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatNotificationMediumId_CatNotificationTypeId_CustomerId_DateToSend_IsSent_RowStatus]
+    ON [dbo].[NotificationQueue]([CatNotificationMediumId] ASC, [CatNotificationTypeId] ASC, [CustomerId] ASC, [DateToSend] ASC, [IsSent] ASC, [RowStatus] ASC);
 

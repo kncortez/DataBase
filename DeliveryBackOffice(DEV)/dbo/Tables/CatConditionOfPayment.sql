@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatConditionOfPayment] (
-    [IdConditionOfPayment]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdConditionOfPayment]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ConditionOfPayment]            NVARCHAR (50)  NOT NULL,
     [ConditionOfPaymenDescription]  NVARCHAR (200) NULL,
     [ConditionOfPaymenAbbreviation] NVARCHAR (20)  NULL,
@@ -8,10 +8,12 @@
     [DateCreated]                   DATETIME       NOT NULL,
     [TokenUpdated]                  NVARCHAR (50)  NULL,
     [DateUpdated]                   DATETIME       NULL,
-    [IdCountry]                     VARCHAR(2)     NULL,
+    [IdCountry]                     VARCHAR (2)    NULL,
     CONSTRAINT [PK_CatConditionOfPayment] PRIMARY KEY CLUSTERED ([IdConditionOfPayment] ASC),
-    CONSTRAINT [FK_CatConditionOfPayment_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    CONSTRAINT [FK_CatConditionOfPayment_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SettlementPickupStation] (
-    [IdSettlementPickupStation] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdSettlementPickupStation] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CouriermanId]              VARCHAR (50)  NULL,
     [RouteId]                   VARCHAR (250) NOT NULL,
     [TransactionDate]           DATE          NOT NULL,
@@ -10,6 +10,10 @@
     [DateUpdated]               DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdSettlementPickupStation] ASC)
 );
+
+
+
+
 
 
 GO
@@ -50,4 +54,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario de 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SettlementPickupStation', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_SettlementPickupStation_TransactionDate_RowStatus]
+    ON [dbo].[SettlementPickupStation]([TransactionDate] ASC, [RowStatus] ASC);
 

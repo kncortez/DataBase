@@ -19,6 +19,26 @@
 -- Update date: <2024-06-26>
 -- Description:	<Se agrega validacion para obtener campo isCOD sin valor null>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2024-06-26>
+-- Description:	<Se agrega validacion para obtener campo isCOD sin valor null>
+-- =============================================
+-- Modified:	<Tito Garcia>
+-- Update date: <2024-10-21>
+-- Description:	<Se agrega nuevo campo IsVoucherRequired>
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2025-06-12>
+-- Description:	<Facturación SV - Obtiene campos de direccion de clientes para facturar de El Salvador>
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2025-08-14>
+-- Description:	<Guias Rapidas - Obtiene campos que indica si restringue uso a tarifario por articulo>
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2025-08-14>
+-- Description:	<Facturacion SV - Se quita validacion isnull al consultar tabla customer>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer AS INT = -1
@@ -36,7 +56,7 @@ BEGIN
         SELECT CAST(cst.IdCustomer AS NVARCHAR)                                                                [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                                   [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
               AND
@@ -44,14 +64,14 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
         SELECT cst.SAPCardCode                                                                          [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                            [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
               AND
@@ -59,7 +79,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
+			  AND cst.CountryID = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -120,7 +140,9 @@ BEGIN
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
-        FROM Customer cst
+			 , cst.[IsVoucherRequired]
+             , ISNULL(cst.[RestrictionByArticle], 0)       AS RestrictionByArticle
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
               AND
@@ -128,7 +150,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
     END;
 
@@ -138,28 +160,28 @@ BEGIN
         SELECT CAST(cst.IdCustomer AS NVARCHAR)                                                                [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                                   [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
         SELECT cst.SAPCardCode                                                                          [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                            [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
+			  AND cst.CountryID = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -222,14 +244,16 @@ BEGIN
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
 			 , ISNULL(cst.[IsCOD],0) IsCOD
-        FROM Customer cst
+			 , cst.[IsVoucherRequired]
+             , ISNULL(cst.[RestrictionByArticle], 0)       AS RestrictionByArticle
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-              AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+              AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
     END;
@@ -241,40 +265,40 @@ BEGIN
         SELECT CAST(cst.IdCustomer AS NVARCHAR)                                                                [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                                   [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
         SELECT cst.SAPCardCode                                                                          [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                            [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
+			  AND cst.CountryID = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
              , cst.[Name]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 	END;
 
@@ -285,42 +309,57 @@ BEGIN
         SELECT CAST(cst.IdCustomer AS NVARCHAR)                                                                [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                                   [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
         SELECT cst.SAPCardCode                                                                          [IdValue]
              , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
              , cst.CountryID                                                                            [IdFilter]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-              AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
+              AND cst.CountryID = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
              , cst.[Name]
 			 , cst.[SaleAdvisorID]
-        FROM Customer cst
+        FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-			 AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			 AND cst.CountryID = @IdCountry
         ORDER BY cst.Name;
 	END;
+    -- Facturacion El Salvador
+	SELECT
+		BL.Id,
+		BL.IdCustomer,
+        BL.IdTownship,
+        BL.IdProvince,
+		BL.ActivityId AS CodeActivity,
+		BL.NRC,
+		BL.Nirphone,
+		BL.Phone
+    FROM dbo.BillingCustomerBySV BL WITH(NOLOCK)
+    LEFT JOIN dbo.DistrictByBillingSV DIS WITH(NOLOCK)
+       ON DistrictId = DIS.Id
+    WHERE BL.IdCustomer = @IdCustomer
+        AND BL.RowStatus = 1;
 
 END;

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CreditCardTransaction] (
-    [IdTransaction]         BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdTransaction]         BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [System]                TINYINT         NOT NULL,
     [CardNumber]            NVARCHAR (20)   NOT NULL,
     [TypeCardNumber]        NVARCHAR (50)   NOT NULL,
@@ -19,6 +19,8 @@
     [ReasonCodeDescription] NVARCHAR (100)  NULL,
     CONSTRAINT [PK_CreditCardTransaction] PRIMARY KEY CLUSTERED ([IdTransaction] ASC)
 );
+
+
 
 
 GO

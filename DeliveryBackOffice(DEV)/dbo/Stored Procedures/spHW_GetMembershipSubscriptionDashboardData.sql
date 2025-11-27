@@ -33,7 +33,7 @@ BEGIN
         SELECT TOP 1
                CS.IdCatSubscription
         FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
-        WHERE CS.SubscriptionName = 'Plan Diamante' COLLATE Latin1_General_CI_AI
+        WHERE CS.SubscriptionName = 'Plan Diamante' 
     );
 
     SET @DateStart = DATEADD(SECOND, -1, CAST(DATEADD(DAY, 1, CAST(@DateStart AS DATE)) AS DATETIME));

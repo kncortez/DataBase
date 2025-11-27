@@ -11,15 +11,33 @@
 -- Create date: <2023-03-10>
 -- Description:	<Al procesar guías en proceso de recolección desde la CourierApp, si durante el proceso de verificación de montos se detecta una guía en estado terminal, debe impedir el proceso indicando las guías y los estados de estas.>
 -- =============================================
+-- =============================================  
+-- Mofified:    <Brandon, Pedroza>  
+-- Create date: <2025-01-13>  
+-- Description: <Contenerizacion guias - se agrega parametro para buscar guias de un contenedor asociado o referencia>  
+-- =============================================  
 CREATE PROCEDURE [dbo].[spws_get_validate_guides_pickup]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD138515,FD138513,FD13852,FD138514,FD138545,FD135539',
     @IdPickup BIGINT = 120,
-    @Token NVARCHAR(50)
+    @Token NVARCHAR(50),
+    @ReferencesGuide TblReferencesList READONLY,  
+	@ContainerReferences TblContainerList READONLY,  
+	@IdCountry NVARCHAR(2)= 'GT' 
 AS
 BEGIN
 
     SET NOCOUNT ON;
+	
+	--DECLARE @CountryFind TABLE (
+	--	IdCountry varchar(2)
+	--);
+	--INSERT INTO @CountryFind
+	--exec GetCountryOfPickupService @IdPickup,@Token
+	--DECLARE @IDCOUNTRYSERVICE varchar(2) =(SELECT IdCountry FROM @CountryFind)
+	
+	
+
 
     BEGIN TRY
 
@@ -28,7 +46,11 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#ErrorGuides', 'U') IS NOT NULL
             DROP TABLE #ErrorGuides;
 
+        DECLARE @StatusContainerPickUp INT;
 
+	    SET @StatusContainerPickUp = (SELECT IdCatStatus
+									    FROM CatShipContainerStatus WITH(NOLOCK)
+									    WHERE [Name]= 'Creado');
 
 			 CREATE TABLE #listGuides
                 (
@@ -38,18 +60,63 @@ BEGIN
 					charinde NVARCHAR(10),
 					Item INT
                 );
-
-				INSERT INTO #listGuides
-				(
-				    ItemSerie,
-				    ItemNumber,
-				    ItemPiece,
-					charinde,
-					Item
-				)
+            -- BUSCAR GUIAS POR REFERENCIA Y CONTENEDOR  
+        WITH CTE_Ranked AS (
+		        SELECT  DOP.GuideSerie, 
+			            DOP.GuideNumber, 
+			            DOP.NoPiece,
+			            DO.Ticket_Number,
+			            ROW_NUMBER() OVER (PARTITION BY DO.Ticket_Number ORDER BY DOP.GuideSerie DESC, DOP.GuideNumber DESC) AS RowNum,
+			            DO.DateCreated
+		        FROM DeliveryOrder DO WITH (NOLOCK)
+		        INNER JOIN DeliveryOrderPiece DOP WITH(NOLOCK)
+			        ON DO.Guide_Serie = DOP.GuideSerie
+			        AND DO.Guide_Number = DOP.GuideNumber
+		        WHERE DO.Ticket_Number IN (SELECT ReferenceGuide FROM @ReferencesGuide WHERE ReferenceGuide NOT IN ('','0'))
+			        AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry
+	    )
+		INSERT INTO #listGuides
+		(
+			ItemSerie,
+			ItemNumber,
+			ItemPiece,
+			charinde,
+			Item
+		)
+       SELECT   GuideSerie, 
+		        GuideNumber, 
+		        NoPiece,
+		        '',
+		        1
+	    FROM CTE_Ranked
+	    WHERE RowNum = 1
+	    UNION
+	    SELECT  DOP.GuideSerie, 
+			    DOP.GuideNumber, 
+			    DOP.NoPiece, 
+			    '',
+			    1
+	    FROM ShippingContainer CT WITH (NOLOCK)
+	    INNER JOIN ShippingContainerDetail CTD WITH (NOLOCK)
+		    ON CT.IdContainer = CTD.IdContainer
+	    INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
+		    ON CTD.GuideSerie = DOP.GuideSerie
+		    AND CTD.GuideNumber = DOP.GuideNumber
+	    WHERE CT.IdStatusContainer = @StatusContainerPickUp
+		    AND CTD.RowStatus = 1
+		    AND CT.ReferenceContainer IN (SELECT ContainerReference FROM  @ContainerReferences)
+	    UNION
         SELECT SUBSTRING(Item, 1, 2) ItemSerie,
                SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
-               SUBSTRING(Item, CHARINDEX('-', Item), LEN(Item)) ItemPiece,
+               ISNULL(   (CASE
+										WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))) > 1 THEN
+											1
+										ELSE
+											SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))
+									END
+									),
+									0
+								) ItemPiece,
                CHARINDEX('-', Item) charinde,
                LEN(Item) len
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
@@ -112,7 +179,11 @@ BEGIN
                ISNULL(dr.Guide_Number, 0) exist,
                IIF(ISNULL(pyt.IdHeaderRecolection, 0) = @IdPickup, 1, IIF(ISNULL(pyt.IdHeaderRecolection, 0) = 0, 1, 0)) pik,
                IIF(dr.StatusOrderId IN ( 16, 15, 1,21,20, 10 ), 1, 0) status,
-               st.OrderDescription
+               st.OrderDescription,
+			   --IIF(DR.SenderCountryId=@IDCOUNTRYSERVICE,1,0) samecountry,
+               1 samecountry,
+			   DR.SenderCountryId guidecountry
+			   
         --, pyt.IdHeaderRecolection
         INTO #ErrorGuides
         FROM #listGuides lst
@@ -131,7 +202,8 @@ BEGIN
 									[dbo].[StatusOrder] SO  WITH(NOLOCK)
 								WHERE
 									[CatCheckpointTypeId] = 3 And SO.RowStatus =1
-							);
+							) 
+							--or DR.SenderCountryId <>@IDCOUNTRYSERVICE;
 
 		CREATE NONCLUSTERED INDEX IX_ErrorGuides_Exist
             ON #ErrorGuides (exist);
@@ -142,10 +214,20 @@ BEGIN
         --select * from #ErrorGuides
 
         SELECT CONCAT(er.ItemSerie, er.ItemNumber) Guide,
-               IIF(er.exist = 0, 'Servicio no existe', CONCAT('Servicio ', er.OrderDescription)) Mensaje
+			(
+			CASE 
+				WHEN er.exist = 0 THEN
+					'Servicio no existe'
+				--WHEN er.samecountry = 0 THEN
+					--'El servicio de recolección pertenece al pais '+@IDCOUNTRYSERVICE+', no coincide con el país de origen de la guía ('+er.guidecountry+').'
+				ELSE
+					er.OrderDescription
+				END
+			) Mensaje
+               --IIF(er.exist = 0, 'Servicio no existe', CONCAT('Servicio ', er.OrderDescription)) Mensaje
         FROM #ErrorGuides er
-        WHERE er.exist = 0
-              OR er.status = 0; --  or er.pik =0  Se elimina esta validacione por la reasignación
+        WHERE (er.exist = 0
+              OR er.status = 0 OR ER.samecountry=0); --  or er.pik =0  Se elimina esta validacione por la reasignación
 
     END TRY
     BEGIN CATCH

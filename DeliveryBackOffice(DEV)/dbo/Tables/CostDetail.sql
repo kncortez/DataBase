@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CostDetail] (
-    [IdCostDetail]  INT             IDENTITY (1, 1) NOT NULL,
+    [IdCostDetail]  INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCost]        INT             NULL,
     [IdTypeOfMoney] INT             NULL,
     [Amount]        DECIMAL (18, 2) NULL,
@@ -22,6 +22,10 @@
 
 
 
+
+
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_IdCost]
     ON [dbo].[CostDetail]([IdCost] ASC);
@@ -35,4 +39,9 @@ CREATE NONCLUSTERED INDEX [idx_DateCreated]
 GO
 CREATE NONCLUSTERED INDEX [idx_idcost_amount_voucher]
     ON [dbo].[CostDetail]([IdCost] ASC, [Amount] ASC, [Voucher] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Voucher]
+    ON [dbo].[CostDetail]([Voucher] ASC);
 

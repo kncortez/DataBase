@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AccountingClosuresDetail] (
-    [IdAccountingClosuresDetail] INT            IDENTITY (1, 1) NOT NULL,
+    [IdAccountingClosuresDetail] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountingClosuresHeaderId] INT            NOT NULL,
     [GuideSerie]                 NVARCHAR (2)   NULL,
     [GuideNumber]                INT            NULL,
@@ -15,6 +15,10 @@
     CONSTRAINT [FK_AccountingClosuresDetail_AccountingClosuresHeader] FOREIGN KEY ([AccountingClosuresHeaderId]) REFERENCES [dbo].[AccountingClosuresHeader] ([IdAccountingClosuresHeader]),
     CONSTRAINT [FK_AccountingClosuresDetail_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
+
+
 
 
 
@@ -82,4 +86,9 @@ CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_RowStatus_DopId]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de detalle de guías asociadas a un cierre de punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountingClosuresDetail';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountingClosuresHeaderId_RowStatus]
+    ON [dbo].[AccountingClosuresDetail]([AccountingClosuresHeaderId] ASC, [RowStatus] ASC);
 

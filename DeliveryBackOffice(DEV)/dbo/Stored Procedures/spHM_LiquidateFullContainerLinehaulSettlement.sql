@@ -3,12 +3,18 @@
 -- Create date: <22-08-2022>
 -- Description:	<Liquidate a full container in Linehaul Settlement>
 -- =============================================
+-- Propósito: Agregar parámetro @IdStation y validación de Hub destino
+-- Autor:     <Freddy Camposeco>
+-- Historia:  <FDAPI-4724>
+-- Fecha:     <2025-10-15>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_LiquidateFullContainerLinehaulSettlement]
 	@LinehaulRouteSettlementId AS INT,
 	@LinehaulRoutePreparationId AS INT,
 	@ContainerSerie AS NVARCHAR(5),
 	@ContainerNumber AS NVARCHAR(15),
-	@TknUser AS NVARCHAR(50)
+	@TknUser AS NVARCHAR(50),
+	@IdStation AS INT = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -31,41 +37,52 @@ BEGIN
 	DECLARE @SETTLEMENT_STATUS_ORDER_ID AS INT;		-- StatusOrder
 	
 	SET @CONTAINER_SERIE_ID = (SELECT	[CTC].[IdCatTypeContainer]
-								FROM	[dbo].[CatTypeContainer] CTC
+								FROM	[dbo].[CatTypeContainer] CTC WITH(NOLOCK)
 								WHERE	[CTC].[TypeContainerSerie] = @ContainerSerie);
 
 	SET @CONTAINER_ID = (SELECT	[C].[IdContainer]
-						FROM	[DBO].[Container] C
+						FROM	[DBO].[Container] C WITH(NOLOCK)
 						WHERE	[C].[CatTypeContainerId] = @CONTAINER_SERIE_ID
 							AND [C].[ContainerNumber] = @ContainerNumber);
 							
 	SET @STATUS_IN_TRANSIT = (SELECT	[CLS].[IdCatLinehaulStatus]
-								FROM	[dbo].[CatLinehaulStatus] CLS
+								FROM	[dbo].[CatLinehaulStatus] CLS WITH(NOLOCK)
 								WHERE	[CLS].[StatusName] = 'IN TRANSIT');
 
 	SET @EXISTING_CONTAINER_LRPC = (SELECT  [LRPC].[IdLinehaulRoutePreparationContainer]
-									FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
+									FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH(NOLOCK)
 									WHERE	[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 										AND	[LRPC].[ContainerId] = @CONTAINER_ID
 										AND [LRPC].[RowStatus] = 1
 										AND [LRPC].[CatLinehaulStatusId] = @STATUS_IN_TRANSIT);
 
 	SET @LRPC_HUB_ID = (SELECT  [LRPC].[HubDestinyId]
-						FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
+						FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH(NOLOCK)
 						WHERE	[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_CONTAINER_LRPC);
 	
 	SET @EXISTING_CONTAINER_LRSC = (SELECT	COUNT([LRSC].[IdLinehaulRouteSettlementContainer]) AS CONT
-									FROM	[dbo].[LinehaulRouteSettlementContainer] LRSC
+									FROM	[dbo].[LinehaulRouteSettlementContainer] LRSC WITH(NOLOCK)
 									WHERE	[LRSC].[ContainerId] = @CONTAINER_ID
 										AND	[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 	SET @STOPOVER_STATUS_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
-								FROM	[dbo].[CatLinehaulStatus] CLS
+								FROM	[dbo].[CatLinehaulStatus] CLS WITH(NOLOCK)
 								WHERE	[CLS].[StatusName] = 'STOPOVER');
 
 	SET @SETTLEMENT_STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
-										FROM	[dbo].[StatusOrder] SO
+										FROM	[dbo].[StatusOrder] SO WITH(NOLOCK)
 										WHERE	[SO].[OrderDescription] = 'En escala');
+
+	-- Validar que la estación de liquidación coincide con el HUB destino planificado
+	IF (@IdStation IS NOT NULL AND @IdStation != @LRPC_HUB_ID)
+	BEGIN
+		SELECT 0 [spResult], 
+			   'ERROR: La liquidación debe realizarse en el HUB destino planificado. Hub esperado: ' 
+			   + CAST(@LRPC_HUB_ID AS NVARCHAR(10)) 
+			   + ', Hub recibido: ' 
+			   + CAST(@IdStation AS NVARCHAR(10)) [spMessage];
+		RETURN;
+	END
 
 	BEGIN TRANSACTION
 	BEGIN TRY
@@ -143,21 +160,23 @@ BEGIN
 		FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-			AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
+		--	AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
 		INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 			ON		[LRSCD].[GuideSerie] = [LRPCD].[GuideSerie]
 			AND		[LRSCD].[GuideNumber] = [LRPCD].[GuideNumber]
-			AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC;
+		WHERE		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC
+			
 
 		-- UPDATE SETTLEMENT CONTAINER COUNTERS
 		SET @COUNT_DRY_QUANTITY = (SELECT		COUNT([LRSCDP].[PieceNumber]) AS CONT
 									FROM		[dbo].[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
 									INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]	
-										AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC
+										--
 									WHERE	[LRSCDP].[IsDryPiece] = 1
 										AND [LRSCDP].[ActCode] IS NULL
-										AND [LRSCDP].[RowStatus] = 1);
+										AND [LRSCDP].[RowStatus] = 1
+										AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC)
 
 		SET @COUNT_COLD_QUANTITY = (SELECT		COUNT([LRSCDP].[PieceNumber]) AS CONT
 									FROM		[dbo].[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
@@ -189,21 +208,22 @@ BEGIN
 										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 											ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-											AND		[LRSC].[RowStatus] = 1
+										WHERE		[LRSC].[RowStatus] = 1
 											AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 		SET @COUNT_PIECES_RECEIVED = (SELECT		SUM([LRSCD].[PiecesReceived]) AS CONT
 										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 											ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-											AND		[LRSC].[RowStatus] = 1
+											WHERE 
+													[LRSC].[RowStatus] = 1
 											AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 		SET @COUNT_PIECES_MISSING = (SELECT		SUM([LRSCD].[PiecesMissing]) AS CONT
 										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 											ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-											AND [LRSC].[RowStatus] = 1
+										WHERE [LRSC].[RowStatus] = 1
 											AND [LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 		UPDATE	[LinehaulRouteSettlement]
@@ -228,7 +248,7 @@ BEGIN
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie]
 			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
-			AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
+		WHERE		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
 			AND		[LRPCD].[RowStatus] = 1 ;
 
 		-- INSERT LOG IN DELIVERY ORDER DETAIL
@@ -236,12 +256,14 @@ BEGIN
 					([Guide_Serie],
 					 [Guide_Number],
 					 [StatusOrderId],
+					 [StationId],
 					 [UserCreated],
 					 [DateCreated],
 					 [DateCreatedInSystem])
 		SELECT		[LRPCD].[GuideSerie],
 					[LRPCD].[GuideNumber],
 					@SETTLEMENT_STATUS_ORDER_ID,
+					@IdStation,
 					@TknUser,
 					SYSDATETIME(),
 					SYSDATETIME()
@@ -262,7 +284,7 @@ BEGIN
 			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-			AND		[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_CONTAINER_LRPC;
+		WHERE		[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_CONTAINER_LRPC;
 
 
 		SELECT 1 [spResult], 'Container has been liquidated successfully' [spMessage];

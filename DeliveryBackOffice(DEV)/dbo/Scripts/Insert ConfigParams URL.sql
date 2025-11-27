@@ -1,0 +1,2 @@
+ INSERT INTO dbo.ConfigParams( [Name],	[Description],	[Value],	[Status],	[CreateDate],	[IdCountry],	[IdCurrencyCOD])
+ VALUES('URLLinkdeEntrega','URL de confirmación de datos','https://develop.forzadelivery.com/portal/rastreo/',1,GETDATE(),'GT',NULL)

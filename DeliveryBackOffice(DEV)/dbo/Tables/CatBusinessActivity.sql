@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatBusinessActivity] (
-    [IdBusinessActivity]          INT            IDENTITY (1, 1) NOT NULL,
+    [IdBusinessActivity]          INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [BusinessActivityName]        NVARCHAR (75)  NOT NULL,
     [BusinessActivityDescription] NVARCHAR (200) NULL,
     [RowStatus]                   BIT            NOT NULL,
@@ -7,6 +7,6 @@
     [DateCreated]                 DATETIME       NOT NULL,
     [TokenUpdated]                NVARCHAR (50)  NULL,
     [DateUpdated]                 DATETIME       NULL,
-    CONSTRAINT [PK_CatBusinessActivity] PRIMARY KEY CLUSTERED ([IdBusinessActivity] ASC),
+    CONSTRAINT [PK_CatBusinessActivity] PRIMARY KEY CLUSTERED ([IdBusinessActivity] ASC)
 );
 

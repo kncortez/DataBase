@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LinehaulRouteSettlementContainerDetail] (
-    [IdLinehaulRouteSettlementContainerDetail] INT           IDENTITY (1, 1) NOT NULL,
+    [IdLinehaulRouteSettlementContainerDetail] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRouteSettlementContainerId]       INT           NOT NULL,
     [GuideSerie]                               NVARCHAR (2)  NOT NULL,
     [GuideNumber]                              INT           NOT NULL,
@@ -17,6 +17,12 @@
     PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlementContainerDetail] ASC),
     CONSTRAINT [FK_LinehaulRouteSettlementContainerDetail_RouteSettlementContainer] FOREIGN KEY ([LinehaulRouteSettlementContainerId]) REFERENCES [dbo].[LinehaulRouteSettlementContainer] ([IdLinehaulRouteSettlementContainer])
 );
+
+
+
+
+
+
 
 
 
@@ -89,4 +95,14 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicador b
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para saber si es una guía fuera de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlementContainerDetail', @level2type = N'COLUMN', @level2name = N'IsOffRoute';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_LinehaulRouteSettlementContainerId_GuideSerie_GuideNumber]
+    ON [dbo].[LinehaulRouteSettlementContainerDetail]([LinehaulRouteSettlementContainerId] ASC, [GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_IsOpenProcess_UserProcess]
+    ON [dbo].[LinehaulRouteSettlementContainerDetail]([GuideSerie] ASC, [GuideNumber] ASC, [IsOpenProcess] ASC, [UserProcess] ASC);
 

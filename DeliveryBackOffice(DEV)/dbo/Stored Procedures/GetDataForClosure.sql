@@ -1,8 +1,12 @@
-﻿--EXEC GetDataForClosure
--- =============================================
+﻿-- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-07-02>
 -- Description:	<Se agrega el filtro por pais y el nombre de las cuentas asignadas por pais>
+-- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-07>
+-- Description:	<Mejoras de multipaís en moneda para SV.>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetDataForClosure]
     @VisitPointId INT = 4246,
@@ -109,7 +113,7 @@ BEGIN
            ISNULL(costd.Voucher, '') 'Voucher',
            ISNULL(DOPD.amount, 0) 'PriceShippment',
            ISNULL(DOR.Collect_OnDelivery, 0) 'COD',
-		   CASE WHEN ISNULL(DOR.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END 'CurrencySymbol',
+		   ISNULL(CCC.Symbol, '') 'CurrencySymbol',
            ISNULL(DOPD.CODAmountProcess, 0) 'ProcessedCOD',
            CASE
                WHEN DOPD.TypeofInOutMoneyId = 1 THEN
@@ -143,10 +147,6 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
             ON DOPD.GuideSerie = DOR.Guide_Serie
                AND DOPD.GuideNumber = DOR.Guide_Number
-               AND DOPD.ShipmentCompleted = 1
-               AND DOPD.AccountId = @IdAccount
-               AND DOPD.AccountId > 0
-			 AND DOPD.[TypeofInOutMoneyId] != 8
                
         INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
@@ -170,7 +170,8 @@ BEGIN
                   -- AND 
 				   --costd.Voucher != ''
             --  )
-              
+        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
+			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 	
 	AND DOR.StatusOrderId != 7
@@ -193,6 +194,11 @@ BEGIN
 
               AND ACD.RowStatus = 1
     )
+    
+        AND DOPD.ShipmentCompleted = 1
+        AND DOPD.AccountId = @IdAccount
+        AND DOPD.AccountId > 0
+		AND DOPD.[TypeofInOutMoneyId] != 8
     -- ORDER BY DOPD.DateCreated DESC;
     ---------------------------------------------------------------------------------------------
     UNION ALL
@@ -263,8 +269,6 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Number = dpd.GuideNumber
                AND DOR.Guide_Serie = dpd.GuideSerie
-               AND dpd.CODAmountProcess > 0
-               AND DOR.StatusOrderId != 7
     WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND AccountId = @IdAccount
           AND NOT EXISTS
@@ -279,7 +283,9 @@ BEGIN
               -- FIN MODIFICACIÓN
 
               AND ACD.RowStatus = 1
-    );
+    )
+        AND dpd.CODAmountProcess > 0
+        AND DOR.StatusOrderId != 7;
     WITH ROWCTE (TotalCash, AccountExp, CountCash, TotalCard, CountCard, CurrencySymbolExp, TotalCredit,  CountCredit, AccountCOD, TotalFacturaCash,
                  CountFacturaCash, TotalFacturaCard, CountFacturaCard, CurrencySymbolCOD, IdAccount
                 )
@@ -361,7 +367,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountCard',
-				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolExp',
+				   ISNULL(CCC.Symbol, '') 'CurrencySymbolExp',
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 8 THEN
                            /*SUM(   CASE
@@ -440,7 +446,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard',
-				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolCOD',
+				   ISNULL(CCC.Symbol, '') 'CurrencySymbolCOD',
                    --FIN MODIFICACIÓN 
 
                    DOPD.AccountId IdAccount
@@ -457,9 +463,10 @@ BEGIN
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
                     ON DOPD.GuideSerie = DOR.Guide_Serie
                        AND DOPD.GuideNumber = DOR.Guide_Number
-                       AND DOPD.ShipmentCompleted = 1
-                       AND DOR.StatusOrderId != 7
-			 AND DOPD.[TypeofInOutMoneyId] != 8
+				LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+					ON C.GuideNumber = DOR.Guide_Number AND C.GuideSerie = DOR.Guide_Serie
+				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                   AND DOPD.AccountId = @IdAccount
                   AND
@@ -480,11 +487,15 @@ BEGIN
 
                       AND ACD.RowStatus = 1
             )
+                AND DOPD.ShipmentCompleted = 1
+                AND DOR.StatusOrderId != 7
+                AND DOPD.[TypeofInOutMoneyId] != 8
             GROUP BY DOPD.TypeofInOutMoneyId,
                      DOPD.TypeServiceId,
                      DOPD.amount,
                      AccountId,
-					 DOR.SenderCountryId
+					 DOR.SenderCountryId,
+					 CCC.Symbol
             UNION ALL
             SELECT CASE
                        WHEN DOPD.TypeofInOutMoneyId = 1
@@ -526,7 +537,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountCard',
-				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolExp',
+				   ISNULL(CCC.Symbol, '') 'CurrencySymbolExp',
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 8 THEN
                            SUM(DOPD.amount)
@@ -581,7 +592,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard',
-				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolCOD',
+				   ISNULL(CCC.Symbol, '') 'CurrencySymbolCOD',
                    -- FIN MODIFICACIÓN
 
                    DOPD.AccountId IdAccount
@@ -593,6 +604,10 @@ BEGIN
                     ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 				INNER JOIN DeliveryOrder DOR WITH (NOLOCK)
 					ON DOR.Guide_Number = DOPD.GuideNumber AND DOR.Guide_Serie = DOPD.GuideSerie
+				LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+					ON C.GuideNumber = DOR.Guide_Number AND C.GuideSerie = DOR.Guide_Serie
+				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                   AND DOPD.AccountId = @IdAccount
 			 AND DOPD.[TypeofInOutMoneyId] != 8
@@ -611,7 +626,8 @@ BEGIN
                      DOPD.TypeServiceId,
                      DOPD.amount,
                      AccountId,
-					 DOR.SenderCountryId
+					 DOR.SenderCountryId,
+					 CCC.Symbol
 
         ) S1
         GROUP BY IdAccount, CurrencySymbolExp, CurrencySymbolCOD)

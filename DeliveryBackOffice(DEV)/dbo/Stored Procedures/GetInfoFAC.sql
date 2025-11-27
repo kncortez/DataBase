@@ -10,7 +10,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[GetInfoFAC] 
 	@Type VARCHAR(100) = 'GetResponseFAC',
-	@OrderNumber VARCHAR(100) = NULL, --Guide
+	@OrderNumber VARCHAR(100) = NULL, --Guidefffff
 	@AccountId INT = 0,
 
 	@Token NVARCHAR(50) = '',
@@ -84,8 +84,8 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
 			ON
 				Acc.IdCustomer = Cu.IdCustomer
-				AND
-				Acc.AccIdAccount = @AccountId
+				--AND
+				--Acc.AccIdAccount = @AccountId
 	WHERE
 		Acc.AccIdAccount = @AccountId
 
@@ -236,7 +236,7 @@ BEGIN
                         WHERE vpc.CodeOfReference = do.Sender_ID
                     )
 				LEFT JOIN 
-				[dbo].[DeliveryOrderPaymentDetail] dopd 
+				[dbo].[DeliveryOrderPaymentDetail] dopd  WITH(NOLOCK)
 				ON CG.Guide_Serie = dopd.GuideSerie AND 
 				   CG.Guide_Number = dopd.GuideNumber
             WHERE DopId IS NULL
@@ -603,7 +603,7 @@ BEGIN
 								WHERE 
 									BOP.IdCost = @CostId 
 									AND 
-									BOP.Description = @PromoName COLLATE Latin1_General_CI_AI AND BOP.RowStatus = 1)
+									BOP.Description = @PromoName AND BOP.RowStatus = 1)
 						)
 						BEGIN
 
@@ -618,7 +618,7 @@ BEGIN
 							WHERE
 								IdCost = @CostId
 								AND
-								Description = @PromoName COLLATE Latin1_General_CI_AI
+								Description = @PromoName 
 
 							IF(SCOPE_IDENTITY() > 0)
 								SET @CoUpdated = 1;

@@ -18,21 +18,17 @@ CREATE PROCEDURE [dbo].[SPHW_RegistrationofTransactionProcessStatesNonLoggedinUs
 @TblSalePackageMarketPlace [TblProductMarketPlace2] READONLY,
 @InvoiceEmail AS NVARCHAR(500),
 @Vaucher AS NVARCHAR (50),
-@PhoneNumber AS NVARCHAR(10) 
-
-	
+@PhoneNumber AS NVARCHAR(20) 
 AS
 BEGIN
-	
 	
     BEGIN TRAN
 	BEGIN TRY
 		SET NOCOUNT ON; 
-	
+		
 	DECLARE  @isSuscription AS BIT 
-
-
-
+	DECLARE  @PhoneNumber2 AS NVARCHAR(10);
+	SET @PhoneNumber2 =RIGHT(LTRIM(REPLACE(@PhoneNumber, '+','')), 8);
 	INSERT INTO [dbo].[RegistrationofTransactionProcessStates]
 	(
 	  AccountId,
@@ -277,14 +273,11 @@ BEGIN
 					  THEN NULL
 					  ELSE T.ProductGiftShippingEmail
 					  END,
-		@PhoneNumber
+		@PhoneNumber2
     FROM @TblSalePackageMarketPlace AS T;
 
 	COMMIT TRAN
-
 	SELECT 1 AS 'ResultCode' 
-
-
 
 END TRY
 	BEGIN CATCH
@@ -300,5 +293,4 @@ END TRY
                ERROR_MESSAGE() AS [ErrorMessage];
 
 	END CATCH
- 
 END

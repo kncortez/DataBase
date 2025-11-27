@@ -151,14 +151,14 @@ BEGIN
 				   ,bop.Amount Amount
 				FROM AccountServiceCartDetail ascd
 				INNER JOIN Cost c WITH (NOLOCK)
-					ON CONCAT(ascd.GuideSerie, ascd.GuideNumber) = c.ProductNumber
-						AND c.RowStatus = 1
+					ON c.GuideSerie = ascd.GuideSerie AND c.GuideNumber = ascd.GuideNumber
 				INNER JOIN BreakdownOfPayment bop WITH (NOLOCK)
 					ON c.IdCost = bop.IdCost
-						AND bop.RowStatus = 1
-						AND bop.Amount <> 0
 				WHERE ascd.AccountServiceCartId = @AccountServiceCartId
 				AND ascd.RowStatus = 1
+				AND bop.RowStatus = 1
+				AND bop.Amount <> 0
+				AND c.RowStatus = 1
 				ORDER BY bop.IdBreakdownOfPayment
 				
 			END

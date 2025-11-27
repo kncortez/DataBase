@@ -4,7 +4,7 @@
 -- Description:	<Insert a new Linehaul Route Preparation Document>
 -- =============================================
 
-CREATE PROCEDURE [DBO].[spHM_GenerateLinehaulRoutePreparation] 
+CREATE PROCEDURE [dbo].[spHM_GenerateLinehaulRoutePreparation] 
 	@StationId AS INT,
 	@RouteId AS INT,
 	@UserName AS VARCHAR(25),
@@ -12,6 +12,7 @@ CREATE PROCEDURE [DBO].[spHM_GenerateLinehaulRoutePreparation]
 	@TknUsr AS VARCHAR(50)
 AS
 BEGIN
+	set arithabort on;
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;

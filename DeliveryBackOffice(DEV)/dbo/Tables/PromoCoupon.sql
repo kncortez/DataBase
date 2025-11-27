@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[PromoCoupon] (
-    [IdPromoCoupon]                        INT             IDENTITY (1, 1) NOT NULL,
+    [IdPromoCoupon]                        INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatPromoId]                           INT             NOT NULL,
     [PromoCouponSerie]                     NVARCHAR (20)   NOT NULL,
     [GuideSerieOrigin]                     NVARCHAR (2)    NULL,
@@ -47,6 +47,12 @@
     CONSTRAINT [FK_PromoCoupon_VisitPointClientPortfolioDestination] FOREIGN KEY ([VisitPointClientPortfolioDestination]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio]),
     CONSTRAINT [FK_PromoCoupon_VisitPointClientPortfolioOrigin] FOREIGN KEY ([VisitPointClientPortfolioOrigin]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio])
 );
+
+
+
+
+
+
 
 
 GO
@@ -185,4 +191,14 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fec
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PromoCoupon', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_PromoCouponSerie_RedeemedDate_RowStatus_FinalActiveDate]
+    ON [dbo].[PromoCoupon]([PromoCouponSerie] ASC, [RedeemedDate] ASC, [RowStatus] ASC, [FinalActiveDate] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideNumberOrigin_GuideSerieOrigin]
+    ON [dbo].[PromoCoupon]([GuideNumberOrigin] ASC, [GuideSerieOrigin] ASC);
 

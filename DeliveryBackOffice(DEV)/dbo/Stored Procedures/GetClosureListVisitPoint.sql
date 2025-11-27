@@ -1,11 +1,4 @@
-﻿/*
-EXEC GetClosureList
-@VisitPointId = -1
-,@StartDate = '20210627'
-,@EndDate = '20210627'
-*/
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Alejandro Rodríguez>
 -- Create date: <2022-03-29>
 -- Description:	<SP para obtener la lista de cierres que se procesaron en un express center por VisitPoint>
@@ -58,17 +51,22 @@ BEGIN
 		,ACH.TotalAmountFacturaCashDeclared
 		,ACH.TotalAmountFacturaCard
 		,ACH.TotalAmountFacturaCardDeclared
-		,CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END CunrrencySymbol
+		,ISNULL(CCC.Symbol,'') CunrrencySymbol
 		-- FIN MODIFICACIÓN
 	FROM DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint ACH
-	JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 		ON ACH.VisitPoint = VPC.CodeOfReference
-	JOIN DeliveryBackOffice.dbo.RegisterUser REU 
+	INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 		ON REU.UsrIdUser = ACH.UserId
+	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+		ON VPC.CountryId = DC.Currency_IdCountry
+	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+		ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
 	WHERE CAST(ACH.DateCreated AS DATE) 
 		BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)
 		AND (@VisitPointId = ACH.VisitPoint OR @VisitPointId = -1)
-
+		AND DC.DefaultPerCountry = 1
+		
 	select @Account AS AccountExp,
 		   @AccountCOD AS AccountCOD,
 		   Value 'URL' from ConfigParams

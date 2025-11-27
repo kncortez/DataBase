@@ -89,8 +89,8 @@ BEGIN
 	SELECT A1.IdCustomer FROM DeliveryBackOffice.dbo.Customer A1 WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.DBO.VisitPointClient  A2 WITH(NOLOCK) 
 	ON A1.IdCustomer = A2.CustomerID
+	WHERE DO.Sender_ID = A2.CodeOfReference    
 	AND A2.IdKindOfVPClient = 1
-	WHERE DO.Sender_ID = A2.CodeOfReference
  )
  AND NOT EXISTS --búsqueda por customer
  (
@@ -163,9 +163,9 @@ BEGIN
           LEFT JOIN [dbo].[DeliveryBank] AS bank
                  ON bank.Id_bank = CDATA.DCBA_Bank_Id
     WHERE ISNULL(IIF(CDATA.DCBA_Bank_Id = '', NULL, CDATA.DCBA_Bank_Id), 0) <> 0
-      AND ISNULL(bank.Id_country,'GT') = IIF(@IdCountry = '-1', ISNULL(bank.Id_country,'GT'), @IdCountry)
+      AND bank.Id_country = @IdCountry--IIF(@IdCountry = '-1', bank.Id_country, @IdCountry)  
+   --OPTION (MAXDOP 1);  
 END;
-
 
 
 

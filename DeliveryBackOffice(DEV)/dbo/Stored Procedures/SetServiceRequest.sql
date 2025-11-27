@@ -1,8 +1,12 @@
-﻿
+﻿-- =============================================
+-- Author:	<Oscar Rodriguez>
+-- Description: Se regresa informacion de poblado de origen
+-- =============================================
+
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
     @TblServiceRequest AS TblServiceRequest3 READONLY,
-    @TblDeliveryOrders AS TblDeliveryOrders READONLY,
+    @TblDeliveryOrders AS TblDeliveryOrders_v2 READONLY,
 	@IsArticle BIT = 0
 AS
 BEGIN
@@ -45,8 +49,9 @@ BEGIN
     /*********************************************************************************************/
     DECLARE @CorrelativeTable AS TABLE
     (
-        [Row_Number] [INT] IDENTITY(1, 1), -- no de fila
-        [Guide_Number] [INT] NULL          -- correlativo autogenerado
+        Row_Number INT IDENTITY(1, 1), -- no de fila
+        Guide_Number INT NULL,          -- correlativo autogenerado
+        Guide_Serie VARCHAR(2) NULL
     );
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
     BEGIN TRANSACTION;
@@ -72,9 +77,9 @@ BEGIN
             WHERE num + 1 <= @endnum)
         INSERT INTO @CorrelativeTable
         (
-            Guide_Number
+            Guide_Number, Guide_Serie
         )
-        SELECT NEXT VALUE FOR [dbo].[NewGuideNumberSequence]
+        SELECT NEXT VALUE FOR [dbo].[NewGuideNumberSequence], @GuideSerie
         FROM gen
         OPTION (MAXRECURSION 10000);
 
@@ -134,7 +139,6 @@ BEGIN
                -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                --[Collect],
                NULL 'SenderIdTownship',
-               NULL 'ReceiverIdTownship',
                NULL 'HubOriginId',
                NULL 'HubDestinationId',
                NULL 'SourceSystemId',
@@ -145,8 +149,11 @@ BEGIN
                NULL 'OrderUserCreated',
                NULL 'SalePipeLineId',
 			   -- SE MANDA EL PAIS CRISTIAN SUAZO
-			   '  ' AS 'ReceiverCountryId'
+			   '  ' AS 'ReceiverCountryId',
         -- FIN MODIFICACION
+               [ReceiverIdTownship],
+			   [ReceiverIdSettlement],
+			   [SenderIdSettlement]
 
         INTO #GuideTable
         FROM @TblDeliveryOrders
@@ -216,18 +223,6 @@ BEGIN
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
                       )
             ),
-            ReceiverIdTownship =
-            (
-                SELECT IdTownship
-                FROM [DeliveryBackOffice].[dbo].[Township]
-                WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Town)
-                      AND IdProvince =
-                      (
-                          SELECT IdProvince
-                          FROM [DeliveryBackOffice].[dbo].[Province]
-                          WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
-                      )
-            ),
             SourceSystemId =
             (
                 SELECT SysIdSystem
@@ -263,7 +258,7 @@ BEGIN
             IdCustomer =
             (
                 SELECT CustomerID
-                FROM DeliveryBackOffice.dbo.VisitPointClient
+                FROM DeliveryBackOffice.dbo.VisitPointClient WITH (NOLOCK)
                 WHERE CodeOfReference = t.Sender_ID
             ),
             SalePipeLineId =
@@ -370,8 +365,11 @@ BEGIN
             [OrderUserCreated],
             [SalePipeLineId],
 			[SenderCountryId],
-			[ReceiverCountryId]
+			[ReceiverCountryId],
+            [GuideType],
         -- FIN MODIFICACION
+			[ReceiverIdSettlement],
+			[SenderIdSettlement]
         )
         SELECT GT.[Ticket_Number],
                GT.[Order_Number],
@@ -441,8 +439,11 @@ BEGIN
                GT.OrderUserCreated,
                GT.SalePipeLineId,
 			   GT.IdCountrySender,
-			   GT.ReceiverCountryId
+			   GT.ReceiverCountryId,
+               CASE WHEN GT.IdCountrySender = ReceiverCountryId THEN 'DOM' ELSE 'INT' END,
         -- FIN MODIFICACION
+               NULLIF(GT.ReceiverIdSettlement,0),
+			   GT.SenderIdSettlement
         FROM #GuideTable GT;
 
 		SELECT @IdCountry = IdCountrySender  FROM #GuideTable
@@ -506,19 +507,31 @@ BEGIN
 			   ,NULL
 			   ,NULL
 			FROM #GuideTable GT
-			INNER JOIN RateByCustomer rc WITH (NOLOCK)
-				ON rc.RbcId = (SELECT TOP 1
-							rbc.RbcId
-						FROM RatebyCustomer rbc WITH (NOLOCK)
-						INNER JOIN VisitPointClient vpc WITH (NOLOCK)
-							ON GT.Sender_ID = vpc.CodeOfReference
-						WHERE ISNULL(GT.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
-						AND rbc.RbcRowStatus = 1
-						AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
-						OR rbc.RbcCodeOfReference IS NULL)
-						ORDER BY rbc.RbcCodeOfReference DESC)
-			INNER JOIN RateHeader rh WITH (NOLOCK)
-				ON rc.RbcIdRate = rh.RheId
+            CROSS APPLY (
+                SELECT TOP 1 RbcId FROM (
+                    SELECT TOP 1 rbc.RbcId, 1 AS Priority
+                    FROM RatebyCustomer rbc WITH (NOLOCK)
+                    INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+                        ON GT.Sender_ID = vpc.CodeOfReference
+                    WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
+                        AND rbc.RbcRowStatus = 1
+                        AND rbc.RbcCodeOfReference = vpc.CodeOfReference        
+                    UNION ALL        
+                    SELECT TOP 1 rbc.RbcId, 2 AS Priority
+                    FROM RatebyCustomer rbc WITH (NOLOCK)
+                    INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+                        ON GT.Sender_ID = vpc.CodeOfReference
+                    WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
+                        AND rbc.RbcRowStatus = 1
+                        AND rbc.RbcCodeOfReference IS NULL
+                    ORDER BY rbc.RbcCodeOfReference DESC                           
+                ) AS CombinedResults
+                ORDER BY Priority
+            ) AS BestRate
+            INNER JOIN RateByCustomer rc WITH (NOLOCK)
+                ON rc.RbcId = BestRate.RbcId
+            INNER JOIN RateHeader rh WITH (NOLOCK)
+                ON rc.RbcIdRate = rh.RheId;
         -- Fin FDAPI-1418 Oscar Morales 2023-02-23
 
         -- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
@@ -687,7 +700,7 @@ BEGIN
                     SELECT TOP 1
                            CustomerID
                     FROM #GuideTable
-                        INNER JOIN dbo.VisitPointClient
+                        INNER JOIN dbo.VisitPointClient WITH (NOLOCK)
                             ON CodeOfReference = Sender_ID
                 );
 
@@ -788,14 +801,17 @@ BEGIN
 					[DO].[Sender_ID] = [VPC].[CodeOfReference]
 		------------------------------------------------------
 
-		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
-		INNER JOIN @CorrelativeTable ct
-		ON do.Guide_Number = ct.Guide_Number
-		INNER JOIN Membership mb
-		ON do.IdCustomer = mb.CustomerId
-		WHERE mb.CatMembershipStatusId = 3
-		AND mb.ExpirationDate >= GETDATE()
-		AND mb.RowStatus = 1)
+		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) 
+                                FROM DeliveryOrder do WITH (NOLOCK)
+		                            INNER JOIN @CorrelativeTable ct
+		                                ON do.Guide_Number = ct.Guide_Number
+                                        AND do.Guide_Serie = ct.Guide_Serie
+		                            INNER JOIN Membership mb
+		                                ON do.IdCustomer = mb.CustomerId
+		                        WHERE mb.CatMembershipStatusId = 3
+		                            AND mb.ExpirationDate >= GETDATE()
+		                            AND mb.RowStatus = 1
+                             )
 
         DROP TABLE #GuideTable;
 
@@ -847,7 +863,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
 	(
@@ -857,7 +873,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @IndividualWebSys INT =
 	(
@@ -867,7 +883,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web' -- COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -877,7 +893,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -887,7 +903,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -897,7 +913,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI 
 	)
 
 
@@ -976,11 +992,22 @@ BEGIN
 						ELSE 'API'
 					END
 			)'GuideOrigin',
-			D.ReceiverCountryId
+			D.ReceiverCountryId,
+			IIF(D.InsuranceAmount>800 AND D.IsInsuarance=1,1,0) 'IsInsured',
+			CASE
+									WHEN DOP.PiecePhysicalWeight > 0 THEN 
+								  IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT))
+								ELSE 
+									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
+								'WeightLB',
+								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
+			ISNULL(DSC.RouteCode,'') AS 'RouteCode',
+			ISNULL(DSC.RouteCode,'') AS 'Route_Code',
+			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
-				AND D.Guide_Serie = @GuideSerie
+				AND C.Guide_Serie = D.Guide_Serie
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
@@ -989,19 +1016,35 @@ BEGIN
 			    AND MMBSHP.ExpirationDate >= GETDATE()
 				AND MMBSHP.RowStatus = 1
 			LEFT JOIN DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
-				ON DOPD.GuideNumber = D.Guide_Number
+				ON dopd.GuideSerie = d.Guide_Serie and DOPD.GuideNumber = D.Guide_Number
 			LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
 				ON vpct.CodeOfReference = D.Sender_ID
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
 				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Province] PrvOri  WITH(NOLOCK) 
 				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+			LEFT JOIN [dbo].[del_ParametrosFactura] DPF WITH(NOLOCK)
+			    ON  D.[OriginSenderId] = DPF.dpf_VpCodeOfReference
+			LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
+			    ON DSC.IdSettlement = D.ReceiverIdSettlement
+			LEFT JOIN [dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+			    ON   DOP.GuideSerie = D.Guide_Serie   AND  DOP.GuideNumber  = D.Guide_Number
+			LEFT JOIN  dbo.RatebyCustomer RC WITH(NOLOCK)
+			   ON D.IdCustomer = RC.RbcIdCustomer  AND RbcRowStatus = 1 AND (D.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
+            LEFT JOIN    dbo.RateHeader RH WITH(NOLOCK)
+              ON RC.RbcIdRate= RH.RheId
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (
                       SELECT CT.Guide_Number FROM @CorrelativeTable CT
                   )
-		ORDER BY C.[Row_Number] ASC;
+		ORDER BY C.[Row_Number] ,
+			  CASE 
+				WHEN RbcCodeOfReference = D.Sender_ID THEN 1
+				WHEN RbcCodeOfReference IS NULL THEN 2
+				ELSE 3
+			  END
+			  ASC;
     END;
 END;
 

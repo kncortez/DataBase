@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderPaid] (
-    [IdDeliveryOrderPaid]       BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryOrderPaid]       BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Guide_Serie]               NVARCHAR (2)  NULL,
     [Guide_Number]              INT           NULL,
     [Deposit_Number]            NVARCHAR (50) NULL,
@@ -14,6 +14,12 @@
     CONSTRAINT [PK_DeliveryOrderPaid] PRIMARY KEY CLUSTERED ([IdDeliveryOrderPaid] ASC),
     CONSTRAINT [FK_DeliveryOrderPaid_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
+
+
+
+
 
 
 
@@ -38,4 +44,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'0 Depósito
 GO
 CREATE NONCLUSTERED INDEX [IDX_Serie_Numero_guia]
     ON [dbo].[DeliveryOrderPaid]([Guide_Serie] ASC, [Guide_Number] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdStatus_INCLUDE]
+    ON [dbo].[DeliveryOrderPaid]([IdStatus] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Guide_Number_IdStatus_Guide_Serie]
+    ON [dbo].[DeliveryOrderPaid]([Guide_Number] ASC, [IdStatus] ASC, [Guide_Serie] ASC);
 

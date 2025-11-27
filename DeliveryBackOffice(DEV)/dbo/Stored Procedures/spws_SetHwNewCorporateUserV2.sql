@@ -29,7 +29,7 @@ BEGIN
          , @firstName   = vpc.DescriptionOfClient
          , @idCustomer  = vpc.CustomerID
     FROM DeliveryBackOffice.dbo.Customer             cu WITH (NOLOCK)
-        JOIN DeliveryBackOffice.dbo.VisitPointClient vpc
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc
             ON vpc.CustomerID = cu.IdCustomer
     WHERE vpc.IdVisitPointClient = @IdVisitPointClient;
 
@@ -215,3 +215,8 @@ BEGIN
     END;
 
 END;
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[spws_SetHwNewCorporateUserV2] TO [ebarrios]
+    AS [dbo];
+

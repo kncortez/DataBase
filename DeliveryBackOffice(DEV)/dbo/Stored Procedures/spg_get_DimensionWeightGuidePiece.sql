@@ -30,7 +30,7 @@ BEGIN
             IF
             (
                 SELECT IdCustomer
-                FROM DeliveryBackOffice.dbo.DeliveryOrder
+                FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
                 WHERE Guide_Number = @numberGuide
                       AND Guide_Serie = @serieGuide
 					  AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
@@ -48,11 +48,11 @@ BEGIN
                        dop.PieceHeight,
                        dop.PieceWidth,
                        dop.PieceLength
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro WITH(NOLOCK)
                         ON dro.Guide_Serie = dop.GuideSerie
                            AND dro.Guide_Number = dop.GuideNumber
-                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc
+                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = dro.Sender_ID
                 WHERE dop.GuideSerie = @serieGuide
                       AND dop.GuideNumber = @numberGuide
@@ -72,13 +72,13 @@ BEGIN
                        dop.PieceHeight,
                        dop.PieceWidth,
                        dop.PieceLength
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro WITH(NOLOCK)
                         ON dro.Guide_Serie = dop.GuideSerie
                            AND dro.Guide_Number = dop.GuideNumber
-                    INNER JOIN DeliveryBackOffice.[dbo].[Customer] cli
+                    INNER JOIN DeliveryBackOffice.[dbo].[Customer] cli WITH(NOLOCK)
                         ON cli.IdCustomer = dro.IdCustomer
-                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc
+                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = dro.Sender_ID
                 WHERE dop.GuideSerie = @serieGuide
                       AND dop.GuideNumber = @numberGuide
@@ -90,7 +90,7 @@ BEGIN
             IF
             (
                 SELECT IdCustomer
-                FROM DeliveryBackOffice.dbo.DeliveryOrder
+                FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
                 WHERE Guide_Number = @numberGuide
                       AND Guide_Serie = @serieGuide
 					  AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
@@ -108,11 +108,11 @@ BEGIN
                        dop.PieceHeight,
                        dop.PieceWidth,
                        dop.PieceLength
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro WITH(NOLOCK)
                         ON dro.Guide_Serie = dop.GuideSerie
                            AND dro.Guide_Number = dop.GuideNumber
-                    JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc
+                    JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = dro.Sender_ID
                 WHERE dop.GuideSerie = @serieGuide
                       AND dop.GuideNumber = @numberGuide
@@ -134,13 +134,13 @@ BEGIN
                        dop.PieceHeight,
                        dop.PieceWidth,
                        dop.PieceLength
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro WITH(NOLOCK)
                         ON dro.Guide_Serie = dop.GuideSerie
                            AND dro.Guide_Number = dop.GuideNumber
-                    INNER JOIN DeliveryBackOffice.[dbo].[Customer] cli
+                    INNER JOIN DeliveryBackOffice.[dbo].[Customer] cli WITH(NOLOCK)
                         ON cli.IdCustomer = dro.IdCustomer
-                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc
+                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = dro.Sender_ID
                 WHERE dop.GuideSerie = @serieGuide
                       AND dop.GuideNumber = @numberGuide
@@ -156,7 +156,7 @@ BEGIN
 
         DECLARE @statusOrderId int
         SELECT @statusOrderId = StatusOrderId
-        FROM DeliveryBackOffice.dbo.DeliveryOrder
+        FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
         WHERE Guide_Serie = @serieGuide
               AND Guide_Number = @numberGuide
 			  AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
@@ -164,7 +164,7 @@ BEGIN
         WHILE @count <
         (
             SELECT SUM(Pieces_Dry + Pieces_Cold)
-            FROM DeliveryBackOffice.dbo.DeliveryOrder
+            FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
             WHERE Guide_Serie = @serieGuide
                   AND Guide_Number = @numberGuide
 				  AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
@@ -194,7 +194,7 @@ BEGIN
         IF
         (
             SELECT IdCustomer
-            FROM DeliveryBackOffice.dbo.DeliveryOrder
+            FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
             WHERE Guide_Number = @numberGuide
                   AND Guide_Serie = @serieGuide
 				  AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
@@ -214,11 +214,11 @@ BEGIN
                        dop.PieceHeight,
                        dop.PieceWidth,
                        dop.PieceLength
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro WITH(NOLOCK)
                         ON dro.Guide_Serie = dop.GuideSerie
                            AND dro.Guide_Number = dop.GuideNumber
-                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc
+                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = dro.Sender_ID
                 WHERE dop.GuideSerie = @serieGuide
                       AND dop.GuideNumber = @numberGuide
@@ -239,11 +239,11 @@ BEGIN
                        dop.PieceHeight,
                        dop.PieceWidth,
                        dop.PieceLength
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro WITH(NOLOCK)
                         ON dro.Guide_Serie = dop.GuideSerie
                            AND dro.Guide_Number = dop.GuideNumber
-                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc
+                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = dro.Sender_ID
                 WHERE dop.GuideSerie = @serieGuide
                       AND dop.GuideNumber = @numberGuide
@@ -269,13 +269,13 @@ BEGIN
                        dop.PieceHeight,
                        dop.PieceWidth,
                        dop.PieceLength
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro WITH(NOLOCK)
                         ON dro.Guide_Serie = dop.GuideSerie
                            AND dro.Guide_Number = dop.GuideNumber
-                    INNER JOIN DeliveryBackOffice.[dbo].[Customer] cli
+                    INNER JOIN DeliveryBackOffice.[dbo].[Customer] cli WITH(NOLOCK)
                         ON cli.IdCustomer = dro.IdCustomer
-                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc
+                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = dro.Sender_ID
                 WHERE dop.GuideSerie = @serieGuide
                       AND dop.GuideNumber = @numberGuide
@@ -296,13 +296,13 @@ BEGIN
                        dop.PieceHeight,
                        dop.PieceWidth,
                        dop.PieceLength
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] dro WITH(NOLOCK)
                         ON dro.Guide_Serie = dop.GuideSerie
                            AND dro.Guide_Number = dop.GuideNumber
-                    INNER JOIN DeliveryBackOffice.[dbo].[Customer] cli
+                    INNER JOIN DeliveryBackOffice.[dbo].[Customer] cli WITH(NOLOCK)
                         ON cli.IdCustomer = dro.IdCustomer
-                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc
+                    INNER JOIN DeliveryBackOffice.[dbo].[VisitPointClient] vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = dro.Sender_ID
                 WHERE dop.GuideSerie = @serieGuide
                       AND dop.GuideNumber = @numberGuide

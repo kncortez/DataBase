@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Surcharge] (
-    [IdSurcharge]    INT             IDENTITY (1, 1) NOT NULL,
+    [IdSurcharge]    INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [SurchargeName]  NVARCHAR (50)   NULL,
     [PercentValue]   DECIMAL (18, 2) NULL,
     [SuchargeStatus] BIT             NULL,

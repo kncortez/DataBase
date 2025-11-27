@@ -11,7 +11,44 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+    
+	DECLARE @companyName NVARCHAR(500) =(
+	                                      Select TOP 1 companyName
+												 From [InvoiceBatchDetailLinehaul] IBDL WITH(NOLOCK)
+														  INNER JOIN 
+													  [InvoiceBatchHeader] IBH WITH(NOLOCK)
+													   ON IBDL.IdBatch = IBH.Id_Lote
+												 Where LinehaulRoutePreparationId  = @IdLinehaulRoutePreparation);
+		
+	DECLARE @CAI NVARCHAR(500) =(
+	                                      Select TOP 1  IBH.CAI
+												 From [InvoiceBatchDetailLinehaul] IBDL WITH(NOLOCK)
+														  INNER JOIN 
+													  [InvoiceBatchHeader] IBH WITH(NOLOCK)
+													   ON IBDL.IdBatch = IBH.Id_Lote
+												 Where LinehaulRoutePreparationId  = @IdLinehaulRoutePreparation);
+   DECLARE @Numero NVARCHAR(250) =(
+                                    Select TOP 1
+										CONCAT(     RIGHT('000' + CAST([IBH].Establishment  AS VARCHAR), 3), '-',
+										             RIGHT('000' + CAST(IBH.Emision_Point  AS VARCHAR), 3), '-',
+													  RIGHT('00' + CAST([IBH].TypeDocument AS VARCHAR), 2),'-',
+													  RIGHT('00000000' + CAST([IBDL].ProcessedCorrelative AS VARCHAR), 8))
+									
+									From [InvoiceBatchDetailLinehaul] IBDL WITH(NOLOCK)
+									INNER JOIN 
+									[InvoiceBatchHeader] IBH WITH(NOLOCK)
+									ON IBDL.IdBatch = IBH.Id_Lote
+									Where LinehaulRoutePreparationId = @IdLinehaulRoutePreparation);
 
+	DECLARE @LimiteDate NVARCHAR(10) =(
+	                                    Select TOP 1 FORMAT(IBH.LimitDateEmision, 'dd-MM-yyyy')
+										From [InvoiceBatchDetailLinehaul] IBDL WITH(NOLOCK)
+										INNER JOIN 
+										[InvoiceBatchHeader] IBH WITH(NOLOCK)
+										ON IBDL.IdBatch = IBH.Id_Lote
+										Where LinehaulRoutePreparationId = @IdLinehaulRoutePreparation);
+	
+	
     -- Insert statements for procedure here
 	SELECT
 		lrp.IdLinehaulRoutePreparation IdLinehaulRoutePreparation
@@ -67,6 +104,10 @@ BEGIN
 		, lrp.DateLinehaulRoutePreparation)  DateRoutePreparation
 		, ISNULL(lrpcm.CustomsMarkSerie, '') CustomMark
 		, hl.HubAbbreviation HubAbbreviation
+		,@companyName CompanyName
+		,@CAI CAI 
+		,@Numero Numero
+		,@LimiteDate LimiteDate
 	FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
 	LEFT JOIN CatRoute cr WITH (NOLOCK)
 		ON cr.IdRoute = lrp.CatRouteId

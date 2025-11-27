@@ -1,16 +1,19 @@
 ﻿CREATE TABLE [dbo].[NoLaborCalendar] (
-    [IdNoLaborCalendar] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdNoLaborCalendar] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [NoLaborDate]       DATE          NOT NULL,
     [RowStatus]         BIT           DEFAULT ((1)) NOT NULL,
     [DateCreated]       DATETIME      NOT NULL,
     [TokenCreated]      NVARCHAR (50) NOT NULL,
     [DateUpdated]       DATETIME      NULL,
     [TokenUpdated]      NVARCHAR (50) NULL,
-    [IdCountry]         VARCHAR  (2)  NOT NULL,
+    [IdCountry]         VARCHAR (2)   NULL,
     PRIMARY KEY CLUSTERED ([IdNoLaborCalendar] ASC),
-    FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     CONSTRAINT [UQ_NoLaborCalendar_Composite] UNIQUE NONCLUSTERED ([NoLaborDate] ASC, [IdCountry] ASC)
 );
+
+
+
+
 
 
 

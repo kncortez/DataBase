@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[DeliveryBank] (
     [Id_bank]     INT            NOT NULL,
     [Name]        NVARCHAR (50)  NOT NULL,
-    [Acronym]     NVARCHAR (15)  NULL,
+    [Acronym]     NVARCHAR (100) NULL,
     [Description] NVARCHAR (255) NULL,
     [create_date] DATETIME       NOT NULL,
     [Id_status]   INT            NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [PK_SP_DEPOSITOS_BANCOS] PRIMARY KEY CLUSTERED ([Id_bank] ASC),
     CONSTRAINT [FK_DeliveryBank_IdBank_PayingBank] FOREIGN KEY ([PayingBank]) REFERENCES [dbo].[DeliveryBank] ([Id_bank])
 );
+
+
 
 
 

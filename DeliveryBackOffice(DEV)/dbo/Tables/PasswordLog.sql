@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[PasswordLog] (
-    [PslIdLog]        BIGINT        IDENTITY (1, 1) NOT NULL,
+    [PslIdLog]        BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [PslIdUser]       BIGINT        NOT NULL,
     [PslPassword]     VARCHAR (100) NOT NULL,
     [PslTokenCreated] VARCHAR (50)  NOT NULL,

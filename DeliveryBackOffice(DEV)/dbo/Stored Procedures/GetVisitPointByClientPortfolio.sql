@@ -4,487 +4,159 @@
 -- Description:	<Devuelve el listado de Direcciones asignadas a una cuenta>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetVisitPointByClientPortfolio]
-    @IdAccount INT,
-    @Token VARCHAR(200) = ''
-AS
-BEGIN
-    SET NOCOUNT ON;
-	SET ARITHABORT ON
-
-    DECLARE @jsonResult NVARCHAR(MAX) = NULL;
-    DECLARE @jsonResult2 NVARCHAR(MAX) = NULL;
-    DECLARE @jsonResult3 NVARCHAR(MAX) = NULL;
-    DECLARE @jsonResultErrror NVARCHAR(MAX) = NULL;
-	 
-    DECLARE @VisitPointId INT;
-    SET @VisitPointId =
-    (
-        SELECT TOP 1
-               vp.IdVisitPointClient
-        FROM [dbo].RegisterUser usr WITH (NOLOCK)
-            LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
-                ON rua.RuaIdUser = usr.UsrIdUser
-                   AND rua.RuaRowStatus = 1
-            INNER JOIN [dbo].Account ac WITH (NOLOCK)
-                ON ac.AccIdAccount = rua.RuaIdAccount
-                   AND ac.AccRowStatus = 1
-            INNER JOIN VisitPointByUser vp WITH (NOLOCK)
-                ON vp.RegisterUserID = usr.UsrIdUser
+    @IdAccount INT,  
+    @Token VARCHAR(200) = ''  
+AS  
+BEGIN  
+  
+    SET NOCOUNT ON;  
+    SET ARITHABORT ON  
+  
+    DECLARE @VisitPointId INT;  
+  
+    SET @VisitPointId =  
+    (  
+        SELECT TOP 1  
+               vp.IdVisitPointClient  
+        FROM [dbo].RegisterUser usr WITH (NOLOCK)  
+            LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)  
+                ON rua.RuaIdUser = usr.UsrIdUser  
+                   AND rua.RuaRowStatus = 1  
+            INNER JOIN [dbo].Account ac WITH (NOLOCK)  
+                ON ac.AccIdAccount = rua.RuaIdAccount  
+            INNER JOIN VisitPointByUser vp WITH (NOLOCK)  
+                ON vp.RegisterUserID = usr.UsrIdUser  
         WHERE ac.AccIdAccount = @IdAccount
-    );
+          AND ac.AccRowStatus = 1  
+          AND vp.RowStatus = 1  
+    );  
+  
+    --SET STATISTICS TIME ON;  
+    SELECT DISTINCT  
+                   CONVERT(VARCHAR, vcp.IdVisitPointByClientPortfolio) [IdVisitPointByClientPortfolio]  
+                  ,ISNULL(vcp.InternalCode, '') [InternalCode]  
+                  ,CONVERT( NVARCHAR(50),ISNULL(vcp.FirstName,'')) [FirstName]  
+                  ,ISNULL(CONVERT(VARCHAR,ISNULL(vcp.SecondName,'')),'') [SecondName]  
+                  ,ISNULL(CONVERT(VARCHAR,ISNULL(vcp.LastName,'')),'') [LastName]  
+                  ,ISNULL(CONVERT(VARCHAR,ISNULL(vcp.SecondLastName,'')),'') [SecondLastName]  
+                  ,ISNULL(CONVERT(VARCHAR, vcp.NirPhone), '') [NirPhone]  
+                  ,ISNULL(CONVERT(VARCHAR,ISNULL(vcp.Phone,'')),'') [Phone]  
+                  ,ISNULL(CONVERT(VARCHAR(50), REPLACE(vcp.Email, '"', '')),'') [Email]  
+                  ,ISNULL(CONVERT(VARCHAR, vcp.CUI),'') [CUI]  
+                  ,ISNULL(CONVERT(VARCHAR, vcp.RowStatus), ' ') [Status]  
+                  ,ISNULL(CONVERT(VARCHAR, vcp.TokenCreated), ' ') [Token]  
+                  ,ISNULL(vcp.TaxId, ' ') [TaxId]  
+                  ,REPLACE(ISNULL(vcp.ContactName, ' '), '"', '') [ContactName]  
+    FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)  
+    WHERE vcp.RowStatus = 1  
+      AND vcp.VisitPointId = @VisitPointId  
+  
+    -- BILLING  
+    SELECT  
+          'BILLING'  
+          ,CONVERT(VARCHAR, vcp.IdVisitPointByClientPortfolio) [IdVisitPointByClientPortfolio]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpIdBilling), ' ') [IdBilling]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpIdAccount),' ') [IdAccount]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpName),' ') [Name]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpAddress),'') [Address]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpTaxId), ' ') [TaxId]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.NRC), ' ') [NRC]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.TypeIdentificationDocumentCode), ' ') [TypeIdentificationDocumentCode]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.IdDocument), ' ') [IdDocument]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.DistrictId), ' ') [DistrictId]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.StateId), ' ') [StateId]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.ActivityCode), ' ') [ActivityCode]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.Inv_type), ' ') [Inv_type]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpRowStatus), ' ') [Status]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpTokenCreated), ' ') [Token]  
+    FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)  
+        INNER JOIN BillingProfile SUB WITH (NOLOCK)  
+            ON SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio  
+    WHERE vcp.RowStatus = 1  
+      AND SUB.BlpRowStatus = 1  
+      AND vcp.VisitPointId = @VisitPointId  
+  
+   -- COD  
+    SELECT  
+         'cod'  
+         ,ISNULL(CONVERT(VARCHAR, SUB.VisitPointByClientPortfolioId),' ') [IdVisitPointByClientPortfolio]           ,ISNULL(CONVERT(VARCHAR, SUB.IdDeliveryFavCOD),' ') [Id]  
+         ,ISNULL(CONVERT(VARCHAR, SUB.IdAccountFavCOD),' ') [IdAccount]  
+         ,ISNULL(CONVERT(VARCHAR, SUB.IdBank),' ') [IdBank]  
+         ,ISNULL(CONVERT(VARCHAR(250),(ISNULL(DB.Name,''))),'') [NameBank]  
+         ,ISNULL(CONVERT(VARCHAR(250),(ISNULL(SUB.NameAccountFavCOD,''))),'') [NameAccount]  
+         ,ISNULL(CONVERT(VARCHAR,SUB.TypeAccountFavCOD),'') [TypeAccount]  
+         ,ISNULL(CONVERT(VARCHAR,SUB.DocumentIdFavCOD),'') [DocID]  
+         ,ISNULL(CONVERT(VARCHAR(250),SUB.AliasFavCOD),' ') [Alias]  
+         ,ISNULL(CONVERT(VARCHAR(100), SUB.TokenCreated), ' ') [Token]  
+         ,ISNULL(CONVERT(VARCHAR(100), SUB.TokenUpdate), ' ') [TokenUpdate]  
+         ,ISNULL(CONVERT(VARCHAR, SUB.NumberAccFavCOD), ' ') [NumberAcc]  
+         ,ISNULL(CONVERT(VARCHAR, SUB.StatusFavCOD), ' ') [Status]  
+    FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryFavCOD SUB WITH (NOLOCK)
+            ON SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
+        INNER JOIN dbo.DeliveryBank DB WITH (NOLOCK)
+            ON DB.Id_bank = SUB.IdBank
+    WHERE vcp.RowStatus = 1
+      AND vcp.VisitPointId = @VisitPointId
+      AND  SUB.StatusFavCOD = 1
 
-		--SET STATISTICS TIME ON; 
-	
-    SET @jsonResult2 =
-    (
-        SELECT STUFF(
-                        (
-                            SELECT DISTINCT
-                                   ',
-									{									
-                                    "IdVisitPointByClientPortfolio":"'
-                                   + CONVERT(VARCHAR, vcp.IdVisitPointByClientPortfolio) + '",' + '"InternalCode":"'
-                                   + ISNULL(vcp.InternalCode, '') + '",' + '"FirstName":"'
-                                   + dbo.fnt_String_Escape(
-                                                              CONVERT(
-                                                                         NVARCHAR(50),
-                                                                         [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                         vcp.FirstName,
-                                                                                                                         ''
-                                                                                                                     )
-                                                                                                              )
-                                                                     ),
-                                                              'json'
-                                                          ) + '",' + '"SecondName":"'
-                                   + dbo.fnt_String_Escape(
-                                                              ISNULL(
-                                                                        CONVERT(
-                                                                                   VARCHAR,
-                                                                                   [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                   vcp.SecondName,
-                                                                                                                                   ''
-                                                                                                                               )
-                                                                                                                        )
-                                                                               ),
-                                                                        'json'
-                                                                    ),
-                                                              ''
-                                                          ) + '",' + '"LastName":"'
-                                   + dbo.fnt_String_Escape(
-                                                              ISNULL(
-                                                                        CONVERT(
-                                                                                   VARCHAR,
-                                                                                   [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                   vcp.LastName,
-                                                                                                                                   ''
-                                                                                                                               )
-                                                                                                                        )
-                                                                               ),
-                                                                        'json'
-                                                                    ),
-                                                              ''
-                                                          ) + '",' + '"SecondLastName":"'
-                                   + dbo.fnt_String_Escape(
-                                                              ISNULL(
-                                                                        CONVERT(
-                                                                                   VARCHAR,
-                                                                                   [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                   vcp.SecondLastName,
-                                                                                                                                   ''
-                                                                                                                               )
-                                                                                                                        )
-                                                                               ),
-                                                                        'json'
-                                                                    ),
-                                                              ''
-                                                          ) + '",' + '"NirPhone":"'
-                                   + dbo.fnt_String_Escape(ISNULL(CONVERT(VARCHAR, vcp.NirPhone), 'json'), '') + '",'
-                                   + '"Phone":"'
-                                   + dbo.fnt_String_Escape(
-                                                              ISNULL(
-                                                                        CONVERT(
-                                                                                   VARCHAR,
-                                                                                   [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                   vcp.Phone,
-                                                                                                                                   ''
-                                                                                                                               )
-                                                                                                                        )
-                                                                               ),
-                                                                        'json'
-                                                                    ),
-                                                              ''
-                                                          ) + '",' + '"Email":"'
-                                   + dbo.fnt_String_Escape(
-                                                              ISNULL(
-                                                                        CONVERT(VARCHAR(50), REPLACE(vcp.Email, '"', '')),
-                                                                        'json'
-                                                                    ),
-                                                              ''
-                                                          ) + '",' + '"CUI":"'
-                                   + dbo.fnt_String_Escape(ISNULL(CONVERT(VARCHAR, vcp.CUI), 'json'), '') + '",'
-                                   + '"Status":"' + ISNULL(CONVERT(VARCHAR, vcp.RowStatus), ' ') + '",' + '"Token":"'
-                                   + ISNULL(CONVERT(VARCHAR, vcp.TokenCreated), ' ') + '",' + '"TaxId":"'
-                                   + ISNULL(vcp.TaxId, ' ') + '",' + '"ContactName":"'
-                                   + dbo.fnt_String_Escape(REPLACE(ISNULL(vcp.ContactName, ' '), '"', ''), 'json') + '",'
-                                   + '"Billing":['
-                                   + ISNULL(
-                                               STUFF(
-                                               (
-                                                   SELECT ',{ "IdBilling":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.BlpIdBilling), ' ') + '",'
-                                                          + '"IdAccount":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     ISNULL(
-                                                                                               CONVERT(
-                                                                                                          VARCHAR,
-                                                                                                          SUB.BlpIdAccount
-                                                                                                      ),
-                                                                                               ' '
-                                                                                           ),
-                                                                                     'json'
-                                                                                 ) + '",' + '"Name":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     ISNULL(
-                                                                                               CONVERT(
-                                                                                                          VARCHAR,
-                                                                                                          [dbo].[fn_replace_special_characters](SUB.BlpName)
-                                                                                                      ),
-                                                                                               ' '
-                                                                                           ),
-                                                                                     'json'
-                                                                                 ) + '",' + '"Address":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     ISNULL(
-                                                                                               CONVERT(
-                                                                                                          VARCHAR,
-                                                                                                          [dbo].[fn_replace_special_characters](SUB.BlpAddress)
-                                                                                                      ),
-                                                                                               'json'
-                                                                                           ),
-                                                                                     ' '
-                                                                                 ) + '",' + '"TaxId":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.BlpTaxId), ' ') + '",'
-                                                          + '"Status":"' + ISNULL(CONVERT(VARCHAR, SUB.BlpRowStatus), ' ')
-                                                          + '",' + '"Token":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.BlpTokenCreated), ' ') + '",'
-                                                          + '"IdVisitPointByClientPortfolio":"'
-                                                          + ISNULL(
-                                                                      CONVERT(VARCHAR, SUB.VisitPointByClientPortfolioId),
-                                                                      ' '
-                                                                  ) + '"}'
-                                                   FROM dbo.BillingProfile SUB WITH (NOLOCK)
-                                                   WHERE SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-                                                         AND SUB.BlpRowStatus = 1
-                                                   FOR XML PATH('')
-                                               ),
-                                               1,
-                                               1,
-                                               ''
-                                                    ),
-                                               ' '
-                                           ) + '],' + '"cod":['
-                                   + ISNULL(
-                                               STUFF(
-                                               (
-                                                   SELECT ',{ "Id":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.IdDeliveryFavCOD), ' ') + '",'
-                                                          + '"IdAccount":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.IdAccountFavCOD), ' ') + '",'
-                                                          + '"IdBank":"' + ISNULL(CONVERT(VARCHAR, SUB.IdBank), ' ')
-                                                          + '",' + '"NameBank":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     ISNULL(
-                                                                                               CONVERT(
-                                                                                                          VARCHAR,
-                                                                                                          [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                                          DB.Name,
-                                                                                                                                                          ''
-                                                                                                                                                      )
-                                                                                                                                               )
-                                                                                                      ),
-                                                                                               'json'
-                                                                                           ),
-                                                                                     ' '
-                                                                                 ) + '",' + '"NameAccount":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     ISNULL(
-                                                                                               CONVERT(
-                                                                                                          VARCHAR,
-                                                                                                          [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                                          SUB.NameAccountFavCOD,
-                                                                                                                                                          ''
-                                                                                                                                                      )
-                                                                                                                                               )
-                                                                                                      ),
-                                                                                               'json'
-                                                                                           ),
-                                                                                     ' '
-                                                                                 ) + '",' + '"TypeAccount":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     ISNULL(
-                                                                                               CONVERT(
-                                                                                                          VARCHAR,
-                                                                                                          SUB.TypeAccountFavCOD
-                                                                                                      ),
-                                                                                               'json'
-                                                                                           ),
-                                                                                     ' '
-                                                                                 ) + '",' + '"DocID":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     ISNULL(
-                                                                                               CONVERT(
-                                                                                                          VARCHAR,
-                                                                                                          SUB.DocumentIdFavCOD
-                                                                                                      ),
-                                                                                               'json'
-                                                                                           ),
-                                                                                     ' '
-                                                                                 ) + '",' + '"Alias":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     ISNULL(
-                                                                                               CONVERT(
-                                                                                                          VARCHAR,
-                                                                                                          SUB.AliasFavCOD
-                                                                                                      ),
-                                                                                               ' '
-                                                                                           ),
-                                                                                     'json'
-                                                                                 ) + '",' + '"Token":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.TokenCreated), ' ') + '",'
-                                                          + '"TokenUpdate":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.TokenUpdate), ' ') + '",'
-                                                          + '"NumberAcc":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.NumberAccFavCOD), ' ') + '",'
-                                                          + '"Status":"' + ISNULL(CONVERT(VARCHAR, SUB.StatusFavCOD), ' ')
-                                                          + '",' + '"IdVisitPointByClientPortfolio":"'
-                                                          + ISNULL(
-                                                                      CONVERT(VARCHAR, SUB.VisitPointByClientPortfolioId),
-                                                                      ' '
-                                                                  ) + '"}'
-                                                   FROM DeliveryBackOffice.dbo.DeliveryFavCOD SUB WITH (NOLOCK)
-                                                        INNER JOIN dbo.DeliveryBank DB WITH (NOLOCK) ON SUB.StatusFavCOD = 1   
-														 AND DB.Id_bank = SUB.IdBank
-                                                   WHERE SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-                                                         
-                                                        
-                                                   FOR XML PATH('')
-                                               ),
-                                               1,
-                                               1,
-                                               ''
-                                                    ),
-                                               ' '
-                                           ) + '],' + '"Addresses":['
-                                   + ISNULL(
-                                               STUFF(
-                                               (
-                                                   SELECT DISTINCT
-                                                          ',{ "IdAddress":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.UadIdAddress), ' ') + '",'
-                                                          + '"IdTownship":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.UadIdTownship), ' ') + '",'
-                                                          + '"IdProvince":"' + ISNULL(CONVERT(VARCHAR, pr.IdProvince), ' ')
-                                                          + '",' + '"Province":"'
-                                                          + ISNULL(CONVERT(VARCHAR, pr.ProvinceName), ' ') + '",'
-                                                          + '"Township":"' + ISNULL(CONVERT(VARCHAR, tw.TownshipName), ' ')
-                                                          + '",' + '"HeaderCode":"'
-                                                          + ISNULL(CONVERT(VARCHAR, tw.HeaderCode), ' ') + '",'
-                                                          + '"IdAccount":"' + ISNULL(CONVERT(VARCHAR, SUB.UadIdAccount), ' ')
-                                                          + '",' + '"IdCountry":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.UadIdCountry), ' ') + '",'
-                                                          + '"FullName":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     REPLACE(
-                                                                                                [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                                SUB.UadFullName,
-                                                                                                                                                ''
-                                                                                                                                            )
-                                                                                                                                     ),
-                                                                                                '"',
-                                                                                                ''
-                                                                                            ),
-                                                                                     'json'
-                                                                                 ) + '",' + '"Address1":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     REPLACE(
-                                                                                                [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                                SUB.UadAddress1,
-                                                                                                                                                ''
-                                                                                                                                            )
-                                                                                                                                     ),
-                                                                                                '"',
-                                                                                                ''
-                                                                                            ),
-                                                                                     'json'
-                                                                                 ) + '",' + '"Address2":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     REPLACE(
-                                                                                                [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                                SUB.UadAddress2,
-                                                                                                                                                ''
-                                                                                                                                            )
-                                                                                                                                     ),
-                                                                                                '"',
-                                                                                                ''
-                                                                                            ),
-                                                                                     'json'
-                                                                                 ) + '",' + '"NirPhone":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     REPLACE(
-                                                                                                ISNULL(SUB.UadNirPhone, ''),
-                                                                                                '"',
-                                                                                                ''
-                                                                                            ),
-                                                                                     'json'
-                                                                                 ) + '",' + '"Phone":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     REPLACE(
-                                                                                                [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                                SUB.UadPhone,
-                                                                                                                                                ''
-                                                                                                                                            )
-                                                                                                                                     ),
-                                                                                                '"',
-                                                                                                ''
-                                                                                            ),
-                                                                                     'json'
-                                                                                 ) + '",' + '"AdditionalInstructions":"'
-                                                          + dbo.fnt_String_Escape(
-                                                                                     REPLACE(
-                                                                                                [dbo].[fn_replace_special_characters](ISNULL(
-                                                                                                                                                SUB.UadAdditionalInstructions,
-                                                                                                                                                ''
-                                                                                                                                            )
-                                                                                                                                     ),
-                                                                                                '"',
-                                                                                                ''
-                                                                                            ),
-                                                                                     'json'
-                                                                                 ) + '",' + '"Status":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.UadRowStatus), ' ') + '",'
-                                                          + '"Token":"'
-                                                          + ISNULL(CONVERT(VARCHAR(100), SUB.UadTokenCreated), ' ') + '",'
-                                                          + '"IdSettlement":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.UadIdSettlement), '') + '",'
-                                                          + '"SettlementDescription":"' + ISNULL(st.Settlement, '') + '",'
-                                                          + '"IdDeliveryOption":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.UadIdDeliveryOption), ' ') + '",'
-                                                          + '"DescriptionDeliveryOption":"' + ISNULL(cdo.Name, ' ') + '",'
-                                                          + '"IsTDA":"' + CASE
-                                                                              WHEN dsc.TDA = 1 THEN
-                                                                                  'TRUE'
-                                                                              ELSE
-                                                                                  'FALSE'
-                                                                          END + '",' + '"HasSDD":"'
-                                                          + CASE
-                                                                WHEN dsc.SDD = 1 THEN
-                                                                    'TRUE'
-                                                                ELSE
-                                                                    'FALSE'
-                                                            END + '",' + '"Hub":"' + ISNULL(dsc.Hub, '') + '",'
-                                                          + '"IdVisitPointByClientPortfolio":"'
-                                                          + ISNULL(CONVERT(VARCHAR, SUB.VisitPointByClientPortfolioId), ' ')
-                                                          + '"}'
-                                                   FROM DeliveryBackOffice.dbo.UserAddress SUB WITH (NOLOCK)
-                                                       LEFT JOIN DeliveryBackOffice.dbo.Township tw WITH (NOLOCK)
-                                                           ON tw.IdTownship = SUB.UadIdTownship
-                                                       LEFT JOIN DeliveryBackOffice.dbo.Province pr WITH (NOLOCK)
-                                                           ON pr.IdProvince = tw.IdProvince
-                                                       LEFT JOIN DeliveryBackOffice.dbo.Settlement st WITH (NOLOCK)
-                                                           ON st.IdSettlement = SUB.UadIdSettlement
-                                                              AND st.SettlementSatus = 1
-                                                       LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)
-                                                           ON cdo.IdDeliveryOption = SUB.UadIdDeliveryOption
-                                                       LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc WITH (NOLOCK)
-                                                           ON dsc.IdSettlement = st.IdSettlement
-                                                              AND dsc.RowStatus = 1
-                                                   WHERE SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-                                                         AND SUB.UadRowStatus = 1
-                                                   FOR XML PATH('')
-                                               ),
-                                               1,
-                                               1,
-                                               ''
-                                                    ),
-                                               ' '
-                                           ) + ']' + '}'
-                            FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)
-                                LEFT JOIN DeliveryBackOffice.dbo.UserAddress uad WITH (NOLOCK)
-                                    ON uad.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-                                       AND uad.UadRowStatus = 1
-                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryFavCOD dfc WITH (NOLOCK)
-                                    ON dfc.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-                                LEFT JOIN DeliveryBackOffice.dbo.BillingProfile bp WITH (NOLOCK)
-                                    ON bp.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-                            WHERE vcp.RowStatus = 1
-                                  AND vcp.VisitPointId = @VisitPointId
-                            FOR XML PATH(''), TYPE
-                        ).value('.', 'varchar(max)'),
-                        1,
-                        1,
-                        ''
-                    )
-    );
-
-	--SET STATISTICS TIME OFF;
-
-
-    IF @jsonResult IS NULL
-       AND @jsonResult2 IS NULL
-       AND @jsonResult3 IS NULL
-    BEGIN
-        SET @jsonResultErrror =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT '{{"IdResult":500,' + '"Message":" No se encontraron registros"}'
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)'),
-                            1,
-                            1,
-                            ''
-                        )
-        );
-    END;
-
-
-    SELECT ('[' + COALESCE(@jsonResultErrror, '') + CASE
-                                                        WHEN @jsonResult IS NOT NULL
-                                                             AND @jsonResult2 IS NULL
-                                                             AND @jsonResult3 IS NULL THEN
-                                                            CONCAT(@jsonResult, '')
-                                                        ELSE
-                                                            ''
-                                                    END + CASE
-                                                              WHEN @jsonResult IS NOT NULL
-                                                                   AND
-                                                                   (
-                                                                       @jsonResult2 IS NOT NULL
-                                                                       OR @jsonResult3 IS NOT NULL
-                                                                   ) THEN
-                                                                  CONCAT(@jsonResult, ',')
-                                                              ELSE
-                                                                  ''
-                                                          END + CASE
-                                                                    WHEN @jsonResult2 IS NOT NULL
-                                                                         AND @jsonResult3 IS NULL THEN
-                                                                        CONCAT(@jsonResult2, '')
-                                                                    ELSE
-                                                                        ''
-                                                                END + CASE
-                                                                          WHEN @jsonResult2 IS NOT NULL
-                                                                               AND @jsonResult3 IS NOT NULL THEN
-                                                                              CONCAT(@jsonResult2, ',')
-                                                                          ELSE
-                                                                              ''
-                                                                      END + COALESCE(@jsonResult3, '') + ']'
-           ) jsonResult;
-
-
-
+    -- Addresses  
+    SELECT DISTINCT  
+                  'ADDRESSES'  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.VisitPointByClientPortfolioId), ' ') [IdVisitPointByClientPortfolio]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdAddress), ' ') [IdAddress]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdTownship), ' ') [IdTownship]  
+                  ,ISNULL(CONVERT(VARCHAR, pr.IdProvince), ' ') [IdProvince]  
+                  ,ISNULL(CONVERT(VARCHAR, pr.ProvinceName), ' ') [Province]  
+                  ,ISNULL(CONVERT(VARCHAR, tw.TownshipName), ' ') [Township]  
+                  ,ISNULL(CONVERT(VARCHAR, tw.HeaderCode), ' ') [HeaderCode]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdAccount), ' ') [IdAccount]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdCountry), ' ') [IdCountry]  
+                  ,REPLACE((ISNULL(SUB.UadFullName, '' )),'"','') [FullName]  
+                  ,REPLACE((ISNULL(SUB.UadAddress1, '' )),'"','') [Address1]  
+                  ,REPLACE((ISNULL(SUB.UadAddress2,'')),'"','') [Address2]  
+                  ,REPLACE(ISNULL(SUB.UadNirPhone, ''),'"','') [NirPhone]  
+                  ,REPLACE((ISNULL(SUB.UadPhone,'')),'"','') [Phone]  
+                  ,REPLACE((ISNULL(SUB.UadAdditionalInstructions,'')),'"','') [AdditionalInstructions]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadRowStatus), ' ') [Status]  
+                  ,ISNULL(CONVERT(VARCHAR(100), SUB.UadTokenCreated), ' ') [Token]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdSettlement), '') [IdSettlement]  
+                  ,ISNULL(st.Settlement, '') [SettlementDescription]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdDeliveryOption), ' ') [IdDeliveryOption]  
+                  ,ISNULL(cdo.Name, ' ') [DescriptionDeliveryOption]  
+                  ,CASE  
+                       WHEN dsc.TDA = 1   
+                       THEN 'TRUE'  
+                       ELSE 'FALSE'  
+                   END  [IsTDA]  
+                  ,CASE  
+                        WHEN dsc.SDD = 1 THEN  
+                            'TRUE'  
+                        ELSE  
+                            'FALSE'  
+                    END [HasSDD]  
+                   ,ISNULL(dsc.Hub, '') [Hub]  
+                   ,ISNULL(CONVERT(VARCHAR, SUB.IdCityPlace),'0') [IdCityPlace]  
+    FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)  
+        INNER JOIN DeliveryBackOffice.dbo.UserAddress SUB WITH (NOLOCK)  
+            ON SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio  
+        LEFT JOIN DeliveryBackOffice.dbo.Township tw WITH (NOLOCK)  
+            ON tw.IdTownship = SUB.UadIdTownship  
+            AND tw.TownshipStatus = 1  
+        LEFT JOIN DeliveryBackOffice.dbo.Province pr WITH (NOLOCK)  
+            ON pr.IdProvince = tw.IdProvince  
+            AND pr.ProvinceStatus = 1  
+        LEFT JOIN DeliveryBackOffice.dbo.Settlement st WITH (NOLOCK)  
+            ON st.IdSettlement = SUB.UadIdSettlement  
+               AND st.SettlementSatus = 1  
+        LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)  
+            ON cdo.IdDeliveryOption = SUB.UadIdDeliveryOption  
+            AND cdo.RowStatus = 1  
+        LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc WITH (NOLOCK)  
+            ON dsc.IdSettlement = st.IdSettlement  
+               AND dsc.RowStatus = 1  
+    WHERE SUB.UadRowStatus = 1  
+      AND vcp.RowStatus = 1  
+      AND vcp.VisitPointId = @VisitPointId  
+  
 END;
-
-
-
-
-

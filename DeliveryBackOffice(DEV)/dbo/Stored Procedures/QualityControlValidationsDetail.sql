@@ -7,6 +7,11 @@
 -- Modified: <2024-08-07>
 -- Description:	<Se agrega el simbolo de moneda segun el pais de origen de la guia>
 -- =============================================
+-- =============================================
+-- Author:	 <Walter Orozco>
+-- Modified: <2025-05-02>
+-- Description:	<Mejoras de multimoneda para proyecto de SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[QualityControlValidationsDetail] 
  @StartDate DATE,
  @EndDate DATE
@@ -37,8 +42,7 @@ set arithabort on;
         CIC.IncidenceTypeName		
     FROM ConfirmationOfIncidence COI WITH (NOLOCK) 
         INNER JOIN DeliveryAttempt DA WITH (NOLOCK)
-		ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence  AND COI.IsConfirmed = 0 AND DA.Delivered = 0
-		And COI.StatusOrderId=45
+		ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence  
 		INNER JOIN 
 		DeliveryOrder DO WITH (NOLOCK)
 		ON DA.Guide_Serie = DO.Guide_Serie AND DA.Guide_Number = DO.Guide_Number
@@ -50,7 +54,7 @@ set arithabort on;
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						cur WITH (NOLOCK)
 			ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						curCOD WITH (NOLOCK)
-			ON ISNULL(co.CodCurrency,IIF(DO.SenderCountryId='HN',4,1)) = curCOD.IdCatCurrencyCOD 
+			ON ISNULL(co.CodCurrency,co.ShippingCurrency) = curCOD.IdCatCurrencyCOD 
         OUTER APPLY
 		(
 		 SELECT TOP 1 DOD.UserCreated FROM  DeliveryOrderDetail DOD WITH (NOLOCK)
@@ -86,6 +90,9 @@ set arithabort on;
         LEFT JOIN [DBO].[CatIncidenceClasification] CIC WITH (NOLOCK) ON CI.IncidenceClasificationId = CIC.IdCatIncidenceClasification
     WHERE
         CONVERT(DATE, COI.DateCreated) BETWEEN @StartDate AND @EndDate
+      AND COI.IsConfirmed = 0 
+      AND DA.Delivered = 0
+      AND COI.StatusOrderId = 45
 	UNION
 	SELECT 
 
@@ -110,8 +117,7 @@ set arithabort on;
         CIC.IncidenceTypeName		
     FROM ConfirmationOfIncidence COI WITH (NOLOCK) 
         INNER JOIN DeliveryAttempt DA WITH (NOLOCK)
-		ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence  AND COI.IsConfirmed = 1 AND DA.Delivered = 0
-		And COI.StatusOrderId=50
+		ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence  
 		INNER JOIN 
 		DeliveryOrder DO WITH (NOLOCK)
 		ON DA.Guide_Serie = DO.Guide_Serie AND DA.Guide_Number = DO.Guide_Number
@@ -123,7 +129,7 @@ set arithabort on;
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						cur WITH (NOLOCK)
 			ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						curCOD WITH (NOLOCK)
-			ON ISNULL(co.CodCurrency,IIF(DO.SenderCountryId='HN',4,1)) = curCOD.IdCatCurrencyCOD 
+			ON ISNULL(co.CodCurrency,co.ShippingCurrency) = curCOD.IdCatCurrencyCOD 
         OUTER APPLY
 		(
 		 SELECT TOP 1 DOD.UserCreated FROM  DeliveryOrderDetail DOD WITH (NOLOCK)
@@ -159,6 +165,9 @@ set arithabort on;
         LEFT JOIN [DBO].[CatIncidenceClasification] CIC WITH (NOLOCK) ON CI.IncidenceClasificationId = CIC.IdCatIncidenceClasification
     WHERE
         CONVERT(DATE, COI.DateCreated) BETWEEN @StartDate AND @EndDate
+      AND COI.IsConfirmed = 1 
+      AND DA.Delivered = 0
+      AND COI.StatusOrderId=50
    
 END
 

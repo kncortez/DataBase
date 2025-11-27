@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SchedulePickup] (
-    [SchedulePickupId]               BIGINT          IDENTITY (1, 1) NOT NULL,
+    [SchedulePickupId]               BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountId]                      BIGINT          NULL,
     [StartDate]                      DATETIME        NULL,
     [EndDate]                        DATETIME        NULL,
@@ -35,6 +35,10 @@
     CONSTRAINT [FK_SchedulePickup_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_SchedulePickup_CatTypeVehicle] FOREIGN KEY ([TypeVehicleId]) REFERENCES [dbo].[CatTypeVehicle] ([IdTypeVehicle])
 );
+
+
+
+
 
 
 
@@ -226,3 +230,17 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'SchedulePickup',
     @level2type = N'COLUMN',
     @level2name = N'TransaccionFAC'
+GO
+CREATE NONCLUSTERED INDEX [idx_SenderId]
+    ON [dbo].[SchedulePickup]([SenderId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdHubLogistics]
+    ON [dbo].[SchedulePickup]([IdHubLogistics] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountId_DateCreated]
+    ON [dbo].[SchedulePickup]([AccountId] ASC, [DateCreated] ASC);
+

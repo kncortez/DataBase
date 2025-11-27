@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatColumnCOD] (
-    [IdCatColumnCOD]           INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatColumnCOD]           INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ColumnName]               NVARCHAR (50) NOT NULL,
     [BatchDetailCODColumnName] NVARCHAR (50) NOT NULL,
     [RowStatus]                BIT           CONSTRAINT [DF_CatColumn_RowStatus] DEFAULT ('TRUE') NOT NULL,

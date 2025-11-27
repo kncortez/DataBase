@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AuthorizationLogCOD] (
-    [IdAuthorizationLogCOD] BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdAuthorizationLogCOD] BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]            VARCHAR (4)     NOT NULL,
     [GuideNumber]           INT             NOT NULL,
     [Voucher]               NVARCHAR (800)  NULL,
@@ -14,6 +14,10 @@
     [DateUpdated]           DATETIME        NULL,
     PRIMARY KEY CLUSTERED ([IdAuthorizationLogCOD] ASC)
 );
+
+
+
+
 
 
 
@@ -68,4 +72,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es la fecha
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre de la persona que autoriza el cambio de cambio de precio COD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AuthorizationLogCOD', @level2type = N'COLUMN', @level2name = N'AuthorizedBy';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideSerie]
+    ON [dbo].[AuthorizationLogCOD]([GuideSerie] ASC, [GuideNumber] ASC);
 

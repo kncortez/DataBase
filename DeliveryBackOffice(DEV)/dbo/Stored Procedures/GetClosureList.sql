@@ -1,22 +1,30 @@
-﻿/*
-EXEC GetClosureList
-@VisitPointId = -1
-,@StartDate = '20210627'
-,@EndDate = '20210627'
-*/
--- =============================================
+﻿-- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-07-05>
 -- Description:	<Se agrega la moneda correspondiente al express center>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[GetClosureList]
+CREATE PROCEDURE [dbo].[GetClosureList] 
     @VisitPointId INT,
     @StartDate DATETIME,
     @EndDate DATETIME
 AS
 BEGIN
+	DECLARE @IdCountry NVARCHAR(2),
+		    @Account NVARCHAR(30),
+			@AccountCOD NVARCHAR(30);
 
+	SELECT @IdCountry = CountryId 
+	FROM VisitPointClient 
+	WHERE CodeOfReference = @VisitPointId
+
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
+	FROM dbo.ClosureAccount 
+	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+	
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
+	FROM dbo.ClosureAccount 
+	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
     SELECT ACH.IdAccountingClosuresHeader 'ClosureId',
            ACH.VisitPoint 'VisitPointId',
            VPC.DescriptionOfClient 'VisitPoinDescription',
@@ -38,22 +46,29 @@ BEGIN
            ACH.TotalAmountFacturaCashDeclared,
            ACH.TotalAmountFacturaCard,
            ACH.TotalAmountFacturaCardDeclared,
-		   CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
+		   ISNULL(CCC.Symbol,'') AS CurrencySymbol
     -- FIN MODIFICACIÓN
     FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
-        JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
             ON ACH.VisitPoint = VPC.CodeOfReference
-        JOIN DeliveryBackOffice.dbo.RegisterUser REU
+        INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU
             ON REU.UsrIdUser = ACH.UserId
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+			ON VPC.CountryId = DC.Currency_IdCountry
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
     WHERE CAST(ACH.DateCreated AS DATE)
           BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)
+          AND DC.DefaultPerCountry = 1
           AND
           (
               @VisitPointId = ACH.VisitPoint
               OR @VisitPointId = -1
           );
 
-    SELECT Value 'URL'
+    SELECT @Account AS AccounExp,
+		   @AccountCOD AS AccountCOD,
+		  Value 'URL'
     FROM ConfigParams
     WHERE Name = 'ClosureExpressCenter';
 

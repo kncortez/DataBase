@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[PieceByService] (
-    [IdServiceManagementByPiece] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdServiceManagementByPiece] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ServiceManagmentId]         INT           NOT NULL,
     [GuidePieceId]               BIGINT        NOT NULL,
     [RowStatus]                  BIT           NOT NULL,
@@ -10,6 +10,8 @@
     PRIMARY KEY CLUSTERED ([IdServiceManagementByPiece] ASC),
     CONSTRAINT [FK_PieceByService_ServiceManagmentId] FOREIGN KEY ([ServiceManagmentId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement])
 );
+
+
 
 
 

@@ -61,12 +61,9 @@ BEGIN
 			CD.IdContentDetail
 		FROM
 			[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
-			INNER JOIN
-				@FilteredContentTitle FCT
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+			INNER JOIN @FilteredContentTitle FCT
+				ON CD.ContentTitleId = FCT.IdContentTitle
+		WHERE CD.RowStatus = 1
 
 		-- Tags a tomar para titulo
 		INSERT INTO @FilteredContentTags
@@ -78,16 +75,12 @@ BEGIN
 			@FilteredContentTitle FCT
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+				ON CD.ContentTitleId = FCT.IdContentTitle
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetailByTag] CDBT WITH(NOLOCK)
-				ON
-					CD.IdContentDetail = CDBT.ContentDetailId
-					AND
-					CDBT.RowStatus = 1
+				ON CD.IdContentDetail = CDBT.ContentDetailId
+         WHERE CD.RowStatus = 1
+           AND CDBT.RowStatus = 1
 
 		IF(EXISTS (SELECT TOP 1 1 FROM @FilteredContentTitle) AND EXISTS (SELECT TOP 1 1 FROM @FilteredContentDescription))
 		BEGIN
@@ -205,10 +198,8 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
 			INNER JOIN
 				@FilteredContentTitle FCT
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+				ON CD.ContentTitleId = FCT.IdContentTitle
+		WHERE CD.RowStatus = 1
 
 		-- Tags a tomar para titulo
 		INSERT INTO @FilteredContentTags
@@ -220,16 +211,12 @@ BEGIN
 			@FilteredContentTitle FCT
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+				ON CD.ContentTitleId = FCT.IdContentTitle
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetailByTag] CDBT WITH(NOLOCK)
-				ON
-					CD.IdContentDetail = CDBT.ContentDetailId
-					AND
-					CDBT.RowStatus = 1
+				ON CD.IdContentDetail = CDBT.ContentDetailId
+        WHERE CD.RowStatus = 1
+          AND CDBT.RowStatus = 1
 
 		IF(EXISTS (SELECT TOP 1 1 FROM @FilteredContentTitle) AND EXISTS (SELECT TOP 1 1 FROM @FilteredContentDescription))
 		BEGIN

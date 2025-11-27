@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[EventService] (
-    [IdEventService]      INT            IDENTITY (1, 1) NOT NULL,
+    [IdEventService]      INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ServiceManagementId] INT            NOT NULL,
     [ServiceStatusId]     INT            NOT NULL,
     [RowStauts]           BIT            NOT NULL,
@@ -10,6 +10,8 @@
     CONSTRAINT [FKEventService] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement]),
     CONSTRAINT [FKEventStatus] FOREIGN KEY ([ServiceStatusId]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus])
 );
+
+
 
 
 

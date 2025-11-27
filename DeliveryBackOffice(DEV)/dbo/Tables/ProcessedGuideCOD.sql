@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ProcessedGuideCOD] (
-    [IdProcessedGuideCOD]    INT          IDENTITY (1, 1) NOT NULL,
+    [IdProcessedGuideCOD]    INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]             NVARCHAR (2) NOT NULL,
     [GuideNumber]            INT          NOT NULL,
     [CourierManId]           INT          NULL,
@@ -20,6 +20,8 @@
     [CollectBatch]           BIT          NULL,
     [RecolectionBatch]       BIT          NULL,
     [CODBatch]               BIT          NULL,
+    [IsCompleted]            TINYINT      DEFAULT ((0)) NULL,
+    [IsAnticipatedCOD]       INT          NULL,
     CONSTRAINT [PK_ProcessedGuideCOD_IdProcessedGuideCOD] PRIMARY KEY CLUSTERED ([IdProcessedGuideCOD] ASC),
     CONSTRAINT [FK_ProcessedGuideCOD_BatchCOD] FOREIGN KEY ([BatchCODId]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
     CONSTRAINT [FK_ProcessedGuideCOD_BatchCOD_BatchCODIdCommission] FOREIGN KEY ([BatchCODIdCommission]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
@@ -28,6 +30,10 @@
     CONSTRAINT [FK_ProcessedGuideCOD_SenderReceiver] FOREIGN KEY ([CourierManId]) REFERENCES [dbo].[SenderReceiver] ([ID]),
     CONSTRAINT [UK_SERIE_GUIA] UNIQUE NONCLUSTERED ([GuideSerie] ASC, [GuideNumber] ASC)
 );
+
+
+
+
 
 
 
@@ -53,6 +59,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica los lotes que son de pagos de COD ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'CODBatch';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valida que el regsitro ha sido procesado y finalizado 0 = En proceso 1 = Finalizada ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'IsCompleted';
+
 
 GO
 CREATE NONCLUSTERED INDEX [idx_Notificated_BatchCODId]
@@ -69,10 +78,20 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Flag para p
 
 
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para identificar guias creadas para servicio cod anticipado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'IsAnticipatedCOD';
+
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'En esta columna se asigna el ID de lote que pertenece al proceso de  Collect ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'CollectBatchId';
 
 
 GO
 CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_RowStatus]
     ON [dbo].[ProcessedGuideCOD]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_BatchCODId_BatchCODIdCommission_RowStatus_Date_INCLUDE]
+    ON [dbo].[ProcessedGuideCOD]([BatchCODId] ASC, [BatchCODIdCommission] ASC, [RowStatus] ASC, [Date] ASC)
+    INCLUDE([GuideSerie], [GuideNumber]);
 

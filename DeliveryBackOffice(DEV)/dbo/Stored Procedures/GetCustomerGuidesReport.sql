@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-06-30>
 -- Description:	< Reporte general de guías por rango de fechas >
@@ -7,6 +6,15 @@
 -- Author:      <Daniel, Ramirez>
 -- Create date: <2024-07-22>
 -- Description: <Se agregan los valores de moneda de pago y moneda de COD para el reporte en corporativo>
+-- =============================================
+-- Author:      <Tito García>
+-- Create date: <2025-09-11>
+-- Description: <Se agrega el valor: Instrucciones adicioneles para el reporte Excel>
+-- =============================================
+-- =============================================
+-- Author:      <Walter Orozco>
+-- Create date: <2025-10-09>
+-- Description: <Se agrega InternalCode para clientes cartera de corporativo>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetCustomerGuidesReport]
     @AccountId INT
@@ -51,7 +59,6 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
     FROM [DeliveryBackOffice].[dbo].[Account]                     Acc WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[Customer]          Cu WITH (NOLOCK)
             ON Acc.IdCustomer = Cu.IdCustomer
-               AND ISNULL(Cu.RowSatus, 1) = 1
         LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH (NOLOCK)
             ON RBUBA.RuaIdAccount = Acc.AccIdAccount
                AND RBUBA.RuaRowStatus = 1
@@ -62,7 +69,8 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
             ON VPBU.IdVisitPointClient = VPC.IdVisitPointClient
                AND VPC.StatusClient = 1
     WHERE Acc.AccIdAccount = @AccountIdParam
-          AND Acc.AccRowStatus = 1;
+          AND Acc.AccRowStatus = 1
+          AND ISNULL(Cu.RowSatus, 1) = 1;
 
     IF (@CustomerTypeId = 3) -- INDIVIDUAL - cliente
     BEGIN
@@ -117,6 +125,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                     , NULL
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
+             , DO.IndicationsToSendDestination                                    'Instrucciones adicionales'  
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]						  C WITH (NOLOCK)
 				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
@@ -200,6 +209,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                     , NULL
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
+             , DO.IndicationsToSendDestination                                    'Instrucciones adicionales'  
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
@@ -237,7 +247,6 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
     END;
     ELSE IF (@CustomerTypeId = 1) -- Corporativos - cliente + punto de visita
     BEGIN
-
         SELECT LTRIM(RTRIM(IIF(VPC.DescriptionOfClient IS NULL
                                , ''
                                , CONCAT(VPC.CodeOfReference, ' - ', VPC.DescriptionOfClient))
@@ -300,6 +309,8 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                     , NULL
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
+             , DO.IndicationsToSendDestination                                    'Instrucciones adicionales'  
+             , ISNULL(VPCP.InternalCode,'')										  'InternalCode'
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
@@ -307,14 +318,11 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
                    AND VPC.StatusClient = 1
-            LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
-                ON vpc.CustomerID = RC.RbcIdCustomer
-                AND rc.RbcRowStatus = 1
-            LEFT JOIN DeliveryBackOffice.dbo.RateHeader        RH WITH(NOLOCK)
-                ON RC.RbcIdRate = RH.RheId 
+            LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]                       C WITH (NOLOCK)
+                   ON DO.Guide_Serie = C.GuideSerie 
+                  AND DO.Guide_Number = C.GuideNumber
             LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD    CCC WITH(NOLOCK)
-                ON CCC.IdCatCurrencyCOD = RH.IdCurrency 
-                OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) --1 DEFAULT GT
+                ON CCC.IdCatCurrencyCOD = C.ShippingCurrency 
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                 ON DOPD.GuideSerie = DO.Guide_Serie
                    AND DOPD.GuideNumber = DO.Guide_Number
@@ -322,10 +330,11 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DOPD.PayTypeId = CPT.PayTypeId
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnId WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = TwnId.IdTownship
-            LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnName WITH (NOLOCK)
-                ON DO.Receiver_Town = TwnName.TownshipName COLLATE Latin1_General_CI_AI
+                OR (DO.ReceiverIdTownship IS NULL AND DO.Receiver_Town = TwnId.TownshipName COLLATE Latin1_General_CI_AI)
             LEFT JOIN #HubsByHeaderCode                                       DSC
-                ON ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
+                ON TwnId.HeaderCode = DSC.HeaderCode
+            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointByClientPortfolio] VPCP WITH(NOLOCK)
+				ON	DO.VisitpointClientPortfolioId = VPCP.IdVisitPointByClientPortfolio
         WHERE DO.DateCreated
               BETWEEN @DateStartParam AND @DateFinishParam
               AND DO.IdCustomer = @CustomerId

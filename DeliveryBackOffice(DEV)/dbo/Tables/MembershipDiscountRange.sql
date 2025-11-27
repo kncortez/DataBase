@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[MembershipDiscountRange] (
-    [IdMembershipDiscountRange] INT            IDENTITY (1, 1) NOT NULL,
+    [IdMembershipDiscountRange] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [MembershipId]              INT            NOT NULL,
     [DiscountLowServiceRange]   INT            NOT NULL,
     [DiscountTopServiceRange]   INT            NULL,
@@ -14,4 +14,13 @@
     CONSTRAINT [FK_MembershipDiscountRange_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
     CONSTRAINT [FK_MembershipDiscountRange_ValueType] FOREIGN KEY ([ValueTypeId]) REFERENCES [dbo].[CatValueType] ([IdCatValueType])
 );
+
+
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_MembershipId]
+    ON [dbo].[MembershipDiscountRange]([MembershipId] ASC);
 

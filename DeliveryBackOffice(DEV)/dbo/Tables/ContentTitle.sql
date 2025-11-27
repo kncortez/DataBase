@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ContentTitle] (
-    [IdContentTitle]     BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdContentTitle]     BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TypeContentId]      BIGINT         NOT NULL,
     [ContentTitle]       NVARCHAR (100) NOT NULL,
     [ContentDescription] NVARCHAR (500) NULL,
@@ -8,11 +8,14 @@
     [TokenCreated]       NVARCHAR (50)  NOT NULL,
     [DateUpdated]        DATETIME       NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
-    [CountryId]          VARCHAR (2)   DEFAULT 'GT' NOT NULL, 
+    [CountryId]          VARCHAR (2)    DEFAULT ('GT') NOT NULL,
     PRIMARY KEY CLUSTERED ([IdContentTitle] ASC),
-    CONSTRAINT [FK_ContentTitle_CatTypeContent] FOREIGN KEY ([TypeContentId]) REFERENCES [dbo].[CatTypeContent] ([IdCatTypeContent]),
-    CONSTRAINT [FK_ContentTitle_CatCountry] FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    CONSTRAINT [FK_ContentTitle_CatTypeContent] FOREIGN KEY ([TypeContentId]) REFERENCES [dbo].[CatTypeContent] ([IdCatTypeContent])
 );
+
+
+
+
 
 
 GO

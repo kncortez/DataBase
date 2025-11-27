@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[UserSystemRestriction] (
-    [UstIdRestriction] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [UstIdRestriction] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UstIdUser]        BIGINT       NOT NULL,
     [UstIdSystem]      INT          NOT NULL,
     [UstAccessRetries] INT          NOT NULL,
@@ -13,6 +13,12 @@
     CONSTRAINT [FKSystemRestriction] FOREIGN KEY ([UstIdSystem]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     CONSTRAINT [FKUserRestriction] FOREIGN KEY ([UstIdUser]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
+
+
+
+
+
+
 
 
 
@@ -111,3 +117,19 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'UserSystemRestriction',
     @level2type = N'COLUMN',
     @level2name = N'UstOperationDate'
+GO
+CREATE NONCLUSTERED INDEX [idx_UstIdSystem_Include]
+    ON [dbo].[UserSystemRestriction]([UstIdSystem] ASC)
+    INCLUDE([UstIdUser], [UstStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_UstIdUser_UstIdSystem_INCLUDE]
+    ON [dbo].[UserSystemRestriction]([UstIdUser] ASC, [UstIdSystem] ASC)
+    INCLUDE([UstStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_UstIdUser_UstIdSystem]
+    ON [dbo].[UserSystemRestriction]([UstIdUser] ASC, [UstIdSystem] ASC);
+

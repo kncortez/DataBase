@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatSubscriptionDiscountRange] (
-    [IdCatSubscriptionDiscountRange] INT            IDENTITY (1, 1) NOT NULL,
+    [IdCatSubscriptionDiscountRange] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatSubscriptionId]              INT            NOT NULL,
     [DiscountLowServiceRange]        INT            NOT NULL,
     [DiscountTopServiceRange]        INT            NULL,

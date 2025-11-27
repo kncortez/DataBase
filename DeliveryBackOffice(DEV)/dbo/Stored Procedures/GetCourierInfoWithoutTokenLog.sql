@@ -21,10 +21,16 @@ begin
 
     -- insertar en tabla temporal posbibles mensajes de respuesta
 
-    if object_id('tempdb.dbo.#responsemessage', 'U') is not null
-        drop table #responsemessage;
-    select *
-    into #responsemessage
+    DECLARE @responsemessage TABLE(
+        [IdResult] INT,
+        [Message] VARCHAR(100),
+        [Id] VARCHAR(20)
+    );
+
+    --if object_id('tempdb.dbo.#responsemessage', 'U') is not null
+        --drop table #responsemessage;
+    insert into @responsemessage
+    select *    
     from
     (
         select 200                              as IdResult
@@ -176,7 +182,7 @@ begin
         (
             select stuff((
                              select ',{"IdResult":' + convert(varchar, IdResult) + ',' + '"Message":"' + Message + '"}'
-                             from #responsemessage
+                             from @responsemessage
                              where Id = 'OK'
                              for xml path(''), type
                          ).value('.', 'varchar(max)')
@@ -197,7 +203,7 @@ begin
                             (
                                 select '"IdResult":' + convert(varchar, IdResult) + ',' + '"Message":"'
                                        + convert(nvarchar(max), error_message()) + '"}'
-                                from #responsemessage
+                                from @responsemessage
                                 where Id = 'Invalid'
                                 for xml path(''), type
                             ).value('.', 'varchar(max)')
@@ -217,8 +223,6 @@ begin
 
     if object_id('tempdb.dbo.#listGuides', 'U') is not null
         drop table #listGuides;
-    if object_id('tempdb.dbo.#responsemessage', 'U') is not null
-        drop table #responsemessage;
 
     -- retornar resultado en formato json
 

@@ -178,7 +178,13 @@ SELECT
 	SUM(CASE WHEN ISNULL(DSD.StatusOrderId,0) = 0  THEN DOP.NoPiece ELSE 0 END) AS NonOperatedGuidesPiece,
 
 
-	(SUM(CASE WHEN DSD.StatusOrderId = 5 THEN DOP.NoPiece ELSE 0 END) * 100 / MAX(ISNULL(DOBS.Pieces_Dry_Dispatched,0)) + MAX(ISNULL(DOBS.Pieces_Cold_Dispatched,0)))  AS Delivery_effectiveness,
+	(
+		SUM(CASE WHEN DSD.StatusOrderId = 5 THEN DOP.NoPiece ELSE 0 END) * 100 /
+		NULLIF(
+			(MAX(ISNULL(DOBS.Pieces_Dry_Dispatched, 0)) + MAX(ISNULL(DOBS.Pieces_Cold_Dispatched, 0))),
+			0
+		)
+	) AS Delivery_effectiveness,
       CONVERT(
         CHAR(8),
         DATEADD(
@@ -253,22 +259,3 @@ GROUP BY DOBS.ID
 
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,7 +1,12 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<CRISTIAN SUAZO>
 -- Create date: <2024-05-243>
 -- Description:	<Valida el tipo de moneda aceptado por un pais para una nueva preparacion en Hermes>
+-- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2025-04-02>
+-- Description:	<Cambios de multipaís para SV.>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_Validate_Currency] 
 		@GuideSerie NVARCHAR(2) = 'FD',
@@ -9,14 +14,14 @@ CREATE PROCEDURE [dbo].[sps_Validate_Currency]
 		@CountryId NVARCHAR(3) = 'GT'
 AS
 BEGIN
-	DECLARE @CurrencyContry NVARCHAR(5),
-			@Currency INT,
-			@Validate INT
+	DECLARE @Currency INT,
+            @Validate INT
 
-	DECLARE @CurrencyGT INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Symbol = 'Q')
-	DECLARE @CurrencyHN INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Symbol = 'L')
+	SELECT @Currency = C.IdCatCurrencyCOD FROM DeliveryBackOffice.dbo.CatCurrencyCOD C WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK) 
+		ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
+	WHERE DC.Currency_IdCountry = @CountryId AND DC.DefaultPerCountry = 1
 
-	SELECT @Currency = CASE WHEN  @CountryId = 'GT' THEN @CurrencyGT ELSE @CurrencyHN END
 	PRINT @Currency
 	BEGIN TRY
 
@@ -26,7 +31,7 @@ BEGIN
 		FROM Cost C
 		WHERE GuideNumber = @GuideNumber 
 		AND C.GuideSerie = @GuideSerie
-		AND C.ShippingCurrency = @Currency
+		AND ISNULL(C.ShippingCurrency,1) = @Currency
 
 		IF @Validate IS NOT NULL
 		BEGIN

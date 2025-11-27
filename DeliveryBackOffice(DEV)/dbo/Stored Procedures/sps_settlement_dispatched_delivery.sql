@@ -49,7 +49,7 @@ BEGIN
 			dop.NoPiece
 		INTO #listGuidesPieces_Dispatch
 		FROM DeliveryOrderPiece dop
-			JOIN DeliveryBackOffice.dbo.DeliveryOrder serv ON serv.Guide_Serie = dop.GuideSerie AND serv.Guide_Number = dop.GuideNumber
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK) ON serv.Guide_Serie = dop.GuideSerie AND serv.Guide_Number = dop.GuideNumber
 			INNER JOIN #listGuides ls ON ls.ItemSerie = dop.GuideSerie AND ls.ItemNumber = dop.GuideNumber
 		WHERE dop.StatusOrderId = 4
 		ORDER BY dop.NoPiece ASC

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[InvoiceDailyExecution] (
-    [IdInvoiceDailyExecution] INT             IDENTITY (1, 1) NOT NULL,
+    [IdInvoiceDailyExecution] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [InvoiceDailyScheduleId]  INT             NOT NULL,
     [ExecutionDate]           DATE            NOT NULL,
     [InvoiceProcessName]      NVARCHAR (100)  NOT NULL,
@@ -18,6 +18,8 @@
     PRIMARY KEY CLUSTERED ([IdInvoiceDailyExecution] ASC),
     CONSTRAINT [FK_InvoiceDailyExecution_InvoiceDailySchedule] FOREIGN KEY ([InvoiceDailyScheduleId]) REFERENCES [dbo].[CatInvoiceDailySchedule] ([IdCatInvoiceDailySchedule])
 );
+
+
 
 
 GO

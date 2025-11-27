@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServiceManagementDetail] (
-    [IdServiceManagementDetail]    BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdServiceManagementDetail]    BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ServiceManagement]            INT             NOT NULL,
     [ServiceStartDate]             DATETIME        NOT NULL,
     [ServiceEndDate]               DATETIME        NOT NULL,
@@ -33,6 +33,12 @@
     CONSTRAINT [FK_ServiceManagementDetail_VisitPointByClientPortfolio] FOREIGN KEY ([ServiceVisitPointPortfolioId]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio]),
     CONSTRAINT [FK_ServiceManagementDetail_VisitPointClient] FOREIGN KEY ([ServiceVisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
+
+
+
+
 
 
 
@@ -143,3 +149,13 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'ServiceManagementDetail',
     @level2type = NULL,
     @level2name = NULL
+GO
+CREATE NONCLUSTERED INDEX [idx_SubTypeServiceManagmentId_SubTypeServiceManagmentId_RowStatus_ServiceStartDate_include]
+    ON [dbo].[ServiceManagementDetail]([SubTypeServiceManagmentId] ASC, [RowStatus] ASC, [ServiceStartDate] ASC)
+    INCLUDE([ProvinceId], [TownshipId], [ServiceAddress], [ServicePhone]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdServiceManagementDetail_RowStatus]
+    ON [dbo].[ServiceManagementDetail]([IdServiceManagementDetail] ASC, [RowStatus] ASC);
+

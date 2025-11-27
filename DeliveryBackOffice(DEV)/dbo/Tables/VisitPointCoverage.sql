@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointCoverage] (
-    [IdVpbySegment] INT          IDENTITY (1, 1) NOT NULL,
+    [IdVpbySegment] INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [VisitPointId]  INT          NOT NULL,
     [HubLogisticId] INT          NOT NULL,
     [SegmentId]     INT          NOT NULL,
@@ -13,4 +13,20 @@
     CONSTRAINT [FKSegmentVP] FOREIGN KEY ([SegmentId]) REFERENCES [dbo].[CatRateSegment] ([CrsId]),
     CONSTRAINT [FKVpSegment] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_VisitPointId_HubLogisticId_RowStatus]
+    ON [dbo].[VisitPointCoverage]([VisitPointId] ASC, [HubLogisticId] ASC, [RowStatus] ASC)
+    INCLUDE([SegmentId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RowStatus]
+    ON [dbo].[VisitPointCoverage]([RowStatus] ASC)
+    INCLUDE([VisitPointId], [HubLogisticId], [SegmentId]);
 

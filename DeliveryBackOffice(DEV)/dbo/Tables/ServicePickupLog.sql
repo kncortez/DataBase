@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ServicePickupLog] (
-    [IdServicePickupLog]     BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdServicePickupLog]     BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]             NVARCHAR (2)  NOT NULL,
     [GuideNumber]            INT           NOT NULL,
     [OldIdHeaderRecolection] INT           NOT NULL,
@@ -11,6 +11,8 @@
     [DateUpdated]            DATETIME      NULL,
     CONSTRAINT [PK_ServicePickupLog_IdServicePickupLog] PRIMARY KEY CLUSTERED ([IdServicePickupLog] ASC)
 );
+
+
 
 
 

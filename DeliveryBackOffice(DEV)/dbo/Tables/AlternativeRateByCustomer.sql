@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[AlternativeRateByCustomer] (
-    [IdAlternativeRatebyCustomer] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [IdAlternativeRatebyCustomer] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RateId]                      INT          NOT NULL,
     [CustomerId]                  INT          NOT NULL,
     [VisitPointClientId]          INT          NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FK_AlternativeRates_Rate] FOREIGN KEY ([RateId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_AlternativeRates_VPC] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

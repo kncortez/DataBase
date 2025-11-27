@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DumpServiceCoverage] (
-    [IdDump]       BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdDump]       BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [DumpFileName] NVARCHAR (100) NULL,
     [DumpVersion]  NVARCHAR (50)  NULL,
     [HeaderCode]   VARCHAR (10)   NULL,
@@ -20,6 +20,10 @@
 );
 
 
+
+
+
+
 GO
 CREATE NONCLUSTERED INDEX [NonClusteredIndex-Hub]
     ON [dbo].[DumpServiceCoverage]([Hub] ASC);
@@ -38,4 +42,10 @@ CREATE NONCLUSTERED INDEX [NonClusteredIndex-IdSettlement]
 GO
 CREATE NONCLUSTERED INDEX [IX_DumpServiceCoverage_SettlementStatusList]
     ON [dbo].[DumpServiceCoverage]([IdSettlement] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_include]
+    ON [dbo].[DumpServiceCoverage]([RowStatus] ASC)
+    INCLUDE([HeaderCode], [Hub]);
 

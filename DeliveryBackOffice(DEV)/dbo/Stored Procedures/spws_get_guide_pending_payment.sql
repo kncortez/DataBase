@@ -3,6 +3,10 @@
 -- Create date: <2021-05-21>
 -- Description:	<Devuleve el monto a cobrar >
 -- =============================================
+-- Author:      <Juan Ramirez>
+-- Create date: <2025-03-28>
+-- Description: <Ajustes de optimización>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment]
     @InGuides VARCHAR(MAX),
     @InTime INT,
@@ -10,10 +14,10 @@ CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment]
     @CodeApp VARCHAR(100),
     @IdModule INT,
     @Token VARCHAR(100)
-
 AS
 BEGIN
     SET NOCOUNT ON;
+
     DECLARE @InSequenceTime INT;
     DECLARE @TimeShortName VARCHAR(10);
     DECLARE @InCollectCOD BIT;
@@ -24,14 +28,15 @@ BEGIN
     DECLARE @CollectTime INT;
     DECLARE @CollectSequence INT;
 
-	DECLARE
-    @_InGuides VARCHAR(MAX),
-    @_InTime INT,
-    @_IsReturn BIT,
-    @_CodeApp VARCHAR(100),
-    @_IdModule INT,
-    @_Token VARCHAR(100)
+    DECLARE @_InGuides VARCHAR(MAX),
+            @_InTime INT,
+            @_IsReturn BIT,
+            @_CodeApp VARCHAR(100),
+            @_IdModule INT,
+            @_Token VARCHAR(100)
+
 	PRINT '************************************************************************************* SETS'
+
 	SET @_InGuides= @InGuides
 	SET @_InTime = @InTime 
 	SET @_IsReturn= @IsReturn
@@ -77,80 +82,104 @@ BEGIN
     FROM dbo.CatPaymentTime cpt WITH (NOLOCK)
     WHERE cpt.TimePlaAbrev = 'DEST';
 
-    DECLARE @listGuidesBrain AS TABLE
+    PRINT '************************************************************************************* INSERT SPLIT'
+
+    CREATE TABLE #listGuidesBrain
     (
-        ItemSerie NVARCHAR(2),
-        ItemNumber INT
+        ItemSerie   NVARCHAR(50),
+        ItemNumber  INT,
+        GuideNumber VARCHAR(50)
     );
 
-   /* IF OBJECT_ID('tempdb.dbo.#listGuidesBrain', 'U') IS NOT NULL
-        DROP TABLE #listGuidesBrain;
-    IF OBJECT_ID('tempdb.dbo.#TempPrice', 'U') IS NOT NULL
-        DROP TABLE #TempPrice;
-    IF OBJECT_ID('tempdb.dbo.#RevalueGuides', 'U') IS NOT NULL
-        DROP TABLE #RevalueGuides; */
+    CREATE TABLE #TempPrice
+    (
+     GuideSerie               NVARCHAR(2),
+     GuideNumber              INT,
+     IsCollect                BIT,
+     Price                    DECIMAL(18, 2),
+     COD                      DECIMAL(18, 2),
+     AmountPaid               DECIMAL(18, 2),
+     CODPaid                  DECIMAL(18, 2),
+     CODIsPaid                BIT,
+     PaymentTime              INT,
+     TimeSequence             INT,
+     FelNumber                NVARCHAR(50),
+     IsPaid                   BIT,
+     IsCustomer               INT,
+     ConditionPayment         NVARCHAR(200),
+     HaveCredit               BIT,
+     CollectCOD               BIT,
+     ReturnRate               DECIMAL(5, 2),
+     CurrencyPrice_CODCodeISO NVARCHAR(8),
+     CurrencyPrice_CODSymbol  NVARCHAR(8),
+     CurrencyPriceCodeISO     NVARCHAR(8),
+     CurrencyPriceSymbol      NVARCHAR(8),
+    );
 
-PRINT '************************************************************************************* INSERT SPLIT'
-	
-    --INSERT INTO @listGuidesBrain
-    --(
-    --    ItemSerie,
-    --    ItemNumber
-    --)
-    --SELECT DISTINCT
-    --       SUBSTRING(Item, 1, 2) ItemSerie,
-    --       SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber
-    --FROM DeliveryBackOffice.dbo.SplitUnlimited(@_InGuides, ',');
-	
-    SELECT DISTINCT
-           CAST(SUBSTRING(Item, 1, 2)AS NVARCHAR(50)) ItemSerie,
-           CAST(SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) AS INT) ItemNumber,
-		   CAST(SUBSTRING(Item, 1, 2)AS VARCHAR(50)) +           
-		   CAST(SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) AS VARCHAR(50)) GuideNumber
-		   INTO #listGuidesBrain
-    FROM DeliveryBackOffice.dbo.SplitUnlimited(@_InGuides, ',');
+    CREATE NONCLUSTERED INDEX idx_tempbrain ON #listGuidesBrain (ItemNumber, ItemSerie);
+    CREATE NONCLUSTERED INDEX IDX_TEMPPRICEBRAIN ON #TempPrice (IsCustomer, GuideNumber);
 
-	CREATE NONCLUSTERED INDEX IDX_TEMPBRAIN ON #listGuidesBrain (ItemNumber, ItemSerie)
-	--CREATE NONCLUSTERED INDEX IDX_TEMPBRAIN2 ON #listGuidesBrain (ItemNumber)
-	--SELECT --l.ItemSerie,
- --         --l.ItemNumber 
-	--	  *
-	--FROM #listGuidesBrain l
+    -- Clear existing data if needed
+    TRUNCATE TABLE #listGuidesBrain;
 
+    WITH ParsedGuides AS (
+        SELECT 
+            Item,
+            LEFT(Item, 2) AS ItemSerie,
+            CAST(SUBSTRING(Item, 3, 
+                CASE 
+                    WHEN CHARINDEX('-', Item) = 0 THEN LEN(Item) - 2
+                    ELSE CHARINDEX('-', Item) - 3 
+                END
+            ) AS INT) AS ItemNumber,
+            LEFT(Item, 2) + SUBSTRING(Item, 3, 
+                CASE 
+                    WHEN CHARINDEX('-', Item) = 0 THEN LEN(Item) - 2
+                    ELSE CHARINDEX('-', Item) - 3 
+                END
+            ) AS GuideNumber
+        FROM DeliveryBackOffice.dbo.SplitUnlimited(@_InGuides, ',')
+    )
+    INSERT INTO #listGuidesBrain (ItemSerie, ItemNumber, GuideNumber)
+    SELECT DISTINCT 
+        ItemSerie, 
+        ItemNumber, 
+        GuideNumber
+    FROM ParsedGuides;
 
-	  SELECT ord20.[GuideSerie],
-			 ord20.[GuideNumber],
-			 ord20.[IsCollect],
-			 ord20.[Price],
-             ord20.[COD],
-			 ord20.[AmountPaid],
-			 ord20.[CODPaid],
-             IIF(ord20.CODAmount IS NULL, 0, IIF(ord20.CODAmount = ord20.Collect_OnDelivery,  1,0)) [CODIsPaid],
-             ISNULL(
-                     pyt.TimePlaId,
-                     IIF(ord20.IsCollect = 'true',
-                         @CollectTime,
-                         IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, @MinTime, @MaxTime))
-                 ) [PaymentTime],
-            ISNULL(
-                     tim.TimeSequence,
-                     IIF(ord20.IsCollect = 'true',
-                         @CollectSequence,
-                         IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, @MinSequenceTime, @MaxSequenceTime))
-                 ) [TimeSequence],
-            inh.inv_certificationFEL [FelNumber],
-            IIF(inh.inv_certificationFEL IS NULL, IIF(ISNULL(ord20.TotalAmountPaid, 0) = 0, 0, 1), 1) [IsPaid],
-            cus.IdCustomer [IsCustomer],
-            cdp.ConditionOfPaymenDescription [ConditionPayment],
-            IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, 0, 1) [HaveCredit],
-            ISNULL(@InCollectCOD, 0) [CollectCOD],
-            ISNULL(ISNULL(rh.ReturnRate, rhd.ReturnRate), 100) [ReturnRate]
-			, ord20.[CurrencyPrice_CODCodeISO]
-			, ord20.[CurrencyPrice_CODSymbol]
-			, ord20.[CurrencyPriceCodeISO]   
-			, ord20.[CurrencyPriceSymbol]
-    INTO #TempPrice
-    FROM #listGuidesBrain lg WITH(NOLOCK)
+    INSERT INTO #TempPrice
+    SELECT ord20.[GuideSerie],
+           ord20.[GuideNumber],
+           ord20.[IsCollect],
+           ord20.[Price],
+           ord20.[COD],
+           ord20.[AmountPaid],
+           ord20.[CODPaid],
+           IIF(ord20.CODAmount IS NULL, 0, IIF(ord20.CODAmount = ord20.Collect_OnDelivery,  1,0)) [CODIsPaid],
+           ISNULL(
+                   pyt.TimePlaId,
+                   IIF(ord20.IsCollect = 'true',
+                       @CollectTime,
+                       IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, @MinTime, @MaxTime))
+               ) [PaymentTime],
+          ISNULL(
+                   tim.TimeSequence,
+                   IIF(ord20.IsCollect = 'true',
+                       @CollectSequence,
+                       IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, @MinSequenceTime, @MaxSequenceTime))
+               ) [TimeSequence],
+          inh.inv_certificationFEL [FelNumber],
+          IIF(inh.inv_certificationFEL IS NULL, IIF(ISNULL(ord20.TotalAmountPaid, 0) = 0, 0, 1), 1) [IsPaid],
+          cus.IdCustomer [IsCustomer],
+          cdp.ConditionOfPaymenDescription [ConditionPayment],
+          IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, 0, 1) [HaveCredit],
+          ISNULL(@InCollectCOD, 0) [CollectCOD],
+          ISNULL(ISNULL(rh.ReturnRate, rhd.ReturnRate), 100) [ReturnRate],
+          ord20.[CurrencyPrice_CODCodeISO],
+          ord20.[CurrencyPrice_CODSymbol],
+          ord20.[CurrencyPriceCodeISO],
+          ord20.[CurrencyPriceSymbol]
+     FROM #listGuidesBrain lg WITH(NOLOCK)
 		OUTER APPLY
 		(   --GUIAS DENTRO DEL MISMO PAIS
 			SELECT ord.Guide_Serie		 [GuideSerie]
@@ -170,53 +199,18 @@ PRINT '*************************************************************************
 				, ccc.Symbol             [CurrencyPrice_CODSymbol]
 				, ccc.CodeISO            [CurrencyPriceCodeISO]   
 				, ccc.Symbol			 [CurrencyPriceSymbol]
-			FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]				ord WITH (NOLOCK)
-				LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]				cst WITH (NOLOCK)
+			FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]  ord WITH (NOLOCK)
+				LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]  cst WITH (NOLOCK)
 					ON  cst.GuideSerie  = ord.Guide_Serie
 					AND cst.GuideNumber = ord.Guide_Number
 					AND cst.RowStatus = 1
-				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency] de WITH (NOLOCK)
 					ON  de.Currency_IdCountry = ISNULL(ord.SenderCountryId,'GT')
 					AND de.DefaultPerCountry = 1
-				LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]	ccc WITH (NOLOCK)
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD] ccc WITH (NOLOCK)
 					ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
-			WHERE	ord.Guide_Serie  = lg.ItemSerie               
+			  WHERE ord.Guide_Serie  = lg.ItemSerie
 				AND ord.Guide_Number = lg.ItemNumber
-				AND ISNULL(ord.GuideType,'DOM') = 'DOM'
-			UNION --GUIAS MULTIPAIS
-			SELECT ord.Guide_Serie		 [GuideSerie]
-				, ord.Guide_Number		 [GuideNumber]
-				, ord.IdCustomer		 [IdCustomer]
-				, ord.Sender_Id			 [Sender_Id]
-				, ord.SenderCountryId    [SenderCountryId]
-				, ord.IsCollect			 [IsCollect]
-				, ROUND(((ord.PriceShippment / cst.CODExchangeRate) * ce.ExchangeRate),2,1)		[Price]
-				, ROUND(((ord.Collect_OnDelivery / cst.CODExchangeRate) * ce.ExchangeRate),2,1)	[COD]
-				, ROUND(((ord.Collect_OnDelivery / cst.CODExchangeRate) * ce.ExchangeRate),2,1)	[Collect_OnDelivery]
-				, ROUND(((cst.TotalAmountPaid / cst.CODExchangeRate) * ce.ExchangeRate),2,1)	[AmountPaid]
-				, ROUND(((cst.TotalAmountPaid / cst.CODExchangeRate) * ce.ExchangeRate),2,1)	[TotalAmountPaid]
-				, ROUND(((cst.CODAmount / cst.CODExchangeRate) * ce.ExchangeRate),2,1)			[CODPaid]
-				, ROUND(((cst.CODAmount / cst.CODExchangeRate) * ce.ExchangeRate),2,1)			[CODAmount]
-				, ccc.CodeISO            [CurrencyPrice_CODCodeISO]
-				, ccc.Symbol             [CurrencyPrice_CODSymbol]
-				, ccc.CodeISO            [CurrencyPriceCodeISO]   
-				, ccc.Symbol			 [CurrencyPriceSymbol]
-			FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]					 ord WITH (NOLOCK)
-				LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]					 cst WITH (NOLOCK)
-					ON  cst.GuideSerie  = ord.Guide_Serie
-					AND cst.GuideNumber = ord.Guide_Number
-					AND cst.RowStatus = 1                                            
-				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
-					ON  de.Currency_IdCountry = ISNULL(ord.ReceiverCountryId,'GT')
-					AND de.DefaultPerCountry = 1
-				LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
-					ON ce.TargetCurrency = de.IdCurrencyCOD
-					and CONVERT(date,ce.ExchangeDate) = CONVERT(date,getdate())
-				LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]		 ccc WITH (NOLOCK)
-					ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
-			WHERE	ord.Guide_Serie  = lg.ItemSerie               
-				AND ord.Guide_Number = lg.ItemNumber
-				AND ISNULL(ord.GuideType,'DOM') = 'INT'
 		)	ord20
         LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH (NOLOCK)
             ON pyt.GuideSerie = lg.ItemSerie
@@ -257,8 +251,6 @@ PRINT '*************************************************************************
          --AND IIF(ord20.SenderCountryId IS NULL, 'GT',ord20.SenderCountryId) = @IdCountry
     ORDER BY lg.ItemSerie,
              lg.ItemNumber;
-
-	CREATE NONCLUSTERED INDEX IDX_TEMPPRICEBRAIN ON #TempPrice (IsCustomer, GuideNumber)
 
 			 PRINT '************************************************************************************* SELECT DISTINCT'
 	
@@ -358,8 +350,7 @@ PRINT '*************************************************************************
     FROM #TempPrice tp
     ORDER BY tp.IsCustomer,
              tp.GuideNumber
-			 OPTION(OPTIMIZE FOR UNKNOWN);
 
-	DROP TABLE #TempPrice
-	DROP TABLE #listGuidesBrain
+    IF OBJECT_ID('tempdb.dbo.#listGuidesBrain', 'U') IS NOT NULL DROP TABLE #listGuidesBrain;
+    IF OBJECT_ID('tempdb.dbo.#TempPrice', 'U') IS NOT NULL DROP TABLE #TempPrice;
 END;

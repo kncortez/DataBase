@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeSubscription] (
-    [IdCatTypeSubscription]    INT         IDENTITY (1, 1) NOT NULL,
+    [IdCatTypeSubscription]    INT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatTypeSubscriptionName]  NCHAR (100) NOT NULL,
     [DescriptionTSubscription] NCHAR (200) NOT NULL,
     [RowStatus]                BIT         NOT NULL,
@@ -9,6 +9,8 @@
     [TokenUpdated]             NCHAR (10)  NULL,
     CONSTRAINT [PK_CatTypeSubscription] PRIMARY KEY CLUSTERED ([IdCatTypeSubscription] ASC)
 );
+
+
 
 
 GO

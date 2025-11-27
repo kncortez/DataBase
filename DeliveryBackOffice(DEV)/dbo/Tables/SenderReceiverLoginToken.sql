@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[SenderReceiverLoginToken] (
-    [IdSenderRecieverLoginToken] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdSenderRecieverLoginToken] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LoginToken]                 NVARCHAR (6)  NOT NULL,
     [SenderReceiverId]           INT           NOT NULL,
     [RowStatus]                  BIT           CONSTRAINT [DF_SenderReceiverLoginToken_RowStatus] DEFAULT ((1)) NOT NULL,
@@ -9,6 +9,10 @@
     [DateUpdated]                DATETIME      NULL,
     CONSTRAINT [PK_SenderReceiverLoginToken] PRIMARY KEY CLUSTERED ([IdSenderRecieverLoginToken] ASC)
 );
+
+
+
+
 
 
 GO
@@ -45,4 +49,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para el almacenamiento de token de CourierApp.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiverLoginToken';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_SenderReceiverId_iNCLUDE]
+    ON [dbo].[SenderReceiverLoginToken]([SenderReceiverId] ASC)
+    INCLUDE([LoginToken]);
 

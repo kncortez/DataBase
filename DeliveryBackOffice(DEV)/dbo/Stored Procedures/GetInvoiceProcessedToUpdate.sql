@@ -21,17 +21,12 @@ BEGIN
 		--inv_documentRecieved ='TimeOut' 
 		--)
 		--  AND 
-		  inv_dateRegister >='2024-05-01 00:00:00'
-		 AND inv_dateRegister <='2024-05-31 23:59:59'
-		 AND 
-		 
+		  inv_dateRegister >=   '2025-06-01 00:00:00'
+		 AND inv_dateRegister <='2025-06-30 23:59:59'
+		 AND 		 
 		 (inv_certificationFEL IS NULL OR inv_certificationFEL = '')
-		
-		  --AND 
-		  --inv_pk_id IN (3404563)
-		  --AND 
-		 
-		   --   AND CAST(inv_dateRegister AS DATE) >= CAST(GETDATE() - @DaysFrom AS DATE);
+		--AND  inv_pk_id IN (5807293)
+--)
 		
     END TRY
     BEGIN CATCH

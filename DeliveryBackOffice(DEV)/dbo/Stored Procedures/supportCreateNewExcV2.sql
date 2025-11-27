@@ -1,8 +1,16 @@
-﻿-- =============================================
--- Author:		<Brandon, Pedroza>
--- Create date: <07-30-2024>
--- Description:	<Crear nuevo punto de visita de tipo exc para multipais>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[supportCreateNewExcV2]
+   Propósito: Crear nuevo punto de visita de tipo exc para multipais.
+   Autor:     Brandon Pedroza
+   Historia:  ---
+   Fecha:     2024-07-30
+
+=== CHANGELOG ============================
+
+2025-10-29 | Historia/épica: FDAPI-4454 | Autor: Brandon Pedroza |
+
+=========================================== */
+
 CREATE PROCEDURE [dbo].[supportCreateNewExcV2]
     @DescriptionOfClient NVARCHAR(100),
     @TokenSupport NVARCHAR(50),
@@ -27,13 +35,15 @@ BEGIN
     BEGIN TRY
 	
 		BEGIN TRANSACTION;
-            
+
+	DECLARE @PrefixNumber VARCHAR(8);
 	DECLARE @PhoneNumber VARCHAR(50);
 	-- Verificar si el formato es correcto (8 dígitos)
 		IF @Phone LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
 		BEGIN
+			SET @PrefixNumber = (SELECT PrefixNumber FROM DefaultValuesPerCountry WHERE IdCountry = @IdCountry)
 			-- Formatear la cadena
-			SET @PhoneNumber = '('+IIF(@IdCountry = 'HN','504','502')+') ' + SUBSTRING(@Phone, 1, 4) + '-' + SUBSTRING(@Phone, 5, 4)
+			SET @PhoneNumber = @PrefixNumber + SUBSTRING(@Phone, 1, 4) + '-' + SUBSTRING(@Phone, 5, 4)
 		END
 		ELSE
 		BEGIN
@@ -47,11 +57,11 @@ BEGIN
 			SELECT pr.IdProvince,
                    pr.ProvinceName,
                    tw.TownshipName
-            FROM dbo.Township tw
-                INNER JOIN dbo.Province pr
+            FROM dbo.Township tw WITH (NOLOCK)
+                INNER JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
             WHERE  tw.IdTownship = @IdTownship
-			AND ISNULL(pr.IdCountry,'GT') = @IdCountry
+			AND pr.IdCountry = @IdCountry
 		)
 		BEGIN
 			RAISERROR('El municipio no pertene al pais especificado', 16, 1);
@@ -60,38 +70,50 @@ BEGIN
 
         IF NOT EXISTS -- verifica que el punto de visita no exista
         (
-            SELECT *
+            SELECT 1
             FROM dbo.VisitPointClient vp
             WHERE vp.DescriptionOfClient = @DescriptionOfClient
+                  AND CountryId = @IdCountry
         )
-        BEGIN		
+        BEGIN
 
             DECLARE @CodeOfReference INT;
             DECLARE @IdKindOfVPBusiness INT;
             DECLARE @IdKindOfVPClient INT;
             DECLARE @IdBusinessSegment INT;
-			DECLARE @IdCustomer INT;
+            DECLARE @IdCustomer INT;
 
             SELECT @IdKindOfVPBusiness = IdKindOfVPBusiness
             FROM KindOfVPBusiness WITH(NOLOCK)
             WHERE Shorthand = 'EXP'
-                  AND ISNULL(IdCountry, 'GT') = @IdCountry
+                  AND IdCountry = @IdCountry
 
             SELECT @IdKindOfVPClient = IdKindOfVPClient
             FROM KindOfVPClient WITH(NOLOCK)
             WHERE KindOfVPName = 'Express Center'
-                  AND ISNULL(IdCountry, 'GT') = @IdCountry
+                  AND IdCountry = @IdCountry
 
             SELECT @IdBusinessSegment = IdBusinessSegment
             FROM CatBusinessSegment WITH(NOLOCK)
             WHERE BusinessSegmentName = 'C2C'
-                  AND ISNULL(IdCountry, 'GT') = @IdCountry
+                  AND IdCountry = @IdCountry
 
-			SELECT @IdCustomer = IdCustomer
-            FROM Customer WITH(NOLOCK)
-            WHERE Name like '%FD EXPRESS CENTER%'
-				  AND IdCustomer IN(81, 68381)
-                  AND ISNULL(CountryID, 'GT') = @IdCountry
+            IF(@IdCountry != 'GT')
+            BEGIN
+                SELECT TOP 1 @IdCustomer = IdCustomer
+                FROM Customer WITH(NOLOCK)
+                WHERE Name like '%FD EXPRESS CENTER%'
+                      --AND IdCustomer IN(81, 68381)
+                      AND CountryID = @IdCountry
+            END
+            ELSE
+            BEGIN
+                SELECT TOP 1 @IdCustomer = IdCustomer
+                FROM Customer WITH(NOLOCK)
+                WHERE Name like '%FD EXPRESS CENTER ' + @IdCountry + '%'
+                      --AND IdCustomer IN(81, 68381)
+                      AND CountryID = @IdCountry
+            END
 
             SELECT @CodeOfReference = MAX(vp.CodeOfReference) + 1
             FROM dbo.VisitPointClient vp
@@ -101,7 +123,7 @@ BEGIN
             DECLARE @IdProvice INT;
             DECLARE @ProvinceName NVARCHAR(100);
             DECLARE @TownshipName NVARCHAR(100);
-			DECLARE @IdSettlement INT;
+            DECLARE @IdSettlement INT;
 
 
             SELECT TOP 1
@@ -109,13 +131,13 @@ BEGIN
 					@ProvinceName = pr.ProvinceName,
 					@TownshipName = tw.TownshipName,
 					@IdSettlement = se.IdSettlement
-            FROM dbo.Township tw
-                INNER JOIN dbo.Province pr
+            FROM dbo.Township tw WITH (NOLOCK)
+                INNER JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
-				INNER JOIN dbo.Settlement se
+				INNER JOIN dbo.Settlement se WITH (NOLOCK)
 					ON se.IdProvince = pr.IdProvince AND se.IdTownship = tw.IdTownship
             WHERE tw.IdTownship = @IdTownship;
-	
+
 
             INSERT INTO dbo.VisitPointClient
             (
@@ -191,15 +213,23 @@ BEGIN
                 DEFAULT                                  -- AllowScheduledPickups - bit
             );
 
-			IF(@IdCountry = 'HN')
+			IF(@IdCountry <> 'GT')
 			BEGIN
 				IF NOT EXISTS
 				(
-					SELECT *
-					FROM dbo.del_ParametrosFactura pr
+					SELECT 1
+					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = @CodeOfReference
+					AND pr.dpf_FELCountry = @IdCountry
 				)
 				BEGIN
+
+					DECLARE @CountryName AS NVARCHAR(32);
+					DECLARE @vpCodeOfReference AS INT;
+
+					SET @CountryName = (SELECT CountryNameES FROM CatCountry WHERE IdCountry = @IdCountry)
+					SET @vpCodeOfReference = (SELECT TOP 1  dpf_VpCodeOfReference FROM del_ParametrosFactura WHERE dpf_FELCountry = @IdCountry)
+
 					INSERT INTO dbo.del_ParametrosFactura
 					(
 						dpf_VpCodeOfReference,
@@ -269,10 +299,10 @@ BEGIN
 						   @SapOcrCode2,
 						   pr.dpf_StatusFACE,
 						   @SapOcrCode,
-						   'DELIVERY EXPRESS HONDURAS',
-						   'DELIVERY EXPRESS HN'
-					FROM dbo.del_ParametrosFactura pr
-					WHERE pr.dpf_VpCodeOfReference = 677882;
+						   'Delivery Express ' + @CountryName +' S.A. De C.V.',
+						   'DELIVERY EXPRESS ' + @IdCountry
+					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
+					WHERE pr.dpf_VpCodeOfReference = @vpCodeOfReference;
 				END;
 				ELSE
 				BEGIN
@@ -283,9 +313,10 @@ BEGIN
 			BEGIN
 				IF NOT EXISTS
 				(
-					SELECT *
-					FROM dbo.del_ParametrosFactura pr
+					SELECT 1
+					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = @CodeOfReference
+					AND pr.dpf_FELCountry = @IdCountry
 				)
 				BEGIN
 
@@ -356,7 +387,7 @@ BEGIN
 						   pr.dpf_OcrCode2,
 						   pr.dpf_StatusFACE,
 						   @SapOcrCode
-					FROM dbo.del_ParametrosFactura pr
+					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = 999;
 
 				END;
@@ -368,8 +399,7 @@ BEGIN
 			END;
             COMMIT;
 
-			INSERT INTO CatStation VALUES (@DescriptionOfClient, @IdCountry,2,NULL,@CodeOfReference,1,@TokenSupport,GETDATE(),NULL,NULL);
-
+            INSERT INTO CatStation VALUES (@DescriptionOfClient, @IdCountry,2,NULL,@CodeOfReference,1,@TokenSupport,GETDATE(),NULL,NULL);
 
             SELECT vp.CodeOfReference,
                    vp.DescriptionOfClient,
@@ -383,21 +413,18 @@ BEGIN
 
 
             SELECT *
-            FROM dbo.del_ParametrosFactura pr
+            FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
             WHERE pr.dpf_VpCodeOfReference = @CodeOfReference;
 
-			SELECT *
-			FROM CatStation 
-			WHERE CodeOfReference = @CodeOfReference
+            SELECT *
+            FROM CatStation 
+            WHERE CodeOfReference = @CodeOfReference
 
         END;
         ELSE
         BEGIN
             SELECT 'Este punto de visita ya existe';
         END;
-
-
-
 
     END TRY
     BEGIN CATCH
@@ -410,3 +437,20 @@ BEGIN
     END CATCH;
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
+    AS [dbo];
+

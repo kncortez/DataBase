@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CorporateManifestDetail] (
-    [IdManifestDetail] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [IdManifestDetail] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ManifestId]       BIGINT       NOT NULL,
     [GuideSerie]       NVARCHAR (2) NOT NULL,
     [GuideNumber]      INT          NOT NULL,
@@ -12,6 +12,10 @@
     CONSTRAINT [FKGuideSerie_GuideNumber] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FKManifestId] FOREIGN KEY ([ManifestId]) REFERENCES [dbo].[CorporateManifest] ([IdManifest])
 );
+
+
+
+
 
 
 GO
@@ -48,4 +52,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de ac
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado de fila si esta activa o no', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CorporateManifestDetail', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_RowStatus]
+    ON [dbo].[CorporateManifestDetail]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
 

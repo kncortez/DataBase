@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CoDDailyExecution] (
-    [IdCoDDailyExecution] INT             IDENTITY (1, 1) NOT NULL,
+    [IdCoDDailyExecution] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CodDailyScheduleId]  INT             NOT NULL,
     [ExecutionDate]       DATE            NOT NULL,
     [CoDProcessName]      NVARCHAR (100)  NOT NULL,
@@ -16,12 +16,15 @@
     [DateCreated]         DATETIME        NOT NULL,
     [TokenUpdated]        NVARCHAR (50)   NULL,
     [DateUpdated]         DATETIME        NULL,
-    [IdCountry]           VARCHAR (2)    NULL DEFAULT 'GT',
+    [IdCountry]           VARCHAR (2)     DEFAULT ('GT') NULL,
     PRIMARY KEY CLUSTERED ([IdCoDDailyExecution] ASC),
     CONSTRAINT [FK_CoDDailyExectuion_CoDDailySchedule] FOREIGN KEY ([CodDailyScheduleId]) REFERENCES [dbo].[CatCoDDailySchedule] ([IdCatCoDDailySchedule]),
-    CONSTRAINT [FK_CoDDailyExectuion_DeliveryBank] FOREIGN KEY ([DeliveryBankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
-    CONSTRAINT [FK_CoDDailyExectuion_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    CONSTRAINT [FK_CoDDailyExectuion_DeliveryBank] FOREIGN KEY ([DeliveryBankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank])
 );
+
+
+
+
 
 
 GO

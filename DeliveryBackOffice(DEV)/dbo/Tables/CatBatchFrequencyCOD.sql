@@ -1,13 +1,15 @@
 ﻿CREATE TABLE [dbo].[CatBatchFrequencyCOD] (
-    [CatBatchFrequencyCODId] BIGINT       IDENTITY (1, 1) NOT NULL,
+    [CatBatchFrequencyCODId] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]                   VARCHAR (50) NOT NULL,
     [RowStatus]              BIT          NOT NULL,
     [TokenCreated]           VARCHAR (50) NOT NULL,
     [DateCreated]            DATETIME     NOT NULL,
     [TokenUpdated]           VARCHAR (50) NULL,
     [DateUpdated]            DATETIME     NULL,
-    PRIMARY KEY CLUSTERED ([CatBatchFrequencyCODId] ASC),
+    PRIMARY KEY CLUSTERED ([CatBatchFrequencyCODId] ASC)
 );
+
+
 
 
 GO
@@ -37,5 +39,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es el token
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es la fecha en que se actualizó el registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatBatchFrequencyCOD', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
-
-GO

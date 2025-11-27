@@ -1,211 +1,220 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Oscar,Morales>
 -- Create date: <2021-11-24>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta filtrado por nombres, CUI, correo y telefono>
 -- =============================================
 
+CREATE PROCEDURE [dbo].[FilterVisitPointByClientPortfolio]  
+    @IdAccount INT,  
+    @Token VARCHAR(50) = '',  
+    @TextFilter NVARCHAR(100)  
+AS  
+BEGIN  
+    -- SET NOCOUNT ON added to prevent extra result sets from  
+    -- interfering with SELECT statements.  
+    SET NOCOUNT ON;
+    DECLARE @VisitPointId INT;
+  
+    SET @VisitPointId =  
+    (  
+        SELECT TOP 1  
+               vp.IdVisitPointClient  
+        FROM [dbo].RegisterUser usr WITH (NOLOCK)  
+            LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)  
+                ON rua.RuaIdUser = usr.UsrIdUser  
+            INNER JOIN [dbo].Account ac WITH (NOLOCK)  
+                ON ac.AccIdAccount = rua.RuaIdAccount  
+            INNER JOIN VisitPointByUser vp WITH (NOLOCK)  
+                ON vp.RegisterUserID = usr.UsrIdUser  
+        WHERE  ac.AccRowStatus = 1  
+          AND  ac.AccIdAccount = @IdAccount  
+          AND rua.RuaRowStatus = 1  
+          AND vp.RowStatus = 1  
+    );  
+  
+    --SET STATISTICS TIME ON;  
+    SELECT DISTINCT  
+                   CONVERT(VARCHAR, vcp.IdVisitPointByClientPortfolio) [IdVisitPointByClientPortfolio]  
+                  ,ISNULL(vcp.InternalCode, '') [InternalCode]  
+                  ,CONVERT( NVARCHAR(50),ISNULL(vcp.FirstName,'')) [FirstName]  
+                  ,ISNULL(CONVERT(VARCHAR,ISNULL(vcp.SecondName,'')),'') [SecondName]  
+                  ,ISNULL(CONVERT(VARCHAR,ISNULL(vcp.LastName,'')),'') [LastName]  
+                  ,ISNULL(CONVERT(VARCHAR,ISNULL(vcp.SecondLastName,'')),'') [SecondLastName]  
+                  ,ISNULL(CONVERT(VARCHAR, vcp.NirPhone), '') [NirPhone]  
+                  ,ISNULL(CONVERT(VARCHAR,ISNULL(vcp.Phone,'')),'') [Phone]  
+                  ,ISNULL(CONVERT(VARCHAR(50), REPLACE(vcp.Email, '"', '')),'') [Email]  
+                  ,ISNULL(CONVERT(VARCHAR, vcp.CUI),'') [CUI]  
+                  ,ISNULL(CONVERT(VARCHAR, vcp.RowStatus), ' ') [Status]  
+                  ,ISNULL(CONVERT(VARCHAR(100), vcp.TokenCreated), ' ') [Token]  
+                  ,ISNULL(vcp.TaxId, ' ') [TaxId]  
+                  ,REPLACE(ISNULL(vcp.ContactName, ' '), '"', '') [ContactName]  
+    FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)  
+    WHERE vcp.RowStatus = 1  
+      AND vcp.VisitPointId = @VisitPointId  
+      AND (  
+           CONCAT(  
+                     vcp.FirstName,  
+                     ' ',  
+                     vcp.SecondName,  
+                     ' ',  
+                     vcp.LastName,  
+                     ' ',  
+                     vcp.SecondLastName  
+                 ) LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.CUI LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.Phone LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.Email LIKE CONCAT('%', @TextFilter, '%')  
+          )  
+  
+    -- BILLING  
+    SELECT  
+          'BILLING'  
+          ,CONVERT(VARCHAR, vcp.IdVisitPointByClientPortfolio) [IdVisitPointByClientPortfolio]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpIdBilling), ' ') [IdBilling]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpIdAccount),' ') [IdAccount]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpName),' ') [Name]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpAddress),'') [Address]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpTaxId), ' ') [TaxId]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.NRC), ' ') [NRC]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.TypeIdentificationDocumentCode), ' ') [TypeIdentificationDocumentCode]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.IdDocument), ' ') [IdDocument]  
+       ,ISNULL(CONVERT(VARCHAR, SUB.DistrictId), ' ') [DistrictId]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.StateId), ' ') [StateId]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.ActivityCode), ' ') [ActivityCode]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.Inv_type), ' ') [Inv_type]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpRowStatus), ' ') [Status]  
+          ,ISNULL(CONVERT(VARCHAR, SUB.BlpTokenCreated), ' ') [Token]  
+    FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)  
+        INNER JOIN BillingProfile SUB WITH (NOLOCK)  
+            ON SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio  
+    WHERE vcp.RowStatus = 1  
+      AND SUB.BlpRowStatus = 1  
+      AND vcp.VisitPointId = @VisitPointId  
+      AND (  
+           CONCAT(  
+                     vcp.FirstName,  
+                     ' ',  
+                     vcp.SecondName,  
+                     ' ',  
+                     vcp.LastName,  
+                     ' ',  
+                     vcp.SecondLastName  
+                 ) LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.CUI LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.Phone LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.Email LIKE CONCAT('%', @TextFilter, '%')  
+          )  
+  
+   -- COD  
+    SELECT  
+         'cod'  
+         ,ISNULL(CONVERT(VARCHAR, SUB.VisitPointByClientPortfolioId),' ') [IdVisitPointByClientPortfolio]  
+         ,ISNULL(CONVERT(VARCHAR, SUB.IdDeliveryFavCOD),' ') [Id]  
+         ,ISNULL(CONVERT(VARCHAR, SUB.IdAccountFavCOD),' ') [IdAccount]  
+         ,ISNULL(CONVERT(VARCHAR, SUB.IdBank),' ') [IdBank]  
+         ,ISNULL(CONVERT(VARCHAR(250),(ISNULL(DB.Name,''))),'') [NameBank]  
+         ,ISNULL(CONVERT(VARCHAR(250),(ISNULL(SUB.NameAccountFavCOD,''))),'') [NameAccount]  
+         ,ISNULL(CONVERT(VARCHAR,SUB.TypeAccountFavCOD),'') [TypeAccount]  
+         ,ISNULL(CONVERT(VARCHAR,SUB.DocumentIdFavCOD),'') [DocID]  
+         ,ISNULL(CONVERT(VARCHAR,SUB.AliasFavCOD),' ') [Alias]  
+         ,ISNULL(CONVERT(VARCHAR(100), SUB.TokenCreated), ' ') [Token]  
+         ,ISNULL(CONVERT(VARCHAR(100), SUB.TokenUpdate), ' ') [TokenUpdate]  
+         ,ISNULL(CONVERT(VARCHAR, SUB.NumberAccFavCOD), ' ') [NumberAcc]  
+         ,ISNULL(CONVERT(VARCHAR, SUB.StatusFavCOD), ' ') [Status]  
+    FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)  
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryFavCOD SUB WITH (NOLOCK)  
+            ON SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio  
+        INNER JOIN dbo.DeliveryBank DB WITH (NOLOCK)
+            ON DB.Id_bank = SUB.IdBank  
+    WHERE vcp.RowStatus = 1
+      AND vcp.VisitPointId = @VisitPointId
+      AND  SUB.StatusFavCOD = 1
+      AND (  
+           CONCAT(  
+                     vcp.FirstName,  
+                     ' ',  
+                     vcp.SecondName,  
+                     ' ',  
+                     vcp.LastName,  
+                     ' ',  
+                     vcp.SecondLastName  
+                 ) LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.CUI LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.Phone LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.Email LIKE CONCAT('%', @TextFilter, '%')  
+          )  
 
-CREATE PROCEDURE [dbo].[FilterVisitPointByClientPortfolio]
-	
-	@IdAccount int,
-	@Token VARCHAR(50)='',
-	@TextFilter NVARCHAR(100)
-
-AS
-BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
-
-	DECLARE @jsonResult NVARCHAR(MAX) = null
-	DECLARE @jsonResult2 NVARCHAR(MAX) = null
-	DECLARE @jsonResult3 NVARCHAR(MAX) = null
-	DECLARE @jsonResultErrror NVARCHAR(MAX) = null
-
-
-	declare @VisitPointId int 
-
-	set @VisitPointId   = (select top 1 vp.IdVisitPointClient FROM [dbo].RegisterUser usr with (nolock)
-						   LEFT JOIN [dbo].[RolByUserByAccount] rua with (nolock) ON rua.RuaIdUser = usr.UsrIdUser
-						                                               AND rua.RuaRowStatus = 1
-						   INNER JOIN [dbo].Account ac with (nolock) ON ac.AccIdAccount = rua.RuaIdAccount
-						                                  AND ac.AccRowStatus = 1
-							 INNER join VisitPointByUser vp with (nolock) ON vp.RegisterUserID = usr.UsrIdUser
-							where ac.AccIdAccount = @IdAccount)
-
-
-
-
-	set @jsonResult2 = (SELECT STUFF(( 
-						select  distinct
-									',
-									{									
-                                    "IdVisitPointByClientPortfolio":"' +  CONVERT( varchar, vcp.IdVisitPointByClientPortfolio)  + '",' +
-									'"InternalCode":"'+ISNULL(vcp.InternalCode,'')+'",'+
-									'"FirstName":"' +  dbo.fnt_String_Escape(convert( NVARCHAR(50),[dbo].[fn_replace_special_characters](isnull(vcp.FirstName,''))),'json')  + '",' +
-									'"SecondName":"' +  dbo.fnt_String_Escape( isnull( convert(varchar, [dbo].[fn_replace_special_characters](ISNULL(vcp.SecondName,''))),'json') , '') + '",' +
-									'"LastName":"' +   dbo.fnt_String_Escape(isnull( convert(varchar, [dbo].[fn_replace_special_characters](ISNULL(vcp.LastName,''))),'json') , '') + '",' +
-									'"SecondLastName":"'  +  dbo.fnt_String_Escape( isnull( convert(varchar, [dbo].[fn_replace_special_characters](ISNULL(vcp.SecondLastName,''))),'json') , '') + '",' +
-									'"NirPhone":"' +  dbo.fnt_String_Escape(isnull( convert(varchar, vcp.NirPhone),'json') , '') + '",' +
-									'"Phone":"' +  dbo.fnt_String_Escape( isnull( convert(varchar, [dbo].[fn_replace_special_characters](ISNULL(vcp.Phone,''))),'json') , '') + '",' +
-									'"Email":"' +  dbo.fnt_String_Escape(isnull( convert(VARCHAR(50), REPLACE(vcp.Email,'"','')),'json') , '') + '",' +
-									'"CUI":"' +  dbo.fnt_String_Escape(isnull( convert(varchar, vcp.CUI),'json') , '') + '",' +
-									'"Status":"' +   isnull( convert(varchar, vcp.RowStatus) , ' ')  + '",' +
-									'"Token":"' + isnull( convert(varchar, vcp.TokenCreated) , ' ') + '",' +
-                  '"TaxId":"' + isnull( vcp.TaxId , ' ') + '",' +
-                  '"ContactName":"' + dbo.fnt_String_Escape(REPLACE(ISNULL(vcp.ContactName, ' '),'"',''),'json') + '",' +
-									'"Billing":[' +
-								ISNULL(	STUFF((    SELECT ',{ "IdBilling":"'  +  isnull( convert(varchar, SUB.BlpIdBilling) , ' ')  + '",' +
-														'"IdAccount":"' +  dbo.fnt_String_Escape( isnull( convert(varchar, SUB.BlpIdAccount) , ' '),'json') + '",' +
-														'"Name":"' +  dbo.fnt_String_Escape(isnull( convert(varchar, [dbo].[fn_replace_special_characters](SUB.BlpName)) , ' '),'json') + '",' +
-														'"Address":"' +  dbo.fnt_String_Escape(isnull( convert(varchar, [dbo].[fn_replace_special_characters](SUB.BlpAddress)) ,'json'), ' ') + '",' +
-														'"TaxId":"' + isnull( convert(varchar, SUB.BlpTaxId) , ' ') + '",' +
-														'"Status":"' + isnull( convert(varchar, SUB.BlpRowStatus) , ' ') + '",' +
-														'"Token":"' + isnull( convert(varchar, SUB.BlpTokenCreated) , ' ') + '",' +
-														'"IdVisitPointByClientPortfolio":"' +   isnull( convert(varchar, SUB.VisitPointByClientPortfolioId) , ' ')  
-														+'"}'
-												
-													 FROM dbo.BillingProfile SUB with (nolock)
-													 WHERE
-													 SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio and SUB.BlpRowStatus= 1
-													 FOR XML PATH('') 
-													 ), 1, 1, '' ), 
-													 
-													  ' '
-													  )
-									
-									
-									 + '],' +
-									'"cod":[' + 
-									isnull(STUFF((    SELECT ',{ "Id":"'  +  isnull( convert(varchar, SUB.IdDeliveryFavCOD) , ' ')  + '",' +
-														'"IdAccount":"' + isnull( convert(varchar, SUB.IdAccountFavCOD) , ' ') + '",' +
-														'"IdBank":"' + isnull( convert(varchar, SUB.IdBank) , ' ') + '",' +
-														'"NameBank":"'  +  isnull(convert(nvarchar(max), DB.Name),'') + '",' +
-														'"NameAccount":"'  + dbo.fnt_String_Escape( isnull( convert(varchar, [dbo].[fn_replace_special_characters](ISNULL(SUB.NameAccountFavCOD,''))),'json') , ' ') + '",' +
-														'"TypeAccount":"'  + dbo.fnt_String_Escape( isnull( convert(varchar, SUB.TypeAccountFavCOD),'json') , ' ') + '",' +
-														'"DocID":"' +  dbo.fnt_String_Escape(isnull( convert(varchar, SUB.DocumentIdFavCOD),'json') , ' ') + '",' +
-														'"Alias":"' +  dbo.fnt_String_Escape(isnull( convert(varchar, SUB.AliasFavCOD) , ' '),'json') + '",' +
-														'"Token":"' + isnull( convert(varchar, SUB.TokenCreated) , ' ') + '",' +
-														'"TokenUpdate":"' + isnull( convert(varchar, SUB.TokenUpdate) , ' ') + '",' +
-														'"NumberAcc":"' + isnull( convert(varchar, SUB.NumberAccFavCOD) , ' ') + '",' +
-														'"Status":"' + isnull( convert(varchar, SUB.StatusFavCOD) , ' ') + '",' +
-														'"IdVisitPointByClientPortfolio":"' +   isnull( convert(varchar, SUB.VisitPointByClientPortfolioId) , ' ')  
-														+'"}'
-													 FROM dbo.DeliveryFavCOD SUB with (nolock), dbo.DeliveryBank DB with (nolock)
-													 --join  dbo.DeliveryBank db on db.Id_bank = SUB.IdBank
-													 WHERE
-													 SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio and SUB.StatusFavCOD= 1 and DB.Id_bank = SUB.IdBank
-													 FOR XML PATH(''), TYPE).value('.', 'varchar(max)'), 1, 1, '' ),
-													 
-													 ' '
-													 
-													 )
-									
-									  + '],' +
-									'"Addresses":[' + 
-									
-							ISNULL(		STUFF((    SELECT DISTINCT ',{ "IdAddress":"'  +  isnull( convert(varchar, SUB.UadIdAddress) , ' ')  + '",' +
-														'"IdTownship":"' + isnull( convert(varchar, SUB.UadIdTownship) , ' ') + '",' +
-														'"IdProvince":"' + isnull( convert(varchar, pr.IdProvince) , ' ') + '",' +
-														'"Province":"' + isnull( convert(varchar, pr.ProvinceName) , ' ') + '",' +
-														'"Township":"' + isnull( convert(varchar, tw.TownshipName) , ' ') + '",' +
-														'"HeaderCode":"' + isnull( convert(varchar, tw.HeaderCode) , ' ') + '",' +
-														'"IdAccount":"' + isnull( convert(varchar, SUB.UadIdAccount) , ' ') + '",' +
-														'"IdCountry":"' + isnull( convert(varchar, SUB.UadIdCountry) , ' ') + '",' +
-														'"FullName":"' +  dbo.fnt_String_Escape(REPLACE([dbo].[fn_replace_special_characters](ISNULL(SUB.UadFullName,'')),'"',''),'json') + '",' +
-														'"Address1":"' +  dbo.fnt_String_Escape(REPLACE([dbo].[fn_replace_special_characters](ISNULL(SUB.UadAddress1,'')),'"',''),'json')+ '",' +
-														'"Address2":"' +  dbo.fnt_String_Escape(REPLACE([dbo].[fn_replace_special_characters](ISNULL(SUB.UadAddress2,'')),'"',''),'json') + '",' +
-														'"NirPhone":"' +  dbo.fnt_String_Escape(REPLACE(ISNULL(SUB.UadNirPhone,''),'"',''),'json')+ '",' +
-														'"Phone":"' +  dbo.fnt_String_Escape(REPLACE([dbo].[fn_replace_special_characters](ISNULL(SUB.UadPhone,'')),'"',''),'json') + '",' +
-														'"AdditionalInstructions":"' + dbo.fnt_String_Escape(REPLACE([dbo].[fn_replace_special_characters](ISNULL(SUB.UadAdditionalInstructions,'')),'"',''),'json')  + '",' +
-														'"Status":"' + isnull( convert(varchar, SUB.UadRowStatus) , ' ') + '",' +
-														'"Token":"' + isnull( convert(VARCHAR(100), SUB.UadTokenCreated) , ' ') + '",' +
-                            '"IdSettlement":"' + isnull( convert(varchar, SUB.UadIdSettlement) , '') + '",' +
-                            '"SettlementDescription":"' + isnull( st.Settlement , '') + '",' +
-                            '"IdDeliveryOption":"' + isnull( convert(varchar, SUB.UadIdDeliveryOption) , ' ') + '",' +
-							'"DescriptionDeliveryOption":"' + isnull( cdo.Name , ' ') + '",' +
-                            '"IsTDA":"' + CASE WHEN dsc.TDA = 1 THEN 'TRUE' ELSE 'FALSE' END+ '",' +
-                            '"HasSDD":"' + CASE WHEN dsc.SDD = 1 THEN 'TRUE' ELSE 'FALSE' END+ '",' +
-							'"Hub":"' + ISNULL(dsc.Hub,'') + '",' +
-														'"IdVisitPointByClientPortfolio":"' +   isnull( convert(varchar, SUB.VisitPointByClientPortfolioId) , ' ')  
-														+'"}'
-													 FROM UserAddress SUB with (nolock)
-													right join Township tw with (nolock) on tw.IdTownship = SUB.UadIdTownship
-													right join Province pr with (nolock) on pr.IdProvince = tw.IdProvince
-                          LEFT JOIN Settlement st with (nolock) ON st.IdSettlement = SUB.UadIdSettlement AND st.SettlementSatus= 1
-                          LEFT JOIN CatDeliveryOptions cdo with (nolock) ON cdo.IdDeliveryOption = SUB.UadIdDeliveryOption
-                          LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc with (nolock) ON dsc.IdSettlement = st.IdSettlement AND dsc.RowStatus=1
-													 WHERE
-													 SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio and SUB.UadRowStatus= 1
-													 FOR XML PATH('') 
-													 ), 1, 1, '' ),
-													 
-													 ' '
-													 
-													 )
-									
-									  
-										+']'+ '}' 
-									from  VisitPointByClientPortfolio vcp with (nolock)
-									left join UserAddress uad with (nolock) on  uad.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-									AND uad.UadRowStatus=1
-									left join DeliveryFavCOD dfc with (nolock) on dfc.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-									left join BillingProfile bp with (nolock) on bp.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
-									where vcp.RowStatus = 1 and vcp.VisitPointId = @VisitPointId
-									AND (
-										CONCAT(vcp.FirstName, ' ', vcp.SecondName, ' ', vcp.LastName, ' ', vcp.SecondLastName) LIKE CONCAT('%',@TextFilter,'%') OR
-										--vcp.FirstName LIKE CONCAT('%',@TextFilter,'%') OR
-										--vcp.SecondName LIKE CONCAT('%',@TextFilter,'%') OR
-										--vcp.LastName LIKE CONCAT('%',@TextFilter,'%') OR
-										--vcp.SecondLastName LIKE CONCAT('%',@TextFilter,'%') OR
-										vcp.CUI LIKE CONCAT('%',@TextFilter,'%') OR
-										vcp.Phone LIKE CONCAT('%',@TextFilter,'%') OR
-										vcp.Email LIKE CONCAT('%',@TextFilter,'%')
-									)
-								
-
-
-								FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,''
-											) )
-	
-	
-					
-						If @jsonResult is null and @jsonResult2 is null and @jsonResult3 is null
-						begin
-							set @jsonResultErrror =(
-										SELECT STUFF(( 
-										SELECT '{{"IdResult":500,' 
-										+ '"Message":" No se encontraron registros"}' 
-										FOR XML PATH(''), TYPE
-										).value('.', 'varchar(max)'),1,1,''
-											  ) 
-										)
-						end
-
-						
-						
-							select ('[' + COALESCE(@jsonResultErrror,'') 
-						+ CASE WHEN @jsonResult IS NOT NULL and @jsonResult2 Is null and @jsonResult3 Is null THEN CONCAT( @jsonResult ,'')  ELSE '' END 
-						+ CASE WHEN @jsonResult IS NOT NULL and (@jsonResult2 IS NOT NULL OR @jsonResult3 IS NOT NULL) THEN CONCAT( @jsonResult ,',')  ELSE '' END 
-						+ CASE WHEN @jsonResult2 IS NOT NULL and @jsonResult3 Is null THEN CONCAT( @jsonResult2 ,'')  ELSE '' END
-						+ CASE WHEN @jsonResult2 IS NOT NULL and @jsonResult3 IS NOT NULL THEN CONCAT( @jsonResult2 ,',') ELSE '' END 
-						+ COALESCE(@jsonResult3,'') +  ']') jsonResult
-
-						--zIF OBJECT_ID('tempdb.dbo.#GuideService', 'U') IS NOT NULL DROP TABLE #GuideService;
-
-						--select ('[' + COALESCE(@jsonResult,'') 
-						--+ CASE WHEN @jsonResult IS NOT NULL THEN ',' ELSE '' END 
-						--+ CASE WHEN @jsonResult2 IS NOT NULL THEN ',' ELSE ''',' END    
-						--+ COALESCE(@jsonResult3,'') + ']') jsonResult
-
-
-
-
-END
-
-
-
-
-
+    -- Addresses  
+    SELECT DISTINCT  
+                  'ADDRESSES'  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.VisitPointByClientPortfolioId), ' ') [IdVisitPointByClientPortfolio]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdAddress), ' ') [IdAddress]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdTownship), ' ') [IdTownship]  
+                  ,ISNULL(CONVERT(VARCHAR, pr.IdProvince), ' ') [IdProvince]  
+                  ,ISNULL(CONVERT(VARCHAR, pr.ProvinceName), ' ') [Province]  
+                  ,ISNULL(CONVERT(VARCHAR, tw.TownshipName), ' ') [Township]  
+                  ,ISNULL(CONVERT(VARCHAR, tw.HeaderCode), ' ') [HeaderCode]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdAccount), ' ') [IdAccount]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdCountry), ' ') [IdCountry]  
+                  ,REPLACE((ISNULL(SUB.UadFullName, '' )),'"','') [FullName]  
+                  ,REPLACE((ISNULL(SUB.UadAddress1, '' )),'"','') [Address1]  
+                  ,REPLACE((ISNULL(SUB.UadAddress2,'')),'"','') [Address2]  
+                  ,REPLACE(ISNULL(SUB.UadNirPhone, ''),'"','') [NirPhone]  
+                  ,REPLACE((ISNULL(SUB.UadPhone,'')),'"','') [Phone]  
+                  ,REPLACE((ISNULL(SUB.UadAdditionalInstructions,'')),'"','') [AdditionalInstructions]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadRowStatus), ' ') [Status]  
+                  ,ISNULL(CONVERT(VARCHAR(100), SUB.UadTokenCreated), ' ') [Token]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdSettlement), '') [IdSettlement]  
+                  ,ISNULL(st.Settlement, '') [SettlementDescription]  
+                  ,ISNULL(CONVERT(VARCHAR, SUB.UadIdDeliveryOption), ' ') [IdDeliveryOption]  
+                  ,ISNULL(cdo.Name, ' ') [DescriptionDeliveryOption]  
+                  ,CASE  
+                       WHEN dsc.TDA = 1   
+                       THEN 'TRUE'  
+                       ELSE 'FALSE'  
+                   END  [IsTDA]  
+                  ,CASE  
+                        WHEN dsc.SDD = 1 THEN  
+                            'TRUE'  
+                        ELSE  
+                            'FALSE'  
+                    END [HasSDD]  
+                   ,ISNULL(dsc.Hub, '') [Hub]  
+                   ,ISNULL(CONVERT(VARCHAR, SUB.IdCityPlace),'0') [IdCityPlace]  
+    FROM DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp WITH (NOLOCK)  
+        INNER JOIN DeliveryBackOffice.dbo.UserAddress SUB WITH (NOLOCK)  
+            ON SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio  
+        LEFT JOIN DeliveryBackOffice.dbo.Township tw WITH (NOLOCK)  
+            ON tw.IdTownship = SUB.UadIdTownship  
+            AND tw.TownshipStatus = 1  
+        LEFT JOIN DeliveryBackOffice.dbo.Province pr WITH (NOLOCK)  
+            ON pr.IdProvince = tw.IdProvince  
+            AND pr.ProvinceStatus = 1  
+        LEFT JOIN DeliveryBackOffice.dbo.Settlement st WITH (NOLOCK)  
+            ON st.IdSettlement = SUB.UadIdSettlement  
+               AND st.SettlementSatus = 1  
+        LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)  
+            ON cdo.IdDeliveryOption = SUB.UadIdDeliveryOption  
+            AND cdo.RowStatus = 1  
+        LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc WITH (NOLOCK)  
+            ON dsc.IdSettlement = st.IdSettlement  
+               AND dsc.RowStatus = 1  
+    WHERE SUB.UadRowStatus = 1  
+      AND vcp.RowStatus = 1  
+      AND vcp.VisitPointId = @VisitPointId  
+      AND (  
+           CONCAT(  
+                     vcp.FirstName,  
+                     ' ',  
+                     vcp.SecondName,  
+                     ' ',  
+                     vcp.LastName,  
+                     ' ',  
+                     vcp.SecondLastName  
+                 ) LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.CUI LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.Phone LIKE CONCAT('%', @TextFilter, '%')  
+           OR vcp.Email LIKE CONCAT('%', @TextFilter, '%')  
+          )  
+  
+END;

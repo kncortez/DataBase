@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[TransactionalBackbone] (
-    [IdTransactionalMovement] INT           IDENTITY (1, 1) NOT NULL,
+    [IdTransactionalMovement] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]              NVARCHAR (2)  NOT NULL,
     [GuideNumber]             INT           NOT NULL,
     [GuidePiece]              INT           NOT NULL,
@@ -27,4 +27,23 @@
     FOREIGN KEY ([ServiceManagmentID]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement]),
     FOREIGN KEY ([TransactionTypeId]) REFERENCES [dbo].[TransactionType] ([IdTransactionType])
 );
+
+
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RouteId]
+    ON [dbo].[TransactionalBackbone]([RouteId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber]
+    ON [dbo].[TransactionalBackbone]([GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DateCreated_RowStatus]
+    ON [dbo].[TransactionalBackbone]([DateCreated] ASC, [RowStatus] ASC);
 

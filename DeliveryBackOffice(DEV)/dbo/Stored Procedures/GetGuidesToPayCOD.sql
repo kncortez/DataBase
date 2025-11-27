@@ -14,12 +14,69 @@
 CREATE PROCEDURE [dbo].[GetGuidesToPayCOD]
     -- Add the parameters for the stored procedure here
     @Date DATE
+  , @IdCountry NVARCHAR(2)= 'GT'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
-	set arithabort on;
+	SET ARITHABORT ON;
     SET NOCOUNT ON;
+
+	IF OBJECT_ID('tempdb.dbo.#TempBatchDetail', 'U') IS NOT NULL
+            DROP TABLE #TempBatchDetail;
+
+
+
+  CREATE TABLE #TempBatchDetail
+            (
+              GuideSerie NVARCHAR(2)
+     , GuideNumber INT
+     , Amount DECIMAL(12,4)
+     , Commission DECIMAL(12,4)
+     , CommissionDate DATETIME
+	 , CommissionId INT
+     , RowStatus INT
+     , CatConceptCODId INT
+            );
+            CREATE NONCLUSTERED INDEX tempbtdetail
+            ON #TempBatchDetail (
+                               GuideSerie
+                             , GuideNumber
+                           );
+          
+
+INSERT INTO #TempBatchDetail
+(
+    GuideSerie
+  , GuideNumber
+  , Amount
+  , Commission
+   , CommissionId
+  , CommissionDate
+  , RowStatus
+  , CatConceptCODId
+)
+SELECT 
+       BTD.GuideSerie
+     , BTD.GuideNumber
+     , BTD.Amount
+     , BTD.Commission
+	 , btd.CommissionId
+     , BTD.CommissionDate
+     , BTd.RowStatus
+     , BTD.CatConceptCODId
+FROM dbo.BatchCOD                 BT WITH(NOLOCK)
+    INNER JOIN dbo.BatchDetailCOD BTD WITH(NOLOCK)
+        ON BTD.BatchCODId = BT.IdBatchCOD
+WHERE CONVERT(DATE, BT.Date) = @Date
+      AND BTD.CatConceptCODId = 1
+      AND BTd.RowStatus = 1
+      AND BTD.IdCountry = @IdCountry --NEW BNHL;
+
+
+
+
+
     SELECT bt.IdBatchCOD,
            bt.Name,
            bt.BatchNumber,
@@ -91,7 +148,9 @@ BEGIN
 			WHEN cpt.TimePlaName = 'Post-Venta' THEN 'Crédito'
 			ELSE cpt.TimePlaName
 			END) PaymentType,
-			(IIF(ctiom.tio_pk_name = 'pago con tarjeta' OR ctiom.tio_pk_name = 'Datafono', 'Si','No')) CardPayment
+			(IIF(ctiom.tio_pk_name = 'pago con tarjeta' OR ctiom.tio_pk_name = 'Datafono', 'Si','No')) CardPayment,
+			(IIF(MAX(ISNULL(bt.IsAnticipatedCOD,0)) = 1, 'C.O.D. Anticipado','C.O.D. Inmediato')) BatchTypeCOD,
+			(MAX(ISNULL(btd.ComisionCODAnticipated,0))) AnticipatedCommission
     FROM [dbo].[BatchDetailCOD] btd WITH(NOLOCK)
         LEFT JOIN [dbo].[BatchCOD] bt WITH(NOLOCK)
             ON btd.[BatchCODId] = bt.[IdBatchCOD]
@@ -111,7 +170,7 @@ BEGIN
                        SELECT TOP 1
                               [IdTownship]
                        FROM [dbo].[Township] WITH(NOLOCK)
-                       WHERE UPPER(do.[Receiver_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                       WHERE UPPER(do.[Receiver_Town]) = UPPER([TownshipName])
                    )
                    ELSE
                        do.[ReceiverIdTownship]
@@ -123,7 +182,7 @@ BEGIN
                        SELECT TOP 1
                               [IdTownship]
                        FROM [dbo].[Township] WITH(NOLOCK)
-                       WHERE UPPER(do.[Sender_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                       WHERE UPPER(do.[Sender_Town]) = UPPER([TownshipName])
                    )
                    ELSE
                        do.[SenderIdTownship]
@@ -133,11 +192,11 @@ BEGIN
                AND btd.[GuideNumber] = pg.[GuideNumber]
         LEFT JOIN [dbo].[SenderReceiver] sr WITH(NOLOCK)
             ON pg.CourierManId = sr.ID
-        LEFT JOIN [dbo].[BatchDetailCOD] btc WITH(NOLOCK)
+        LEFT JOIN #TempBatchDetail btc WITH(NOLOCK)
             ON btc.GuideSerie = btd.GuideSerie
                AND btc.GuideNumber = btd.GuideNumber
-               AND btc.CatConceptCODId = 1
-			   AND btc.RowStatus =1 --cambio BNHL 04/08/2023
+      --         AND btc.CatConceptCODId = 1
+			   --AND btc.RowStatus =1 --cambio BNHL 04/08/2023
 		LEFT JOIN [dbo].[KindOfVPClient] kovpc WITH(NOLOCK)
 			ON kovpc.IdKindOfVPClient = vp.IdKindOfVPClient
 		LEFT JOIN [dbo].[DeliveryOrderPaymentTransaction] dopt WITH(NOLOCK)
@@ -185,6 +244,9 @@ BEGIN
 		--AND pg.RowStatus = 'TRUE'
 		AND BTD.RowStatus = 1 
 		--AND btc.RowStatus = 1 
+		--AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
+		AND do.SenderCountryId = @IdCountry
+        AND BTD.isCompleted = 1
 ​
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,
@@ -242,5 +304,9 @@ BEGIN
              bt.Date, btd.AuthorizationNumber DESC
 			 --option (optimize for unknown);
 			 
-    SET NOCOUNT OFF;
+
+			 	IF OBJECT_ID('tempdb.dbo.#TempBatchDetail', 'U') IS NOT NULL
+            DROP TABLE #TempBatchDetail;
+
+    --SET NOCOUNT OFF;
 END;

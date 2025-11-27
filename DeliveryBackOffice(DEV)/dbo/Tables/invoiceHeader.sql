@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[invoiceHeader] (
-    [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT NULL,
+    [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [inv_vpCodeOfReferences]  INT            NOT NULL,
     [inv_cmp_name]            VARCHAR (500)  NULL,
     [inv_cmp_nameComercial]   VARCHAR (500)  NULL,
@@ -52,10 +52,20 @@
     [IdCurrency]              INT            NULL,
     [IdCountry]               VARCHAR (2)    NULL,
     CONSTRAINT [PK_invoiceHeader] PRIMARY KEY CLUSTERED ([inv_pk_id] ASC),
-    CONSTRAINT [FK_IdCurrencyInvH_CatCurrencyCOD] FOREIGN KEY (IdCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
-    CONSTRAINT [FK_IdCountryInvH_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry),
-    FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
+    FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
+    CONSTRAINT [FK_IdCountryInvH_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
+    CONSTRAINT [FK_IdCurrencyInvH_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -116,6 +126,10 @@ CREATE NONCLUSTERED INDEX [idx_inv_pk_id_CatInvoiceTypeId]
     ON [dbo].[invoiceHeader]( [CatInvoiceTypeId]);
 
 GO
+CREATE NONCLUSTERED INDEX IX_invoiceHeader_IdCountry_inv_numberFEL
+        ON dbo.invoiceHeader (IdCountry, inv_numberFEL ASC);
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del pais registrado para la factura', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'IdCountry';
 
 GO
@@ -126,7 +140,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar los intentos de la generacion de una factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'Retries';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar los int�ntos de la generaci�n de una factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'Retries';
+
+
 
 
 GO
@@ -270,3 +286,24 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de cabecera de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader'
 GO
+CREATE NONCLUSTERED INDEX [idx_inv_vpCodeOfReferences]
+    ON [dbo].[invoiceHeader]([inv_vpCodeOfReferences] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_dateRegister_inv_type_inv_SAPDocEntry_include]
+    ON [dbo].[invoiceHeader]([inv_dateRegister] ASC, [inv_type] ASC, [inv_SAPDocEntry] ASC)
+    INCLUDE([inv_vpCodeOfReferences], [inv_date], [inv_status], [inv_invoiceOfCreditNote], [IdCountry]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IsManualInvoice_inv_dateRegister_inv_type_inv_SAPDocEntry_INCLUDE]
+    ON [dbo].[invoiceHeader]([IsManualInvoice] ASC, [inv_dateRegister] ASC, [inv_type] ASC, [inv_SAPDocEntry] ASC)
+    INCLUDE([inv_vpCodeOfReferences], [inv_certificationFEL], [inv_status], [inv_invoiceOfCreditNote], [IdCountry]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_inv_invoiceOfCreditNote_inv_creditNote_Include]
+    ON [dbo].[invoiceHeader]([inv_invoiceOfCreditNote] ASC, [inv_creditNote] ASC)
+    INCLUDE([inv_cli_name], [inv_certificationFEL], [inv_serieFEL], [inv_numberFEL], [IdCountry]);
+

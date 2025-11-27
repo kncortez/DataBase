@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatContainerSubtype] (
-    [IdCatContainerSubtype]       BIGINT         IDENTITY (1, 1) NOT NULL,
+    [IdCatContainerSubtype]       BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ContainerSubtypeName]        NVARCHAR (100) NOT NULL,
     [ContainerSubtypeDescription] NVARCHAR (600) NULL,
     [RowStatus]                   BIT            DEFAULT ((0)) NOT NULL,
@@ -9,6 +9,8 @@
     [TokenUpdated]                NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdCatContainerSubtype] ASC)
 );
+
+
 
 
 GO

@@ -26,7 +26,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI AND IdCountry = @IdCountry
+			[KOVPC].[KindOfVPName] = 'Concesionario' AND IdCountry = @IdCountry
 	)
 
 	DECLARE @TempGuideSplit TABLE (
@@ -116,8 +116,6 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
 				ON
 					[DO].[Sender_ID] = [VPC].[CodeOfReference]
-					AND
-					[VPC].[IdKindOfVPClient] = @FranchiseVPCType
 			OUTER APPLY
 			(
 				SELECT 
@@ -166,6 +164,7 @@ BEGIN
 		WHERE
 			[DO].[DateCreated] BETWEEN @StartDate AND @EndDate
 			AND ISNULL(DO.SenderCountryId,'GT') = @IdCountry
+            AND [VPC].[IdKindOfVPClient] = @FranchiseVPCType
 		
 	END
 	ELSE
@@ -212,8 +211,6 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
 				ON
 					[DO].[Sender_ID] = [VPC].[CodeOfReference]
-					AND
-					[VPC].[IdKindOfVPClient] = @FranchiseVPCType
 			OUTER APPLY
 			(
 				SELECT 
@@ -262,6 +259,7 @@ BEGIN
 		WHERE
 			[DO].[DateCreated] BETWEEN @StartDate AND @EndDate
 			AND ISNULL(DO.SenderCountryId,'GT') = @IdCountry
+            AND [VPC].[IdKindOfVPClient] = @FranchiseVPCType
 		
 	END
 

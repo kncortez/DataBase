@@ -8,6 +8,19 @@
 -- Modified:	<29-08-2024>
 -- Description:	<Se envian parametros de pais de origen y destino a la funcion ETA>
 -- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Modified:	<30-09-2024>
+-- Description:	<Se agrega la relación de una guía con un DeliveryLink.>
+-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-11-19>
+-- Description:	<Se agrego registro de informacion de poblado de origen en nuevo campo SenderIdSettlement>
+-- =============================================
+-- Author:		<Josue Villagrán>
+-- Create date: <2025-08-07>
+-- Description:	<Se elimina llamada a funcion costosa (SplitUnlimited) que utiliza XML y se reemplaza por SplitOrdinal sin XML reducción 91% del costo>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -15,7 +28,8 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @UserAddressId BIGINT = 0,
 @SystemModule NVARCHAR(200) = NULL,
 @IdAccount BIGINT = NULL,
-@AddToServiceCart BIT = 0
+@AddToServiceCart BIT = 0,
+@IdDeliveryLink INT = 0
 AS
 BEGIN
 	DECLARE @IdTransaction BIGINT = NULL
@@ -28,7 +42,7 @@ BEGIN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
 	--FIN MODIFICACIÓN
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
-	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WHERE CustomerID = @CustomerID )
+	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WITH(NOLOCK) WHERE CustomerID = @CustomerID )
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -42,24 +56,23 @@ BEGIN
   DECLARE @system INT = NULL;
   DECLARE @module INT = NULL;
 
-  IF (@SystemModule != '') 
-  BEGIN
-  --Se almacena el sistema y modulo desde donde se crea una guía
-		SET @system = (
-						SELECT SysIdSystem from CatSystem ca
-						WHERE ca.SysNameSystem = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/') 
-						WHERE id = 1)
-					   );
 
+ 
+  IF (@SystemModule != '') 
+  BEGIN  
+		--Se almacena el sistema y modulo desde donde se crea una guía
+   		SET @system = (
+						SELECT SysIdSystem from CatSystem ca
+						WHERE ca.SysNameSystem = (SELECT value FROM dbo.SplitOrdinal(@SystemModule,'/',10) WHERE ordinal = 1)						
+					   );
+					   	
 		-- Se deja la sentencia TOP 1 ya que existe dos modulos con el mismo nombre para la creación de guías en porta Web
 		-- Crear guías para usuarios individuales/Express y Crear Guías para corporativos en el flujo normal
 		SET @module = (
 						SELECT TOP 1 mo.ModIdModule from CatModule mo
-						WHERE mo.ModName = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/')
-						WHERE id = 2)
+						WHERE mo.ModName = (SELECT value FROM dbo.SplitOrdinal(@SystemModule,'/',10) WHERE ordinal = 2)	
 					   );
   END
-
 	/*********************************************************************************************/
 	/******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
 	/*********************************************************************************************/
@@ -147,7 +160,8 @@ BEGIN
 			[Sender_Lat],
 			[Sender_Lng],
 			[ReceiverLatitude],
-			[ReceiverLongitude]
+			[ReceiverLongitude],
+			[SenderIdSettlement]
 		INTO #GuideTable
 		FROM @TblDeliveryOrdersFD
 		LEFT JOIN @CorrelativeTable C ON C.[Row_Number] = RowNumber
@@ -262,7 +276,8 @@ BEGIN
 			[Receiver_Lng],
 			[SenderCountryId],
 			[ReceiverCountryId],
-			[GuideType]
+			[GuideType],
+			[SenderIdSettlement]
 		)
 		SELECT 
 			GT.[Ticket_Number],
@@ -337,7 +352,8 @@ BEGIN
 			CASE
 				WHEN ISNULL(P.IdCountry,'GT') = ISNULL(P2.IdCountry,'GT') THEN 'DOM'
 				ELSE 'INT'
-			END AS GuideType
+			END AS GuideType,
+			GT.SenderIdSettlement
 		FROM #GuideTable GT
 		INNER JOIN DeliveryBackOffice.dbo.Township T ON GT.SenderIdTownship = T.IdTownship
 		INNER JOIN DeliveryBackOffice.dbo.Province P ON T.IdProvince = P.IdProvince
@@ -406,7 +422,7 @@ BEGIN
 							ON GT.Sender_ID = vpc.CodeOfReference
 						WHERE ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
 						AND rbc.RbcRowStatus = 1
-						AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+					    AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
 						OR rbc.RbcCodeOfReference IS NULL)
 						ORDER BY rbc.RbcCodeOfReference DESC)
 			INNER JOIN RateHeader rh WITH (NOLOCK)
@@ -458,28 +474,6 @@ BEGIN
 										   GETDATE()
 									FROM #GuideTable GIT
 
-									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
-									--SELECT 1,
-									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
-									--	   1,
-									--	   GDT.PriceShippment,
-									--	   1,
-									--	   @Token,
-									--	   GETDATE(),
-									--	   GDT.Guide_Serie,
-									--	   GDT.Guide_Number
-									--FROM #GuideTable GDT
-									-- SET @IdCost = @@IDENTITY; 
-
-									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
-									--SELECT @IdCost,
-									--	   'Servicio',
-									--	   GTL.PriceShippment,
-									--	   1,
-									--		@Token,
-									--		GETDATE()
-									--FROM #GuideTable GTL
-
 								END
 							ELSE
 								BEGIN
@@ -494,27 +488,6 @@ BEGIN
 										   GETDATE()
 									FROM #GuideTable GIT
 
-									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
-									--SELECT 1,
-									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
-									--	   1,
-									--	   GDT.PriceShippment,
-									--	   1,
-									--	   @Token,
-									--	   GETDATE(),
-									--	   GDT.Guide_Serie,
-									--	   GDT.Guide_Number
-									--FROM #GuideTable GDT
-									-- SET @IdCost = @@IDENTITY; 
-
-									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
-									--SELECT @IdCost,
-									--	   'Servicio',
-									--	   GTL.PriceShippment,
-									--	   1,
-									--		@Token,
-									--		GETDATE()
-									--FROM #GuideTable GTL
 							  END
 						END
 
@@ -638,6 +611,26 @@ BEGIN
 		END
 		--Termina proceso para añadir a carrito de compras
 
+		--Inicia proceso para DeliveryLink
+		IF(@IdDeliveryLink > 0)
+		BEGIN
+			--Cambiamos estado de Link
+			DECLARE @StatusDeliveryLink INT;
+			SELECT @StatusDeliveryLink = IdDeliveryLinkStatus FROM DeliveryBackOffice.dbo.DeliveryLinkStatus WITH(NOLOCK)
+			WHERE [Name] = 'Envío realizado';
+
+			DECLARE @GuideNumerDL INT;
+			SELECT TOP 1 @GuideNumerDL = Guide_Number FROM #GuideTable
+			
+			--Hacemos relación entre link y guía
+			UPDATE DeliveryBackOffice.dbo.DeliveryLink
+			SET GuideSerie = @GuideSerie , GuideNumber = @GuideNumerDL , DeliveryLinkStatusId = @StatusDeliveryLink , 
+				UserUpdated = 'SYSTEM' , DateUpdated = GETDATE()
+			WHERE IdDeliveryLink = @IdDeliveryLink AND RowStatus = 1
+
+		END;
+		--Termina proceso para DeliveryLink
+
 		DROP TABLE #GuideTable
 	END TRY
 	BEGIN CATCH
@@ -683,7 +676,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario' COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario' --COLLATE Latin1_General_CI_AI 
 			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
@@ -694,7 +687,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center' COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center' --COLLATE Latin1_General_CI_AI 
 			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 
@@ -706,7 +699,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -716,7 +709,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -726,7 +719,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -736,14 +729,14 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI 
 	)
 
 
   --Fin Nuevos datos para consumir nuevo formato guía
 
 
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND ISNULL(IdCountry,'GT')= @IdCountryByCustomer);
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WITH(NOLOCK) WHERE BusinessSegmentName='B2B' AND ISNULL(IdCountry,'GT')= @IdCountryByCustomer);
 
 		SELECT 
 			1 AS 'StatusCode',
@@ -809,7 +802,18 @@ BEGIN
 						WHEN [D].[CatSystemId] IS NULL THEN 'API'
 						ELSE 'API'
 					END
-			)'GuideOrigin'
+			)'GuideOrigin',
+			D.ReceiverCountryId,
+			IIF(D.InsuranceAmount>800 AND D.IsInsuarance=1,1,0) 'IsInsured',
+			CASE
+			    WHEN DOP.PiecePhysicalWeight > 0 THEN 
+			  IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT))
+			ELSE 
+									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
+			'WeightLB',
+								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
+	    	ISNULL(DSC.RouteCode,'') AS 'RouteCode',
+			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
 										AND D.Guide_Serie = @GuideSerie
@@ -821,11 +825,21 @@ BEGIN
 			    AND MMBSHP.ExpirationDate >= GETDATE()
 				AND MMBSHP.RowStatus = 1
 		LEFT JOIN DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
-			ON DOPD.GuideNumber = D.Guide_Number
+			ON dopd.GuideSerie = d.Guide_Serie AND  DOPD.GuideNumber = D.Guide_Number			
 		LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
             ON vpct.CodeOfReference = D.Sender_ID
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpcti  WITH(NOLOCK) 
 		    ON [vpcti].[CodeOfReference] = [D].[OriginSenderId]
+		LEFT JOIN [dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+			    ON   DOP.GuideSerie = D.Guide_Serie   AND  DOP.GuideNumber  = D.Guide_Number
+		LEFT JOIN [dbo].[del_ParametrosFactura] DPF WITH(NOLOCK)
+			    ON  D.[OriginSenderId] = DPF.dpf_VpCodeOfReference
+		LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
+			    ON DSC.IdSettlement = D.ReceiverIdSettlement
+		LEFT JOIN  dbo.RatebyCustomer RC WITH(NOLOCK)
+			   ON D.IdCustomer = RC.RbcIdCustomer  AND RbcRowStatus = 1 AND (D.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
+        LEFT JOIN    dbo.RateHeader RH WITH(NOLOCK)
+              ON RC.RbcIdRate= RH.RheId
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
 END

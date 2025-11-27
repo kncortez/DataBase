@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatCorrelativeCOD] (
-    [IdCatCorrelativeCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatCorrelativeCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Begin]               INT           CONSTRAINT [DF_CatCorrelativeCOD_Begin] DEFAULT ((1)) NOT NULL,
     [End]                 INT           NOT NULL,
     [Last]                INT           CONSTRAINT [DF_CatCorrelativeCOD_Last] DEFAULT ((1)) NOT NULL,

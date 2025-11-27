@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatRuleCOD] (
-    [IdCatRuleCOD] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatRuleCOD] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ListName]     NVARCHAR (50) NOT NULL,
     [Key]          NVARCHAR (50) NOT NULL,
     [Value]        NVARCHAR (50) NOT NULL,

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatCityPlace] (
-    [IdCityPlace]           INT          IDENTITY (1, 1) NOT NULL,
+    [IdCityPlace]           INT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CityPlace]             VARCHAR (50) NULL,
     [CityPlaceRowStatus]    BIT          NULL,
     [CityPlaceTokenCreated] VARCHAR (50) NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [PK_CatCityPlace] PRIMARY KEY CLUSTERED ([IdCityPlace] ASC),
     FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[DeliveryOrderAlert] (
-    [IdDeliveryOrderAlert] INT            IDENTITY (1, 1) NOT NULL,
+    [IdDeliveryOrderAlert] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]           VARCHAR (2)    NULL,
     [GuideNumber]          INT            NULL,
     [AlertDescription]     NVARCHAR (200) NOT NULL,
@@ -16,6 +16,12 @@
     CONSTRAINT [FK_DeliveryOrderAlert_TypeAlertId] FOREIGN KEY ([AlertTypeId]) REFERENCES [dbo].[CatTypeAlert] ([IdCatTypeAlert]),
     CONSTRAINT [FK_DOA_ServiceManagement] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement])
 );
+
+
+
+
+
+
 
 
 
@@ -106,4 +112,22 @@ CREATE NONCLUSTERED INDEX [IDX_guideserie_guidenumber]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del servicio de la tabla ServiceManagement', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderAlert', @level2type = N'COLUMN', @level2name = N'ServiceManagementId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RowStatus_ServiceTypeId_DateCreated]
+    ON [dbo].[DeliveryOrderAlert]([RowStatus] ASC, [ServiceTypeId] ASC, [DateCreated] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [AlertDescription]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RowStatus_ServiceTypeId_ServiceManagementId_DateCreated_include]
+    ON [dbo].[DeliveryOrderAlert]([RowStatus] ASC, [ServiceTypeId] ASC, [ServiceManagementId] ASC, [DateCreated] ASC)
+    INCLUDE([GuideSerie], [GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RowStatus_ServiceManagementId_DateCreated_ServiceTypeId_include]
+    ON [dbo].[DeliveryOrderAlert]([RowStatus] ASC, [ServiceManagementId] ASC, [DateCreated] ASC, [ServiceTypeId] ASC)
+    INCLUDE([GuideNumber], [AlertDescription], [AlertTypeId]);
 

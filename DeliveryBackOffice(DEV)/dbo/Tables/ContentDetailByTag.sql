@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ContentDetailByTag] (
-    [IdContentDetailByTag] BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdContentDetailByTag] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TagContentId]         BIGINT        NOT NULL,
     [ContentDetailId]      BIGINT        NOT NULL,
     [RowStatus]            BIT           DEFAULT ((1)) NOT NULL,
@@ -12,6 +12,8 @@
     CONSTRAINT [FK_ContentDetailByTag_ContentDetail] FOREIGN KEY ([ContentDetailId]) REFERENCES [dbo].[ContentDetail] ([IdContentDetail]),
     UNIQUE NONCLUSTERED ([TagContentId] ASC, [ContentDetailId] ASC)
 );
+
+
 
 
 GO

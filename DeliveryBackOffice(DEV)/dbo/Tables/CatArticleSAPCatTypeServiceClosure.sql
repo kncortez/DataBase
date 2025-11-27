@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatArticleSAPCatTypeServiceClosure] (
-    [IdCatArticleSAPCatTypeServiceClosure] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatArticleSAPCatTypeServiceClosure] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdCatArticleSAP]                      INT           NULL,
     [IdTypeService]                        INT           NULL,
     [SAPCode]                              NVARCHAR (50) NULL,
@@ -8,16 +8,26 @@
 );
 
 
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAPCatTypeServiceClosure', @level2type = N'COLUMN', @level2name = N'IdCatArticleSAPCatTypeServiceClosure';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del artículo SAP', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAPCatTypeServiceClosure', @level2type = N'COLUMN', @level2name = N'IdCatArticleSAP';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAPCatTypeServiceClosure', @level2type = N'COLUMN', @level2name = N'IdCatArticleSAPCatTypeServiceClosure';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de tipo servicio(Referencia a IdTypeService de la tabla CatTypeServiceClosure)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAPCatTypeServiceClosure', @level2type = N'COLUMN', @level2name = N'IdTypeService';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID foranea ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAPCatTypeServiceClosure', @level2type = N'COLUMN', @level2name = N'IdCatArticleSAP';
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID foranea de servicios ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAPCatTypeServiceClosure', @level2type = N'COLUMN', @level2name = N'IdTypeService';
+
+
 
 
 GO

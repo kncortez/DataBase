@@ -4,7 +4,7 @@
 -- Description:	<Realiza el proceso de facturación>
 -- =============================================
 --drop  PROCEDURE Sps_RegisterInvoiceForza
---CREATE PROCEDURE Sps_RegisterInvoiceForza
+--ALTER PROCEDURE Sps_RegisterInvoiceForza
 
 -- =============================================
 -- Author:		<Eduardo, López>
@@ -14,6 +14,10 @@
 -- Author:      <Daniel, Ramirez>
 -- Create date: <2024-06-27>
 -- Description: <Se agrego parametros de factura y moneda, por defecto 1 = QTZ, 'GT'>
+-- =============================================
+-- Author:      <Brandon, Pedroza>
+-- Modified:    <2024-06-27>
+-- Description: <Facturacion SV - Se registra informacion del documento emitido>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
 	 @VpCodeOfReferences int
@@ -31,6 +35,7 @@ CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
     ,@IdCountry  VARCHAR(2) = 'GT'
 	,@TblLstDetail TblLstDetail READONLY
 	,@TblInOutOfMoneyDetail TblInOutOfMoneyDetail READONLY
+	,@TblBuyerInfo TblBuyerInfo READONLY
 AS
 BEGIN
 	DECLARE @invoiceHeaderId bigint=-1;
@@ -167,6 +172,43 @@ BEGIN
 							,@tokenRegister
 							,GETDATE()
 					FROM @TblInOutOfMoneyDetail MD
+					
+					--INSERT EN TABLA LOG DE INFORMACION DEL CLIENTE CUANDO SE EMITE UNA FACTURA
+					IF(@IdCountry = 'SV')
+					BEGIN
+					INSERT INTO InformationBuyerInvoice 
+								(
+								InvoiceId,
+								DistrictCode,
+								StateCode,
+								ActivityCode,
+								ActivityDescription,
+								NRC,
+								TypeIdentificationDocumentCode,
+								IdDocument,
+								Phone,
+								Rowstatus,
+								TokenCreated,
+								DateCreated,
+								TokenUpdated,
+								DateUpdated
+								)
+						SELECT @invoiceHeaderId
+								,BI.DistrictCode
+								,BI.StateCode
+								,BI.ActivityCode
+								,BI.ActivityDescription
+								,BI.NRC
+								,BI.TypeDocument
+								,BI.IdDocument
+								,BI.Phone
+								,1
+								,@tokenRegister
+								,GETDATE()
+								,NULL
+								,NULL
+							FROM @TblBuyerInfo BI
+					END
 
 					SELECT @invoiceHeaderId 'IDENTITY'
 					COMMIT TRANSACTION;
@@ -182,6 +224,30 @@ BEGIN
 							   ERROR_MESSAGE() AS [ErrorMessage];
 
 						ROLLBACK TRANSACTION;
+
+
+
+						INSERT INTO dbo.RoutePreparationLogError
+						(
+						    ErrorDescription
+						  , ErrorNumber
+						  , ErrorProcedure
+						  , ErrorLine
+						  , GuideSerie
+						  , GuideNumber
+						  , TokenCreated
+						  , DateCreated
+						)
+						VALUES
+						(   ERROR_MESSAGE()      -- ErrorDescription - varchar(300)
+						  , ERROR_NUMBER()      -- ErrorNumber - int
+						  , ERROR_PROCEDURE()      -- ErrorProcedure - varchar(100)
+						  , ERROR_LINE()      -- ErrorLine - int
+						  , NULL      -- GuideSerie - nvarchar(2)
+						  , NULL      -- GuideNumber - int
+						  , @cli_email        -- TokenCreated - varchar(50)
+						  , GETDATE() -- DateCreated - datetime
+						    )
 
 					END CATCH
      END

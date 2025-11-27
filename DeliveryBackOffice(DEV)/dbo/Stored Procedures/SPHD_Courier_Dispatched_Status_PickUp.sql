@@ -49,7 +49,7 @@ SELECT SR.ID AS ID_Courier,
 			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK) ON SP.SchedulePickupId = DOPD.IdHeaderRecolection
 			INNER JOIN [DeliveryBackOffice].[DBO].[SenderReceiver] SR WITH (NOLOCK) ON SM.IdPuCourrier = SR.ID
 			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOPaux WITH (NOLOCK) ON [DOPaux].[GuideSerie] = [DOPD].[GuideSerie] AND [DOPaux].[GuideNumber] = [DOPD].[GuideNumber]
-			WHERE CONVERT(DATE, SM.DateCreated) = @DispatchedDate
+			WHERE CONVERT(DATE, sp.StartDate) = @DispatchedDate
 			AND (SR.IdCountry = @IdCountry OR (SR.IdCountry IS NULL AND @IdCountry ='GT'))
 			GROUP BY SR.ID, SR.First_Name, SR.Last_Name
 END

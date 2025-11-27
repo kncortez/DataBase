@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[ImagesByVisitPoint] (
-    [IdImage]         INT           IDENTITY (1, 1) NOT NULL,
+    [IdImage]         INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CodeOfReference] INT           NULL,
     [PathImage]       VARCHAR (200) NULL,
     [RowStatus]       BIT           NULL,
@@ -12,4 +12,13 @@
 );
 
 
+
+
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CodeOfReference]
+    ON [dbo].[ImagesByVisitPoint]([CodeOfReference] ASC);
 

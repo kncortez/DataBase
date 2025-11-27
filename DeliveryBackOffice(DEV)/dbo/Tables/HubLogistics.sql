@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[HubLogistics] (
-    [IdHubLogistic]   INT            IDENTITY (1, 1) NOT NULL,
+    [IdHubLogistic]   INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [HubName]         VARCHAR (50)   NULL,
     [HubAbbreviation] VARCHAR (5)    NULL,
     [HubStatus]       BIT            NULL,
@@ -13,9 +13,12 @@
     [HubLatitude]     NVARCHAR (20)  NULL,
     [HubLongitude]    NVARCHAR (20)  NULL,
     [DescriptionCC]   NVARCHAR (100) NULL,
-    CONSTRAINT [PK_HubLogistics] PRIMARY KEY CLUSTERED ([IdHubLogistic] ASC),
-    CONSTRAINT [FK_IdCountry_CatCountry] FOREIGN KEY (idCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
+    CONSTRAINT [PK_HubLogistics] PRIMARY KEY CLUSTERED ([IdHubLogistic] ASC)
 );
+
+
+
+
 
 
 

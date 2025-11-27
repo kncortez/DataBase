@@ -24,6 +24,15 @@
 -- Create date: <2022-08-05>
 -- Description:	< Cambio para uso de orden como decimal .>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-10-01>
+-- Description:	<Se filtra para que tome en cuenta unicamente las guias que no han sido despachadas>
+-- =============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2025-01-17>
+-- Description:	<devolución de campo Ticlet_Number como referencia>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetRoutePreparation]
 	@IdRoute INT,
 	@Date DATE
@@ -33,14 +42,12 @@ BEGIN
 	DECLARE @RouteAssignmentExists BIT;
 
 	SET @RouteAssignmentExists = (
-										SELECT 1
+										SELECT TOP 1 1
 										FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
-										WHERE
-										RP.CatRouteId = @IdRoute
-										AND
-										RP.DateRoutePreparation = @Date
-										AND
-										RP.RowStatus = 1
+										WHERE RP.RowStatus = 1
+											AND RP.CatRouteId = @IdRoute
+											AND RP.DateRoutePreparation = @Date
+										ORDER BY rp.IdRoutePreparation DESC
 									)
 
 	IF (@RouteAssignmentExists IS NOT NULL)
@@ -57,14 +64,10 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 					ON
 						RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
-						AND
-						RPD.RowStatus = 1
 				inner JOIN
 					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 					ON
 						RPD.RoutePreparationId = RP.IdRoutePreparation
-						AND
-						RP.RowStatus = 1
 				inner JOIN 
 					[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 					ON
@@ -79,6 +82,10 @@ BEGIN
 				RP.DateRoutePreparation = @Date
 				AND
 				RPDP.RowStatus = 1
+				AND
+				RPD.RowStatus = 1
+				AND
+				RP.RowStatus = 1
 
 			--- Actualizar la preparación de ruta en base a los datos almacenados
 			UPDATE RP
@@ -148,8 +155,10 @@ BEGIN
 		ON rp.DeliveryOrderBySettlementId = dobs.ID
 	LEFT JOIN SenderReceiver sr WITH(NOLOCK)
 		ON dobs.ID_Courier = sr.ID
-	WHERE rp.CatRouteId = @IdRoute AND rp.DateRoutePreparation = @Date
-		AND rp.RowStatus = 1
+	WHERE rp.RowStatus = 1
+		AND rp.DeliveryOrderBySettlementId IS NULL
+		AND rp.CatRouteId = @IdRoute 
+		AND rp.DateRoutePreparation = @Date
 
 	--TABLE 1 Información de las guías en preparación de la ruta
 		SELECT RPD.Guide_Serie 'Guide_Serie'
@@ -168,6 +177,8 @@ BEGIN
 		, CAST(IIF(DOP.StatusOrderId = 3, 1 ,0) AS BIT) 'IsProgrammed'
 		, cu.Abbreviation 'CustomerAbbreviation' 
 		, RPD.ETAGuide 'GuideETA'
+		, cu.IsVoucherRequired
+		,do.Ticket_Number
 	FROM RoutePreparation RP WITH(NOLOCK)
 	LEFT JOIN RoutePreparationDetail RPD WITH(NOLOCK)
 		ON
@@ -195,7 +206,9 @@ BEGIN
 		ON vpc.CodeOfReference = do.Sender_ID
 	LEFT JOIN Customer cu WITH(NOLOCK)
 		ON cu.IdCustomer = COALESCE(do.IdCustomer, vpc.CustomerID)
-	WHERE rp.CatRouteId = @IdRoute AND rp.DateRoutePreparation = @Date
-		AND rp.RowStatus = 1
+	WHERE rp.RowStatus = 1
+		AND rp.DeliveryOrderBySettlementId IS NULL
+		AND rp.CatRouteId = @IdRoute 
+		AND rp.DateRoutePreparation = @Date
 	ORDER BY COALESCE(rpd.GuideOrder, 999999) ASC
 END
