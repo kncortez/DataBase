@@ -101,6 +101,40 @@ BEGIN TRY
 			,5 --Entregado
 			)
 	END
+
+	IF NOT EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.KindOfVPClient WITH(NOLOCK) WHERE KindOfVPName = 'Smart Locker Extern')
+	BEGIN
+		INSERT INTO [dbo].[KindOfVPClient]
+           ([KindOfVPName]
+           ,[KindOfVPStatus]
+           ,[TokenCreated]
+           ,[DateCreated]
+           ,[TokenUpdate]
+           ,[DateUpdated]
+           ,[IdCountry])
+		 VALUES
+			   ('Smart Locker Extern'
+			   ,1
+			   ,'SYS-WOROZCO'
+			   ,GETDATE()
+			   ,NULL
+			   ,NULL
+			   ,'GT'),
+			   ('Smart Locker Extern'
+			   ,1
+			   ,'SYS-WOROZCO'
+			   ,GETDATE()
+			   ,NULL
+			   ,NULL
+			   ,'HN'),
+			   ('Smart Locker Extern'
+			   ,1
+			   ,'SYS-WOROZCO'
+			   ,GETDATE()
+			   ,NULL
+			   ,NULL
+			   ,'SV')
+	END
     
     COMMIT TRANSACTION;
 END TRY

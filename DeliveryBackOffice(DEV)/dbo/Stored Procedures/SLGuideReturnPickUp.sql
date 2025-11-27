@@ -31,8 +31,8 @@ BEGIN
 		IF NOT EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 		BEGIN
 			SELECT
-				  500																										[IdResult]
-				, 'La guía ingresada no existe, por favor intente de nuevo, en caso persista contacte al Administrador.'	[Message]
+				  500																								[IdResult]
+				, 'Por favor verifica el número e intenta nuevamente. Si el problema persiste, contacta a soporte.'	[Message]
 			RETURN;
 		END;
 
@@ -46,12 +46,15 @@ BEGIN
 		DECLARE @StatusDeclareReturned INT = ( SELECT StatusOrderId FROM DeliveryBackOffice.dbo.StatusOrder			WITH(NOLOCK) 
 									  WHERE [OrderDescription] = 'Declarado para Devolución' );
 
+		DECLARE @StatusRequired	INT = ( SELECT StatusOrderId FROM DeliveryBackOffice.dbo.StatusOrder			WITH(NOLOCK) 
+									  WHERE [OrderDescription] = 'Solicitado' );
+
 		-- Verificar estado
-		IF (@Status NOT IN (@StatusDeclareReturned))
+		IF (@Status NOT IN (@StatusDeclareReturned,@StatusRequired))
 		BEGIN
 			SELECT
-				  500																															[IdResult]
-				, 'La guía se encuentra en un estado no permitido, asegurese de que se encuentre el paquete en devolución de Smart Locker.'		[Message]
+				  500																			[IdResult]
+				, 'Asegúrate de que esté en devolución de smart locker antes de continuar.'		[Message]
 			RETURN;
 		END;
 
@@ -76,12 +79,7 @@ BEGIN
 			WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 		);
 
-		-- Actualizar entrega de la orden
-        UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-        SET StatusOrderId = @GuideReturnPickUpInSL, DateUpdated = GETDATE(), TokenUpdated = @Token
-        WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber;
-
-		-- Insertar entrega del detalle de la orden 
+		-- Se agrega para dejar registro de 'Retirado en Smart Locker' sin afectar el flujo despues de recoleccion
         INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
         (
               [Guide_Serie]

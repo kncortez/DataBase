@@ -35,8 +35,8 @@ BEGIN
 		IF NOT EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 		BEGIN
 			SELECT
-				  500																										[IdResult]
-				, 'La guía ingresada no existe, por favor intente de nuevo, en caso persista contacte al Administrador.'	[Message]
+				  500																									[IdResult]
+				, ' Por favor verifica el número e intenta nuevamente. Si el problema persiste, contacta a soporte.'	[Message]
 			RETURN;
 		END;
 
@@ -56,8 +56,8 @@ BEGIN
 		IF (@Status <> @GuideReceptionInSL)
 		BEGIN
 			SELECT
-				  500													[IdResult]
-				, 'La guía se encuentra en un estado no permitido.'		[Message]
+				  500																			[IdResult]
+				, 'Asegúrate de que esté el paquete en Smart Locker antes de continuar.'		[Message]
 			RETURN;
 		END;
 
