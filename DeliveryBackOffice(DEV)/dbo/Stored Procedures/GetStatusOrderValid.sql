@@ -20,13 +20,14 @@ BEGIN
                       AND do.Guide_Number = @GuideNumber
             );
 
-	DECLARE @StatusDelivery TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Entregado')
-	DECLARE @StatusDeliveryExpress TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Entregado en Express center')
-	DECLARE @StatusCODSettlement TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'COD Liquidado')
-	DECLARE @StatusCODPaid TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'COD Pagado')
-	DECLARE @StatusReturn TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Devuelto')
-	DECLARE @StatusReturnExpress TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Devuelto en Express center')
-	DECLARE @StatusCancelled TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Anulado')
+	DECLARE @StatusDelivery TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Entregado')
+	DECLARE @StatusDeliveryExpress TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Entregado en Express center')
+	DECLARE @StatusCODSettlement TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'COD Liquidado')
+	DECLARE @StatusCODPaid TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'COD Pagado')
+	DECLARE @StatusReturn TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Devuelto')
+	DECLARE @StatusReturnExpress TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Devuelto en Express center')
+	DECLARE @StatusCancelled TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Anulado')
+	DECLARE @StatusReview TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'En Revisión')
 
     --Estados de finalización (Entregado, Entregado en Express center)
     IF @GuideStatusOrderId = @StatusDelivery
@@ -69,6 +70,9 @@ BEGIN
     ELSE IF @GuideStatusOrderId = @StatusReturn
         SELECT 0 StatusCode,
                'La guía se encuentra en estado Devuelto.' Description;
+	ELSE IF @GuideStatusOrderId = @StatusReview
+        SELECT 0 StatusCode,
+               'La guía se encuentra en estado En Revisíon.' Description;
 
     ELSE --De momento no se valida nada más
         SELECT 1 StatusCode,
