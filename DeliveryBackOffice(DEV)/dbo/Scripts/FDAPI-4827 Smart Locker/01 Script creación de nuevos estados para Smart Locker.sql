@@ -1,6 +1,6 @@
-/* =================================================
-   Script:    Creación de nuevos estados.
-   Propósito: Se encargara en crear nuevos estados para los smart lockers.
+ï»¿/* =================================================
+   Script:    CreaciÃ³n de nuevos estados.
+   PropÃ³sito: Se encargara en crear nuevos estados para los smart lockers.
    Autor:     Walter Orozco
    Historia:  FDAPI-4827 [FDAPI-4831],[FDAPI-4832],[FDAPI-4834]
    Fecha:     2025-10-23
@@ -28,8 +28,8 @@ BEGIN TRY
 			('Paquete en Smart Locker'
 			,2 --Checkpoint de proceso
 			,2 --Externo
-			,'La guía se encuentra en Smart Locker'
-			,'Guía se encuentra en Smart Locker'
+			,'La guÃ­a se encuentra en Smart Locker'
+			,'GuÃ­a se encuentra en Smart Locker'
 			,1
 			,'SYS-WOROZCO'
 			,GETDATE()
@@ -60,7 +60,7 @@ BEGIN TRY
 			,3 --Checkpoint final
 			,2 --Externo
 			,'Estimado cliente, el paquete fue entregado en Smart Locker'
-			,'Guía entregada a travez de Smart Locker'
+			,'GuÃ­a entregada a travez de Smart Locker'
 			,1
 			,'SYS-WOROZCO'
 			,GETDATE()
@@ -91,7 +91,7 @@ BEGIN TRY
 			,3 --Checkpoint final
 			,2 --Externo
 			,'Estimado cliente, el paquete fue devuelto en Smart Locker'
-			,'Guía entregada por devolución a travez de Smart Locker'
+			,'GuÃ­a entregada por devoluciÃ³n a travez de Smart Locker'
 			,1
 			,'SYS-WOROZCO'
 			,GETDATE()
