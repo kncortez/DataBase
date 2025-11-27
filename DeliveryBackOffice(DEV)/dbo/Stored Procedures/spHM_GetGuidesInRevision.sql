@@ -18,13 +18,7 @@ BEGIN
     SET QUOTED_IDENTIFIER ON
     SET NOCOUNT ON;
 
-    DECLARE @StatusRevision INT = (
-        SELECT TOP 1
-        SO.StatusOrderId
-    FROM StatusOrder SO WITH (NOLOCK)
-    WHERE SO.OrderDescription = 'En Revisión'
-    );
-
+    DECLARE @StatusRevision INT = 13;-- OrderDescription "En Revisión"
     DECLARE @GuideSerie NVARCHAR(2);
     DECLARE @GuideNumber INT;
 
@@ -82,7 +76,7 @@ BEGIN
 
     IF (
         @GuideSerie IS NOT NULL
-        AND @GuideNumber IS NOT NULL
+        OR @GuideNumber IS NOT NULL
     )
     BEGIN
         SET @Sql += N'
