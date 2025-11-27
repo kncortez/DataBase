@@ -395,28 +395,51 @@ BEGIN
 		) rdm ON gd.id = rdm.DeliveryOrderBySettlementId
 		GROUP BY rdm.TotalApplied;
 
-      SELECT 
-			gd.id,
-			gd.Guide,
-			gd.GuideSerie,
-			gd.GuideNumber,
-			gd.Delivered,
-			gd.Price,
-			gd.COD,
-			gd.Total AS TOTAL,
-			gd.FEL,
-			gd.StatusOrderId,
-			gd.OrderDescription,
-			gd.StatusOrderValid,
-			gd.DescriptionStatusOrderValid
-		FROM @GuidesDetail gd
-            LEFT JOIN (
-                SELECT 
-                    DeliveryOrderBySettlementId,
-                    SUM(AmountApplied) AS TotalApplied
-                FROM [DeliveryBackOffice].[dbo].[RelDepositManifest] WITH (NOLOCK)
-                GROUP BY DeliveryOrderBySettlementId
-            ) rdm ON gd.id = rdm.DeliveryOrderBySettlementId
-		ORDER BY gd.id DESC;
+		WITH rdm AS (
+			SELECT 
+				DeliveryOrderBySettlementId,
+				SUM(AmountApplied) AS TotalApplied
+			FROM [DeliveryBackOffice].[dbo].[RelDepositManifest] WITH (NOLOCK)
+			GROUP BY DeliveryOrderBySettlementId
+		),
+		Applied AS
+		(
+			SELECT
+				gd.*,
+				ISNULL(r.TotalApplied, 0) AS TotalApplied,
+				SUM(gd.Total) OVER (
+					PARTITION BY COALESCE(r.DeliveryOrderBySettlementId, gd.id)
+					ORDER BY gd.id ASC
+					ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+				) AS RunningTotal,
+				SUM(gd.Total) OVER (
+					PARTITION BY COALESCE(r.DeliveryOrderBySettlementId, gd.id)
+					ORDER BY gd.id ASC
+					ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+				) AS RunningBefore
+			FROM @GuidesDetail gd
+			LEFT JOIN rdm r
+				ON gd.id = r.DeliveryOrderBySettlementId
+		)
+		SELECT
+			id,
+			Guide,
+			GuideSerie,
+			GuideNumber,
+			Delivered,
+			Price,
+			COD,
+			CASE
+				WHEN TotalApplied <= ISNULL(RunningBefore, 0) THEN Total
+				WHEN TotalApplied >= RunningTotal THEN 0
+				ELSE (RunningTotal - TotalApplied)
+			END AS Total,
+			FEL,
+			StatusOrderId,
+			OrderDescription,
+			StatusOrderValid,
+			DescriptionStatusOrderValid
+		FROM Applied
+		ORDER BY id ASC;
 
 END;
