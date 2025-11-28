@@ -56,15 +56,16 @@ BEGIN
 	END
 
 	BEGIN TRY
+	
+		CREATE TABLE #GuidesTmp (GuideSerie NVARCHAR(2), GuideNumber INT, PiecesNumber INT);
+
+		CREATE INDEX IX_Guides_SerieNumero
+		ON #GuidesTmp (GuideSerie, GuideNumber);	
+		
 		BEGIN TRANSACTION;
 
 		IF (@PIECES_MISSING_IN_SETTLEMENT > 0) -- PIECES MISSING IN SETTLEMENT
-		BEGIN
-			CREATE TABLE #GuidesTmp (GuideSerie NVARCHAR(2), GuideNumber INT, PiecesNumber INT);
-
-			CREATE INDEX IX_Guides_SerieNumero
-			ON #GuidesTmp (GuideSerie, GuideNumber);			
-			
+		BEGIN				
 			-- SE PASAN A ESTADO EN REVISION LAS GUIAS MULTIPIEZAS NO ESCANEADAS
 			INSERT INTO #GuidesTmp (GuideSerie, GuideNumber)
 			SELECT DISTINCT
