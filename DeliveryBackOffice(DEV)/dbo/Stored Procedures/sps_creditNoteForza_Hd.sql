@@ -24,6 +24,7 @@ BEGIN
     DECLARE @idNotaCredito AS INT = NULL;
     DECLARE @vpCodeOfReferences NVARCHAR(10);
 	DECLARE @TypeDocumentCreditNote INT = (SELECT IdRegister FROM CatTypeDocument WHERE [Name] = 'Nota de crédito')
+    DECLARE @Establishment         NVARCHAR(150);
 
     DECLARE @Country NVARCHAR(2) = 'GT';
     SET @Country =
@@ -427,15 +428,27 @@ BEGIN
   
                     IF(@rowcount > 0)  
                     BEGIN   
-                       SELECT @secuencia = [Value]  
-                        FROM AddInfoByConfigSV  WITH(NOLOCK)
-                       WHERE RowStatus = 1  
-                         AND [Name] = 'Secuencial'  
-                         AND [Node] = 'Header.AdditionalIssueDocInfo'  
-  	               
-                      UPDATE AddInfoByConfigSV  
-                         SET [Value] = @secuencia + 1  
-                       WHERE [Name] = 'Secuencial'  
+                          SELECT @vpCodeOfReferences = ih.inv_vpCodeOfReferences 
+                           FROM invoiceHeader ih WITH (NOLOCK)
+                          WHERE inv_pk_id = @idInvoice;
+
+                        SELECT @Establishment = [Value]
+                          FROM DeliveryBackOffice.dbo.AddInfoByCodeOfReference WITH (NOLOCK)
+                         WHERE RowStatus = 1
+                           AND CodeOfReference = @vpCodeOfReferences
+                           AND [Name] = 'CodEstablecimientoMH'
+
+                        SELECT @secuencia = CAST(A1.[Sequence] AS INT)
+                          FROM dbo.InvoiceSequenceByEstablishment A1 WITH (NOLOCK)
+                         WHERE A1.RowStatus = 1
+                           AND A1.Establishment = @Establishment
+                           AND A1.TypeDocument = 2
+
+                        UPDATE DeliveryBackOffice.dbo.InvoiceSequenceByEstablishment
+                           SET [Sequence] = @secuencia + 1
+                         WHERE RowStatus = 1
+                           AND TypeDocument = 2
+                           AND Establishment = @Establishment
                     END  
                 END
                 ELSE
