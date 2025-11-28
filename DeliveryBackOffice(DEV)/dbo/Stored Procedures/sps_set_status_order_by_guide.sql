@@ -308,8 +308,8 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                 ON dopd.IdHeaderRecolection = sm.IdSchedulePickup
             INNER JOIN @ItemsTable it
-                ON dopd.GuideNumber = it.Guide_Number
-				AND dopd.GuideSerie = it.Guide_Serie
+                ON dopd.GuideSerie = it.Guide_Serie 
+				AND dopd.GuideNumber = it.Guide_Number				
             WHERE dopd.GuideSerie = @Guide_Serie
         END
 
