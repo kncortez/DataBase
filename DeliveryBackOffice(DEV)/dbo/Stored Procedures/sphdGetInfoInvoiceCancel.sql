@@ -12,7 +12,8 @@ BEGIN
 
 	DECLARE @TypeDocumentCreditNote INT,
 			@IssueDate DATE,
-			@CancelTypeId INT;
+			@CancelTypeId INT,
+            @CodeOfReference INT;
 	
 	SET @TypeDocumentCreditNote = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Nota de Crédito');
 
@@ -79,13 +80,22 @@ BEGIN
 	WHERE INV.IdCountry = @IdCountry
 	  AND INV.inv_numberFEL = @Guid;
 
+    SELECT @CodeOfReference = inv.inv_vpCodeOfReferences
+	FROM invoiceHeader INV WITH(NOLOCK)
+	WHERE INV.IdCountry = @IdCountry
+	  AND INV.inv_numberFEL = @Guid;
+
 	-- Obtener datos adicionales de configuración
 	SELECT [Name], [Value]
-	FROM AddInfoByConfigSV WITH(NOLOCK)
-	WHERE [Node] = 'CancelDTE';
+	  FROM AddInfoByCodeOfReference WITH(NOLOCK)
+	 WHERE RowStatus = 1 
+       AND [Node] = 'CancelDTE'
+       AND CodeOfReference = @CodeOfReference;
 
 	SELECT	[Name],[Value] 
 	FROM AddInfoByConfigSV WITH(NOLOCK)
-	WHERE [Node] = 'CreateDTE' AND [Name] = 'USERNAME'
+	WHERE RowStatus = 1
+      AND [Node] = 'CreateDTE' 
+      AND [Name] = 'USERNAME'
 
 END;
