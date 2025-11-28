@@ -720,7 +720,7 @@ BEGIN
                 AND SysRowStatus = 1
 		)
 
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IdCountry = @IdCountry);
 
         SELECT 1 AS 'StatusCode',
                'Registros guardados correctamente' AS 'Description',
@@ -737,7 +737,7 @@ BEGIN
                PrvOri.[ProvinceAbbreviation] AS 'HubOrigin',
                (
                    SELECT HubAbbreviation
-                   FROM [DeliveryBackOffice].[dbo].[HubLogistics]
+                   FROM [DeliveryBackOffice].[dbo].[HubLogistics] WITH(NOLOCK)
                    WHERE IdHubLogistic = D.HubDestinationId
                ) AS 'HubDestination',
                (
