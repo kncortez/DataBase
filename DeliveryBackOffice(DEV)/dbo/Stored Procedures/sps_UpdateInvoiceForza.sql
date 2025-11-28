@@ -1,8 +1,15 @@
-﻿-- =============================================
--- Author:      <Cristian, Azurdia>
--- Modified:    <2025-00-10>
--- Description: <Facturacion SV - Se actualiza informacion del documento emitido>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sps_UpdateInvoiceForza]
+   Propósito: Facturacion SV - Se actualiza informacion del documento emitido
+   Autor:     Cristian, Azurdia
+   Historia:  ---
+   Fecha:     2025-10-07
+
+=== CHANGELOG ============================
+
+2025-11-21 | Historia/épica: FDAPI-4961   | Autor: Brandon Pedroza |
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_UpdateInvoiceForza]
      @IdInvoice int
     ,@cli_name varchar(500)
@@ -40,6 +47,7 @@ BEGIN
                ,Phone = BI.Phone
                ,TokenUpdated = @tokenRegister
                ,DateUpdated = GETDATE()
+               ,OperationConditionCode = BI.OperationConditionCode
             FROM @TblBuyerInfo BI
             WHERE InvoiceId = @IdInvoice
         END

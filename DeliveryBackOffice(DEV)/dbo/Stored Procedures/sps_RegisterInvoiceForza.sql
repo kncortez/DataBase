@@ -1,24 +1,16 @@
-﻿-- =============================================
--- Author:		<Alberto, Ixchop>
--- Create date: <2022-04-21>
--- Description:	<Realiza el proceso de facturación>
--- =============================================
---drop  PROCEDURE Sps_RegisterInvoiceForza
---ALTER PROCEDURE Sps_RegisterInvoiceForza
+﻿/* =================================================
+   SP:        [dbo].[sps_RegisterInvoiceForza]
+   Propósito: Realiza el proceso de facturación
+   Autor:     Alberto Ixchop
+   Historia:  ---
+   Fecha:     2022-04-21
 
--- =============================================
--- Author:		<Eduardo, López>
--- Create date: <2022-09-07>
--- Description:	<Actualizar SP para que valide si existe algun registro en la tabla invoiceHeader vinculada con la guía por la cual se desea crear factura>
--- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-06-27>
--- Description: <Se agrego parametros de factura y moneda, por defecto 1 = QTZ, 'GT'>
--- =============================================
--- Author:      <Brandon, Pedroza>
--- Modified:    <2024-06-27>
--- Description: <Facturacion SV - Se registra informacion del documento emitido>
--- =============================================
+=== CHANGELOG ============================
+
+2024-06-27 | Historia/épica: ---        | Autor: Daniel Ramirez  |
+2024-06-27 | Historia/épica: ---        | Autor: Brandon Pedroza |
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
 	 @VpCodeOfReferences int
     ,@cmp_nit varchar(100)
@@ -191,7 +183,8 @@ BEGIN
 								TokenCreated,
 								DateCreated,
 								TokenUpdated,
-								DateUpdated
+								DateUpdated,
+								OperationConditionCode
 								)
 						SELECT @invoiceHeaderId
 								,BI.DistrictCode
@@ -207,6 +200,7 @@ BEGIN
 								,GETDATE()
 								,NULL
 								,NULL
+								,BI.OperationConditionCode
 							FROM @TblBuyerInfo BI
 					END
 
