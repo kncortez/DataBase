@@ -36,7 +36,11 @@ AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE @secuencia BIGINT,
-            @rowcount  INT;
+            @rowcount        INT,
+            @CodeOfReference BIGINT,
+            @Establishment   NVARCHAR(150),
+            @typeDocument    INT;
+
     -- Insert statements for procedure here
     UPDATE DeliveryBackOffice.dbo.invoiceHeader
        SET inv_documentSend = @documentSend,
@@ -71,15 +75,28 @@ BEGIN
 
      IF(@rowcount >= 1)
      BEGIN 
-        SELECT @secuencia = [Value]
-         FROM AddInfoByConfigSV WITH(NOLOCK)
-        WHERE RowStatus = 1
-          AND [Name] = 'Secuencial'
-          AND [Node] = 'Header.AdditionalIssueDocInfo'
+          SELECT @CodeOfReference = inv_vpCodeOfReferences,
+                 @typeDocument    = inv_type
+            FROM dbo.invoiceHeader A1 WITH(NOLOCK)
+           WHERE A1.inv_pk_id = @id;
 
-       UPDATE AddInfoByConfigSV
-          SET [Value] = @secuencia + 1
-        WHERE [Name] = 'Secuencial'
+          SELECT @Establishment = [Value]
+            FROM DeliveryBackOffice.dbo.AddInfoByCodeOfReference WITH(NOLOCK)
+           WHERE RowStatus = 1
+             AND CodeOfReference = @CodeOfReference
+             AND [Name] = 'CodEstablecimientoMH';
+
+        SELECT @secuencia = [Sequence]
+          FROM DeliveryBackOffice.dbo.InvoiceSequenceByEstablishment WITH(NOLOCK)
+          WHERE RowStatus = 1
+           AND TypeDocument = @typeDocument
+           AND Establishment = @Establishment
+
+        UPDATE DeliveryBackOffice.dbo.InvoiceSequenceByEstablishment
+           SET [Sequence] = @secuencia + 1
+         WHERE RowStatus = 1
+           AND TypeDocument = @typeDocument
+           AND Establishment = @Establishment
      END
 
     SELECT @rowcount 'rowCount'
