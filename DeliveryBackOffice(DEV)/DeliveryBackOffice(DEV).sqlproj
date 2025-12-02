@@ -1233,6 +1233,8 @@
     <Build Include="dbo\Stored Procedures\spHM_CancelOpenProcessesPreparationDeliveries.sql" />
     <Build Include="dbo\Stored Procedures\spHM_CancelOpenProcessLiquidationUnifiedRoutes.sql" />
     <Build Include="dbo\Stored Procedures\spHM_AddContainerInStopOverToLinehaulRoutePreparation.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetGuidesInRevision.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_ReleaseGuideFromReview.sql" />
     <Build Include="dbo\Stored Procedures\spHD_VerifyGuideStatus.sql" />
     <Build Include="dbo\Stored Procedures\spHD_ValidateVisitPointStatusByCodeOfReference.sql" />
     <Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttempsUpdateAdress.sql" />
