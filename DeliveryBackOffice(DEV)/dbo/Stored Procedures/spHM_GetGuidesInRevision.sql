@@ -6,7 +6,7 @@
 USE [DeliveryBackOffice]
 GO
 
-CREATE PROCEDURE [dbo].[spHM_GetGuidesInRevision]
+CREATE OR ALTER PROCEDURE [dbo].[spHM_GetGuidesInRevision]
     @CountryId NVARCHAR(5) = 'GT',
     @RouteId INT = NULL,
     @CourierName NVARCHAR(100) = NULL,
@@ -56,7 +56,7 @@ BEGIN
         SELECT
             DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR(20)) AS Guia,
             CR.CodeRoute AS Ruta,
-            DO.Courier_Name AS Piloto,
+            CONCAT(SR.First_Name, '' '', SR.Last_Name) AS Piloto,
             HL.HubName + '', '' + HL.HubAbbreviation AS HubDestino,
             DO.DateCreated AS Fecha,
             DOP.NoPiece AS Pieza,
@@ -65,14 +65,23 @@ BEGIN
         INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
             ON DO.Guide_Serie = DOP.GuideSerie
             AND DO.Guide_Number = DOP.GuideNumber
+        INNER JOIN LinehaulRoutePreparationContainerDetail LHP WITH (NOLOCK)
+            ON DO.Guide_Serie = LHP.GuideSerie
+            AND DO.Guide_Number = LHP.GuideNumber
+        INNER JOIN LinehaulRoutePreparationContainer LHRP WITH (NOLOCK)
+            ON LHP.LinehaulRoutePreparationContainerId = LHRP.IdLinehaulRoutePreparationContainer
+        INNER JOIN LinehaulRoutePreparation HRP WITH (NOLOCK)
+            ON HRP.IdLinehaulRoutePreparation = LHRP.LinehaulRoutePreparationId
         INNER JOIN CatRoute CR WITH (NOLOCK)
-            ON DO.Courier_Route = CR.CodeRoute
+            ON HRP.CatRouteId = CR.IdRoute
+        INNER JOIN SenderReceiver SR WITH (NOLOCK)
+            ON HRP.SenderReceiverId = SR.ID
         LEFT JOIN HubLogistics HL WITH (NOLOCK)
             ON DO.HubDestinationId = HL.IdHubLogistic
         INNER JOIN StatusOrder SO WITH (NOLOCK)
             ON DO.StatusOrderId = SO.StatusOrderId
         WHERE DO.StatusOrderId = @StatusRevision
-            AND ISNULL(CR.CountryId, ''GT'') = @CountryId';
+            AND CR.CountryId = @CountryId';
 
     IF (
         @GuideSerie IS NOT NULL
@@ -93,7 +102,7 @@ BEGIN
     IF (@CourierName IS NOT NULL)
     BEGIN
         SET @Sql += N'
-            AND DO.Courier_Name LIKE @CourierNamePattern';
+            AND (SR.First_Name LIKE @CourierNamePattern OR SR.Last_Name LIKE @CourierNamePattern)';
     END
 
     IF (@HubId IS NOT NULL)
