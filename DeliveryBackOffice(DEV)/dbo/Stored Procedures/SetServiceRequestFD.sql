@@ -30,7 +30,7 @@ BEGIN
 	DECLARE @IdCountryByCustomer NVARCHAR(2) = 'GT'
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] WHERE SalesPackageStatusName = 'Activa')
-	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM [DeliveryBackOffice].[dbo].[VisitPointClient] WITH(NOLOCK) WHERE CustomerID = @CustomerID )
+	SET @IdCountryByCustomer =(SELECT TOP 1 CountryID FROM [DeliveryBackOffice].[dbo].[VisitPointClient] WITH(NOLOCK) WHERE CustomerID = @CustomerID )
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -335,10 +335,10 @@ BEGIN
 			@module,
 			GT.ReceiverLatitude,
 			GT.ReceiverLongitude,
-			ISNULL(P.IdCountry,'GT'),
-			ISNULL(P2.IdCountry,'GT'),
+			P.IdCountry,
+			P2.IdCountry,
 			CASE
-				WHEN ISNULL(P.IdCountry,'GT') = ISNULL(P2.IdCountry,'GT') THEN 'DOM'
+				WHEN P.IdCountry = P2.IdCountry THEN 'DOM'
 				ELSE 'INT'
 			END AS GuideType,
 			GT.SenderIdSettlement,
@@ -403,18 +403,16 @@ BEGIN
 			   ,NULL
 			FROM #GuideTable GT
 			INNER JOIN [DeliveryBackOffice].[dbo].[RateByCustomer] rc WITH (NOLOCK)
-				ON rc.RbcId = (SELECT TOP 1
-							rbc.RbcId
-						FROM [DeliveryBackOffice].[dbo].[RatebyCustomer] rbc WITH (NOLOCK)
-						INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
-							ON GT.Sender_ID = vpc.CodeOfReference
-						WHERE ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
-							AND rbc.RbcRowStatus = 1
-							AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
-							OR rbc.RbcCodeOfReference IS NULL)
-						ORDER BY rbc.RbcCodeOfReference DESC)
+				ON rc.RbcId = (SELECT TOP 1	rbc.RbcId
+								FROM [DeliveryBackOffice].[dbo].[RatebyCustomer] rbc WITH (NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
+									ON GT.Sender_ID = vpc.CodeOfReference
+										AND (rbc.RbcCodeOfReference = vpc.CodeOfReference OR rbc.RbcCodeOfReference IS NULL)
+								WHERE ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
+									AND rbc.RbcRowStatus = 1
+								ORDER BY rbc.RbcCodeOfReference DESC)
 			INNER JOIN [DeliveryBackOffice].[dbo].[RateHeader] rh WITH (NOLOCK)
-				ON rc.RbcIdRate = rh.RheId
+						ON rc.RbcIdRate = rh.RheId
         -- Fin FDAPI-1418 Oscar Morales 2023-02-23
 
 
@@ -653,14 +651,14 @@ BEGIN
 			SELECT TOP (1) [KOVPC].[IdKindOfVPClient] 
 			FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 			WHERE [KOVPC].[KindOfVPName] = 'Concesionario'
-				AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
+				AND [KOVPC].[IdCountry] = @IdCountryByCustomer
 		)
 		DECLARE @ExpressVisitPointTypeId INT = 
 		(
 			SELECT TOP (1) [KOVPC].[IdKindOfVPClient] 
 			FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 			WHERE [KOVPC].[KindOfVPName] = 'Express Center'
-				AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
+				AND [KOVPC].[IdCountry] = @IdCountryByCustomer
 		)
 
 		DECLARE @IndividualWebSys INT =
