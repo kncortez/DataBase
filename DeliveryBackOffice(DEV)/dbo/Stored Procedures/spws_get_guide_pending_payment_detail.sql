@@ -27,6 +27,11 @@
 -- Create date: <2024-12-18>
 -- Description: <Se realizan optimizaciones recomendadas por DBA>
 -- =============================================
+-- =============================================
+-- Author:      <Bilkar Morataya>
+-- Create date: <2025-09-02>
+-- Description: <Se incluyen las Guías pagas por Zigi dentro del objeto Rejects>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
@@ -129,52 +134,42 @@ BEGIN
     CREATE NONCLUSTERED INDEX IX_LGNE_NGUIDES ON #listGuidesNotExist (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
-    ---- Obtener guias que si se pueden procesar con el modulo indicado ------------------------------------
-    SELECT lg.Guide_Serie,
-           lg.Guide_Number
-    INTO #listGuidesIncluded
+
+    ---- Crear tabla temporal para guías excluidas si no existe ----
+    CREATE TABLE #listGuidesExcluded (
+        Guide_Serie NVARCHAR(2),
+        Guide_Number INT,
+        StatusOrderId INT,
+        Description NVARCHAR(255)
+    );
+
+    -- 1. Crear tabla temporal de guías pagadas en Zigi
+    IF OBJECT_ID('tempdb.dbo.#listGuidesPaidZigi', 'U') IS NOT NULL
+        DROP TABLE #listGuidesPaidZigi;
+    SELECT lg.Guide_Serie, lg.Guide_Number
+    INTO #listGuidesPaidZigi
     FROM #listGuides lg
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
-            ON lg.Guide_Serie = do.Guide_Serie
-               AND lg.Guide_Number = do.Guide_Number
-        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
-            ON do.StatusOrderId = so.StatusOrderId
-    WHERE (
-              UPPER(@ServiceType) = 'PICKUP'
-              AND so.StatusOrderId IN ( 1, 15, 50, 45 )
-			  
-          )
-          OR
-          (
-              UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 )			  
-			  AND COALESCE(DO.IsLastMileReturn,0) = 0
-          )
-          OR
-          (
-              UPPER(@ServiceType) = 'RETURN'
-              AND so.StatusOrderId IN ( 10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35 )
-          )
-      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+    INNER JOIN PaymentZigi pz WITH(NOLOCK)
+        ON lg.Guide_Serie = pz.GuideSerie AND lg.Guide_Number = pz.GuideNumber
+    WHERE pz.ZigiLinkStatus = 'PAID';
 
-    /*SELECT lg.Guide_Serie,
-			lg.Guide_Number
-	INTO #listGuidesIncluded
-	FROM #listGuides lg
-	WHERE NOT EXISTS (SELECT 1
-					  FROM #listGuidesNotExist lgne
-					  WHERE lgne.Guide_Serie = lg.Guide_Serie
-					  AND lgne.Guide_Number = lg.Guide_Number);*/
+    -- 2. Agregar guías pagadas a los excluidos (Rejects)
+    -- INSERT INTO #listGuidesExcluded (Guide_Serie, Guide_Number, StatusOrderId, Description)
+    -- SELECT Guide_Serie, Guide_Number, 999, 'Guía pagada en Zigi'
+    -- FROM #listGuidesPaidZigi;
 
-    CREATE NONCLUSTERED INDEX IX_LGI_GUIDES ON #listGuidesIncluded (Guide_Serie, Guide_Number);
-    -----------------------------------------------------------------------------------------------------------------
 
-    ---- Obtener guias que no se pueden procesar con el modulo indicado ------------------------------------
+
+    -- 3. Poblar #listGuidesIncluded se mueve después de poblar completamente #listGuidesExcluded
+    -- -----------------------------------------------------------------------------------------------------------------
+
+
+    -- Insertar guias que no se pueden procesar con el modulo indicado en #listGuidesExcluded
+    INSERT INTO #listGuidesExcluded (Guide_Serie, Guide_Number, StatusOrderId, Description)
     SELECT lg.Guide_Serie,
            lg.Guide_Number,
            so.StatusOrderId,
            so.OrderDescription 'Description'
-    INTO #listGuidesExcluded
     FROM #listGuides lg
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
@@ -183,24 +178,22 @@ BEGIN
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
-              AND (so.StatusOrderId NOT IN ( 1, 15, 50, 45 )
-			))
-          
+              AND (so.StatusOrderId NOT IN ( 1, 15, 50, 45 ))
+          )
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND (so.StatusOrderId NOT IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 )
-			  )
+              AND (so.StatusOrderId NOT IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 ))
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId NOT IN ( 10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35 )
-			
           )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
-		  
-  INSERT INTO #listGuidesExcluded
+
+    -- Insertar guias en estado terminal en #listGuidesExcluded
+    INSERT INTO #listGuidesExcluded (Guide_Serie, Guide_Number, StatusOrderId, Description)
     SELECT lg.Guide_Serie,
            lg.Guide_Number,
            so.StatusOrderId,
@@ -216,7 +209,7 @@ BEGIN
                                     FROM [dbo].[StatusOrder] SO  WITH(NOLOCK)
                                     WHERE [CatCheckpointTypeId] = 3 
                                         AND RowStatus = 1 ))
-		)
+        )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
 
 ------------------------------------  Validación de estados terminales --------------------------------------------------
@@ -251,6 +244,32 @@ BEGIN
 			END
 
     CREATE NONCLUSTERED INDEX IX_LGE_GUIDES ON #listGuidesExcluded (Guide_Serie, Guide_Number);
+
+    -- Ahora sí, poblar #listGuidesIncluded después de poblar completamente #listGuidesExcluded
+    SELECT lg.Guide_Serie,
+           lg.Guide_Number
+    INTO #listGuidesIncluded
+    FROM #listGuides lg
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+            ON lg.Guide_Serie = do.Guide_Serie
+               AND lg.Guide_Number = do.Guide_Number
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
+            ON do.StatusOrderId = so.StatusOrderId
+    WHERE (
+            (UPPER(@ServiceType) = 'PICKUP' AND so.StatusOrderId IN (1, 15, 50, 45))
+         OR (UPPER(@ServiceType) = 'DELIVERY' AND so.StatusOrderId IN (10, 11, 12, 20, 21, 50, 45, 48, 51) AND COALESCE(DO.IsLastMileReturn,0) = 0)
+         OR (UPPER(@ServiceType) = 'RETURN' AND so.StatusOrderId IN (10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35))
+    )
+    AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
+    -- AND NOT EXISTS (
+          -- SELECT 1 FROM #listGuidesPaidZigi paid
+          -- WHERE paid.Guide_Serie = lg.Guide_Serie AND paid.Guide_Number = lg.Guide_Number
+    -- )
+    AND NOT EXISTS (
+          SELECT 1 FROM #listGuidesExcluded ex
+          WHERE ex.Guide_Serie = lg.Guide_Serie AND ex.Guide_Number = lg.Guide_Number
+    );
+    CREATE NONCLUSTERED INDEX IX_LGI_GUIDES ON #listGuidesIncluded (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
     ---- Asignar configuracion de parametros -------------------------------------------------------------
@@ -277,7 +296,7 @@ BEGIN
            ord.Guide_Number
     INTO #RevalueGuides
     FROM #listGuidesIncluded lst
-        JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
             ON ord.Guide_Number = lst.Guide_Number
                AND ord.Guide_Serie = lst.Guide_Serie
 		LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
@@ -883,5 +902,3 @@ BEGIN
 
     SELECT @Output FormatJson;
 END;
-
-
