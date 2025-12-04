@@ -32,6 +32,11 @@
 -- Create date: <2025-09-02>
 -- Description: <Se incluyen las Guías pagas por Zigi dentro del objeto Rejects>
 -- =============================================
+-- =============================================
+-- Author:      <Bilkar Morataya>
+-- Create date: <2025-12-04>
+-- Description: <Se incluye el campo isNeedBilling>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
@@ -580,7 +585,8 @@ BEGIN
 					'N/A'
 				)
 				)) AS TypePayment,
-	DO.IdCustomer
+	DO.IdCustomer,
+    CAST(1 AS BIT) AS IsNeedBilling
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
@@ -594,6 +600,21 @@ BEGIN
    WHERE do.SenderCountryId = @IdCountry;
 
     CREATE NONCLUSTERED INDEX IX_PPTID_ID ON #PendingPaymentTempId ([Id]);
+
+    ---------------------------------------------------------
+    -- Actualización masiva de IsNeedBilling
+    ---------------------------------------------------------
+    UPDATE T
+    SET IsNeedBilling = 0
+    FROM #PendingPaymentTempId T
+    INNER JOIN DeliveryBackOffice.dbo.invoiceDetail ID WITH (NOLOCK)
+        ON T.GuideSerie = ID.dti_fk_orderSerie 
+        AND T.GuideNumber = ID.dti_fk_orderNumber
+    INNER JOIN DeliveryBackOffice.dbo.invoiceHeader IH WITH (NOLOCK)
+        ON IH.inv_pk_id = ID.dti_fk_header
+    WHERE IH.inv_certificationFEL IS NOT NULL
+      AND LTRIM(RTRIM(IH.inv_certificationFEL)) <> ''
+    ---------------------------------------------------------
 
 	DECLARE @IdCountrySender NVARCHAR(2) = 
 	(
@@ -777,6 +798,7 @@ BEGIN
                          + ', ' + '"TypePayment": "' + pg.TypePayment +'"'
                          + ', ' + '"IsCollect": ' + CAST(ISNULL(pg.IsCollect, 0) AS VARCHAR) + ', ' + '"Pieces": '
                          + CAST(ISNULL(pg.Pieces, 0) AS VARCHAR) + ', ' + '"ServiceType": "' + pg.ServiceType + '", '
+                         + '"isNeedBilling": ' + CAST(pg.IsNeedBilling AS VARCHAR) + ', '
 						 + '"IdCustomer": ' + CAST(ISNULL(c.IdCustomer,0) AS VARCHAR) + ', '
 						 + '"IdPortafolio": ' + CAST(ISNULL(c.IdPortafolio,0) AS VARCHAR) + ', '
 						 + '"COD": ' + CAST(ISNULL(c.COD,0) AS VARCHAR) + ', '
