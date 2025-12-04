@@ -126,7 +126,7 @@ BEGIN
     IF (@CourierName IS NOT NULL)
     BEGIN
         SET @Sql += N'
-            AND (SR.First_Name LIKE @CourierNamePattern OR SR.Last_Name LIKE @CourierNamePattern)';
+            AND (CONCAT(SR.First_Name,'' '',SR.Last_Name) LIKE @CourierNamePattern)';
     END
 
     IF (@HubId IS NOT NULL)
