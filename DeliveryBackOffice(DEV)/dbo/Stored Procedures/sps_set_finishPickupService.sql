@@ -3,6 +3,10 @@
 -- Create date: <2025-06-23>
 -- Description:	<Confirma servicio de recepción de guía en express center>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-11-06>
+-- Description:	<Se guarda el parámetro @Voucher si es para tarjeta o para Zigi, caso contrario solo ''>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_finishPickupService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
@@ -263,7 +267,7 @@ BEGIN
 				INSERT INTO #GuidesToProcessTEMP (GuideSerieTEMP, GuideNumberTEMP)
                 SELECT dlo.Guide_Serie, dlo.Guide_Number
                 FROM #listGuidesEnabled            lge
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]       dlo WITH (NOLOCK)
+                    INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
                         ON lge.Guide_Serie = dlo.Guide_Serie
                         AND lge.Guide_Number = dlo.Guide_Number
                 WHERE dlo.Collect_OnDelivery > 0
@@ -311,14 +315,14 @@ BEGIN
                                 , cus.IdCustomer
                                 , 1 AS 'IsAnticipatedCOD'
                         FROM #listGuidesEnabled            lge
-                            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]       dlo WITH (NOLOCK)
+                            INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
                                 ON lge.Guide_Serie = dlo.Guide_Serie
                                     AND lge.Guide_Number = dlo.Guide_Number
-                            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vp WITH (NOLOCK)
+                            LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                                 ON vp.CodeOfReference = dlo.Sender_ID
-                            LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]         cus WITH (NOLOCK)
+                            LEFT JOIN dbo.Customer         cus WITH (NOLOCK)
                                 ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-                            LEFT JOIN [DeliveryBackOffice].[dbo].[ProcessedGuideCOD]    pcd WITH (NOLOCK)
+                            LEFT JOIN ProcessedGuideCOD    pcd WITH (NOLOCK)
                                 ON pcd.GuideSerie = dlo.Guide_Serie
                                     AND pcd.GuideNumber = dlo.Guide_Number
                         WHERE dlo.Collect_OnDelivery > 0
@@ -343,14 +347,14 @@ BEGIN
 
 				UPDATE do
 					SET do.StatusOrderId = @NewStatusOrderId
-				FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                do WITH (NOLOCK)
+				FROM DeliveryOrder                do WITH (NOLOCK)
 				INNER JOIN #listGuidesEnabled lge
 					ON lge.Guide_Serie = do.Guide_Serie
 					AND lge.Guide_Number = do.Guide_Number;
 
 				UPDATE dop
 					SET StatusOrderId = @NewStatusOrderId
-				FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]           dop WITH (NOLOCK)
+				FROM DeliveryOrderPiece           dop WITH (NOLOCK)
 				INNER JOIN #listGuidesEnabled lge
 					ON lge.Guide_Serie = dop.GuideSerie
 					AND lge.Guide_Number = dop.GuideNumber;
@@ -497,7 +501,7 @@ BEGIN
 					SELECT ct.IdCost
 						, @IdTypeOfMoney
 						, ct.TotalAmountPaid
-						, IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '') AS Voucher
 						, 1 -- crear registro activo por default
 						, @TokenP
 						, GETDATE()
@@ -518,7 +522,7 @@ BEGIN
 					UPDATE CD
 						SET CD.Amount = ct.TotalAmountPaid
 						, CD.IdTypeOfMoney = @IdTypeOfMoney
-						, CD.Voucher = IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, CD.Voucher = IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '')
 						, CD.TokenUpdated = @TokenP
 						, CD.DateUpdated = GETDATE()
 					FROM Cost                                              ct WITH(NOLOCK)

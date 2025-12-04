@@ -1,29 +1,18 @@
 ﻿
--- =============================================
--- Author:		<Cano, Carlos>
--- Create date: <2020-09-08>
--- Description:	<Registrar incidente de entrega en sitio>
--- =============================================
--- =============================================
--- Author:		<Andres, Ruiz>
--- Update date: <2022-03-21>
--- Description:	< Verificar si ubicación  existe dentro de geocerca >
--- =============================================
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Update date: <2022-08-19>
--- Description:	<registro de incidencias en servicios de entrega registra en su proceso un registro en la “cola de incidencias pendientes de validar“ relacionado a la prueba de entrega realizada.>
--- =============================================
--- =============================================
--- Author:		<Edelman>
--- Create date: <2022-10-19>
--- Description:	<devolución ingreso a cola de webhooks>
--- =============================================
--- Author:		<Tito Garcia>
--- Update date: <2024-07-23>
--- Description:	<Se guarda en la tabla ConfirmationOfIncidence el comentario que registra el piloto al momento de crear la incidencia>
--- =============================================
-
+/* =================================================
+   SP:        [dbo].[sps_proof_onincident]
+   Propósito: <Registrar incidente de entrega en sitio>
+   Autor:     <Carlos Cano>
+   Historia:  <>
+   Fecha:     2020-09-08
+============================================
+=== CHANGELOG ================================
+-- 2025-11-20 | Historia/épica: FDAPI-5030 | Autor: Tito Garcia |
+-- 2024-07-23 | Historia/épica:  | Autor: Tito Garcia |
+-- 2022-10-19 | Historia/épica:  | Autor: Edelman Vasquez  |
+-- 2022-08-19 | Historia/épica:  | Autor: Edelman Vasquez  |
+-- 2022-03-21 | Historia/épica:  | Autor: Andres Ruiz  |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_proof_onincident]
     @GuideSerie NVARCHAR(2)
   , @GuideNumber INT
@@ -96,8 +85,8 @@ BEGIN
                 FROM [dbo].[DeliveryAttempt]                   DA WITH (NOLOCK)
                     INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-                WHERE DA.Guide_Number = @GuideNumber
-                  AND DA.Guide_Serie = @GuideSerie
+                WHERE DA.Guide_Serie = @GuideSerie
+                    AND DA.Guide_Number = @GuideNumber
                   AND CONVERT(DATE, DA.Date_Created) = @DateGlobal
             );
 
@@ -955,11 +944,6 @@ BEGIN
         IF @@TRANCOUNT > 0
         BEGIN
 
-
-
-
-
-
             IF (@RInserted > 0)
                 SELECT 1                                           AS 'StatusCode'
                      , 'Registro guardado correctamente'           AS 'Description'
@@ -975,34 +959,31 @@ BEGIN
                      , @MessageReturn                              'MessageReturn'
                      , @TokenLinkGeneration                        'TokenLinkGeneration';
 
-
-
-
-
             COMMIT TRANSACTION;
 
-        -- Proceso para autoconfirmar inciencias por temporada alta activada el 2024-12-04
-        -- Desactivado el 2024-12-30
-
-        --EXEC dbo.CreateIncidentRecord @GuideSerie = @GuideSerie                      -- nvarchar(2)
-        --                           , @GuideNumber = @GuideNumber                       -- int
-        --                           , @TokenCreated = 'SYS-AUTOSIGNED'                    -- nvarchar(200)
-        --                           , @IsRealIncident = 1                 -- bit
-        --                           , @IsServiceDesired = 1               -- bit
-        --                           , @IsAddressModificationRequested = 0 -- bit
-        --                           , @IsExpressCenterAddress = 0         -- bit
-        --                           , @IdExpressCenter = 0                   -- int
-        --                           , @NewAddress = N''                      -- nvarchar(600)
-        --                           , @NewPhoneNumber = N''                  -- nvarchar(100)
-        --                           , @DeliveryDateChange =0             -- bit
-        --                           , @NewDeliveryDate = '2024-12-04'        -- date
-        --                           , @Observations = N''                    -- nvarchar(600)
-        --                           , @LiquidatorRemarks = N'Incidencia autoconfirmada por temporada alta'               -- nvarchar(600)
-        --                           , @ValidGeolocationEvidence = 1       -- bit
-        --                           , @ValidPhotographicEvidence = 1      -- bit
-        --                           , @IdIncident = 0                        -- int
-        --                           , @ConfirmedTypeIncidenceId = 0          -- int
-        --                           , @CommentOnConfirmedTypeIncidence = N'' -- nvarchar(600)
+            -- Proceso para autoconfirmar inciencias por temporada alta activada, ID's especificados en epica
+            IF @IdIssue IN (82,135,196)
+            BEGIN
+                EXEC dbo.CreateIncidentRecord @GuideSerie = @GuideSerie                      -- nvarchar(2)
+                                        , @GuideNumber = @GuideNumber                       -- int
+                                        , @TokenCreated = 'SYS-AUTOSIGNED'                    -- nvarchar(200)
+                                        , @IsRealIncident = 1                 -- bit
+                                        , @IsServiceDesired = 1               -- bit
+                                        , @IsAddressModificationRequested = 0 -- bit
+                                        , @IsExpressCenterAddress = 0         -- bit
+                                        , @IdExpressCenter = 0                   -- int
+                                        , @NewAddress = N''                      -- nvarchar(600)
+                                        , @NewPhoneNumber = N''                  -- nvarchar(100)
+                                        , @DeliveryDateChange =0             -- bit
+                                        , @NewDeliveryDate = '2024-12-04'        -- date
+                                        , @Observations = N''                    -- nvarchar(600)
+                                        , @LiquidatorRemarks = N'Incidencia autoconfirmada por temporada alta'               -- nvarchar(600)
+                                        , @ValidGeolocationEvidence = 1       -- bit
+                                        , @ValidPhotographicEvidence = 1      -- bit
+                                        , @IdIncident = 0                        -- int
+                                        , @ConfirmedTypeIncidenceId = 0          -- int
+                                        , @CommentOnConfirmedTypeIncidence = N'' -- nvarchar(600)
+            END;
         END;
         ELSE
             SELECT 0                                           AS 'StatusCode'

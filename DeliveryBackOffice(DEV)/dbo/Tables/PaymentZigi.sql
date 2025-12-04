@@ -22,6 +22,9 @@
     [ZigiBankAccount] NVARCHAR (100)  NULL,
     [LinkRequestSent]           BIT             CONSTRAINT [DF_PaymentZigi_LinkRequestSent] DEFAULT ((0)) NOT NULL,
     [PaymentConfirmSent]        BIT             CONSTRAINT [DF_PaymentZigi_PaymentConfirmSent] DEFAULT ((0)) NOT NULL,
+    [PhoneNumber]               NVARCHAR(20),
+    [IsGroup]                   BIT DEFAULT 0 NOT NULL,
+    [GeneratedMethod]           NVARCHAR(100),
     CONSTRAINT [PK_PaymentZigi] PRIMARY KEY CLUSTERED ([ZigiPaymentId] ASC),
     CONSTRAINT [FK_PaymentZigi_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );

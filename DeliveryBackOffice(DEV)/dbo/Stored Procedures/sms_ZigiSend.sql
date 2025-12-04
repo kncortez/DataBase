@@ -4,6 +4,23 @@
 -- Create date: <2025-08-21>
 -- Description:	<Su funcion es verificar si existen mensajes pendientes de enviar por Zigi a Whatsapp del cliente.>
 -- =============================================
+-- =============================================
+-- System:		<SMS_Sender>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-08-28>
+-- Description:	<Se agregan 2 campos de la tabla DefaultValuesPerCountry para obtener la expresion regular y el numero de Whatsapp y que sea dinámico>
+-- =============================================
+-- System:		<SMS_Sender>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-09-03>
+-- Description:	<El campo WhatsappNumber puede venir el asignado para la guía, o si se personalizó, usará el que viene desde la tabla PaymentZigi, esto último beneficia a links pedidos desde EXC para uniguías y multiguías>
+-- =============================================
+-- System:		<SMS_Sender>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-09-10>
+-- Description:	<El campo TypeTransaction indica si es "del paquete" o "de la transacción", esto para el mensaje de Whatsapp, IsGroup para definir si es un grupo de guías o una guía individual>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sms_ZigiSend]
 	@Token NVARCHAR(50) = 'SYS_ZigiSMSender'
 AS
@@ -29,11 +46,15 @@ BEGIN
 		[_LastName]       NVARCHAR(100)  NULL,
 		[_IdCountry]      NVARCHAR(10)   NULL,       
 		[_NirPhone]       NVARCHAR(10)   NULL,       
-		[_GuideSerie]     NVARCHAR(2)    NOT NULL,   
+		[_GuideSerie]     NVARCHAR(3)    NOT NULL,
 		[_GuideNumber]    INT            NOT NULL,
 		[_Amount]         DECIMAL(10,2)  NULL,
 		[_Currency]       NVARCHAR(10)   NULL,      
 		[_LinkZigi]       NVARCHAR(MAX)  NULL,
+		[_RegxMovilPhone] NVARCHAR(50)  NULL,
+		[_WhatsappNumber] NVARCHAR(15)   NULL,
+        [_IsGroup]        BIT            NOT NULL DEFAULT 0,
+        [_TypeTransaction]  NVARCHAR(100) NULL,
 		CONSTRAINT PK_WhatsappRecipientZigi PRIMARY KEY CLUSTERED ([_GuideSerie], [_GuideNumber])
 	);
 
@@ -41,7 +62,7 @@ BEGIN
 	-- Insertar pendientes de envio de link
 	INSERT INTO #WhatsappRecipientZigi
 	SELECT 
-		   DO.Receiver_Phone
+		   ISNULL(Z.PhoneNumber, DO.Receiver_Phone) as Phone
 		 , DO.StatusOrderId
 		 , 1	--Tipo de mensaje: Solicitud de link
 		 , 0
@@ -49,11 +70,26 @@ BEGIN
 		 , DO.Receiver_LastName
 		 , DO.ReceiverCountryId
 		 , DPC.PrefixNumber
-		 , Z.GuideSerie
-		 , Z.GuideNumber
+		 , CASE
+                WHEN Z.IsGroup = 1 THEN
+                        'MFD'		-- Si IsGroup es 1, usa MFD como serie, para identificar multiguías
+                ELSE Z.GuideSerie 	-- Si IsGroup es 0, solo usa GuideNumber
+            END AS GuideSerie
+		 , CASE
+                WHEN Z.IsGroup = 1 THEN
+                        Z.ZigiPaymentId	-- Si IsGroup es 1, usa el Id del registro en PaymentZigi, para identificar multiguías
+                ELSE Z.GuideNumber 		-- Si IsGroup es 0, solo usa GuideNumber
+            END AS GuideNumber
 		 , Z.PaidAmount
 		 , CCC.Symbol
 		 , Z.ZigiLink
+		 , DPC.RegxMovilPhone
+		 , DPC.WhatsappNumber
+	     , Z.IsGroup
+	     , CASE
+                WHEN z.IsGroup = 0 THEN 'del paquete'
+	            ELSE 'de la transacción'
+	        END AS TypeTransaction
 	FROM DeliveryBackOffice.dbo.PaymentZigi Z WITH (NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 		ON Z.GuideSerie = DO.Guide_Serie AND Z.GuideNumber = DO.Guide_Number
@@ -66,19 +102,34 @@ BEGIN
 	WHERE Z.RowStatus = 1 AND Z.LinkRequestSent = 0 AND Z.PaymentConfirmSent = 0 AND Z.ZigiLinkStatus = 'CREATED' AND DC.DefaultPerCountry = 1
 	UNION 
 	SELECT 
-		   DO.Receiver_Phone
+		   ISNULL(Z.PhoneNumber, DO.Receiver_Phone) as Phone
 		 , DO.StatusOrderId
 		 , 0
 		 , 1	--Tipo de mensaje: Confirmacion de pago de link
 		 , IIF(DO.Receiver_FirstName = '',DO.Receiver_Alternant_FullName,DO.Receiver_FirstName)
 		 , DO.Receiver_LastName
 		 , DO.ReceiverCountryId
-		 , DPC.PrefixNumber
-		 , Z.GuideSerie
-		 , Z.GuideNumber
+	     , DPC.PrefixNumber
+		 , CASE
+                WHEN Z.IsGroup = 1 THEN
+                        'MFD'		-- Si IsGroup es 1, usa MFD como serie, para identificar multiguías
+                ELSE Z.GuideSerie 	-- Si IsGroup es 0, solo usa GuideNumber
+            END AS GuideSerie
+		 , CASE
+                WHEN Z.IsGroup = 1 THEN
+                        Z.ZigiPaymentId	-- Si IsGroup es 1, usa el Id del registro en PaymentZigi, para identificar multiguías
+                ELSE Z.GuideNumber 		-- Si IsGroup es 0, solo usa GuideNumber
+            END AS GuideNumber
 		 , Z.PaidAmount
 		 , CCC.Symbol
 		 , Z.ZigiLink
+		 , DPC.RegxMovilPhone
+		 , DPC.WhatsappNumber
+	     , Z.IsGroup
+	     , CASE
+                WHEN z.IsGroup = 0 THEN 'del paquete'
+	                ELSE 'de la transacción'
+	        END AS TypeTransaction
 	FROM DeliveryBackOffice.dbo.PaymentZigi Z WITH (NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 		ON Z.GuideSerie = DO.Guide_Serie AND Z.GuideNumber = DO.Guide_Number
