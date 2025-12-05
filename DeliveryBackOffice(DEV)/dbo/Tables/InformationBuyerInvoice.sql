@@ -15,7 +15,8 @@ Id INT IDENTITY(1,1) NOT NULL,
 	DateCreated DATETIME,
 	TokenUpdated NVARCHAR(50) NULL,
 	DateUpdated DATETIME NULL,
-	CONSTRAINT PK_InformationBuyerInvoice PRIMARY KEY (Id),
+	[OperationConditionCode] INT NULL, 
+    CONSTRAINT PK_InformationBuyerInvoice PRIMARY KEY (Id),
 	CONSTRAINT FK_InformationBuyerInvoice_invoiceHeader FOREIGN KEY (InvoiceId) REFERENCES [dbo].[invoiceHeader] (inv_pk_id)
 );
 
@@ -148,3 +149,13 @@ EXEC sp_addextendedproperty
     @level2type = N'COLUMN', @level2name = 'DateUpdated',
     @level0type = N'SCHEMA', @level0name = 'dbo', 
     @level1type = N'TABLE',  @level1name = 'InformationBuyerInvoice';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de condición de operación(1 contado, 2 crédito)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'InformationBuyerInvoice',
+    @level2type = N'COLUMN',
+    @level2name = N'OperationConditionCode'
