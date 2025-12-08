@@ -22,7 +22,7 @@ BEGIN
 		   vpc.CustomerID
 	INTO #VisitPointsCorporate
 	FROM VisitPointClient vpc WITH (NOLOCK)
-	   INNER JOIN Customer cust
+	   INNER JOIN Customer cust WITH (NOLOCK)
 			ON vpc.CustomerID = cust.IdCustomer
 	WHERE cust.IdCustomerType = 1; --corporativo
 
