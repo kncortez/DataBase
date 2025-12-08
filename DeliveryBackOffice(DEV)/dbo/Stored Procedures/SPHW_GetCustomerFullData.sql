@@ -3,7 +3,7 @@
 -- Create date: <2025-11-25>
 -- Description:	<Obtener data de cliente para forzaPay>
 -- =============================================
-ALTER PROCEDURE [dbo].[SPHW_GetCustomerFullData]
+CREATE PROCEDURE [dbo].[SPHW_GetCustomerFullData]
     @IdCustomer INT
 AS
 BEGIN
