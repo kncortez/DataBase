@@ -4,7 +4,6 @@
 -- Update date: <2025-09-18>
 -- Description: < Reporte de integracion de liquidaciones>
 -- =============================================
-
 CREATE PROCEDURE [dbo].[ReportCODSettlement]
 		@DateIni DATE = '2025-09-01',
 		@DateFin DATE = '2025-09-30',
@@ -12,6 +11,7 @@ CREATE PROCEDURE [dbo].[ReportCODSettlement]
 
 AS
 BEGIN
+SET NOCOUNT ON;
     SELECT DBS.ID,
            COALESCE(HL.HubAbbreviation, VPC.DescriptionOfClient) AS HUB,
            CONVERT(DATE,DBS.Date_Dispatched) AS Date_Dispatched,
