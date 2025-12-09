@@ -4,6 +4,10 @@
 -- Update date: <2025-09-18>
 -- Description: < Reporte de integracion de liquidaciones>
 -- =============================================
+-- Author:      <Edelman>
+-- Update date: <2025-12-09>
+-- Description: <Agregar mejoras: set nocount on; y quitar cast del filtro para no interferir en uso de Index y performes por convertir fecha por cada registro>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportCODSettlement]
 		@DateIni DATE = '2025-09-01',
 		@DateFin DATE = '2025-09-30',
@@ -12,6 +16,7 @@ CREATE PROCEDURE [dbo].[ReportCODSettlement]
 AS
 BEGIN
 SET NOCOUNT ON;
+
     SELECT DBS.ID,
            COALESCE(HL.HubAbbreviation, VPC.DescriptionOfClient) AS HUB,
            CONVERT(DATE,DBS.Date_Dispatched) AS Date_Dispatched,
@@ -117,8 +122,8 @@ SET NOCOUNT ON;
                  DPM.Efectibox
     ) AG
     WHERE HL.HubAbbreviation = @Hub
-          AND CAST(DBS.Date_Dispatched AS DATE) >= @DateIni
-          AND CAST(DBS.Date_Dispatched AS DATE) <= @DateFin
+          AND DBS.Date_Dispatched >= @DateIni
+          AND DBS.Date_Dispatched <= DATEADD(DAY,1,@DateFin)
     GROUP BY DBS.ID,
              HL.HubAbbreviation,
              VPC.DescriptionOfClient,
