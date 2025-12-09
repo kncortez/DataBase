@@ -1,13 +1,14 @@
-﻿-- =============================================
--- Author:		<Ochoa, Jerson>
--- Create date: <24-08-2022>
--- Description:	<End settlement process>
--- =============================================
--- =============================================
--- Author:		<Cristian, Suazo>
--- Create date: <05-11-2025>
--- Description:	<Se actualizan a estado en revision las guias multipiezas que no han sido escaneadas por completo>
--- =============================================
+﻿/* =================================================
+   SP:        [<dbo>].[<spHM_EndLinehaulRouteSettlement>]
+   Propósito: <End settlement process>
+   Autor:     <Jerson Ochoa>
+   Historia:  <>
+   Fecha:     2022-08-24
+============================================
+=== CHANGELOG ================================
+2025-11-27 | Historia/épica: <FDAPI-4607> | Autor: <Tito Garcia> |
+2025-11-05 | Historia/épica: <FDAPI-4607> | Autor: <Cristian Suazo> |
+=========================================== */
 CREATE PROCEDURE [dbo].[spHM_EndLinehaulRouteSettlement]
 	@LinehaulRouteSettlementId AS INT,
 	@TknUser AS NVARCHAR(50)
@@ -23,155 +24,137 @@ BEGIN
 	DECLARE @IN_TRANSIT_STATUS_ID AS INT;			-- CatLinehaulStatus
 	DECLARE @Status INT
 
-	SET @LIQUIDATED_STATUS_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
-								FROM	[dbo].[CatLinehaulStatus] CLS
-								WHERE	[CLS].[StatusName] = 'LIQUIDATED');
+	SELECT  
+		@LIQUIDATED_STATUS_ID = MAX(CASE WHEN StatusName = 'LIQUIDATED' THEN IdCatLinehaulStatus END),
+		@IN_TRANSIT_STATUS_ID = MAX(CASE WHEN StatusName = 'IN TRANSIT' THEN IdCatLinehaulStatus END)
+	FROM [DeliveryBackOffice].[dbo].[CatLinehaulStatus];
 
-	SET @IN_TRANSIT_STATUS_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
-								FROM	[dbo].[CatLinehaulStatus] CLS
-								WHERE	[CLS].[StatusName] = 'IN TRANSIT');
-	
-	SET @EXISTING_LRS = (SELECT  COUNT([LRS].[IdLinehaulRouteSettlement]) AS CONT
-						FROM	[dbo].[LinehaulRouteSettlement] LRS
-						WHERE	[LRS].[IdLinehaulRouteSettlement] = @LinehaulRouteSettlementId
-							AND [LRS].[CatLinehaulStatusId] != @LIQUIDATED_STATUS_ID);
+	SELECT 
+		@EXISTING_LRS = CASE WHEN CatLinehaulStatusId <> @LIQUIDATED_STATUS_ID THEN 1 ELSE 0 END,
+		@LRP_ID = LinehaulRoutePreparationId
+	FROM [DeliveryBackOffice].[dbo].[LinehaulRouteSettlement] WITH (NOLOCK)
+	WHERE IdLinehaulRouteSettlement = @LinehaulRouteSettlementId;
 
-	SET @LRP_ID = (SELECT	[LRS].[LinehaulRoutePreparationId]
-					FROM	[dbo].[LinehaulRouteSettlement] LRS
-					WHERE	[LRS].[IdLinehaulRouteSettlement] = @LinehaulRouteSettlementId);
+	SET @Status = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WHERE OrderDescription = 'En Revisión')
 
-
-	SET @Status = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'En Revisión')
-
-	SET @PIECES_MISSING_IN_SETTLEMENT = (SELECT		COUNT([CTC].[TypeContainerSerie]) AS CONT
-										FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-										INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-											ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-										INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
-											ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-										INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
-											ON		[LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]											
-										INNER JOIN	[dbo].[Container] C
-											ON		[LRPC].[ContainerId] = [C].[IdContainer]
-										INNER JOIN	[dbo].[CatTypeContainer] CTC
-											ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
-										WHERE		[LRPCDP].[CatLinehaulStatusId] = @IN_TRANSIT_STATUS_ID
-											AND		[LRPCDP].[ActCode] IS NULL
-											AND		[LRPCD].[RowStatus] = 1
-											AND		[LRP].[IdLinehaulRoutePreparation] = @LRP_ID);
+	SELECT @PIECES_MISSING_IN_SETTLEMENT = COUNT(*)
+		FROM [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP WITH (NOLOCK)
+	INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
+		ON LRPCD.IdLinehaulRoutePreparationContainerDetail = LRPCDP.LinehaulRoutePreparationContainerDetailId
+	INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
+		ON LRPCD.LinehaulRoutePreparationContainerId = LRPC.IdLinehaulRoutePreparationContainer
+	WHERE LRPCDP.ActCode IS NULL
+		AND LRPCDP.CatLinehaulStatusId = @IN_TRANSIT_STATUS_ID
+		AND LRPCD.RowStatus = 1
+		AND LRPC.LinehaulRoutePreparationId = @LRP_ID;
 
 	IF (@EXISTING_LRS = 0)
-		-- SETTLEMENT DOESN'T EXIST
-		BEGIN
-			SELECT 0 [spResult], 'NO se encontró ningún manifiesto de liquidación activo con los datos ingresados.' [spMessage];
-			RETURN;
-		END
-
-	IF (@PIECES_MISSING_IN_SETTLEMENT > 0)
-		-- PIECES MISSING IN SETTLEMENT
+	-- SETTLEMENT DOESN'T EXIST
 	BEGIN
-		BEGIN TRY
-			BEGIN TRAN; 
+		SELECT 0 [spResult], 'NO se encontró ningún manifiesto de liquidación activo con los datos ingresados.' [spMessage];
+		RETURN;
+	END
 
-			DECLARE @Guides TABLE (GuideSerie NVARCHAR(3), GuideNumber INT);
+	BEGIN TRY
+	
+		CREATE TABLE #GuidesTmp (GuideSerie NVARCHAR(2), GuideNumber INT, PiecesNumber INT);
+
+		CREATE INDEX IX_Guides_SerieNumero
+		ON #GuidesTmp (GuideSerie, GuideNumber);	
+		
+		BEGIN TRANSACTION;
+
+		IF (@PIECES_MISSING_IN_SETTLEMENT > 0) -- PIECES MISSING IN SETTLEMENT
+		BEGIN				
 			-- SE PASAN A ESTADO EN REVISION LAS GUIAS MULTIPIEZAS NO ESCANEADAS
-			INSERT INTO @Guides (GuideSerie, GuideNumber)
+			INSERT INTO #GuidesTmp (GuideSerie, GuideNumber)
 			SELECT DISTINCT
 				LRPCD.GuideSerie,
 				LRPCD.GuideNumber
-			FROM dbo.LinehaulRoutePreparationContainerDetailPiece LRPCDP
-			INNER JOIN dbo.LinehaulRoutePreparationContainerDetail LRPCD
+			FROM [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 				ON LRPCDP.LinehaulRoutePreparationContainerDetailId = LRPCD.IdLinehaulRoutePreparationContainerDetail
-			INNER JOIN dbo.LinehaulRoutePreparationContainer LRPC
+			INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 				ON LRPCD.LinehaulRoutePreparationContainerId = LRPC.IdLinehaulRoutePreparationContainer
-			INNER JOIN dbo.LinehaulRoutePreparation LRP
-				ON LRPC.LinehaulRoutePreparationId = LRP.IdLinehaulRoutePreparation
-			INNER JOIN dbo.Container C
-				ON LRPC.ContainerId = C.IdContainer
-			INNER JOIN dbo.CatTypeContainer CTC
-				ON C.CatTypeContainerId = CTC.IdCatTypeContainer
 			WHERE LRPCDP.CatLinehaulStatusId = @IN_TRANSIT_STATUS_ID
-			  AND LRPCDP.ActCode IS NULL
-			  AND LRPCD.RowStatus = 1
-			  AND LRP.IdLinehaulRoutePreparation = @LRP_ID;
+				AND LRPCDP.ActCode IS NULL
+				AND LRPCD.RowStatus = 1
+				AND LRPC.LinehaulRoutePreparationId = @LRP_ID;
 
-			 --CREAMOS LOG DE CAMBIO DE ESTADO
-			 INSERT INTO DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus)
-			 SELECT G.GuideSerie,
-					G.GuideNumber,
-					@Status,
-					@TknUser,
-					GETDATE(),
-					GETDATE(),
-					1
-			 FROM @Guides G
-
+			--CREAMOS LOG DE CAMBIO DE ESTADO
+			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus)
+			SELECT G.GuideSerie,
+				G.GuideNumber,
+				@Status,
+				@TknUser,
+				GETDATE(),
+				GETDATE(),
+				1
+			FROM #GuidesTmp G
+			
+			-- Se actualiza estado en la DeliveryOrder
 			UPDATE DO
 			SET DO.StatusOrderId = @Status
-			FROM dbo.DeliveryOrder DO
-			INNER JOIN @Guides T
+			FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+			INNER JOIN #GuidesTmp T
 				ON DO.Guide_Serie = T.GuideSerie
-			   AND DO.Guide_Number = T.GuideNumber
+				AND DO.Guide_Number = T.GuideNumber
 			WHERE ISNULL(DO.StatusOrderId, 0) <> @Status;
-			
-			COMMIT TRAN;
+		END
 
-		END TRY
-		BEGIN CATCH
-			IF XACT_STATE() <> 0
-				ROLLBACK TRAN;
-
-			SELECT
-				0 AS spResult,
-				ERROR_NUMBER() AS ErrorNumber,
-				ERROR_SEVERITY() AS ErrorSeverity,
-				ERROR_STATE() AS ErrorState,
-				ERROR_PROCEDURE() AS ErrorProcedure,
-				ERROR_LINE() AS ErrorLine,
-				ERROR_MESSAGE() AS spMessage;
-			RETURN;
-		END CATCH
-	END 
-
-	BEGIN TRANSACTION
-	BEGIN TRY
-
-	-- CLOSE DISPATCH CONTAINERS
-		UPDATE	[dbo].[LinehaulRoutePreparationContainer]
+		-- CLOSE DISPATCH CONTAINERS
+		UPDATE	[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer]
 		SET		[CatLinehaulStatusId] = @LIQUIDATED_STATUS_ID
 		WHERE	[LinehaulRoutePreparationId] = @LRP_ID
 			AND	[CatLinehaulStatusId] = @IN_TRANSIT_STATUS_ID;
 
-	-- CLOSE DISPATCH
-		UPDATE	[dbo].[LinehaulRoutePreparation]
+		-- CLOSE DISPATCH
+		UPDATE	[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation]
 		SET		[CatLinehaulStatusId] = @LIQUIDATED_STATUS_ID,
 				[TokenUpdated] = @TknUser,
 				[DateUpdated] = SYSDATETIME()
 		WHERE	[IdLinehaulRoutePreparation] = @LRP_ID;
 
-	-- END SETTLEMENT 
-		UPDATE	[dbo].[LinehaulRouteSettlement]
+		-- END SETTLEMENT 
+		UPDATE	[DeliveryBackOffice].[dbo].[LinehaulRouteSettlement]
 		SET		[CatLinehaulStatusId] = @LIQUIDATED_STATUS_ID,
 				[EndDateLinehaulRouteSettlement] = SYSDATETIME(),
 				[TokenUpdated] = @TknUser,
 				[DateUpdated] = SYSDATETIME()
 		WHERE	[IdLinehaulRouteSettlement] = @LinehaulRouteSettlementId;
 
-		SELECT 1 [spResult], 'Liquidación de linehaul ha sido finalizada con éxito.' [spMessage];
-
 		IF(@@TRANCOUNT > 0)
 			COMMIT TRANSACTION
+
+		SELECT 1 [spResult], 'Liquidación de linehaul ha sido finalizada con éxito.' [spMessage];
+
+		SELECT CONCAT(LRPCD.GuideSerie, LRPCD.GuideNumber,'-', LRPCDP.PieceNumber) AS Guides
+		FROM dbo.LinehaulRoutePreparationContainerDetailPiece LRPCDP WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
+			ON LRPCDP.LinehaulRoutePreparationContainerDetailId = LRPCD.IdLinehaulRoutePreparationContainerDetail
+		INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
+			ON LRPCD.LinehaulRoutePreparationContainerId = LRPC.IdLinehaulRoutePreparationContainer
+		INNER JOIN #GuidesTmp GT 
+			ON LRPCD.GuideSerie = GT.GuideSerie
+				AND LRPCD.GuideNumber = GT.GuideNumber			
+		WHERE LRPCDP.CatLinehaulStatusId = @IN_TRANSIT_STATUS_ID
+			AND LRPCDP.ActCode IS NULL
+			AND LRPCD.RowStatus = 1
+			AND LRPC.LinehaulRoutePreparationId = @LRP_ID;
+		
 	END TRY
-	BEGIN CATCH
-		SELECT 0 [spResult],
-				ERROR_NUMBER() AS [ErrorNumber],
-				ERROR_SEVERITY() AS [ErrorSeverity],
-				ERROR_STATE() AS [ErrorState],
-				ERROR_PROCEDURE() AS [ErrorProcedure],
-				ERROR_LINE() AS [ErrorLine],
-				ERROR_MESSAGE() AS [spMessage];
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
 
-		ROLLBACK TRANSACTION
-	END CATCH
-
+        SELECT 
+            0 AS spResult,
+            ERROR_NUMBER() AS ErrorNumber,
+            ERROR_MESSAGE() AS ErrorMessage,
+            ERROR_LINE() AS ErrorLine,
+            ERROR_SEVERITY() AS ErrorSeverity,
+            ERROR_STATE() AS ErrorState,
+            ERROR_PROCEDURE() AS ErrorProcedure;
+        RETURN;
+    END CATCH
 END

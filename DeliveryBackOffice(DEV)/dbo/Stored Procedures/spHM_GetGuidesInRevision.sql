@@ -6,7 +6,7 @@
 USE [DeliveryBackOffice]
 GO
 
-CREATE PROCEDURE [dbo].[spHM_GetGuidesInRevision]
+CREATE OR ALTER PROCEDURE [dbo].[spHM_GetGuidesInRevision]
     @CountryId NVARCHAR(5) = 'GT',
     @RouteId INT = NULL,
     @CourierName NVARCHAR(100) = NULL,
@@ -18,7 +18,9 @@ BEGIN
     SET QUOTED_IDENTIFIER ON
     SET NOCOUNT ON;
 
-    DECLARE @StatusRevision INT = 13;-- OrderDescription "En Revisión"
+    DECLARE @StatusRevision INT = 13;-- OrderDescription "En Revisión" y Estado pieza "En Revisión"
+    DECLARE @StatusExtraviado INT = 27;-- Estado pieza "Paquete Extraviado"
+    DECLARE @StatusTrasladadoHub INT = 44;-- Estado pieza "Trasladado a Hub"
     DECLARE @GuideSerie NVARCHAR(2);
     DECLARE @GuideNumber INT;
 
@@ -53,26 +55,57 @@ BEGIN
     END
 
     DECLARE @Sql NVARCHAR(MAX) = N'
+        WITH GuideAggregates AS (
+            SELECT
+                DOP.GuideSerie,
+                DOP.GuideNumber,
+                COUNT(1) AS TotalPiezas,
+                SUM(CASE WHEN DOP.StatusOrderId = @StatusRevision THEN 1 ELSE 0 END) AS PiezasEnRevision,
+                SUM(CASE WHEN DOP.StatusOrderId = @StatusExtraviado THEN 1 ELSE 0 END) AS PiezasExtraviadas,
+                SUM(CASE WHEN DOP.StatusOrderId = @StatusTrasladadoHub THEN 1 ELSE 0 END) AS PiezasLiberadas,
+                SUM(CASE WHEN DOP.StatusOrderId IN (@StatusRevision, @StatusExtraviado) THEN 1 ELSE 0 END) AS PiezasObservadas
+            FROM DeliveryOrderPiece DOP WITH (NOLOCK)
+            GROUP BY DOP.GuideSerie, DOP.GuideNumber
+        )
         SELECT
             DO.Guide_Serie + CAST(DO.Guide_Number AS VARCHAR(20)) AS Guia,
+            DOP.NoPiece AS Pieza,
             CR.CodeRoute AS Ruta,
-            DO.Courier_Name AS Piloto,
+            CONCAT(SR.First_Name, '' '', SR.Last_Name) AS Piloto,
             HL.HubName + '', '' + HL.HubAbbreviation AS HubDestino,
             DO.DateCreated AS Fecha,
-            DOP.NoPiece AS Pieza,
-            SO.OrderDescription AS Estado
+            SO.OrderDescription AS EstadoPieza,
+            GA.TotalPiezas,
+            GA.PiezasEnRevision,
+            GA.PiezasExtraviadas,
+            GA.PiezasLiberadas,
+            GA.PiezasObservadas,
+            CASE WHEN GA.TotalPiezas > 0 AND GA.PiezasLiberadas = GA.TotalPiezas THEN 1 ELSE 0 END AS EsLiberable,
+            CASE WHEN GA.PiezasExtraviadas > 0 THEN 1 ELSE 0 END AS TieneExtraviadas
         FROM DeliveryOrder DO WITH (NOLOCK)
-        INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
-            ON DO.Guide_Serie = DOP.GuideSerie
-            AND DO.Guide_Number = DOP.GuideNumber
+        INNER JOIN LinehaulRoutePreparationContainerDetail LHP WITH (NOLOCK)
+            ON DO.Guide_Serie = LHP.GuideSerie
+            AND DO.Guide_Number = LHP.GuideNumber
+        INNER JOIN LinehaulRoutePreparationContainer LHRP WITH (NOLOCK)
+            ON LHP.LinehaulRoutePreparationContainerId = LHRP.IdLinehaulRoutePreparationContainer
+        INNER JOIN LinehaulRoutePreparation HRP WITH (NOLOCK)
+            ON HRP.IdLinehaulRoutePreparation = LHRP.LinehaulRoutePreparationId
         INNER JOIN CatRoute CR WITH (NOLOCK)
-            ON DO.Courier_Route = CR.CodeRoute
+            ON HRP.CatRouteId = CR.IdRoute
+        INNER JOIN SenderReceiver SR WITH (NOLOCK)
+            ON HRP.SenderReceiverId = SR.ID
         LEFT JOIN HubLogistics HL WITH (NOLOCK)
             ON DO.HubDestinationId = HL.IdHubLogistic
-        INNER JOIN StatusOrder SO WITH (NOLOCK)
-            ON DO.StatusOrderId = SO.StatusOrderId
+        LEFT JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
+            ON DO.Guide_Serie = DOP.GuideSerie
+            AND DO.Guide_Number = DOP.GuideNumber
+        LEFT JOIN StatusOrder SO WITH (NOLOCK)
+            ON DOP.StatusOrderId = SO.StatusOrderId
+        LEFT JOIN GuideAggregates GA
+            ON GA.GuideSerie = DO.Guide_Serie
+            AND GA.GuideNumber = DO.Guide_Number
         WHERE DO.StatusOrderId = @StatusRevision
-            AND ISNULL(CR.CountryId, ''GT'') = @CountryId';
+            AND (CR.CountryId = @CountryId OR CR.CountryId IS NULL)';
 
     IF (
         @GuideSerie IS NOT NULL
@@ -93,7 +126,7 @@ BEGIN
     IF (@CourierName IS NOT NULL)
     BEGIN
         SET @Sql += N'
-            AND DO.Courier_Name LIKE @CourierNamePattern';
+            AND (CONCAT(SR.First_Name,'' '',SR.Last_Name) LIKE @CourierNamePattern)';
     END
 
     IF (@HubId IS NOT NULL)
@@ -114,6 +147,8 @@ BEGIN
     EXEC sp_executesql
         @Sql,
         N'@StatusRevision INT,
+          @StatusExtraviado INT,
+          @StatusTrasladadoHub INT,
           @CountryId NVARCHAR(5),
           @RouteId INT,
           @CourierNamePattern NVARCHAR(202),
@@ -121,6 +156,8 @@ BEGIN
           @GuideSerie NVARCHAR(2),
           @GuideNumber INT',
         @StatusRevision = @StatusRevision,
+        @StatusExtraviado = @StatusExtraviado,
+        @StatusTrasladadoHub = @StatusTrasladadoHub,
         @CountryId = @CountryId,
         @RouteId = @RouteId,
         @CourierNamePattern = @CourierNamePattern,
