@@ -124,6 +124,7 @@ SET NOCOUNT ON;
     WHERE HL.HubAbbreviation = @Hub
           AND DBS.Date_Dispatched >= @DateIni
           AND DBS.Date_Dispatched <= DATEADD(DAY,1,@DateFin)
+          AND DBS.Date_Received_COD IS NOT NULL
     GROUP BY DBS.ID,
              HL.HubAbbreviation,
              VPC.DescriptionOfClient,
