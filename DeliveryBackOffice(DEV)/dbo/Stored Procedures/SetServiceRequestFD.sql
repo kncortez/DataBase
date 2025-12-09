@@ -29,7 +29,7 @@ BEGIN
 	DECLARE @GuideSerie VARCHAR(2) = 'FD'
 	DECLARE @IdCountryByCustomer NVARCHAR(2) = 'GT'
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
-	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] WHERE SalesPackageStatusName = 'Activa')
+	DECLARE @StatusPackage INT = 2 --'Activa'
 	SET @IdCountryByCustomer =(SELECT TOP 1 CountryID FROM [DeliveryBackOffice].[dbo].[VisitPointClient] WITH(NOLOCK) WHERE CustomerID = @CustomerID )
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
@@ -593,9 +593,7 @@ BEGIN
 		IF(@IdDeliveryLink > 0)
 		BEGIN
 			--Cambiamos estado de Link
-			DECLARE @StatusDeliveryLink INT;
-			SELECT @StatusDeliveryLink = IdDeliveryLinkStatus FROM DeliveryBackOffice.dbo.DeliveryLinkStatus WITH(NOLOCK)
-			WHERE [Name] = 'Envío realizado';
+			DECLARE @StatusDeliveryLink INT = 2; --'Envío realizado'
 
 			DECLARE @GuideNumerDL INT;
 			SELECT TOP 1 @GuideNumerDL = Guide_Number FROM #GuideTable
@@ -661,30 +659,10 @@ BEGIN
 				AND [KOVPC].[IdCountry] = @IdCountryByCustomer
 		)
 
-		DECLARE @IndividualWebSys INT =
-		(
-			SELECT TOP 1 [CS].[SysIdSystem]
-			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-			WHERE [CS].[SysNameSystem] = 'Hermes Web'
-		)
-		DECLARE @ExpressWebSys INT =
-		(
-			SELECT TOP 1 [CS].[SysIdSystem]
-			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-			WHERE [CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'
-		)
-		DECLARE @CorporateWebSys INT =
-		(
-			SELECT TOP 1 [CS].[SysIdSystem]
-			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-			WHERE [CS].[SysNameSystem] = 'Hermes Web-Corporativo'
-		)
-		DECLARE @ParserSys INT =
-		(
-			SELECT TOP 1 [CS].[SysIdSystem]
-			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-			WHERE [CS].[SysNameSystem] = 'Parser'
-		)
+		DECLARE @IndividualWebSys INT = 1; --'Hermes Web'
+		DECLARE @ExpressWebSys INT = 10; --'Hermes Web-ExpressCenter'
+		DECLARE @CorporateWebSys INT = 11; --'Hermes Web-Corporativo'
+		DECLARE @ParserSys INT = 7; --'Parser'
 
 		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM [DeliveryBackOffice].[dbo].[CatBusinessSegment] WITH(NOLOCK) WHERE BusinessSegmentName='B2B' AND IdCountry= @IdCountryByCustomer);
 
