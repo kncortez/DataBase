@@ -1,14 +1,17 @@
 ﻿
--- =============================================
--- Author:		<Oscar Morales>
--- Create date: <2023-04-24>
--- Description:	<Genera o obtiene el token para login en Courier App>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazi>
--- Create date: <2024-07-29>
--- Description:	<Se corrige el contador de mensajes para ambos paises, solo funcionaba para GT>
--- =============================================
+/* =================================================
+   SP:        GetCourierLoginToken
+   Propósito: Genera o obtiene el token para login en Courier App
+   Autor:     Oscar Morales
+   Historia:  ---
+   Fecha:     2023-04-24
+
+=== CHANGELOG ============================
+
+2024-07-29 | Historia/épica: ---            | Autor: Cristian Suazo  | 
+2025-12-10 | Historia/épica: FDAPI-4733     | Autor: Cristian Suazo  | 
+
+=========================================== */
 CREATE PROCEDURE [dbo].[GetCourierLoginToken]
     -- Add the parameters for the stored procedure here
     @Phone NVARCHAR(20)
@@ -25,16 +28,17 @@ BEGIN
 
 	BEGIN TRY
 		
+		DECLARE @StationId INT;
 		DECLARE @MaxValue INT;
-		SET @MaxValue = (SELECT TOP 1 Value FROM ConfigParams WHERE Name = 'MaxNumMessagesAllowed')
+		SET @MaxValue = (SELECT TOP 1 Value FROM ConfigParams WITH(NOLOCK) WHERE Name = 'MaxNumMessagesAllowed')
 
 		DECLARE @SenderReceiverId INT =
                 ( 
 					SELECT	TOP 1
 							ID
-					FROM	SenderReceiver
+					FROM	SenderReceiver WITH(NOLOCK)
 					WHERE	Phone LIKE '%' + @Phone + '%'
-						AND ISNULL(IdCountry,'GT') = @IdCountry
+						AND IdCountry = @IdCountry
 						AND Estatus = 1
 				); 
 
@@ -42,11 +46,21 @@ BEGIN
 				( 
 					SELECT	TOP 1
 							Email
-					FROM	SenderReceiver
+					FROM	SenderReceiver WITH(NOLOCK)
 					WHERE	Phone LIKE '%' + @Phone + '%'
-							AND ISNULL(IdCountry,'GT') = @IdCountry
+							AND IdCountry = @IdCountry
 							AND Estatus = 1
 				);
+
+		
+		SET @StationId = 
+		   (	
+				SELECT HL.IdStation 
+				FROM SenderReceiver SR WITH (NOLOCK)
+				LEFT JOIN HubLogistics HL WITH (NOLOCK)
+					ON SR.HubLogisticId = HL.IdHubLogistic
+				WHERE SR.ID = @SenderReceiverId AND HL.IdCountry = @IdCountry
+			);
 
 		IF @SenderReceiverId IS NOT NULL
 		BEGIN 
@@ -55,7 +69,7 @@ BEGIN
 
 			SELECT 
 					@LoginToken = LoginToken
-			FROM	SenderReceiverLoginToken
+			FROM	SenderReceiverLoginToken WITH(NOLOCK)
 			WHERE	SenderReceiverId = @SenderReceiverId
 				AND RowStatus = 1
 			
@@ -70,14 +84,14 @@ BEGIN
 			COMMIT TRANSACTION
 
 				DECLARE @DateToken DateTime;
-				SET @DateToken = (SELECT Date_UpdateToken FROM SenderReceiver where Phone = @Phone AND ISNULL(IdCountry,'GT') = @IdCountry AND Estatus = 1)
+				SET @DateToken = (SELECT Date_UpdateToken FROM SenderReceiver WITH(NOLOCK) where Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
 
 				IF(@DateToken IS NULL)
 				BEGIN
 					UPDATE SenderReceiver
 					SET		Date_UpdateToken = GETDATE()
 					WHERE	Phone = @Phone
-						AND ISNULL(IdCountry,'GT') = @IdCountry
+						AND IdCountry = @IdCountry
 						AND Estatus = 1;						
 				END
 
@@ -89,12 +103,12 @@ BEGIN
 							MailCounter = 0,
 							Date_UpdateToken = GETDATE()
 					WHERE	Phone = @Phone
-						AND ISNULL(IdCountry,'GT') = @IdCountry
+						AND IdCountry = @IdCountry
 						AND Estatus = 1;
 				END
 
 				DECLARE @MCounter INT;
-				SET @MCounter = (SELECT TOP 1 MessageCounter FROM SenderReceiver WHERE Phone = @Phone AND ISNULL(IdCountry,'GT') = @IdCountry AND Estatus = 1)
+				SET @MCounter = (SELECT TOP 1 MessageCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
 
 				IF(@NotificationEmail = 0)
 				BEGIN
@@ -103,7 +117,7 @@ BEGIN
 						UPDATE	SenderReceiver
 						SET		MessageCounter = @MCounter +1
 						WHERE	Phone = @Phone
-							AND ISNULL(IdCountry,'GT') = @IdCountry
+							AND IdCountry = @IdCountry
 							AND Estatus = 1;
 					END
 				END
@@ -111,10 +125,10 @@ BEGIN
 				IF(@NotificationEmail = 1 )
 				BEGIN
 						DECLARE @ECounter INT;
-						SET @ECounter = (SELECT TOP 1 MailCounter FROM SenderReceiver WHERE Phone = @Phone AND ISNULL(IdCountry,'GT') = @IdCountry AND Estatus = 1)
+						SET @ECounter = (SELECT TOP 1 MailCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
 
 						DECLARE @MMail Varchar(100)
-						SET @MMail = (SELECT TOP 1 Email FROM SenderReceiver WHERE Phone = @Phone AND ISNULL(IdCountry,'GT') = @IdCountry AND Estatus = 1)
+						SET @MMail = (SELECT TOP 1 Email FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
 
 						IF(@MMail = '')
 						BEGIN
@@ -126,7 +140,7 @@ BEGIN
 							UPDATE	SenderReceiver
 							SET		MailCounter = @ECounter +1
 							WHERE	Phone = @Phone
-								AND ISNULL(IdCountry,'GT') =@IdCountry
+								AND IdCountry =@IdCountry
 								AND Estatus = 1;
 						END
 				END
@@ -140,26 +154,27 @@ BEGIN
 						,MessageCounter
 						,MailCounter
 						,IdCountry
-				FROM	SenderReceiver 
+						,@StationId AS StationId
+				FROM	SenderReceiver WITH(NOLOCK)
 				WHERE	Phone = @Phone
-					AND ISNULL(IdCountry,'GT') = @IdCountry
+					AND IdCountry = @IdCountry
 					AND Estatus = 1;
 			   
-				IF((SELECT TOP 1 MessageCounter FROM SenderReceiver WHERE Phone = @Phone AND ISNULL(IdCountry,'GT') =@IdCountry AND Estatus = 1) = @MaxValue)
+				IF((SELECT TOP 1 MessageCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry =@IdCountry AND Estatus = 1) = @MaxValue)
 				BEGIN
 					UPDATE	SenderReceiver
-					SET		MessageCounter = (SELECT TOP 1 MessageCounter FROM SenderReceiver WHERE Phone = @Phone AND ISNULL(IdCountry,'GT') = @IdCountry AND Estatus = 1) +1
+					SET		MessageCounter = (SELECT TOP 1 MessageCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1) +1
 					WHERE	Phone = @Phone
-						AND ISNULL(IdCountry,'GT') = @IdCountry
+						AND IdCountry = @IdCountry
 						AND Estatus = 1;
 				END
 
-				IF((SELECT TOP 1 MailCounter FROM SenderReceiver WHERE Phone = @Phone AND ISNULL(IdCountry,'GT') = @IdCountry AND Estatus = 1) = @MaxValue)
+				IF((SELECT TOP 1 MailCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1) = @MaxValue)
 				BEGIN
 					UPDATE	SenderReceiver
-					SET		MailCounter = (SELECT TOP 1 MailCounter FROM SenderReceiver WHERE Phone = @Phone AND ISNULL(IdCountry,'GT') = @IdCountry AND Estatus = 1) +1
+					SET		MailCounter = (SELECT TOP 1 MailCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1) +1
 					WHERE	Phone = @Phone
-						AND ISNULL(IdCountry,'GT') = @IdCountry
+						AND IdCountry = @IdCountry
 						AND Estatus = 1;
 				END
 			  
