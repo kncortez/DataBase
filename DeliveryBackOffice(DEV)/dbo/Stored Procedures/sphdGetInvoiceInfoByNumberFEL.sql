@@ -1,8 +1,15 @@
-﻿-- =============================================
--- Author:      <Brandon, Pedroza>
--- Create date: <2025-07-30>
--- Description: <Facturacion SV - Obtener datos de factura que se emitio previamente>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sphdGetInvoiceInfoByNumberFEL]
+   Propósito: Obtener datos de factura que se emitio previamente para El Salvador.
+   Autor:     Brandon Pedroza
+   Historia:  ---
+   Fecha:     2025-07-30
+
+=== CHANGELOG ============================
+
+2025-11-21 | Historia/épica: FDAPI-4961   | Autor: Brandon Pedroza |
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sphdGetInvoiceInfoByNumberFEL]
 	@NumberFel NVARCHAR(100),
 	@IdCountry NVARCHAR(2)
@@ -39,7 +46,8 @@ BEGIN
 		ibi.IdDocument AS TaxID,
 		ibi.TypeIdentificationDocumentCode AS TaxIDType,
 		CASE WHEN ih.inv_type = 4 THEN '03' ELSE '01' END TypeDocument,
-		CONVERT(varchar(10), ih.inv_dateRegister, 23) AS IssueDate
+		CONVERT(varchar(10), ih.inv_dateRegister, 23) AS IssueDate,
+		ISNULL(ibi.OperationConditionCode,1) AS OpCondition
 	FROM invoiceHeader ih WITH(NOLOCK)
 	LEFT JOIN InformationBuyerInvoice ibi WITH(NOLOCK)
 		ON ih.inv_pk_id = ibi.InvoiceId

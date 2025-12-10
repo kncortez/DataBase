@@ -15,7 +15,7 @@ CREATE PROCEDURE [dbo].[supportCreateNewExcV2]
     @DescriptionOfClient NVARCHAR(100),
     @TokenSupport NVARCHAR(50),
     @Address NVARCHAR(600),
-    @IdTownship INT,
+    @IdSettlement INT,
     @zone INT = 0,
     @Phone NVARCHAR(10),
     @ContactName NVARCHAR(100),
@@ -60,11 +60,15 @@ BEGIN
             FROM dbo.Township tw WITH (NOLOCK)
                 INNER JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
-            WHERE  tw.IdTownship = @IdTownship
-			AND pr.IdCountry = @IdCountry
+				INNER JOIN dbo.Settlement st WITH(NOLOCK)
+					ON st.IdProvince = pr.IdProvince
+					AND st.IdTownship = tw.IdTownship
+            WHERE  st.IdSettlement = @IdSettlement
+			AND st.IdCountry = @IdCountry
+			AND st.SettlementSatus = 1
 		)
 		BEGIN
-			RAISERROR('El municipio no pertene al pais especificado', 16, 1);
+			RAISERROR('El poblado no pertene al pais especificado o esta inhabilitado', 16, 1);
 			RETURN;
 		END
 
@@ -123,20 +127,20 @@ BEGIN
             DECLARE @IdProvice INT;
             DECLARE @ProvinceName NVARCHAR(100);
             DECLARE @TownshipName NVARCHAR(100);
-            DECLARE @IdSettlement INT;
+            DECLARE @IdTownship INT;
 
 
             SELECT TOP 1
 					@IdProvice = pr.IdProvince,
 					@ProvinceName = pr.ProvinceName,
 					@TownshipName = tw.TownshipName,
-					@IdSettlement = se.IdSettlement
+					@IdTownship = tw.IdTownship
             FROM dbo.Township tw WITH (NOLOCK)
                 INNER JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
 				INNER JOIN dbo.Settlement se WITH (NOLOCK)
 					ON se.IdProvince = pr.IdProvince AND se.IdTownship = tw.IdTownship
-            WHERE tw.IdTownship = @IdTownship;
+            WHERE se.IdSettlement = @IdSettlement;
 
 
             INSERT INTO dbo.VisitPointClient
@@ -412,12 +416,23 @@ BEGIN
             WHERE vp.CodeOfReference = @CodeOfReference;
 
 
-            SELECT *
+            SELECT dpf_VpCodeOfReference
+                  ,dpf_FELRequestor
+                  ,dpf_FELTransaction
+                  ,dpf_FELCountry
+                  ,dpf_FELEntity
+                  ,dpf_FELUser
+                  ,dpf_FELCorreo
             FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
             WHERE pr.dpf_VpCodeOfReference = @CodeOfReference;
 
-            SELECT *
-            FROM CatStation 
+            SELECT IdStation
+                  ,StationName
+                  ,CountryId
+                  ,StationType
+                  ,HubLogisticId
+                  ,CodeOfReference
+            FROM CatStation WITH (NOLOCK)
             WHERE CodeOfReference = @CodeOfReference
 
         END;
@@ -437,20 +452,4 @@ BEGIN
     END CATCH;
 
 END;
-GO
-GRANT VIEW DEFINITION
-    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
-    AS [dbo];
-
-
-GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [ebarrios]
-    AS [dbo];
-
-
-GO
-GRANT ALTER
-    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
-    AS [dbo];
 
