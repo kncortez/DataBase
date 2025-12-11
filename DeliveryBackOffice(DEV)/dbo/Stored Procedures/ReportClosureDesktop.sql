@@ -227,6 +227,7 @@ BEGIN
 	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 		--ON VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId)
 		ON DOPD.VisitPoint = VPC.CodeOfReference
+		OR (@VisitPointId = '-1' AND VPC.CodeOfReference = ACH.VisitPoint)
 	-- FIN MODIFICACIÓN
 
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)

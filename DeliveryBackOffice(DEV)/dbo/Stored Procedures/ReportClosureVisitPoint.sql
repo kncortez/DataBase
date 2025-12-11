@@ -232,10 +232,9 @@ BEGIN
                 (
                     SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
                 )
-            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
                 ON INH.inv_numberFEL = ACD.Fel
-                   AND ACD.RowStatus = 1
-            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
                 ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
                 ON REU.UsrIdUser = ACH.UserId
@@ -255,9 +254,10 @@ BEGIN
                   --OR DOPD.AccountId = @IdAccount
                   )
               AND ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre
-              AND (CTS.IdTypeService <> 23)
+              AND (CTS.IdTypeService NOT IN ( 5, 23 ))
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
               AND DOPD.[TypeofInOutMoneyId] != 8
+              AND ACD.RowStatus = 1
         ORDER BY DOPD.DateCreated ASC;
     END;
 
@@ -375,7 +375,6 @@ BEGIN
               AND DOPD.AccountId > 0
 			  AND DOPD.[TypeofInOutMoneyId] != 8
               AND ACD.RowStatus = 1
-			  AND DOPD.[TypeofInOutMoneyId] != 8
         -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
         UNION ALL
@@ -438,9 +437,8 @@ BEGIN
                 (
                     SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
                 )
-            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-                   AND ACD.RowStatus = 1
-            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			ON INH.inv_numberFEL = ACD.Fel
             INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
                 ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
@@ -460,9 +458,10 @@ BEGIN
               AND (VPC.CodeOfReference = @VisitPointId
                   --OR DOPD.AccountId = @IdAccount
                   )
-              AND (CTS.IdTypeService <> 23)
+              AND (CTS.IdTypeService NOT IN ( 5, 23 ))
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
               AND DOPD.[TypeofInOutMoneyId] != 8
+			  AND ACD.RowStatus = 1
         ORDER BY ACD.AccountingClosuresHeaderId,
                  DOPD.DateCreated ASC;
 
@@ -634,9 +633,8 @@ BEGIN
                 (
                     SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
                 )
-            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-                   AND ACD.RowStatus = 1
-            LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+            INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			ON INH.inv_numberFEL = ACD.Fel
             INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
                 ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
             LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
@@ -651,10 +649,10 @@ BEGIN
                 ON REU1.UsrIdUser = ACHVP.UserId
         WHERE CONVERT(DATE, DOPD.DateCreated)
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-              AND (CTS.IdTypeService <> 23)
               AND (CTS.IdTypeService NOT IN ( 5, 23 ))
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
               AND DOPD.[TypeofInOutMoneyId] != 8
+              AND ACD.RowStatus = 1
         ORDER BY ACD.AccountingClosuresHeaderId,
                  DOPD.DateCreated ASC;
     END;
