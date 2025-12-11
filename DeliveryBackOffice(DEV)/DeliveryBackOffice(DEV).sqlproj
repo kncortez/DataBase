@@ -2070,6 +2070,8 @@
     <Build Include="dbo\Stored Procedures\ValidateDepositBalance.sql" />
     <Build Include="dbo\Stored Procedures\sps_UpdateInvoiceForza.sql" />
     <Build Include="dbo\Functions\SplitOrdinal.sql" />
+    <Build Include="dbo\Tables\DepositReportCODHeader.sql" />
+    <Build Include="dbo\Tables\ProcessedGuideCODNotifications.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
