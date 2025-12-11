@@ -500,7 +500,7 @@ BEGIN
 										FROM #GuideTable g
 											INNER JOIN [DeliveryBackOffice].[dbo].[Township] twn WITH(NOLOCK)
 												ON twn.IdTownship = g.ReceiverIdTownship
-											LEFT JOIN [DeliveryBackOffice].[dbo].[dbo.DumpServiceCoverage] cov WITH(NOLOCK)
+											LEFT JOIN [DeliveryBackOffice].[dbo].[DumpServiceCoverage] cov WITH(NOLOCK)
 												ON cov.HeaderCode = twn.HeaderCode
 													AND cov.RowStatus=1
 												)
