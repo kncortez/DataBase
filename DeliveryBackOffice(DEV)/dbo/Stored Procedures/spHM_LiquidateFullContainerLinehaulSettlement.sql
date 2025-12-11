@@ -3,12 +3,18 @@
 -- Create date: <22-08-2022>
 -- Description:	<Liquidate a full container in Linehaul Settlement>
 -- =============================================
+-- Propósito: Agregar parámetro @IdStation y validación de Hub destino
+-- Autor:     <Freddy Camposeco>
+-- Historia:  <FDAPI-4724>
+-- Fecha:     <2025-10-15>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_LiquidateFullContainerLinehaulSettlement]
 	@LinehaulRouteSettlementId AS INT,
 	@LinehaulRoutePreparationId AS INT,
 	@ContainerSerie AS NVARCHAR(5),
 	@ContainerNumber AS NVARCHAR(15),
-	@TknUser AS NVARCHAR(50)
+	@TknUser AS NVARCHAR(50),
+	@IdStation AS INT = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -66,6 +72,17 @@ BEGIN
 	SET @SETTLEMENT_STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
 										FROM	[dbo].[StatusOrder] SO WITH(NOLOCK)
 										WHERE	[SO].[OrderDescription] = 'En escala');
+
+	-- Validar que la estación de liquidación coincide con el HUB destino planificado
+	IF (@IdStation IS NOT NULL AND @IdStation != @LRPC_HUB_ID)
+	BEGIN
+		SELECT 0 [spResult], 
+			   'ERROR: La liquidación debe realizarse en el HUB destino planificado. Hub esperado: ' 
+			   + CAST(@LRPC_HUB_ID AS NVARCHAR(10)) 
+			   + ', Hub recibido: ' 
+			   + CAST(@IdStation AS NVARCHAR(10)) [spMessage];
+		RETURN;
+	END
 
 	BEGIN TRANSACTION
 	BEGIN TRY
@@ -147,7 +164,7 @@ BEGIN
 		INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 			ON		[LRSCD].[GuideSerie] = [LRPCD].[GuideSerie]
 			AND		[LRSCD].[GuideNumber] = [LRPCD].[GuideNumber]
-			AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC
+		WHERE		[LRSCD].[LinehaulRouteSettlementContainerId] = @EXISTING_CONTAINER_LRSC
 			
 
 		-- UPDATE SETTLEMENT CONTAINER COUNTERS
@@ -191,7 +208,7 @@ BEGIN
 										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 											ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-											AND		[LRSC].[RowStatus] = 1
+										WHERE		[LRSC].[RowStatus] = 1
 											AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 		SET @COUNT_PIECES_RECEIVED = (SELECT		SUM([LRSCD].[PiecesReceived]) AS CONT
@@ -206,7 +223,7 @@ BEGIN
 										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 											ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-											AND [LRSC].[RowStatus] = 1
+										WHERE [LRSC].[RowStatus] = 1
 											AND [LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 		UPDATE	[LinehaulRouteSettlement]
@@ -231,7 +248,7 @@ BEGIN
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie]
 			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
-			AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
+		WHERE		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
 			AND		[LRPCD].[RowStatus] = 1 ;
 
 		-- INSERT LOG IN DELIVERY ORDER DETAIL
@@ -239,12 +256,14 @@ BEGIN
 					([Guide_Serie],
 					 [Guide_Number],
 					 [StatusOrderId],
+					 [StationId],
 					 [UserCreated],
 					 [DateCreated],
 					 [DateCreatedInSystem])
 		SELECT		[LRPCD].[GuideSerie],
 					[LRPCD].[GuideNumber],
 					@SETTLEMENT_STATUS_ORDER_ID,
+					@IdStation,
 					@TknUser,
 					SYSDATETIME(),
 					SYSDATETIME()
@@ -265,7 +284,7 @@ BEGIN
 			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-			AND		[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_CONTAINER_LRPC;
+		WHERE		[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_CONTAINER_LRPC;
 
 
 		SELECT 1 [spResult], 'Container has been liquidated successfully' [spMessage];

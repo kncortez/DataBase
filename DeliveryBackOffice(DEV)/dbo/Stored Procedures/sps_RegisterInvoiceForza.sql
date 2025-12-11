@@ -1,20 +1,16 @@
-﻿-- =============================================
--- Author:		<Alberto, Ixchop>
--- Create date: <2022-04-21>
--- Description:	<Realiza el proceso de facturación>
--- =============================================
---drop  PROCEDURE Sps_RegisterInvoiceForza
---ALTER PROCEDURE Sps_RegisterInvoiceForza
+﻿/* =================================================
+   SP:        [dbo].[sps_RegisterInvoiceForza]
+   Propósito: Realiza el proceso de facturación
+   Autor:     Alberto Ixchop
+   Historia:  ---
+   Fecha:     2022-04-21
 
--- =============================================
--- Author:		<Eduardo, López>
--- Create date: <2022-09-07>
--- Description:	<Actualizar SP para que valide si existe algun registro en la tabla invoiceHeader vinculada con la guía por la cual se desea crear factura>
--- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-06-27>
--- Description: <Se agrego parametros de factura y moneda, por defecto 1 = QTZ, 'GT'>
--- =============================================
+=== CHANGELOG ============================
+
+2024-06-27 | Historia/épica: ---        | Autor: Daniel Ramirez  |
+2024-06-27 | Historia/épica: ---        | Autor: Brandon Pedroza |
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
 	 @VpCodeOfReferences int
     ,@cmp_nit varchar(100)
@@ -31,6 +27,7 @@ CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
     ,@IdCountry  VARCHAR(2) = 'GT'
 	,@TblLstDetail TblLstDetail READONLY
 	,@TblInOutOfMoneyDetail TblInOutOfMoneyDetail READONLY
+	,@TblBuyerInfo TblBuyerInfo READONLY
 AS
 BEGIN
 	DECLARE @invoiceHeaderId bigint=-1;
@@ -167,6 +164,45 @@ BEGIN
 							,@tokenRegister
 							,GETDATE()
 					FROM @TblInOutOfMoneyDetail MD
+					
+					--INSERT EN TABLA LOG DE INFORMACION DEL CLIENTE CUANDO SE EMITE UNA FACTURA
+					IF(@IdCountry = 'SV')
+					BEGIN
+					INSERT INTO InformationBuyerInvoice 
+								(
+								InvoiceId,
+								DistrictCode,
+								StateCode,
+								ActivityCode,
+								ActivityDescription,
+								NRC,
+								TypeIdentificationDocumentCode,
+								IdDocument,
+								Phone,
+								Rowstatus,
+								TokenCreated,
+								DateCreated,
+								TokenUpdated,
+								DateUpdated,
+								OperationConditionCode
+								)
+						SELECT @invoiceHeaderId
+								,BI.DistrictCode
+								,BI.StateCode
+								,BI.ActivityCode
+								,BI.ActivityDescription
+								,BI.NRC
+								,BI.TypeDocument
+								,BI.IdDocument
+								,BI.Phone
+								,1
+								,@tokenRegister
+								,GETDATE()
+								,NULL
+								,NULL
+								,BI.OperationConditionCode
+							FROM @TblBuyerInfo BI
+					END
 
 					SELECT @invoiceHeaderId 'IDENTITY'
 					COMMIT TRANSACTION;
