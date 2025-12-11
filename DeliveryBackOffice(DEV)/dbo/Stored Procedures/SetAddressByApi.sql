@@ -1,9 +1,13 @@
-﻿
--- =============================================
--- Author:      <Juan, Ramirez>
--- Create date: <2025-05-01>
--- Description: <Se agregan puntos de visita por medio de metodo de integración en API core>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SetAddressByApi]
+   Propósito: Se agregan puntos de visita por medio de metodo de integración en API core.
+   Autor:     Juan Ramirez
+   Historia:  Desconocido
+   Fecha:     2025-05-01
+ ================ CHANGELOG ======================
+2025-11-20 | Historia: FDAPI-4831 | Autor: Walter Orozco |
+================================================= */
+
 CREATE PROCEDURE [dbo].[SetAddressByApi]
 (
    @CodeApp                NVARCHAR(60),
@@ -17,7 +21,8 @@ CREATE PROCEDURE [dbo].[SetAddressByApi]
    @Latitude               NVARCHAR(50)  = NULL,
    @Longitude              NVARCHAR(50)  = NULL,
    @Zone                   SMALLINT      = NULL,
-   @Email                  NVARCHAR(200) = NULL
+   @Email                  NVARCHAR(200) = NULL,
+   @KindOfVPClient		   NVARCHAR(100) = NULL
 )
 AS
 BEGIN
@@ -273,6 +278,21 @@ BEGIN
                                                FROM dbo.VisitPointClient vpc3 WITH(NOLOCK)
                                               ORDER BY vpc3.CodeOfReference DESC)
 
+					-- Se agrega tipo de punto de visita del cliente si lo trae, de lo contrario NULL
+					DECLARE @IdKindOfVPClient INT = NULL;
+
+					IF(@KindOfVPClient IS NOT NULL AND @KindOfVPClient <> '')
+					BEGIN
+						IF EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.KindOfVPClient WITH(NOLOCK) 
+							WHERE KindOfVPName = @KindOfVPClient AND IdCountry = @IdCountry AND KindOfVPStatus = 1)
+						BEGIN
+							SELECT 
+								@IdKindOfVPClient = IdKindOfVPClient
+							FROM DeliveryBackOffice.dbo.KindOfVPClient WITH(NOLOCK) 
+							WHERE KindOfVPName = @KindOfVPClient AND IdCountry = @IdCountry AND KindOfVPStatus = 1;
+						END;
+					END;
+
                     -- Verificar si ya contiene el guion
                     IF CHARINDEX('-', @Phone) = 0 AND LEN(@Phone) = 8
                     BEGIN
@@ -326,7 +346,7 @@ BEGIN
                       @ProvinceName,                               -- Department - nvarchar(100)
                       CONCAT('(',@NirPhone,') ',@Phone),           -- Phone - nvarchar(50)
                       '',                                          -- ContactName - nvarchar(200)
-                      NULL,                                        -- IdKindOfVPClient,
+                      @IdKindOfVPClient,                           -- IdKindOfVPClient - int
                       NULL,                                        -- IdKindOfVPBusiness - int
                       IIF(@IdSettlement = 0, NULL,@IdSettlement),  -- IdSettlement - bigint
                       '',                                          -- Email - nvarchar(200)
