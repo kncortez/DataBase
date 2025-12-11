@@ -3,6 +3,10 @@
 -- Create date: <11-08-2022>
 -- Description:	<Add a guide into LinehaulRouteSettlementContainerDetail and LinehaulRouteSettlementContainerDetailPiece>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian, Suazo>
+-- Create date: <05-11-2025>
+-- Description:	<Se quita la restriccion de escanear todas las piezas de una guia>
 -- Propósito: Agregar parámetro @IdStation para rastrear estación en escala
 -- Autor:     <Freddy Camposeco>
 -- Historia:  <FDAPI-4723>
@@ -57,6 +61,7 @@ BEGIN
     DECLARE @ALLOW_UNRST_SETTL AS BIT; -- CatTypeContainer
     DECLARE @SETTL_CONTAINER_ID_BETA AS INT; -- LinehaulRouteSettlementContainer
     DECLARE @DISPT_CONTAINER_ID_BETA AS INT; -- LinehaulRoutePreparationContainer
+	DECLARE @ValidStatus INT
 
     SET @VBX_ID =
     (
@@ -86,12 +91,12 @@ BEGIN
                 ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
                  
             INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
-                ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]                  
+                ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
         WHERE [LRPCDP].[PieceNumber] = @GuidePiece
 		  AND [LRPCD].[RowStatus] = 1
                    AND [LRPCD].[GuideSerie] = @GuideSerie
                    AND [LRPCD].[GuideNumber] = @GuideNumber
-				   AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+                    AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
                    AND [LRPC].[RowStatus] = 1
     );
 
@@ -122,10 +127,26 @@ BEGIN
               AND [DOP].[GuideNumber] = @GuideNumber
     );
 
+
+	/****VALIDAMOS QUE NO ESTE EN ESTADO EN REVISADO LA GUIA*****/
+
+	SET @ValidStatus = 
+	(
+		SELECT StatusOrderId FROM DeliveryOrder WITH (NOLOCK) 
+		WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
+	)
+
+	IF (@ValidStatus = 13)
+	BEGIN
+		SELECT 0 [spResult],
+               'La guía se encuentra en estado “En revisión”, por lo que, no se puede procesar. Por favor, comunícate con el área de Planning para liberarla.' [errorMessage];
+        RETURN;
+	END;
+
     IF (@DOP_PIECES = 0)
     BEGIN
         SELECT 0 [spResult],
-               'El código escaneado NO existe en la base de datos, intente nuevamente o comuníquese con soporte técnico.' [spMessage];
+               'El código escaneado NO existe en la base de datos, intente nuevamente o comuníquese con soporte técnico.' [errorMessage];
         RETURN;
     END;
 
@@ -277,8 +298,11 @@ BEGIN
     (
         SELECT COUNT([LRSCD].[IdLinehaulRouteSettlementContainerDetail]) AS CONT
         FROM [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
+		INNER JOIN LinehaulRouteSettlementContainerDetailPiece PC WITH (NOLOCK)
+			ON PC.LinehaulRouteSettlementContainerDetailId = LRSCD.IdLinehaulRouteSettlementContainerDetail
         WHERE [LRSCD].[GuideSerie] = @GuideSerie
               AND [LRSCD].[GuideNumber] = @GuideNumber
+			  AND PC.PieceNumber = @GuidePiece
               AND [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
               AND [LRSCD].[GuideReceived] = 1
               AND [LRSCD].[RowStatus] = 1
@@ -345,420 +369,8 @@ BEGIN
         END;
 
         BEGIN
-            IF (@DOP_PIECES > 1)
             BEGIN
-                -- MULTIPLE PIECES
-                SET @GUIDE_IS_OPEN_PROCESS =
-                (
-                    SELECT [LRSCD].[IsOpenProcess]
-                    FROM [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                    WHERE [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
-                          AND [LRSCD].[GuideSerie] = @GuideSerie
-                          AND [LRSCD].[GuideNumber] = @GuideNumber
-                );
 
-                IF (@GUIDE_IS_OPEN_PROCESS = 1)
-                BEGIN
-                    -- GUIDE IS OPEN PROCESS, CHECK USER
-                    SET @OPEN_PROCESS_TKN =
-                    (
-                        SELECT [LRSCD].[UserProcess]
-                        FROM [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                        WHERE [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
-                              AND [LRSCD].[GuideSerie] = @GuideSerie
-                              AND [LRSCD].[GuideNumber] = @GuideNumber
-                    );
-
-                    SET @OPEN_PROCESS_USER =
-                    (
-                        SELECT [IU].[Username]
-                        FROM [dbo].[TokenLog] TL WITH (NOLOCK)
-                            INNER JOIN [dbo].[InternalUser] IU
-                                ON [TL].[TknIdUser] = [IU].[RegisterUserID]
-                        WHERE [TL].[TknIdToken] = @OPEN_PROCESS_TKN
-                    );
-
-                    IF (@OPEN_PROCESS_TKN = @TknUser)
-                    BEGIN
-                        -- SAME USER IN OPEN PROCESS
-                        IF (@IsOpenProcess = 1)
-                        BEGIN
-                            -- USER HAS OPEN PROCESS, ADD PIECE TO LINEHAUL
-                            -- CONTAINER DETAIL IN SETTLEMENT EXISTS, UPDATE
-                            UPDATE [LinehaulRouteSettlementContainerDetail]
-                            SET [RowStatus] = 0,
-                                [TokenUpdated] = @TknUser,
-                                [DateUpdated] = SYSDATETIME(),
-                                [IsOpenProcess] = @IsOpenProcess,
-                                [GuideReceived] = @GuideReceived,
-                                [UserProcess] = @TknUser
-                            WHERE [GuideSerie] = @GuideSerie
-                                  AND [GuideNumber] = @GuideNumber
-                                  AND [LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId;
-
-                            IF (@EXISTING_LRSCDP > 0)
-                            BEGIN
-                                -- PIECE EXISTS IN SETTLEMENT, UPDATE
-                                UPDATE [LinehaulRouteSettlementContainerDetailPiece]
-                                SET [RowStatus] = 1,
-                                    [TokenUpdated] = @TknUser,
-                                    [DateUpdated] = SYSDATETIME()
-                                WHERE [LinehaulRouteSettlementContainerDetailId] =
-                                (
-                                    SELECT [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-                                    FROM [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                                    WHERE [LRSCD].[GuideSerie] = @GuideSerie
-                                          AND [LRSCD].[GuideNumber] = @GuideNumber
-                                          AND [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
-                                )
-                                      AND [PieceNumber] = @GuidePiece;
-
-                                -- UPDATE PIECE IN LINEHAUL ROUTE PREPARATION
-                                UPDATE [LinehaulRoutePreparationContainerDetailPiece]
-                                SET [CatLinehaulStatusId] = @LIQUIDATED_STATUS_ID
-                                FROM [dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-                                    INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-                                        ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-                                          
-                                    INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
-                                        ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                                          
-                                WHERE [LRPCDP].[PieceNumber] = @GuidePiece
-								 AND [LRPCD].[GuideSerie] = @GuideSerie
-                                           AND [LRPCD].[GuideNumber] = @GuideNumber
-                                           AND [LRPCD].[RowStatus] = 1
-										    AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-
-                                -- RETURN DATA
-                                SELECT [LRSCD].[GuideSerie],
-                                       [LRSCD].[GuideNumber],
-                                       [LRSCD].[UserProcess],
-                                       [LRSCD].[IsOpenProcess],
-                                       [LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-                                       [LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-                                       [LRSCDP].[PieceNumber],
-                                       [LRSCDP].[IsDryPiece],
-                                       COALESCE([LRSCDP].[ActCode], 0) AS ActCode,
-                                       [LRSC].[HubId],
-                                       [HL].[HubAbbreviation],
-                                       [LRSC].[ContainerId],
-                                       CONCAT([CTC].[TypeContainerSerie], [C].[ContainerNumber]) AS Container,
-                                       [LRSC].[IdLinehaulRouteSettlementContainer]
-                                FROM [LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-                                    INNER JOIN [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                                        ON [LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-                                          
-                                    INNER JOIN [dbo].[LinehaulRouteSettlementContainer] LRSC
-                                        ON [LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-                                    INNER JOIN [dbo].[HubLogistics] HL
-                                        ON [LRSC].[HubId] = [HL].[IdHubLogistic]
-                                    INNER JOIN [dbo].[Container] C
-                                        ON [LRSC].[ContainerId] = [C].[IdContainer]
-                                    INNER JOIN [dbo].[CatTypeContainer] CTC
-                                        ON [C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
-                                WHERE [LRSCDP].[RowStatus] = 1
-								 AND [LRSCD].[GuideSerie] = @GuideSerie
-                                           AND [LRSCD].[GuideNumber] = @GuideNumber
-                                           AND [LRSCD].[UserProcess] = @TknUser
-                                           AND [LRSCD].[IsOpenProcess] = 1
-
-                            END;
-                            ELSE
-                            BEGIN
-                                -- PIECE DOESN'T EXIST IN SETTLEMENT, INSERT
-                                INSERT INTO [dbo].[LinehaulRouteSettlementContainerDetailPiece]
-                                (
-                                    [LinehaulRouteSettlementContainerDetailId],
-                                    [PieceNumber],
-                                    [IsDryPiece],
-                                    [RowStatus],
-                                    [TokenCreated],
-                                    [DateCreated]
-                                )
-                                VALUES
-                                (
-                                    (
-                                        SELECT [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-                                        FROM [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                                        WHERE [LRSCD].[GuideSerie] = @GuideSerie
-                                              AND [LRSCD].[GuideNumber] = @GuideNumber
-                                              AND [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
-                                    ), @GuidePiece,
-                                    (
-                                        SELECT [LRPCDP].[IsDryPiece]
-                                        FROM [dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-                                            INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-                                                ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-                                             
-                                            INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
-                                                ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                                                  
-                                        WHERE [LRPCDP].[PieceNumber] = @GuidePiece
-										      AND [LRPCD].[GuideSerie] = @GuideSerie
-                                                   AND [LRPCD].[GuideNumber] = @GuideNumber
-                                                   AND [LRPCD].[RowStatus] = 1
-												    AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-                                    ), 1, -- RowStatus
-                                    @TknUser, SYSDATETIME());
-
-                                SET @INSERTED_DOC = SCOPE_IDENTITY();
-
-                                -- UPDATE PIECE IN LINEHAUL ROUTE PREPARATION
-                                UPDATE [LinehaulRoutePreparationContainerDetailPiece]
-                                SET [CatLinehaulStatusId] = @LIQUIDATED_STATUS_ID
-                                FROM [dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-                                    INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-                                        ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-                                          
-                                    INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
-                                        ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                                         
-                                WHERE [LRPCDP].[PieceNumber] = @GuidePiece
-								 AND [LRPCD].[GuideSerie] = @GuideSerie
-                                           AND [LRPCD].[GuideNumber] = @GuideNumber
-                                           AND [LRPCD].[RowStatus] = 1
-										     AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-
-                                -- RETURN DATA
-                                SELECT [LRSCD].[GuideSerie],
-                                       [LRSCD].[GuideNumber],
-                                       [LRSCD].[UserProcess],
-                                       [LRSCD].[IsOpenProcess],
-                                       [LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-                                       [LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-                                       [LRSCDP].[PieceNumber],
-                                       [LRSCDP].[IsDryPiece],
-                                       COALESCE([LRSCDP].[ActCode], 0) AS ActCode,
-                                       [LRSC].[HubId],
-                                       [HL].[HubAbbreviation],
-                                       [LRSC].[ContainerId],
-                                       CONCAT([CTC].[TypeContainerSerie], [C].[ContainerNumber]) AS Container,
-                                       [LRSC].[IdLinehaulRouteSettlementContainer]
-                                FROM [LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-                                    INNER JOIN [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                                        ON [LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-                                           
-                                    INNER JOIN [dbo].[LinehaulRouteSettlementContainer] LRSC
-                                        ON [LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-                                    INNER JOIN [dbo].[HubLogistics] HL
-                                        ON [LRSC].[HubId] = [HL].[IdHubLogistic]
-                                    INNER JOIN [dbo].[Container] C
-                                        ON [LRSC].[ContainerId] = [C].[IdContainer]
-                                    INNER JOIN [dbo].[CatTypeContainer] CTC
-                                        ON [C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
-                                WHERE [LRSCDP].[RowStatus] = 1
-								AND [LRSCD].[GuideSerie] = @GuideSerie
-                                           AND [LRSCD].[GuideNumber] = @GuideNumber
-                                           AND [LRSCD].[UserProcess] = @TknUser
-                                           AND [LRSCD].[IsOpenProcess] = 1
-
-                            END;
-                        END;
-                        ELSE
-                        BEGIN
-                            -- USER DOESN'T HAS OPEN PROCES, ASK FOR COMPLETE PIECES
-                            SELECT 1 [spResult],
-                                   'Guide has multiple pieces' [errorMessage];
-                        END;
-                    END;
-                    ELSE
-                    BEGIN
-                        -- OPEN PROCESS WITH DIFFERENT USER, SEND ALERT TO CLIENT
-                        SELECT 2 [spResult],
-                               @OPEN_PROCESS_USER [errorMessage];
-                    END;
-                END;
-                ELSE IF (@IsOpenProcess = 1)
-                BEGIN
-                    -- CONTAINER DETAIL IN SETTLEMENT EXISTS, UPDATE
-                    UPDATE [LinehaulRouteSettlementContainerDetail]
-                    SET [RowStatus] = 0,
-                        [TokenUpdated] = @TknUser,
-                        [DateUpdated] = SYSDATETIME(),
-                        [IsOpenProcess] = @IsOpenProcess,
-                        [GuideReceived] = @GuideReceived,
-                        [UserProcess] = @TknUser
-                    WHERE [GuideSerie] = @GuideSerie
-                          AND [GuideNumber] = @GuideNumber
-                          AND [LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId;
-
-                    IF (@EXISTING_LRSCDP > 0)
-                    BEGIN
-                        -- PIECE EXISTS IN SETTLEMENT, UPDATE
-                        UPDATE [LinehaulRouteSettlementContainerDetailPiece]
-                        SET [RowStatus] = 1,
-                            [TokenUpdated] = @TknUser,
-                            [DateUpdated] = SYSDATETIME()
-                        WHERE [LinehaulRouteSettlementContainerDetailId] =
-                        (
-                            SELECT [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-                            FROM [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                            WHERE [LRSCD].[GuideSerie] = @GuideSerie
-                                  AND [LRSCD].[GuideNumber] = @GuideNumber
-                                  AND [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
-                        )
-                              AND [PieceNumber] = @GuidePiece;
-
-                        -- UPDATE PIECE IN LINEHAUL ROUTE PREPARATION
-                        UPDATE [LinehaulRoutePreparationContainerDetailPiece]
-                        SET [CatLinehaulStatusId] = @LIQUIDATED_STATUS_ID
-                        FROM [dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-                            INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-                                ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-                                 
-                            INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
-                                ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                                   
-                        WHERE [LRPCDP].[PieceNumber] = @GuidePiece
-						  AND [LRPCD].[GuideSerie] = @GuideSerie
-                                   AND [LRPCD].[GuideNumber] = @GuideNumber
-                                   AND [LRPCD].[RowStatus] = 1
-								   AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-                        -- RETURN DATA
-                        SELECT [LRSCD].[GuideSerie],
-                               [LRSCD].[GuideNumber],
-                               [LRSCD].[UserProcess],
-                               [LRSCD].[IsOpenProcess],
-                               [LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-                               [LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-                               [LRSCDP].[PieceNumber],
-                               [LRSCDP].[IsDryPiece],
-                               COALESCE([LRSCDP].[ActCode], 0) AS ActCode,
-                               [LRSC].[HubId],
-                               [HL].[HubAbbreviation],
-                               [LRSC].[ContainerId],
-                               CONCAT([CTC].[TypeContainerSerie], [C].[ContainerNumber]) AS Container,
-                               [LRSC].[IdLinehaulRouteSettlementContainer]
-                        FROM [LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-                            INNER JOIN [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                                ON [LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-                                  
-                            INNER JOIN [dbo].[LinehaulRouteSettlementContainer] LRSC
-                                ON [LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-                            INNER JOIN [dbo].[HubLogistics] HL
-                                ON [LRSC].[HubId] = [HL].[IdHubLogistic]
-                            INNER JOIN [dbo].[Container] C
-                                ON [LRSC].[ContainerId] = [C].[IdContainer]
-                            INNER JOIN [dbo].[CatTypeContainer] CTC
-                                ON [C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
-                        WHERE [LRSCDP].[RowStatus] = 1
-						 AND [LRSCD].[GuideSerie] = @GuideSerie
-                                   AND [LRSCD].[GuideNumber] = @GuideNumber
-                                   AND [LRSCD].[UserProcess] = @TknUser
-                                   AND [LRSCD].[IsOpenProcess] = 1
-
-                    END;
-                    ELSE
-                    BEGIN
-                        -- PIECE DOESN'T EXIST IN SETTLEMENT, INSERT
-                        INSERT INTO [dbo].[LinehaulRouteSettlementContainerDetailPiece]
-                        (
-                            [LinehaulRouteSettlementContainerDetailId],
-                            [PieceNumber],
-                            [IsDryPiece],
-                            [RowStatus],
-                            [TokenCreated],
-                            [DateCreated]
-                        )
-                        VALUES
-                        (
-                            (
-                                SELECT [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-                                FROM [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                                WHERE [LRSCD].[GuideSerie] = @GuideSerie
-                                      AND [LRSCD].[GuideNumber] = @GuideNumber
-                                      AND [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
-                            ), @GuidePiece,
-                            (
-                                SELECT [LRPCDP].[IsDryPiece]
-                                FROM [dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-                                    INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-                                        ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-                                          
-                                    INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
-                                        ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                                         
-                                WHERE [LRPCDP].[PieceNumber] = @GuidePiece
-								 AND [LRPCD].[GuideSerie] = @GuideSerie
-                                           AND [LRPCD].[GuideNumber] = @GuideNumber
-                                           AND [LRPCD].[RowStatus] = 1
-										     AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-                            ), 1, -- RowStatus
-                            @TknUser, SYSDATETIME());
-
-                        SET @INSERTED_DOC = SCOPE_IDENTITY();
-
-                        -- UPDATE PIECE IN LINEHAUL ROUTE PREPARATION
-                        UPDATE [LinehaulRoutePreparationContainerDetailPiece]
-                        SET [CatLinehaulStatusId] = @LIQUIDATED_STATUS_ID
-                        FROM [dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-                            INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-                                ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-                                  
-                            INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
-                                ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                                  
-                        WHERE [LRPCDP].[PieceNumber] = @GuidePiece
-						 AND [LRPCD].[GuideSerie] = @GuideSerie
-                                   AND [LRPCD].[GuideNumber] = @GuideNumber
-                                   AND [LRPCD].[RowStatus] = 1
-								    AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-                        -- RETURN DATA
-                        SELECT [LRSCD].[GuideSerie],
-                               [LRSCD].[GuideNumber],
-                               [LRSCD].[UserProcess],
-                               [LRSCD].[IsOpenProcess],
-                               [LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-                               [LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-                               [LRSCDP].[PieceNumber],
-                               [LRSCDP].[IsDryPiece],
-                               COALESCE([LRSCDP].[ActCode], 0) AS ActCode,
-                               [LRSC].[HubId],
-                               [HL].[HubAbbreviation],
-                               [LRSC].[ContainerId],
-                               CONCAT([CTC].[TypeContainerSerie], [C].[ContainerNumber]) AS Container,
-                               [LRSC].[IdLinehaulRouteSettlementContainer]
-                        FROM [LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-                            INNER JOIN [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-                                ON [LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-                                   
-                            INNER JOIN [dbo].[LinehaulRouteSettlementContainer] LRSC
-                                ON [LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
-                            INNER JOIN [dbo].[HubLogistics] HL
-                                ON [LRSC].[HubId] = [HL].[IdHubLogistic]
-                            INNER JOIN [dbo].[Container] C
-                                ON [LRSC].[ContainerId] = [C].[IdContainer]
-                            INNER JOIN [dbo].[CatTypeContainer] CTC
-                                ON [C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
-                        WHERE [LRSCDP].[RowStatus] = 1
-						AND [LRSCD].[GuideSerie] = @GuideSerie
-                                   AND [LRSCD].[GuideNumber] = @GuideNumber
-                                   AND [LRSCD].[UserProcess] = @TknUser
-                                   AND [LRSCD].[IsOpenProcess] = 1
-
-                    END;
-                END;
-                ELSE
-                BEGIN
-                    -- USER DOESN'T HAS OPEN PROCES, ASK FOR COMPLETE PIECES
-                    UPDATE [LinehaulRouteSettlementContainerDetail]
-                    SET [RowStatus] = 0,
-                        [TokenUpdated] = @TknUser,
-                        [DateUpdated] = SYSDATETIME(),
-                        [IsOpenProcess] = @IsOpenProcess,
-                        [GuideReceived] = @GuideReceived,
-                        [UserProcess] = @TknUser
-                    WHERE [GuideSerie] = @GuideSerie
-                          AND [GuideNumber] = @GuideNumber
-                          AND [LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId;
-
-                    SELECT 1 [spResult],
-                           'Guide has multiple pieces' [errorMessage];
-                --RETURN;
-                END;
-            END;
-            ELSE
-            BEGIN
                 -- ONE PIECE, ADD TO SETTLEMENT
                 -- CONTAINER DETAIL IN SETTLEMENT EXISTS, UPDATE
                 UPDATE [LinehaulRouteSettlementContainerDetail]
@@ -767,10 +379,12 @@ BEGIN
                     [DateUpdated] = SYSDATETIME(),
                     [IsOpenProcess] = @IsOpenProcess,
                     [GuideReceived] = @GuideReceived,
-                    [UserProcess] = @TknUser
+                    [UserProcess] = @TknUser,
+					PiecesMissing = PiecesMissing + 1
                 WHERE [GuideSerie] = @GuideSerie
                       AND [GuideNumber] = @GuideNumber
                       AND [LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId;
+
 
                 IF (@EXISTING_LRSCDP > 0)
                 BEGIN
@@ -986,8 +600,7 @@ BEGIN
                     INNER JOIN [dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
                         ON [LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
                          
-                WHERE [LRSCDP].[ActCode] IS NOT NULL
-                      AND [LRSCDP].[RowStatus] = 1
+                WHERE [LRSCDP].[RowStatus] = 1
 					    AND [LRSCD].[GuideSerie] = @GuideSerie
                            AND [LRSCD].[GuideNumber] = @GuideNumber
                            AND [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
