@@ -1,13 +1,16 @@
-﻿-- =============================================
--- Author:        <Cristian Suazo>
--- Updated date:<21-02-2025>
--- Description:    <Se crea sp para manejo de recolecciones en servicio PickupProcessingService>
--- =============================================
--- =============================================
--- Author:        <Edelman>
--- Updated date:<02-05-2025>
--- Description:    <Actualizar tablas de referencia y contenedores que se hayan procesado en el servicio recolección POD>
--- =============================================
+﻿/* =================================================
+   SP:        SetFinishPickUpBatch
+   Propósito: Se crea SP para manejo de recolecciones en servicio PickupProcessingService
+   Autor:     Cristian Suazo
+   Historia:  ---
+   Fecha:     2025-02-21
+
+=== CHANGELOG ============================
+
+2025-05-02 | Historia/épica: ---         | Autor: Edelman         | 
+2025-12-12 | Historia/épica: FDAPI-4733  | Autor: Cristian Suazo  | 
+
+=========================================== */
 
 CREATE PROCEDURE [dbo].[SetFinishPickUpBatch]
     -- Add the parameters for the stored procedure here
@@ -30,11 +33,11 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    DECLARE @jsonResult NVARCHAR(MAX);
-    DECLARE @jsonResult1 NVARCHAR(MAX);
-    DECLARE @jsonResult2 NVARCHAR(MAX);
-    DECLARE @jsonError NVARCHAR(MAX);
-    DECLARE @jsonToken NVARCHAR(MAX);
+    --DECLARE @jsonResult NVARCHAR(MAX);
+    --DECLARE @jsonResult1 NVARCHAR(MAX);
+    --DECLARE @jsonResult2 NVARCHAR(MAX);
+    --DECLARE @jsonError NVARCHAR(MAX);
+    --DECLARE @jsonToken NVARCHAR(MAX);  -- FIX 2025-09-10 CRAS
     DECLARE @ManifestSerie VARCHAR(10) = 'FM';
     DECLARE @ManifestNumber BIGINT;
 
@@ -262,25 +265,15 @@ BEGIN
                     FROM DeliveryOrder ord WITH (NOLOCK)
                         LEFT JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                             ON (
-                                   ord.Guide_Number = dop.GuideNumber
-                                   AND ord.Guide_Serie = dop.GuideSerie
+                                   ord.Guide_Serie = dop.GuideSerie
+                                   AND ord.Guide_Number = dop.GuideNumber
                                )
                         INNER JOIN #listGuides ls
                             ON (
-                                   ord.Guide_Number = ls.ItemNumber
-                                   AND ord.Guide_Serie = ls.ItemSerie
+                                   ord.Guide_Serie = ls.ItemSerie
+                                   AND ord.Guide_Number = ls.ItemNumber
                                )
-                    WHERE ord.Guide_Number IN
-                          (
-                           SELECT ItemNumber 
-                             FROM #listGuides 
-                          )
-                          AND ord.Guide_Serie IN 
-                          (
-                           SELECT ItemSerie 
-                             FROM #listGuides
-                          )
-                          AND ord.StatusOrderId IN ( 15, 1, 16 )
+                    WHERE  ord.StatusOrderId IN ( 15, 1, 16 )
                           AND dop.GuideNumber IS NULL
                 ) AS Table1;
 
@@ -288,8 +281,9 @@ BEGIN
 
                 CREATE NONCLUSTERED INDEX tempNowInsert
                 ON #NowInsert (
-                                  Guide_Number,
-                                  Guide_Serie
+                                  Guide_Serie,
+								  Guide_Number
+                                  
                               );
 
                 ----------------------------------------------Inserta en la tabla DeliveryOrderPaymentDetail los datos de la tabla temporal ----------------------------------
@@ -382,17 +376,9 @@ BEGIN
                             FROM #listGuides ls
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
-                                           ord.Guide_Number = ls.ItemNumber
-                                           AND ord.Guide_Serie = ls.ItemSerie
+                                           ord.Guide_Serie = ls.ItemSerie
+                                           AND ord.Guide_Number = ls.ItemNumber
                                        )
-                            WHERE ord.Guide_Number IN
-                                  (
-                                    SELECT ItemNumber FROM #listGuides
-                                  )
-                                  AND ord.Guide_Serie IN 
-                                  (
-                                    SELECT ItemSerie FROM #listGuides
-                                  )
                         );
 
                 DECLARE @CustomerId INT =
@@ -402,17 +388,9 @@ BEGIN
                             FROM #listGuides ls
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
-                                           ord.Guide_Number = ls.ItemNumber
-                                           AND ord.Guide_Serie = ls.ItemSerie
+                                           ord.Guide_Serie = ls.ItemSerie
+                                           AND ord.Guide_Number = ls.ItemNumber
                                        )
-                            WHERE ord.Guide_Number IN
-                                  (
-                                   SELECT ItemNumber FROM #listGuides
-                                  )
-                                  AND ord.Guide_Serie IN 
-                                  (
-                                   SELECT ItemSerie FROM #listGuides
-                                  )
                         );
 
                 DECLARE @SenderName VARCHAR(50) =
@@ -422,17 +400,9 @@ BEGIN
                             FROM #listGuides ls
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
-                                           ord.Guide_Number = ls.ItemNumber
-                                           AND ord.Guide_Serie = ls.ItemSerie
+                                           ord.Guide_Serie = ls.ItemSerie
+                                           AND ord.Guide_Number = ls.ItemNumber
                                        )
-                            WHERE ord.Guide_Number IN
-                                  (
-                                    SELECT ItemNumber FROM #listGuides
-                                  )
-                                   AND ord.Guide_Serie IN 
-                                  (
-                                    SELECT ItemSerie FROM #listGuides
-                                  )
                         );
 
                 DECLARE @Sender_Phone VARCHAR(20) =
@@ -442,17 +412,9 @@ BEGIN
                             FROM #listGuides ls
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
-                                           ord.Guide_Number = ls.ItemNumber
-                                           AND ord.Guide_Serie = ls.ItemSerie
+                                           ord.Guide_Serie = ls.ItemSerie
+                                           AND ord.Guide_Number = ls.ItemNumber
                                        )
-                            WHERE ord.Guide_Number IN
-                                  (
-                                   SELECT ItemNumber FROM #listGuides
-                                  )
-                                  AND ord.Guide_Serie IN 
-                                  (
-                                   SELECT ItemSerie FROM #listGuides
-                                  )
                         );
 
                 DECLARE @IdHublogistic INT =
@@ -462,8 +424,8 @@ BEGIN
                             FROM #listGuides ls
                                  INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                      ON (
-                                            ord.Guide_Number = ls.ItemNumber
-                                            AND ord.Guide_Serie = ls.ItemSerie
+                                            ord.Guide_Serie = ls.ItemSerie
+                                            AND ord.Guide_Number = ls.ItemNumber
                                         )
                                  INNER JOIN DeliveryBackOffice.dbo.Township TWN WITH(NOLOCK)
                                      ON ord.SenderIdTownship = twn.IdTownship 
@@ -473,18 +435,10 @@ BEGIN
                                      ON HBG.HubAbbreviation = THB.Hub 
                                  INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                                      ON (
-                                         dop.GuideNumber = ord.Guide_Number
-                                         AND dop.GuideSerie = ord.Guide_Serie
+                                         dop.GuideSerie = ord.Guide_Serie
+                                         AND dop.GuideNumber = ord.Guide_Number
                                         )
-                           WHERE ord.Guide_Number IN
-                                 (
-                                     SELECT ItemNumber FROM #listGuides
-                                 )
-                                 AND ord.Guide_Serie IN 
-                                 (
-                                       SELECT ItemSerie FROM #listGuides
-                                 )
-                                 AND THB.RowStatus = 1
+                           WHERE THB.RowStatus = 1
                                  AND twn.TownshipStatus = 1
                                  AND HBG.HubStatus = 1
                         );
@@ -496,19 +450,9 @@ BEGIN
                            FROM #listGuides ls
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                    ON (
-                                       ord.Guide_Number = ls.ItemNumber
-                                       AND ord.Guide_Serie = ls.ItemSerie
+                                       ord.Guide_Serie = ls.ItemSerie
+                                       AND ord.Guide_Number = ls.ItemNumber
                                       )
-                            WHERE ord.Guide_Number IN
-                                  (
-                                   SELECT ItemNumber 
-                                     FROM #listGuides
-                                  )
-                                  AND ord.Guide_Serie IN 
-                                  (
-                                   SELECT ItemSerie
-                                     FROM #listGuides
-                                  )
                         );
 
                 DECLARE @Sender_Email VARCHAR(200) =
@@ -518,8 +462,8 @@ BEGIN
                            FROM #listGuides ls
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                    ON (
-                                          ord.Guide_Number = ls.ItemNumber
-                                          AND ord.Guide_Serie = ls.ItemSerie
+                                          ord.Guide_Serie = ls.ItemSerie
+                                          AND ord.Guide_Number = ls.ItemNumber
                                       )
                                 LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                                    ON cus.IdCustomer = ord.IdCustomer
@@ -540,15 +484,11 @@ BEGIN
                   FROM DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                        INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                            ON (
-                                  ord.Guide_Number = dop.GuideNumber
-                                  AND ord.Guide_Serie = dop.GuideSerie
+                                  ord.Guide_Serie = dop.GuideSerie
+                                  AND ord.Guide_Number = dop.GuideNumber
                               )
-                  WHERE dop.GuideSerie = 'FD'
-                        AND dop.GuideNumber IN
-                            (
-                                SELECT ItemNumber FROM #listGuides
-                            )
-                        AND ord.StatusOrderId IN ( 15, 1, 16 )
+						INNER JOIN #listGuides lg ON lg.ItemSerie = ord.Guide_Serie AND lg.ItemNumber = ord.Guide_Number
+                  WHERE ord.StatusOrderId IN ( 15, 1, 16 )
                         AND
                         (
                             dop.IdHeaderRecolection = @IdPickup
@@ -560,8 +500,8 @@ BEGIN
                 SET IdHeaderRecolection = NULL
                 FROM DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                     LEFT JOIN #listGuides LG
-                        ON dop.GuideNumber = LG.ItemNumber
-                           AND dop.GuideSerie = LG.ItemSerie
+                        ON dop.GuideSerie = LG.ItemSerie
+                           AND dop.GuideNumber = LG.ItemNumber
                 WHERE dop.IdHeaderRecolection = @IdPickup
                       AND LG.ItemNumber IS NULL
                       AND LG.ItemSerie IS NULL;
@@ -570,17 +510,8 @@ BEGIN
 
                 UPDATE DeliveryOrder
                    SET StatusOrderId = 2
-                  FROM DeliveryOrder WITH (NOLOCK)
-                 WHERE Guide_Number IN
-                       (
-                        SELECT ItemNumber 
-                          FROM #listGuides
-                       )
-                       AND Guide_Serie IN
-                       (
-                        SELECT ItemSerie 
-                          FROM #listGuides
-                       );
+                  FROM DeliveryOrder do WITH (NOLOCK)
+				  INNER JOIN #listGuides lg ON lg.ItemSerie = do.Guide_Serie AND lg.ItemNumber = do.Guide_Number;
 
                 DECLARE @CartGuides AS TABLE
                 (
@@ -639,8 +570,8 @@ BEGIN
                            DO.StatusOrderId
                     FROM #listGuides TLG
                         INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                            ON TLG.ItemNumber = DO.Guide_Number
-                               AND TLG.ItemSerie = DO.Guide_Serie;
+                            ON TLG.ItemSerie = DO.Guide_Serie
+                               AND TLG.ItemNumber = DO.Guide_Number;
 
                     -- Ingresar endpoints de cliente
                     UPDATE @WebhookCustomerTable
@@ -649,7 +580,7 @@ BEGIN
                     FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
                         INNER JOIN @WebhookCustomerTable WCT
                             ON WE.CustomerId = WCT.CustomerId
-                               AND WE.WebhookTypeId = @GuideStatusChangeWebhook;
+                               WHERE WE.WebhookTypeId = @GuideStatusChangeWebhook; ---FIX 2025-09-10 CRAS
 
                     DECLARE @ResponseTable AS TABLE
                     (
@@ -803,9 +734,11 @@ BEGIN
                                  ON dop.GuideSerie = do.Guide_Serie
                                  AND dop.GuideNumber = do.Guide_Number
                              INNER JOIN @GuidePiecesTable gpt
-                                 ON wct.GuideNumber = gpt.GuideNumber
+                                 ON 
+								 wct.GuideSerie = gpt.GuideSerie  AND--- fix 2025-09-10 CRAS
+								 wct.GuideNumber = gpt.GuideNumber
                              INNER JOIN @PiecesGuideRelatedTable pgt
-                                 ON gpt.GuideNumber = pgt.GuideNumber
+                                 ON gpt.GuideSerie = pgt.GuideSerie AND gpt.GuideNumber = pgt.GuideNumber
                        WHERE do.IdCustomer = wct.CustomerId
                          AND WHE.TypeConnectionId = 2
                          AND gpt.NumberPieces = pgt.NumberRelatedPieces
@@ -821,15 +754,8 @@ BEGIN
                 UPDATE DeliveryOrderPiece
                    SET IsPickup = 1,
                        StatusOrderId = 2
-                  FROM DeliveryOrderPiece WITH (NOLOCK)
-                 WHERE GuideNumber IN
-                       (
-                           SELECT ItemNumber FROM #listGuides
-                       )
-                       AND GuideSerie IN
-                       (
-                           SELECT ItemSerie FROM #listGuides
-                       );
+                  FROM DeliveryOrderPiece dop WITH (NOLOCK)
+				  INNER JOIN #listGuides lg ON lg.ItemSerie = dop.GuideSerie AND lg.ItemNumber = dop.GuideNumber;
 
                 ---------------------------------------------- Actualiza el Status del Servicio  -------------------------------------------------------------------------
 
@@ -969,14 +895,7 @@ BEGIN
                             FROM Customer ct WITH (NOLOCK)
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (ord.IdCustomer = ct.IdCustomer)
-                            WHERE ord.Guide_Number IN
-                                  (
-                                      SELECT ItemNumber FROM #listGuides
-                                  )
-                                  AND ord.Guide_Serie IN 
-                                  (
-                                        SELECT ItemSerie FROM #listGuides
-                                  )
+								INNER JOIN #listGuides lg ON lg.ItemSerie = ord.Guide_Serie AND lg.ItemNumber = ord.Guide_Number
                         );
 
 
