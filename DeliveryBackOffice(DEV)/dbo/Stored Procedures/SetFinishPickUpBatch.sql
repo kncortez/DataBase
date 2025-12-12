@@ -43,6 +43,7 @@ BEGIN
 
     DECLARE @CodeOfReference INT;
     DECLARE @CourierID INT;
+    DECLARE @StationId INT;
 
     -- insertar en tabla temporal posbibles mensajes de respuesta
     --IF OBJECT_ID('tempdb.dbo.#UpdateNow', 'U') IS NOT NULL DROP TABLE #UpdateNow;
@@ -164,7 +165,12 @@ BEGIN
         SET @FixedLongitude = NULL;
     END CATCH;
 
-
+		SET @StationId = 
+		(
+			SELECT StationId 
+			FROM FinishPickUpHeader WITH (NOLOCK)
+			WHERE SchedulePickupId = @IdPickup
+		)
         CREATE TABLE #Temp
         (
             Guide VARCHAR(255),
@@ -350,7 +356,8 @@ BEGIN
                     [DateCreated],
                     [DateCreatedInSystem],
                     [Observations],
-                    [Temperature_Celsius]
+                    [Temperature_Celsius],
+					[StationId]
                 )
                 SELECT ni.ItemSerie,
                        ni.ItemNumber,
@@ -359,7 +366,8 @@ BEGIN
                        GETDATE(),
                        GETDATE(),
                        NULL,
-                       NULL
+                       NULL,
+					   @StationId
                 FROM #listGuides ni;
 
                 -------------------------- Drop la tabla temporal -------------------------------------------------------------------

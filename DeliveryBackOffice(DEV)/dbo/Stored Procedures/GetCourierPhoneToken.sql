@@ -1,11 +1,14 @@
 ﻿
--- =============================================
--- Author:		<Hugo,Gomez>
--- Create date: <2021-02-11>
--- Description:	<Recotizacion>
--- =============================================
-
-
+/* =================================================
+   SP:        [dbo].[GetCourierPhoneToken]
+   Propósito: <Recotizacion>
+   Autor:     <ugo,Gomez>
+   Historia:  <>   
+   Fecha:     2021-02-11
+============================================
+=== CHANGELOG ================================
+-- 2025-11-17 | Historia/épica: FDAPI-4976 | Autor: Cristian Suazo |
+=========================================== */
 CREATE PROCEDURE [dbo].[GetCourierPhoneToken]
     -- Add the parameters for the stored procedure here
     @Phone NVARCHAR(20) = '48119415',
@@ -42,15 +45,18 @@ begin
     begin transaction;
     begin try
         -------------------------------------------------------------------------------------------------------------------------
-        declare @phon int =
-                (
-                    SELECT	TOP 1
-							ID
-                    FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] with (nolock)
-                    WHERE	ISNULL(IdCountry, 'GT') = @IdCountry
-						AND	Phone like '%' + @Phone + '%'
-                        AND Estatus = 1
-                );
+        declare @phon int,
+				@StationId INT
+
+                SELECT	TOP 1
+						@phon = SR.ID,
+						@StationId = HL.IdStation
+                FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] SR with (nolock)
+				LEFT JOIN HubLogistics HL WITH (NOLOCK)
+					ON SR.HubLogisticId = HL.IdHubLogistic
+                WHERE	SR.IdCountry = @IdCountry
+					AND	SR.Phone like '%' + @Phone + '%'
+                    AND SR.Estatus = 1
 
         declare @TokenInavt varchar(max) =
                 (
@@ -71,7 +77,7 @@ begin
         if exists
         (
             select 1
-            from SenderReceiverLoginToken
+            from SenderReceiverLoginToken WITH (NOLOCK)
             where SenderReceiverId = @phon
                   and LoginToken = @LoginToken
                   and RowStatus = 1
@@ -117,14 +123,14 @@ begin
             declare @DefaultEmail nvarchar(50) =
                     (
                         select isnull(cf.Value, '')
-                        from dbo.ConfigParams cf
+                        from dbo.ConfigParams cf WITH (NOLOCK)
                         where cf.Name = 'BillingEmailCAPP'
                     );
 
             declare @DefaultPickupManifestEmail nvarchar(50) =
                     (
                         select isnull(cf.Value, '')
-                        from dbo.ConfigParams cf
+                        from dbo.ConfigParams cf WITH (NOLOCK)
                         where cf.Name = 'PickUpManifestEmailCAPP'
                     );
 
@@ -148,7 +154,8 @@ begin
                                            + '"BillingEmail":"' + isnull(convert(varchar(50), @DefaultEmail), 'N/A')
                                            + '",' + '"PickUpManifestEmail":"'
                                            + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
-                                           + '"Token":"' + isnull(LogTokenPOD, '') + +'"}'
+                                           + '"Token":"' + isnull(LogTokenPOD, '') + +'",'
+										   + '"StationId":"'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'N/A') + '"}'
                                     from LogTokenPOD						pod with (nolock)
                                         inner join SenderReceiver			sr with (nolock)
                                             on (sr.ID = pod.IdCourierman)
