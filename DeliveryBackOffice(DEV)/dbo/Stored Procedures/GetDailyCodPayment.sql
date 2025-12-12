@@ -50,11 +50,11 @@ BEGIN
             OR LEN(COALESCE(DH.Sender_Email, '')) > 0
         )
         AND (DH.IdKindOfVPClient IS NULL OR DH.IdKindOfVPClient <> 1)
-        AND (DH.IdCustomer IS NULL  OR ISNULL(DH.Customer_Type, 0) <> 2)
+        AND (DH.Customer_Id IS NULL  OR ISNULL(DH.Customer_Type, 0) <> 2)
         UNION
         SELECT DISTINCT
         0 AS IdCustomer,
-        DH.Customer_Email AS RegexEmail,
+        TRIM(ISNULL(IIF(DH.Sender_Email = '', NULL, DH.Sender_Email),'')) AS RegexEmail,
         DH.Sender_Email AS SenderEmail,
         DH.Bank_id AS DCBA_Bank_Id
         FROM dbo.DepositReportCODHeader AS DH
