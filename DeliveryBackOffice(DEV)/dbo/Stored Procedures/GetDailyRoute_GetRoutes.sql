@@ -261,9 +261,8 @@ CTE_DeliveryAttemp_WithTransaction AS (
                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] d
                 INNER JOIN [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] cctbc WITH (NOLOCK)
                     ON cctbc.OrderNumber = d.Guide_Serie + CONVERT(VARCHAR, d.Guide_Number)
-                    AND cctbc.ReasonCode = '00'
                 WHERE d.Guide_Serie = DAT.Guide_Serie
-                  AND d.Guide_Number = DAT.Guide_Number
+                  AND d.Guide_Number = DAT.Guide_Number AND cctbc.ReasonCode = '00'
             ) THEN 1
             ELSE 0
         END AS HasValidTransaction
