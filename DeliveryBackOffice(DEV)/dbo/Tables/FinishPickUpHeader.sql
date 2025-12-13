@@ -19,7 +19,8 @@
     [StationId] INT NULL, 
     PRIMARY KEY CLUSTERED ([SchedulePickupId] ASC),
     CONSTRAINT [FK_FinishPickUpHeader_CatServiceStatus] FOREIGN KEY ([ServiceStatusId]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus]),
-    CONSTRAINT [FK_FinishPickUpHeader_SchedulePickup] FOREIGN KEY ([SchedulePickupId]) REFERENCES [dbo].[SchedulePickup] ([SchedulePickupId])
+    CONSTRAINT [FK_FinishPickUpHeader_SchedulePickup] FOREIGN KEY ([SchedulePickupId]) REFERENCES [dbo].[SchedulePickup] ([SchedulePickupId]),
+    CONSTRAINT [FK_FinishPickUpHeader_CatStation] FOREIGN KEY ([StationId]) REFERENCES [dbo].[CatStation] ([IdStation])
 );
 
 
