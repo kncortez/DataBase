@@ -1,8 +1,13 @@
--- =============================================
--- Author:		<Tito García>
--- Create date: <2025-06-23>
--- Description:	<Confirma servicio de devoluciones de guías en express center>
--- =============================================
+/* =================================================
+   SP:        [dbo].[sps_set_finishPickupService]
+   Propósito: <Confirma servicio de devolucion de guía en express center>
+   Autor:     <Tito Garcia>
+   Historia:  <>
+   Fecha:     2025-06-23
+============================================
+=== CHANGELOG ================================
+-- 2025-12-14 | Historia/épica: FDAPI-4787 | Autor: Tito Garcia |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finishReturnService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
