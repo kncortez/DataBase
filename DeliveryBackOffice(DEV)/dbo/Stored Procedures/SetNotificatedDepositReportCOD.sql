@@ -17,97 +17,21 @@ BEGIN
 
 	BEGIN TRANSACTION
 	BEGIN TRY
-
-	IF(ISNULL(@IdCustomer,0) <> 0)
-	BEGIN
-		 	UPDATE pg
-			SET pg.[Notificated] = 1
-			FROM [dbo].[ProcessedGuideCOD] pg WITH(NOLOCK)
-	INNER JOIN (
-			 SELECT cu.[IdCustomer] IdCliente, 
-               CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber               
-        FROM [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
-            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH(NOLOCK)
-                ON btd.[GuideSerie] = pg.[GuideSerie]
-                   AND btd.[GuideNumber] = pg.[GuideNumber]
-            INNER JOIN [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
-                ON btd.[GuideSerie] = do.[Guide_Serie]
-                   AND btd.[GuideNumber] = do.[Guide_Number]
-            LEFT JOIN dbo.Township twn WITH(NOLOCK)
-                ON twn.IdTownship = do.ReceiverIdTownship
-            LEFT JOIN dbo.Township tw WITH(NOLOCK)
-                ON tw.TownshipName = do.Receiver_Town
-            LEFT JOIN dbo.Province prv WITH(NOLOCK)
-                ON prv.IdProvince = twn.IdProvince
-            LEFT JOIN dbo.Province pr WITH(NOLOCK)
-                ON pr.IdProvince = tw.IdProvince
-            LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
-                ON vpc.CodeOfReference = do.Sender_ID
-            LEFT JOIN dbo.Customer cu WITH(NOLOCK)
-                ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-            LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
-                ON dc.DCBA_Id = do.DCBA_ID
-            LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
-                ON bk.Id_bank = dc.DCBA_Bank_Id
-        WHERE
-		pg.[Notificated] = 0
-              AND 
-			  btd.[AuthorizationNumber] IS NOT NULL
-			   AND pg.BatchCODId IS NOT NULL
-              AND cu.IdCustomer = @IdCustomer
-              AND btd.BankId = @IdBank
-			  GROUP BY btd.[GuideSerie],btd.GuideNumber, cu.IdCustomer
-			)x ON  CONCAT(pg.GuideSerie, pg.GuideNumber)      = x.GuideNumber
-			WHERE x.IdCliente = @IdCustomer
-				AND pg.[Notificated] = 0
-	END
-	ELSE
-BEGIN
-
-		 	UPDATE pg
-			SET pg.[Notificated] = 1
-			FROM [dbo].[ProcessedGuideCOD] pg
-	INNER JOIN (
-			 SELECT cu.[IdCustomer] IdCliente,   			 
-			 DO.Sender_Mail,
-               CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber               
-        FROM [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
-            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH(NOLOCK)
-                ON btd.[GuideSerie] = pg.[GuideSerie]
-                   AND btd.[GuideNumber] = pg.[GuideNumber]
-            INNER JOIN [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
-                ON btd.[GuideSerie] = do.[Guide_Serie]
-                   AND btd.[GuideNumber] = do.[Guide_Number]
-            LEFT JOIN dbo.Township twn WITH(NOLOCK)
-                ON twn.IdTownship = do.ReceiverIdTownship
-            LEFT JOIN dbo.Township tw WITH(NOLOCK)
-                ON tw.TownshipName = do.Receiver_Town
-            LEFT JOIN dbo.Province prv WITH(NOLOCK)
-                ON prv.IdProvince = twn.IdProvince
-            LEFT JOIN dbo.Province pr WITH(NOLOCK)
-                ON pr.IdProvince = tw.IdProvince
-            LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
-                ON vpc.CodeOfReference = do.Sender_ID
-            LEFT JOIN dbo.Customer cu WITH(NOLOCK)
-                ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-            LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
-                ON dc.DCBA_Id = do.DCBA_ID
-            LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
-                ON bk.Id_bank = dc.DCBA_Bank_Id
-        WHERE
-		pg.[Notificated] = 0
-              AND 
-			  btd.[AuthorizationNumber] IS NOT NULL
-			   AND pg.BatchCODId IS NOT NULL
-              AND do.Sender_Mail = @SenderEmail
-              AND btd.BankId = @IdBank
-			  GROUP BY btd.[GuideSerie],btd.GuideNumber, cu.IdCustomer,DO.Sender_Mail
-			)x ON  CONCAT(pg.GuideSerie, pg.GuideNumber)      = x.GuideNumber
-			WHERE x.Sender_Mail = @SenderEmail
-				AND pg.[Notificated] = 0
- 
-			  
-END
+	UPDATE dbo.DepositReportCODHeader
+	SET Notificated = 1,
+	TokenUpdated = 'SYS_SNDR',
+	DateUpdated = GETDATE()
+	WHERE 
+	Bank_Id = @IdBank
+	AND Notificated = 0
+	AND   (
+          @IdCustomer = 0 
+          OR Customer_Id = @IdCustomer
+      )
+    AND   (
+          @SenderEmail = '0'
+          OR Sender_Email = @SenderEmail
+      )
 	END TRY
 	BEGIN CATCH
 		SELECT 
