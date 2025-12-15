@@ -1,26 +1,17 @@
-﻿
--- =============================================
--- Author:		<Brandon, Pedroza>
--- Modified:	<28/08/2024>
--- Description:	<Se agrega validacion para tomar en cuenta idKindOfVPClient multipais>
--- =============================================
--- Author:		<Brandon, Pedroza>
--- Modified:	<29-08-2024>
--- Description:	<Se envian parametros de pais de origen y destino a la funcion ETA>
--- =============================================
--- =============================================
--- Author:		<Walter, Orozco>
--- Modified:	<30-09-2024>
--- Description:	<Se agrega la relación de una guía con un DeliveryLink.>
--- =============================================
--- Author:		<Oscar Rodriguez>
--- Create date: <2024-11-19>
--- Description:	<Se agrego registro de informacion de poblado de origen en nuevo campo SenderIdSettlement>
--- =============================================
--- Author:		<Josue Villagrán>
--- Create date: <2025-08-07>
--- Description:	<Se elimina llamada a funcion costosa (SplitUnlimited) que utiliza XML y se reemplaza por SplitOrdinal sin XML reducción 91% del costo>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SetServiceRequestFD]
+   Propósito: Crear guias desde los portales y clientes de integracion.
+   Autor:     Equipo Reclutamiento
+   Historia:  <>
+   Fecha:     <>
+   === CHANGELOG ============================
+2025-12-01 | Historia/épica: <FDAPI-4786> | Autor: Tito Garcia |
+2024-11-19 | Historia/épica: <Se elimina llamada a funcion costosa (SplitUnlimited) que utiliza XML y se reemplaza por SplitOrdinal sin XML reducción 91% del costo> | Autor: Josue Villagran |
+2024-11-19 | Historia/épica: <Se agrego registro de informacion de poblado de origen en nuevo campo SenderIdSettlement> | Autor: Oscar Rodriguez |
+2024-09-30 | Historia/épica: <Se agrega la relación de una guía con un DeliveryLink.> | Autor: Walter Orozco  |
+2024-08-29 | Historia/épica: <Se envian parametros de pais de origen y destino a la funcion ETA> | Autor: Brandon Pedroza  |
+2024-08-28 | Historia/épica: <Se agrega validacion para tomar en cuenta idKindOfVPClient multipais> | Autor: Brandon Pedroza  |
+=========================================== */
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -29,7 +20,8 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @SystemModule NVARCHAR(200) = NULL,
 @IdAccount BIGINT = NULL,
 @AddToServiceCart BIT = 0,
-@IdDeliveryLink INT = 0
+@IdDeliveryLink INT = 0,
+@StationId INT = 0
 AS
 BEGIN
 	DECLARE @IdTransaction BIGINT = NULL
@@ -51,6 +43,11 @@ BEGIN
   IF(@UserAddressId = 0)
   BEGIN
   SET @UserAddressId = NULL;
+  END
+  
+  IF(@StationId = 0)
+  BEGIN
+  SET @StationId = NULL;
   END
   
   DECLARE @system INT = NULL;
@@ -504,14 +501,16 @@ BEGIN
 			[StatusOrderId],
 			[UserCreated],
 			[DateCreated],
-			[DateCreatedInSystem])
+			[DateCreatedInSystem],
+			[StationId])
 		SELECT 
 			GT.Guide_Serie,
 			GT.Guide_Number,
 			GT.StatusOrderId,
 			'SYSTEM',
 			GETDATE(),
-			GETDATE()
+			GETDATE(),
+			@StationId
 		FROM #GuideTable GT
 
 		DECLARE @Route nvarchar(20) = (select  top 1 cov.RouteCode 
