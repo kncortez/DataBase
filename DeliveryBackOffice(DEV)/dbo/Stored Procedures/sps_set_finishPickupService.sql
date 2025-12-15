@@ -1,4 +1,3 @@
-
 /* =================================================
    SP:        [dbo].[sps_set_finishPickupService]
    Propósito: <Confirma servicio de recepción de guía en express center>
