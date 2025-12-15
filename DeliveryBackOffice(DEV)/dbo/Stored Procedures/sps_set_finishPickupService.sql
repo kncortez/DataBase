@@ -1,8 +1,14 @@
--- =============================================
--- Author:		<Tito García>
--- Create date: <2025-06-23>
--- Description:	<Confirma servicio de recepción de guía en express center>
--- =============================================
+
+/* =================================================
+   SP:        [dbo].[sps_set_finishPickupService]
+   Propósito: <Confirma servicio de recepción de guía en express center>
+   Autor:     <Tito Garcia>
+   Historia:  <>
+   Fecha:     2025-06-23
+============================================
+=== CHANGELOG ================================
+-- 2025-12-14 | Historia/épica: FDAPI-4783 | Autor: Tito Garcia |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finishPickupService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
@@ -12,6 +18,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishPickupService]
   , @TblDetail AS TblPaymentList READONLY
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
+  , @StationId INT
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -236,6 +243,7 @@ BEGIN
 					, DateCreated
 					, DateCreatedInSystem
 					, Observations
+					, StationId
 				)
 				SELECT lge.Guide_Serie
 					, lge.Guide_Number
@@ -244,6 +252,7 @@ BEGIN
 					, @DateCreated DateCreated
 					, @DateCreated DateCreatedInSystem
 					, @observations
+					, @StationId
 				FROM #listGuidesEnabled lge;
 				
 				-- ==========================================================================================
