@@ -18,11 +18,20 @@ BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 	UPDATE dbo.DepositReportCODHeader
-	SET Notificated = 1
-	WHERE Customer_Id = @IdCustomer
-	AND Bank_Id = @IdBank
-	AND Sender_Email = @SenderEmail
+	SET Notificated = 1,
+	TokenUpdated = 'SYS_SNDR',
+	DateUpdated = GETDATE()
+	WHERE 
+	Bank_Id = @IdBank
 	AND Notificated = 0
+	AND   (
+          @IdCustomer = 0 
+          OR Customer_Id = @IdCustomer
+      )
+    AND   (
+          @SenderEmail = '0'
+          OR Sender_Email = @SenderEmail
+      )
 	END TRY
 	BEGIN CATCH
 		SELECT 
