@@ -19,8 +19,8 @@ BEGIN
         GuideSerie,
         ZigiReference
     FROM PaymentZigi
-    WHERE GuideNumber = @GuideNumber
-        AND GuideSerie = @GuideSerie
+    WHERE GuideSerie = @GuideSerie
+        AND GuideNumber = @GuideNumber
         AND ZigiLinkStatus NOT IN ('PAID', 'CANCELLED')
         AND RowStatus != 0
 

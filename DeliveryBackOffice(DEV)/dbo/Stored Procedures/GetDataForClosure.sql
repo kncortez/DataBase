@@ -37,10 +37,10 @@ BEGIN
 	FROM VisitPointClient WITH (NOLOCK)
 	WHERE CodeOfReference = @VisitPointId
 
-	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @CountryId
-	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @CountryId
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Express Center' AND IdCountry = @CountryId
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Área COD' AND IdCountry = @CountryId
      -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
-    SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @CountryId
+    SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Zigi' AND IdCountry = @CountryId
     -- Fin Modificación
     SET @Estandar =
     (
@@ -282,8 +282,8 @@ BEGIN
            @TOTALCODCASH = COUNT(dpd.CODAmountProcess)
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-            ON DOR.Guide_Number = dpd.GuideNumber
-               AND DOR.Guide_Serie = dpd.GuideSerie
+            ON DOR.Guide_Serie = dpd.GuideSerie
+                AND DOR.Guide_Number = dpd.GuideNumber
     WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND AccountId = @IdAccount
           AND dpd.TypeofInOutMoneyId = 1
@@ -303,8 +303,8 @@ BEGIN
            @TOTALCODZIGI = COUNT(dpd.CODAmountProcess)
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-            ON DOR.Guide_Number = dpd.GuideNumber
-               AND DOR.Guide_Serie = dpd.GuideSerie
+            ON DOR.Guide_Serie = dpd.GuideSerie
+                AND DOR.Guide_Number = dpd.GuideNumber
     WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND AccountId = @IdAccount
           AND dpd.TypeofInOutMoneyId = 10
@@ -354,13 +354,6 @@ BEGIN
                        -- CUENTA DE EXPRESS CENTER
                        WHEN DOPD.TypeofInOutMoneyId = 1
                             AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion ) THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -405,13 +398,6 @@ BEGIN
                        -- CUENTA DE EXPRESS CENTER
                        WHEN DOPD.TypeofInOutMoneyId = 10
                             AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion ) THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -531,7 +517,7 @@ BEGIN
                     ON DOPD.GuideSerie = DOR.Guide_Serie
                        AND DOPD.GuideNumber = DOR.Guide_Number
 				LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
-					ON C.GuideNumber = DOR.Guide_Number AND C.GuideSerie = DOR.Guide_Serie
+					ON C.GuideSerie = DOR.Guide_Serie AND C.GuideNumber = DOR.Guide_Number
 				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
@@ -710,9 +696,9 @@ BEGIN
                 LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
                     ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 				INNER JOIN DeliveryOrder DOR WITH (NOLOCK)
-					ON DOR.Guide_Number = DOPD.GuideNumber AND DOR.Guide_Serie = DOPD.GuideSerie
+					ON DOR.Guide_Serie = DOPD.GuideSerie AND DOR.Guide_Number = DOPD.GuideNumber
 				LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
-					ON C.GuideNumber = DOR.Guide_Number AND C.GuideSerie = DOR.Guide_Serie
+					ON C.GuideSerie = DOR.Guide_Serie AND C.GuideNumber = DOR.Guide_Number
 				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)

@@ -27,16 +27,16 @@ BEGIN
       AND LinkRequestSent = 1 
       AND PaymentConfirmSent = 0 
       AND ZigiLinkStatus = 'CREATED'
-      AND GuideNumber = @GuideNumber 
-      AND GuideSerie = @GuideSerie;
+      AND GuideSerie = @GuideSerie
+      AND GuideNumber = @GuideNumber;
 
     UPDATE DeliveryBackOffice.dbo.PaymentZigi
     SET PhoneNumber = @PhoneNumber
     WHERE RowStatus = 1
       AND PaymentConfirmSent = 0
       AND ZigiLinkStatus = 'CREATED'
-      AND GuideNumber = @GuideNumber
       AND GuideSerie = @GuideSerie;
+      AND GuideNumber = @GuideNumber
 
 END;
 go

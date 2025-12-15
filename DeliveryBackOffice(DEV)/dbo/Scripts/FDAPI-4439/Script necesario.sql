@@ -135,6 +135,10 @@ INSERT INTO DeliveryBackOffice.dbo.ClosureAccount
     (AccountNumber, Name, Description, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated, IdCountry) VALUES
     (N'749', N'Cuenta Zigi', N'Cuenta Zigi', 1, N'SYS-BMORATAYA', N'2025-10-19 18:46:26.000', null, null, N'GT');
 
+
+UPDATE DeliveryBackOffice.dbo.ClosureAccount SET IdCountry = N'GT' WHERE IdClosureAccount = 1;
+UPDATE DeliveryBackOffice.dbo.ClosureAccount SET IdCountry = N'GT' WHERE IdClosureAccount = 2;
+
 ------------------ SUGERENCIA IMPORTANTE ----------------------
 -- Revisar la estructura de la tabla DefaultValuesPerCountry --
 -- parece no estar actualizada en el entorno de desarrollo   --

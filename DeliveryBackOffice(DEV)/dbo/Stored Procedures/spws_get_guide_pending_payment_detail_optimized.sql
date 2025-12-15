@@ -151,8 +151,8 @@ BEGIN
         FROM DeliveryBackOffice.dbo.CatCurrencyCOD ccc WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.DeliveryCurrency de WITH (NOLOCK)
             ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
-        WHERE de.Currency_IdCountry = ISNULL(ord.SenderCountryId,'GT')
+        WHERE de.Currency_IdCountry = ord.SenderCountryId
           AND de.DefaultPerCountry = 1
     ) ccc
-    WHERE ISNULL(ord.SenderCountryId,'GT') = @IdCountry;
+    WHERE ord.SenderCountryId = @IdCountry;
 END

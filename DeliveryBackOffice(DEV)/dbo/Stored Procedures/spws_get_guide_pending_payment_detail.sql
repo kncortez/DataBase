@@ -62,10 +62,6 @@ BEGIN
     IF OBJECT_ID('tempdb.dbo.#PendingPaymentTempId', 'U') IS NOT NULL
         DROP TABLE #PendingPaymentTempId;
 
-    --DECLARE @InGuidesP VARCHAR(MAX) = 'FD509086,FD509087,FD509088';
-    --DECLARE @IdModuleP INT = 35;
-    --DECLARE @ServiceType VARCHAR(100) = 'PICKUP';
-    --DECLARE @TokenP VARCHAR(100) = '3E9C2157FD6D5863CFBA2366C0838F8B';
     DECLARE @InTimeP INT;
     DECLARE @IsReturnP BIT;
 
@@ -133,7 +129,7 @@ BEGIN
         FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
         WHERE lg.Guide_Serie = do.Guide_Serie
               AND lg.Guide_Number = do.Guide_Number
-          AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
+          AND do.SenderCountryId = @IdCountry
     );
 
     CREATE NONCLUSTERED INDEX IX_LGNE_NGUIDES ON #listGuidesNotExist (Guide_Serie, Guide_Number);
@@ -302,8 +298,8 @@ BEGIN
     INTO #RevalueGuides
     FROM #listGuidesIncluded lst
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-            ON ord.Guide_Number = lst.Guide_Number
-               AND ord.Guide_Serie = lst.Guide_Serie
+            ON ord.Guide_Serie = lst.Guide_Serie
+            AND ord.Guide_Number = lst.Guide_Number 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 			ON lst.Guide_Serie = PC.GuideSerieDestination
 				AND lst.Guide_Number = PC.GuideNumberDestination
@@ -311,7 +307,7 @@ BEGIN
 		AND PC.IdPromoCoupon IS NULL
 		AND PC.FinalActiveDate >= GETDATE()
 		AND PC.RowStatus = 1
-        AND ISNULL(ord.SenderCountryId,'GT') = @IdCountry ;
+        AND ord.SenderCountryId = @IdCountry ;
 
     CREATE NONCLUSTERED INDEX tempFila ON #RevalueGuides (fila);
 
@@ -344,24 +340,13 @@ BEGIN
         FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
 		INNER JOIN Subscription sb WITH (NOLOCK)
 		ON sbl.SubscriptionId = sb.IdSubscription
-		WHERE sbl.LogGuideNumber = @RevalueGuide AND sbl.LogGuideSerie = @RevalueSerie )
+		WHERE sbl.LogGuideSerie = @RevalueSerie AND sbl.LogGuideNumber = @RevalueGuide)
 
 		IF(@TypeSubsId IS NULL)
 			BEGIN
 			SET @TypeSubsId = 0
 			END
 		-----Fin--------------------------------
-        --EXECUTE @RC = DeliveryBackOffice.dbo.spws_revalue_guide @GuideSerie = @RevalueSerie,
-        --                                                        @GuideNumber = @RevalueGuide,
-        --                                                        @CodeApp = '',
-        --                                                        @Format = 'Non',
-        --                                                        @CalculateTaxes = 'true',
-        --                                                        @IdModule = @IdModuleP,
-        --                                                        @SetUpdate = 'true',
-        --                                                        @Token = @TokenP,
-        --                                                        @IsReturn = 'false',
-								--								@TypeSubscriptionId =@TypeSubsId;
-
         SET @count = @count + 1;
     END;
     -----------------------------------------------------------------------------------------------------

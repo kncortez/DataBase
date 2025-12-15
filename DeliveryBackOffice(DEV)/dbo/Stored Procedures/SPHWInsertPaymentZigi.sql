@@ -27,11 +27,7 @@ CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @Token              NVARCHAR(50),
     @PhoneNumber        NVARCHAR(20) = NULL,
     @IsGroup            BIT = 0,
-<<<<<<< HEAD
     @GeneratedMethod    NVARCHAR(100) = 'Identificación pendiente'
-=======
-    @GeneratedMethod    NVARCHAR(100) = 'Whatsapp/CourierApp'
->>>>>>> feature/FDAPI-4438-zigi-fase-2---exc
 AS
 BEGIN
     BEGIN TRY
@@ -120,8 +116,8 @@ BEGIN
             LEFT JOIN DeliveryOrder DO WITH(NOLOCK)
                 ON PZ.GuideSerie = DO.Guide_Serie AND PZ.GuideNumber = DO.Guide_Number
 			LEFT JOIN Cost CS WITH(NOLOCK)
-				ON CS.GuideNumber = DO.Guide_Number
-			AND CS.GuideSerie = DO.Guide_Serie
+				ON CS.GuideSerie = DO.Guide_Serie
+			AND CS.GuideNumber = DO.Guide_Number
 			LEFT JOIN CatCurrencyCOD CC WITH(NOLOCK)
 				ON ISNULL(CS.CodCurrency,1) = CC.IdCatCurrencyCOD
         WHERE PZ.ZigiPaymentId = @NewZigiPaymentId;
