@@ -12,6 +12,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishReturnService]
   , @TblDetail AS TblPaymentList READONLY
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
+  , @StationId
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -243,6 +244,7 @@ BEGIN
 					, DateCreated
 					, DateCreatedInSystem
 					, Observations
+					, StationId
 				)
 				SELECT lge.Guide_Serie
 					, lge.Guide_Number
@@ -251,6 +253,7 @@ BEGIN
 					, @DateCreated DateCreated
 					, @DateCreated DateCreatedInSystem
 					, @observations
+					, @StationId
 				FROM #listGuidesEnabled lge;
 
 				UPDATE acodh
