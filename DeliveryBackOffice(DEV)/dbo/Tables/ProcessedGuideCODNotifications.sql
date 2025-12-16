@@ -21,10 +21,7 @@
 	[Collect_OnDelivery]          DECIMAL(9,2)				NULL,			
 	[TypeService]                 NVARCHAR(3)				NULL,			
 	[IsCollect]                   BIT						NULL,			
-	[PriceShippment]              DECIMAL(9,2)				NULL,			
-	[SalePipeLineId]              INT						NULL,			
-	[IdKindOfVPClient]            INT						NULL,			
-	[SaleChannelId]               INT						NULL,			
+	[PriceShippment]              DECIMAL(9,2)				NULL,
 	[Commission]                  DECIMAL(9,2)				NULL,			
 	[CODCommissionPercentage]     DECIMAL(9,2)				NULL,			
 	[Amount]                      DECIMAL(9,2)				NULL,			
@@ -36,6 +33,16 @@
 	[DateUpdated]				  DATETIME					NULL,
 	CONSTRAINT [FK_PGuideCODNot_DepositHeader] FOREIGN KEY ([IdDepositReportCODHeader]) REFERENCES [dbo].[DepositReportCODHeader] ([IdDepositReportCODHeader])
 )
+
+GO
+CREATE NONCLUSTERED INDEX IX_PGCN_Header_Guide
+ON dbo.ProcessedGuideCODNotifications (IdDepositReportCODHeader, GuideSerie, GuideNumber)
+INCLUDE (
+	Pieces_Dry, Pieces_Cold, TotalWeight, Department_Name, Township_Name,
+	ArrivalDate, DeliveryDate, Receiver_FirstName, Receiver_LastName,
+	Collect_OnDelivery, TypeService, IsCollect, ConditionOfPaymentID,
+	PriceShippment, Commission, CODCommissionPercentage, Amount
+);
 
 GO
 EXECUTE sys.sp_addextendedproperty 
@@ -219,30 +226,6 @@ EXECUTE sys.sp_addextendedproperty
 	@level0type = N'SCHEMA', @level0name = N'dbo',
 	@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 	@level2type = N'COLUMN', @level2name = N'PriceShippment';
-
-GO
-EXECUTE sys.sp_addextendedproperty 
-	@name = N'MS_Description',
-	@value = N'Pipeline de la guía según configuración (DeliveryOrder.SalePipeLineId).',
-	@level0type = N'SCHEMA', @level0name = N'dbo',
-	@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
-	@level2type = N'COLUMN', @level2name = N'SalePipeLineId';
-
-GO
-EXECUTE sys.sp_addextendedproperty 
-	@name = N'MS_Description',
-	@value = N'Tipo de punto de venta asociado al cliente (VisitPointClient.IdKindOfVPClient).',
-	@level0type = N'SCHEMA', @level0name = N'dbo',
-	@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
-	@level2type = N'COLUMN', @level2name = N'IdKindOfVPClient';
-
-GO
-EXECUTE sys.sp_addextendedproperty 
-	@name = N'MS_Description',
-	@value = N'Canal de venta asociado al punto de venta del cliente (VisitPointClient.SaleChannelId).',
-	@level0type = N'SCHEMA', @level0name = N'dbo',
-	@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
-	@level2type = N'COLUMN', @level2name = N'SaleChannelId';
 
 GO
 EXECUTE sys.sp_addextendedproperty 
