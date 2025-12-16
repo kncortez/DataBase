@@ -159,16 +159,14 @@ BEGIN
         do.Receiver_LastName,
         do.ReceiverIdTownship,
         do.Receiver_Town,
-        do.ReceiverCountryId,
         do.Collect_OnDelivery,
         do.TypeService,
         do.IsCollect,
         cu.ConditionOfPaymentID,
         do.PriceShippment,
-        do.Sender_FirstName,
         do.Sender_Mail,
         cu.IdCustomer,
-        cu.[Name]          AS ClienteNombre,
+        COALESCE(cu.[Name], do.Sender_FirstName) AS ClienteNombre,
         cu.CODContactEmail,
         cu.RegexEmail,
         twn.TownshipName   AS TownshipNameTwn,
@@ -224,7 +222,7 @@ BEGIN
         ON dc.DCBA_Id = do.DCBA_ID
     LEFT JOIN dbo.DeliveryBank           AS bk  WITH (NOLOCK)
         ON bk.Id_bank = dc.DCBA_Bank_Id
-    WHERE btd.BatchCODId = @BatchCODId
+    WHERE btd.BatchCODId = @BatchCODId and btd.Excluded = 0
 ),
 Pieces AS
 (
@@ -260,7 +258,7 @@ Final AS
             b.CODContactEmail,
             REPLACE(REPLACE(b.RegexEmail, '^', ''), '$', '')
         )                                                   AS CorreoCliente,
-        b.Sender_Mail                         AS CorreoSender,
+        b.Sender_Mail                                       AS CorreoSender,
 		b.HRegexEmail,
         b.BankName                                          AS Banco,
 		b.BankId,
