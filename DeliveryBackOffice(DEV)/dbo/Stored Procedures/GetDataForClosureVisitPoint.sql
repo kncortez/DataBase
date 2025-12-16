@@ -29,16 +29,16 @@ BEGIN
 
 	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
 	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+	WHERE Description = 'Cuenta Express Center' AND IdCountry = @IdCountry
 	
 	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
 	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+	WHERE Description = 'Cuenta Área COD' AND IdCountry = @IdCountry
 
 	-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
 	SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
 	FROM dbo.ClosureAccount
-	WHERE Description = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
+	WHERE Description = 'Cuenta Zigi' AND IdCountry = @IdCountry
 	
 
 	SELECT	UsrIdUser 'UserId', UsrNickName 'UserNickName', DateCreated, IdAccountingClosuresHeader 'IdCierre',

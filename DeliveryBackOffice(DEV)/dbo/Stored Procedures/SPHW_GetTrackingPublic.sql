@@ -86,45 +86,6 @@ BEGIN
         WHERE DO.Guide_Serie = @GuideSerie
               AND DO.Guide_Number = @GuideNumber;
 
-
-        ----CALCULO DEL HUB---------
-        --SET @Hub =
-        --(
-        --	SELECT TOP 1 TB.Hub
-        --	FROM(
-        --		SELECT dat.DateCreated,
-        --			COALESCE(
-        --			(
-        --				SELECT TOP 1
-        --					ISNULL(HSB.HubName, VP.DescriptionOfClient) StationName
-        --				FROM dbo.RolByUserBySystem rua WITH (NOLOCK)
-        --					INNER JOIN dbo.CatStation ct WITH (NOLOCK)
-        --						ON ct.IdStation = rua.StationId
-        --					LEFT JOIN dbo.HubLogistics HSB WITH (NOLOCK)
-        --						ON HSB.IdHubLogistic = ct.HubLogisticId
-        --					LEFT JOIN dbo.VisitPointClient VP WITH (NOLOCK)
-        --						ON VP.CodeOfReference = ct.CodeOfReference
-        --				WHERE rua.RusIdUser = rg.UsrIdUser
-        --			), hb.HubName) AS Hub
-        --		FROM dbo.DeliveryOrderDetail dat WITH (NOLOCK)
-        --			LEFT JOIN dbo.TokenLog tk WITH (NOLOCK)
-        --				ON tk.TknIdToken = dat.UserCreated
-        --			LEFT JOIN dbo.RegisterUser rg WITH (NOLOCK)
-        --				ON rg.UsrIdUser = tk.TknIdUser
-        --			LEFT JOIN dbo.LogTokenPOD tpd WITH (NOLOCK)
-        --				ON tpd.LogTokenPOD = dat.UserCreated
-        --			LEFT JOIN dbo.SenderReceiver sr WITH (NOLOCK)
-        --				ON sr.ID = tpd.IdCourierman
-        --			LEFT JOIN dbo.HubLogistics hb WITH (NOLOCK)
-        --				ON hb.IdHubLogistic = sr.HubLogisticId
-        --		WHERE DAT.Guide_Number = @GuideNumber
-        --		  AND DAT.Guide_Serie = @GuideSerie
-        --		--ORDER BY daT.DateCreated DESC
-        --	) AS TB
-        --	WHERE TB.Hub IS NOT NULL
-        --	ORDER BY TB.DateCreated DESC
-        --)
-
         IF (@Hub IS NULL)
         BEGIN
             SET @Hub =
@@ -154,8 +115,8 @@ BEGIN
                         LEFT JOIN dbo.InternalUser                    it WITH (NOLOCK)
                             ON it.IdUser = tkd.SSN_IdUser
                                AND it.Username = tkd.SSN_Username
-                    WHERE dat.Guide_Number = @GuideNumber
-                          AND dat.Guide_Serie = @GuideSerie
+                    WHERE dat.Guide_Serie = @GuideSerie
+                            AND dat.Guide_Number = @GuideNumber
                 ) AS TB2
                 WHERE TB2.Hub IS NOT NULL
                 ORDER BY TB2.DateCreated DESC
@@ -273,8 +234,8 @@ BEGIN
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -287,8 +248,8 @@ BEGIN
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -301,8 +262,8 @@ BEGIN
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -315,8 +276,8 @@ BEGIN
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -329,8 +290,8 @@ BEGIN
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -463,7 +424,7 @@ BEGIN
         
             LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH (NOLOCK)
                 ON CP.[Name] = 'AreaCode'
-               AND ISNULL(DO.ReceiverCountryId, 'GT') = CP.IdCountry
+               AND DO.ReceiverCountryId = CP.IdCountry
         
             LEFT JOIN @EncabezadoRastreo ER
                 ON SO.CatStatusProcessId = ER.Id
@@ -608,26 +569,6 @@ BEGIN
                           AND DO.Guide_Number = @GuideNumber
                 );
 
-        -- BORRAR COMENTARIOS PARA HABILITARLA
-        -- "Recibir Alertas" SE DEJA DESHABILITADA "FDAPI-4778: Deshabilitación temporal de notificaciones de rastreo"
-        --
-        -- DECLARE @f4 NVARCHAR(10) = (
-        --         SELECT CASE 
-        --                 WHEN (
-        --                         SELECT CatCheckpointTypeId
-        --                         FROM DeliveryBackOffice.dbo.StatusOrder WITH (NOLOCK)
-        --                         WHERE StatusOrderId = DO.StatusOrderId
-        --                         ) = @CheckpointType --NO ESTAR EN ESTADO FINAL
-        --                     OR SO.CatStatusProcessId = @StatusProcessFinal --LA GUÍA SE ENCUENTRA EN UN ESTADO ENTREGADO
-        --                     THEN 'false'
-        --                 ELSE 'true'
-        --                 END AS 'flagNotifications'
-        --         FROM #DO DO WITH (NOLOCK)
-        --         INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK) ON DO.StatusOrderId = SO.StatusOrderId
-        --         WHERE DO.Guide_Serie = @GuideSerie
-        --             AND DO.Guide_Number = @GuideNumber
-        --         );
-        --
         DECLARE @f4 NVARCHAR(10) = 'false';
         -- "Recibir Alertas" SE DEJA DESHABILITADA "FDAPI-4778: Deshabilitación temporal de notificaciones de rastreo"
         DECLARE @f5 NVARCHAR(10) =
@@ -712,7 +653,7 @@ BEGIN
                                    INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt     da WITH (NOLOCK)
                                        ON da.Guide_Serie = dp.Guide_Serie
                                           AND da.Guide_Number = dp.Guide_Number
-                                   INNER JOIN #DOD dod WITH (NOLOCK)
+                                   INNER JOIN #DOD dod
                                        ON dp.Guide_Serie = dod.Guide_Serie
                                           AND dp.Guide_Number = dod.Guide_Number
                                WHERE dp.Guide_Serie = @GuideSerie

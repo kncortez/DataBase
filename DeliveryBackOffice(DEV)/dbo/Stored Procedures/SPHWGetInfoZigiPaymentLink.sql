@@ -55,15 +55,15 @@ BEGIN
 			ZI.GeneratedMethod AS GeneratedMethod
 	FROM PaymentZigi ZI WITH(NOLOCK)
 	INNER JOIN DeliveryOrder DO WITH(NOLOCK)
-	ON ZI.GuideNumber = DO.Guide_Number
-	AND ZI.GuideSerie = DO.Guide_Serie
+	ON ZI.GuideSerie = DO.Guide_Serie
+	AND ZI.GuideNumber = DO.Guide_Number
 	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 		ON DO.ReceiverCountryId = DC.Currency_IdCountry
 	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
 		ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
 	WHERE (
-            (ZI.GuideNumber = @GuideNumber
-                AND ZI.GuideSerie = @GuideSerie)
+            (ZI.GuideSerie = @GuideSerie
+			AND ZI.GuideNumber = @GuideNumber)
             -- Para Multiguías agrupadas en un solo link Zigi: VERIFICAR SI @GuideSerie es = MFD, se evalua ZI.ZigiPaymentId con @GuideNumber
                OR (@GuideSerie = 'MFD' AND ZI.ZigiPaymentId = @GuideNumber)
         )
@@ -84,16 +84,16 @@ BEGIN
       AND LinkRequestSent = 1 
       AND PaymentConfirmSent = 0 
       AND ZigiLinkStatus = 'CREATED'
-      AND GuideNumber = @GuideNumber 
-      AND GuideSerie = @GuideSerie;
+      AND GuideSerie = @GuideSerie
+	  AND GuideNumber = @GuideNumber;
 
     UPDATE DeliveryBackOffice.dbo.PaymentZigi
     SET PhoneNumber = @PhoneNumber
     WHERE RowStatus = 1 
       AND PaymentConfirmSent = 0 
-      AND ZigiLinkStatus = 'CREATED'
-      AND GuideNumber = @GuideNumber 
-      AND GuideSerie = @GuideSerie;
+      AND ZigiLinkStatus = 'CREATED' 
+      AND GuideSerie = @GuideSerie
+	  AND GuideNumber = @GuideNumber;
 
     -- =============================================
     -- 3. Seleccionar la información del link para guías con estado CREATED
@@ -116,8 +116,8 @@ BEGIN
 				ZI.GeneratedMethod AS GeneratedMethod
 		FROM PaymentZigi ZI WITH(NOLOCK)
 		INNER JOIN DeliveryOrder DO WITH(NOLOCK)
-		ON ZI.GuideNumber = DO.Guide_Number
-		AND ZI.GuideSerie = DO.Guide_Serie
+		ON ZI.GuideSerie = DO.Guide_Serie
+		AND ZI.GuideNumber = DO.Guide_Number
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
 			ON DO.ReceiverCountryId = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)

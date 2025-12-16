@@ -13,13 +13,13 @@
 -- Create date: <26-07-2024>
 -- Description:	<Se optimiza la consulta ya que se tardaba 1:30seg>
 -- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <26-07-2024>
--- Description:	<Aceptación de Voucher en pagos con Zigi>
--- =============================================
 -- Author:		<Walter Orozco>
 -- Create date: <10/10/2025>
 -- Description:	<Se agregan envios internacionales.>
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <26-10-2025>
+-- Description:	<Aceptación de Voucher en pagos con Zigi>
 -- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
     @StartDate DATETIME = NULL,

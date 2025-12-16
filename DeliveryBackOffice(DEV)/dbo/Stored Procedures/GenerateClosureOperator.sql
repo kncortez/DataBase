@@ -189,12 +189,12 @@ BEGIN
     SELECT @TotalAmountCODCash = ISNULL(SUM(dpd.CODAmountProcess), 0),
            @TotalCOD = COUNT(dpd.CODAmountProcess)
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
-        JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Number = dpd.GuideNumber
                AND DOR.Guide_Serie = dpd.GuideSerie
                AND dpd.CODAmountProcess > 0
-               AND DOR.StatusOrderId != 7
     WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+            AND DOR.StatusOrderId != 7
           AND AccountId = @UserId
           AND NOT EXISTS
     (

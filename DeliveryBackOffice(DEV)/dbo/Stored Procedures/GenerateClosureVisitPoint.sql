@@ -59,10 +59,10 @@ BEGIN
 					   AND rua.RuaRowStatus = 1
 				INNER JOIN [dbo].Account ac
 					ON ac.AccIdAccount = rua.RuaIdAccount
-					   AND ac.AccRowStatus = 1
 				INNER JOIN VisitPointByUser vp
 					ON vp.RegisterUserID = usr.UsrIdUser
 			WHERE ac.AccIdAccount = @UserId
+					AND ac.AccRowStatus = 1
 		);
 
 	SELECT	@TotalAmountCash =ISNULL(SUM(TotalAmountCash), 0),

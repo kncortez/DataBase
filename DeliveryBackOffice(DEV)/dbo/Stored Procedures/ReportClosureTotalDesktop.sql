@@ -26,15 +26,15 @@ BEGIN
 
     SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')' 
     FROM ClosureAccount WITH (NOLOCK)
-    WHERE Name = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+    WHERE Name = 'Cuenta Express Center' AND IdCountry = @IdCountry
 
     SELECT @AccountCOD = Name +' '+ '(' +AccountNumber +')' 
     FROM ClosureAccount WITH (NOLOCK)
-    WHERE Name = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+    WHERE Name = 'Cuenta Área COD' AND IdCountry = @IdCountry
 
     SELECT @AccountZigi = Name +' '+ '(' +AccountNumber +')' 
     FROM ClosureAccount WITH (NOLOCK)
-    WHERE Name = 'Cuenta Zigi' AND ISNULL(IdCountry,'GT') = @IdCountry
+    WHERE Name = 'Cuenta Zigi' AND IdCountry = @IdCountry
 
     DECLARE @tblVisitPointId TABLE(
         CodeOfReference int
