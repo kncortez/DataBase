@@ -1,13 +1,18 @@
-﻿-- =============================================
--- Author:		<Michael, Espinoza>
--- Create date: <2021-08-02>
--- Description:	<Devuelve el listado de GUIAS asiganadas a una cuenta usuario Individual>
--- =============================================
--- =============================================
--- Author:		<Walter, Orozco>
--- Create date: <2024-07-02>
--- Description:	<Mostrar correctamente la moneda en función del país.>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[spws_get_GuidesByCustomer]
+   Propósito: Devuelve el listado de GUIAS asiganadas a una cuenta usuario Individual.
+   Autor:     Michael Espinoza
+   Historia:  ---
+   Fecha:     2021-08-02
+
+=== CHANGELOG ============================
+
+2025-10-29 | Historia/épica: FDAPI-4454 | Autor: Brandon Pedroza |
+
+2024-07-02 | Historia/épica: ---        | Autor: Walter Orozco  |
+
+=========================================== */
+
 CREATE PROCEDURE [dbo].[spws_get_GuidesByCustomer]
     -- Add the parameters for the stored procedure here
     --@StartDate DATETIME,
@@ -122,7 +127,7 @@ SET @jsonResult =
                                                    CONVERT(   VARCHAR,
                                                    (
                                                        SELECT TimePlaName
-                                                       FROM DeliveryBackOffice.dbo.CatPaymentTime TMD
+                                                       FROM DeliveryBackOffice.dbo.CatPaymentTime TMD WITH(NOLOCK)
                                                        WHERE paydord.TimePlaId = TMD.TimePlaId
                                                    )
                                                           ),
@@ -150,7 +155,7 @@ SET @jsonResult =
                                                                                   WHEN
                                                                                   (
                                                                                       SELECT COUNT(*)
-                                                                                      FROM Cost C
+                                                                                      FROM Cost C WITH(NOLOCK)
                                                                                           INNER JOIN CostDetail CD WITH(NOLOCK)
                                                                                              ON C.IdCost = CD.IdCost
                                                                                       WHERE C.RowStatus = 1
@@ -160,7 +165,7 @@ SET @jsonResult =
                                                                                       'TARJETA'
                                                                                   WHEN
                                                                                   (
-                                                                                      SELECT 1 FROM InternalUser WHERE RegisterUserID = @IdUser
+                                                                                      SELECT 1 FROM InternalUser WITH(NOLOCK) WHERE RegisterUserID = @IdUser
                                                                                   ) = 1 THEN
                                                                                       'EFECTIVO'
                                                                                   ELSE
@@ -189,7 +194,7 @@ SET @jsonResult =
 										ON (ord.ReceiverCountryId = dc.Currency_IdCountry OR (ord.ReceiverCountryId IS NULL AND dc.Currency_IdCountry = 'GT'))
 										AND dc.DefaultPerCountry = 1
                                     LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-                                        ON (ord.Guide_Number = paydord.GuideNumber)
+                                        ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
                                     LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
                                         ON (catpay.PayTypeId = paydord.PayTypeId)
                                     LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -234,7 +239,7 @@ SET @jsonResult =
                                           --AND 
 										  ord.IdCustomer =
                                           (
-                                              SELECT TOP 1 IdCustomer FROM Account WHERE AccIdAccount = @IdAccount
+                                              SELECT TOP 1 IdCustomer FROM Account WITH(NOLOCK) WHERE AccIdAccount = @IdAccount
                                           )
                                       ))
                                 ORDER BY ord.Guide_Number DESC
