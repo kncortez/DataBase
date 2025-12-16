@@ -20,6 +20,7 @@ BEGIN TRY
 			IdDepositReportCODHeader  BIGINT IDENTITY(1,1)	NOT NULL PRIMARY KEY,
 			Batch_COD_Id              INT					NOT NULL,   -- BatchCOD.IdBatchCOD
 			Customer_Id               INT					NOT NULL,   -- Customer.IdCustomer
+			Customer_Type			  INT					NOT NULL,	-- Customer.IdCustomerType
 			Customer_Name             NVARCHAR(200)			NOT NULL,	-- Customer.Name o DeliveryOrder.Sender_FirstName
 			Customer_Email            NVARCHAR(200)			NOT NULL,	-- Customer.CODContactEmail o Customer.RegexEmail (RegexEmail)
 			Sender_Email              NVARCHAR(400)			NOT NULL,	-- DeliveryOrder.Sender_Mail (SenderEmail)
@@ -31,6 +32,9 @@ BEGIN TRY
 			AuthorizationNumber       NVARCHAR(100)			NOT NULL,	-- BatchDetailCOD.AuthorizationNumber
 			AuthorizationDate         DATETIME				NOT NULL,	-- BatchDetailCOD.AuthorizationDate
 			Notificated               TINYINT				NOT NULL,	-- ProcessedGuideCOD.Notificated
+			SalePipeLineId            INT					NULL,		-- DeliveryOrder.SalePipeLineId
+			IdKindOfVPClient          INT					NULL,		-- VisitPointClient.IdKindOfVPClient
+			SaleChannelId             INT					NULL,		-- VisitPointClient.SaleChannelId
 			RowStatus                 BIT					NOT NULL,
 			TokenCreated              NVARCHAR(100)			NOT NULL,
 			DateCreated               DATETIME				NOT NULL,
@@ -74,6 +78,14 @@ BEGIN TRY
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'Customer_Id';
+
+		-- Customer_Type
+		EXEC sys.sp_addextendedproperty 
+			@name = N'MS_Description',
+			@value = N'Identificador del tipo de cliente asociado al reporte (Customer.IdCustomerType).',
+			@level0type = N'SCHEMA', @level0name = N'dbo',
+			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
+			@level2type = N'COLUMN', @level2name = N'Customer_Type';
 
 		-- Customer_Name
 		EXEC sys.sp_addextendedproperty 
@@ -163,6 +175,30 @@ BEGIN TRY
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'Notificated';
 
+		-- SalePipeLineId
+		EXEC sys.sp_addextendedproperty 
+			@name = N'MS_Description',
+			@value = N'Pipeline de la guía según configuración (DeliveryOrder.SalePipeLineId).',
+			@level0type = N'SCHEMA', @level0name = N'dbo',
+			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
+			@level2type = N'COLUMN', @level2name = N'SalePipeLineId';
+
+		-- IdKindOfVPClient
+		EXEC sys.sp_addextendedproperty 
+			@name = N'MS_Description',
+			@value = N'Tipo de punto de venta asociado al cliente (VisitPointClient.IdKindOfVPClient).',
+			@level0type = N'SCHEMA', @level0name = N'dbo',
+			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
+			@level2type = N'COLUMN', @level2name = N'IdKindOfVPClient';
+
+		-- SaleChannelId
+		EXEC sys.sp_addextendedproperty 
+			@name = N'MS_Description',
+			@value = N'Canal de venta asociado al punto de venta del cliente (VisitPointClient.SaleChannelId).',
+			@level0type = N'SCHEMA', @level0name = N'dbo',
+			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
+			@level2type = N'COLUMN', @level2name = N'SaleChannelId';
+
 		-- RowStatus
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
@@ -203,6 +239,21 @@ BEGIN TRY
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'DateUpdated';
 
+		CREATE NONCLUSTERED INDEX IX_DRCH_Customer_AuthDate
+		ON dbo.DepositReportCODHeader (Customer_Id, AuthorizationDate)
+		INCLUDE (Bank_Id, Customer_Name, Customer_Email, BankName, AccountNumber, AuthorizationNumber, Currency_Symbol, Sender_Email);
+
+		CREATE NONCLUSTERED INDEX IX_DRCH_Customer_Bank_AuthDate
+		ON dbo.DepositReportCODHeader (Customer_Id, Bank_Id, AuthorizationDate)
+		INCLUDE (Customer_Name, Customer_Email, BankName, AccountNumber, AuthorizationNumber, Currency_Symbol, Sender_Email);
+
+		CREATE NONCLUSTERED INDEX IX_DRCH_SenderEmail_AuthDate
+		ON dbo.DepositReportCODHeader (Sender_Email, AuthorizationDate)
+		INCLUDE (Customer_Id, Customer_Name, Bank_Id, BankName, AccountNumber, AuthorizationNumber, Currency_Symbol);
+
+		CREATE NONCLUSTERED INDEX IX_DRCH_SenderEmail_Bank_AuthDate
+		ON dbo.DepositReportCODHeader (Sender_Email, Bank_Id, AuthorizationDate)
+		INCLUDE (Customer_Id, Customer_Name, BankName, AccountNumber, AuthorizationNumber, Currency_Symbol);
 
 	END;
 
@@ -236,9 +287,6 @@ BEGIN TRY
 			TypeService                 NVARCHAR(3)				NULL,			-- DeliveryOrder.TypeService
 			IsCollect                   BIT						NULL,			-- DeliveryOrder.IsCollect
 			PriceShippment              DECIMAL(9,2)			NULL,			-- DeliveryOrder.PriceShippment
-			SalePipeLineId              INT						NULL,			-- DeliveryOrder.SalePipeLineId
-			IdKindOfVPClient            INT						NULL,			-- VisitPointClient.IdKindOfVPClient
-			SaleChannelId               INT						NULL,			-- VisitPointClient.SaleChannelId
 			Commission                  DECIMAL(9,2)			NULL,			-- BatchDetailCOD.Commission
 			CODCommissionPercentage     DECIMAL(9,2)			NULL,			-- BatchDetailCOD.CODCommissionPercentage
 			Amount                      DECIMAL(9,2)			NULL,			-- BatchDetailCOD.Amount
@@ -435,30 +483,6 @@ BEGIN TRY
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'PriceShippment';
 
-		-- SalePipeLineId
-		EXEC sys.sp_addextendedproperty 
-			@name = N'MS_Description',
-			@value = N'Pipeline de la guía según configuración (DeliveryOrder.SalePipeLineId).',
-			@level0type = N'SCHEMA', @level0name = N'dbo',
-			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
-			@level2type = N'COLUMN', @level2name = N'SalePipeLineId';
-
-		-- IdKindOfVPClient
-		EXEC sys.sp_addextendedproperty 
-			@name = N'MS_Description',
-			@value = N'Tipo de punto de venta asociado al cliente (VisitPointClient.IdKindOfVPClient).',
-			@level0type = N'SCHEMA', @level0name = N'dbo',
-			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
-			@level2type = N'COLUMN', @level2name = N'IdKindOfVPClient';
-
-		-- SaleChannelId
-		EXEC sys.sp_addextendedproperty 
-			@name = N'MS_Description',
-			@value = N'Canal de venta asociado al punto de venta del cliente (VisitPointClient.SaleChannelId).',
-			@level0type = N'SCHEMA', @level0name = N'dbo',
-			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
-			@level2type = N'COLUMN', @level2name = N'SaleChannelId';
-
 		-- Commission
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
@@ -530,6 +554,15 @@ BEGIN TRY
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+		CREATE NONCLUSTERED INDEX IX_PGCN_Header_Guide
+		ON dbo.ProcessedGuideCODNotifications (IdDepositReportCODHeader, GuideSerie, GuideNumber)
+		INCLUDE (
+			Pieces_Dry, Pieces_Cold, TotalWeight, Department_Name, Township_Name,
+			ArrivalDate, DeliveryDate, Receiver_FirstName, Receiver_LastName,
+			Collect_OnDelivery, TypeService, IsCollect, ConditionOfPaymentID,
+			PriceShippment, Commission, CODCommissionPercentage, Amount
+		);
 
 	END;
 

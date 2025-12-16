@@ -1,20 +1,23 @@
 ﻿CREATE TABLE [dbo].[DepositReportCODHeader]
 (
 	[IdDepositReportCODHeader]  BIGINT IDENTITY(1,1)	NOT NULL PRIMARY KEY,
-	[Batch_COD_Id]              INT					NOT NULL,   
-	[Customer_Id]               INT					NOT NULL,   
+	[Batch_COD_Id]              INT						NOT NULL,   
+	[Customer_Id]               INT						NOT NULL,   
 	[Customer_Name]             NVARCHAR(200)			NOT NULL,	
 	[Customer_Email]            NVARCHAR(200)			NOT NULL,	
 	[Sender_Email]              NVARCHAR(400)			NOT NULL,	
-	[Bank_Id]                   INT					NOT NULL,	
+	[Bank_Id]                   INT						NOT NULL,	
 	[BankName]                  NVARCHAR(100)			NOT NULL,	
 	[AccountNumber]             NVARCHAR(100)			NOT NULL,	
-	[Currency_Symbol]           NVARCHAR(5)			NOT NULL,	
-	[Country_Id]                NVARCHAR(2)			NOT NULL,	
+	[Currency_Symbol]           NVARCHAR(5)				NOT NULL,	
+	[Country_Id]                NVARCHAR(2)				NOT NULL,	
 	[AuthorizationNumber]       NVARCHAR(100)			NOT NULL,	
 	[AuthorizationDate]         DATETIME				NOT NULL,	
-	[Notificated]               TINYINT				NOT NULL,	
-	[RowStatus]                 BIT					NOT NULL,
+	[Notificated]               TINYINT					NOT NULL,	
+	[SalePipeLineId]            INT						NULL,
+	[IdKindOfVPClient]          INT						NULL,
+	[SaleChannelId]             INT						NULL,
+	[RowStatus]                 BIT						NOT NULL,
 	[TokenCreated]              NVARCHAR(100)			NOT NULL,
 	[DateCreated]               DATETIME				NOT NULL,
 	[TokenUpdated]              NVARCHAR(100)			NULL,
@@ -23,6 +26,26 @@
 	CONSTRAINT [FK_DepositReportCODHeader_Customer]		FOREIGN KEY ([Customer_Id])  REFERENCES [dbo].[Customer] ([IdCustomer]),
 	CONSTRAINT [FK_DepositReportCODHeader_DeliveryBank]	FOREIGN KEY ([Bank_Id])      REFERENCES [dbo].[DeliveryBank] ([Id_bank])
 )
+
+GO
+CREATE NONCLUSTERED INDEX IX_DRCH_Customer_AuthDate
+ON dbo.DepositReportCODHeader (Customer_Id, AuthorizationDate)
+INCLUDE (Bank_Id, Customer_Name, Customer_Email, BankName, AccountNumber, AuthorizationNumber, Currency_Symbol, Sender_Email);
+
+GO
+CREATE NONCLUSTERED INDEX IX_DRCH_Customer_Bank_AuthDate
+ON dbo.DepositReportCODHeader (Customer_Id, Bank_Id, AuthorizationDate)
+INCLUDE (Customer_Name, Customer_Email, BankName, AccountNumber, AuthorizationNumber, Currency_Symbol, Sender_Email);
+
+GO
+CREATE NONCLUSTERED INDEX IX_DRCH_SenderEmail_AuthDate
+ON dbo.DepositReportCODHeader (Sender_Email, AuthorizationDate)
+INCLUDE (Customer_Id, Customer_Name, Bank_Id, BankName, AccountNumber, AuthorizationNumber, Currency_Symbol);
+
+GO
+CREATE NONCLUSTERED INDEX IX_DRCH_SenderEmail_Bank_AuthDate
+ON dbo.DepositReportCODHeader (Sender_Email, Bank_Id, AuthorizationDate)
+INCLUDE (Customer_Id, Customer_Name, BankName, AccountNumber, AuthorizationNumber, Currency_Symbol);
 
 GO
 EXECUTE sys.sp_addextendedproperty 
@@ -142,6 +165,30 @@ EXECUTE sys.sp_addextendedproperty
 	@level0type = N'SCHEMA', @level0name = N'dbo',
 	@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 	@level2type = N'COLUMN', @level2name = N'Notificated';
+
+GO
+EXECUTE sys.sp_addextendedproperty 
+	@name = N'MS_Description',
+	@value = N'Pipeline de la guía según configuración (DeliveryOrder.SalePipeLineId).',
+	@level0type = N'SCHEMA', @level0name = N'dbo',
+	@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
+	@level2type = N'COLUMN', @level2name = N'SalePipeLineId';
+
+GO
+EXECUTE sys.sp_addextendedproperty 
+	@name = N'MS_Description',
+	@value = N'Tipo de punto de venta asociado al cliente (VisitPointClient.IdKindOfVPClient).',
+	@level0type = N'SCHEMA', @level0name = N'dbo',
+	@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
+	@level2type = N'COLUMN', @level2name = N'IdKindOfVPClient';
+
+GO
+EXECUTE sys.sp_addextendedproperty 
+	@name = N'MS_Description',
+	@value = N'Canal de venta asociado al punto de venta del cliente (VisitPointClient.SaleChannelId).',
+	@level0type = N'SCHEMA', @level0name = N'dbo',
+	@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
+	@level2type = N'COLUMN', @level2name = N'SaleChannelId';
 
 GO
 EXECUTE sys.sp_addextendedproperty 
