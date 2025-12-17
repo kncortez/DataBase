@@ -37,6 +37,10 @@ CREATE TABLE [dbo].[BillingCustomerBySV]
 	CONSTRAINT FK_BillingCustomerBySV_Township
 		FOREIGN KEY (IdTownship) 
 		REFERENCES dbo.Township(IdTownship)
+	CONSTRAINT [FK_BillingCustomerBySV_CatTypeDocument]  
+	    FOREIGN KEY([Inv_type])
+        REFERENCES [CatTypeDocument] ([IdRegister])
+GO
 );
 
 GO
