@@ -6,6 +6,12 @@
 -- Create date: <2025-08-21>
 -- Description:	<Se agrega actualizacion de la bandera para solicitud de link zigi enviado por whatsapp.>
 -- =============================================
+-- =============================================
+-- System:		<API>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-12-17>
+-- Description:	<Se agrega en la respuesta el campo del linkde Zigi>
+-- =============================================
 CREATE PROCEDURE [dbo].[ValidatePaymentZigiTracking]
     @GuideNumber        INT,
     @GuideSerie         NVARCHAR(2),
@@ -22,6 +28,7 @@ BEGIN
 		DECLARE @GuidePaid INT = 0;
 		DECLARE @IdDeliveryOption INT = 0;
 		DECLARE @ReceiverPhone NVARCHAR(200);
+        DECLARE @ZigiLink NVARCHAR(500) = NULL;
 
         SET @IdDeliveryOption = (
             SELECT TOP 1 C.IdDeliveryOption
@@ -45,11 +52,18 @@ BEGIN
 		WHERE GuideSerie = @GuideSerie
 		  AND GuideNumber = @GuideNumber;
 
+        SELECT TOP (1)
+            @ZigiLink = PZ.ZigiLink
+        FROM DeliveryBackOffice.dbo.PaymentZigi PZ WITH (NOLOCK)
+        WHERE PZ.GuideSerie = @GuideSerie
+          AND PZ.GuideNumber = @GuideNumber
+        ORDER BY PZ.DateUpdated DESC;
+
 		SET @GuidePaid = CASE WHEN EXISTS 
 			(SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH(NOLOCK)
-				ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 
-			WHERE	DOR.Guide_Serie = @GuideSerie AND	DOR.Guide_Number = @GuideNumber AND CCTBC.ReasonCode = '00') THEN 1 ELSE 0 END;
+				ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) AND CCTBC.ReasonCode = '00'
+			WHERE	DOR.Guide_Serie = @GuideSerie AND	DOR.Guide_Number = @GuideNumber) THEN 1 ELSE 0 END;
 
 		IF((@ReceiverPhone = @NirPhoneStr + @PhoneStr) OR (@ReceiverPhone = @PhoneStr))
 		BEGIN
@@ -62,6 +76,7 @@ BEGIN
 						200																										AS	[IdResult]
 						, '¡Listo! Hemos generado tu link de pago'																AS	[Title]
 						, 'En breve recibirás un mensaje por WhatsApp con el enlace para realizar tu pago de forma segura.' 	AS	[Message]
+                        , @ZigiLink                                                                                              AS  [ZigiLink]
 						, CASE
 							WHEN DO.IdDeliveryOption = @IdDeliveryOption 
 							THEN 0
@@ -84,7 +99,7 @@ BEGIN
 					LEFT JOIN [DeliveryBackOffice].[dbo].[KindOfVPClient]	KVP WITH (NOLOCK)
 						ON kvp.IdKindOfVPClient = VP.IdKindOfVPClient
 					WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber					
-						
+					
 				END
 				ELSE
 				BEGIN
@@ -100,6 +115,7 @@ BEGIN
 						, 'Este envío ya fue pagado'										AS	[Title]
 						, 'La guía ' + @GuideSerie + CAST(@GuideNumber AS NVARCHAR(20)) + 
 						  ' ya fue pagada. Gracias por utilizar nuestros servicios.'		AS	[Message]
+                        , @ZigiLink                                                       AS  [ZigiLink]
 				END
 			END
 			ELSE
@@ -108,6 +124,7 @@ BEGIN
 					  203																									AS	[IdResult]
 					, '¡Listo! Hemos enviado tu link de pago'																AS	[Title]
 					, 'En breve recibirás un mensaje por WhatsApp con el enlace para realizar tu pago de forma segura.' 	AS	[Message]
+                    , @ZigiLink                                                                                          AS  [ZigiLink]
 			END
 		END
 		ELSE
@@ -116,24 +133,26 @@ BEGIN
 				  202										AS	[IdResult]
 				, 'Télefono no coincide'					AS	[Title]
 				, 'El número de télefono no coincide.'		AS	[Message]
+                , CAST(NULL AS NVARCHAR(500))              AS  [ZigiLink]
 		END;
 
     END TRY
     BEGIN CATCH
 
 		SELECT
-				  409																				AS	[IdResult]
-				, 'No se pudo generar el link de pago'												AS	[Title]
-				, 'Ocurrió un inconveniente al crear el link de pago para la guía '
-				  + @GuideSerie + CAST(@GuideNumber AS NVARCHAR(20)) 
-				  + '. Por favor, inténtalo más tarde o comunícate con nuestro equipo de atención.' AS	[Message]
+			  409																				AS	[IdResult]
+			, 'No se pudo generar el link de pago'												AS	[Title]
+			, 'Ocurrió un inconveniente al crear el link de pago para la guía '
+			  + @GuideSerie + CAST(@GuideNumber AS NVARCHAR(20)) 
+			  + '. Por favor, inténtalo más tarde o comunícate con nuestro equipo de atención.' AS	[Message]
+            , CAST(NULL AS NVARCHAR(500))                                                        AS  [ZigiLink]
 
         -- Capturar información del error
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
         DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
         DECLARE @ErrorState INT = ERROR_STATE();
-        
+
         RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
-        
+		
     END CATCH;
 END;
