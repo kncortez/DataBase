@@ -32,7 +32,7 @@ CREATE PROCEDURE [dbo].[SetFinishPickUp]
     @ReferencesGuide TblReferencesList READONLY,  
 	  @ContainerReferences TblContainerList READONLY,
 	  @IdCountry NVARCHAR(2)= 'GT',
-   @StationId INT
+   @StationId INT = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
