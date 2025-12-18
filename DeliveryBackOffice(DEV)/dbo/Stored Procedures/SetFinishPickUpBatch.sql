@@ -511,8 +511,8 @@ BEGIN
                         ON dop.GuideSerie = LG.ItemSerie
                            AND dop.GuideNumber = LG.ItemNumber
                 WHERE dop.IdHeaderRecolection = @IdPickup
-                      AND LG.ItemNumber IS NULL
-                      AND LG.ItemSerie IS NULL;
+                      AND LG.ItemSerie IS NULL
+                      AND LG.ItemNumber IS NULL;
 
                 ------------------------------------------------- Actualiza su StatusId a 2 = Recoleccion todas las guias del lote -------------------------------------
 

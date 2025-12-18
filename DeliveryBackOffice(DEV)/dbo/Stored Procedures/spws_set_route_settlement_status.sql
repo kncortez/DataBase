@@ -1112,14 +1112,16 @@ BEGIN
             BEGIN
                 UPDATE sm
                 SET sm.IdPuRouteAssigment = ra.IdRouteAssigment,
-                    TokenUpdated = @Token,
-                    DateUpdated = GETDATE()
+                    sm.TokenUpdated = @Token,
+                    sm.DateUpdated = GETDATE()
                 FROM DeliveryBackOffice.dbo.ServiceManagement sm WITH(NOLOCK)
-                    INNER JOIN DeliveryBackOffice.dbo.RouteAssigment ra WITH(NOLOCK)
-                        ON sm.IdPuRouteAssigment = ra.IdRouteAssigment                          
-                WHERE sm.IdServiceManagement = @ServiceManagementId 
-					AND ra.DateOfRoute = @tiempo
-					AND ra.IdRoute = @IdRoute ;
+                CROSS APPLY (
+                    SELECT TOP 1 IdRouteAssigment
+                    FROM DeliveryBackOffice.dbo.RouteAssigment WITH(NOLOCK)
+                    WHERE IdRoute = @IdRoute
+                      AND DateOfRoute = @tiempo
+                ) ra
+                WHERE sm.IdServiceManagement = @ServiceManagementId;
 
                 --Se marca como recolectado
                 UPDATE sm
