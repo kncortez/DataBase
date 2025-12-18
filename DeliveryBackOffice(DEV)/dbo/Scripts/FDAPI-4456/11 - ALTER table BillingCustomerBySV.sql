@@ -58,25 +58,6 @@ BEGIN TRY
         PRINT 'LLAVE : FK_BillingCustomerBySV_Township YA EXISTE'
     END
 
-     IF NOT EXISTS
-    (
-        SELECT 1
-        FROM sys.foreign_keys
-        WHERE name = 'FK_BillingCustomerBySV_CatTypeDocument'
-              AND parent_object_id = OBJECT_ID('dbo.BillingCustomerBySV')
-    )
-    BEGIN
-        ALTER TABLE [dbo].[BillingCustomerBySV] 
-        CONSTRAINT [FK_BillingCustomerBySV_CatTypeDocument] 
-            FOREIGN KEY([Inv_type])
-            REFERENCES [dbo].[CatTypeDocument] ([IdRegister])
-    END
-    ELSE
-    BEGIN
-        PRINT 'LLAVE : FK_BillingCustomerBySV_CatTypeDocument YA EXISTE'
-    END
-
-
     --3. Agregar descripciones a las columnas faltantes
     -- IdProvince
     IF NOT EXISTS
