@@ -40,6 +40,7 @@ BEGIN TRY
         PRINT 'LLAVE : FK_BillingCustomerBySV_Province YA EXISTE'
     END
 
+
     IF NOT EXISTS
     (
         SELECT 1
@@ -57,6 +58,7 @@ BEGIN TRY
     BEGIN
         PRINT 'LLAVE : FK_BillingCustomerBySV_Township YA EXISTE'
     END
+
 
     --3. Agregar descripciones a las columnas faltantes
     -- IdProvince
