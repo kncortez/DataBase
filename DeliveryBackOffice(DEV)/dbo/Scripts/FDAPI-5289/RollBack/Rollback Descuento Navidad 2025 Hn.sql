@@ -1,6 +1,6 @@
-/* =================================================
+ï»¿/* =================================================
    Script:    Rollback - Descuento Navidad Honduras 2025
-   Propósito: Realizar rollback de modificación por segmento de tarifarios para Hn.
+   PropÃ³sito: Realizar rollback de modificaciÃ³n por segmento de tarifarios para Hn.
    Autor:     Walter Orozco
    Historia:  FDAPI-5289[FDAPI-5288]
    Fecha:     2025-12-17
@@ -10,7 +10,7 @@ BEGIN TRY
     BEGIN TRANSACTION;
 
 	DECLARE
-		@TokenRollback		NVARCHAR(100)	= 'SYS-DESCUENTONAVIDAD25', --Utilizar token único para identificar tarifas afectadas por descuentos.
+		@TokenRollback		NVARCHAR(100)	= 'SYS-DESCUENTONAVIDAD25', --Utilizar token Ãºnico para identificar tarifas afectadas por descuentos.
 		@Token				NVARCHAR(100)	= 'SYS-RBDESCUENTONAVIDAD25',
 		@DateCreated		DATETIME		= GETDATE();
 
