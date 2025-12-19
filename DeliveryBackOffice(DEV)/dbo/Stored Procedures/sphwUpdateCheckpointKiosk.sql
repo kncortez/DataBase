@@ -1,19 +1,19 @@
-﻿-- =============================================
--- Author:		<Brandon Pedroza>
--- Create date: <2024-11-20>
--- Description:	<Kiosko - Registra guia pasa a estado Depositada en buzon>
--- =============================================
--- Author:      <Brandon Pedroza>
--- Modified:    <2024-11-21>
--- Description: <Se agrega parametro para busqueda de estacion>
--- =============================================
--- Author:      <Juan Ramirez > <2025-10-02>
--- Description: <Se cambia de ser unicamente una guía a procesar, a procesar multiguias>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sphwUpdateCheckpointKiosk]
+   Propósito: Kiosko - Registra guia pasa a estado Depositada en buzon
+   Autor:     <Brando Pedroza>
+   Historia:  <>
+   Fecha:     <2024-11-20>
+   === CHANGELOG ============================
+2025-12-19 | Historia/épica: <FDAPI-4954> | Autor: Tito Garcia |
+2025-10-02 | Historia/épica: <> | Autor: Juan Ramirez |
+2024-11-21 | Historia/épica: <> | Autor: Brandon Pedroza |
+=========================================== */
 CREATE PROCEDURE [dbo].[sphwUpdateCheckpointKiosk]
     @GuidesKiosko    AS dbo.GuidesKiosko READONLY,
     @IdCountry       AS NVARCHAR(2),
-    @CodeOfReference INT
+    @CodeOfReference INT,
+    @StationId
 AS
 BEGIN
     BEGIN TRANSACTION KioskoTran
@@ -24,33 +24,10 @@ BEGIN
                 @StatusOrderRecepcionado AS INT,
                 @IdStation AS INT;
 
-        -- Obtener valores de los estados
-        SET @StatusOrderDepositado =
-        (
-            SELECT StatusOrderId
-            FROM StatusOrder WITH (NOLOCK)
-            WHERE OrderDescription = 'Depositado en buzón'
-        );
-        SET @StatusOrderRecepcionado =
-        (
-            SELECT StatusOrderId
-            FROM StatusOrder WITH (NOLOCK)
-            WHERE OrderDescription = 'Recibido En Express Center'
-        );
-		SET @StatusOrderSolicitado =
-        (
-            SELECT StatusOrderId
-            FROM StatusOrder WITH (NOLOCK)
-            WHERE OrderDescription = 'Solicitado'
-        );
-        SET @StatusOrderGenerado =
-        (
-            SELECT StatusOrderId
-            FROM StatusOrder WITH (NOLOCK)
-            WHERE OrderDescription = 'Generado'
-        );
-
-        SET @IdStation = (SELECT TOP 1 IdStation FROM CatStation With(NOLOCK) WHERE CodeOfReference = @CodeOfReference)
+        SET @StatusOrderDepositado = 51; --'Depositado en buzón' 
+        SET @StatusOrderRecepcionado = 21; --'Recibido En Express Center'
+		SET @StatusOrderSolicitado = 1; --'Solicitado'
+        SET @StatusOrderGenerado = 15; --'Generado'
 
         INSERT INTO [dbo].[DeliveryOrderDetail]
         (
@@ -80,17 +57,17 @@ BEGIN
                1  ,
                NULL,
                NULL,
-               @IdStation
+               @StationId
           FROM @GuidesKiosko gk
 
         -- Actualizar DeliveryOrder
         UPDATE do
            SET do.StatusOrderId = @StatusOrderRecepcionado
-          FROM DeliveryOrder do WITH(NOLOCK)
+          FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
                INNER JOIN @GuidesKiosko gk 
-                  ON do.Guide_Number = gk.Guide_Number
-                 AND do.Guide_Serie = gk.Guide_Serie
-                 AND do.SenderCountryId = gk.IdCountry;
+                  ON  do.Guide_Serie = gk.Guide_Serie
+                    AND do.Guide_Number = gk.Guide_Number
+                        AND do.SenderCountryId = gk.IdCountry;
 
         -- Insertar en DeliveryOrderDetail estado Depositado en Buzon
         INSERT INTO [dbo].[DeliveryOrderDetail]
@@ -121,17 +98,17 @@ BEGIN
                1  ,
                NULL,
                NULL,
-               @IdStation
+               @StationId
           FROM @GuidesKiosko gk
 
         -- Actualizar DeliveryOrder
          UPDATE do
             SET do.StatusOrderId = @StatusOrderDepositado
-           FROM DeliveryOrder do WITH(NOLOCK)
+           FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
                 INNER JOIN @GuidesKiosko gk 
-                   ON do.Guide_Number = gk.Guide_Number
-                  AND do.Guide_Serie = gk.Guide_Serie
-                  AND do.SenderCountryId = gk.IdCountry;
+                    ON do.Guide_Serie = gk.Guide_Serie
+                        AND do.Guide_Number = gk.Guide_Number
+                        AND do.SenderCountryId = gk.IdCountry;
 
         COMMIT TRANSACTION KioskoTran
 
