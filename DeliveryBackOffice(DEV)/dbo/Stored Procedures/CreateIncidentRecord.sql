@@ -32,7 +32,7 @@ CREATE PROCEDURE [dbo].[CreateIncidentRecord]
   , @ConfirmedTypeIncidenceId INT = 0                        --Id del tipo de incidencia si es que se cambia en la validación 
   , @CommentOnConfirmedTypeIncidence NVARCHAR(600) = ''		-- Comentario del cambio del tipo de incidencia
   , @TicketNumber NVARCHAR(300) = NULL
-  , @StationId INT
+  , @StationId INT = NULL
 AS
 BEGIN
     DECLARE @StatusOrderId TINYINT;

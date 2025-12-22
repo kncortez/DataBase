@@ -32,7 +32,7 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @Receiver_CUI NVARCHAR(25) = '',
 	@IdCountry NVARCHAR(8) = 'GT',
 	@TicketNumber NVARCHAR(300) = NULL,
-	@StationId INT
+	@StationId INT = NULL
 AS
 BEGIN
 	

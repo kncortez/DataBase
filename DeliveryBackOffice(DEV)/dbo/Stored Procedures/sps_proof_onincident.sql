@@ -24,7 +24,7 @@ CREATE PROCEDURE [dbo].[sps_proof_onincident]
   , @Accuracy NVARCHAR(20)
   , @MaxDistance FLOAT = 7000 --Distancia en metros
   , @CommentOnIncident NVARCHAR(200) = '',
-  . @StationId INT
+  . @StationId INT = NULL
 AS
 BEGIN
     -- control de inserciones para transacción
