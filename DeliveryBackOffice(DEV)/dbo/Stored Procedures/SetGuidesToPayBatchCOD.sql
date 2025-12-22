@@ -468,7 +468,7 @@ END
 			GuideStatusId TINYINT
 		)
 		BEGIN TRY
-			DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+			DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
 			-- Clientes de las guías por procesar
 			INSERT INTO 
@@ -485,9 +485,9 @@ END
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 					ON
-						BDCOD.GuideNumber = DO.Guide_Number
-						AND
 						BDCOD.GuideSerie = DO.Guide_Serie
+						AND
+						BDCOD.GuideNumber = DO.Guide_Number
 			WHERE
 				BDCOD.BatchCODId = @BatchCODId 
 				AND 
