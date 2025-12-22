@@ -17,7 +17,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishDeliveryService]
   , @TblDetail AS TblPaymentList READONLY
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
-  . @StationId INT = NULL
+  , @StationId INT = NULL
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -30,7 +30,7 @@ BEGIN
     
 		IF(@StationId = 0)
 		BEGIN
-			@StationId = NULL;
+			SET @StationId = NULL;
 		END
 
 		DECLARE @DateCreated DATETIME = GETDATE();

@@ -30,9 +30,9 @@ BEGIN
     		
 		IF(@StationId = 0)
 		BEGIN
-			@StationId = NULL;
+			SET @StationId = NULL;
 		END
-		
+
 		DECLARE @DateCreated DATETIME = GETDATE();
 		DECLARE @CatSalesPackageStatusId INT = 0;
 

@@ -5,7 +5,7 @@
    Historia:  <>
    Fecha:     <>
    === CHANGELOG ============================
-2025-12-01 | Historia/épica: <FDAPI-4786> | Autor: Tito Garcia |
+2025-12-22 | Historia/épica: <FDAPI-4786> | Autor: Tito Garcia |
 2024-11-19 | Historia/épica: <Se elimina llamada a funcion costosa (SplitUnlimited) que utiliza XML y se reemplaza por SplitOrdinal sin XML reducción 91% del costo> | Autor: Josue Villagran |
 2024-11-19 | Historia/épica: <Se agrego registro de informacion de poblado de origen en nuevo campo SenderIdSettlement> | Autor: Oscar Rodriguez |
 2024-09-30 | Historia/épica: <Se agrega la relación de una guía con un DeliveryLink.> | Autor: Walter Orozco  |
@@ -47,7 +47,7 @@ BEGIN
   
   IF(@StationId = 0)
   BEGIN
-  SET @StationId = NULL;
+  	SET @StationId = NULL;
   END
   
   DECLARE @system INT = NULL;

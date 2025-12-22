@@ -27,7 +27,7 @@ BEGIN
     		
     IF(@StationId = 0)
     BEGIN
-        @StationId = NULL;
+        SET @StationId = NULL;
     END
    
     BEGIN TRANSACTION;
