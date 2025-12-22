@@ -87,7 +87,7 @@ BEGIN
     )
 
     --Estado para Reenviado a Express Center
-    DECLARE @StatusEXC AS INT = 20; 'Traslado a Express Center'
+    DECLARE @StatusEXC AS INT = 20; --'Traslado a Express Center'
     --Se obtiene el IdDeliveryOption configurado
     DECLARE @IdDeliveryOption AS INT = 3; --'Express Center'
     --Se obtiene el IdDeliveryOption que tiene la guía
@@ -669,7 +669,7 @@ BEGIN
 								AND dop.GuideNumber = gpt.GuideNumber
 							INNER JOIN @PiecesGuideRelatedTable pgt
 								ON gpt.GuideSerie = pgt.GuideSerie
-								ON gpt.GuideNumber = pgt.GuideNumber
+									AND gpt.GuideNumber = pgt.GuideNumber
 							WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
 								AND WHE.TypeConnectionId = 2
 
