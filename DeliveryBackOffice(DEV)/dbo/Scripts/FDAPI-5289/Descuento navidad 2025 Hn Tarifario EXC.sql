@@ -11,7 +11,8 @@ BEGIN TRY
 
 	DECLARE
 		@Token			NVARCHAR(100)	= 'SYS-DESCUENTONAVIDAD25',
-		@DateCreated	DATETIME		= GETDATE();
+		@DateCreated	DATETIME		= GETDATE(),
+		@ServicioEco	DECIMAL(14,2)	= 15.00;
     
      DECLARE 
 		@IdSegmentMetro			INT	= (SELECT CrsId FROM CatRateSegment WITH(NOLOCK) WHERE CrsShortName = 'MEH'), --14 Metro Honduras
@@ -295,6 +296,16 @@ BEGIN TRY
 	( @IdRate , @TypeServiceCOD , @IdSegmentForGracias , NULL , NULL , @PaqueteSobreDim     , @COD_GD_PS , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL);
     
 	PRINT('Se inserto las tarifas para el servicio COD correctamente.');
+
+	--Servicio Economico,  descuento sobre la tarifa asignada cuando se trate de un envío originado en una agencia EXC con destino a otra agencia EXC
+	UPDATE RateData 
+	SET 
+		RateValue = RateValue - @ServicioEco
+	WHERE RateId = @IdRate
+	AND RowStatus = 1
+	AND TypeServiceId IN (@TypeServiceSTD,@TypeServiceCOD)
+
+	PRINT('Se realizaron modificaciones por Servicio Economico.');
 
     COMMIT TRANSACTION;
 	PRINT 'ActualizaciÃ³n realizada correctamente.'
