@@ -1,5 +1,5 @@
 /* =================================================
-   SP:        [dbo].[sps_set_finishPickupService]
+   SP:        [dbo].[sps_set_finishReturnService]
    Propósito: <Confirma servicio de devolucion de guía en express center>
    Autor:     <Tito Garcia>
    Historia:  <>
@@ -17,7 +17,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishReturnService]
   , @TblDetail AS TblPaymentList READONLY
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
-  , @StationId
+  , @StationId = NULL
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -26,7 +26,12 @@ BEGIN
 	BEGIN TRY
         -- =====================================================================
         -- SECCIÓN 1: INICIALIZACIÓN Y PREPARACIÓN DE DATOS
-        -- =====================================================================
+        -- =====================================================================    
+		
+		IF(@StationId = 0)
+		BEGIN
+			@StationId = NULL;
+		END
     
 		DECLARE @DateCreated DATETIME = GETDATE();
 		DECLARE @CatSalesPackageStatusId INT = 0;

@@ -29,9 +29,14 @@ CREATE PROCEDURE [dbo].[SetRecolectionRequest]
     @DeliveryLongitude AS DECIMAL(18, 15) = 0,
     @IdUser INT = 0,
     @TypeVehicleId INT = NULL,
-    @StationId INT
+    @StationId INT = NULL
 AS
 BEGIN
+    IF(@StationId = 0)
+    BEGIN
+        @StationId = NULL;
+    END
+
     IF (@ValidateFilter = 1)
     BEGIN
         BEGIN TRANSACTION;

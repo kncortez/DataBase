@@ -13,7 +13,7 @@ CREATE PROCEDURE [dbo].[sphwUpdateCheckpointKiosk]
     @GuidesKiosko    AS dbo.GuidesKiosko READONLY,
     @IdCountry       AS NVARCHAR(2),
     @CodeOfReference INT,
-    @StationId
+    @StationId INT = NULL
 AS
 BEGIN
     BEGIN TRANSACTION KioskoTran
@@ -28,6 +28,11 @@ BEGIN
         SET @StatusOrderRecepcionado = 21; --'Recibido En Express Center'
 		SET @StatusOrderSolicitado = 1; --'Solicitado'
         SET @StatusOrderGenerado = 15; --'Generado'
+        		
+		IF(@StationId = 0)
+		BEGIN
+			@StationId = NULL;
+		END
 
         INSERT INTO [dbo].[DeliveryOrderDetail]
         (

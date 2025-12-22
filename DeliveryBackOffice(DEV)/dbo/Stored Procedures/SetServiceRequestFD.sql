@@ -21,7 +21,7 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @IdAccount BIGINT = NULL,
 @AddToServiceCart BIT = 0,
 @IdDeliveryLink INT = 0,
-@StationId INT = 0
+@StationId INT = NULL
 AS
 BEGIN
 	DECLARE @IdTransaction BIGINT = NULL

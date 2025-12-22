@@ -1,5 +1,5 @@
 ﻿/* =================================================
-   SP:        [dbo].[sps_set_finishPickupService]
+   SP:        [dbo].[sps_set_finishDeliveryService]
    Propósito: <Confirma servicio de entrega de guía en express center>
    Autor:     <Tito Garcia>
    Historia:  <>
@@ -17,7 +17,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishDeliveryService]
   , @TblDetail AS TblPaymentList READONLY
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
-  . @StationId INT
+  . @StationId INT = NULL
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -28,6 +28,11 @@ BEGIN
         -- SECCIÓN 1: INICIALIZACIÓN Y PREPARACIÓN DE DATOS
         -- =====================================================================
     
+		IF(@StationId = 0)
+		BEGIN
+			@StationId = NULL;
+		END
+
 		DECLARE @DateCreated DATETIME = GETDATE();
 		DECLARE @CatSalesPackageStatusId INT = 0;
 

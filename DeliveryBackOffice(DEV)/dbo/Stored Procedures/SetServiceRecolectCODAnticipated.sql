@@ -12,9 +12,14 @@ CREATE PROCEDURE [dbo].[SetServiceRecolectCODAnticipated]
 	@GuideNumber INT = 955582,  
 	@Token          NVARCHAR(50) = 'API-FORZA',  
 	@IsProcessedGuideCOD INT = 0,
-	@StationId INT
+	@StationId INT = NULL
 AS  
 BEGIN  
+	
+    IF(@StationId = 0)
+    BEGIN
+        @StationId = NULL;
+    END
   
  --INFORMACIÓN AH OBTENER DEL HEADER  
 	DECLARE @IdAnticipatedCODHeader INT;

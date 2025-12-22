@@ -1,11 +1,20 @@
-﻿
+﻿/* =================================================
+   SP:        [dbo].[sps_set_finisTransfer]
+   Propósito: <>
+   Autor:     <>
+   Historia:  <>
+   Fecha:     <>
+============================================
+=== CHANGELOG ================================
+-- 2025-12-22 | Historia/épica: FDAPI-4784 | Autor: Tito Garcia |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finisTransfer]
     @TblListGuides AS TblListGuidesTransfer READONLY,
     @IdCourier INT,
     @CourierName VARCHAR(50),
     @DPI VARCHAR(15),
     @TokenCreated VARCHAR(100),
-    @StationId INT
+    @StationId INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -15,6 +24,11 @@ BEGIN
 
     DECLARE @jsonResult NVARCHAR(MAX) = N'';
     DECLARE @errorMessage NVARCHAR(100);
+    		
+    IF(@StationId = 0)
+    BEGIN
+        @StationId = NULL;
+    END
    
     BEGIN TRANSACTION;
 
