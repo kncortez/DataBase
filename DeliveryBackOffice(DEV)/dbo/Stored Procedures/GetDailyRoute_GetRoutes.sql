@@ -64,7 +64,7 @@ BEGIN
 				ID_Courier
    )
    SELECT
-    @ConcatReturnGuides = STRING_AGG(CONCAT(DAT.Guide_Serie, DAT.Guide_Number), ',')
+    @ConcatReturnGuides = STRING_AGG(CONVERT(NVARCHAR(MAX), CONCAT(DAT.Guide_Serie, DAT.Guide_Number)), ',')
     FROM Attemps                                                              DAT
 	LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]           DOR WITH (NOLOCK)
         ON DAT.Guide_Serie = DOR.Guide_Serie
@@ -476,86 +476,80 @@ WHERE
 -- ===================================== FIN DELIVERY TABLE =================================
 
 -- ===================================== PICK UP TABLE ======================================
-	SELECT
-	'Pickup' AS [ServiceType],
+SELECT
+    'Pickup' AS [ServiceType],
 
-	vpc.CodeOfReference,
-	spk.SchedulePickupId AS [Id],
-	sma.IdServiceManagement,
-	cpt.TimePlaName AS [ServicePaymentTime],
+    vpc.CodeOfReference,
+    spk.SchedulePickupId AS [Id],
+    sma.IdServiceManagement,
+    cpt.TimePlaName AS [ServicePaymentTime],
 
-	spk.SenderName,
-	vpc.DescriptionOfClient,
-	spk.AddressPickup,
-	vpc.[Address],
-	t.TownshipName,
-	p.ProvinceName,
-	vpc.Town,
+    spk.SenderName,
+    vpc.DescriptionOfClient,
+    spk.AddressPickup,
+    vpc.[Address],
+    t.TownshipName,
+    p.ProvinceName,
+    vpc.Town,
     spk.TownshipId,
-	vpc.Department,
-	spk.SenderPhone,
-	vpc.Phone,
+    vpc.Department,
+    spk.SenderPhone,
+    vpc.Phone,
     CP.Value,
+
     hp.HighPriority as HighPriority,
-	pay.IdHeaderRecolection,
-	filteredPieces.PiecesDry as Pieces_Dry,
-	filteredPieces.PiecesCold as Pieces_Cold,
-	sc.QuantityOverDimensionedPackage,
-	sc.QuantityRegularPackages,
 
-	spk.StartDate as ScheduleStart,
-	spk.EndDate as ScheduleEnd,
+    filteredPieces.PiecesDry as Pieces_Dry,
+    filteredPieces.PiecesCold as Pieces_Cold,
 
-	latestImage.PathImage as Photo,
-	vpc.Latitude,
-	vpc.Longitude,
-	vpc.Accuracy as Precision,
+    spk.StartDate as ScheduleStart,
+    spk.EndDate as ScheduleEnd,
 
-	sma.ServiceStatusId as Status,
+    latestImage.PathImage as Photo,
+    vpc.Latitude,
+    vpc.Longitude,
+    vpc.Accuracy as Precision,
 
-	de.IdCurrencyCOD,
-	de.Currency_IdCountry,
-	de.DefaultPerCountry,
-	ce.ExchangeDate,
-	ccc.CodeISO[CurrencyPriceCodeISO],
-	ccc.Symbol[CurrencyPriceSymbol],
+    sma.ServiceStatusId as Status,
+
+    de.IdCurrencyCOD,
+    de.Currency_IdCountry,
+    de.DefaultPerCountry,
+    ce.ExchangeDate,
+    ccc.CodeISO[CurrencyPriceCodeISO],
+    ccc.Symbol[CurrencyPriceSymbol],
     ccc.CodeISO[PickupPriceCodeISO],
     ccc.Symbol[PickupPriceSymbol],
 
-	ras.IdCurrierMan,
-	ras.DateOfRoute,
-	sma.SubTypeServiceManagmentId
+    ras.IdCurrierMan,
+    ras.DateOfRoute,
+    sma.SubTypeServiceManagmentId
 
 FROM dbo.RouteAssigment ras WITH (NOLOCK)
 INNER JOIN dbo.ServiceManagement sma WITH (NOLOCK)
-	ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
+    ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
 INNER JOIN dbo.SchedulePickup spk WITH (NOLOCK)
-	ON spk.SchedulePickupId = sma.IdSchedulePickup
+    ON spk.SchedulePickupId = sma.IdSchedulePickup
 LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
-	ON vpc.CodeOfReference = spk.SenderId
+    ON vpc.CodeOfReference = spk.SenderId
 LEFT JOIN dbo.CatPaymentTime cpt WITH (NOLOCK)
-	ON sma.CatPaymentTimeId = cpt.TimePlaId
+    ON sma.CatPaymentTimeId = cpt.TimePlaId
 LEFT JOIN dbo.Township t WITH (NOLOCK)
-	ON spk.TownshipId = t.IdTownship
+    ON spk.TownshipId = t.IdTownship
 LEFT JOIN dbo.Province p WITH (NOLOCK)
-	ON t.IdProvince = p.IdProvince
+    ON t.IdProvince = p.IdProvince
 LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH (NOLOCK)
-	ON CP.IdCountry = vpc.CountryId
-	AND CP.[Name] = 'AreaCode'
+    ON CP.IdCountry = vpc.CountryId
+    AND CP.[Name] = 'AreaCode'
 LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency] de WITH (NOLOCK)
-	ON de.Currency_IdCountry = vpc.CountryId
-	AND de.DefaultPerCountry = 1
+    ON de.Currency_IdCountry = vpc.CountryId
+    AND de.DefaultPerCountry = 1
 LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
-	ON ce.TargetCurrency = de.IdCurrencyCOD
-	AND ce.ExchangeDate >= CAST(GETDATE() AS DATE)
-	AND ce.ExchangeDate < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
+    ON ce.TargetCurrency = de.IdCurrencyCOD
+    AND ce.ExchangeDate >= CAST(GETDATE() AS DATE)
+    AND ce.ExchangeDate < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
 LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD] ccc WITH (NOLOCK)
-	ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
-LEFT JOIN dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
-    ON pay.IdHeaderRecolection = spk.SchedulePickupId
-LEFT JOIN dbo.DeliveryOrder ord WITH (NOLOCK)
-	ON ord.Guide_Serie = pay.GuideSerie
-	AND ord.Guide_Number = pay.GuideNumber
+    ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
 LEFT JOIN (
     SELECT
         pay.IdHeaderRecolection AS SchedulePickupId,
@@ -575,53 +569,41 @@ LEFT JOIN (
 ) AS filteredPieces
     ON filteredPieces.SchedulePickupId = spk.SchedulePickupId
 LEFT JOIN (
-	SELECT
-		VPC2.CodeOfReference,
-		HighPriority = 
-			CASE 
-				WHEN COUNT(DOA2.GuideNumber) > 0 THEN 1 
-				ELSE 0 
-			END
-	FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA2 WITH (NOLOCK)
-	LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO2 WITH (NOLOCK)
-		ON DO2.Guide_Serie = DOA2.GuideSerie
-		AND DO2.Guide_Number = DOA2.GuideNumber
-	LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] VPC2 WITH (NOLOCK)
-		ON VPC2.CodeOfReference = DO2.Sender_Id
-	WHERE 
-		CAST(DOA2.DateCreated AS DATE) = @DateRoute
-		AND DOA2.ServiceTypeId IN (@PickUpTypeId)
-		AND DOA2.RowStatus = 1
-		AND DOA2.ServiceManagementId IS NULL
-	GROUP BY VPC2.CodeOfReference
+    SELECT
+        VPC2.CodeOfReference,
+        HighPriority =
+            CASE WHEN COUNT(DOA2.GuideNumber) > 0 THEN 1 ELSE 0 END
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA2 WITH (NOLOCK)
+    LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO2 WITH (NOLOCK)
+        ON DO2.Guide_Serie = DOA2.GuideSerie
+        AND DO2.Guide_Number = DOA2.GuideNumber
+    LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] VPC2 WITH (NOLOCK)
+        ON VPC2.CodeOfReference = DO2.Sender_Id
+    WHERE
+        CAST(DOA2.DateCreated AS DATE) = @DateRoute
+        AND DOA2.ServiceTypeId IN (@PickUpTypeId)
+        AND DOA2.RowStatus = 1
+        AND DOA2.ServiceManagementId IS NULL
+    GROUP BY VPC2.CodeOfReference
 ) AS hp
-	ON hp.CodeOfReference = vpc.CodeOfReference
-LEFT JOIN dbo.SchedulePickup sc WITH (NOLOCK)
-	ON sc.SchedulePickupId = pay.IdHeaderRecolection
-LEFT JOIN dbo.ImagesByVisitPoint vpi WITH (NOLOCK)
-	ON vpi.CodeOfReference = vpc.CodeOfReference
+    ON hp.CodeOfReference = vpc.CodeOfReference
 LEFT JOIN (
-	SELECT CodeOfReference, PathImage
-	FROM (
-		SELECT 
-			CodeOfReference,
-			PathImage,
-			ROW_NUMBER() OVER (PARTITION BY CodeOfReference ORDER BY DateCreated DESC) AS rn
-		FROM dbo.ImagesByVisitPoint WITH (NOLOCK)
-	) AS ranked
-	WHERE ranked.rn = 1
+    SELECT CodeOfReference, PathImage
+    FROM (
+        SELECT
+            CodeOfReference,
+            PathImage,
+            ROW_NUMBER() OVER (PARTITION BY CodeOfReference ORDER BY DateCreated DESC) AS rn
+        FROM dbo.ImagesByVisitPoint WITH (NOLOCK)
+    ) AS ranked
+    WHERE ranked.rn = 1
 ) latestImage
-	ON latestImage.CodeOfReference = vpc.CodeOfReference
-LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] doa2 WITH (NOLOCK)
-	ON doa2.ServiceManagementId = sma.IdServiceManagement
-	AND doa2.RowStatus = 1
-	AND doa2.ServiceTypeId IN (@PickUpTypeId)
-	AND doa2.DateCreated >= @DateRoute
-	AND doa2.DateCreated < DATEADD(DAY, 1, @DateRoute)
+    ON latestImage.CodeOfReference = vpc.CodeOfReference
+
 WHERE
-	ras.IdCurrierMan = @IdCourier
-	AND ras.DateOfRoute = @DateRoute
-	AND ISNULL(sma.SubTypeServiceManagmentId, 1) = 1
+    ras.IdCurrierMan = @IdCourier
+    AND ras.DateOfRoute = @DateRoute
+    AND ISNULL(sma.SubTypeServiceManagmentId, 1) = 1;
 
 -- ===================================== FIN PICKUP TABLE =================================
 
