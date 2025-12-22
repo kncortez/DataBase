@@ -1,6 +1,6 @@
-/* =================================================
-   Script:    Creación de tabla
-   Propósito: Se encargara en crear las nuevas tablas utilizada para seguimiento de reporte/notificación en lotes de clientes COD.
+ï»¿/* =================================================
+   Script:    CreaciÃ³n de tabla
+   PropÃ³sito: Se encargara en crear las nuevas tablas utilizada para seguimiento de reporte/notificaciÃ³n en lotes de clientes COD.
    Autor:     Walter Orozco
    Historia:  FDAPI-5247 [FDAPI-5248]
    Fecha:     2025-12-05
@@ -48,17 +48,17 @@ BEGIN TRY
 			REFERENCES dbo.DeliveryBank (Id_bank)
 		);
 
-		-- Descripción de la tabla
+		-- DescripciÃ³n de la tabla
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Encabezado de reporte de depósitos COD por lote.',
+			@value = N'Encabezado de reporte de depÃ³sitos COD por lote.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader';
 
 		-- IdDepositReportCODHeader
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Identificador único del encabezado de reporte de depósito COD.',
+			@value = N'Identificador Ãºnico del encabezado de reporte de depÃ³sito COD.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'IdDepositReportCODHeader';
@@ -90,7 +90,7 @@ BEGIN TRY
 		-- Customer_Name
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Nombre del cliente que recibe el reporte (Customer.Name o Sender_FirstName según el caso).',
+			@value = N'Nombre del cliente que recibe el reporte (Customer.Name o Sender_FirstName segÃºn el caso).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'Customer_Name';
@@ -98,7 +98,7 @@ BEGIN TRY
 		-- Customer_Email
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Correo principal del cliente para notificación de depósitos (CODContactEmail o RegexEmail).',
+			@value = N'Correo principal del cliente para notificaciÃ³n de depÃ³sitos (CODContactEmail o RegexEmail).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'Customer_Email';
@@ -114,7 +114,7 @@ BEGIN TRY
 		-- Bank_Id
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Identificador del banco en el que se realizó el depósito (BatchDetailCOD.BankId / DeliveryBank.Id_bank).',
+			@value = N'Identificador del banco en el que se realizÃ³ el depÃ³sito (BatchDetailCOD.BankId / DeliveryBank.Id_bank).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'Bank_Id';
@@ -122,7 +122,7 @@ BEGIN TRY
 		-- BankName
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Nombre del banco utilizado en el depósito COD (BatchDetailCOD.BankName).',
+			@value = N'Nombre del banco utilizado en el depÃ³sito COD (BatchDetailCOD.BankName).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'BankName';
@@ -130,7 +130,7 @@ BEGIN TRY
 		-- AccountNumber
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Número de cuenta bancaria donde se acreditan los depósitos COD (BatchDetailCOD.AccountNumber).',
+			@value = N'NÃºmero de cuenta bancaria donde se acreditan los depÃ³sitos COD (BatchDetailCOD.AccountNumber).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'AccountNumber';
@@ -138,7 +138,7 @@ BEGIN TRY
 		-- Currency_Symbol
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Símbolo de la moneda utilizada en el depósito (CatCurrencyCOD.Symbol).',
+			@value = N'SÃ­mbolo de la moneda utilizada en el depÃ³sito (CatCurrencyCOD.Symbol).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'Currency_Symbol';
@@ -146,7 +146,7 @@ BEGIN TRY
 		-- Country_Id
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Código de país asociado al depósito (ReceiverCountryId o DeliveryBank.Id_country).',
+			@value = N'CÃ³digo de paÃ­s asociado al depÃ³sito (ReceiverCountryId o DeliveryBank.Id_country).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'Country_Id';
@@ -154,7 +154,7 @@ BEGIN TRY
 		-- AuthorizationNumber
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Número de autorización del depósito COD (BatchDetailCOD.AuthorizationNumber).',
+			@value = N'NÃºmero de autorizaciÃ³n del depÃ³sito COD (BatchDetailCOD.AuthorizationNumber).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'AuthorizationNumber';
@@ -162,7 +162,7 @@ BEGIN TRY
 		-- AuthorizationDate
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Fecha y hora en que se registró la autorización del depósito COD (BatchDetailCOD.AuthorizationDate).',
+			@value = N'Fecha y hora en que se registrÃ³ la autorizaciÃ³n del depÃ³sito COD (BatchDetailCOD.AuthorizationDate).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'AuthorizationDate';
@@ -170,7 +170,7 @@ BEGIN TRY
 		-- Notificated
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Indicador de notificación de depósito COD (0 = pendiente, 1 = notificado).',
+			@value = N'Indicador de notificaciÃ³n de depÃ³sito COD (0 = pendiente, 1 = notificado).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'Notificated';
@@ -178,7 +178,7 @@ BEGIN TRY
 		-- SalePipeLineId
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Pipeline de la guía según configuración (DeliveryOrder.SalePipeLineId).',
+			@value = N'Pipeline de la guÃ­a segÃºn configuraciÃ³n (DeliveryOrder.SalePipeLineId).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'SalePipeLineId';
@@ -202,7 +202,7 @@ BEGIN TRY
 		-- RowStatus
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Estado lógico del registro (1 = activo, 0 = inactivo).',
+			@value = N'Estado lÃ³gico del registro (1 = activo, 0 = inactivo).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'RowStatus';
@@ -210,7 +210,7 @@ BEGIN TRY
 		-- TokenCreated
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Identificador o usuario que creó el registro del encabezado de reporte COD.',
+			@value = N'Identificador o usuario que creÃ³ el registro del encabezado de reporte COD.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'TokenCreated';
@@ -218,7 +218,7 @@ BEGIN TRY
 		-- DateCreated
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Fecha y hora de creación del registro del encabezado de reporte COD.',
+			@value = N'Fecha y hora de creaciÃ³n del registro del encabezado de reporte COD.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'DateCreated';
@@ -226,7 +226,7 @@ BEGIN TRY
 		-- TokenUpdated
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Identificador o usuario que realizó la última actualización del registro del encabezado.',
+			@value = N'Identificador o usuario que realizÃ³ la Ãºltima actualizaciÃ³n del registro del encabezado.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'TokenUpdated';
@@ -234,7 +234,7 @@ BEGIN TRY
 		-- DateUpdated
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Fecha y hora de la última actualización del registro del encabezado.',
+			@value = N'Fecha y hora de la Ãºltima actualizaciÃ³n del registro del encabezado.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'DepositReportCODHeader',
 			@level2type = N'COLUMN', @level2name = N'DateUpdated';
@@ -300,17 +300,17 @@ BEGIN TRY
 			REFERENCES dbo.DepositReportCODHeader (IdDepositReportCODHeader)
 		);
 
-		-- Descripción de la tabla
+		-- DescripciÃ³n de la tabla
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Detalle de guías COD asociadas a un reporte de depósito COD.',
+			@value = N'Detalle de guÃ­as COD asociadas a un reporte de depÃ³sito COD.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications';
 
 		-- IdProcessedNotification
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Identificador único del registro de detalle de guía COD en el reporte/notificación.',
+			@value = N'Identificador Ãºnico del registro de detalle de guÃ­a COD en el reporte/notificaciÃ³n.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'IdProcessedNotification';
@@ -318,7 +318,7 @@ BEGIN TRY
 		-- IdDepositReportCODHeader
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Referencia al encabezado de reporte COD al que pertenece la guía (FK a DepositReportCODHeader).',
+			@value = N'Referencia al encabezado de reporte COD al que pertenece la guÃ­a (FK a DepositReportCODHeader).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'IdDepositReportCODHeader';
@@ -326,7 +326,7 @@ BEGIN TRY
 		-- GuideSerie
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Serie de la guía asociada al depósito COD (BatchDetailCOD.GuideSerie).',
+			@value = N'Serie de la guÃ­a asociada al depÃ³sito COD (BatchDetailCOD.GuideSerie).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'GuideSerie';
@@ -334,7 +334,7 @@ BEGIN TRY
 		-- GuideNumber
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Número de guía asociada al depósito COD (BatchDetailCOD.GuideNumber).',
+			@value = N'NÃºmero de guÃ­a asociada al depÃ³sito COD (BatchDetailCOD.GuideNumber).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'GuideNumber';
@@ -342,7 +342,7 @@ BEGIN TRY
 		-- IdCustomerType
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Tipo de cliente asociado a la guía (Customer.IdCustomerType).',
+			@value = N'Tipo de cliente asociado a la guÃ­a (Customer.IdCustomerType).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'IdCustomerType';
@@ -350,7 +350,7 @@ BEGIN TRY
 		-- ConditionOfPaymentID
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Condición de pago del cliente.',
+			@value = N'CondiciÃ³n de pago del cliente.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'ConditionOfPaymentID';
@@ -358,7 +358,7 @@ BEGIN TRY
 		-- Pieces_Dry
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Cantidad de piezas secas de la guía (DeliveryOrder.Pieces_Dry).',
+			@value = N'Cantidad de piezas secas de la guÃ­a (DeliveryOrder.Pieces_Dry).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Pieces_Dry';
@@ -366,7 +366,7 @@ BEGIN TRY
 		-- Pieces_Cold
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Cantidad de piezas frías de la guía (DeliveryOrder.Pieces_Cold).',
+			@value = N'Cantidad de piezas frÃ­as de la guÃ­a (DeliveryOrder.Pieces_Cold).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Pieces_Cold';
@@ -374,7 +374,7 @@ BEGIN TRY
 		-- TotalWeight
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Peso total de la guía en base a DeliveryOrderPiece (suma de MassWeight/PieceWeight).',
+			@value = N'Peso total de la guÃ­a en base a DeliveryOrderPiece (suma de MassWeight/PieceWeight).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'TotalWeight';
@@ -382,7 +382,7 @@ BEGIN TRY
 		-- Department_Name
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Nombre del departamento de destino de la guía.',
+			@value = N'Nombre del departamento de destino de la guÃ­a.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Department_Name';
@@ -390,7 +390,7 @@ BEGIN TRY
 		-- Township_Name
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Nombre del municipio de destino de la guía.',
+			@value = N'Nombre del municipio de destino de la guÃ­a.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Township_Name';
@@ -398,7 +398,7 @@ BEGIN TRY
 		-- ArrivalDate
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Fecha de arribo de la guía.',
+			@value = N'Fecha de arribo de la guÃ­a.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'ArrivalDate';
@@ -406,7 +406,7 @@ BEGIN TRY
 		-- DeliveryDate
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Fecha de entrega de la guía.',
+			@value = N'Fecha de entrega de la guÃ­a.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'DeliveryDate';
@@ -414,7 +414,7 @@ BEGIN TRY
 		-- Sender_ID
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Identificador del remitente de la guía (DeliveryOrder.Sender_ID, correlacionado con VisitPointClient).',
+			@value = N'Identificador del remitente de la guÃ­a (DeliveryOrder.Sender_ID, correlacionado con VisitPointClient).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Sender_ID';
@@ -422,7 +422,7 @@ BEGIN TRY
 		-- ReceiverIdTownship
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Identificador del municipio de destino configurado en la guía (DeliveryOrder.ReceiverIdTownship).',
+			@value = N'Identificador del municipio de destino configurado en la guÃ­a (DeliveryOrder.ReceiverIdTownship).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'ReceiverIdTownship';
@@ -430,7 +430,7 @@ BEGIN TRY
 		-- Receiver_FirstName
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Primer nombre del receptor de la guía (DeliveryOrder.Receiver_FirstName).',
+			@value = N'Primer nombre del receptor de la guÃ­a (DeliveryOrder.Receiver_FirstName).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Receiver_FirstName';
@@ -438,7 +438,7 @@ BEGIN TRY
 		-- Receiver_LastName
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Apellido(s) del receptor de la guía (DeliveryOrder.Receiver_LastName).',
+			@value = N'Apellido(s) del receptor de la guÃ­a (DeliveryOrder.Receiver_LastName).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Receiver_LastName';
@@ -446,7 +446,7 @@ BEGIN TRY
 		-- Receiver_Town
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Nombre de la ciudad/población de destino según viene en la guía (DeliveryOrder.Receiver_Town).',
+			@value = N'Nombre de la ciudad/poblaciÃ³n de destino segÃºn viene en la guÃ­a (DeliveryOrder.Receiver_Town).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Receiver_Town';
@@ -462,7 +462,7 @@ BEGIN TRY
 		-- TypeService
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Tipo de servicio de la guía utilizado para clasificar el envío.',
+			@value = N'Tipo de servicio de la guÃ­a utilizado para clasificar el envÃ­o.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'TypeService';
@@ -470,7 +470,7 @@ BEGIN TRY
 		-- IsCollect
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Indica si la guía es de tipo Collect (true/false).',
+			@value = N'Indica si la guÃ­a es de tipo Collect (true/false).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'IsCollect';
@@ -478,7 +478,7 @@ BEGIN TRY
 		-- PriceShippment
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Monto del envío cobrado por la guía (DeliveryOrder.PriceShippment).',
+			@value = N'Monto del envÃ­o cobrado por la guÃ­a (DeliveryOrder.PriceShippment).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'PriceShippment';
@@ -486,7 +486,7 @@ BEGIN TRY
 		-- Commission
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Monto de comisión aplicada a la guía dentro del lote COD (BatchDetailCOD.Commission).',
+			@value = N'Monto de comisiÃ³n aplicada a la guÃ­a dentro del lote COD (BatchDetailCOD.Commission).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Commission';
@@ -494,7 +494,7 @@ BEGIN TRY
 		-- CODCommissionPercentage
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Porcentaje de comisión COD aplicado a la guía dentro del lote (BatchDetailCOD.CODCommissionPercentage).',
+			@value = N'Porcentaje de comisiÃ³n COD aplicado a la guÃ­a dentro del lote (BatchDetailCOD.CODCommissionPercentage).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'CODCommissionPercentage';
@@ -502,7 +502,7 @@ BEGIN TRY
 		-- Amount
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Monto neto acreditado al cliente por la guía dentro del depósito COD (BatchDetailCOD.Amount).',
+			@value = N'Monto neto acreditado al cliente por la guÃ­a dentro del depÃ³sito COD (BatchDetailCOD.Amount).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Amount';
@@ -510,7 +510,7 @@ BEGIN TRY
 		-- Country_Id
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Código de país asociado al destino de la guía o al depósito (DeliveryOrder.ReceiverCountryId).',
+			@value = N'CÃ³digo de paÃ­s asociado al destino de la guÃ­a o al depÃ³sito (DeliveryOrder.ReceiverCountryId).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'Country_Id';
@@ -518,7 +518,7 @@ BEGIN TRY
 		-- RowStatus
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Estado lógico del registro de detalle (1 = activo, 0 = inactivo).',
+			@value = N'Estado lÃ³gico del registro de detalle (1 = activo, 0 = inactivo).',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'RowStatus';
@@ -526,7 +526,7 @@ BEGIN TRY
 		-- TokenCreated
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Identificador o usuario que creó el registro de detalle de la guía COD.',
+			@value = N'Identificador o usuario que creÃ³ el registro de detalle de la guÃ­a COD.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'TokenCreated';
@@ -534,7 +534,7 @@ BEGIN TRY
 		-- DateCreated
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Fecha y hora de creación del registro de detalle de la guía COD.',
+			@value = N'Fecha y hora de creaciÃ³n del registro de detalle de la guÃ­a COD.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'DateCreated';
@@ -542,7 +542,7 @@ BEGIN TRY
 		-- TokenUpdated
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Identificador o usuario que realizó la última actualización del detalle de la guía COD.',
+			@value = N'Identificador o usuario que realizÃ³ la Ãºltima actualizaciÃ³n del detalle de la guÃ­a COD.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'TokenUpdated';
@@ -550,7 +550,7 @@ BEGIN TRY
 		-- DateUpdated
 		EXEC sys.sp_addextendedproperty 
 			@name = N'MS_Description',
-			@value = N'Fecha y hora de la última actualización del detalle de la guía COD.',
+			@value = N'Fecha y hora de la Ãºltima actualizaciÃ³n del detalle de la guÃ­a COD.',
 			@level0type = N'SCHEMA', @level0name = N'dbo',
 			@level1type = N'TABLE',  @level1name = N'ProcessedGuideCODNotifications',
 			@level2type = N'COLUMN', @level2name = N'DateUpdated';
