@@ -265,7 +265,7 @@ BEGIN
 				'avenida', 'Ave.'), ',' + pb.Department, ''), 'colonia', 'col.'), 
 				'Residencial', 'Resid.'), 'carretera', 'ctra.'), 'manzana', 'mz.'),
 			45
-		) AS _Address,
+		) AS Address,
 		pb.Town,
 		pb.Department,
 		pb.ReceiverID,
