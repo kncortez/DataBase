@@ -29,8 +29,8 @@ BEGIN
 	DECLARE @GuideSerie VARCHAR(2) = 'FD'
 	DECLARE @IdCountryByCustomer NVARCHAR(2) = 'GT'
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
-	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] WHERE SalesPackageStatusName = 'Activa')
-	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM [DeliveryBackOffice].[dbo].[VisitPointClient] WITH(NOLOCK) WHERE CustomerID = @CustomerID )
+	DECLARE @StatusPackage INT = 2 --'Activa'
+	SET @IdCountryByCustomer =(SELECT TOP 1 CountryID FROM [DeliveryBackOffice].[dbo].[VisitPointClient] WITH(NOLOCK) WHERE CustomerID = @CustomerID )
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -335,14 +335,17 @@ BEGIN
 			@module,
 			GT.ReceiverLatitude,
 			GT.ReceiverLongitude,
-			ISNULL(P.IdCountry,'GT'),
-			ISNULL(P2.IdCountry,'GT'),
+			P.IdCountry,
+			P2.IdCountry,
 			CASE
-				WHEN ISNULL(P.IdCountry,'GT') = ISNULL(P2.IdCountry,'GT') THEN 'DOM'
+				WHEN P.IdCountry = P2.IdCountry THEN 'DOM'
 				ELSE 'INT'
 			END AS GuideType,
 			GT.SenderIdSettlement,
-			GT.ReceiverIdSettlement
+			CASE
+				WHEN GT.ReceiverIdSettlement = 0 THEN NULL
+				ELSE GT.ReceiverIdSettlement
+			END
 		FROM #GuideTable GT
 		INNER JOIN DeliveryBackOffice.dbo.Township T ON GT.SenderIdTownship = T.IdTownship
 		INNER JOIN DeliveryBackOffice.dbo.Province P ON T.IdProvince = P.IdProvince
@@ -403,18 +406,16 @@ BEGIN
 			   ,NULL
 			FROM #GuideTable GT
 			INNER JOIN [DeliveryBackOffice].[dbo].[RateByCustomer] rc WITH (NOLOCK)
-				ON rc.RbcId = (SELECT TOP 1
-							rbc.RbcId
-						FROM [DeliveryBackOffice].[dbo].[RatebyCustomer] rbc WITH (NOLOCK)
-						INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
-							ON GT.Sender_ID = vpc.CodeOfReference
-						WHERE ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
-							AND rbc.RbcRowStatus = 1
-							AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
-							OR rbc.RbcCodeOfReference IS NULL)
-						ORDER BY rbc.RbcCodeOfReference DESC)
+				ON rc.RbcId = (SELECT TOP 1	rbc.RbcId
+								FROM [DeliveryBackOffice].[dbo].[RatebyCustomer] rbc WITH (NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
+									ON GT.Sender_ID = vpc.CodeOfReference
+										AND (rbc.RbcCodeOfReference = vpc.CodeOfReference OR rbc.RbcCodeOfReference IS NULL)
+								WHERE ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
+									AND rbc.RbcRowStatus = 1
+								ORDER BY rbc.RbcCodeOfReference DESC)
 			INNER JOIN [DeliveryBackOffice].[dbo].[RateHeader] rh WITH (NOLOCK)
-				ON rc.RbcIdRate = rh.RheId
+						ON rc.RbcIdRate = rh.RheId
         -- Fin FDAPI-1418 Oscar Morales 2023-02-23
 
 
@@ -502,7 +503,7 @@ BEGIN
 										FROM #GuideTable g
 											INNER JOIN [DeliveryBackOffice].[dbo].[Township] twn WITH(NOLOCK)
 												ON twn.IdTownship = g.ReceiverIdTownship
-											LEFT JOIN [DeliveryBackOffice].[dbo].[dbo.DumpServiceCoverage] cov WITH(NOLOCK)
+											LEFT JOIN [DeliveryBackOffice].[dbo].[DumpServiceCoverage] cov WITH(NOLOCK)
 												ON cov.HeaderCode = twn.HeaderCode
 													AND cov.RowStatus=1
 												)
@@ -595,9 +596,7 @@ BEGIN
 		IF(@IdDeliveryLink > 0)
 		BEGIN
 			--Cambiamos estado de Link
-			DECLARE @StatusDeliveryLink INT;
-			SELECT @StatusDeliveryLink = IdDeliveryLinkStatus FROM DeliveryBackOffice.dbo.DeliveryLinkStatus WITH(NOLOCK)
-			WHERE [Name] = 'Envío realizado';
+			DECLARE @StatusDeliveryLink INT = 2; --'Envío realizado'
 
 			DECLARE @GuideNumerDL INT;
 			SELECT TOP 1 @GuideNumerDL = Guide_Number FROM #GuideTable
@@ -653,40 +652,20 @@ BEGIN
 			SELECT TOP (1) [KOVPC].[IdKindOfVPClient] 
 			FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 			WHERE [KOVPC].[KindOfVPName] = 'Concesionario'
-				AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
+				AND [KOVPC].[IdCountry] = @IdCountryByCustomer
 		)
 		DECLARE @ExpressVisitPointTypeId INT = 
 		(
 			SELECT TOP (1) [KOVPC].[IdKindOfVPClient] 
 			FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 			WHERE [KOVPC].[KindOfVPName] = 'Express Center'
-				AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
+				AND [KOVPC].[IdCountry] = @IdCountryByCustomer
 		)
 
-		DECLARE @IndividualWebSys INT =
-		(
-			SELECT TOP 1 [CS].[SysIdSystem]
-			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-			WHERE [CS].[SysNameSystem] = 'Hermes Web'
-		)
-		DECLARE @ExpressWebSys INT =
-		(
-			SELECT TOP 1 [CS].[SysIdSystem]
-			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-			WHERE [CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'
-		)
-		DECLARE @CorporateWebSys INT =
-		(
-			SELECT TOP 1 [CS].[SysIdSystem]
-			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-			WHERE [CS].[SysNameSystem] = 'Hermes Web-Corporativo'
-		)
-		DECLARE @ParserSys INT =
-		(
-			SELECT TOP 1 [CS].[SysIdSystem]
-			FROM [DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-			WHERE [CS].[SysNameSystem] = 'Parser'
-		)
+		DECLARE @IndividualWebSys INT = 1; --'Hermes Web'
+		DECLARE @ExpressWebSys INT = 10; --'Hermes Web-ExpressCenter'
+		DECLARE @CorporateWebSys INT = 11; --'Hermes Web-Corporativo'
+		DECLARE @ParserSys INT = 7; --'Parser'
 
 		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM [DeliveryBackOffice].[dbo].[CatBusinessSegment] WITH(NOLOCK) WHERE BusinessSegmentName='B2B' AND IdCountry= @IdCountryByCustomer);
 

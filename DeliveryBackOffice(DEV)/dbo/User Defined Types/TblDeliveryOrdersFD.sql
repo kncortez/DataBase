@@ -62,7 +62,7 @@ CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE (
     [ReceiverLatitude]                     NVARCHAR (25)   NULL,
     [ReceiverLongitude]                    NVARCHAR (25)   NULL,
 	[SenderIdSettlement]                   BIGINT          NULL,
-	[ReceiverIdSettlement]                 BIGINT          NULL);
+	[ReceiverIdSettlement]                 INT             NULL);
 
 
 
