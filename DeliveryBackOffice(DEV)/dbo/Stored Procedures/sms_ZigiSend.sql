@@ -38,24 +38,24 @@ BEGIN
 
 	CREATE TABLE #WhatsappRecipientZigi
 	(
-		[_Phone]          NVARCHAR(20)   NOT NULL,   
-		[_StatusOrderId]  INT            NOT NULL,   
-		[_LinkCreated]    BIT            NOT NULL,   
-		[_LinkPaid]       BIT            NOT NULL,   
-		[_FirstName]      NVARCHAR(100)  NULL,
-		[_LastName]       NVARCHAR(100)  NULL,
-		[_IdCountry]      NVARCHAR(10)   NULL,       
-		[_NirPhone]       NVARCHAR(10)   NULL,       
-		[_GuideSerie]     NVARCHAR(3)    NOT NULL,
-		[_GuideNumber]    INT            NOT NULL,
-		[_Amount]         DECIMAL(10,2)  NULL,
-		[_Currency]       NVARCHAR(10)   NULL,      
-		[_LinkZigi]       NVARCHAR(MAX)  NULL,
-		[_RegxMovilPhone] NVARCHAR(50)  NULL,
-		[_WhatsappNumber] NVARCHAR(15)   NULL,
-        [_IsGroup]        BIT            NOT NULL DEFAULT 0,
-        [_TypeTransaction]  NVARCHAR(100) NULL,
-		CONSTRAINT PK_WhatsappRecipientZigi PRIMARY KEY CLUSTERED ([_GuideSerie], [_GuideNumber])
+		[Phone]          NVARCHAR(20)   NOT NULL,   
+		[StatusOrderId]  INT            NOT NULL,   
+		[LinkCreated]    BIT            NOT NULL,   
+		[LinkPaid]       BIT            NOT NULL,   
+		[FirstName]      NVARCHAR(100)  NULL,
+		[LastName]       NVARCHAR(100)  NULL,
+		[IdCountry]      NVARCHAR(10)   NULL,       
+		[NirPhone]       NVARCHAR(10)   NULL,       
+		[GuideSerie]     NVARCHAR(3)    NOT NULL,
+		[GuideNumber]    INT            NOT NULL,
+		[Amount]         DECIMAL(10,2)  NULL,
+		[Currency]       NVARCHAR(10)   NULL,      
+		[LinkZigi]       NVARCHAR(MAX)  NULL,
+		[RegxMovilPhone] NVARCHAR(50)  NULL,
+		[WhatsappNumber] NVARCHAR(15)   NULL,
+        [IsGroup]        BIT            NOT NULL DEFAULT 0,
+        [TypeTransaction]  NVARCHAR(100) NULL,
+		CONSTRAINT PK_WhatsappRecipientZigi PRIMARY KEY CLUSTERED ([GuideSerie], [GuideNumber])
 	);
 
     
