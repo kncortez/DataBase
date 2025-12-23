@@ -1,44 +1,23 @@
-﻿-- =============================================
--- Author:		<Edwin,Ramirez>
--- Create date: <2021-19-04>
--- Description:	<Obtiene el listado de los clientes>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sphdGetCustomer]
+   Propósito: Obtiene el listado de los clientes
+   Autor:     Edwin Ramirez
+   Historia:  FDAPI-2405
+   Fecha:     2021-19-04
+===== CHANGELOG ============================
+2021-19-04 | Historia/épica: FDAPI-4856 | Autor: Cristian |
+2025-08-14 | Historia/épica: FDAPI-4421 | Autor: Brandon, Pedroza |
+2025-08-14 | Historia/épica: FDAPI-4421 | Autor: Brandon, Pedroza |
+2025-06-12 | Historia/épica: FDAPI-4923 | Autor: Brandon, Pedroza |
+2024-10-21 | Historia/épica: FDAPI-1353 | Autor: Tito Garcia |
+2024-06-26 | Historia/épica: FDAPI-2552 | Autor: Brandon, Pedroza |
+2024-06-26 | Historia/épica: FDAPI-2405 | Autor: Brandon, Pedroza |
+2024-06-03 | Historia/épica: FDAPI-4923 | Autor: Brandon, Pedroza |
+2024-04-23 | Historia/épica: FDAPI-2185 | Autor: Oscar,Rodriguez |
+2021-19-04 | Historia/épica: FDAPI-2405 | Autor: Edwin Ramirez |
+=========================================== */
 
--- =============================================
--- Author:		<Oscar,Rodriguez>
--- Update date: <2024-04-23>
--- Description:	<Se agrego obtencion de campo isCOD>
--- =============================================
 
--- =============================================
--- Author:		<Brandon, Pedroza>
--- Update date: <2024-06-03>
--- Description:	<Se agrega parametro para filtrar por pais>
--- =============================================
--- Modified:	<Brandon, Pedroza>
--- Update date: <2024-06-26>
--- Description:	<Se agrega validacion para obtener campo isCOD sin valor null>
--- =============================================
--- Modified:	<Brandon, Pedroza>
--- Update date: <2024-06-26>
--- Description:	<Se agrega validacion para obtener campo isCOD sin valor null>
--- =============================================
--- Modified:	<Tito Garcia>
--- Update date: <2024-10-21>
--- Description:	<Se agrega nuevo campo IsVoucherRequired>
--- =============================================
--- Modified:	<Brandon, Pedroza>
--- Update date: <2025-06-12>
--- Description:	<Facturación SV - Obtiene campos de direccion de clientes para facturar de El Salvador>
--- =============================================
--- Modified:	<Brandon, Pedroza>
--- Update date: <2025-08-14>
--- Description:	<Guias Rapidas - Obtiene campos que indica si restringue uso a tarifario por articulo>
--- =============================================
--- Modified:	<Brandon, Pedroza>
--- Update date: <2025-08-14>
--- Description:	<Facturacion SV - Se quita validacion isnull al consultar tabla customer>
--- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer AS INT = -1
@@ -347,15 +326,18 @@ BEGIN
         ORDER BY cst.Name;
 	END;
     -- Facturacion El Salvador
-	SELECT
-		BL.Id,
-		BL.IdCustomer,
-        BL.IdTownship,
-        BL.IdProvince,
-		BL.ActivityId AS CodeActivity,
-		BL.NRC,
-		BL.Nirphone,
-		BL.Phone
+    SELECT
+          BL.Id,
+          BL.NRC,
+          BL.IdDocument,
+          BL.IdCustomer,
+          BL.IdTownship,
+          BL.IdProvince,
+          BL.ActivityId AS CodeActivity,
+          BL.TypeIdentificationDocumentCode,
+          BL.Inv_type,
+          BL.Nirphone,
+          BL.Phone
     FROM dbo.BillingCustomerBySV BL WITH(NOLOCK)
     LEFT JOIN dbo.DistrictByBillingSV DIS WITH(NOLOCK)
        ON DistrictId = DIS.Id
