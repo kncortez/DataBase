@@ -1,4 +1,69 @@
-﻿-- =============================================
+DROP PROCEDURE [dbo].[SetServiceRequest];
+GO
+
+-- Borrar el tipo
+DROP TYPE dbo.TblDeliveryOrders_v2;
+GO
+
+-- Crear el tipo con la columna GuideType
+CREATE TYPE dbo.TblDeliveryOrders_v2 AS TABLE
+(
+    RowNumber                            int     not null,
+    Ticket_Number                        nvarchar(150),
+    Order_Number                         int,
+    Preparation_Date                     datetime,
+    Shipping_Date                        datetime,
+    Pieces_Dry                           int,
+    Pieces_Cold                          int,
+    Consolidated_Number                  int,
+    Recipe_Number                        nvarchar(1000),
+    Sender_ID                            int,
+    Sender_FirstName                     nvarchar(100),
+    Sender_LastName                      nvarchar(100),
+    Sender_Address                       nvarchar(200),
+    Sender_Zone                          nvarchar(100),
+    Sender_Town                          nvarchar(100),
+    Sender_Department                    nvarchar(100),
+    Sender_Phone                         nvarchar(50),
+    Receiver_ID                          int,
+    Receiver_FirstName                   nvarchar(100),
+    Receiver_LastName                    nvarchar(100),
+    Receiver_Address                     nvarchar(600),
+    Receiver_Zone                        nvarchar(100),
+    Receiver_Town                        nvarchar(100),
+    Receiver_Department                  nvarchar(100),
+    Receiver_Phone                       nvarchar(100),
+    Receiver_Email                       nvarchar(200),
+    Receiver_SocialSecurity_ID           nvarchar(200),
+    Receiver_Alternant_ID                int,
+    Receiver_Alternant_FullName          nvarchar(200),
+    Receiver_Alternant_Address           nvarchar(200),
+    Receiver_Alternant_Zone              nvarchar(100),
+    Receiver_Alternant_Town              nvarchar(100),
+    Receiver_Alternant_Department        nvarchar(100),
+    Receiver_Alternant_Phone             nvarchar(100),
+    Receiver_Alternant_Email             nvarchar(200),
+    Receiver_Alternant_SocialSecurity_ID nvarchar(200),
+    Delivery_Max_Date                    datetime,
+    printedStatus                        tinyint,
+    StatusOrderId                        tinyint not null,
+    Receiver_CUI                         nvarchar(25),
+    Package_Description                  nvarchar(200),
+    Sender_Internal_Code                 nvarchar(50),
+    Receiver_Alternant_CUI               nvarchar(25),
+    Collect_OnDelivery                   decimal(14, 2),
+    ParcelCode                           nvarchar(1000),
+    IdCountrySender                      nvarchar(2),
+    ReceiverIdSettlement                 bigint,
+    ReceiverIdTownship                   int,
+    SenderIdSettlement                   bigint,
+    GuideType                            nvarchar(20) -- Columna agregada exitosamente
+)
+GO
+
+
+
+-- =============================================
 -- Author:    <Oscar Rodriguez>
 -- Description: Se regresa informacion de poblado de origen
 -- =============================================
@@ -1098,3 +1163,4 @@ BEGIN
 			  ASC;
     END;
 END;
+go
