@@ -12,13 +12,15 @@ CREATE PROCEDURE [dbo].[SetServiceRecolectCODAnticipated]
 	@GuideNumber INT = 955582,  
 	@Token          NVARCHAR(50) = 'API-FORZA',  
 	@IsProcessedGuideCOD INT = 0,
-	@StationId INT = NULL
+	@StationId INT = NULL,
+	@Code           SMALLINT OUTPUT,  
+    @Message        NVARCHAR(3000) OUTPUT  
 AS  
 BEGIN  
 	
     IF(@StationId = 0)
     BEGIN
-        @StationId = NULL;
+        SET @StationId = NULL;
     END
   
  --INFORMACIÓN AH OBTENER DEL HEADER  
@@ -87,8 +89,8 @@ BEGIN
                           AND VPP.IdVisitPointByClientPortfolio = @PortfolioId
                        )
          BEGIN 
-              SELECT 0 AS code,  
-                     'No existe el cliente registrado para COD Anticipado ' AS [Message];  
+		 		SET @Code = 0;
+				SET @Message = 'No existe el cliente registrado para COD Anticipado ';
               RETURN;
          END
     END
@@ -234,8 +236,8 @@ BEGIN
 
                      EXEC spUpdateBalanceByIdClient @AnticipatedCODDetail
              
-					 SELECT  200 AS code,  
-					   'Proceso finalizado' AS [Message];  
+					SET @Code = 200;
+					SET @Message = 'Proceso finalizado';
 
 					 COMMIT TRANSACTION InsertCODAnticipated  
 
@@ -247,17 +249,18 @@ BEGIN
 			  END TRY  
 			  BEGIN CATCH  
 					ROLLBACK TRANSACTION InsertCODAnticipated;  
-            
-					SELECT  0 AS code,  
-					  'Existe errores al momento de registrar la Guia' AS [Message];  
+					
+					SET @Code = 0;
+					SET @Message = 'Existe errores al momento de registrar la Guia';
+
 			  END CATCH
 			END  
 		ELSE  
 		BEGIN  
 			PRINT 'Return Percent: ' + CONVERT(NVARCHAR(16),@ReturnPercent)  
-        
-			SELECT  0 AS code,  
-			  'El monto no se encuentra dentro de los paramettros definidos' AS [Message];  
+
+			SET @Code = 0;
+			SET @Message = 'El monto no se encuentra dentro de los paramettros definidos';
 			RETURN;
 		END  
 		END  
@@ -265,8 +268,8 @@ BEGIN
 		BEGIN  
 			PRINT  'LIMITE DIARIO: ' + CONVERT(NVARCHAR(12),@DailyAmount) + ' MONTO COD: ' + CONVERT(NVARCHAR(12),@collectOnDeliveryDaily);  
       
-			SELECT  0AS code,  
-			'Limite Diario COD Anticipado superado' AS [Message];  
+	  		SET @Code = 0;
+			SET @Message = 'Limite Diario COD Anticipado superado';
 			RETURN;  
 		END    
 	END  
@@ -295,8 +298,8 @@ BEGIN
     
 			ROLLBACK TRANSACTION UpdateCOD;  
   
-			SELECT  0 AS [code],  
-			  'No es posible Actualizar la guía'  AS [Message];  
+  	  		SET @Code = 0;
+			SET @Message = 'No es posible Actualizar la guía';
 			RETURN;  
   
 		END CATCH  

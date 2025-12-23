@@ -282,11 +282,6 @@ BEGIN
                 WHERE dlo.Collect_OnDelivery > 0
                 AND lge.IsAnticipatedCOD = 1
 
-				CREATE TABLE #TempTable (
-                    code INT,
-                    Message NVARCHAR(200)
-                );
-
 				WHILE EXISTS (SELECT 1 FROM #GuidesToProcessTEMP)
                 BEGIN
                     SELECT TOP 1
@@ -294,14 +289,13 @@ BEGIN
                         @GuideNumberT = GuideNumberTEMP
                     FROM #GuidesToProcessTEMP;
 
-                    INSERT INTO #TempTable -- Guarda el resultado del SP para que no interfiera en el resultado final de este SP
                     EXEC [dbo].[SetServiceRecolectCODAnticipated] 
                         @GuideSerie = @GuideSerieT,  
                         @GuideNumber = @GuideNumberT,
                         @Token = @TokenP,
+						@StationId = @StationId,
                         @Code = @Code OUTPUT,
-                        @Message = @Message OUTPUT,
-						@StationId = @StationId;
+                        @Message = @Message OUTPUT;
 
                     IF (@Code = 200)
                     BEGIN
@@ -347,8 +341,6 @@ BEGIN
                 END;
 
                 DROP TABLE #GuidesToProcessTEMP;						
-                DROP TABLE #TempTable;
-
 
 				-- FIN INSERTAR REGISTRO EN ProcessGuideCOD
 
