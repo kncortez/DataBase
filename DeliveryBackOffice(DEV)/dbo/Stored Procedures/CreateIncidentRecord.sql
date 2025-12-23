@@ -40,8 +40,8 @@ BEGIN
     DECLARE @CatTypeConfirmationOfIncidenceId INT;
     DECLARE @FailedVisitStatusId INT;
     DECLARE @IncidenceStatusId INT = 45; --'Incidencia en ruta'
-    DECLARE @CatTypeCOIFailedVisitStatusId INT = 1; --'Incidencia en Ruta'
-    DECLARE @CatTypeCOIIncidenceStatusId INT;
+    DECLARE @CatTypeCOIFailedVisitStatusId INT; 
+    DECLARE @CatTypeCOIIncidenceStatusId INT = 1; --'Incidencia en Ruta'
     DECLARE @DeliveryAttemptId AS BIGINT = NULL;
     DECLARE @SytemOrigin AS INT = NULL;
     DECLARE @IdCountrySender AS NVARCHAR(2) = 'GT';
