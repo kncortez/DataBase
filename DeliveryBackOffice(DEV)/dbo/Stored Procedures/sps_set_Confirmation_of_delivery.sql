@@ -1,43 +1,27 @@
-﻿-- =============================================
--- Author:		<Bidcar, Herrera>
--- Create date: <2020-06-12>
--- Description:	<Confirmar entrega de guía>
--- =============================================
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2022-06-28>
--- Description:	<Agregar Filtro para saber si tiene pago con tarjeta o datafono en CostDetail>
--- =============================================
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2022-08-01>
--- Description:	<Agregar validación para impedir entrega cuando el destino sea un express center: revisión 01/09/2022>
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2022-09-26>
--- Description:	<Al momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL>
--- =============================================
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2023-03-20>
--- Description:	<Validar que guía no este en estado terminal>
--- =============================================
--- =============================================
--- Author:		<Cristian, Suazo>
--- Create date: <2024-06-06>
--- Description:	<Valida que el pais destino es el mismo que el pais logueado>
--- =============================================
--- Author:		<Tito Garcia>
--- Updated date:<18-12-2024>
--- Description:	<Se realizan optimizaciones recomendadas por DBA>
--- =============================================
+﻿/* =================================================
+   SP:        sps_set_Confirmation_of_delivery
+   Propósito: Confirmar entrega de guía
+   Autor:     Bidcar Herrera
+   Historia:  ---
+   Fecha:     2020-06-12
+
+=== CHANGELOG ============================
+
+2024-06-06 | Historia/épica: ---         | Autor: Cristian Suazo   | Validar que el país destino sea el mismo que el país logueado
+2024-12-18 | Historia/épica: ---         | Autor: Tito Garcia      | Optimización del SP según recomendaciones del DBA
+2025-12-19 | Historia/épica: FDAPI-4744  | Autor: Brandon Pedroza  | agregar id estacion al confirmar entrega desktop
+
+=========================================== */
+
 CREATE PROCEDURE [dbo].[sps_set_Confirmation_of_delivery]
     @Guide_Serie AS NVARCHAR(2),   --guide serie
     @Guide_Number AS INT,         --guide number
     @DateOfDelivery NVARCHAR(50),  --Date of delivery
     @NameOfReceiver NVARCHAR(200), --Name of receiver
     @TokenId AS NVARCHAR(50),       --token user
-	@IdCountry AS NVARCHAR(2) = 'GT' --Country
+    @IdCountry AS NVARCHAR(2) = 'GT', --Country
+    @StationId AS INT = NULL
+
 AS
 BEGIN
     DECLARE @StatusId TINYINT = 5; --Status of delivery 
@@ -65,7 +49,7 @@ BEGIN
 													And DO.Guide_Number =@Guide_Number 
 														),0)
 																					
-	SELECT @BelongCountry = CASE WHEN IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry THEN 1 ELSE 0 END	
+	SELECT @BelongCountry = CASE WHEN ReceiverCountryId = @IdCountry THEN 1 ELSE 0 END	
 	FROM DeliveryOrder WITH (NOLOCK)
 	WHERE Guide_Serie = @Guide_Serie 
         AND Guide_Number = @Guide_Number																			
@@ -93,11 +77,7 @@ BEGIN
             FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK)
             WHERE Guide_Serie = @Guide_Serie
                   AND Guide_Number = @Guide_Number
-                  AND
-                  (
-                      StatusOrderId = @StatusId
-                      OR StatusOrderId = 14
-                  )
+                  AND StatusOrderId IN (@StatusId, 14)
 				  AND [RowStatus] = 1
         );
 			
@@ -160,14 +140,16 @@ IF(@IsStatusTerminal = 0)
                         [StatusOrderId],
                         [UserCreated],
                         [DateCreated],
-                        [DateCreatedInSystem]
+                        [DateCreatedInSystem],
+						[StationId]
                     )
                     SELECT @Guide_Serie,
                            @Guide_Number,
                            @StatusId,
                            @TokenId,
                            CONVERT(DATETIME, @DateOfDelivery, 120),
-                           GETDATE()
+                           GETDATE(),
+						   @StationId
                     WHERE EXISTS
                     (
                         SELECT 1
