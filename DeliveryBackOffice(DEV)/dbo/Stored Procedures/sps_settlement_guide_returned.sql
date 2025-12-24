@@ -1,13 +1,21 @@
-﻿-- =============================================
--- Author:		<Cano, Carlos>
--- Create date: <2020-11-22>
--- Description:	<Registrar transacción de liquidación para material devuelto>
--- =============================================
+﻿/* =================================================
+   SP:        sps_settlement_guide_returned
+   Propósito: Registrar transacción de liquidación para material devuelto
+   Autor:     Carlos Cano
+   Historia:  ---
+   Fecha:     2020-11-22
+
+=== CHANGELOG ============================
+
+2025-12-23 | Historia/épica: FDAPI-4748   | Autor: Brandon Pedroza | Se almacena idStation en liquidación para material devuelto
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_settlement_guide_returned]
     @GuideSerie AS VARCHAR(2)
   , @GuideNumber AS INT
   , @Token NVARCHAR(50)
   , @IdManifest INT
+  , @StationId INT = NULL
 AS
 BEGIN
     DECLARE @RModified INT;
@@ -52,10 +60,11 @@ BEGIN
           , [DateCreatedInSystem]
           , [Observations]
           , [Temperature_Celsius]
+          , [StationId]
         )
         VALUES
         (   @GuideSerie, @GuideNumber, 8 -- retornado a Forza
-          , @Token, GETDATE(), GETDATE(), NULL, NULL);
+          , @Token, GETDATE(), GETDATE(), NULL, NULL,@StationId);
 
         -- registrar último checkpoint de devolución
         UPDATE DeliveryBackOffice.dbo.DeliveryOrder
@@ -126,9 +135,10 @@ BEGIN
               , [DateCreatedInSystem]
               , [Observations]
               , [Temperature_Celsius]
+              , [StationId]
             )
             VALUES
-            (@GuideSerie, @GuideNumber, @StatusReturn, @Token, GETDATE(), GETDATE(), NULL, NULL);
+            (@GuideSerie, @GuideNumber, @StatusReturn, @Token, GETDATE(), GETDATE(), NULL, NULL,@StationId);
 
             -- registrar último checkpoint de devolución
             UPDATE DeliveryOrder
