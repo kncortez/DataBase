@@ -1,8 +1,12 @@
-﻿-- =============================================
--- Author:		<Andrés, Ruíz>
--- Create date: <2023-04-28>
--- Description:	< ingreso de incidencia manual desde hermes desktop >
--- =============================================
+﻿/* =================================================
+   SP:        spHD_SetGuideIncidence
+   Propósito: Ingreso de incidencia manual desde Hermes Desktop
+   Autor:     Andrés Ruíz
+   Historia:  ---
+   Fecha:     2023-04-28
+=== CHANGELOG ============================
+-- 2025-12-19 | Historia/épica:  FDAPI-4746   | Autor: Brandon Pedroza    | Almacenar idstation al registrar incidencia desktop
+=========================================== */
 CREATE PROCEDURE [dbo].[spHD_SetGuideIncidence]
 
 	@GuideSerie NVARCHAR(2),
@@ -10,7 +14,8 @@ CREATE PROCEDURE [dbo].[spHD_SetGuideIncidence]
 	@SimulatedDate DATETIME,
 	@Incidence INT,
 	@Observations NVARCHAR(200) = '',
-	@Token NVARCHAR(50)
+	@Token NVARCHAR(50),
+	@StationId INT = NULL
 
 AS
 BEGIN
@@ -349,7 +354,8 @@ IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
 				[PieceId],
 				[RowStatus],
 				[DeliveryAttemptId],
-				[SystemOrigin]
+				[SystemOrigin],
+				[StationId]
 			)
 			OUTPUT [Inserted].[Guide_Number] INTO @DeliveryOrderDetailInserted ([IdDeliveryOrderDetail])
 			SELECT
@@ -365,7 +371,8 @@ IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
 					NULL,      -- PieceId - int
 					1,   -- RowStatus - bit
 					[DAI].[IdDeliveryAttempt],
-					@SystemOrigin
+					@SystemOrigin,
+					@StationId
 			FROM
 				@DeliveryAttemptInserted DAI
 
