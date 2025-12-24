@@ -1,38 +1,24 @@
-﻿
+﻿/* =================================================
+   SP:        sps_set_Return_of_delivery
+   Propósito: Devolución entrega de guía
+   Autor:     Josselyn Hernandez
+   Historia:  ---
+   Fecha:     2020-09-15
 
--- =============================================
--- Author:		<Hernandez, Josselyn>
--- Create date: <2020-09-15>
--- Description:	<Devolucion entrega de guía>
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2022-09-26>
--- Description:	<Al momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL>
--- =============================================
--- =============================================
--- Author:		<Edelman>
--- Create date: <2022-10-19>
--- Description:	<confirmación de devolución, ingreso a cola de webhooks>
--- =============================================
--- =============================================
--- Author:		<Edelman>
--- Create date: <2023-03-20>
--- Description:	<Validar que guía esta en estado terminal y evitar cualquier proceso>
--- =============================================
--- Modified:	<Brandon Pedroza>
--- Create date: <2024-05-28>
--- Description:	<Se agrega parametro para filtrar por pais de origen>
--- =============================================
--- Author:		<Tito Garcia>
--- Updated date:<18-12-2024>
--- Description:	<Se realizan optimizaciones recomendadas por DBA>
--- =============================================
+=== CHANGELOG ============================
+
+2024-05-28 | Historia/épica: ---         | Autor: Brandon Pedroza  | Se agrega parámetro para filtrar por país de origen
+2024-12-18 | Historia/épica: ---         | Autor: Tito Garcia      | Optimización según recomendaciones del DBA
+2025-12-23 | Historia/épica: FDAPI-4750  | Autor: Brandon Pedroza  | Almacena idstation al confirmar devolución en desktop
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_Return_of_delivery]
     @Guide_Serie AS NVARCHAR(2),  --guide serie
     @Guide_Number AS INT,        --guide number
     @DateOfDelivery NVARCHAR(50), --Date of delivery
     @TokenId AS NVARCHAR(50),      --token user
-	@IdCountry AS NVARCHAR(2) = 'GT'	 --id country
+	@IdCountry AS NVARCHAR(2) = 'GT',	 --id country
+    @StationId AS INT = NULL
 AS
 BEGIN
     DECLARE @StatusId TINYINT =
@@ -121,7 +107,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
                     WHERE Guide_Serie = @Guide_Serie
                           AND Guide_Number = @Guide_Number
-                          AND ISNULL(SenderCountryId, 'GT') = @IdCountry
+                          AND SenderCountryId = @IdCountry
                           
                 );
 
@@ -186,14 +172,16 @@ BEGIN
                             [StatusOrderId],
                             [UserCreated],
                             [DateCreated],
-                            [DateCreatedInSystem]
+                            [DateCreatedInSystem],
+                            [StationId]
                         )
                         SELECT @Guide_Serie,
                                @Guide_Number,
                                @StatusId,
                                @TokenId,
                                CONVERT(DATETIME, @DateOfDelivery, 120),
-                               GETDATE()
+                               GETDATE(),
+                               @StationId
                         WHERE EXISTS
                         (
                             SELECT 1
