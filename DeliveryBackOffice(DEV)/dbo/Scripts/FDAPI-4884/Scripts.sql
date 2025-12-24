@@ -1,3 +1,19 @@
+alter table dbo.VisitPointClient
+    add ParserGuideTypes NVARCHAR(100) default 'Crédito'
+go
+
+exec sp_addextendedproperty 'MS_Description', N'Tipos de guías permitidos que se puden crear desde Parsers', 'SCHEMA',
+     'dbo', 'TABLE', 'VisitPointClient', 'COLUMN', 'ParserGuideTypes'
+go
+
+-- IMPORTANTE PARA NO AFECTAR A TODOS LOS VISITPOINT EN SU FUNCIONAMIENTO PREVIO A IMPLEMENTAR LAS GUIAS STANDARD Y COLLECT,
+-- PARA QUE SIEMPRE SIGA CREANDO GUÍAS DE TIPO CREDITO
+UPDATE dbo.VisitPointClient SET ParserGuideTypes = 'Crédito'; -- ES NECESARIO APLICAR A TODOS LOS REGISTROS EXISTENTES
+
+
+
+
+-- CREACION DE BORRADO Y CREACION DE SP Y TABLE TYPE PARA AGREGAR GuideType
 DROP PROCEDURE [dbo].[SetServiceRequest];
 GO
 
