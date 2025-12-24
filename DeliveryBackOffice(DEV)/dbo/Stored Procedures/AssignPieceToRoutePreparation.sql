@@ -1,27 +1,18 @@
-﻿-- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-01-18>
--- Description:	< Asignación por pieza a RoutePreparation .>
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-02-02>
--- Description:	< Cambio para uso de Ruta sobre Unidad .>
--- =============================================
--- =============================================
--- Author:		<Edelman,Vásquez>
--- Create date: <2022-09-28>
--- Description:	<generar los datos del servicio tomando en cuenta si esta esta marcada para una devolución.>
--- =============================================
--- Author:		<Tito Garcia>
--- update date: <2024-10-01>
--- Description:	<Permitir asociar varios manifiestos a una ruta para que sean liquidados en un mismo proceso>
--- =============================================
--- =============================================
--- Author:		<Edelman,Vásquez>
--- Create date: <2025-01-17>
--- Description:	<Proceso de preparación cuando se agrega una referencia>
--- =============================================
+﻿
+/* =================================================
+   SP:        AssignPieceToRoutePreparation
+   Propósito: Asignación por pieza a RoutePreparation
+   Autor:     Andres Ruiz
+   Historia:  ---
+   Fecha:     2022-01-18
+
+=== CHANGELOG ============================
+
+2024-10-01 | Historia/épica: ---          | Autor: Tito Garcia     | Permitir asociar varios manifiestos a una ruta para ser liquidados en un mismo proceso
+2025-01-17 | Historia/épica: ---          | Autor: Edelman Vásquez | Proceso de preparación cuando se agrega una referencia
+2025-12-18 | Historia/épica: FDAPI-4740   | Autor: Brandon Pedroza | Guardar estación a pieza al prepara ruta
+
+=========================================== */
 CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
     @IdRoute INT,
     @Date DATE,
@@ -30,7 +21,8 @@ CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
     @GuidePiece INT,
     @GuidePieceType BIT = 1, --- 1 = Pieza seca | 0 = Pieza fría
     @Token NVARCHAR(50),
-    @IsReference BIT = 0
+    @IsReference BIT = 0,
+	@StationId INT = NULL
 AS
 BEGIN
 
@@ -539,14 +531,16 @@ BEGIN
                             [StatusOrderId],
                             [UserCreated],
                             [DateCreated],
-                            [DateCreatedInSystem]
+                            [DateCreatedInSystem],
+                            [StationId]
                         )
                         SELECT @GuideSerie,
                                @GuideNumber,
                                3,
                                @Token,
                                GETDATE(),
-                               GETDATE()
+                               GETDATE(),
+                               @StationId
                         WHERE NOT EXISTS
                         (
                             SELECT 1
