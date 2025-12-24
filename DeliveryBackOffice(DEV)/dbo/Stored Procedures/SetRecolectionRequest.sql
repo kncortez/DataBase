@@ -179,10 +179,8 @@ BEGIN
                     TimePlaId = t.IdTimePayment
                 FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                     INNER JOIN @TblDeliveryOrdersList t
-                        ON (
-                               t.Guide_Number = pay.GuideNumber
-                               AND t.Guide_Serie = pay.GuideSerie
-                           );
+                        ON t.Guide_Serie = pay.GuideSerie
+                            AND t.Guide_Number = pay.GuideNumber;
 
                 IF (@IdAccount != 0)
                 BEGIN
@@ -193,15 +191,13 @@ BEGIN
                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                                     INNER JOIN DeliveryBackOffice.dbo.VisitPointByUser VPU WITH (NOLOCK)
                                         ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-                                           --AND VPU.RowStatus = 1
                                     INNER JOIN DeliveryBackOffice.dbo.RegisterUser ru WITH (NOLOCK)
                                         ON VPU.RegisterUserID = ru.UsrIdUser
-                                           --AND ru.UsrRowStatus = 1
                                     INNER JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                                         ON rua.RuaIdUser = ru.UsrIdUser
                                 WHERE rua.RuaIdAccount = @IdAccount
-								AND VPU.RowStatus = 1
-								AND ru.UsrRowStatus = 1
+                                    AND VPU.RowStatus = 1
+                                    AND ru.UsrRowStatus = 1
                             );
 
                     INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction

@@ -34,7 +34,7 @@ BEGIN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
 	--FIN MODIFICACIÓN
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
-	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WITH(NOLOCK) WHERE CustomerID = @CustomerID )
+	SET @IdCountryByCustomer =(SELECT TOP 1 CountryID FROM VisitPointClient WITH(NOLOCK) WHERE CustomerID = @CustomerID )
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -344,10 +344,10 @@ BEGIN
 			@module,
 			GT.ReceiverLatitude,
 			GT.ReceiverLongitude,
-			ISNULL(P.IdCountry,'GT'),
-			ISNULL(P2.IdCountry,'GT'),
+			P.IdCountry,
+			P2.IdCountry,
 			CASE
-				WHEN ISNULL(P.IdCountry,'GT') = ISNULL(P2.IdCountry,'GT') THEN 'DOM'
+				WHEN P.IdCountry = P2.IdCountry THEN 'DOM'
 				ELSE 'INT'
 			END AS GuideType,
 			GT.SenderIdSettlement

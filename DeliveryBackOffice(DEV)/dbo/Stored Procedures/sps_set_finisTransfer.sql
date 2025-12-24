@@ -24,6 +24,7 @@ BEGIN
 
     DECLARE @jsonResult NVARCHAR(MAX) = N'';
     DECLARE @errorMessage NVARCHAR(100);
+    DECLARE @Today DATE = GETDATE();
     		
     IF(@StationId = 0)
     BEGIN
@@ -88,8 +89,9 @@ BEGIN
 			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement dobs WITH(NOLOCK)
 				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
 		WHERE dsd.RowStatus = 1
-            AND CAST(dobs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
-            AND dobs.ID_Courier = @IdCourier
+            AND dobs.Date_Dispatched >= @Today
+            AND dobs.Date_Dispatched < DATEADD(DAY, 1, @Today)
+            AND dobs.ID_Courier = @IdCourier;
 
 		UPDATE rpd 
 		SET RowStatus = 0,
@@ -102,7 +104,8 @@ BEGIN
 		INNER JOIN DeliveryBackOffice.dbo.RoutePreparation rp WITH(NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
 		WHERE rpd.RowStatus = 1
-			AND rp.DateRoutePreparation = CAST(GETDATE() AS DATE)
+            AND rp.DateRoutePreparation >= @Today
+            AND rp.DateRoutePreparation < DATEADD(DAY, 1, @Today);
 
         -- Actualizar registros del detalle de servicios de devolución
         UPDATE std
@@ -133,7 +136,7 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail std WITH (NOLOCK)
                 ON std.SettlementByPickupId = stp.Id
                    AND std.RowStatus = 1
-            JOIN #listGuidesEnabled lge
+            INNER JOIN #listGuidesEnabled lge
                 ON lge.Guide_Serie = std.GuideSerie
                    AND lge.Guide_Number = std.GuideNumber
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dpc WITH (NOLOCK)
