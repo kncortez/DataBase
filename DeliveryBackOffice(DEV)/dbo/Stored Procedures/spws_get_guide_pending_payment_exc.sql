@@ -5,7 +5,7 @@
 --               incluyendo las guías relacionadas (madre e hijas).>
 -- =============================================
 CREATE PROCEDURE spws_get_guide_pending_payment_exc
-    @InGuidesP VARCHAR(MAX)
+    @InGuidesP VARCHAR(1000)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -42,7 +42,7 @@ BEGIN
         IsPayZigi_COD BIT,
         IsPayZigi_COD_Exclude BIT,
         ZigiTransactionId INT NULL,
-        GuidesRelated NVARCHAR(MAX) NULL,
+        GuidesRelated NVARCHAR(1000) NULL,
         OriginalServicePrice DECIMAL(18, 2) NULL,
         OriginalCODAmount DECIMAL(18, 2) NULL,
         OriginalAmountToCollect DECIMAL(18, 2) NULL

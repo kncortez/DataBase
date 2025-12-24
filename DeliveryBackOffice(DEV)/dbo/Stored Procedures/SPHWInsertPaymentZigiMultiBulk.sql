@@ -5,7 +5,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigiMultiBulk]
 (
-    @ValuesString NVARCHAR(MAX)
+    @ValuesString NVARCHAR(1000)
 )
 AS
 BEGIN

@@ -4,7 +4,7 @@
 -- Description: Versión optimizada (JOINs agregados, 10x más rápida)
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail_optimized]
-    @InGuidesP    VARCHAR(MAX),
+    @InGuidesP    VARCHAR(1000),
     @IdCountry    VARCHAR(2) = 'GT'
 AS
 BEGIN

@@ -14,9 +14,9 @@
 CREATE PROCEDURE  [dbo].[ReportClosureTotalDesktop] 
     @StartDate datetime = NULL,
     @EndDate datetime = NULL,
-    @VisitPointId NVARCHAR(MAX) = NULL,
-    @IdCierre NVARCHAR(MAX) = NULL,
-    @IdAccount NVARCHAR(MAX) = NULL
+    @VisitPointId NVARCHAR(50) = NULL,
+    @IdCierre NVARCHAR(50) = NULL,
+    @IdAccount NVARCHAR(50) = NULL
 AS
 BEGIN
     DECLARE @AccountExp NVARCHAR(30),
