@@ -163,13 +163,13 @@ BEGIN
                         (
                             SELECT StatusOrderId
                             FROM DeliveryBackOffice.dbo.StatusOrder WITH (NOLOCK)
-                            WHERE OrderDescription = 'En ruta'
+                            WHERE StatusOrderId = 4 --'En ruta'
                         );
                 DECLARE @IDSTATUSFAILEDDELIVERY INT =
                         (
                             SELECT StatusOrderId
                             FROM DeliveryBackOffice.dbo.StatusOrder WITH (NOLOCK)
-                            WHERE OrderDescription = 'Intento de entrega fallida'
+                            WHERE StatusOrderId = 12 -- 'Intento de entrega fallida'
                         );
                 --Obtiene la lista de guías que ya salieron a ruta 2 o mas veces y que tienen 0 intentos de entrega fallida
                 INSERT INTO @GuidesTableWithoutFailRetries
@@ -221,7 +221,7 @@ BEGIN
                             (
                                 SELECT IdTypeServiceManagment
                                 FROM DeliveryBackOffice.dbo.TypeServiceManagment WITH (NOLOCK)
-                                WHERE Name = 'Entrega'
+                                WHERE IdTypeServiceManagment = 2 -- 'Entrega'
                             );
                     INSERT INTO dbo.DeliveryOrderAlert
                     (
@@ -243,7 +243,7 @@ BEGIN
                            (
                                SELECT IdCatTypeAlert
                                FROM DeliveryBackOffice.dbo.CatTypeAlert WITH (NOLOCK)
-                               WHERE AlertName = 'Prioritario'
+                               WHERE IdCatTypeAlert = 1 -- 'Prioritario'
                            ),
                            1,
                            @TokenId,
@@ -326,7 +326,7 @@ BEGIN
                                (
                                    SELECT ModIdModule
                                    FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
-                                   WHERE ModName = 'Liquidación COD'
+                                   WHERE ModIdModule = 30 -- 'Liquidación COD'
                                ),
                                0
                                      );
@@ -355,8 +355,8 @@ BEGIN
                 (
                     SELECT 1
                     FROM [DeliveryBackOffice].[dbo].[ProcessedGuideCOD] WITH (NOLOCK)
-                    WHERE [GuideNumber] = @GuideNumber
-                          AND GuideSerie = @Guide_Serie
+                    WHERE [GuideSerie] = @Guide_Serie 
+                          AND [GuideNumber] = @GuideNumber
                 )
                 BEGIN
                     INSERT INTO [DeliveryBackOffice].[dbo].[ProcessedGuideCOD]
@@ -394,8 +394,8 @@ BEGIN
                         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                             ON do.Guide_Serie = DOP.GuideSerie
                                AND do.Guide_Number = DOP.GuideNumber
-                    WHERE do.[Guide_Number] = @GuideNumber
-                          AND do.[Guide_Serie] = @Guide_Serie
+                    WHERE do.[Guide_Serie] = @Guide_Serie
+                          AND do.[Guide_Number] = @GuideNumber
                           AND
                           (
                               do.IsCollect = 'false'
@@ -455,7 +455,7 @@ BEGIN
                                              @WebhookCustomerId =  ISNULL(DO.IdCustomer,-1),
 											 @GuideCurrentStatus = ISNULL(DO.StatusOrderId,-1)
                                     FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                      WHERE DO.Guide_Number = @Guide_Number AND DO.Guide_Serie = @Guide_Serie
+                                      WHERE DO.Guide_Serie = @Guide_Serie AND DO.Guide_Number = @Guide_Number
 
                             SET @CustomerEndpointId
                                 = ISNULL(
@@ -551,11 +551,12 @@ BEGIN
 													Count(dop.GuideNumber)
 											FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 											INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
-												ON do.Guide_Number = dop.GuideNumber
-                                                AND do.Guide_Serie = dop.GuideSerie
+												ON do.Guide_Serie = dop.GuideSerie
+                                                AND do.Guide_Number = dop.GuideNumber 
                                             INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
                                                 ON do.IdCustomer = WHE.CustomerId
-                                            WHERE do.Guide_Number = @Guide_Number
+                                            WHERE do.Guide_Serie = @Guide_Serie 
+                                                AND do.Guide_Number = @Guide_Number
                                                 AND WHE.TypeConnectionId = 2
                                             GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -585,11 +586,12 @@ BEGIN
 													Count(dop.GuideNumber)
 											FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 											INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
-												ON do.Guide_Number = dop.GuideNumber
-                                                AND do.Guide_Serie = dop.GuideSerie
+												ON do.Guide_Serie = dop.GuideSerie
+                                                AND do.Guide_Number = dop.GuideNumber
                                             INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
                                                 ON do.IdCustomer = WHE.CustomerId
-                                            WHERE do.Guide_Number = @Guide_Number
+                                            WHERE do.Guide_Serie = @Guide_Serie
+                                                AND do.Guide_Number = @Guide_Number
                                                 AND dop.ExternalPieceId IS NOT NULL
                                                 AND WHE.TypeConnectionId = 2
                                             GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -616,15 +618,16 @@ BEGIN
 												@TokenId AS TokenCreated
 										FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
 										INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
-											ON dop.GuideNumber = do.Guide_Number
-                                            AND dop.GuideSerie = do.Guide_Serie
+											ON dop.GuideSerie = do.Guide_Serie 
+                                            AND dop.GuideNumber = do.Guide_Number
 										INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
 										    ON do.IdCustomer = WHE.CustomerId
 										INNER JOIN @GuidePiecesTable gpt
-										    ON dop.GuideNumber = gpt.GuideNumber
-                                            AND dop.GuideSerie = gpt.GuideSerie
+										    ON dop.GuideSerie = gpt.GuideSerie 
+                                            AND dop.GuideNumber = gpt.GuideNumber
 										INNER JOIN @PiecesGuideRelatedTable pgt
-										    ON gpt.GuideNumber = pgt.GuideNumber
+										    ON gpt.GuideSerie = pgt.GuideSerie
+                                            AND gpt.GuideNumber = pgt.GuideNumber
 											AND gpt.NumberPieces = pgt.NumberRelatedPieces
 										WHERE WHE.TypeConnectionId = 2
 

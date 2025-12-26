@@ -18,7 +18,7 @@ CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
     @Token NVARCHAR(100),
     @Route VARCHAR(100),
     @CountryId VARCHAR(2) = 'GT',
-	@StationId INT
+	@StationId INT = NULL
 AS
 BEGIN
 
@@ -117,21 +117,21 @@ BEGIN
                 (
                     SELECT IdTranportationZone
                     FROM DeliveryBackOffice.dbo.CatTransportationZone WITH (NOLOCK)
-                    WHERE Name = 'Ruta de recolección'
+                    WHERE IdTranportationZone = 1 -- 'Ruta de recolección'
                 );
 
         DECLARE @outBound INT =
                 (
                     SELECT IdTranportationZone
                     FROM DeliveryBackOffice.dbo.CatTransportationZone WITH (NOLOCK)
-                    WHERE Name = 'Bodega'
+                    WHERE IdTranportationZone = 4 -- 'Bodega'
                 );
 
         DECLARE @idTransactionType INT =
                 (
                     SELECT IdTransactionType
                     FROM DeliveryBackOffice.dbo.TransactionType WITH (NOLOCK)
-                    WHERE Name = 'Liquidación de Recolección'
+                    WHERE IdTransactionType = 1 -- 'Liquidación de Recolección'
                 );
 
         DECLARE @IdRoute INT =
@@ -347,8 +347,8 @@ BEGIN
 																AND do.Guide_Number = dop.GuideNumber
 															INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
 																ON do.IdCustomer = WHE.CustomerId
-															WHERE do.Guide_Number = @GuideNumber
-                                                                AND do.Guide_Serie = @GuideSerie
+															WHERE do.Guide_Serie = @GuideSerie 
+                                                                AND do.Guide_Number = @GuideNumber
 																AND WHE.TypeConnectionId = 2
 															GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -365,7 +365,7 @@ BEGIN
 													);
 
 													DECLARE @MaxPieceOrderDetail INT = 0;
-													SET @MaxPieceOrderDetail = IIF((SELECT MAX(PieceId) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH(NOLOCK) Where Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND StatusOrderId = 2) IS NULL,0,(SELECT MAX(PieceId) FROM DeliveryOrderDetail Where Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND StatusOrderId = 2))
+													SET @MaxPieceOrderDetail = IIF((SELECT MAX(PieceId) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH(NOLOCK) Where Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND StatusOrderId = 2) IS NULL,0,(SELECT MAX(PieceId) FROM DeliveryOrderDetail Where Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND StatusOrderId = 2))
 
 													INSERT INTO @PiecesGuideRelatedTableRec 
 																( 
@@ -500,12 +500,12 @@ BEGIN
 					DECLARE @GuideCurrentStatus INT = -1;
 
 					BEGIN TRY
-						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
+						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.RowStatus = 1 AND WT.IdWebhookType = 1);--'GuideStatusChange'
 
-						SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
+						SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber),-1);
 						SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
 
-						SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie);
+						SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber );
 
 						-- Cliente tiene webhook configurado para el tipo especificado
 						-- Estado actual de la guía coincide dentro de las restricciónes por usuario
@@ -582,12 +582,12 @@ BEGIN
 																Count(dop.GuideNumber)
 														FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 														INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
-															ON do.Guide_Number = dop.GuideNumber
-															AND do.Guide_Serie = dop.GuideSerie
+															ON do.Guide_Serie = dop.GuideSerie
+															AND do.Guide_Number = dop.GuideNumber
 														INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
 															ON do.IdCustomer = WHE.CustomerId
-														WHERE do.Guide_Number = @GuideNumber
-                                                            AND do.Guide_Serie = @GuideSerie
+														WHERE do.Guide_Serie = @GuideSerie 
+                                                            AND do.Guide_Number = @GuideNumber
 															AND WHE.TypeConnectionId = 2
 														GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -618,10 +618,10 @@ BEGIN
 																Count(dop.GuideNumber)
 														FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 														INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
-															ON do.Guide_Number = dop.GuideNumber AND dop.GuideSerie = do.Guide_Serie
+															ON dop.GuideSerie = do.Guide_Serie AND do.Guide_Number = dop.GuideNumber 
 														INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
 															ON do.IdCustomer = WHE.CustomerId
-														WHERE do.Guide_Number = @GuideNumber AND do.Guide_Serie = @GuideSerie
+														WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber 
 															AND dop.ExternalPieceId IS NOT NULL
 															AND WHE.TypeConnectionId = 2
 														GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -648,13 +648,13 @@ BEGIN
 															@Token AS TokenCreated
 													FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
 													INNER JOIN DeliveryOrder do WITH(NOLOCK)
-														ON dop.GuideNumber = do.Guide_Number AND do.Guide_Serie = dop.GuideSerie
+														ON do.Guide_Serie = dop.GuideSerie AND dop.GuideNumber = do.Guide_Number
 													INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
 													    ON do.IdCustomer = WHE.CustomerId
 													INNER JOIN @GuidePiecesTable gpt
-													    ON dop.GuideNumber = gpt.GuideNumber AND dop.GuideSerie = gpt.GuideSerie
+													    ON dop.GuideSerie = gpt.GuideSerie AND dop.GuideNumber = gpt.GuideNumber 
 													INNER JOIN @PiecesGuideRelatedTable pgt
-													    ON gpt.GuideNumber = pgt.GuideNumber AND gpt.GuideSerie = pgt.GuideSerie
+													    ON gpt.GuideSerie = pgt.GuideSerie AND gpt.GuideNumber = pgt.GuideNumber
 														 AND gpt.NumberPieces = pgt.NumberRelatedPieces
 														WHERE
 														--	AND
@@ -953,8 +953,7 @@ BEGIN
                 WHERE ra.IdRoute = @IdRoute
                       AND ra.DateOfRoute = @tiempo
 					  AND do.Guide_Serie = @GuideSerie
-                           AND do.Guide_Number = @GuideNumber
-                            ;
+                           AND do.Guide_Number = @GuideNumber;
             END;
 
             --Si se encuentra el vp entre los servicios de recolección, se asigna

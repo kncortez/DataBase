@@ -37,7 +37,7 @@ BEGIN
 					SELECT	TOP 1
 							ID
 					FROM	SenderReceiver WITH(NOLOCK)
-					WHERE	Phone LIKE '%' + @Phone + '%'
+					WHERE	Phone LIKE @Phone + '%'
 						AND IdCountry = @IdCountry
 						AND Estatus = 1
 				); 
@@ -47,7 +47,7 @@ BEGIN
 					SELECT	TOP 1
 							Email
 					FROM	SenderReceiver WITH(NOLOCK)
-					WHERE	Phone LIKE '%' + @Phone + '%'
+					WHERE	Phone LIKE @Phone + '%'
 							AND IdCountry = @IdCountry
 							AND Estatus = 1
 				);
