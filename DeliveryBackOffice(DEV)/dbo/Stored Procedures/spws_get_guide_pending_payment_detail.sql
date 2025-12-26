@@ -38,7 +38,7 @@
 -- Description: <Se incluye el campo isNeedBilling>
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
-    @InGuidesP VARCHAR(MAX),
+    @InGuidesP VARCHAR(1000),
     @IdModuleP INT,
     @ServiceType VARCHAR(100),
     @TokenP VARCHAR(100),
