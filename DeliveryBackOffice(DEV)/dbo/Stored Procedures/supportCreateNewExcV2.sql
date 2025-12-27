@@ -9,9 +9,15 @@
 
 2025-10-29 | Historia/épica: FDAPI-4454 | Autor: Brandon Pedroza |
 
+-- =============================================
+-- Author:		<Kevin Oliva>
+-- Create date: <2025-12-26>
+-- Description:	<Se agrega la generacion de kiokocode automatica>
+-- =============================================
+
 =========================================== */
 
-CREATE PROCEDURE [dbo].[supportCreateNewExcV2]
+ALTER PROCEDURE [dbo].[supportCreateNewExcV2]
     @DescriptionOfClient NVARCHAR(100),
     @TokenSupport NVARCHAR(50),
     @Address NVARCHAR(600),
@@ -217,6 +223,18 @@ BEGIN
                 DEFAULT                                  -- AllowScheduledPickups - bit
             );
 
+            -- Generar KioskCode único
+            DECLARE @Codigo INT;
+            DECLARE @CodigoFinal VARCHAR(4);
+            SET @Codigo = FLOOR(RAND() * 10000);
+            
+            WHILE EXISTS (SELECT 1 FROM dbo.del_ParametrosFactura WITH(NOLOCK) WHERE kioskcode = @Codigo)
+            BEGIN
+                SET @Codigo = FLOOR(RAND() * 10000);
+            END
+            
+            SET @CodigoFinal = RIGHT('0000' + CAST(@Codigo AS VARCHAR(4)), 4);
+
 			IF(@IdCountry <> 'GT')
 			BEGIN
 				IF NOT EXISTS
@@ -269,7 +287,8 @@ BEGIN
 						dpf_StatusFACE,
 						dpf_WarehouseCode,
 						inv_cmp_name,
-						inv_cmp_nameComercial
+						inv_cmp_nameComercial,
+						kioskcode
 					)
 					SELECT @CodeOfReference,
 						   pr.dpf_FELRequestor,
@@ -304,7 +323,8 @@ BEGIN
 						   pr.dpf_StatusFACE,
 						   @SapOcrCode,
 						   'Delivery Express ' + @CountryName +' S.A. De C.V.',
-						   'DELIVERY EXPRESS ' + @IdCountry
+						   'DELIVERY EXPRESS ' + @IdCountry,
+						   @CodigoFinal
 					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = @vpCodeOfReference;
 				END;
@@ -357,7 +377,8 @@ BEGIN
 						dpf_OcrCode,
 						dpf_OcrCode2,
 						dpf_StatusFACE,
-						dpf_WarehouseCode
+						dpf_WarehouseCode,
+						kioskcode
 					)
 					SELECT @CodeOfReference,
 						   pr.dpf_FELRequestor,
@@ -390,7 +411,8 @@ BEGIN
 						   @SapOcrCode,
 						   pr.dpf_OcrCode2,
 						   pr.dpf_StatusFACE,
-						   @SapOcrCode
+						   @SapOcrCode,
+						   @CodigoFinal
 					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = 999;
 
@@ -423,6 +445,7 @@ BEGIN
                   ,dpf_FELEntity
                   ,dpf_FELUser
                   ,dpf_FELCorreo
+                  ,kioskcode
             FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
             WHERE pr.dpf_VpCodeOfReference = @CodeOfReference;
 
@@ -443,13 +466,14 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        SELECT ERROR_LINE(),
-               ERROR_MESSAGE(),
-               ERROR_NUMBER(),
-               ERROR_STATE();
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT ERROR_LINE() AS ErrorLine,
+               ERROR_MESSAGE() AS ErrorMessage,
+               ERROR_NUMBER() AS ErrorNumber,
+               ERROR_STATE() AS ErrorState;
 
     END CATCH;
 
 END;
-
+GO
