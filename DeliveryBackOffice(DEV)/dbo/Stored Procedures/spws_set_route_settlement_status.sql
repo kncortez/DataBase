@@ -113,26 +113,11 @@ BEGIN
 			un registro de las piezas que se estan liquidando de una ruta										 
 		 */
 
-        DECLARE @inBound INT =
-                (
-                    SELECT IdTranportationZone
-                    FROM DeliveryBackOffice.dbo.CatTransportationZone WITH (NOLOCK)
-                    WHERE IdTranportationZone = 1 -- 'Ruta de recolección'
-                );
+        DECLARE @inBound INT = 1; -- CatTransportationZone -> 'Ruta de recolección'
 
-        DECLARE @outBound INT =
-                (
-                    SELECT IdTranportationZone
-                    FROM DeliveryBackOffice.dbo.CatTransportationZone WITH (NOLOCK)
-                    WHERE IdTranportationZone = 4 -- 'Bodega'
-                );
+        DECLARE @outBound INT =  4; -- CatTransportationZone -> 'Bodega'
 
-        DECLARE @idTransactionType INT =
-                (
-                    SELECT IdTransactionType
-                    FROM DeliveryBackOffice.dbo.TransactionType WITH (NOLOCK)
-                    WHERE IdTransactionType = 1 -- 'Liquidación de Recolección'
-                );
+        DECLARE @idTransactionType INT = 1; -- TransactionType -> 'Liquidación de Recolección'
 
         DECLARE @IdRoute INT =
                 (
@@ -175,8 +160,8 @@ BEGIN
                GETDATE()
         FROM DeliveryBackOffice.dbo.DeliveryOrderPiece ord WITH (NOLOCK)
         WHERE (
-                  ord.GuideNumber = @GuideNumber
-                  AND ord.GuideSerie = @GuideSerie
+                  ord.GuideSerie = @GuideSerie
+                  AND ord.GuideNumber = @GuideNumber
                   AND ord.NoPiece = @GuidePiece
                   AND
                   (
@@ -195,8 +180,8 @@ BEGIN
                 @IsDry = ISNULL(ord.IsDry, 1)
             FROM DeliveryBackOffice.dbo.DeliveryOrderPiece ord WITH (NOLOCK)
             WHERE (
-                      ord.GuideNumber = @GuideNumber
-                      AND ord.GuideSerie = @GuideSerie
+                      ord.GuideSerie = @GuideSerie
+                      AND ord.GuideNumber = @GuideNumber
                       AND ord.NoPiece = @GuidePiece
                   );
 
@@ -262,7 +247,7 @@ BEGIN
 						BEGIN TRY
 							DECLARE @GuideStatusChangeWebhookRec INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
-							SET @WebhookCustomerIdRec = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
+							SET @WebhookCustomerIdRec = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber),-1);
 							SET @CustomerEndpointIdRec = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerIdRec AND  WE.WebhookTypeId = @GuideStatusChangeWebhookRec),-1);
 
 							SET @GuideCurrentStatusRec = 2
@@ -365,7 +350,7 @@ BEGIN
 													);
 
 													DECLARE @MaxPieceOrderDetail INT = 0;
-													SET @MaxPieceOrderDetail = IIF((SELECT MAX(PieceId) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH(NOLOCK) Where Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND StatusOrderId = 2) IS NULL,0,(SELECT MAX(PieceId) FROM DeliveryOrderDetail Where Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND StatusOrderId = 2))
+													SET @MaxPieceOrderDetail = IIF((SELECT MAX(PieceId) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH(NOLOCK) Where Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND StatusOrderId = 2) IS NULL,0,(SELECT MAX(PieceId) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail Where Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND StatusOrderId = 2))
 
 													INSERT INTO @PiecesGuideRelatedTableRec 
 																( 
@@ -391,7 +376,7 @@ BEGIN
 																AND WHE.TypeConnectionId = 2
 															GROUP BY dop.GuideSerie,dop.GuideNumber
 									  
-									  					INSERT INTO WebhookTrackingQueueDetailForSFTP 
+									  					INSERT INTO DeliveryBackOffice.dbo.WebhookTrackingQueueDetailForSFTP 
 															(CustomerId,
 															GuideSerie,
 															GuideNumber,
@@ -699,10 +684,7 @@ BEGIN
         DECLARE @RouteAssigmentFind INT;
         DECLARE @FindServiceManagement BIT = 0;
         DECLARE @CreateServiceManagement BIT = 0;
-        DECLARE @ServiceStatus INT =
-                (
-                    SELECT IdServiceStatus FROM DeliveryBackOffice.dbo.CatServiceStatus WHERE [Name] = 'Recolectado'
-                );
+        DECLARE @ServiceStatus INT = 3; -- CatServiceStatus -> 'Recolectado'
 
         DECLARE @VehicleTypeId INT =
                 (

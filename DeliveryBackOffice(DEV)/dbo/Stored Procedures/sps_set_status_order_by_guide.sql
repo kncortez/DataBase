@@ -159,18 +159,10 @@ BEGIN
                     StatusOrderId INT,
                     StatusCount INT
                 );
-                DECLARE @IDSTATUSINROUTE INT =
-                        (
-                            SELECT StatusOrderId
-                            FROM DeliveryBackOffice.dbo.StatusOrder WITH (NOLOCK)
-                            WHERE StatusOrderId = 4 --'En ruta'
-                        );
-                DECLARE @IDSTATUSFAILEDDELIVERY INT =
-                        (
-                            SELECT StatusOrderId
-                            FROM DeliveryBackOffice.dbo.StatusOrder WITH (NOLOCK)
-                            WHERE StatusOrderId = 12 -- 'Intento de entrega fallida'
-                        );
+                DECLARE @IDSTATUSINROUTE INT = 4; --StatusOrder -> 'En ruta'
+
+                DECLARE @IDSTATUSFAILEDDELIVERY INT = 12; --StatusOrder -> 'Intento de entrega fallida'
+
                 --Obtiene la lista de guías que ya salieron a ruta 2 o mas veces y que tienen 0 intentos de entrega fallida
                 INSERT INTO @GuidesTableWithoutFailRetries
                 SELECT @Guide_Serie,
@@ -217,12 +209,8 @@ BEGIN
                     WHERE GTA.StatusOrderId = @IDSTATUSINROUTE;
 
                     --CREANDO ALERTA DE GUÍAS QUE NO POSEEN ALERTA Y QUE TIENEN MAS DE DOS SALIDAS A RUTA
-                    DECLARE @SERVICETYPE NVARCHAR(MAX) =
-                            (
-                                SELECT IdTypeServiceManagment
-                                FROM DeliveryBackOffice.dbo.TypeServiceManagment WITH (NOLOCK)
-                                WHERE IdTypeServiceManagment = 2 -- 'Entrega'
-                            );
+                    DECLARE @SERVICETYPE BIGINT = 2; -- TypeServiceManagment -> 'Entrega'
+
                     INSERT INTO dbo.DeliveryOrderAlert
                     (
                         GuideSerie,
@@ -240,11 +228,7 @@ BEGIN
                            GTWRD.Guide_Number,
                            @SERVICETYPE,
                            'El paquete ha salido a ruta 2 o mas veces',
-                           (
-                               SELECT IdCatTypeAlert
-                               FROM DeliveryBackOffice.dbo.CatTypeAlert WITH (NOLOCK)
-                               WHERE IdCatTypeAlert = 1 -- 'Prioritario'
-                           ),
+                           1, -- CatTypeAlert ->'Prioritario'
                            1,
                            @TokenId,
                            GETDATE(),
@@ -322,14 +306,7 @@ BEGIN
         IF @StatusId = 11
         BEGIN
             --Buscar ID modulo liquidación Recolecciones
-            SET @CatModuleId = ISNULL(
-                               (
-                                   SELECT ModIdModule
-                                   FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
-                                   WHERE ModIdModule = 30 -- 'Liquidación COD'
-                               ),
-                               0
-                                     );
+            SET @CatModuleId =  30; -- CatModule -> 'Liquidación COD'
 
             SELECT *
             INTO #listGuidesTemp

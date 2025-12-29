@@ -36,7 +36,7 @@ BEGIN
                 ( 
 					SELECT	TOP 1
 							ID
-					FROM	SenderReceiver WITH(NOLOCK)
+					FROM	DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK)
 					WHERE	Phone LIKE @Phone + '%'
 						AND IdCountry = @IdCountry
 						AND Estatus = 1
@@ -46,7 +46,7 @@ BEGIN
 				( 
 					SELECT	TOP 1
 							Email
-					FROM	SenderReceiver WITH(NOLOCK)
+					FROM	DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK)
 					WHERE	Phone LIKE @Phone + '%'
 							AND IdCountry = @IdCountry
 							AND Estatus = 1
@@ -56,8 +56,8 @@ BEGIN
 		SET @StationId = 
 		   (	
 				SELECT HL.IdStation 
-				FROM SenderReceiver SR WITH (NOLOCK)
-				LEFT JOIN HubLogistics HL WITH (NOLOCK)
+				FROM DeliveryBackOffice.dbo.SenderReceiver SR WITH (NOLOCK)
+				LEFT JOIN DeliveryBackOffice.dbo.HubLogistics HL WITH (NOLOCK)
 					ON SR.HubLogisticId = HL.IdHubLogistic
 				WHERE SR.ID = @SenderReceiverId AND HL.IdCountry = @IdCountry
 			);
@@ -69,7 +69,7 @@ BEGIN
 
 			SELECT 
 					@LoginToken = LoginToken
-			FROM	SenderReceiverLoginToken WITH(NOLOCK)
+			FROM	DeliveryBackOffice.dbo.SenderReceiverLoginToken WITH(NOLOCK)
 			WHERE	SenderReceiverId = @SenderReceiverId
 				AND RowStatus = 1
 			
@@ -77,18 +77,18 @@ BEGIN
 			BEGIN
 				SET @LoginToken = (SELECT ROUND(((999999 - 111111) * RAND() + 111111), 0))
 
-				INSERT INTO SenderReceiverLoginToken (LoginToken, SenderReceiverId, RowStatus, TokenCreated, DateCreated)
+				INSERT INTO DeliveryBackOffice.dbo.SenderReceiverLoginToken (LoginToken, SenderReceiverId, RowStatus, TokenCreated, DateCreated)
 				VALUES (@LoginToken, @SenderReceiverId, 1, 'SetCourierLoginToken', GETDATE())
 			END
 
 			COMMIT TRANSACTION
 
 				DECLARE @DateToken DateTime;
-				SET @DateToken = (SELECT Date_UpdateToken FROM SenderReceiver WITH(NOLOCK) where Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
+				SET @DateToken = (SELECT Date_UpdateToken FROM DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK) where Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
 
 				IF(@DateToken IS NULL)
 				BEGIN
-					UPDATE SenderReceiver
+					UPDATE DeliveryBackOffice.dbo.SenderReceiver
 					SET		Date_UpdateToken = GETDATE()
 					WHERE	Phone = @Phone
 						AND IdCountry = @IdCountry
@@ -98,7 +98,7 @@ BEGIN
 				--Manejo de reinicio de columnas contadores de mensajes
 				IF((SELECT Convert(Date,@DateToken)) <> (SELECT Convert(Date,GETDATE())))
 				BEGIN
-					UPDATE	SenderReceiver
+					UPDATE	DeliveryBackOffice.dbo.SenderReceiver
 					SET		MessageCounter = 0,
 							MailCounter = 0,
 							Date_UpdateToken = GETDATE()
@@ -108,13 +108,13 @@ BEGIN
 				END
 
 				DECLARE @MCounter INT;
-				SET @MCounter = (SELECT TOP 1 MessageCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
+				SET @MCounter = (SELECT TOP 1 MessageCounter FROM DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
 
 				IF(@NotificationEmail = 0)
 				BEGIN
 					IF(@MCounter < @MaxValue)
 					BEGIN
-						UPDATE	SenderReceiver
+						UPDATE	DeliveryBackOffice.dbo.SenderReceiver
 						SET		MessageCounter = @MCounter +1
 						WHERE	Phone = @Phone
 							AND IdCountry = @IdCountry
@@ -125,10 +125,10 @@ BEGIN
 				IF(@NotificationEmail = 1 )
 				BEGIN
 						DECLARE @ECounter INT;
-						SET @ECounter = (SELECT TOP 1 MailCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
+						SET @ECounter = (SELECT TOP 1 MailCounter FROM DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
 
 						DECLARE @MMail Varchar(100)
-						SET @MMail = (SELECT TOP 1 Email FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
+						SET @MMail = (SELECT TOP 1 Email FROM DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1)
 
 						IF(@MMail = '')
 						BEGIN
@@ -137,7 +137,7 @@ BEGIN
 
 						IF(@MMail IS NOT NULL)
 						BEGIN
-							UPDATE	SenderReceiver
+							UPDATE	DeliveryBackOffice.dbo.SenderReceiver
 							SET		MailCounter = @ECounter +1
 							WHERE	Phone = @Phone
 								AND IdCountry =@IdCountry
@@ -160,19 +160,19 @@ BEGIN
 					AND IdCountry = @IdCountry
 					AND Estatus = 1;
 			   
-				IF((SELECT TOP 1 MessageCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry =@IdCountry AND Estatus = 1) = @MaxValue)
+				IF((SELECT TOP 1 MessageCounter FROM DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry =@IdCountry AND Estatus = 1) = @MaxValue)
 				BEGIN
 					UPDATE	SenderReceiver
-					SET		MessageCounter = (SELECT TOP 1 MessageCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1) +1
+					SET		MessageCounter = (SELECT TOP 1 MessageCounter FROM DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1) +1
 					WHERE	Phone = @Phone
 						AND IdCountry = @IdCountry
 						AND Estatus = 1;
 				END
 
-				IF((SELECT TOP 1 MailCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1) = @MaxValue)
+				IF((SELECT TOP 1 MailCounter FROM DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1) = @MaxValue)
 				BEGIN
 					UPDATE	SenderReceiver
-					SET		MailCounter = (SELECT TOP 1 MailCounter FROM SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1) +1
+					SET		MailCounter = (SELECT TOP 1 MailCounter FROM DeliveryBackOffice.dbo.SenderReceiver WITH(NOLOCK) WHERE Phone = @Phone AND IdCountry = @IdCountry AND Estatus = 1) +1
 					WHERE	Phone = @Phone
 						AND IdCountry = @IdCountry
 						AND Estatus = 1;
