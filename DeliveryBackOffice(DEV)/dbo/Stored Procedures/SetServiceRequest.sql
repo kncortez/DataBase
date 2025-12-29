@@ -57,7 +57,7 @@ BEGIN
         Guide_Number INT NULL,          -- correlativo autogenerado
         Guide_Serie VARCHAR(2) NULL
     );
-	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
+	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WITH (NOLOCK) WHERE SalesPackageStatusName = 'Activa')
     BEGIN TRANSACTION;
     BEGIN TRY
         /*********************************************************************************************/
@@ -219,19 +219,19 @@ BEGIN
         SET SenderIdTownship =
             (
                 SELECT IdTownship
-                FROM [DeliveryBackOffice].[dbo].[Township]
+                FROM [DeliveryBackOffice].[dbo].[Township] WITH (NOLOCK)
                 WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Town)
                       AND IdProvince =
                       (
                           SELECT IdProvince
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
                       )
             ),
             SourceSystemId =
             (
                 SELECT SysIdSystem
-                FROM DeliveryBackOffice.dbo.CatSystem
+                FROM DeliveryBackOffice.dbo.CatSystem WITH (NOLOCK)
                 WHERE SysNameSystem = 'Parser'
                       AND SysRowStatus = 1
             )
@@ -257,7 +257,7 @@ BEGIN
             CatModuleId =
             (
                 SELECT ModIdModule
-                FROM DeliveryBackOffice.dbo.CatModule
+                FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
                 WHERE ModName = 'Parser'
             ),
             IdCustomer =
@@ -269,7 +269,7 @@ BEGIN
             SalePipeLineId =
             (
                 SELECT IdSalePipeLine
-                FROM DeliveryBackOffice.dbo.CatSalePipelines
+                FROM DeliveryBackOffice.dbo.CatSalePipelines WITH (NOLOCK)
                 WHERE Name = 'Parser'
             ),
             OrderUserCreated =
@@ -284,7 +284,7 @@ BEGIN
 			ReceiverCountryId =
 			(
 				SELECT TOP 1 IdCountry
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
 			),
 			-- SE MODIFICA ISCOLLECT SEGÚN EL TIPO DE SERVICIO
@@ -857,7 +857,7 @@ BEGIN
 		                            INNER JOIN @CorrelativeTable ct
 		                                ON do.Guide_Number = ct.Guide_Number
                                         AND do.Guide_Serie = ct.Guide_Serie
-		                            INNER JOIN Membership mb
+		                            INNER JOIN Membership mb WITH (NOLOCK)
 		                                ON do.IdCustomer = mb.CustomerId
 		                        WHERE mb.CatMembershipStatusId = 3
 		                            AND mb.ExpirationDate >= GETDATE()
@@ -971,7 +971,7 @@ BEGIN
   --Fin Nuevos datos para consumir nuevo formato guía
 
 		-- SE AGREGO EL PAIS --CRISTIAN SUAZO
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WITH (NOLOCK) WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
 
 
         SELECT 1 AS 'StatusCode',
@@ -990,7 +990,7 @@ BEGIN
                PrvOri.[ProvinceAbbreviation] AS 'HubOrigin',
                (
                    SELECT HubAbbreviation
-                   FROM [DeliveryBackOffice].[dbo].[HubLogistics]
+                   FROM [DeliveryBackOffice].[dbo].[HubLogistics] WITH (NOLOCK)
                    WHERE IdHubLogistic = D.HubDestinationId
                ) AS 'HubDestination',
                -- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
