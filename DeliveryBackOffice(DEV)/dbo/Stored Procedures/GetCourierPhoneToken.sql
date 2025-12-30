@@ -155,7 +155,7 @@ begin
                                            + '",' + '"PickUpManifestEmail":"'
                                            + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
                                            + '"Token":"' + isnull(LogTokenPOD, '') + +'",'
-										   + '"StationId":"'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'N/A') + '"}'
+										   + '"StationId":'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'null') + '}'
                                     from LogTokenPOD						pod with (nolock)
                                         inner join SenderReceiver			sr with (nolock)
                                             on (sr.ID = pod.IdCourierman)
