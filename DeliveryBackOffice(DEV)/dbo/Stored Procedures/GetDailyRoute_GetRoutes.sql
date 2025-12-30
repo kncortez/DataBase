@@ -19,7 +19,8 @@ BEGIN
 		@PickUpTypeId BIGINT,
 		@DeliveryTypeId BIGINT,
 		@ReturnTypeId BIGINT,
-		@IdDeliveryOption BIGINT;
+		@IdDeliveryOption BIGINT,
+        @CastDate DATE = CAST(GETDATE() AS DATE);
 
 	WITH RecicleIDs AS (
 		SELECT STSM.IdSubTypeServiceManagment AS id, STSM.Name AS idName
@@ -164,7 +165,7 @@ CROSS APPLY (
         AND cst.GuideNumber = ord.Guide_Number
         AND cst.RowStatus = 1
     LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency] de WITH (NOLOCK)
-        ON  de.Currency_IdCountry = ISNULL(ord.SenderCountryId, 'GT')
+        ON  de.Currency_IdCountry = ord.SenderCountryId
         AND de.DefaultPerCountry = 1
     LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD] ccc WITH (NOLOCK)
         ON  ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
@@ -307,7 +308,7 @@ CTE_Photo AS (
         MAX(IIF(ISNULL(dp.TimePlaId, 0) = 3, ISNULL(sc.AmountPickup, 0), 0)) AS PickupAmount
     FROM CTE_DeliveryAttemp DAT
     LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] dp WITH (NOLOCK)
-        ON dp.GuideNumber = DAT.Guide_Number AND dp.GuideSerie = DAT.Guide_Serie
+        ON dp.GuideSerie = DAT.Guide_Serie AND dp.GuideNumber = DAT.Guide_Number
     LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] sc WITH (NOLOCK)
         ON sc.SchedulePickupId = dp.IdHeaderRecolection
     GROUP BY DAT.Guide_Serie, DAT.Guide_Number
@@ -498,7 +499,6 @@ SELECT
     CP.Value,
 
     hp.HighPriority as HighPriority,
-
     filteredPieces.PiecesDry as Pieces_Dry,
     filteredPieces.PiecesCold as Pieces_Cold,
 
@@ -546,8 +546,8 @@ LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency] de WITH (NOLOCK)
     AND de.DefaultPerCountry = 1
 LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
     ON ce.TargetCurrency = de.IdCurrencyCOD
-    AND ce.ExchangeDate >= CAST(GETDATE() AS DATE)
-    AND ce.ExchangeDate < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
+    AND ce.ExchangeDate >= @CastDate
+    AND ce.ExchangeDate < DATEADD(DAY, 1, @CastDate)
 LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD] ccc WITH (NOLOCK)
     ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
 LEFT JOIN (
