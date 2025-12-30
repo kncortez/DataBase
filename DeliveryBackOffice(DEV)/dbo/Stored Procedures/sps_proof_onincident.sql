@@ -760,8 +760,8 @@ BEGIN
                                      SELECT TOP 1
                                             DO.IdCustomer
                                      FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                     WHERE DO.Guide_Number = @GuideNumber
-                                           AND DO.Guide_Serie = @GuideSerie
+                                     WHERE DO.Guide_Serie = @GuideSerie
+                                           AND DO.Guide_Number = @GuideNumber
                                  )
                                , -1
                                 );

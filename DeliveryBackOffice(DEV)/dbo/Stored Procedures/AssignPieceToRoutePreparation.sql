@@ -297,7 +297,8 @@ BEGIN
                                    @Token,
                                    GETDATE()
                             FROM dbo.DeliveryOrderPiece WITH (NOLOCK)
-                            WHERE GuideNumber = @GuideNumber;
+                            WHERE GuideSerie = @GuideSerie
+                            AND GuideNumber = @GuideNumber;
 
                             --- Actualziar el estado de las piezas
                             UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]

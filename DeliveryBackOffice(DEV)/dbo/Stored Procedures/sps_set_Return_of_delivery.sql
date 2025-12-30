@@ -267,8 +267,8 @@ BEGIN
                                       SELECT TOP 1
                                              DO.IdCustomer
                                       FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                      WHERE DO.Guide_Number = @Guide_Number
-                                            AND DO.Guide_Serie = @Guide_Serie
+                                      WHERE DO.Guide_Serie = @Guide_Serie 
+                                            AND DO.Guide_Number = @Guide_Number
                                   ),
                                   -1
                                         );
@@ -289,8 +289,8 @@ BEGIN
                                 SELECT TOP 1
                                        DO.StatusOrderId
                                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                WHERE DO.Guide_Number = @Guide_Number
-                                      AND DO.Guide_Serie = @Guide_Serie
+                                WHERE DO.Guide_Serie = @Guide_Serie 
+                                      AND DO.Guide_Number = @Guide_Number
                             );
 
                             -- Cliente tiene webhook configurado para el tipo especificado

@@ -32,6 +32,7 @@ BEGIN
     DECLARE @COD DECIMAL(14, 2); -- COD de la guía
     DECLARE @Datetime DATETIME; -- Fecha y hora del último checkpoint
 	DECLARE @BelongCountry NVARCHAR(2);
+    DECLARE @Today DATE = CAST(GETDATE() AS DATE);
 
 		DECLARE @StatusDescription NVARCHAR(200)= ( Select SO.OrderDescription 
 												From [dbo].[DeliveryOrder] DO With(Nolock) 
@@ -130,7 +131,7 @@ IF(@IsStatusTerminal = 0)
                     SET Delivered = 1 --Status of delivery 	
                     WHERE Guide_Serie = @Guide_Serie
                         AND Guide_Number = @Guide_Number
-                        AND CAST(Date_Created AS DATE) = CAST(GETDATE() AS DATE);
+                        AND CAST(Date_Created AS DATE) = @Today;
 
                     -- Insertar nuevo estado de guía en tabla histórica
                     INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
@@ -169,10 +170,10 @@ IF(@IsStatusTerminal = 0)
 					BEGIN TRY
 						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
-						SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @Guide_Number AND DO.Guide_Serie = @Guide_Serie),-1);
+						SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @Guide_Serie AND DO.Guide_Number = @Guide_Number),-1);
 						SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
 
-						SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @Guide_Number AND DO.Guide_Serie = @Guide_Serie);
+						SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @Guide_Serie AND DO.Guide_Number = @Guide_Number);
 
 						-- Cliente tiene webhook configurado para el tipo especificado
 						-- Estado actual de la guía coincide dentro de las restricciónes por usuario
@@ -265,12 +266,12 @@ IF(@IsStatusTerminal = 0)
 													Count(dop.GuideNumber)
 													FROM DeliveryOrder do WITH(NOLOCK)
 													INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-														ON do.Guide_Number = dop.GuideNumber
-                                                        AND do.Guide_Serie = dop.GuideSerie
+														ON do.Guide_Serie = dop.GuideSerie
+                                                        AND do.Guide_Number = dop.GuideNumber
 													INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 													    ON do.IdCustomer = WHE.CustomerId
-													WHERE do.Guide_Number = @Guide_Number
-                                                        AND do.Guide_Serie = @Guide_Serie
+													WHERE do.Guide_Serie = @Guide_Serie
+                                                        AND do.Guide_Number = @Guide_Number
                                                         AND WHE.TypeConnectionId = 2
                                                     GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -300,12 +301,12 @@ IF(@IsStatusTerminal = 0)
 													Count(dop.GuideNumber)
 													FROM DeliveryOrder do WITH(NOLOCK)
 													INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-														ON do.Guide_Number = dop.GuideNumber
-                                                        AND do.Guide_Serie = dop.GuideSerie
+														ON do.Guide_Serie = dop.GuideSerie
+                                                        AND do.Guide_Number = dop.GuideNumber
 													INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 													    ON do.IdCustomer = WHE.CustomerId
-                                                    WHERE do.Guide_Number = @Guide_Number
-                                                        AND do.Guide_Serie = @Guide_Serie
+                                                    WHERE do.Guide_Serie = @Guide_Serie
+                                                        AND do.Guide_Number = @Guide_Number
                                                         AND dop.ExternalPieceId IS NOT NULL
                                                         AND WHE.TypeConnectionId = 2
                                                     GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -331,11 +332,11 @@ IF(@IsStatusTerminal = 0)
 												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 												    ON do.IdCustomer = WHE.CustomerId
 												INNER JOIN @GuidePiecesTable gpt
-												    ON dop.GuideNumber = gpt.GuideNumber
-                                                    AND dop.GuideSerie = gpt.GuideSerie
+												    ON dop.GuideSerie = gpt.GuideSerie 
+                                                    AND dop.GuideNumber = gpt.GuideNumber
 												INNER JOIN @PiecesGuideRelatedTable pgt
-												    ON gpt.GuideNumber = pgt.GuideNumber
-                                                    AND gpt.GuideSerie = pgt.GuideSerie
+												    ON gpt.GuideSerie = pgt.GuideSerie
+                                                    AND gpt.GuideNumber = pgt.GuideNumber
                                                     AND gpt.NumberPieces = pgt.NumberRelatedPieces
                                                 WHERE WHE.TypeConnectionId = 2
 

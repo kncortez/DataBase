@@ -35,7 +35,8 @@ BEGIN
 			@SenderCountry NVARCHAR(2),
 			@GuideType NVARCHAR(3),
 			@CurrencyOrigin INT,
-			@CurrencyDestination INT;
+			@CurrencyDestination INT,
+			@Today DATE = CAST(GETDATE() AS DATE);
 
 	BEGIN TRANSACTION
 
@@ -269,7 +270,7 @@ BEGIN
 					SELECT @OriginResult = CASE WHEN @SenderCountry = 'GT' THEN @Amount / ExchangeRate ELSE @Amount * ExchangeRate END  
 					FROM CurrencyExchangeRates WITH(NOLOCK) 
 					WHERE IdCountry = @SenderCountry 
-					AND CAST(ExchangeDate AS DATE) = CAST(GETDATE() AS DATE) 
+					AND CAST(ExchangeDate AS DATE) = @Today
 					AND SourceCurrency = @CurrencyOrigin
 					ORDER BY ExchangeDate DESC
 					
@@ -287,7 +288,7 @@ BEGIN
 							@ExchangeReceiver = ExchangeRate
 					FROM CurrencyExchangeRates WITH(NOLOCK) 
 					WHERE IdCountry = @ReceiverCountry
-					AND CAST(ExchangeDate AS DATE) = CAST(GETDATE() AS DATE) 
+					AND CAST(ExchangeDate AS DATE) = @Today
 					AND TargetCurrency = @Currencydestination
 					ORDER BY ExchangeDate DESC
 					
@@ -303,8 +304,8 @@ BEGIN
 					UPDATE DeliveryBackOffice.dbo.Cost
 					SET CODPaymentCurrency = @Currencydestination,
 						CODPaymentExchangeRate = @ExchangeReceiver
-					WHERE GuideNumber = @GuideNumber
-					AND GuideSerie = @GuideSerie
+					WHERE GuideSerie = @GuideSerie
+					AND GuideNumber = @GuideNumber
 				END
 				ELSE
 				BEGIN

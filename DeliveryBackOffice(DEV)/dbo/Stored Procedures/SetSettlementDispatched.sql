@@ -345,7 +345,7 @@ BEGIN
 			DECLARE @SubTypeDelivery BIGINT = (SELECT IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] WHERE [Name] = 'Entrega' AND RowStatus = 1)
 			DECLARE @SubTypeReturn BIGINT = (SELECT IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] WHERE [Name] = 'Devolución' AND RowStatus = 1)
 			DECLARE @GuidesTableWithRetries TABLE (GuideSerie NVARCHAR(2), GuideNumber INT, SubTypeServiceManagmentId BIGINT, RetriesMade INT);
-			DECLARE @CatTypeAlertId INT = (SELECT IdCatTypeAlert FROM [DeliveryBackOffice].[dbo].[CatTypeAlert] WHERE AlertName='Prioritario')
+			DECLARE @CatTypeAlertId INT = 1; --CatTypeAlert -> 'Prioritario'
 
 			INSERT INTO @GuidesTableWithRetries
 			SELECT

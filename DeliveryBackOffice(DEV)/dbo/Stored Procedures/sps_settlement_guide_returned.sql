@@ -228,13 +228,13 @@ BEGIN
                 INNER JOIN DeliveryAttempt        da WITH (NOLOCK)
                     ON do.Guide_Serie = da.Guide_Serie
                        AND do.Guide_Number = da.Guide_Number
-                       AND da.ID_DeliveryOrderBySettlement = @IdManifest
                 LEFT JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
                     ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
                 LEFT JOIN StatusOrder             so
                     ON coi.StatusOrderId = so.StatusOrderId
             WHERE do.Guide_Serie = @GuideSerie
                   AND do.Guide_Number = @GuideNumber
+                  AND da.ID_DeliveryOrderBySettlement = @IdManifest
             ORDER BY rbc.RbcCodeOfReference DESC;
         END;
         ELSE
@@ -268,17 +268,17 @@ BEGIN
                 INNER JOIN DeliveryAttempt         da WITH (NOLOCK)
                     ON doad.GuideSerie = da.Guide_Serie
                        AND doad.GuideNumber = da.Guide_Number
-                       AND da.ID_DeliveryOrderBySettlement = @IdManifest
                 INNER JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
                     ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
-                       AND coi.IsDenied = 0 --no esté denegada
                 INNER JOIN StatusOrder             so
                     ON coi.StatusOrderId = so.StatusOrderId
                  INNER JOIN dbo.CatTypeIncidence cti WITH (NOLOCK)
 				    ON da.ID_Incident = cti.IdIncidenceType
-				       AND ISNULL(cti.IncidenceClasificationId,0)=1
             WHERE doad.GuideSerie = @GuideSerie
                   AND doad.GuideNumber = @GuideNumber
+                  AND da.ID_DeliveryOrderBySettlement = @IdManifest
+                  AND ISNULL(cti.IncidenceClasificationId,0)=1
+                  AND coi.IsDenied = 0 --no esté denegada
                   AND
                   (
                       so.OrderDescription = 'Incidencia Validada'
@@ -346,14 +346,14 @@ BEGIN
                 INNER JOIN DeliveryOrderAttemptData       doad WITH (NOLOCK)
                     ON doad.GuideSerie = DOR.Guide_Serie
                        AND doad.GuideNumber = DOR.Guide_Number
-                       AND doad.RowStatus = 1
                 LEFT JOIN [dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
                     ON DOR.Guide_Serie = DA.Guide_Serie
                        AND DOR.Guide_Number = DA.Guide_Number
                 LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                     ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
             WHERE DOR.Guide_Serie = @GuideSerie
-                  AND DOR.Guide_Number = @GuideNumber;
+                  AND DOR.Guide_Number = @GuideNumber
+                  AND doad.RowStatus = 1;
 
 
 
