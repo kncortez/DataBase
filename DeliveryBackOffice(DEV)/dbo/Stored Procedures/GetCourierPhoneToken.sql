@@ -55,7 +55,7 @@ begin
 				LEFT JOIN HubLogistics HL WITH (NOLOCK)
 					ON SR.HubLogisticId = HL.IdHubLogistic
                 WHERE	SR.IdCountry = @IdCountry
-					AND	SR.Phone like '%' + @Phone + '%'
+					AND	SR.Phone like @Phone + '%'
                     AND SR.Estatus = 1
 
         declare @TokenInavt varchar(max) =
@@ -108,7 +108,7 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegex'
+                where CP.[ConfigParamsId] = 31 -- 'GuideRegex'
             );
 
 			declare @GuideRegexScannerData nvarchar(500) =
@@ -116,7 +116,7 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegexScanner'
+                where CP.[ConfigParamsId] = 32 -- 'GuideRegexScanner'
             );
 
             --CONVERT(varchar,@Existingdate,3) as [DD/MM/YY]
@@ -124,14 +124,14 @@ begin
                     (
                         select isnull(cf.Value, '')
                         from dbo.ConfigParams cf WITH (NOLOCK)
-                        where cf.Name = 'BillingEmailCAPP'
+                        where cf.[ConfigParamsId] = 19 -- 'BillingEmailCAPP'
                     );
 
             declare @DefaultPickupManifestEmail nvarchar(50) =
                     (
                         select isnull(cf.Value, '')
                         from dbo.ConfigParams cf WITH (NOLOCK)
-                        where cf.Name = 'PickUpManifestEmailCAPP'
+                        where cf.[ConfigParamsId] = 29 -- 'PickUpManifestEmailCAPP'
                     );
 
             set @jsonResult1 =
@@ -155,7 +155,7 @@ begin
                                            + '",' + '"PickUpManifestEmail":"'
                                            + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
                                            + '"Token":"' + isnull(LogTokenPOD, '') + +'",'
-										   + '"StationId":"'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'N/A') + '"}'
+										   + '"StationId":'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'null') + '}'
                                     from LogTokenPOD						pod with (nolock)
                                         inner join SenderReceiver			sr with (nolock)
                                             on (sr.ID = pod.IdCourierman)

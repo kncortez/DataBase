@@ -57,17 +57,17 @@ begin
 						@phon = SR.ID,
 						@StationId = HL.IdStation
 					FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] SR with (nolock)
-					LEFT JOIN HubLogistics HL WITH (NOLOCK)
+					LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] HL WITH (NOLOCK)
 						ON SR.HubLogisticId = HL.IdHubLogistic
 					WHERE	SR.IdCountry = @IdCountry
-						AND	SR.Phone like '%' + @Phone + '%'
+						AND	SR.Phone like @Phone + '%'
 						AND SR.Estatus = 1
 
         declare @TokenInavt varchar(max) =
                 (
                     select top 1
                            LogTokenPOD
-                    from LogTokenPOD with (nolock)
+                    from [DeliveryBackOffice].[dbo].[LogTokenPOD] with (nolock)
                     where IdCourierman = @phon
                           and RowStatus = 1
                     order by DateCreated desc
@@ -95,7 +95,7 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegex' 
+                where CP.[ConfigParamsId] = 31 -- 'GuideRegex' 
             );
 
 			declare @GuideRegexScannerData nvarchar(500) =
@@ -103,22 +103,22 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegexScanner' 
+                where CP.[ConfigParamsId] = 32 -- 'GuideRegexScanner' 
             );
 
             --CONVERT(varchar,@Existingdate,3) as [DD/MM/YY]
             declare @DefaultEmail nvarchar(50) =
                     (
                         select isnull(cf.Value, '')
-                        from dbo.ConfigParams cf
-                        where cf.Name = 'BillingEmailCAPP'
+                        from DeliveryBackOffice.dbo.ConfigParams cf
+                        where cf.[ConfigParamsId] = 19 -- 'BillingEmailCAPP'
                     );
 
             declare @DefaultPickupManifestEmail nvarchar(50) =
                     (
                         select isnull(cf.Value, '')
-                        from dbo.ConfigParams cf
-                        where cf.Name = 'PickUpManifestEmailCAPP'
+                        from DeliveryBackOffice.dbo.ConfigParams cf
+                        where cf.[ConfigParamsId] = 29 -- 'PickUpManifestEmailCAPP'
                     );
 
             set @jsonResult1 =
@@ -142,16 +142,16 @@ begin
                                            + '",' + '"PickUpManifestEmail":"'
                                            + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
                                            + '"Token":"' + isnull(LogTokenPOD, '') + +'",'
-										   + '"StationId":"'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'N/A') + '"}'
-                                    from LogTokenPOD                 pod with (nolock)
-                                        inner join SenderReceiver    sr with (nolock)
+										   + '"StationId":'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'null') + '}'
+                                    from DeliveryBackOffice.dbo.LogTokenPOD                 pod with (nolock)
+                                        inner join DeliveryBackOffice.dbo.SenderReceiver    sr with (nolock)
                                             on (sr.ID = pod.IdCourierman)
-                                        left join dbo.RouteAssigment ras with (nolock)
+                                        left join DeliveryBackOffice.dbo.RouteAssigment ras with (nolock)
                                             on ras.IdCurrierMan = sr.ID
                                                and DateOfRoute = convert(date, getdate())
-                                        left join dbo.CatVehicle     vh with (nolock)
+                                        left join DeliveryBackOffice.dbo.CatVehicle     vh with (nolock)
                                             on vh.IdVehicle = ras.IdVehicle
-                                        left join dbo.CatRoute       cr with (nolock)
+                                        left join DeliveryBackOffice.dbo.CatRoute       cr with (nolock)
                                             on cr.IdRoute = ras.IdRoute
                                     where pod.LogTokenPOD = @Token
 									  AND pod.RowStatus = 1

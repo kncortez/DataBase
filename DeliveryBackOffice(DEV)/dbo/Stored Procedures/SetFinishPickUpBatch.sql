@@ -33,11 +33,6 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    --DECLARE @jsonResult NVARCHAR(MAX);
-    --DECLARE @jsonResult1 NVARCHAR(MAX);
-    --DECLARE @jsonResult2 NVARCHAR(MAX);
-    --DECLARE @jsonError NVARCHAR(MAX);
-    --DECLARE @jsonToken NVARCHAR(MAX);  -- FIX 2025-09-10 CRAS
     DECLARE @ManifestSerie VARCHAR(10) = 'FM';
     DECLARE @ManifestNumber BIGINT;
 
@@ -559,7 +554,7 @@ BEGIN
                                 SELECT TOP 1
                                        WT.IdWebhookType
                                 FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                WHERE WT.WebhookName = 'GuideStatusChange' 
+                                WHERE WT.IdWebhookType =1 -- 'GuideStatusChange' 
                                       AND WT.RowStatus = 1
                             );
 
@@ -747,9 +742,9 @@ BEGIN
 								 wct.GuideNumber = gpt.GuideNumber
                              INNER JOIN @PiecesGuideRelatedTable pgt
                                  ON gpt.GuideSerie = pgt.GuideSerie AND gpt.GuideNumber = pgt.GuideNumber
+                                 AND gpt.NumberPieces = pgt.NumberRelatedPieces
                        WHERE do.IdCustomer = wct.CustomerId
                          AND WHE.TypeConnectionId = 2
-                         AND gpt.NumberPieces = pgt.NumberRelatedPieces
 
                 END TRY
                 BEGIN CATCH
@@ -1182,7 +1177,7 @@ BEGIN
                        (
                            SELECT IdServiceStatus
                            FROM CatServiceStatus WITH (NOLOCK)
-                           WHERE Name = 'Recolectado'
+                           WHERE IdServiceStatus = 3 -- 'Recolectado'
                        )
 
                        UPDATE FinishPickUpHeader
@@ -1270,7 +1265,7 @@ BEGIN
                        SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) [Piece],
                               CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)  [ReceiverName],
                               LEFT(do.Receiver_Address, 200)                             [ReceiverAddress],
-                              ISNULL(do.ReceiverCountryId,'GT')                         [ReceiverCountryId]
+                              do.ReceiverCountryId                                       [ReceiverCountryId]
                        FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
                            INNER JOIN #listGuides lp
                                ON lp.ItemSerie = dop.GuideSerie
