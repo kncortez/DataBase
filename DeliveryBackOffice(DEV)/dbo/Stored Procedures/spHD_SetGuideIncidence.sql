@@ -123,8 +123,8 @@ BEGIN
 			 Select ISNULL([DOAD].[GuideDeliveryMaxAttemptCount],0) -ISNULL([DOAD].[GuideDeliveryAttemptCount],0) 
 				From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
 			 Where 
-			  doad.GuideNumber =  @GuideNumber
-			  AND DOAD.GuideSerie = @GuideSerie
+			  DOAD.GuideSerie = @GuideSerie
+			  AND doad.GuideNumber =  @GuideNumber
 			  
 	
 	);
@@ -135,8 +135,8 @@ BEGIN
 			       Inner Join 
 				   [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
 			  ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-			  where DA.Guide_Number =  @GuideNumber
-			  AND da.Guide_Serie = @GuideSerie
+			  where da.Guide_Serie = @GuideSerie
+			  AND DA.Guide_Number =  @GuideNumber
 			  And Convert(date,DA.Date_Created) = Convert(date,GETDATE())  
 	 
 	 
