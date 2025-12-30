@@ -1,45 +1,43 @@
-﻿-- =============================================
--- Author:		<Oscar,Morales>
--- Create date: <2021-06-23>
--- Description:	<Set datos lote COD>
--- =============================================
--- Author:		<Oscar,Rodriguez>
--- Create date: <2024-12-19>
--- Description:	<Se agregaron validaciones para COD Pagado en COD Anticipado>
--- =============================================
--- Author:		<Oscar, Rodriguez>
--- Create date: <2024-12-12>
--- Description:	<Se agrego actualizacion de estado PAGADO para guias COD Anticipado>
--- =============================================
--- Author:		<Oscar, Rodriguez>
--- Create date: <2024-03-17>
--- Description:	<Se agrego optimizacion en base a indicaciones del DBA para la optimizacion del proceso de generacion de lotes COD>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SetGuidesToPayBatchCOD]
+   Propósito: Set datos lote COD
+   Autor:     Oscar Morales
+   Historia:  <>
+   Fecha:     <2021-06-23>
+   === CHANGELOG ============================
+2025-12-30 | Historia/épica: <FDAPI-4760> | Autor: Tito Garcia |
+2525-03-17 | Historia/épica: <Se agrego optimizacion en base a indicaciones del DBA para la optimizacion del proceso de generacion de lotes COD> | Autor: Oscar Rodriguez |
+2024-12-12 | Historia/épica: <Se agrego actualizacion de estado PAGADO para guias COD Anticipado> | Autor: Oscar Rodriguez |
+2024-12-19 | Historia/épica: <Se agregaron validaciones para COD Pagado en COD Anticipado> | Autor: Oscar Rodriguez  |
+=========================================== */
 CREATE PROCEDURE [dbo].[SetGuidesToPayBatchCOD]
--- Add the parameters for the stored procedure here
 	@BatchCODId INT,
 	@TotalAmount DECIMAL(18,2),
-	@AuthorizationNumber nvarchar(50),
-	@AuthorizationDate datetime,
-	@TokenCreated nvarchar(50),
-	@Valid int
+	@AuthorizationNumber NVARCHAR(50),
+	@AuthorizationDate DATETIME,
+	@TokenCreated NVARCHAR(50),
+	@Valid INT,
+	@StationId INT = NULL
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON
 	
 	DECLARE @ValidateOperation INT = 0 -- control transacción
 	DECLARE @Times INT = 0-- cantidad de veces que aparece el registro
 
+	IF @StationId <= 0
+	BEGIN
+		@StationId = NULL;
+	END
+
 	BEGIN TRANSACTION
 	BEGIN TRY
 		
-		DECLARE @StatusOrderAnticipatedCOD INT = (SELECT StatusOrderId FROM DeliveryBackOffice.dbo.StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'COD Pagado Anticipado')
+		DECLARE @StatusOrderAnticipatedCOD INT = 53; --StatusOrder --> 'COD Pagado Anticipado'
 		IF @Valid = 0
 			SET @Times = (
 				SELECT COUNT(1)
-				FROM [dbo].[BatchDetailCOD]
+				FROM [dbo].[BatchDetailCOD] WITH(NOLOCK)
 				WHERE [AuthorizationNumber] = @AuthorizationNumber
 			)
 
@@ -56,7 +54,8 @@ BEGIN
 			SET [AuthorizationNumber] = @AuthorizationNumber,
 				[AuthorizationDate] = @AuthorizationDate,
 				[CreditDate] = CONVERT(DATE,@AuthorizationDate)
-			WHERE [BatchCODId] = @BatchCODId AND [Excluded] = 0;
+			WHERE [BatchCODId] = @BatchCODId 
+				AND [Excluded] = 0;
 
 			IF COALESCE(@@ROWCOUNT,0) > 0
 				SET @ValidateOperation = @ValidateOperation+1
@@ -66,13 +65,13 @@ BEGIN
 				dop.[TokenUpdate] = @TokenCreated,
 				dop.[DateUpdate] = GETDATE()
 			FROM [dbo].[DeliveryOrderPaid] dop WITH(NOLOCK)
-			INNER JOIN DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH(NOLOCK) 
-			    ON bdc.GuideSerie = dop.Guide_Serie 
-				AND bdc.GuideNumber = dop.Guide_Number
+				INNER JOIN DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH(NOLOCK) 
+					ON bdc.GuideSerie = dop.Guide_Serie 
+						AND bdc.GuideNumber = dop.Guide_Number
 			WHERE bdc.BatchCODId = @BatchCODId
-			AND bdc.Excluded = 0;
+				AND bdc.Excluded = 0;
 
-			IF ((SELECT IsAnticipatedCOD FROM DeliveryBackOffice.dbo.BatchCOD WHERE IdBatchCOD = @BatchCODId) = 1)
+			IF ((SELECT IsAnticipatedCOD FROM DeliveryBackOffice.dbo.BatchCOD WITH(NOLOCK) WHERE IdBatchCOD = @BatchCODId) = 1)
 			BEGIN
 
 				-- Inserta el estado "COD Pagado Anticipado" en tabla DeliveryOrderDetail.
@@ -82,18 +81,23 @@ BEGIN
 				  Guide_number,
 				  StatusOrderId,
 				  UserCreated,
-				  DateCreated
+				  DateCreated,
+				  StationId
 				  )
-				SELECT GuideSerie,GuideNumber,@StatusOrderAnticipatedCOD, @TokenCreated,GETDATE() FROM [dbo].[BatchDetailCOD] 
-				WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2
+				SELECT GuideSerie,GuideNumber,@StatusOrderAnticipatedCOD, @TokenCreated,GETDATE(),@StationId 
+				FROM [dbo].[BatchDetailCOD] WITH(NOLOCK)
+				WHERE [BatchCODId] = @BatchCODId 
+					AND Excluded=0 
+					AND CatConceptCODId =2;
 
 				UPDATE ACD
 				SET ACD.BalanceStatus = 'PAGADO',
 					DateUpdated = GETDATE(),
 					TokenUpdated = @TokenCreated
-				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail ACD
-				INNER JOIN [dbo].[BatchDetailCOD] BDC
-				    ON BDC.GuideSerie = ACD.GuideSerie AND BDC.GuideNumber = ACD.GuideNumber
+				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail ACD WITH(NOLOCK)
+					INNER JOIN [dbo].[BatchDetailCOD] BDC WITH(NOLOCK)
+				    	ON BDC.GuideSerie = ACD.GuideSerie 
+							AND BDC.GuideNumber = ACD.GuideNumber
 				WHERE BDC.[BatchCODId] = @BatchCODId
 						
                 DECLARE @TempData TblAnticipatedCODCustomerBalance;
@@ -105,10 +109,11 @@ BEGIN
 				)
 				SELECT DISTINCT ach.CustomerId, ach.PortfolioId
 				FROM DeliveryBackOffice.dbo.AnticipatedCODDetail acd WITH(NOLOCK)
-				INNER JOIN [dbo].[BatchDetailCOD] BDC WITH(NOLOCK) 
-				    ON BDC.GuideSerie = ACD.GuideSerie AND BDC.GuideNumber = ACD.GuideNumber
-				INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
-					ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
+					INNER JOIN [dbo].[BatchDetailCOD] BDC WITH(NOLOCK) 
+						ON BDC.GuideSerie = ACD.GuideSerie 
+							AND BDC.GuideNumber = ACD.GuideNumber
+					INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach WITH(NOLOCK) 
+						ON ach.IdAnticipatedCODHeader = acd.AnticipatedCODHeaderId
 				WHERE BDC.[BatchCODId] = @BatchCODId
 
 				EXEC spUpdateBalanceByIdClient @TempData
@@ -122,8 +127,11 @@ BEGIN
 				UPDATE [dbo].[DeliveryOrder]
 				SET StatusOrderId = 25
 				WHERE [Guide_Number] IN 
-				(SELECT GuideNumber FROM [dbo].[BatchDetailCOD] 
-				WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2) --OR, Se comento por proyecto COD Anticipado
+				(SELECT GuideNumber 
+					FROM [dbo].[BatchDetailCOD]  WITH(NOLOCK)
+					WHERE [BatchCODId] = @BatchCODId 
+						AND Excluded=0 
+						AND CatConceptCODId =2) --OR, Se comento por proyecto COD Anticipado
 
 				-- Inserta el estado 25 "COD Pagado" en tabla DeliveryOrderDetail.
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
@@ -132,10 +140,14 @@ BEGIN
 				  Guide_number,
 				  StatusOrderId,
 				  UserCreated,
-				  DateCreated
+				  DateCreated,
+				  StationId
 				  )
-				SELECT GuideSerie,GuideNumber,25, @TokenCreated,GETDATE() FROM [dbo].[BatchDetailCOD] 
-				WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2
+				SELECT GuideSerie,GuideNumber,25, @TokenCreated,GETDATE(), @StationId 
+				FROM [dbo].[BatchDetailCOD] WITH(NOLOCK)
+				WHERE [BatchCODId] = @BatchCODId 
+					AND Excluded=0 
+					AND CatConceptCODId =2
 			END
 		
 		-----------------WEBHOOK.INI-----------------------		
@@ -148,7 +160,7 @@ BEGIN
 			GuideStatusId TINYINT
 		)
 		BEGIN TRY
-			DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+			DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
 			-- Clientes de las guías por procesar
 			INSERT INTO 
@@ -160,35 +172,24 @@ BEGIN
 					BDCOD.GuideSerie,
 					BDCOD.GuideNumber,
 					DO.StatusOrderId
-			FROM
-				[DeliveryBackOffice].[dbo].[BatchDetailCOD] BDCOD WITH(NOLOCK)
-				INNER JOIN
-					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-					ON
-						BDCOD.GuideNumber = DO.Guide_Number
-						AND
-						BDCOD.GuideSerie = DO.Guide_Serie
+			FROM [DeliveryBackOffice].[dbo].[BatchDetailCOD] BDCOD WITH(NOLOCK)
+				INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+					ON BDCOD.GuideSerie = DO.Guide_Serie
+						AND	BDCOD.GuideNumber = DO.Guide_Number						
 			WHERE
 				BDCOD.BatchCODId = @BatchCODId 
-				AND 
-				Excluded = 0 
-				AND 
-				CatConceptCODId = 2;
+				AND Excluded = 0 
+				AND CatConceptCODId = 2;
 
 			-- Ingresar endpoints de cliente
-			UPDATE
-				@WebhookCustomerTable
+			UPDATE @WebhookCustomerTable
 			SET
 				CustomerEndpointId = WE.IdWebhookEndpoint
 				,WebhookType = @GuideStatusChangeWebhook
-			FROM
-				[DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
-				INNER JOIN
-					@WebhookCustomerTable WCT
-					ON
-						WE.CustomerId = WCT.CustomerId
-			WHERE
-				WE.WebhookTypeId = @GuideStatusChangeWebhook;
+			FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
+				INNER JOIN @WebhookCustomerTable WCT
+					ON WE.CustomerId = WCT.CustomerId
+			WHERE WE.WebhookTypeId = @GuideStatusChangeWebhook;
 
 			DECLARE @ResponseTable AS TABLE (
 				InsertedId BIGINT
@@ -216,30 +217,18 @@ BEGIN
 				,0
 				,@TokenCreated
 				,GETDATE()
-			FROM
-				@WebhookCustomerTable WCT
-				LEFT JOIN
-					[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK)
-					ON
-						WCT.CustomerId = WRBU.CustomerId
-						AND
-						WCT.GuideStatusId = WRBU.StatusOrderId
-						AND
-						WCT.WebhookType = WRBU.WebhookTypeId
-				LEFT JOIN
-					[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
-					ON
-						WCT.GuideSerie = WTQ.GuideSerie
-						AND
-						WCT.GuideNumber = WTQ.GuideNumber
-						AND
-						WCT.GuideStatusId = WTQ.StatusOrderId
-						AND 
-						WTQ.RowStatus = 1
-			WHERE
-				WRBU.IdWebhookRestrinctionByUser IS NOT NULL
-				AND
-				WTQ.IdWebhookTrackingQueue IS NULL
+			FROM @WebhookCustomerTable WCT
+				LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK)
+					ON WCT.CustomerId = WRBU.CustomerId
+						AND WCT.GuideStatusId = WRBU.StatusOrderId
+						AND WCT.WebhookType = WRBU.WebhookTypeId
+				LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
+					ON WCT.GuideSerie = WTQ.GuideSerie
+						AND WCT.GuideNumber = WTQ.GuideNumber
+						AND WCT.GuideStatusId = WTQ.StatusOrderId
+						AND WTQ.RowStatus = 1
+			WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
+				AND WTQ.IdWebhookTrackingQueue IS NULL
 
 		END TRY
 		BEGIN CATCH
@@ -272,8 +261,9 @@ BEGIN
 					,NULL
 					,NULL
 					,NULL
-				FROM [dbo].[BatchDetailCOD] AS bd
-				WHERE bd.[BatchCODId] = @BatchCODId AND bd.[Excluded] = 0;
+				FROM [dbo].[BatchDetailCOD] AS bd WITH(NOLOCK)
+				WHERE bd.[BatchCODId] = @BatchCODId 
+					AND bd.[Excluded] = 0;
 
 				IF COALESCE(@@ROWCOUNT,0) > 0
 				SET @ValidateOperation = @ValidateOperation+1
@@ -281,11 +271,12 @@ BEGIN
 				UPDATE do
 				SET do.[Deposit_Number] = @AuthorizationNumber
 				,do.[Guide_Collected] = 1
-				FROM [dbo].[DeliveryOrder] AS do
-				INNER JOIN [dbo].[BatchDetailCOD] AS bd 
-				ON do.[Guide_Serie] = bd.[GuideSerie] 
-				AND do.[Guide_Number] = bd.[GuideNumber]
-				WHERE bd.[BatchCODId] = @BatchCODId AND bd.[Excluded] = 0;
+				FROM [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
+					INNER JOIN [dbo].[BatchDetailCOD] AS bd WITH(NOLOCK)
+						ON do.[Guide_Serie] = bd.[GuideSerie] 
+							AND do.[Guide_Number] = bd.[GuideNumber]
+				WHERE bd.[BatchCODId] = @BatchCODId 
+					AND bd.[Excluded] = 0;
 				
 				IF COALESCE(@@ROWCOUNT,0) > 0
 				SET @ValidateOperation = @ValidateOperation+1
