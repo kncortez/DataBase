@@ -49,6 +49,7 @@ BEGIN
     DECLARE @NewRoutePreparation INT = 0;
     DECLARE @NewRouteManifest INT = 0;
     DECLARE @DeliverySettlementId INT = NULL;
+    DECLARE @Today DATE = CONVERT(DATE, GETDATE());
     DECLARE @InsertedRoutePreparation TABLE
     (
         IdRoutePreparation INT
@@ -101,7 +102,7 @@ BEGIN
                 WHERE ddd.Guide_Serie = @GuideSerie
                       AND ddd.Guide_Number = @GuideNumber
                       AND ddd.StatusOrderId = @ValidatedIncidentStatus
-                      AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+                      AND CONVERT(DATE, ddd.DateCreatedInSystem) = @Today
             );
 
     DECLARE @StatusIncidence INT =
@@ -111,7 +112,7 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
                 WHERE DOD.Guide_Serie = @GuideSerie 
                     AND DOD.Guide_Number = @GuideNumber
-                      AND CONVERT(DATE, DOD.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+                      AND CONVERT(DATE, DOD.DateCreatedInSystem) = @Today
                 ORDER BY DOD.DateCreatedInSystem DESC
             );
 
@@ -124,7 +125,7 @@ BEGIN
                         ON DOD.StatusOrderId = SO.StatusOrderId
                 WHERE DOD.Guide_Serie = @GuideSerie 
                     AND DOD.Guide_Number = @GuideNumber
-                    AND CONVERT(DATE, DOD.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+                    AND CONVERT(DATE, DOD.DateCreatedInSystem) = @Today
                 ORDER BY DOD.DateCreatedInSystem DESC
             );
 
@@ -675,7 +676,7 @@ BEGIN
 						ON RPD.RoutePreparationId = RP.IdRoutePreparation
                 WHERE Guide_Serie =  @GuideSerie
 					AND Guide_Number = @GuideNumber
-					AND  RP.DateRoutePreparation > CONVERT(DATE,GETDATE());
+					AND  RP.DateRoutePreparation > @Today;
 
                 IF (EXISTS(
                             SELECT TOP 1 1
