@@ -9,6 +9,7 @@
 
 2024-05-29 | Historia/épica: ---          | Autor: Brandon Pedroza | Se realiza modificación para invertir los códigos de país de origen y destino al realizar una devolución
 2025-12-30 | Historia/épica: FDAPI-4762   | Autor: Brandon Pedroza | Se almacena IdStation al declarar devolucion en desktop
+2025-12-30 | Historia/épica: FDAPI-4763   | Autor: Brandon Pedroza | Se almacena IdStation al hacer reversion de declaracion de devolucion
 
 =========================================== */
 CREATE PROCEDURE [dbo].[SPHD_ModifyReturnStatement]
@@ -151,9 +152,10 @@ begin
                   , [DateCreated]
                   , [DateCreatedInSystem]
                   , [RowStatus]
+                  , [StationId]
                 )
                 values
-                (@Serie, @Numero, @StatusReversal, @Token, getdate(), getdate(), 1);
+                (@Serie, @Numero, @StatusReversal, @Token, getdate(), getdate(), 1, @StationId);
 
                 insert into @GuidesModify
                 (
