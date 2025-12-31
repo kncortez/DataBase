@@ -512,7 +512,7 @@ BEGIN
 										PRINT @IDVCONF
                         DECLARE @IDROWFREQ AS BIGINT = -1;
                         --validar si existe frequency
-                        IF (EXISTS(SELECT vpfreq.IdVPFrequency FROM dbo.VisitPointFrequency vpfreq JOIN @TblVPFrequency tblfreq  
+                        IF (EXISTS(SELECT vpfreq.IdVPFrequency FROM dbo.VisitPointFrequency vpfreq INNER JOIN @TblVPFrequency tblfreq  
 																											ON tblfreq.IdVPFrequency = vpfreq.IdVPFrequency
 																											AND tblfreq.VPConfigurationID = vpfreq.VPConfigurationID
 																WHERE vpfreq.VPConfigurationID = @IDVCONF )
@@ -537,7 +537,7 @@ BEGIN
                             INNER JOIN @TblVPFrequency tblfreq
                                     ON Freq.[VPConfigurationID] = tblfreq.[VPConfigurationID]
                                        AND Freq.IdVPFrequency = tblfreq.IdVPFrequency
-									   AND Freq.VPConfigurationID = @IDVCONF
+                            WHERE Freq.VPConfigurationID = @IDVCONF
 									   
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 3 Se actualizaron registros VisitPointFrequency affected - @IDVCONF'

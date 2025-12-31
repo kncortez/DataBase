@@ -29,7 +29,7 @@ BEGIN
 		   Department, 
 		   Phone, 
 		   DescriptionOfClient, 
-		   ISNULL(CountryId, 'GT') AS CountryId,
+		   CountryId,
 		   IdSettlement,
 		   ParserGuideTypes
 	FROM VisitPointClient WITH(NOLOCK)

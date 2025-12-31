@@ -227,10 +227,10 @@ BEGIN
                NULL 'HubDestinationId',
                NULL 'SourceSystemId',
                NULL 'CatSystemId',
-               NULL 'Segment',
+               CAST(NULL AS NVARCHAR(10)) 'Segment',
                NULL 'CatModuleId',
                NULL 'IdCustomer',
-               NULL 'OrderUserCreated',
+               CAST(NULL AS VARCHAR(100)) 'OrderUserCreated',
                NULL 'SalePipeLineId',
 			   -- SE MANDA EL PAIS CRISTIAN SUAZO
 			   '  ' AS 'ReceiverCountryId',
@@ -287,11 +287,6 @@ BEGIN
         --IF (@IdTransaction IS NOT NULL)
         --BEGIN
 
-        -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-        ALTER TABLE #GuideTable ALTER COLUMN Segment NVARCHAR(10);
-        ALTER TABLE #GuideTable ALTER COLUMN OrderUserCreated VARCHAR(100);
-
-        --Modifica el tipo de los campos que recibirán una cadena
 
         /*****************************************************************************/
         /* REALIZA LA BÚSQUEDA DE LOS ID'S DE LOS MUNICIPIOS Y LOS AGREGA A LA TABLA */
@@ -813,8 +808,8 @@ BEGIN
                    ord.Guide_Number
             FROM #GuideTable lst
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-                    ON ord.Guide_Number = lst.Guide_Number
-                       AND ord.Guide_Serie = lst.Guide_Serie
+                    ON ord.Guide_Serie = lst.Guide_Serie
+                       AND ord.Guide_Number = lst.Guide_Number
             WHERE ISNULL(ord.PriceShippment, 0) = 0;
 
 
@@ -936,8 +931,8 @@ BEGIN
 		SET @GuidePriority = (SELECT COUNT (do.Guide_Number)
                                 FROM DeliveryOrder do WITH (NOLOCK)
 		                            INNER JOIN @CorrelativeTable ct
-		                                ON do.Guide_Number = ct.Guide_Number
-                                        AND do.Guide_Serie = ct.Guide_Serie
+		                                ON do.Guide_Serie = ct.Guide_Serie
+                                        AND do.Guide_Number = ct.Guide_Number
 		                            INNER JOIN Membership mb
 		                                ON do.IdCustomer = mb.CustomerId
 		                        WHERE mb.CatMembershipStatusId = 3
@@ -995,7 +990,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  --COLLATE Latin1_General_CI_AI
+			[KOVPC].[KindOfVPName] = 'Concesionario'
 	)
 	DECLARE @ExpressVisitPointTypeId INT =
 	(
@@ -1005,7 +1000,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI
+			[KOVPC].[KindOfVPName] = 'Express Center'
 	)
 	DECLARE @IndividualWebSys INT =
 	(
@@ -1015,7 +1010,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web' -- COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Hermes Web'
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -1025,7 +1020,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -1035,7 +1030,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -1045,19 +1040,18 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Parser'
 	)
 
 
   --Fin Nuevos datos para consumir nuevo formato guía
 
 		-- SE AGREGO EL PAIS --CRISTIAN SUAZO
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WITH (NOLOCK) WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WITH (NOLOCK) WHERE BusinessSegmentName='B2B' AND IdCountry = @IdCountry);
 
 
         SELECT 1 AS 'StatusCode',
                'Registros guardados correctamente' AS 'Description',
-               --@IdTransaction AS 'NumTransferID'
                @ManifestNumber AS 'NumTransferID';
         SELECT Manifest_Serie AS 'ManifestSerie',
                Manifest_Number AS 'ManifestNumber'
@@ -1138,8 +1132,8 @@ BEGIN
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
-                ON C.Guide_Number = D.Guide_Number
-				AND C.Guide_Serie = D.Guide_Serie
+                ON C.Guide_Serie = D.Guide_Serie
+				AND C.Guide_Number = D.Guide_Number
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
