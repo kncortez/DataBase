@@ -6,11 +6,11 @@
    Fecha:     2021-12-29
 
 === CHANGELOG ================================
-2022-08-05 | Historia/épica: <>  		   | Autor: <Andres Ruiz> |
------
 2025-08-29 | Historia/épica: <>            | Autor: <Tito Garcia> |
 -----
 2025-10-22 | Historia/épica: <FDAPI-4846>  | Autor: <Tito Garcia> |
+-----
+2025-12-19 | Historia/épica: <FDAPI-4742>  | Autor: <Brandon Pedroza> |
 =========================================== */
 CREATE PROCEDURE [dbo].[SetSettlementDispatched]
 	@IdRoute INT,
@@ -25,7 +25,7 @@ CREATE PROCEDURE [dbo].[SetSettlementDispatched]
 	@IdCourier INT,
 	@CourierName NVARCHAR(200),
 	@StartingKilometers NVARCHAR(50),
-	@StationId INT,
+	@StationId INT = NULL,
 	@Token NVARCHAR(50),
 	@iduser INT=NULL,
 	@username NVARCHAR(50)=NULL
@@ -330,8 +330,9 @@ BEGIN
 			,[StatusOrderId]
 			,[UserCreated]
 			,[DateCreated]
-			,[DateCreatedInSystem])
-		SELECT Guide_Serie, Guide_Number, 4, @Token, GETDATE(), GETDATE()
+			,[DateCreatedInSystem]
+			,[StationId])
+		SELECT Guide_Serie, Guide_Number, 4, @Token, GETDATE(), GETDATE(), @StationId
 		FROM @ListGuides
 
 		--operation 2
@@ -344,7 +345,7 @@ BEGIN
 			DECLARE @SubTypeDelivery BIGINT = (SELECT IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] WHERE [Name] = 'Entrega' AND RowStatus = 1)
 			DECLARE @SubTypeReturn BIGINT = (SELECT IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] WHERE [Name] = 'Devolución' AND RowStatus = 1)
 			DECLARE @GuidesTableWithRetries TABLE (GuideSerie NVARCHAR(2), GuideNumber INT, SubTypeServiceManagmentId BIGINT, RetriesMade INT);
-			DECLARE @CatTypeAlertId INT = (SELECT IdCatTypeAlert FROM [DeliveryBackOffice].[dbo].[CatTypeAlert] WHERE AlertName='Prioritario')
+			DECLARE @CatTypeAlertId INT = 1; --CatTypeAlert -> 'Prioritario'
 
 			INSERT INTO @GuidesTableWithRetries
 			SELECT
@@ -463,7 +464,7 @@ BEGIN
 				,@IdCourier
 				,@DateTime
 				,NULL
-				,IIF( ISNULL(@StationId,0) > 0, @StationId, NULL)
+				,@StationId
 				,@IdVehicle
 				,@IdRoute
 				,@StartingKilometers)
