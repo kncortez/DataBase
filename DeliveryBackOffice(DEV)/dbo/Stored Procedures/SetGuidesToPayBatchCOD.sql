@@ -26,9 +26,7 @@ BEGIN
 	DECLARE @Times INT = 0-- cantidad de veces que aparece el registro
 
 	IF @StationId <= 0
-	BEGIN
-		@StationId = NULL;
-	END
+		SET	@StationId = NULL;
 
 	BEGIN TRANSACTION
 	BEGIN TRY
