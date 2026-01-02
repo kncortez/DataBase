@@ -26,7 +26,7 @@ BEGIN
 	DECLARE @RowStatus1 BIT = 0;
 	DECLARE @ResultOperation VARCHAR(200);
 	DECLARE @ResultCode INT;
-	DECLARE @VoidStatus INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado')
+	DECLARE @VoidStatus INT = 7; --StatusOrder -> 'Anulado'
 	SET @RowStatus1  = ISNULL((SELECT top 1 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH(NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND StatusOrderId <> 7),0);
 	
 	--Variabes Membresías y suscripciones

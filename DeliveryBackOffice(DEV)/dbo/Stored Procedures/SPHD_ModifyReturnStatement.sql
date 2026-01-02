@@ -29,19 +29,8 @@ begin
         declare @Numero as int;
         declare @Serie as nvarchar(2);
         declare @STATUS as int;
-        declare @STATUSDECLAREDRETURNED_DO int =
-                (
-                    select top 1
-                           [SO].[StatusOrderId]
-                    from [dbo].[StatusOrder] [SO] with (nolock)
-                    where [OrderDescription] = 'Declarado para Devolución'
-                );
-        declare @StatusReversal int =
-                (
-                    select [StatusOrderId]
-                    from [dbo].[StatusOrder]
-                    where [OrderDescription] = 'Guía revertida para entrega'
-                );
+        declare @STATUSDECLAREDRETURNED_DO int = 32; --StatusOrder -> 'Declarado para Devolución'
+        declare @StatusReversal int =48; --StatusOrder -> 'Guía revertida para entrega'
         declare @RevalueGuides as table
         (
             [GuideSerie] nvarchar(2)

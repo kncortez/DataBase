@@ -35,12 +35,12 @@ BEGIN
 			c.[Name] AS Customer,
 			Receiver_Address AS ReceiverAddress,
 			so.OrderDescription  AS StatusDescription
-    FROM DeliveryBackOffice.dbo.DeliveryOrder AS do
-    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient AS vpc
+    FROM DeliveryBackOffice.dbo.DeliveryOrder AS do WITH(NOLOCK)
+    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient AS vpc WITH(NOLOCK)
     ON do.Sender_ID = vpc.CodeOfReference
-    LEFT JOIN DeliveryBackOffice.dbo.Customer AS c
+    LEFT JOIN DeliveryBackOffice.dbo.Customer AS c WITH(NOLOCK)
     on c.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-    INNER JOIN DeliveryBackOffice.dbo.StatusOrder AS so
+    INNER JOIN DeliveryBackOffice.dbo.StatusOrder AS so WITH(NOLOCK)
     ON do.StatusOrderId = so.StatusOrderId
     WHERE Guide_Serie = @Guide_Serie
     AND Guide_Number = @Guide_Number
