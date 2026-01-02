@@ -1,12 +1,5 @@
---ACTUALIZA IDSTATION PARA POD PARA PROCESO DE ENTREGA
--- 3  Programado para entrega
---50  Incidencia Validada
---45  Incidencia en ruta
--- 4  En ruta
---14  Devuelto
--- 5  Entregado
---32  Declarado para Devolución
--- 8  Paquete Retornado para Reproceso
+--ACTUALIZA IDSTATION PARA POD PARA PROCESOS ADMINISTRATIVOS
+
 DECLARE @RowsAffected INT = 1, @Contador int =0;
 
 WHILE (@RowsAffected > 0 )
@@ -28,7 +21,7 @@ BEGIN
 	   ON SR.HubLogisticId = HL.IdHubLogistic 
 	   where DOD.StationId is null
 	     AND HL.IdStation IS NOT NULL
-		 AND DOD.StatusOrderId IN (3,4,5,8,14,32,45,50);
+		 AND DOD.StatusOrderId NOT IN (2,11,3,4,5,8,14,32,45,50);
        
 	   SET @RowsAffected = @@ROWCOUNT;
 	    
