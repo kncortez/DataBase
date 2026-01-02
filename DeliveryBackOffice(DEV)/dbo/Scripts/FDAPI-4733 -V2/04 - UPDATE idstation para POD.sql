@@ -19,7 +19,8 @@ BEGIN
 	   INNER JOIN HubLogistics HL WITH (NOLOCK)
 	   ON SR.HubLogisticId = HL.IdHubLogistic 
 	   where DOD.StationId is null
-	     AND HL.IdStation IS NOT NULL;
+	     AND HL.IdStation IS NOT NULL
+		 AND DOD.StatusOrderId IN (2,11);
        
 	   SET @RowsAffected = @@ROWCOUNT;
 	    
