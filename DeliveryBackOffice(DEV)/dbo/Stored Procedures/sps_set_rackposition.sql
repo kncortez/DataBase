@@ -33,7 +33,7 @@ BEGIN
 	SELECT
 		@ActualStatusGuide = DO.StatusOrderId,
 		@ActualStatusGuideName = SO.OrderDescription
-	FROM[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+	FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 		INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 			ON DO.StatusOrderId = SO.StatusOrderId
 	WHERE DO.Guide_Serie = @GuideSerie
@@ -135,8 +135,8 @@ BEGIN
 												SELECT TOP 1
 													DO.IdCustomer
 												FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-												WHERE DO.Guide_Number = @GuideNumber
-													AND DO.Guide_Serie = @GuideSerie
+												WHERE DO.Guide_Serie = @GuideSerie
+													AND DO.Guide_Number = @GuideNumber
 											),
 											-1
 												);
@@ -319,8 +319,8 @@ BEGIN
 							INNER JOIN @PiecesGuideRelatedTable pgt
 								ON gpt.GuideSerie = pgt.GuideSerie
 									AND gpt.GuideNumber = pgt.GuideNumber
-						WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-							AND WHE.TypeConnectionId = 2
+									AND gpt.NumberPieces = pgt.NumberRelatedPieces
+						WHERE WHE.TypeConnectionId = 2
 					END
 				END;
 			END TRY
