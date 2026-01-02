@@ -738,12 +738,13 @@ BEGIN
                   , Temperature_Celsius
                   , [DeliveryAttemptId]
                   , [SystemOrigin]
+                  , StationId
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder
                , NULL, NULL, (
                                  SELECT TOP (1) [ID] FROM @Table ORDER BY [ID] DESC
-                             ), @SystemOrigin);
+                             ), @SystemOrigin, @StationId);
                 SET @RInserted = @@ROWCOUNT;
 
                 -----------------WEBHOOK.INI-----------------------		
