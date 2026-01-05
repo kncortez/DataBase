@@ -1,0 +1,9 @@
+-- DESACTIVAR SUSCRIPCIÓN GOLD PARA GUATEMALA
+UPDATE CatSubscription SET
+RowStatus = 0
+WHERE IdCatSubscription = 12;
+
+-- DESACTIVAR SUSCRIPCIÓN GOLD PARA HONDURAS
+UPDATE CatSubscription SET
+RowStatus = 0
+WHERE IdCatSubscription = 19;
