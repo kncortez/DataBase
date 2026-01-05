@@ -178,12 +178,7 @@ BEGIN
 		NULLIF(TRIM(do.Sender_Mail),     ''),
 		NULLIF(TRIM(cu.RegexEmail),      '')
 		) HRegexEmail,
-        CASE
-		WHEN ISNULL(do.SenderCountryId, 'GT') = 'GT' THEN
-		'Q.'
-		ELSE
-		'L.'
-		END    AS CurrencySymbol,
+        CCC.Symbol    AS CurrencySymbol,
 		cu.IdCustomerType,
 		do.Sender_ID,
 		do.SalePipeLineId,
@@ -222,6 +217,11 @@ BEGIN
         ON dc.DCBA_Id = do.DCBA_ID
     LEFT JOIN dbo.DeliveryBank           AS bk  WITH (NOLOCK)
         ON bk.Id_bank = dc.DCBA_Bank_Id
+	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DCurrency WITH (NOLOCK)
+	ON ISNULL(do.SenderCountryId, 'GT') = DCurrency.Currency_IdCountry
+    AND DCurrency.DefaultPerCountry = 1
+	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
+	ON DCurrency.IdCurrencyCOD = CCC.IdCatCurrencyCOD
     WHERE btd.BatchCODId = @BatchCODId and btd.Excluded = 0
 ),
 Pieces AS
