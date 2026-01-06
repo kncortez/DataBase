@@ -18,7 +18,10 @@ BEGIN
         p.PerGender AS Genero,
         p.PerNationality AS Nacionalidad,
         c.Abbreviation AS SobreNombre,
-        CONCAT(ru.PrefixCallingCode, ru.Phone) AS Telefono
+		ru.PrefixCallingCode AS PrefijoTelefono,
+        ru.Phone AS Telefono,
+		c.CommercialName AS NombreComercial,
+		ru.UsrEmail AS Correo
     FROM [DeliveryBackOffice].[dbo].[Customer] c WITH(NOLOCK)
     INNER JOIN [DeliveryBackOffice].[dbo].[Account] a WITH(NOLOCK) ON a.IdCustomer = c.IdCustomer
     INNER JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] rua WITH(NOLOCK) ON rua.RuaIdAccount = a.AccIdAccount
