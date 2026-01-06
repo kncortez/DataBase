@@ -62,10 +62,10 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[HubLogistics] HL  WITH(NOLOCK) 
 			ON
 				[DSC].[Hub] = HL.[HubAbbreviation]
-				AND
-				[HL].[HubStatus] = 1
 	WHERE
 		DSC.[RowStatus] = 1 AND [HL].[IdCountry] = @OriginCountry
+			AND
+			[HL].[HubStatus] = 1
 	GROUP BY
 		[DSC].[HeaderCode]
 
