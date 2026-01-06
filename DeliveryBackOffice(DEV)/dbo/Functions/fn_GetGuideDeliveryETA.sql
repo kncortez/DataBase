@@ -99,7 +99,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
 		WHERE
-			[Prv].[ProvinceName] = @OriginProvince  COLLATE Latin1_General_CI_AI 
+			[Prv].[ProvinceName] = @OriginProvince
 			AND
 			[Prv].[ProvinceStatus] = 1
 			AND
@@ -116,7 +116,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
 		WHERE
-			[Prv].[ProvinceName] = @DestinyProvince  COLLATE Latin1_General_CI_AI 
+			[Prv].[ProvinceName] = @DestinyProvince
 			AND
 			[Prv].[ProvinceStatus] = 1
 			AND
@@ -139,7 +139,7 @@ BEGIN
 				INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
 					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 			WHERE
-				[Twn].[TownshipName] = @OriginTownship  COLLATE Latin1_General_CI_AI 
+				[Twn].[TownshipName] = @OriginTownship
 				AND
 				[Twn].[IdProvince] = @OriginProvinceId
 				AND
@@ -186,7 +186,7 @@ BEGIN
 				INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
 					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 			WHERE
-				[Twn].[TownshipName] = @DestinyTownship  COLLATE Latin1_General_CI_AI 
+				[Twn].[TownshipName] = @DestinyTownship
 				AND
 				[Twn].[IdProvince] = @DestinyProvinceId
 				AND
@@ -220,12 +220,6 @@ BEGIN
 				[Twn].[DateCreated] DESC
 		)
     END
-
-	--SELECT 
-	--	@OriginProvinceId
-	--	,@OriginTownshipId
-	--	,@DestinyProvinceId
-	--	,@DestinyTownshipId
 
 	-- Tomar cabeceras en caso no se detecte correctamente municipios
 	-- No se detecto correctamente municipio de origen
