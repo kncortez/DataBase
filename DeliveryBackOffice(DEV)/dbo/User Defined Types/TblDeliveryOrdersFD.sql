@@ -1,8 +1,13 @@
-﻿-- =============================================
--- Author:		<Oscar Rodriguez>
--- Create date: <2024-11-19>
--- Description:	<Se agrego nuevo campo SenderIdSettlement para almacenar informacion de poblado de origen>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[Oscar Rodriguez]
+   Propósito: Objeto tipo tabla para manejar la información de la nueva guia, se usa como parametro en el SP SetServiceRequestFD
+   Autor:     Equipo Reclutamiento
+   Historia:  <>
+   Fecha:     2024-11-19
+   === CHANGELOG ============================
+2025-12-01 | Historia/épica: <FDAPI-5214> | Autor: Tito Garcia |
+2024-11-19 | Historia/épica: <Se agrego nuevo campo SenderIdSettlement para almacenar informacion de poblado de origen> | Autor: Oscar Rodriguez  |
+=========================================== */
 CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE (
     [RowNumber]                            INT             NOT NULL,
     [Ticket_Number]                        NVARCHAR (150)  NULL,
@@ -56,7 +61,8 @@ CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE (
     [ReceiverIdTownship]                   INT             NULL,
     [ReceiverLatitude]                     NVARCHAR (25)   NULL,
     [ReceiverLongitude]                    NVARCHAR (25)   NULL,
-	[SenderIdSettlement]                   BIGINT          NULL);
+	[SenderIdSettlement]                   BIGINT          NULL,
+	[ReceiverIdSettlement]                 INT             NULL);
 
 
 
