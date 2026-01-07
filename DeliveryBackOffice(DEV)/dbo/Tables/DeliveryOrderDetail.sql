@@ -61,6 +61,11 @@ CREATE NONCLUSTERED INDEX [IDX_GuideandStatusDate]
 
 
 GO
+CREATE NONCLUSTERED INDEX [IDX_DOD_StationId_UserCreated]
+    ON [dbo].[DeliveryOrderDetail] (StationId, UserCreated);
+
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción de status order', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderDetail', @level2type = N'COLUMN', @level2name = N'Guide_Serie';
 
 
