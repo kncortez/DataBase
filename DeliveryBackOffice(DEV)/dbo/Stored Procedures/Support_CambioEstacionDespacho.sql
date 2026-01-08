@@ -1,13 +1,17 @@
-/*
-================================================================================
-FECHA DE CREACIÓN: 2025-12-19
-AUTOR: IGONZALEZ
-================================================================================
-*/
+ï»¿/* =================================================
+   SP:        dbo.Support_CambioEstacionDespacho
+   PropÃ³sito: Actualizar la estaciÃ³n de despacho y liquidaciÃ³n de un manifiesto.
+   Autor:     IRVIN GONZALEZ
+   Historia:  FDAPI-5302
+   Fecha:     2025-12-19
+============================================
+=== CHANGELOG ============================
+2025-12-19 | Historia: FDAPI-5302 | Autor: IRVIN GONZALEZ |
+=========================================== */
 
 CREATE PROCEDURE dbo.Support_CambioEstacionDespacho
     @ManifiestoId INT,              -- Id del manifiesto en DeliveryOrderBySettlement
-    @NuevaEstacionId INT,           -- Id de la nueva estación (para ambos campos)
+    @NuevaEstacionId INT,           -- Id de la nueva estaciÃ³n (para ambos campos)
     @TokenUpdate VARCHAR(50)        -- Token del usuario que realiza el cambio
 AS
 BEGIN
@@ -36,7 +40,7 @@ BEGIN
             RETURN;
         END
 
-        -- PASO 2: Actualizar estación de despacho y liquidación
+        -- PASO 2: Actualizar estaciÃ³n de despacho y liquidaciÃ³n
         
         UPDATE dbo.DeliveryOrderBySettlement
         SET 
@@ -46,11 +50,11 @@ BEGIN
             DateUpdated = GETDATE()
         WHERE Id = @ManifiestoId;
 
-        -- RESULTADO EXITOSO: Mostrar antes y después
+        -- RESULTADO EXITOSO: Mostrar antes y despuÃ©s
         
         SELECT 
-            'Éxito' AS Estado,
-            'El cambio de estación fue aplicado con éxito.' AS Mensaje,
+            'Ã‰xito' AS Estado,
+            'El cambio de estaciÃ³n fue aplicado con Ã©xito.' AS Mensaje,
             @ManifiestoId AS ManifiestoId,
             @DispatchedStationIdAntes AS DispatchedStationId_Antes,
             @NuevaEstacionId AS DispatchedStationId_Despues,
@@ -64,7 +68,7 @@ BEGIN
     BEGIN CATCH
     SELECT 
             'Error' AS Estado,
-            'Ocurrió un error durante la ejecución del procedimiento.' AS Mensaje,
+            'OcurriÃ³ un error durante la ejecuciÃ³n del procedimiento.' AS Mensaje,
             ERROR_NUMBER() AS ErrorNumero,
             ERROR_MESSAGE() AS ErrorDescripcion,
             ERROR_LINE() AS ErrorLinea;
@@ -77,17 +81,11 @@ GO
 
 /*
 ================================================================================
-EJEMPLO DE EJECUCIÓN
+EJEMPLO DE EJECUCIÃ“N
 ================================================================================
 EXEC dbo.Support_CambioEstacionDespacho 
     @ManifiestoId = 654037,
     @NuevaEstacionId = 360,
     @TokenUpdate = 'SYS-IGONZALEZ';
-================================================================================
-HISTORIAL DE CAMBIOS:
-    - 2025-12-19: Versión inicial - Cambio de estación de despacho
-                  Actualiza DispatchedStationId y SettlementStationId
-                  Incluye auditoría con TokenUpdated y DateUpdated
-                  Output estructurado con valores antes/después
 ================================================================================
 */
