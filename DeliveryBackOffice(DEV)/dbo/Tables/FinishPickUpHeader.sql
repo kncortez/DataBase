@@ -16,9 +16,11 @@
     [DateCreated]        DATETIME        DEFAULT (getdate()) NULL,
     [TokenUpdated]       NVARCHAR (200)  NULL,
     [DateUpdated]        DATETIME        NULL,
+    [StationId] INT NULL, 
     PRIMARY KEY CLUSTERED ([SchedulePickupId] ASC),
     CONSTRAINT [FK_FinishPickUpHeader_CatServiceStatus] FOREIGN KEY ([ServiceStatusId]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus]),
-    CONSTRAINT [FK_FinishPickUpHeader_SchedulePickup] FOREIGN KEY ([SchedulePickupId]) REFERENCES [dbo].[SchedulePickup] ([SchedulePickupId])
+    CONSTRAINT [FK_FinishPickUpHeader_SchedulePickup] FOREIGN KEY ([SchedulePickupId]) REFERENCES [dbo].[SchedulePickup] ([SchedulePickupId]),
+    CONSTRAINT [FK_FinishPickUpHeader_CatStation] FOREIGN KEY ([StationId]) REFERENCES [dbo].[CatStation] ([IdStation])
 );
 
 
@@ -93,3 +95,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N' Id del ser
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Encabezado de tabla para guardar los registros del request para recolecciones SetFinishPickUp ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'FinishPickUpHeader';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id de la estacion donde fue procesada el servicio de recoleccion',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'FinishPickUpHeader',
+    @level2type = N'COLUMN',
+    @level2name = N'StationId'

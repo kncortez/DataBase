@@ -15,8 +15,8 @@ BEGIN
   --     Inicia el bloque de manejo de excepciones  
     BEGIN TRY  
         --Variables locales  
-        DECLARE @VisitPointClient TABLE (Id INT);  
-        DECLARE @TypeService      NVARCHAR(3);  
+        DECLARE @XmlVisitPointClient XML,  
+                @TypeService         NVARCHAR(3);  
   
         DECLARE @IdCatInvoiceType INT =  
                 (  
@@ -48,11 +48,8 @@ BEGIN
             SendToInvoice      BIT NULL  
         );  
   
-        -- Convertir la cadena a una variable tabla  
-        INSERT INTO @VisitPointClient (Id)  
-        SELECT TRY_CAST(value AS INT)  
-        FROM STRING_SPLIT(@LstVisitPointClient, ',')  
-        WHERE TRIM(value) <> '';  
+        -- Convertir la cadena a XML  
+        SET @XmlVisitPointClient = CAST('<LstVisitPointClient><PointClient>' + REPLACE(@LstVisitPointClient, ',', '</PointClient><PointClient>') + '</PointClient></LstVisitPointClient>' AS XML);  
   
         -- Inicia una transacción  
         BEGIN TRANSACTION;  
@@ -79,8 +76,8 @@ BEGIN
            AND ih.inv_motiveCreditNote IS NULL  
            AND ih.CatInvoiceTypeId IS NULL  
            AND vst.IdVisitPointClient IN (  
-                                           SELECT Id AS Valor  
-                                           FROM @VisitPointClient  
+                                           SELECT v.value('.', 'NVARCHAR(MAX)') AS Valor  
+                                             FROM @XmlVisitPointClient.nodes('/LstVisitPointClient/PointClient') AS x(v)  
                                           )  
            AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)  
            AND do.IsCollect = 0  

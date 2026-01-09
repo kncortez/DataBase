@@ -56,13 +56,26 @@ BEGIN
 					,'Error fatal intente de nuevo mas tarde'  AS Message
 					,'Transaction' as Id 
 			union
+			SELECT 
+					 500 AS IdResult, 
+					 'Este correo ya fue registrado para un usuario corporativo' AS Message, 
+					 'Corp' as Id 
+            union 
 			SELECT  200 AS IdResult
 					,'Cuenta creada correctamente' AS Message
 					,'Ok' as Id )  as errror
 
 		-- validar que el correo no exite
-
-		if (select count(*) from RegisterUser usr where usr.UsrEmail = @Email) =0  -- no existe usuario, por lo tanto lo crea
+		IF NOT EXISTS(
+			  SELECT 1 
+			  FROM 
+				[DeliveryBackOffice].[dbo].[Customer] WITH(NOLOCK)
+			  WHERE RegexEmail LIKE '%' + @Email + '%' 
+				AND IdCustomerType = 1 
+				AND RowSatus = 1
+		) 
+		BEGIN 
+		if (select count(*) from RegisterUser usr WITH(NOLOCK) where usr.UsrEmail = @Email) =0  -- no existe usuario, por lo tanto lo crea
 			begin
 				IF @TypeAccount = 'IND' 
 				BEGIN
@@ -84,8 +97,9 @@ BEGIN
 					,PerNationality
 					,PerRowStatus
 					,PerTokenCreated
-					,PerDateCreated)
-					Values(@FirstName,@LastName, @Gender,@Birthdate,@IdentificationValue, @Nationality, 1,'SYS-ADMIN',GETDATE())
+					,PerDateCreated
+					,PerCountryOrigin)
+					Values(@FirstName,@LastName, @Gender,@Birthdate,@IdentificationValue, @Nationality, 1,'SYS-ADMIN',GETDATE(), @CountryId)
 					
 					DECLARE @IdPerson as bigint =  SCOPE_IDENTITY();
 
@@ -369,6 +383,27 @@ BEGIN
 					)
 
 			end
+		END -- el usuario es corporativo
+		ELSE 
+		BEGIN 
+			set 
+				@jsonResult =(
+				SELECT 
+				  STUFF(
+					(
+					  SELECT 
+						'{"IdResult":' + convert(varchar, IdResult) + ',' + '"Message":"' + Message + '"}' 
+					  from 
+						#errormessage where Id ='Corp'
+						FOR XML PATH(''), 
+						TYPE
+					).value('.', 'varchar(max)'), 
+					1, 
+					1, 
+					''
+					)
+			) 
+		END
 
 		-- destruir tablas temporales
 
