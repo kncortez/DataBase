@@ -11,8 +11,9 @@
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_CheckGuideInsurance
-    @GuideNumber INT,
-    @GuideSerie  VARCHAR(10) = 'FD'
+    @GuideSerie  VARCHAR(10) = 'FD',
+    @GuideNumber INT
+    
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -24,9 +25,9 @@ BEGIN
         IF NOT EXISTS (
             SELECT 1
             FROM dbo.DeliveryOrder WITH (NOLOCK)
-            WHERE Guide_Number = @GuideNumber
-              AND Guide_Serie  = @GuideSerie
-        )
+            WHERE Guide_Serie  = @GuideSerie
+              AND Guide_Number = @GuideNumber
+              )
         BEGIN
             SELECT
                 'Error' AS Estado,
@@ -45,8 +46,8 @@ BEGIN
             @IsInsurance     = IsInsuarance,
             @InsuranceAmount = InsuranceAmount
         FROM dbo.DeliveryOrder WITH (NOLOCK)
-        WHERE Guide_Number = @GuideNumber
-          AND Guide_Serie  = @GuideSerie;
+        WHERE Guide_Serie  = @GuideSerie
+              AND Guide_Number = @GuideNumber;
 
         -- PASO 3: Respuesta según estado del seguro
 
@@ -90,7 +91,7 @@ GO
 EJEMPLO DE EJECUCIÓN
 ================================================================================
 EXEC dbo.Support_CheckGuideInsurance
-     @GuideNumber = 12345678,
-     @GuideSerie  = 'FD';
+     @GuideSerie  = 'FD',
+     @GuideNumber = 12345678;
 ================================================================================
 */
