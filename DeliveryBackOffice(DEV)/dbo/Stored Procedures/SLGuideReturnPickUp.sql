@@ -67,18 +67,6 @@ BEGIN
 		DECLARE @GuideReturnPickUpInSL INT = 
 		( SELECT StatusOrderId FROM DeliveryBackOffice.dbo.StatusOrder WITH(NOLOCK) WHERE [OrderDescription] = 'Retirado en Smart Locker' );
 
-		DECLARE @StationId INT = 
-		(
-			SELECT 
-				CT.IdStation 
-			FROM DeliveryBackOffice.dbo.DeliveryOrder			DO	WITH(NOLOCK)
-			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient	VPC WITH(NOLOCK) 
-				ON VPC.CodeOfReference = DO.Receiver_ID
-			INNER JOIN DeliveryBackOffice.dbo.CatStation		CT	WITH(NOLOCK)
-				ON CT.CodeOfReference = VPC.CodeOfReference
-			WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
-		);
-
 		-- Se agrega para dejar registro de 'Retirado en Smart Locker' sin afectar el flujo despues de recoleccion
         INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
         (
@@ -108,7 +96,7 @@ BEGIN
             , NULL
             , 1
 			, 8 --API
-			, @StationId
+			, NULL
         );
     
 		COMMIT TRANSACTION;
