@@ -342,7 +342,10 @@ BEGIN
 				ELSE 'INT'
 			END AS GuideType,
 			GT.SenderIdSettlement,
-			GT.ReceiverIdSettlement
+			CASE
+				WHEN GT.ReceiverIdSettlement = 0 THEN NULL
+				ELSE GT.ReceiverIdSettlement
+			END
 		FROM #GuideTable GT
 		INNER JOIN DeliveryBackOffice.dbo.Township T ON GT.SenderIdTownship = T.IdTownship
 		INNER JOIN DeliveryBackOffice.dbo.Province P ON T.IdProvince = P.IdProvince
