@@ -56,7 +56,8 @@ BEGIN
 				Guide_Number,
 				ID_Courier
         FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
-        WHERE	CAST(Date_Created AS DATE) = @DateRoute
+        WHERE Date_Created >= @DateRoute
+            AND Date_Created < DATEADD(DAY, 1, @DateRoute)
 			AND ID_Courier = @IdCourier
 			AND Guide_Piece = 1
 		GROUP BY
@@ -248,7 +249,8 @@ select distinct * from #TempDeliveryPriceInfo
         Guide_Number,
         ID_Courier
     FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
-    WHERE CAST(Date_Created AS DATE) = @DateRoute
+    WHERE Date_Created  >= @DateRoute
+        AND Date_Created  < DATEADD(DAY, 1, @DateRoute)
         AND ID_Courier = @IdCourier
         AND Guide_Piece = 1
     GROUP BY Guide_Serie, Guide_Number, ID_Courier
@@ -469,7 +471,8 @@ LEFT JOIN (
    AND HP.GuideNumber = DOR.Guide_Number
    AND HP.ServiceTypeId = IIF(DOR.IsLastMileReturn = 1, @ReturnTypeId, @DeliveryTypeId)
 WHERE
-	CAST(DSD.DateCreated AS DATE) = @DateRoute
+    DSD.DateCreated >= @DateRoute
+    AND DSD.DateCreated < DATEADD(DAY, 1, @DateRoute)
 	AND DSD.RowStatus = 1
 	AND DOR.StatusOrderId IN (4, 5, 12, 14, 20, 25, 32, 45, 48, 50)
 	AND DSD.RowStatus = 1
@@ -579,9 +582,9 @@ LEFT JOIN (
         AND DO2.Guide_Number = DOA2.GuideNumber
     LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] VPC2 WITH (NOLOCK)
         ON VPC2.CodeOfReference = DO2.Sender_Id
-    WHERE
-        CAST(DOA2.DateCreated AS DATE) = @DateRoute
-        AND DOA2.ServiceTypeId IN (@PickUpTypeId)
+    WHERE DOA2.DateCreated >= @DateRoute
+        AND DOA2.DateCreated < DATEADD(DAY, 1, @DateRoute)
+        AND DOA2.ServiceTypeId = @PickUpTypeId
         AND DOA2.RowStatus = 1
         AND DOA2.ServiceManagementId IS NULL
     GROUP BY VPC2.CodeOfReference
@@ -619,7 +622,8 @@ WHERE
 				DOA.AlertDescription,
 				DOA.DateCreated
 		FROM	[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] doa WITH (NOLOCK)
-        WHERE   CONVERT( DATE, doa.DateCreated ) = @DateRoute
+        WHERE doa.DateCreated >= @DateRoute
+            AND doa.DateCreated < DATEADD(DAY, 1, @DateRoute)
 			AND DOA.RowStatus = 1
 			AND DOA.ServiceManagementId IS NOT NULL
 		UNION ALL
@@ -633,8 +637,9 @@ WHERE
 			AND DO.Guide_Number = DOA.GuideNumber
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
 			ON VPC.CodeOfReference = DO.Sender_Id
-		WHERE  doa.ServiceTypeId IN (@PickUpTypeId)
-				AND CAST( doa.DateCreated AS DATE) = @DateRoute
+		WHERE  doa.ServiceTypeId = @PickUpTypeId
+                AND doa.DateCreated >= @DateRoute
+                AND doa.DateCreated < DATEADD(DAY, 1, @DateRoute)
 				AND DOA.RowStatus = 1
 				AND DOA.ServiceManagementId IS NULL
 		UNION ALL
@@ -647,7 +652,8 @@ WHERE
 			ON DO.Guide_Serie = DOA.GuideSerie
 			AND DO.Guide_Number = DOA.GuideNumber
 		WHERE  DOA.ServiceTypeId IN (@ReturnTypeId, @DeliveryTypeId)
-		   AND CONVERT(DATE, DOA.DateCreated) = @DateRoute
+		   AND DOA.DateCreated >= @DateRoute
+           AND DOA.DateCreated < DATEADD(DAY, 1, @DateRoute)
 		   AND DOA.RowStatus = 1
 		   AND DOA.ServiceManagementId IS NULL
     ) AS TAL
