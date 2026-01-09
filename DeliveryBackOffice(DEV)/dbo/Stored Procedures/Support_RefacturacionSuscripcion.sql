@@ -1,14 +1,19 @@
-/*
-================================================================================
-FECHA DE CREACIÓN: 2025-12-19
-AUTOR: IGONZALEZ
-================================================================================
-*/
+ï»¿/* =================================================
+   SP:        dbo.Support_RefacturacionSuscripcion
+   PropÃ³sito: Asociar una suscripciÃ³n a una factura verificando estado y existencia.
+   Autor:     IRVIN GONZALEZ
+   Historia:  FDAPI-5301
+   Fecha:     2025-12-19
+============================================
+=== CHANGELOG ============================
+2025-12-19 | Historia/Ã©pica: FDAPI-5301 | Autor: IRVIN GONZALEZ |
+-----
+=========================================== */
 
 CREATE PROCEDURE dbo.Support_RefacturacionSuscripcion
-    @CodigoCertificacionFEL VARCHAR(100),   -- Código de certificación FEL
-    @NumeroVoucher VARCHAR(50),              -- Número de voucher/autorización
-    @TokenUpdate VARCHAR(50)                 -- Token del usuario que realiza el cambio
+    @CodigoCertificacionFEL NVARCHAR(100),   -- CÃ³digo de certificaciÃ³n FEL
+    @NumeroVoucher NVARCHAR(100),             -- NÃºmero de voucher/autorizaciÃ³n
+    @TokenUpdate NVARCHAR(100)                -- Token del usuario que realiza el cambio
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -16,7 +21,6 @@ BEGIN
     BEGIN TRY
         
         -- PASO 1: Validar existencia y estado de la factura (InvoiceHeader)
-        
         DECLARE @InvoiceHeaderId INT;
         DECLARE @InvoiceStatus INT;
 
@@ -26,7 +30,6 @@ BEGIN
         FROM dbo.InvoiceHeader WITH (NOLOCK)
         WHERE inv_certificationFEL = @CodigoCertificacionFEL;
 
-        -- Validar si la factura existe
         IF @InvoiceHeaderId IS NULL
         BEGIN
             SELECT 
@@ -36,20 +39,18 @@ BEGIN
             RETURN;
         END
 
-        -- Validar si la factura está anulada
         IF @InvoiceStatus = -1
         BEGIN
             SELECT 
                 'Error' AS Estado,
-                'La factura se encuentra en estado ANULADO. No se puede asociar suscripción.' AS Mensaje,
+                'La factura se encuentra en estado ANULADO. No se puede asociar suscripciÃ³n.' AS Mensaje,
                 @CodigoCertificacionFEL AS CodigoCertificacionFEL,
                 @InvoiceHeaderId AS InvoiceHeaderId,
                 @InvoiceStatus AS EstadoFactura;
             RETURN;
         END
 
-        -- PASO 2: Validar que el detalle NO tenga suscripción asociada
-        
+        -- PASO 2: Validar que el detalle NO tenga suscripciÃ³n asociada
         DECLARE @SubscriptionIdActual INT;
 
         SELECT TOP 1
@@ -57,19 +58,17 @@ BEGIN
         FROM dbo.InvoiceDetail WITH (NOLOCK)
         WHERE DTI_FK_Header = @InvoiceHeaderId;
 
-
         IF @SubscriptionIdActual IS NOT NULL AND @SubscriptionIdActual <> 0
         BEGIN
             SELECT 
                 'Error' AS Estado,
-                'La factura ya está asociada a una suscripción.' AS Mensaje,
+                'La factura ya estÃ¡ asociada a una suscripciÃ³n.' AS Mensaje,
                 @InvoiceHeaderId AS InvoiceHeaderId,
                 @SubscriptionIdActual AS SuscripcionActual;
             RETURN;
         END
 
         -- PASO 3: Validar existencia del voucher en registro de transacciones
-        
         IF NOT EXISTS (
             SELECT TOP 1 1
             FROM dbo.RegistrationofTransactionProcessStates WITH (NOLOCK)
@@ -84,7 +83,6 @@ BEGIN
         END
 
         -- PASO 4: Obtener SubscriptionId desde SubscriptionPaymentLog
-        
         DECLARE @SubscriptionIdNuevo INT;
 
         SELECT TOP 1
@@ -92,39 +90,32 @@ BEGIN
         FROM dbo.SubscriptionPaymentLog WITH (NOLOCK)
         WHERE [Authorization] = @NumeroVoucher;
 
-        -- Validar si existe el SubscriptionId
         IF @SubscriptionIdNuevo IS NULL
         BEGIN
             SELECT 
                 'Error' AS Estado,
-                'No se encontró una suscripción asociada al voucher proporcionado.' AS Mensaje,
+                'No se encontrÃ³ una suscripciÃ³n asociada al voucher proporcionado.' AS Mensaje,
                 @NumeroVoucher AS NumeroVoucher;
             RETURN;
         END
 
-        -- PASO 5: Actualizar InvoiceDetail con la nueva suscripción
-        
-        -- Capturar el valor ANTES del update para mostrar comparación
+        -- PASO 5: Actualizar InvoiceDetail con la nueva suscripciÃ³n
         DECLARE @SubscriptionIdAntes INT;
-        
+
         SELECT TOP 1
             @SubscriptionIdAntes = SubscriptionId
         FROM dbo.InvoiceDetail WITH (NOLOCK)
         WHERE DTI_FK_Header = @InvoiceHeaderId;
 
-        -- Realizar el UPDATE
         UPDATE dbo.InvoiceDetail
         SET 
-            SubscriptionId = @SubscriptionIdNuevo,
-            TokenUpdated = @TokenUpdate,
-            DateUpdated = GETDATE()
-        WHERE DTI_FK_Header = @InvoiceHeaderId;
+            SubscriptionId = @SubscriptionIdNuevo
+       WHERE DTI_FK_Header = @InvoiceHeaderId;
 
-        -- RESULTADO EXITOSO: Mostrar antes y después
-        
+        -- RESULTADO EXITOSO: Mostrar antes y despuÃ©s
         SELECT 
-            'Éxito' AS Estado,
-            'Se ha asociado la suscripción con la factura exitosamente.' AS Mensaje,
+            'Ã‰xito' AS Estado,
+            'Se ha asociado la suscripciÃ³n con la factura exitosamente.' AS Mensaje,
             @InvoiceHeaderId AS InvoiceHeaderId,
             @SubscriptionIdAntes AS SubscriptionId_Antes,
             @SubscriptionIdNuevo AS SubscriptionId_Despues,
@@ -132,35 +123,27 @@ BEGIN
             GETDATE() AS FechaModificacion;
 
     END TRY
-
     BEGIN CATCH
-        
         SELECT 
             'Error' AS Estado,
-            'Ocurrió un error durante la ejecución del procedimiento.' AS Mensaje,
+            'OcurriÃ³ un error durante la ejecuciÃ³n del procedimiento.' AS Mensaje,
             ERROR_NUMBER() AS ErrorNumero,
             ERROR_MESSAGE() AS ErrorDescripcion,
             ERROR_LINE() AS ErrorLinea;
-            
-        THROW;
 
+        THROW;
     END CATCH
 END
 GO
 
 /*
 ================================================================================
-EJEMPLO DE EJECUCIÓN
+EJEMPLO DE EJECUCIÃ“N
 ================================================================================
 
 EXEC dbo.Support_RefacturacionSuscripcion 
-    @CodigoCertificacionFEL = 'C8457275-C3B7-4FC6-8DC6-34F806887CC1',
-    @NumeroVoucher = '214345',
-    @TokenUpdate = 'SYS-IGONZALEZ';
-================================================================================
-HISTORIAL DE CAMBIOS:
-    - 2025-12-19: Versión inicial - Asociación de suscripción a factura
-                  Validaciones completas de estado y existencia
-                  Output estructurado con antes/después de cambios
+    @CodigoCertificacionFEL = N'C8457275-C3B7-4FC6-8DC6-34F806887CC1',
+    @NumeroVoucher           = N'214345',
+    @TokenUpdate             = N'SYS-IGONZALEZ';
 ================================================================================
 */
