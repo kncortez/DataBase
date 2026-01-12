@@ -1,266 +1,381 @@
-﻿--EXEC GetDepositReportCOD_Generic -1,-1,'2021-10-01','2021-12-01',-1, 'ivan.mendoza@forzalatam.com'
--- =============================================
--- Author:		<Marco Jiménez>
--- Create date: <2021-10-19>
--- Description:	<Guias por pagar COD>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-07-15>
--- Description:	<Se agrega el simbolo de la moneda por pais>
--- =============================================
+﻿
+/* =================================================
+   SP:        [dbo].[GetDepositReportCOD_Generic]
+   Propósito: Para obtener la información del Informe de depositos por entregas realizadas.
+   Autor:     Walter Orozco
+   Historia:  FDAPI-5247 [FDAPI-5252]
+   Fecha:     2025-12-12
+ ============ CHANGELOG ============================
+2021-10-19 | Historia/épica: Desconocido | Autor: Marco Jiménez	  |
+2024-07-15 | Historia/épica: Desconocido | Autor: Cristian Suazo  |
+=========================================== */
+
 CREATE PROCEDURE [dbo].[GetDepositReportCOD_Generic]
-    -- Add the parameters for the stored procedure here
-    @IdCustomer INT = -1
-  , @IdBank INT = -1
-  , @StarDate DATETIME
-  , @EndDate DATETIME
-  , @Option INT = -1
-  , @SenderEmail VARCHAR(MAX) = '0'
+    @IdCustomer		INT = -1
+  , @IdBank			INT = -1
+  , @StarDate		DATETIME
+  , @EndDate		DATETIME
+  , @Option			INT = -1
+  , @SenderEmail	VARCHAR(MAX) = '0'
+  , @ResultSet		INT = -1
 AS
 BEGIN
 
+BEGIN TRY
 
-    PRINT '@IdCustomer';
-    PRINT @IdCustomer;
+    SET NOCOUNT ON;
 
-    PRINT '@SenderEmail';
-    PRINT @SenderEmail;
-
-
-    IF @Option = -1
+	IF @Option <> -1
     BEGIN
-        --IF((ISNULL(@IdCustomer,0) != 0  OR @IdCustomer != -1) AND (ISNULL(@SenderEmail,'0') = '0' OR @SenderEmail = '-1' OR @SenderEmail = '1'))
-        IF (@IdCustomer != -1)
-        BEGIN
-            PRINT 'OPCION 1A';
-            SELECT s1.*
-                 , ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaArribo, 103), CONVERT(DATE, s1.FechaEntrega, 103)), 0) AS DiasEntrega
-                 , ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0)   AS DiasPago
-            FROM
-            (
-                SELECT cu.[IdCustomer]                                                                   IdCliente
-                     , cu.[Name]                                                                         Cliente
-                     , COALESCE(cu.CODContactEmail, REPLACE(REPLACE(cu.[RegexEmail], '^', ''), '$', '')) Correo
-                     , btd.BankName                                                                      Banco
-                     , btd.AccountNumber                                                                 Cuenta
-                     , CONCAT(btd.[GuideSerie], btd.[GuideNumber])                                       GuideNumber
-                     , (do.Pieces_Dry + do.Pieces_Cold)                                                  Piezas
-                     , (
-                           SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
-                           FROM dbo.DeliveryOrderPiece dp WITH (NOLOCK)
-                           WHERE dp.GuideSerie = do.Guide_Serie
-                                 AND dp.GuideNumber = do.Guide_Number
-                       )                                                                                 Peso
-                     , ISNULL(prv.ProvinceName, pr.ProvinceName)                                         Departamento
-                     , ISNULL(twn.TownshipName, tw.TownshipName)                                         Municipio
-                     , CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName])                           AS Receiver
-                     , FORMAT((
-                                  SELECT TOP 1
-                                         dt.DateCreated
-                                  FROM dbo.DeliveryOrderDetail dt WITH (NOLOCK)
-                                  WHERE dt.Guide_Serie = do.Guide_Serie
-                                        AND dt.Guide_Number = do.Guide_Number
-                                        AND dt.StatusOrderId IN ( 11, 2 )
-                              )
-                            , 'dd/MM/yyyy hh:mm:ss tt'
-                             )                                                                           FechaArribo
-                     , FORMAT((
-                                  SELECT TOP 1
-                                         dt.DateCreated
-                                  FROM dbo.DeliveryOrderDetail dt WITH (NOLOCK)
-                                  WHERE dt.Guide_Serie = do.Guide_Serie
-                                        AND dt.Guide_Number = do.Guide_Number
-                                        AND dt.StatusOrderId = 5
-                              )
-                            , 'dd/MM/yyyy hh:mm:ss tt'
-                             )                                                                           FechaEntrega
-                     , FORMAT(btd.[AuthorizationDate], 'dd/MM/yyyy hh:mm:ss tt')                         FechaPago
-                     , btd.[AuthorizationNumber]                                                         NoDeposito
-                     , do.[Collect_OnDelivery]                                                           AS CODAmount
-                     , IIF(do.[TypeService] = 'EXP', 'NDD', ISNULL(do.[TypeService], 'NDD'))             TypeService
-                     , IIF(do.IsCollect = 'true'
-                           , 'Collect'
-                           , (IIF(ISNULL(cu.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago')))        TipodePago
-                     , do.[PriceShippment]                                                               AS ShippmentAmount
-                     , btd.[Commission]                                                                  AS CommissionAmount
-                     , btd.CODCommissionPercentage                                                       AS PorcentajeComision
-                     , btd.[Amount] + btd.[Commission]                                                   AS ChargedAmount
-                     , btd.[Amount]                                                                      AS TotalAmount
-                     , IIF(btd.BankId IN ( 3, 5, 31, 33, 1 ), 1, 0)                                      FlagImmediateOrAch
-                     , btd.[AuthorizationDate]
-                     , CASE
-                           WHEN ISNULL(do.SenderCountryId, 'GT') = 'GT' THEN
-                               'Q.'
-                           ELSE
-                               'L.'
-                       END                                                                               AS CurrencySymbol
-                FROM [dbo].[BatchDetailCOD]              AS btd WITH (NOLOCK)
-                    INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
-                        ON btd.[GuideSerie] = pg.[GuideSerie]
-                           AND btd.[GuideNumber] = pg.[GuideNumber]
-                    INNER JOIN [dbo].[DeliveryOrder]     AS do WITH (NOLOCK)
-                        ON btd.[GuideSerie] = do.[Guide_Serie]
-                           AND btd.[GuideNumber] = do.[Guide_Number]
-                    LEFT JOIN dbo.Township               twn WITH (NOLOCK)
-                        ON twn.IdTownship = do.ReceiverIdTownship
-                    OUTER APPLY
-                (
-                    SELECT TOP 1
-                           tw.IdProvince
-                         , tw.TownshipName
-                    FROM dbo.Township           tw WITH (NOLOCK)
-                        INNER JOIN dbo.Province PR WITH (NOLOCK)
-                            ON PR.IdProvince = tw.IdProvince
-                    WHERE tw.TownshipName = do.Receiver_Town
-                          AND PR.IdCountry = do.ReceiverCountryId
-                )                                        tw
-                    --LEFT JOIN dbo.Township tw WITH(NOLOCK)
-                    --    ON tw.TownshipName = do.Receiver_Town
-                    LEFT JOIN dbo.Province                    prv WITH (NOLOCK)
-                        ON prv.IdProvince = twn.IdProvince
-                    LEFT JOIN dbo.Province                    pr WITH (NOLOCK)
-                        ON pr.IdProvince = tw.IdProvince
-                    LEFT JOIN dbo.VisitPointClient            vpc WITH (NOLOCK)
-                        ON vpc.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer                    cu WITH (NOLOCK)
-                        ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                    LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH (NOLOCK)
-                        ON dc.DCBA_Id = do.DCBA_ID
-                    LEFT JOIN dbo.DeliveryBank                bk WITH (NOLOCK)
-                        ON bk.Id_bank = dc.DCBA_Bank_Id
-                WHERE btd.[AuthorizationNumber] IS NOT NULL
-                      AND pg.BatchCODId IS NOT NULL
-                      AND (cu.IdCustomer = @IdCustomer)
-                      AND
-                      (
-                          btd.BankId = @IdBank
-                          OR @IdBank = -1
-                      )
-                      -- AND ISNULL(do.SalePipeLineId,4) NOT IN (3) Se comenta para poder retornar las guías de corporativos que sean realizadas en ExpressCenter
-                      AND CAST(btd.AuthorizationDate AS DATE)
-                      BETWEEN CAST(@StarDate AS DATE) AND CAST(@EndDate AS DATE)
-            ) s1;
+		RETURN;
+	END;
 
-        END;
-        ELSE IF (@SenderEmail != '-1')
-        BEGIN
-            PRINT 'OPCION 2';
-            SELECT s1.*
-                 , ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaArribo, 103), CONVERT(DATE, s1.FechaEntrega, 103)), 0) AS DiasEntrega
-                 , ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0)   AS DiasPago
-            FROM
-            (
-                SELECT cu.[IdCustomer]                                                                    IdCliente
-                     , do.Sender_FirstName                                                                Cliente
-                     , @SenderEmail                                                                       Correo
-                     , btd.BankName                                                                       Banco
-                     , btd.AccountNumber                                                                  Cuenta
-                     , CONCAT(btd.[GuideSerie], btd.[GuideNumber])                                        GuideNumber
-                     , (do.Pieces_Dry + do.Pieces_Cold)                                                   Piezas
-                     , (
-                           SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
-                           FROM dbo.DeliveryOrderPiece dp WITH (NOLOCK)
-                           WHERE dp.GuideSerie = do.Guide_Serie
-                                 AND dp.GuideNumber = do.Guide_Number
-                       )                                                                                  Peso
-                     , ISNULL(prv.ProvinceName, pr.ProvinceName)                                          Departamento
-                     , ISNULL(twn.TownshipName, tw.TownshipName)                                          Municipio
-                     , CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName])                            AS Receiver
-                     , FORMAT((
-                                  SELECT TOP 1
-                                         dt.DateCreated
-                                  FROM dbo.DeliveryOrderDetail dt WITH (NOLOCK)
-                                  WHERE dt.Guide_Serie = do.Guide_Serie
-                                        AND dt.Guide_Number = do.Guide_Number
-                                        AND dt.StatusOrderId IN ( 11, 2 )
-                              )
-                            , 'dd/MM/yyyy hh:mm:ss tt'
-                             )                                                                            FechaArribo
-                     , FORMAT((
-                                  SELECT TOP 1
-                                         dt.DateCreated
-                                  FROM dbo.DeliveryOrderDetail dt WITH (NOLOCK)
-                                  WHERE dt.Guide_Serie = do.Guide_Serie
-                                        AND dt.Guide_Number = do.Guide_Number
-                                        AND dt.StatusOrderId = 5
-                              )
-                            , 'dd/MM/yyyy hh:mm:ss tt'
-                             )                                                                            FechaEntrega
-                     , FORMAT(btd.[AuthorizationDate], 'dd/MM/yyyy hh:mm:ss tt')                          FechaPago
-                     , btd.[AuthorizationNumber]                                                          NoDeposito
-                     , do.[Collect_OnDelivery]                                                            AS CODAmount
-                     , IIF(do.[TypeService] = 'EXP', 'NDD', ISNULL(do.[TypeService], 'NDD'))              TypeService
-                     , IIF(do.IsCollect = 'true'
-                           , 'Collect'
-                           , (IIF(ISNULL(cu.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago')))         TipodePago
-                     , do.[PriceShippment]                                                                AS ShippmentAmount
-                     , btd.[Commission]                                                                   AS CommissionAmount
-                     , btd.CODCommissionPercentage                                                        AS PorcentajeComision
-                     , btd.[Amount] + btd.[Commission]                                                    AS ChargedAmount
-                     , btd.[Amount]                                                                       AS TotalAmount
-                     , IIF(btd.BankId IN ( 3, 5, 31, 33, 1 ), 1, 0)                                       FlagImmediateOrAch
-                     , btd.[AuthorizationDate]
-                     , CONVERT(VARCHAR(10), @StarDate, 103) + ' - ' + CONVERT(VARCHAR(10), @EndDate, 103) AS DateDelivery
-                     , CASE
-                           WHEN ISNULL(do.SenderCountryId, 'GT') = 'GT' THEN
-                               'Q.'
-                           ELSE
-                               'L.'
-                       END                                                                                AS CurrencySymbol
-                FROM [dbo].[BatchDetailCOD]              AS btd WITH (NOLOCK)
-                    INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
-                        ON btd.[GuideSerie] = pg.[GuideSerie]
-                           AND btd.[GuideNumber] = pg.[GuideNumber]
-                    INNER JOIN [dbo].[DeliveryOrder]     AS do WITH (NOLOCK)
-                        ON btd.[GuideSerie] = do.[Guide_Serie]
-                           AND btd.[GuideNumber] = do.[Guide_Number]
-                    LEFT JOIN dbo.Township               twn WITH (NOLOCK)
-                        ON twn.IdTownship = do.ReceiverIdTownship
-                    OUTER APPLY
-                (
-                    SELECT TOP 1
-                           tw.IdProvince
-                         , tw.TownshipName
-                    FROM dbo.Township           tw WITH (NOLOCK)
-                        INNER JOIN dbo.Province PR WITH (NOLOCK)
-                            ON PR.IdProvince = tw.IdProvince
-                    WHERE tw.TownshipName = do.Receiver_Town
-                          AND PR.IdCountry = do.ReceiverCountryId
-                )                                        tw
-                    --LEFT JOIN dbo.Township tw WITH (NOLOCK)
-                    --    ON tw.TownshipName = do.Receiver_Town
-                    LEFT JOIN dbo.Province                    prv WITH (NOLOCK)
-                        ON prv.IdProvince = twn.IdProvince
-                    LEFT JOIN dbo.Province                    pr WITH (NOLOCK)
-                        ON pr.IdProvince = tw.IdProvince
-                    LEFT JOIN dbo.VisitPointClient            vpc WITH (NOLOCK)
-                        ON vpc.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer                    cu WITH (NOLOCK)
-                        ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                    LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH (NOLOCK)
-                        ON dc.DCBA_Id = do.DCBA_ID
-                    LEFT JOIN dbo.DeliveryBank                bk WITH (NOLOCK)
-                        ON bk.Id_bank = dc.DCBA_Bank_Id
-                WHERE btd.[AuthorizationNumber] IS NOT NULL
-                      AND pg.BatchCODId IS NOT NULL
-                      AND LTRIM(RTRIM(do.Sender_Mail)) = @SenderEmail
-                      AND
-                      (
-                          btd.BankId = @IdBank
-                          OR @IdBank = -1
-                      )
-                      --AND do.SalePipeLineId  IN (3)
-                      AND CAST(btd.AuthorizationDate AS DATE)
-                      BETWEEN CAST(@StarDate AS DATE) AND CAST(@EndDate AS DATE)
-            ) s1
-            ORDER BY s1.[AuthorizationDate] ASC;
-        END;
+	IF (@IdCustomer != -1)
+	BEGIN
 
+		IF (@IdBank = -1)
+		BEGIN
 
-    END;
+			IF (@ResultSet = 1 OR @ResultSet = -1)
+			BEGIN
+				;WITH H AS
+				(
+					SELECT
+						h.IdDepositReportCODHeader,
+						h.Customer_Id				AS IdCliente,
+						h.Customer_Name				AS Cliente,
+						h.Customer_Email			AS Correo,
+						h.BankName					AS Banco,
+						h.AccountNumber				AS Cuenta,
+						h.AuthorizationNumber		AS NoDeposito,
+						h.AuthorizationDate,
+						h.Currency_Symbol			AS CurrencySymbol
+					FROM DeliveryBackOffice.dbo.DepositReportCODHeader h WITH (NOLOCK)
+					WHERE h.Customer_Id = @IdCustomer
+					AND h.AuthorizationDate >= @StarDate 
+					AND h.AuthorizationDate < DATEADD(DAY, 1, @EndDate)
+				)
+				-- =======================
+				--		   HEADER
+				-- =======================
+				SELECT
+					H.IdDepositReportCODHeader,
+					H.IdCliente,
+					H.Cliente,
+					H.Correo,
+					H.Banco,
+					H.Cuenta,
+					H.NoDeposito,
+					FORMAT(H.AuthorizationDate,'dd/MM/yyyy hh:mm:ss tt') AS FechaPago,
+					H.AuthorizationDate,
+					CONVERT(VARCHAR(10), @StarDate, 103) + ' - ' + CONVERT(VARCHAR(10), @EndDate, 103) AS DateDelivery,
+					H.CurrencySymbol
+				FROM H
+				ORDER BY H.AuthorizationDate ASC;
+			END
+			IF (@ResultSet = 2 OR @ResultSet = -1)
+			BEGIN
+				-- =======================
+				--		  DETAIL
+				-- =======================
+				SELECT
+					d.IdDepositReportCODHeader,
+					CONCAT(d.GuideSerie, d.GuideNumber)								AS GuideNumber,
+					ISNULL(d.Pieces_Dry,0) + ISNULL(d.Pieces_Cold,0)				AS Piezas,
+					d.TotalWeight													AS Peso,
+					d.Department_Name												AS Departamento,
+					d.Township_Name													AS Municipio,
+					CONCAT(d.Receiver_FirstName,' ',d.Receiver_LastName)			AS Receiver,
+					FORMAT(d.ArrivalDate,'dd/MM/yyyy hh:mm:ss tt')					AS FechaArribo,
+					FORMAT(d.DeliveryDate,'dd/MM/yyyy hh:mm:ss tt')					AS FechaEntrega,
+					d.ArrivalDate,
+					d.DeliveryDate,
+					d.Collect_OnDelivery											AS CODAmount,
+					IIF(d.TypeService = 'EXP','NDD',ISNULL(d.TypeService,'NDD'))	AS TypeService,
+					CASE
+						WHEN d.IsCollect = 1 THEN 'Collect'
+						WHEN ISNULL(d.ConditionOfPaymentID,0) > 1 THEN 'Crédito'
+						ELSE 'Prepago'
+					END																AS TipodePago,
+					d.PriceShippment												AS ShippmentAmount,
+					d.Commission													AS CommissionAmount,
+					d.CODCommissionPercentage										AS PorcentajeComision,
+					d.Amount + ISNULL(d.Commission,0)								AS ChargedAmount,
+					d.Amount														AS TotalAmount,
+					IIF(h.Bank_Id IN (3,5,31,33,1),1,0)								AS FlagImmediateOrAch,
+					h.AuthorizationDate,
+					DATEDIFF(DAY, d.ArrivalDate, d.DeliveryDate)					AS DiasEntrega,
+					DATEDIFF(DAY, d.DeliveryDate, h.AuthorizationDate)				AS DiasPago
+				FROM DeliveryBackOffice.dbo.ProcessedGuideCODNotifications	d	WITH (NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.DepositReportCODHeader	h	WITH (NOLOCK)
+					ON h.IdDepositReportCODHeader = d.IdDepositReportCODHeader
+				WHERE h.Customer_Id = @IdCustomer
+				AND h.AuthorizationDate >= @StarDate 
+				AND h.AuthorizationDate < DATEADD(DAY, 1, @EndDate)
+				ORDER BY h.AuthorizationDate ASC, d.IdDepositReportCODHeader, d.GuideSerie, d.GuideNumber;
+			END
+		END
+		ELSE
+		BEGIN
+			IF (@ResultSet = 1 OR @ResultSet = -1)
+			BEGIN
+				;WITH H AS
+				(
+					SELECT
+						h.IdDepositReportCODHeader,
+						h.Customer_Id				AS IdCliente,
+						h.Customer_Name				AS Cliente,
+						h.Customer_Email			AS Correo,
+						h.BankName					AS Banco,
+						h.AccountNumber				AS Cuenta,
+						h.AuthorizationNumber		AS NoDeposito,
+						h.AuthorizationDate,
+						h.Currency_Symbol			AS CurrencySymbol
+					FROM DeliveryBackOffice.dbo.DepositReportCODHeader h WITH (NOLOCK)
+					WHERE h.Customer_Id = @IdCustomer
+					AND h.Bank_Id = @IdBank
+					AND h.AuthorizationDate >= @StarDate 
+					AND h.AuthorizationDate < DATEADD(DAY, 1, @EndDate)
+				)
+				-- =======================
+				--		   HEADER
+				-- =======================
+				SELECT
+					H.IdDepositReportCODHeader,
+					H.IdCliente,
+					H.Cliente,
+					H.Correo,
+					H.Banco,
+					H.Cuenta,
+					H.NoDeposito,
+					FORMAT(H.AuthorizationDate,'dd/MM/yyyy hh:mm:ss tt') AS FechaPago,
+					H.AuthorizationDate,
+					CONVERT(VARCHAR(10), @StarDate, 103) + ' - ' + CONVERT(VARCHAR(10), @EndDate, 103) AS DateDelivery,
+					H.CurrencySymbol
+				FROM H
+				ORDER BY H.AuthorizationDate ASC;
+			END
+			IF (@ResultSet = 2 OR @ResultSet = -1)
+			BEGIN
+				-- =======================
+				--		  DETAIL
+				-- =======================
+				SELECT
+					d.IdDepositReportCODHeader,
+					CONCAT(d.GuideSerie, d.GuideNumber)								AS GuideNumber,
+					ISNULL(d.Pieces_Dry,0) + ISNULL(d.Pieces_Cold,0)				AS Piezas,
+					d.TotalWeight													AS Peso,
+					d.Department_Name												AS Departamento,
+					d.Township_Name													AS Municipio,
+					CONCAT(d.Receiver_FirstName,' ',d.Receiver_LastName)			AS Receiver,
+					FORMAT(d.ArrivalDate,'dd/MM/yyyy hh:mm:ss tt')					AS FechaArribo,
+					FORMAT(d.DeliveryDate,'dd/MM/yyyy hh:mm:ss tt')					AS FechaEntrega,
+					d.ArrivalDate,
+					d.DeliveryDate,
+					d.Collect_OnDelivery											AS CODAmount,
+					IIF(d.TypeService = 'EXP','NDD',ISNULL(d.TypeService,'NDD'))	AS TypeService,
+					CASE
+						WHEN d.IsCollect = 1 THEN 'Collect'
+						WHEN ISNULL(d.ConditionOfPaymentID,0) > 1 THEN 'Crédito'
+						ELSE 'Prepago'
+					END																AS TipodePago,
+					d.PriceShippment												AS ShippmentAmount,
+					d.Commission													AS CommissionAmount,
+					d.CODCommissionPercentage										AS PorcentajeComision,
+					d.Amount + ISNULL(d.Commission,0)								AS ChargedAmount,
+					d.Amount														AS TotalAmount,
+					IIF(h.Bank_Id IN (3,5,31,33,1),1,0)								AS FlagImmediateOrAch,
+					h.AuthorizationDate,
+					DATEDIFF(DAY, d.ArrivalDate, d.DeliveryDate)					AS DiasEntrega,
+					DATEDIFF(DAY, d.DeliveryDate, h.AuthorizationDate)				AS DiasPago
+				FROM DeliveryBackOffice.dbo.ProcessedGuideCODNotifications	d	WITH (NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.DepositReportCODHeader	h	WITH (NOLOCK)
+					ON h.IdDepositReportCODHeader = d.IdDepositReportCODHeader
+				WHERE h.Customer_Id = @IdCustomer
+				AND h.Bank_Id = @IdBank
+				AND h.AuthorizationDate >= @StarDate 
+				AND h.AuthorizationDate < DATEADD(DAY, 1, @EndDate)
+				ORDER BY h.AuthorizationDate ASC, d.IdDepositReportCODHeader, d.GuideSerie, d.GuideNumber;
+			END
+		END
 
+	END
+	ELSE IF (@SenderEmail != '-1')
+	BEGIN
 
+		IF (@IdBank = -1)
+		BEGIN
 
+			IF (@ResultSet = 1 OR @ResultSet = -1)
+			BEGIN
+				;WITH H AS
+				(
+					SELECT
+						h.IdDepositReportCODHeader,
+						h.Customer_Id					AS IdCliente,
+						h.Customer_Name					AS Cliente,
+						h.Sender_Email					AS Correo,
+						h.BankName						AS Banco,
+						h.AccountNumber					AS Cuenta,
+						h.AuthorizationNumber			AS NoDeposito,
+						h.AuthorizationDate,
+						h.Currency_Symbol				AS CurrencySymbol
+					FROM dbo.DepositReportCODHeader h WITH (NOLOCK)
+					WHERE h.Sender_Email = @SenderEmail
+					AND h.AuthorizationDate >= @StarDate 
+					AND h.AuthorizationDate < DATEADD(DAY, 1, @EndDate)
+				)
+				-- =======================
+				--		   HEADER
+				-- =======================
+				SELECT
+					H.IdDepositReportCODHeader,
+					H.IdCliente,
+					H.Cliente,
+					H.Correo,
+					H.Banco,
+					H.Cuenta,
+					H.NoDeposito,
+					FORMAT(H.AuthorizationDate,'dd/MM/yyyy hh:mm:ss tt') AS FechaPago,
+					H.AuthorizationDate,
+					CONVERT(VARCHAR(10), @StarDate, 103) + ' - ' + CONVERT(VARCHAR(10), @EndDate, 103) AS DateDelivery,
+					H.CurrencySymbol
+				FROM H
+				ORDER BY H.AuthorizationDate ASC;
+			END
+			IF (@ResultSet = 2 OR @ResultSet = -1)
+			BEGIN
+				-- =======================
+				--		   DETAIL
+				-- =======================
+				SELECT
+					d.IdDepositReportCODHeader,
+					CONCAT(d.GuideSerie, d.GuideNumber)								AS GuideNumber,
+					ISNULL(d.Pieces_Dry,0) + ISNULL(d.Pieces_Cold,0)				AS Piezas,
+					d.TotalWeight													AS Peso,
+					d.Department_Name												AS Departamento,
+					d.Township_Name													AS Municipio,
+					CONCAT(d.Receiver_FirstName,' ',d.Receiver_LastName)			AS Receiver,
+					FORMAT(d.ArrivalDate,'dd/MM/yyyy hh:mm:ss tt')					AS FechaArribo,
+					FORMAT(d.DeliveryDate,'dd/MM/yyyy hh:mm:ss tt')					AS FechaEntrega,
+					d.ArrivalDate,
+					d.DeliveryDate,
+					d.Collect_OnDelivery											AS CODAmount,
+					IIF(d.TypeService = 'EXP','NDD',ISNULL(d.TypeService,'NDD'))	AS TypeService,
+					CASE
+						WHEN d.IsCollect = 1 THEN 'Collect'
+						WHEN ISNULL(d.ConditionOfPaymentID,0) > 1 THEN 'Crédito'
+						ELSE 'Prepago'
+					END																AS TipodePago,
+					d.PriceShippment												AS ShippmentAmount,
+					d.Commission													AS CommissionAmount,
+					d.CODCommissionPercentage										AS PorcentajeComision,
+					d.Amount + ISNULL(d.Commission,0)								AS ChargedAmount,
+					d.Amount														AS TotalAmount,
+					IIF(h.Bank_Id IN (3,5,31,33,1),1,0)								AS FlagImmediateOrAch,
+					h.AuthorizationDate,
+					DATEDIFF(DAY, d.ArrivalDate, d.DeliveryDate)					AS DiasEntrega,
+					DATEDIFF(DAY, d.DeliveryDate, h.AuthorizationDate)				AS DiasPago
+				FROM dbo.ProcessedGuideCODNotifications d WITH (NOLOCK)
+				INNER JOIN dbo.DepositReportCODHeader h WITH (NOLOCK)
+					ON h.IdDepositReportCODHeader = d.IdDepositReportCODHeader
+				WHERE h.Sender_Email = @SenderEmail
+				AND h.AuthorizationDate >= @StarDate 
+				AND h.AuthorizationDate < DATEADD(DAY, 1, @EndDate)
+				ORDER BY h.AuthorizationDate ASC, d.IdDepositReportCODHeader, d.GuideSerie, d.GuideNumber;
+			END
+		END
+		ELSE
+		BEGIN
+			IF (@ResultSet = 1 OR @ResultSet = -1)
+			BEGIN
+				;WITH H AS
+				(
+					SELECT
+						h.IdDepositReportCODHeader,
+						h.Customer_Id					AS IdCliente,
+						h.Customer_Name					AS Cliente,
+						h.Sender_Email					AS Correo,
+						h.BankName						AS Banco,
+						h.AccountNumber					AS Cuenta,
+						h.AuthorizationNumber			AS NoDeposito,
+						h.AuthorizationDate,
+						h.Currency_Symbol				AS CurrencySymbol
+					FROM dbo.DepositReportCODHeader h WITH (NOLOCK)
+					WHERE h.Sender_Email = @SenderEmail
+					AND h.Bank_Id = @IdBank
+					AND h.AuthorizationDate >= @StarDate 
+					AND h.AuthorizationDate < DATEADD(DAY, 1, @EndDate)
+				)
+				-- =======================
+				--		  HEADER
+				-- =======================
+				SELECT
+					H.IdDepositReportCODHeader,
+					H.IdCliente,
+					H.Cliente,
+					H.Correo,
+					H.Banco,
+					H.Cuenta,
+					H.NoDeposito,
+					FORMAT(H.AuthorizationDate,'dd/MM/yyyy hh:mm:ss tt') AS FechaPago,
+					H.AuthorizationDate,
+					CONVERT(VARCHAR(10), @StarDate, 103) + ' - ' + CONVERT(VARCHAR(10), @EndDate, 103) AS DateDelivery,
+					H.CurrencySymbol
+				FROM H
+				ORDER BY H.AuthorizationDate ASC;
+			END
+			IF (@ResultSet = 2 OR @ResultSet = -1)
+			BEGIN
+				-- =======================
+				--		   DETAIL
+				-- =======================
+				SELECT
+					d.IdDepositReportCODHeader,
+					CONCAT(d.GuideSerie, d.GuideNumber)								AS GuideNumber,
+					ISNULL(d.Pieces_Dry,0) + ISNULL(d.Pieces_Cold,0)				AS Piezas,
+					d.TotalWeight													AS Peso,
+					d.Department_Name												AS Departamento,
+					d.Township_Name													AS Municipio,
+					CONCAT(d.Receiver_FirstName,' ',d.Receiver_LastName)			AS Receiver,
+					FORMAT(d.ArrivalDate,'dd/MM/yyyy hh:mm:ss tt')					AS FechaArribo,
+					FORMAT(d.DeliveryDate,'dd/MM/yyyy hh:mm:ss tt')					AS FechaEntrega,
+					d.ArrivalDate,
+					d.DeliveryDate,
+					d.Collect_OnDelivery											AS CODAmount,
+					IIF(d.TypeService = 'EXP','NDD',ISNULL(d.TypeService,'NDD'))	AS TypeService,
+					CASE
+						WHEN d.IsCollect = 1 THEN 'Collect'
+						WHEN ISNULL(d.ConditionOfPaymentID,0) > 1 THEN 'Crédito'
+						ELSE 'Prepago'
+					END																AS TipodePago,
+					d.PriceShippment												AS ShippmentAmount,
+					d.Commission													AS CommissionAmount,
+					d.CODCommissionPercentage										AS PorcentajeComision,
+					d.Amount + ISNULL(d.Commission,0)								AS ChargedAmount,
+					d.Amount														AS TotalAmount,
+					IIF(h.Bank_Id IN (3,5,31,33,1),1,0)								AS FlagImmediateOrAch,
+					h.AuthorizationDate,
+					DATEDIFF(DAY, d.ArrivalDate, d.DeliveryDate)					AS DiasEntrega,
+					DATEDIFF(DAY, d.DeliveryDate, h.AuthorizationDate)				AS DiasPago
+				FROM dbo.ProcessedGuideCODNotifications d WITH (NOLOCK)
+				INNER JOIN dbo.DepositReportCODHeader h WITH (NOLOCK)
+					ON h.IdDepositReportCODHeader = d.IdDepositReportCODHeader
+				WHERE h.Sender_Email = @SenderEmail
+				AND h.Bank_Id = @IdBank
+				AND h.AuthorizationDate >= @StarDate 
+				AND h.AuthorizationDate < DATEADD(DAY, 1, @EndDate)
+				ORDER BY h.AuthorizationDate ASC, d.IdDepositReportCODHeader, d.GuideSerie, d.GuideNumber;
+			END
+		END
+
+	END
+	
+END TRY
+BEGIN CATCH
+    DECLARE @ErrorMessage NVARCHAR(4000);
+    SELECT @ErrorMessage = ERROR_MESSAGE();
+    PRINT 'Error: ' + @ErrorMessage;
+END CATCH;
 
 END;

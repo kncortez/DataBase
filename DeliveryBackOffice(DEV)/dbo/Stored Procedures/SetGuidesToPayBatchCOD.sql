@@ -136,6 +136,326 @@ BEGIN
 				  )
 				SELECT GuideSerie,GuideNumber,25, @TokenCreated,GETDATE() FROM [dbo].[BatchDetailCOD] 
 				WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2
+				
+DROP TABLE IF EXISTS #TempData;
+IF @AuthorizationNumber IS NOT NULL AND @BatchCODId IS NOT NULL
+BEGIN
+;WITH Base AS
+(
+    SELECT
+        btd.GuideSerie,
+        btd.GuideNumber,
+        btd.BankName,
+        btd.AccountNumber,
+        btd.BankId,
+        @AuthorizationDate AS AuthorizationDate,
+        @AuthorizationNumber AS AuthorizationNumber,
+        btd.Commission,
+        btd.CODCommissionPercentage,
+        btd.Amount,
+        do.Pieces_Dry,
+        do.Pieces_Cold,
+        do.Receiver_FirstName,
+        do.Receiver_LastName,
+        do.ReceiverIdTownship,
+        do.Receiver_Town,
+        do.Collect_OnDelivery,
+        do.TypeService,
+        do.IsCollect,
+        cu.ConditionOfPaymentID,
+        do.PriceShippment,
+        do.Sender_Mail,
+        cu.IdCustomer,
+        COALESCE(cu.[Name], do.Sender_FirstName) AS ClienteNombre,
+        cu.CODContactEmail,
+        cu.RegexEmail,
+        twn.TownshipName   AS TownshipNameTwn,
+        prv.ProvinceName   AS ProvinceNameTwn,
+        tw.TownshipName    AS TownshipNameTw,
+        pr.ProvinceName    AS ProvinceNameTw,
+		COALESCE(
+		NULLIF(TRIM(cu.CODContactEmail), ''),
+		NULLIF(TRIM(do.Sender_Mail),     ''),
+		NULLIF(TRIM(cu.RegexEmail),      '')
+		) HRegexEmail,
+        CCC.Symbol    AS CurrencySymbol,
+		cu.IdCustomerType,
+		do.Sender_ID,
+		do.SalePipeLineId,
+		vpc.IdKindOfVPClient,
+		vpc.SaleChannelId,
+		btd.IdCountry
+    FROM dbo.BatchDetailCOD              AS btd WITH (NOLOCK)
+    INNER JOIN dbo.ProcessedGuideCOD     AS pg  WITH (NOLOCK)
+        ON  btd.GuideSerie  = pg.GuideSerie
+        AND btd.GuideNumber = pg.GuideNumber
+    INNER JOIN dbo.DeliveryOrder         AS do  WITH (NOLOCK)
+        ON  btd.GuideSerie  = do.Guide_Serie
+        AND btd.GuideNumber = do.Guide_Number
+    LEFT JOIN dbo.Township               AS twn WITH (NOLOCK)
+        ON twn.IdTownship = do.ReceiverIdTownship
+    OUTER APPLY
+    (
+        SELECT TOP 1
+               tw.IdProvince,
+               tw.TownshipName
+        FROM dbo.Township  AS tw WITH (NOLOCK)
+        INNER JOIN dbo.Province AS PR WITH (NOLOCK)
+            ON PR.IdProvince = tw.IdProvince
+        WHERE tw.TownshipName = do.Receiver_Town
+          AND PR.IdCountry    = do.ReceiverCountryId
+    ) AS tw
+    LEFT JOIN dbo.Province               AS prv WITH (NOLOCK)
+        ON prv.IdProvince = twn.IdProvince
+    LEFT JOIN dbo.Province               AS pr  WITH (NOLOCK)
+        ON pr.IdProvince  = tw.IdProvince
+    LEFT JOIN dbo.VisitPointClient       AS vpc WITH (NOLOCK)
+        ON vpc.CodeOfReference = do.Sender_ID
+    LEFT JOIN dbo.Customer               AS cu  WITH (NOLOCK)
+        ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
+    LEFT JOIN dbo.DeliveryCustomerBankAccount AS dc  WITH (NOLOCK)
+        ON dc.DCBA_Id = do.DCBA_ID
+    LEFT JOIN dbo.DeliveryBank           AS bk  WITH (NOLOCK)
+        ON bk.Id_bank = dc.DCBA_Bank_Id
+	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DCurrency WITH (NOLOCK)
+	ON ISNULL(do.SenderCountryId, 'GT') = DCurrency.Currency_IdCountry
+    AND DCurrency.DefaultPerCountry = 1
+	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
+	ON DCurrency.IdCurrencyCOD = CCC.IdCatCurrencyCOD
+    WHERE btd.BatchCODId = @BatchCODId and btd.Excluded = 0
+),
+Pieces AS
+(
+    SELECT
+        dp.GuideSerie,
+        dp.GuideNumber,
+        SUM(ISNULL(dp.MassWeight, dp.PieceWeight)) AS Peso
+    FROM dbo.DeliveryOrderPiece dp WITH (NOLOCK)
+    INNER JOIN Base b
+        ON  b.GuideSerie  = dp.GuideSerie
+        AND b.GuideNumber = dp.GuideNumber
+    GROUP BY dp.GuideSerie, dp.GuideNumber
+),
+Dates AS
+(
+    SELECT
+        b.GuideSerie,
+        b.GuideNumber,
+        MIN(CASE WHEN dt.StatusOrderId IN (11, 2) THEN dt.DateCreated END) AS FechaArriboDate,
+        MIN(CASE WHEN dt.StatusOrderId = 5 THEN dt.DateCreated END)       AS FechaEntregaDate
+    FROM Base b
+    INNER JOIN dbo.DeliveryOrderDetail dt WITH (NOLOCK)
+        ON  dt.Guide_Serie  = b.GuideSerie
+        AND dt.Guide_Number = b.GuideNumber
+    GROUP BY b.GuideSerie, b.GuideNumber
+),
+Final AS
+(
+    SELECT
+        b.IdCustomer                                        AS IdCliente,
+        b.ClienteNombre                                     AS ClienteCorporativo,
+        COALESCE(
+            b.CODContactEmail,
+            REPLACE(REPLACE(b.RegexEmail, '^', ''), '$', '')
+        )                                                   AS CorreoCliente,
+        b.Sender_Mail                                       AS CorreoSender,
+		b.HRegexEmail,
+        b.BankName                                          AS Banco,
+		b.BankId,
+        b.AccountNumber                                     AS Cuenta,
+        CONCAT(b.GuideSerie, b.GuideNumber)                 AS GuideNumber,
+        (b.Pieces_Dry + b.Pieces_Cold)                      AS Piezas,
+        p.Peso,
+        ISNULL(b.ProvinceNameTwn, b.ProvinceNameTw)         AS Departamento,
+        ISNULL(b.TownshipNameTwn, b.TownshipNameTw)         AS Municipio,
+        CONCAT(b.Receiver_FirstName, b.Receiver_LastName)   AS Receiver,
+        FORMAT(d.FechaArriboDate,  'dd/MM/yyyy hh:mm:ss tt') AS FechaArribo,
+        FORMAT(d.FechaEntregaDate, 'dd/MM/yyyy hh:mm:ss tt') AS FechaEntrega,
+        FORMAT(b.AuthorizationDate,'dd/MM/yyyy hh:mm:ss tt') AS FechaPago,
+        b.AuthorizationNumber                        AS NoDeposito,
+        b.Collect_OnDelivery                                AS CODAmount,
+        IIF(b.TypeService = 'EXP', 'NDD', ISNULL(b.TypeService, 'NDD'))
+                                                            AS TypeService,
+        IIF(
+            b.IsCollect = 'true',
+            'Collect',
+            IIF(ISNULL(b.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago')
+        )                                                   AS TipoDePago,
+        b.PriceShippment                                    AS ShippmentAmount,
+        b.Commission                                        AS CommissionAmount,
+        b.CODCommissionPercentage                           AS PorcentajeComision,
+        b.Amount + b.Commission                             AS ChargedAmount,
+        b.Amount                                            AS TotalAmount,
+        IIF(b.BankId IN (3, 5, 31, 33, 1), 1, 0)            AS FlagImmediateOrAch,
+        b.AuthorizationDate,
+        b.CurrencySymbol,
+		b.IsCollect,
+		b.Receiver_FirstName,
+		b.Receiver_LastName,
+		b.Pieces_Dry,
+		b.Pieces_Cold,
+		b.GuideSerie,
+		b.GuideNumber as BGuideNumber,
+		b.IdCustomerType,
+		b.ConditionOfPaymentID,
+		b.Sender_ID,
+		b.ReceiverIdTownship,
+		b.Receiver_Town,
+		b.PriceShippment,
+		b.SalePipeLineId,
+		b.IdKindOfVPClient,
+		b.SaleChannelId,
+		b.IdCountry
+    FROM Base   b
+    LEFT JOIN Pieces p
+        ON p.GuideSerie  = b.GuideSerie
+       AND p.GuideNumber = b.GuideNumber
+    LEFT JOIN Dates  d
+        ON d.GuideSerie  = b.GuideSerie
+       AND d.GuideNumber = b.GuideNumber
+)
+
+SELECT
+    f.*,
+    ISNULL(
+        DATEDIFF(DAY, CONVERT(DATE, f.FechaArribo,103),  CONVERT(DATE, f.FechaEntrega,103)),
+        0
+    ) AS DiasEntrega,
+    ISNULL(
+        DATEDIFF(DAY, CONVERT(DATE, f.FechaEntrega,103), CONVERT(DATE, f.FechaPago,103)),
+        0
+    ) AS DiasPago
+into #TempData
+FROM Final f
+ORDER BY f.AuthorizationDate ASC;
+
+DROP TABLE IF EXISTS #HeaderMapping;
+
+CREATE TABLE #HeaderMapping
+(
+    IdDepositReportCODHeader BIGINT,
+    Customer_Id INT
+);
+;WITH HeaderSource AS
+(
+    SELECT 
+        *,
+        ROW_NUMBER() OVER (PARTITION BY IdCliente ORDER BY AuthorizationDate DESC) AS rn
+    FROM #TempData
+)
+INSERT INTO dbo.DepositReportCODHeader
+(
+    Batch_COD_Id,
+    Customer_Id,
+    Customer_Name,
+    Customer_Email,
+    Sender_Email,
+    Bank_Id,
+    BankName,
+    AccountNumber,
+    Currency_Symbol,
+    Country_Id,
+	SalePipeLineId,
+    IdKindOfVPClient,
+    SaleChannelId,
+	Customer_Type,
+    AuthorizationNumber,
+    AuthorizationDate,
+	Notificated,
+    RowStatus,
+    TokenCreated,
+    DateCreated
+)
+OUTPUT inserted.IdDepositReportCODHeader, inserted.Customer_Id
+INTO #HeaderMapping(IdDepositReportCODHeader, Customer_Id)
+SELECT 
+    @BatchCODId,
+    IdCliente,
+    ClienteCorporativo,
+    HRegexEmail,
+    CorreoSender,
+    BankId,
+    Banco,
+    Cuenta,
+    CurrencySymbol,
+    IdCountry,
+    SalePipeLineId,
+    IdKindOfVPClient,
+    SaleChannelId,
+	IdCustomerType,
+    NoDeposito,
+    AuthorizationDate,
+	0,
+    1,
+    @TokenCreated,
+    GETDATE()
+FROM HeaderSource
+WHERE rn = 1;
+
+INSERT INTO dbo.ProcessedGuideCODNotifications
+(
+    IdDepositReportCODHeader,
+    GuideSerie,
+    GuideNumber,
+    IdCustomerType,
+    ConditionOfPaymentID,
+    Pieces_Dry,
+    Pieces_Cold,
+    TotalWeight,
+    Department_Name,
+    Township_Name,
+    ArrivalDate,
+    DeliveryDate,
+    Sender_ID,
+    ReceiverIdTownship,
+    Receiver_FirstName,
+    Receiver_LastName,
+    Receiver_Town,
+    Collect_OnDelivery,
+    TypeService,
+    IsCollect,
+    PriceShippment,
+    Commission,
+    CODCommissionPercentage,
+    Amount,
+    Country_Id,
+    RowStatus,
+    TokenCreated,
+    DateCreated
+)
+SELECT 
+    hm.IdDepositReportCODHeader,
+    f.GuideSerie,
+    f.BGuideNumber,
+    f.IdCustomerType,
+    f.ConditionOfPaymentID,
+    f.Pieces_Dry,
+    f.Pieces_Cold,
+    f.Peso,
+    f.Departamento,
+    f.Municipio,
+    CONVERT(DATETIME, f.FechaArribo, 103),
+    CONVERT(DATETIME, f.FechaEntrega, 103),
+    f.Sender_ID,
+    f.ReceiverIdTownship,
+    f.Receiver_FirstName,
+    f.Receiver_LastName,
+    f.Receiver_Town,
+    f.CODAmount,
+    f.TypeService,
+    f.IsCollect,
+    f.PriceShippment,
+    f.CommissionAmount,
+    f.PorcentajeComision,
+    f.TotalAmount,
+    f.IdCountry,
+    1,
+    @TokenCreated,
+    GETDATE()
+FROM #TempData f
+INNER JOIN #HeaderMapping hm
+    ON hm.Customer_Id = f.IdCliente;
+END
 			END
 		
 		-----------------WEBHOOK.INI-----------------------		
@@ -148,7 +468,7 @@ BEGIN
 			GuideStatusId TINYINT
 		)
 		BEGIN TRY
-			DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+			DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
 			-- Clientes de las guías por procesar
 			INSERT INTO 
@@ -165,9 +485,9 @@ BEGIN
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 					ON
-						BDCOD.GuideNumber = DO.Guide_Number
-						AND
 						BDCOD.GuideSerie = DO.Guide_Serie
+						AND
+						BDCOD.GuideNumber = DO.Guide_Number
 			WHERE
 				BDCOD.BatchCODId = @BatchCODId 
 				AND 

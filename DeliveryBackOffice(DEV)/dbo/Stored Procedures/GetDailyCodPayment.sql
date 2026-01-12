@@ -37,130 +37,32 @@ BEGIN
            CDATA.DCBA_Bank_Id
     FROM
     (
-         SELECT DISTINCT
-               cu.IdCustomer,
-               IIF(@Debug = 'true',
-                   'envios@parser4@gmail.com,cod.gt@forzalatam.com',
-                   CONCAT(
-                             COALESCE(
-                                         IIF(LTRIM(RTRIM(cu.CODContactEmail)) = '', NULL, LTRIM(RTRIM(cu.CODContactEmail))),
-                                         IIF(LTRIM(RTRIM(do.Sender_Mail)) = '', NULL, LTRIM(RTRIM(do.Sender_Mail))),
-                                         IIF(LTRIM(RTRIM(cu.RegexEmail)) = '', NULL, LTRIM(RTRIM(cu.RegexEmail)))
-                                     ),
-                             ''--',envios.parser4@gmail.com,cod.gt@forzalatam.com'
-                         ))
-               --)
-               RegexEmail,
-               '0' SenderEmail,
-               btd.BankId AS DCBA_Bank_Id
-        FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
-            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
-                ON btd.[GuideSerie] = pg.[GuideSerie]
-                   AND btd.[GuideNumber] = pg.[GuideNumber]
-            INNER JOIN [dbo].[DeliveryOrder] AS do WITH (NOLOCK)
-                ON btd.[GuideSerie] = do.[Guide_Serie]
-                   AND btd.[GuideNumber] = do.[Guide_Number]
-            --LEFT JOIN VisitPointByClientPortfolio vpbc 
-            --	ON do.VisitpointClientPortfolioId = vpbc.IdVisitPointByClientPortfolio 
-            --	AND vpbc.RowStatus = 1
-            LEFT JOIN dbo.Township twn WITH (NOLOCK)
-                ON twn.IdTownship = do.ReceiverIdTownship
-                AND  twn.TownshipName = do.Receiver_Town
-            LEFT JOIN dbo.Province prv WITH (NOLOCK)
-                ON prv.IdProvince = twn.IdProvince
-            LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
-                ON vpc.CodeOfReference = do.Sender_ID
-            LEFT JOIN dbo.Customer cu WITH (NOLOCK)
-                ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-            LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH (NOLOCK)
-                ON dc.DCBA_Id = do.DCBA_ID
-                   AND dc.DCBA_Id_estado = 1
-        WHERE pg.[Notificated] = 0
-              AND pg.BatchCODId IS NOT NULL
-              AND btd.[AuthorizationNumber] IS NOT NULL
-              AND vpc.SaleChannelId NOT IN ( 3 ) --no es portal
-			  AND 
-			  (LEN(COALESCE(cu.CODContactEmail,''))>0
-			  OR LEN(COALESCE(do.Sender_Mail,''))>0
-			  OR LEN(COALESCE(cu.RegexEmail,''))>0--quitar valores nulos
-			  )
- AND NOT EXISTS --búsqueda por sender
- (
-	SELECT A1.IdCustomer FROM DeliveryBackOffice.dbo.Customer A1 WITH(NOLOCK)
-	INNER JOIN DeliveryBackOffice.DBO.VisitPointClient  A2 WITH(NOLOCK) 
-	ON A1.IdCustomer = A2.CustomerID
-	WHERE DO.Sender_ID = A2.CodeOfReference    
-	AND A2.IdKindOfVPClient = 1
- )
- AND NOT EXISTS --búsqueda por customer
- (
-	SELECT A1.IdCustomer FROM DeliveryBackOffice.dbo.Customer A1 WITH(NOLOCK)	
-	WHERE DO.IdCustomer = A1.IdCustomer
-	AND A1.IdCustomerType = 2 --REDISTRIBUIDOR
- )
-
---NO INCLUIR A EXPRESS CENTER
-
-
-
-        --ORDER BY cu.IdCustomer
+        SELECT DISTINCT
+        DH.Customer_Id AS IdCustomer,
+        DH.Customer_Email AS RegexEmail,
+        '0' AS SenderEmail,
+        DH.Bank_id AS DCBA_Bank_Id
+        FROM dbo.DepositReportCODHeader AS DH
+        WHERE DH.Notificated = 0
+        AND DH.SaleChannelId NOT IN (3)
+        AND (
+            LEN(COALESCE(DH.Customer_Email, '')) > 0
+            OR LEN(COALESCE(DH.Sender_Email, '')) > 0
+        )
+        AND (DH.IdKindOfVPClient IS NULL OR DH.IdKindOfVPClient <> 1)
+        AND (DH.Customer_Id IS NULL  OR ISNULL(DH.Customer_Type, 0) <> 2)
         UNION
-        SELECT *
-        FROM
-        (
-            SELECT DISTINCT
-                   0 IdCustomer,
-                   LTRIM(RTRIM(IIF(@Debug= 'true',
-                                   'envios.parser4@gmail.com,cod.gt@forzalatam.com',
-                                   ISNULL(
-                                             IIF(do.Sender_Mail = '',
-                                              NULL,
-                                              do.Sender_Mail/*CONCAT(do.Sender_Mail, ',envios.parser4@gmail.com,cod.gt@forzalatam.com')*/
-											  ),
-                                             ''--'envios.parser4@gmail.com,cod.gt@forzalatam.com'
-                                         ))
-                              )
-                        )
-                   RegexEmail,
-                   do.Sender_Mail SenderEmail,
-                   btd.BankId AS DCBA_Bank_Id
-            FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
-                INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
-                    ON btd.[GuideSerie] = pg.[GuideSerie]
-                       AND btd.[GuideNumber] = pg.[GuideNumber]
-                INNER JOIN [dbo].[DeliveryOrder] AS do WITH (NOLOCK)
-                    ON btd.[GuideSerie] = do.[Guide_Serie]
-                       AND btd.[GuideNumber] = do.[Guide_Number] 
-                --LEFT JOIN VisitPointByClientPortfolio vpbc 
-                --	ON do.VisitpointClientPortfolioId = vpbc.IdVisitPointByClientPortfolio 
-                --	AND vpbc.RowStatus = 1
-                LEFT JOIN dbo.Township twn WITH (NOLOCK)
-                    ON twn.IdTownship = do.ReceiverIdTownship
-                    AND twn.TownshipName = do.Receiver_Town
-                LEFT JOIN dbo.Province prv WITH (NOLOCK)
-                    ON prv.IdProvince = twn.IdProvince
-                LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
-                    ON vpc.CodeOfReference = do.Sender_ID
-                LEFT JOIN dbo.Customer cu WITH (NOLOCK)
-                    ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH (NOLOCK)
-                    ON dc.DCBA_Id = do.DCBA_ID
-                       AND dc.DCBA_Id_estado = 1
-            WHERE pg.[Notificated] = 0
-                  AND pg.BatchCODId IS NOT NULL
-                  AND btd.[AuthorizationNumber] IS NOT NULL
-                  AND do.SalePipeLineId IN ( 3 )
-				  AND LEN(COALESCE(do.Sender_Mail,''))>0 --quitar valores nulos
-            GROUP BY do.Sender_Mail,
-                     cu.CODContactEmail,
-                     cu.RegexEmail,
-                     dc.DCBA_Bank_Id,
-                     pg.GuideSerie,
-                     pg.GuideNumber,
-                     btd.BankId
-        ) X
+        SELECT DISTINCT
+        0 AS IdCustomer,
+        TRIM(ISNULL(IIF(DH.Sender_Email = '', NULL, DH.Sender_Email),'')) AS RegexEmail,
+        DH.Sender_Email AS SenderEmail,
+        DH.Bank_id AS DCBA_Bank_Id
+        FROM dbo.DepositReportCODHeader AS DH
+        WHERE DH.Notificated = 0
+        AND DH.SalePipeLineId = 3
+        AND LEN(COALESCE(DH.Sender_Email, '')) > 0
     ) CDATA
-          LEFT JOIN [dbo].[DeliveryBank] AS bank
+          LEFT JOIN [dbo].[DeliveryBank]  AS bank WITH(NOLOCK)
                  ON bank.Id_bank = CDATA.DCBA_Bank_Id
     WHERE ISNULL(IIF(CDATA.DCBA_Bank_Id = '', NULL, CDATA.DCBA_Bank_Id), 0) <> 0
       AND bank.Id_country = @IdCountry--IIF(@IdCountry = '-1', bank.Id_country, @IdCountry)  
