@@ -15,7 +15,8 @@ BEGIN
         INNER JOIN RolByUserBySystem RUS WITH (NOLOCK)
             ON IU.RegisterUserID = RUS.RusIdUser
         WHERE DOD.StationId IS NULL
-          AND RUS.StationId IS NOT NULL;
+          AND RUS.StationId IS NOT NULL
+		  AND DOD.StatusOrderId IN (2,11);
 	    
         SET @RowsAffected = @@ROWCOUNT;
 	    

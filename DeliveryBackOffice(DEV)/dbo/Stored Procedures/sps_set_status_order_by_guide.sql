@@ -23,7 +23,7 @@ CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide]
     @iduser AS INT = NULL,
     @username NVARCHAR(50) = NULL,
 	@IdCountry NVARCHAR(2) = 'GT',
-	@StationId INT = NULL
+	@IdStation INT = NULL
 AS
 BEGIN
     DECLARE @ValidateOperation BIGINT = 0;
@@ -139,7 +139,7 @@ BEGIN
                    GETDATE(),
                    @Observations,
                    @Temperature_Celsius,
-				   @StationId
+				   @IdStation
             FROM @ItemsTable it;
             SET @ValidateOperation = COALESCE(@@ROWCOUNT, 0);
             -----------------------------

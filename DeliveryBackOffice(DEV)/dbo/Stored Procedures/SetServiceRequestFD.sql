@@ -341,16 +341,29 @@ BEGIN
 				WHEN P.IdCountry = P2.IdCountry THEN 'DOM'
 				ELSE 'INT'
 			END AS GuideType,
-			GT.SenderIdSettlement,
-			CASE
-				WHEN GT.ReceiverIdSettlement = 0 THEN NULL
-				ELSE GT.ReceiverIdSettlement
-			END
+			CASE 
+				WHEN GT.SenderIdSettlement <> 0 
+				AND SS.IdSettlement IS NOT NULL 
+				THEN GT.SenderIdSettlement
+				ELSE NULL
+			END AS SenderIdSettlement,
+			CASE 
+				WHEN GT.ReceiverIdSettlement <> 0 
+				AND RS.IdSettlement IS NOT NULL 
+				THEN GT.ReceiverIdSettlement
+				ELSE NULL
+			END AS ReceiverIdSettlement
 		FROM #GuideTable GT
-		INNER JOIN DeliveryBackOffice.dbo.Township T ON GT.SenderIdTownship = T.IdTownship
-		INNER JOIN DeliveryBackOffice.dbo.Province P ON T.IdProvince = P.IdProvince
-		INNER JOIN DeliveryBackOffice.dbo.Township T2 ON GT.ReceiverIdTownship = T2.IdTownship
-		INNER JOIN DeliveryBackOffice.dbo.Province P2 ON T2.IdProvince = P2.IdProvince
+			INNER JOIN DeliveryBackOffice.dbo.Township T ON GT.SenderIdTownship = T.IdTownship
+			INNER JOIN DeliveryBackOffice.dbo.Province P ON T.IdProvince = P.IdProvince
+			INNER JOIN DeliveryBackOffice.dbo.Township T2 ON GT.ReceiverIdTownship = T2.IdTownship
+			INNER JOIN DeliveryBackOffice.dbo.Province P2 ON T2.IdProvince = P2.IdProvince
+			LEFT JOIN DeliveryBackOffice.dbo.Settlement SS
+				ON SS.IdSettlement = GT.SenderIdSettlement
+					AND GT.SenderIdSettlement <> 0
+			LEFT JOIN DeliveryBackOffice.dbo.Settlement RS
+				ON RS.IdSettlement = GT.ReceiverIdSettlement
+					AND GT.ReceiverIdSettlement <> 0
 			
 		-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
 		-- INSERTAR DATA PARA MANEJO DE LANDING PAGE

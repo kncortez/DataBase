@@ -1,6 +1,6 @@
-/* =================================================
+ï»¿/* =================================================
    Script:    Descuento Navidad Honduras 2025
-   Propósito: Modificación por segmento de tarifario express center para Hn.
+   PropÃ³sito: ModificaciÃ³n por segmento de tarifario express center para Hn.
    Autor:     Walter Orozco
    Historia:  FDAPI-5289[FDAPI-5288]
    Fecha:     2025-12-17
@@ -11,7 +11,8 @@ BEGIN TRY
 
 	DECLARE
 		@Token			NVARCHAR(100)	= 'SYS-DESCUENTONAVIDAD25',
-		@DateCreated	DATETIME		= GETDATE();
+		@DateCreated	DATETIME		= GETDATE(),
+		@ServicioEco	DECIMAL(14,2)	= 15.00;
     
      DECLARE 
 		@IdSegmentMetro			INT	= (SELECT CrsId FROM CatRateSegment WITH(NOLOCK) WHERE CrsShortName = 'MEH'), --14 Metro Honduras
@@ -30,16 +31,16 @@ BEGIN TRY
 		@TypeServiceCOD INT = (SELECT CtsId FROM CatTypeService WITH(NOLOCK) WHERE CtsShortName = 'COD'); --6
 
 	DECLARE
-		@PaquetePequeño			INT = (SELECT AbcId FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH(NOLOCK) WHERE Code = 'EXPHN076'), --567 Paquete pequeño
+		@PaquetePequeÃ±o			INT = (SELECT AbcId FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH(NOLOCK) WHERE Code = 'EXPHN076'), --567 Paquete pequeÃ±o
 		@PaqueteMediano			INT = (SELECT AbcId FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH(NOLOCK) WHERE Code = 'EXPHN077'), --568 Paquete mediano
 		@PaqueteGrande			INT = (SELECT AbcId FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH(NOLOCK) WHERE Code = 'EXPHN078'), --569 Paquete grande
 		@PaqueteExtraGrande		INT = (SELECT AbcId FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH(NOLOCK) WHERE Code = 'EXPHN079'), --570 Paquete extra grande
 		@PaqueteSobreDim		INT = (SELECT AbcId FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH(NOLOCK) WHERE Code = 'EXPHN080'); --571 Paquete sobredimensionado
 
-	--Segmentos: M=Metro, L=Local, D=Departamental, R=Regional, N=Nacional, FO=Foránea Olancho, E=Especial, IB=Isla de la Bahía, GD=Foráneo GD
+	--Segmentos: M=Metro, L=Local, D=Departamental, R=Regional, N=Nacional, FO=ForÃ¡nea Olancho, E=Especial, IB=Isla de la BahÃ­a, GD=ForÃ¡neo GD
 
 	-- =========================
-	-- Servicio Estándar (STD)
+	-- Servicio EstÃ¡ndar (STD)
 	-- =========================
 	DECLARE
 		@STD_M_PP	DECIMAL(14,2) = 64.00,	@STD_M_PM	DECIMAL(14,2) = 71.00,	@STD_M_PG	DECIMAL(14,2) = 94.00,	@STD_M_PE	DECIMAL(14,2) = 101.00, @STD_M_PS	DECIMAL(14,2) = 109.00,
@@ -85,7 +86,7 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	, TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceSTD , @IdSegmentMetro , NULL , NULL , @PaquetePequeño		, @STD_M_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceSTD , @IdSegmentMetro , NULL , NULL , @PaquetePequeÃ±o		, @STD_M_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentMetro , NULL , NULL , @PaqueteMediano		, @STD_M_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentMetro , NULL , NULL , @PaqueteGrande		, @STD_M_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentMetro , NULL , NULL , @PaqueteExtraGrande	, @STD_M_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -96,7 +97,7 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	, TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceSTD , @IdSegmentLocal , NULL , NULL , @PaquetePequeño		, @STD_L_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceSTD , @IdSegmentLocal , NULL , NULL , @PaquetePequeÃ±o		, @STD_L_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentLocal , NULL , NULL , @PaqueteMediano		, @STD_L_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentLocal , NULL , NULL , @PaqueteGrande		, @STD_L_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentLocal , NULL , NULL , @PaqueteExtraGrande	, @STD_L_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -107,7 +108,7 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 		, TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceSTD , @IdSegmentDepart , NULL , NULL , @PaquetePequeño      , @STD_D_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceSTD , @IdSegmentDepart , NULL , NULL , @PaquetePequeÃ±o      , @STD_D_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentDepart , NULL , NULL , @PaqueteMediano      , @STD_D_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentDepart , NULL , NULL , @PaqueteGrande       , @STD_D_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentDepart , NULL , NULL , @PaqueteExtraGrande  , @STD_D_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -118,7 +119,7 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceSTD , @IdSegmentRegional , NULL , NULL , @PaquetePequeño      , @STD_R_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceSTD , @IdSegmentRegional , NULL , NULL , @PaquetePequeÃ±o      , @STD_R_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentRegional , NULL , NULL , @PaqueteMediano      , @STD_R_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentRegional , NULL , NULL , @PaqueteGrande       , @STD_R_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentRegional , NULL , NULL , @PaqueteExtraGrande  , @STD_R_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -129,18 +130,18 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceSTD , @IdSegmentNacional , NULL , NULL , @PaquetePequeño      , @STD_N_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceSTD , @IdSegmentNacional , NULL , NULL , @PaquetePequeÃ±o      , @STD_N_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentNacional , NULL , NULL , @PaqueteMediano      , @STD_N_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentNacional , NULL , NULL , @PaqueteGrande       , @STD_N_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentNacional , NULL , NULL , @PaqueteExtraGrande  , @STD_N_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentNacional , NULL , NULL , @PaqueteSobreDim     , @STD_N_PS , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL);
 
-	--COBERTURA FORÁNEA OLANCHO
+	--COBERTURA FORÃNEA OLANCHO
 	INSERT INTO dbo.RateData
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceSTD , @IdSegmentForOlancho , NULL , NULL , @PaquetePequeño      , @STD_FO_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceSTD , @IdSegmentForOlancho , NULL , NULL , @PaquetePequeÃ±o      , @STD_FO_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForOlancho , NULL , NULL , @PaqueteMediano      , @STD_FO_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForOlancho , NULL , NULL , @PaqueteGrande       , @STD_FO_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForOlancho , NULL , NULL , @PaqueteExtraGrande  , @STD_FO_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -151,29 +152,29 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceSTD , @IdSegmentEspecial , NULL , NULL , @PaquetePequeño      , @STD_E_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceSTD , @IdSegmentEspecial , NULL , NULL , @PaquetePequeÃ±o      , @STD_E_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentEspecial , NULL , NULL , @PaqueteMediano      , @STD_E_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentEspecial , NULL , NULL , @PaqueteGrande       , @STD_E_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentEspecial , NULL , NULL , @PaqueteExtraGrande  , @STD_E_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentEspecial , NULL , NULL , @PaqueteSobreDim     , @STD_E_PS , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL);
 
-	--COBERTURA ISLAS DE LA BAHÍA
+	--COBERTURA ISLAS DE LA BAHÃA
 	INSERT INTO dbo.RateData
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceSTD , @IdSegmentForIslas , NULL , NULL , @PaquetePequeño      , @STD_IB_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceSTD , @IdSegmentForIslas , NULL , NULL , @PaquetePequeÃ±o      , @STD_IB_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForIslas , NULL , NULL , @PaqueteMediano      , @STD_IB_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForIslas , NULL , NULL , @PaqueteGrande       , @STD_IB_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForIslas , NULL , NULL , @PaqueteExtraGrande  , @STD_IB_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForIslas , NULL , NULL , @PaqueteSobreDim     , @STD_IB_PS , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL);
 
-	--COBERTURA FORÁNEO GD
+	--COBERTURA FORÃNEO GD
 	INSERT INTO dbo.RateData
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceSTD , @IdSegmentForGracias , NULL , NULL , @PaquetePequeño      , @STD_GD_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceSTD , @IdSegmentForGracias , NULL , NULL , @PaquetePequeÃ±o      , @STD_GD_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForGracias , NULL , NULL , @PaqueteMediano      , @STD_GD_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForGracias , NULL , NULL , @PaqueteGrande       , @STD_GD_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceSTD , @IdSegmentForGracias , NULL , NULL , @PaqueteExtraGrande  , @STD_GD_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -200,7 +201,7 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	, TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceCOD , @IdSegmentMetro , NULL , NULL , @PaquetePequeño		, @COD_M_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceCOD , @IdSegmentMetro , NULL , NULL , @PaquetePequeÃ±o		, @COD_M_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentMetro , NULL , NULL , @PaqueteMediano		, @COD_M_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentMetro , NULL , NULL , @PaqueteGrande		, @COD_M_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentMetro , NULL , NULL , @PaqueteExtraGrande	, @COD_M_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -211,7 +212,7 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	, TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceCOD , @IdSegmentLocal , NULL , NULL , @PaquetePequeño		, @COD_L_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceCOD , @IdSegmentLocal , NULL , NULL , @PaquetePequeÃ±o		, @COD_L_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentLocal , NULL , NULL , @PaqueteMediano		, @COD_L_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentLocal , NULL , NULL , @PaqueteGrande		, @COD_L_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentLocal , NULL , NULL , @PaqueteExtraGrande	, @COD_L_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -222,7 +223,7 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 		, TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceCOD , @IdSegmentDepart , NULL , NULL , @PaquetePequeño      , @COD_D_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceCOD , @IdSegmentDepart , NULL , NULL , @PaquetePequeÃ±o      , @COD_D_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentDepart , NULL , NULL , @PaqueteMediano      , @COD_D_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentDepart , NULL , NULL , @PaqueteGrande       , @COD_D_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentDepart , NULL , NULL , @PaqueteExtraGrande  , @COD_D_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -233,7 +234,7 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceCOD , @IdSegmentRegional , NULL , NULL , @PaquetePequeño      , @COD_R_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceCOD , @IdSegmentRegional , NULL , NULL , @PaquetePequeÃ±o      , @COD_R_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentRegional , NULL , NULL , @PaqueteMediano      , @COD_R_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentRegional , NULL , NULL , @PaqueteGrande       , @COD_R_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentRegional , NULL , NULL , @PaqueteExtraGrande  , @COD_R_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -244,18 +245,18 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceCOD , @IdSegmentNacional , NULL , NULL , @PaquetePequeño      , @COD_N_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceCOD , @IdSegmentNacional , NULL , NULL , @PaquetePequeÃ±o      , @COD_N_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentNacional , NULL , NULL , @PaqueteMediano      , @COD_N_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentNacional , NULL , NULL , @PaqueteGrande       , @COD_N_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentNacional , NULL , NULL , @PaqueteExtraGrande  , @COD_N_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentNacional , NULL , NULL , @PaqueteSobreDim     , @COD_N_PS , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL);
 
-	--COBERTURA FORÁNEA OLANCHO
+	--COBERTURA FORÃNEA OLANCHO
 	INSERT INTO dbo.RateData
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceCOD , @IdSegmentForOlancho , NULL , NULL , @PaquetePequeño      , @COD_FO_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceCOD , @IdSegmentForOlancho , NULL , NULL , @PaquetePequeÃ±o      , @COD_FO_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForOlancho , NULL , NULL , @PaqueteMediano      , @COD_FO_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForOlancho , NULL , NULL , @PaqueteGrande       , @COD_FO_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForOlancho , NULL , NULL , @PaqueteExtraGrande  , @COD_FO_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -266,29 +267,29 @@ BEGIN TRY
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceCOD , @IdSegmentEspecial , NULL , NULL , @PaquetePequeño      , @COD_E_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceCOD , @IdSegmentEspecial , NULL , NULL , @PaquetePequeÃ±o      , @COD_E_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentEspecial , NULL , NULL , @PaqueteMediano      , @COD_E_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentEspecial , NULL , NULL , @PaqueteGrande       , @COD_E_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentEspecial , NULL , NULL , @PaqueteExtraGrande  , @COD_E_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentEspecial , NULL , NULL , @PaqueteSobreDim     , @COD_E_PS , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL);
 
-	--COBERTURA ISLAS DE LA BAHÍA
+	--COBERTURA ISLAS DE LA BAHÃA
 	INSERT INTO dbo.RateData
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceCOD , @IdSegmentForIslas , NULL , NULL , @PaquetePequeño      , @COD_IB_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceCOD , @IdSegmentForIslas , NULL , NULL , @PaquetePequeÃ±o      , @COD_IB_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForIslas , NULL , NULL , @PaqueteMediano      , @COD_IB_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForIslas , NULL , NULL , @PaqueteGrande       , @COD_IB_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForIslas , NULL , NULL , @PaqueteExtraGrande  , @COD_IB_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForIslas , NULL , NULL , @PaqueteSobreDim     , @COD_IB_PS , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL);
 
-	--COBERTURA FORÁNEO GD
+	--COBERTURA FORÃNEO GD
 	INSERT INTO dbo.RateData
 	( RateId , TypeServiceId , TypeSegmentId , HubSourceId , HubDestinyId , ArticleId , RateValue , RowStatus , TokenCreated , DateCreated
 	  , TokenUpdated , DateUpdated , LimitHourDelivery , LimitHourPickup , WeightFrom , WeightTo , PackagesFrom , PackagesTo )
 	VALUES
-	( @IdRate , @TypeServiceCOD , @IdSegmentForGracias , NULL , NULL , @PaquetePequeño      , @COD_GD_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
+	( @IdRate , @TypeServiceCOD , @IdSegmentForGracias , NULL , NULL , @PaquetePequeÃ±o      , @COD_GD_PP , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForGracias , NULL , NULL , @PaqueteMediano      , @COD_GD_PM , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForGracias , NULL , NULL , @PaqueteGrande       , @COD_GD_PG , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
 	( @IdRate , @TypeServiceCOD , @IdSegmentForGracias , NULL , NULL , @PaqueteExtraGrande  , @COD_GD_PE , 1 , @Token , @DateCreated , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL),
@@ -296,8 +297,18 @@ BEGIN TRY
     
 	PRINT('Se inserto las tarifas para el servicio COD correctamente.');
 
+	--Servicio Economico,  descuento sobre la tarifa asignada cuando se trate de un envío originado en una agencia EXC con destino a otra agencia EXC
+	UPDATE RateData 
+	SET 
+		RateValue = RateValue - @ServicioEco
+	WHERE RateId = @IdRate
+	AND RowStatus = 1
+	AND TypeServiceId IN (@TypeServiceSTD,@TypeServiceCOD)
+
+	PRINT('Se realizaron modificaciones por Servicio Economico.');
+
     COMMIT TRANSACTION;
-	PRINT 'Actualización realizada correctamente.'
+	PRINT 'ActualizaciÃ³n realizada correctamente.'
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
