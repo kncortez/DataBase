@@ -27,36 +27,44 @@ BEGIN
 	DECLARE @DeliveryOrderInfo TABLE (
 		IsCollect BIT,
 		Collect_OnDelivery DECIMAL(18,2),
-		HasCreditCardPaid BIT
+		HasCreditCardPaid BIT,
+        HasPayment BIT
 	);
-	
+
 	-- Consulta única a DeliveryOrder con todas las validaciones necesarias
-	INSERT INTO @DeliveryOrderInfo (IsCollect, Collect_OnDelivery, HasCreditCardPaid)
-	SELECT 
+	INSERT INTO @DeliveryOrderInfo (IsCollect, Collect_OnDelivery, HasCreditCardPaid, HasPayment)
+	SELECT
 		DOR.IsCollect,
 		DOR.Collect_OnDelivery,
-		CASE WHEN CCTBC.ReasonCode = '00' THEN 1 ELSE 0 END
+		CASE WHEN CCTBC.ReasonCode = '00' THEN 1 ELSE 0 END as HasCreditCardPaid,
+		CASE WHEN CostDetail.IdTypeOfMoney IN ('1', '2', '6', '7', '8', '9', '10') THEN 1 ELSE 0 END as HasPayment
 	FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-	LEFT JOIN DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH(NOLOCK)  
+	LEFT JOIN DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH(NOLOCK)
 		ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number)
 		AND CCTBC.ReasonCode = '00'
-	WHERE DOR.Guide_Serie = @GuideSerie  
+	LEFT JOIN DeliveryBackOffice.dbo.Cost Cost WITH(NOLOCK)
+		ON Cost.GuideSerie = DOR.Guide_Serie
+		AND Cost.GuideNumber = DOR.Guide_Number
+	LEFT JOIN DeliveryBackOffice.dbo.CostDetail CostDetail WITH(NOLOCK)
+		ON CostDetail.IdCost = Cost.IdCost
+	WHERE DOR.Guide_Serie = @GuideSerie
 		AND DOR.Guide_Number = @GuideNumber;
 
 	-- Si no existe la guía, error
 	IF NOT EXISTS (SELECT 1 FROM @DeliveryOrderInfo)
 	BEGIN
 		SELECT 400 AS IdResult, 'Guia no encontrada' AS Message, 0 AS PaidZigi,
-			@GuideSerie AS GuideSerie, @GuideNumber AS GuideNumber, 0 AS LinkCreated, 
+			@GuideSerie AS GuideSerie, @GuideNumber AS GuideNumber, 0 AS LinkCreated,
 			0 AS IsPay, '' AS LinkZigi, @isNeedBilling AS isNeedBilling;
 		RETURN;
 	END
 
 	-- Calcular @EnablePaidZigi basado en las reglas de negocio
-	SELECT 
-		@EnablePaidZigi = CASE 
+	SELECT
+		@EnablePaidZigi = CASE
 			WHEN HasCreditCardPaid = 1 AND Collect_OnDelivery = 0 THEN 0  -- Ya pagada con tarjeta y sin COD
 			WHEN Collect_OnDelivery > 0 THEN 1  -- Tiene COD, habilitar Zigi
+			WHEN HasPayment = 1 THEN 0  -- Ya tiene pago Zigi registrado
 			ELSE @EnablePaidZigi  -- Mantener valor por defecto
 		END
 	FROM @DeliveryOrderInfo;
@@ -65,7 +73,7 @@ BEGIN
 	IF EXISTS (SELECT 1 FROM @DeliveryOrderInfo WHERE IsCollect = 0 AND Collect_OnDelivery = 0)
 	BEGIN
 		SELECT 400 AS IdResult, 'opcion no habilitada' AS Message, 0 AS PaidZigi,
-			@GuideSerie AS GuideSerie, @GuideNumber AS GuideNumber, 0 AS LinkCreated, 
+			@GuideSerie AS GuideSerie, @GuideNumber AS GuideNumber, 0 AS LinkCreated,
 			0 AS IsPay, '' AS LinkZigi, @isNeedBilling AS isNeedBilling;
 		RETURN;
 	END
@@ -87,11 +95,11 @@ BEGIN
 
 	-- Consulta única a PaymentZigi para obtener toda la información necesaria
 	DECLARE @ZigiStatus NVARCHAR(20), @ZigiLink NVARCHAR(500);
-	
-	SELECT 
+
+	SELECT
 		@ZigiStatus = ZigiLinkStatus,
 		@ZigiLink = ISNULL(ZigiLink, '')
-	FROM PaymentZigi WITH(NOLOCK) 
+	FROM PaymentZigi WITH(NOLOCK)
 	WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber;
 
 	-- Evaluar estados usando CASE en lugar de múltiples IF
@@ -99,13 +107,13 @@ BEGIN
 	BEGIN
 		-- No existe registro en PaymentZigi
 		SELECT 200 AS IdResult, 'Guia no tiene link asociado ' AS Message, @EnablePaidZigi AS PaidZigi,
-			@GuideSerie AS GuideSerie, @GuideNumber AS GuideNumber, 0 AS LinkCreated, 
+			@GuideSerie AS GuideSerie, @GuideNumber AS GuideNumber, 0 AS LinkCreated,
 			0 AS IsPay, '' AS LinkZigi, @isNeedBilling AS isNeedBilling;
 	END
 	ELSE
 	BEGIN
 		-- Existe registro, evaluar según el estado
-		SELECT 
+		SELECT
 			CASE @ZigiStatus
 				WHEN 'CREATED' THEN 200
 				WHEN 'PAID' THEN 400

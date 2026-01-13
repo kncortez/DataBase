@@ -12,6 +12,12 @@
 -- Create date: <2025-12-17>
 -- Description:	<Se agrega en la respuesta el campo del linkde Zigi>
 -- =============================================
+-- =============================================
+-- System:		<API>
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-01-13>
+-- Description:	<Se restringe a no permitir pagos si ya existe un pago para la guia aunque sea de forma parcial>
+-- =============================================
 CREATE PROCEDURE [dbo].[ValidatePaymentZigiTracking]
     @GuideNumber        INT,
     @GuideSerie         NVARCHAR(2),
@@ -59,11 +65,29 @@ BEGIN
           AND PZ.GuideNumber = @GuideNumber
         ORDER BY PZ.DateUpdated DESC;
 
-		SET @GuidePaid = CASE WHEN EXISTS 
-			(SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)
+		
+		-- SET	@LinkPaid = CASE WHEN EXISTS
+			-- (SELECT 1 FROM DeliveryBackOffice.dbo.PaymentZigi PZ WITH (NOLOCK)
+			-- WHERE PZ.Guide_Serie = @GuideSerie AND PZ.Guide_Number = @GuideNumber AND PZ.ZigiLinkStatus = 'PAID') 
+			-- THEN 1 ELSE 0 END;
+
+		SET @GuidePaid = CASE WHEN EXISTS (
+			SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH(NOLOCK)
 				ON CCTBC.OrderNumber = DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) AND CCTBC.ReasonCode = '00'
-			WHERE	DOR.Guide_Serie = @GuideSerie AND	DOR.Guide_Number = @GuideNumber) THEN 1 ELSE 0 END;
+			WHERE DOR.Guide_Serie = @GuideSerie AND DOR.Guide_Number = @GuideNumber
+			
+			-- ESTE UNION FUE NECESARIO PARA EVITAR UN OR EN LA CONDICION
+			UNION
+			
+			SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[Cost] Cost WITH(NOLOCK)
+				ON Cost.GuideSerie = DOR.Guide_Serie AND Cost.GuideNumber = DOR.Guide_Number
+			INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CostDetail WITH(NOLOCK)
+				ON CostDetail.IdCost = Cost.IdCost
+			WHERE DOR.Guide_Serie = @GuideSerie AND DOR.Guide_Number = @GuideNumber
+			AND CostDetail.IdTypeOfMoney IN ('1', '2', '6', '7', '8', '9', '10')
+		) THEN 1 ELSE 0 END;
 
 		IF((@ReceiverPhone = @NirPhoneStr + @PhoneStr) OR (@ReceiverPhone = @PhoneStr))
 		BEGIN
@@ -115,7 +139,7 @@ BEGIN
 						, 'Este envío ya fue pagado'										AS	[Title]
 						, 'La guía ' + @GuideSerie + CAST(@GuideNumber AS NVARCHAR(20)) + 
 						  ' ya fue pagada. Gracias por utilizar nuestros servicios.'		AS	[Message]
-                        , @ZigiLink                                                       AS  [ZigiLink]
+                        , ''                                                       AS  [ZigiLink]
 				END
 			END
 			ELSE
