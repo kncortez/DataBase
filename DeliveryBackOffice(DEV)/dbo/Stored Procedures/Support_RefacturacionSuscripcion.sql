@@ -6,8 +6,7 @@
    Fecha:     2025-12-19
 ============================================
 === CHANGELOG ============================
-2025-12-19 | Historia/épica: FDAPI-5301 | Autor: IRVIN GONZALEZ |
------
+2025-12-19 | Historia: FDAPI-5301 | Autor: IRVIN GONZALEZ |
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_RefacturacionSuscripcion
@@ -27,7 +26,7 @@ BEGIN
         SELECT TOP 1
             @InvoiceHeaderId = INV_PK_Id,
             @InvoiceStatus = inv_status
-        FROM dbo.InvoiceHeader WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.InvoiceHeader WITH (NOLOCK)
         WHERE inv_certificationFEL = @CodigoCertificacionFEL;
 
         IF @InvoiceHeaderId IS NULL
@@ -55,7 +54,7 @@ BEGIN
 
         SELECT TOP 1
             @SubscriptionIdActual = SubscriptionId
-        FROM dbo.InvoiceDetail WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.InvoiceDetail WITH (NOLOCK)
         WHERE DTI_FK_Header = @InvoiceHeaderId;
 
         IF @SubscriptionIdActual IS NOT NULL AND @SubscriptionIdActual <> 0
@@ -71,7 +70,7 @@ BEGIN
         -- PASO 3: Validar existencia del voucher en registro de transacciones
         IF NOT EXISTS (
             SELECT TOP 1 1
-            FROM dbo.RegistrationofTransactionProcessStates WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.RegistrationofTransactionProcessStates WITH (NOLOCK)
             WHERE OrderNumber = @NumeroVoucher
         )
         BEGIN
@@ -87,7 +86,7 @@ BEGIN
 
         SELECT TOP 1
             @SubscriptionIdNuevo = SubscriptionId
-        FROM dbo.SubscriptionPaymentLog WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.SubscriptionPaymentLog WITH (NOLOCK)
         WHERE [Authorization] = @NumeroVoucher;
 
         IF @SubscriptionIdNuevo IS NULL
@@ -104,7 +103,7 @@ BEGIN
 
         SELECT TOP 1
             @SubscriptionIdAntes = SubscriptionId
-        FROM dbo.InvoiceDetail WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.InvoiceDetail WITH (NOLOCK)
         WHERE DTI_FK_Header = @InvoiceHeaderId;
 
         UPDATE dbo.InvoiceDetail
