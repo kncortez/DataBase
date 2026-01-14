@@ -1,12 +1,13 @@
-﻿-- =============================================
--- Author:		<Tito García>
--- Create date: <2025-06-23>
--- Description:	<Confirma servicio de entrega de guía en express center>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-11-06>
--- Description:	<Se guarda el parámetro @Voucher si es para tarjeta o para Zigi, caso contrario solo ''>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sps_set_finishDeliveryService]
+   Propósito: <Confirma servicio de entrega de guía en express center>
+   Autor:     <Tito Garcia>
+   Historia:  <>
+   Fecha:     2025-06-23
+============================================
+=== CHANGELOG ================================
+-- 2025-12-14 | Historia/épica: FDAPI-4785 | Autor: Tito Garcia |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finishDeliveryService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
@@ -16,6 +17,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishDeliveryService]
   , @TblDetail AS TblPaymentList READONLY	
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
+  , @StationId INT = NULL
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -26,6 +28,11 @@ BEGIN
         -- SECCIÓN 1: INICIALIZACIÓN Y PREPARACIÓN DE DATOS
         -- =====================================================================
     
+		IF(@StationId = 0)
+		BEGIN
+			SET @StationId = NULL;
+		END
+
 		DECLARE @DateCreated DATETIME = GETDATE();
 		DECLARE @CatSalesPackageStatusId INT = 0;
 
@@ -255,6 +262,7 @@ BEGIN
 					, DateCreated
 					, DateCreatedInSystem
 					, Observations
+					, StationId
 				)
 				SELECT lge.Guide_Serie
 					, lge.Guide_Number
@@ -263,6 +271,7 @@ BEGIN
 					, @DateCreated DateCreated
 					, @DateCreated DateCreatedInSystem
 					, @observations
+					, @StationId
 				FROM #listGuidesEnabled lge;
 
 				UPDATE dot
