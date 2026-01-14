@@ -6,8 +6,9 @@
 -- =============================================
 CREATE PROCEDURE [ValidateBatchInvoice]
 (
-  @TypeDocument    SMALLINT = 1,
+  @IdLote          INT = 0,
   @CodeOfReference INT = 0,
+  @TypeDocument    SMALLINT = 1,
   @Code            SMALLINT OUTPUT,
   @Message         NVARCHAR(250) OUTPUT
 )
