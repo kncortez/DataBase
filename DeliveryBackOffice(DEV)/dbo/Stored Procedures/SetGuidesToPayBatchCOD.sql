@@ -138,7 +138,20 @@ BEGIN
 				WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2
 				
 DROP TABLE IF EXISTS #TempData;
-IF @AuthorizationNumber IS NOT NULL AND @BatchCODId IS NOT NULL
+IF EXISTS
+(
+    SELECT 1
+    FROM dbo.DepositReportCODHeader h WITH (NOLOCK)
+    WHERE h.Batch_COD_Id = @BatchCODId
+)
+BEGIN
+    UPDATE h
+        SET h.AuthorizationNumber = @AuthorizationNumber,
+            h.AuthorizationDate   = @AuthorizationDate
+    FROM dbo.DepositReportCODHeader h
+    WHERE h.Batch_COD_Id = @BatchCODId
+END
+ELSE IF @AuthorizationNumber IS NOT NULL AND @BatchCODId IS NOT NULL
 BEGIN
 ;WITH Base AS
 (
