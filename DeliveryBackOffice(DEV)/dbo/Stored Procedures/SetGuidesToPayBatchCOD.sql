@@ -231,7 +231,7 @@ BEGIN
     LEFT JOIN dbo.DeliveryBank           AS bk  WITH (NOLOCK)
         ON bk.Id_bank = dc.DCBA_Bank_Id
 	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DCurrency WITH (NOLOCK)
-	ON ISNULL(do.SenderCountryId, 'GT') = DCurrency.Currency_IdCountry
+	ON do.SenderCountryId = DCurrency.Currency_IdCountry
     AND DCurrency.DefaultPerCountry = 1
 	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
 	ON DCurrency.IdCurrencyCOD = CCC.IdCatCurrencyCOD
