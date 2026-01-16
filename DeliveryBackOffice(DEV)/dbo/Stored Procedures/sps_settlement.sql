@@ -1,9 +1,15 @@
-﻿
--- =============================================
--- Author:		<Carlos, Cano>
--- Create date: <2020-11-24>
--- Description:	<Guarda información para generar manifiesto de liquidación>
--- =============================================
+﻿/* =================================================
+   SP:        sps_settlement
+   Propósito: Guarda información para generar manifiesto de liquidación
+   Autor:     Carlos Cano
+   Historia:  ---
+   Fecha:     2020-11-24
+
+=== CHANGELOG ============================
+
+2025-12-23 | Historia/épica: FDAPI-4748   | Autor: Brandon Pedroza | Mejoras al guardar idstation
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_settlement]
 		@IdManifest INT,
 		@GuideQuantity INT,
@@ -22,24 +28,24 @@ BEGIN
 			-- Obtener las guías que se actuaizará el ultimo estado en bitacora para actualizar el último estado de una guía asignada a un manifiesto
 		;WITH LatestOrder AS (
 			SELECT 
+				[dod].[Guide_Serie],
 				[dod].[Guide_Number],
 				[dod].[StatusOrderId],
 				ROW_NUMBER() OVER (PARTITION BY [dod].[Guide_Number] ORDER BY [dod].[DateCreated] DESC) AS rn
 			FROM 
 				[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] dod WITH(NOLOCK)
-			WHERE 
-				[dod].[Guide_Number] IN (
-										   SELECT [ds].[Guide_Number]
-											 FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] ds WITH(NOLOCK)
-												 WHERE [ds].[ID_DeliveryOrderBySettlement] = @IdManifest
-				)
+				INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] ds WITH(NOLOCK)
+				ON dod.Guide_Serie = ds.Guide_Serie
+					AND dod.Guide_Number = ds.Guide_Number
+			WHERE [ds].[ID_DeliveryOrderBySettlement] = @IdManifest
 		)
 		UPDATE ds
 		SET [ds].[StatusOrderId] = [lo].[StatusOrderId]
 		FROM 
 			[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] ds WITH(NOLOCK)
-		INNER JOIN 
-			[LatestOrder] lo ON [ds].[Guide_Number] = [lo].[Guide_Number]
+		INNER JOIN [LatestOrder] lo 
+			ON	[ds].[Guide_Serie] = [lo].[Guide_Serie] AND
+				[ds].[Guide_Number] = [lo].[Guide_Number]
 		WHERE 
 			[lo].[rn] = 1
 			AND [ds].[ID_DeliveryOrderBySettlement] = @IdManifest
@@ -54,7 +60,7 @@ BEGIN
 				--Pieces_Cold_Received = @PiecesColdReceived,
 				Guides_Received = @GuideQuantity,
 				Route_Received = GETDATE(),
-				SettlementStationId = IIF( ISNULL(@StationId,0) > 0, @StationId, NULL)
+				SettlementStationId = @StationId
 			WHERE ID = @IdManifest
 
 			SET @RUpdated = @@ROWCOUNT
