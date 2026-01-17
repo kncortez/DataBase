@@ -6,6 +6,7 @@
    Fecha:     2022-08-24
 ============================================
 === CHANGELOG ================================
+2025-12-17 | Historia/épica: <FDAPI-5296> | Autor: <Tito Garcia> |
 2025-11-27 | Historia/épica: <FDAPI-4607> | Autor: <Tito Garcia> |
 2025-11-05 | Historia/épica: <FDAPI-4607> | Autor: <Cristian Suazo> |
 =========================================== */
@@ -35,7 +36,7 @@ BEGIN
 	FROM [DeliveryBackOffice].[dbo].[LinehaulRouteSettlement] WITH (NOLOCK)
 	WHERE IdLinehaulRouteSettlement = @LinehaulRouteSettlementId;
 
-	SET @Status = (SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] WHERE OrderDescription = 'En Revisión')
+	SET @Status = 55; -- 'En Revision LH'
 
 	SELECT @PIECES_MISSING_IN_SETTLEMENT = COUNT(*)
 		FROM [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP WITH (NOLOCK)
