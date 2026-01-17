@@ -82,7 +82,7 @@ BEGIN
                         IIF(bcsvf.[TypeIdentificationDocumentCode] IS NULL, vpcf.[TypeIdentificationDocumentCode], bcsvf.[TypeIdentificationDocumentCode]) [TypeIdentificationDocumentCode],
                         IIF(bcsvf.[IdDocument] IS NULL, vpcf.[IdDocument], bcsvf.[IdDocument]) [IdDocument],
                         IIF(bcsvf.[Inv_type] IS NULL, vpcf.[Inv_type], bcsvf.[Inv_type]) [Inv_type],
-                        IIF(bcsvf.[StateCode] IS NULL,1, 0) [isNew]
+                        IIF(bcsvf.[Inv_type] IS NULL,1, 0) [isNew]
                     FROM DeliveryBackOffice.dbo.Customer cs WITH(NOLOCK) 
                         INNER JOIN DeliveryBackOffice.dbo.CustomerType cust WITH(NOLOCK)
                             ON cs.IdCustomerType = cust.IdCustomerType
