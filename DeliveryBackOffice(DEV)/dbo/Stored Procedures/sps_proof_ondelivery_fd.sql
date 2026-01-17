@@ -25,7 +25,11 @@
 -- Update date: <2025-01-12>
 -- Description:	<Se agrega la funcion del proceso por ticket number para las guías>
 -- =============================================
-
+-- =============================================
+-- Author:		<Edelman>
+-- Update date: <2026-01-15>
+-- Description:	<Guardar Data de transferencia imagen de voucher y Idtransfer>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
@@ -46,7 +50,8 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @ExcludeCODPyament BIT = 'false',
     @Receiver_CUI NVARCHAR(25) = '',
 	@IdCountry NVARCHAR(8) = 'GT',
-	@TicketNumber NVARCHAR(300) = NULL
+	@TicketNumber NVARCHAR(300) = NULL,
+	@TransferImagePath NVARCHAR(300) = NULL
 AS
 BEGIN
 	
@@ -1212,7 +1217,8 @@ BEGIN
                                         @FullPayment = @FullPayment,
                                         @TypeCharge = 1,  -- 1 = costo de envío
                                         @Token = @Token,
-                                        @CODPayment = @CODPayment;
+                                        @CODPayment = @CODPayment,
+										@TransferImagePath = @TransferImagePath;
         END;
 
 		IF(EXISTS(SELECT  Top 1 1 FROM [dbo].[DeliveryOrder] dlo WITH (NOLOCK) WHERE dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1)) -- guía marcada para devolución
