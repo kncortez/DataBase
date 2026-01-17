@@ -1,7 +1,7 @@
 ﻿-- =============================================
 -- Author:		<Walter Orozco>
 -- Create date: <2024-09-05>
--- Description:	<Administraci�n de lotes - Creaci�n de lotes>
+-- Description:	<Administración de lotes - Creación de lotes>
 -- =============================================
 
 CREATE PROCEDURE SetBatchAdministration

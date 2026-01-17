@@ -40,29 +40,40 @@ BEGIN
 	WHERE [Id_Lote] = @IdLote
 
 	--Devuelve toda la información de los puntos de ventas relacionado a este Lote
-	SELECT
-		ISNULL(PF.dpf_SAPcardCode,'')			AS 'Code',
-		ISNULL(VPC.DescriptionOfClient,'')		AS 'Punto de venta',
-		ISNULL(VPC.CodeOfReference,0)			AS 'CodeOfReference',
-		ISNULL(COUNT(IBD.Id_Lote),0)			AS 'Facturas generadas',
-		ISNULL(CCC.Symbol,'Q')					AS 'Moneda',
-		ISNULL(SUM(IH.inv_amount),0)			AS 'Monto facturado'
+	SELECT 
+		F.[Code],
+		VPC.[DescriptionOfClient]          [Punto de venta],
+		IBR.[CodeOfReference]              [CodeOfReference],
+		ISNULL(F.[Facturas generadas],0)   [Facturas generadas],
+		ISNULL(F.[Moneda], 'L')            [Moneda],
+		ISNULL(F.[Monto facturado], 0.00)  [Monto facturado],
+		ISNULL(IBR.RowStatus,0)            [RowStatus]
 	FROM dbo.InvoiceBatchHeader IBH WITH (NOLOCK)
-	INNER JOIN dbo.InvoiceBatchDetail IBD WITH (NOLOCK)
-		ON IBH.Id_Lote = IBD.Id_Lote
-	INNER JOIN dbo.InvoiceHeader IH WITH (NOLOCK)
-		ON IBD.inv_pk_id = IH.inv_pk_id
+	LEFT JOIN dbo.InvoiceBatchRelationships IBR WITH(NOLOCK)
+		ON IBR.Id_Lote = IBH.Id_Lote 
 	INNER JOIN dbo.VisitPointClient VPC WITH(NOLOCK)
-		ON IH.inv_vpCodeOfReferences = VPC.CodeOfReference
-	INNER JOIN dbo.InvoiceBatchRelationships IBR WITH(NOLOCK)
-		ON IBH.Id_Lote = IBR.Id_Lote and VPC.CodeOfReference = IBR.CodeOfReference
-	INNER JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-		ON IH.IdCurrency = CCC.IdCatCurrencyCOD
-	LEFT JOIN dbo.del_ParametrosFactura PF WITH(NOLOCK)
-		ON VPC.CodeOfReference = PF.dpf_VpCodeOfReference
-	WHERE IBH.Id_Lote = @IdLote and IBR.RowStatus = 1
-	GROUP BY IBD.Id_Lote , VPC.DescriptionOfClient, VPC.CodeOfReference, CCC.Symbol, PF.dpf_SAPcardCode
-	ORDER BY VPC.DescriptionOfClient
+		ON  VPC.CodeOfReference = IBR.CodeOfReference
+	OUTER APPLY(
+		SELECT ISNULL(PF.dpf_SAPcardCode,'')        [Code]
+			  ,ISNULL(COUNT(IBD.Id_Lote),0)			[Facturas generadas]
+			  ,ISNULL(CCC.Symbol,'L')				[Moneda]
+			  ,ISNULL(SUM(IH.inv_amount),0)			[Monto facturado]
+		FROM dbo.InvoiceHeader IH WITH (NOLOCK)
+		INNER JOIN dbo.InvoiceBatchDetail IBD WITH (NOLOCK)
+			ON IBD.inv_pk_id = IH.inv_pk_id
+		INNER JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON IH.IdCurrency = CCC.IdCatCurrencyCOD
+		LEFT JOIN dbo.del_ParametrosFactura PF WITH(NOLOCK)
+			ON VPC.CodeOfReference = PF.dpf_VpCodeOfReference
+		WHERE IdCountry = 'HN'
+		  AND IBD.Id_Lote = IBH.Id_Lote
+		  AND inv_vpCodeOfReferences =IBR.CodeOfReference
+		GROUP BY PF.dpf_SAPcardCode,
+				 IBD.Id_Lote,
+				 CCC.Symbol
+	) F
+	WHERE IBH.Id_Lote = @IdLote --and IBR.RowStatus = 1
+	ORDER BY VPC.[DescriptionOfClient]
 		
     END TRY
     BEGIN CATCH
