@@ -1,21 +1,18 @@
 ﻿
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <05-09-2022>
--- Description:	< Detalle de rastreo interno para nuevo portal web >
--- =============================================
--- Author:		<Jerson Ochoa>
--- Update date: <21-02-2023>
--- Description: <Management for checkpoint icons>
--- =============================================
--- Author:		<Tito García>
--- Update date: <17-10-2024>
--- Description: <Se modifica para que se tome en primer lugar el comprobante digitalizado y en segundo lugar la imagen tomada por el courier en POD ref.: FDD-1359>
--- =============================================
--- Author:		<Tito García>
--- Update date: <11-11-2024>
--- Description: <Se agregan los campos isVoucherRequired ref.: FDAPI-3147>
--- =============================================
+/* =================================================
+   SP:        GetDetailedTrackingDataOfGuide
+   Propósito: Detalle de rastreo interno para el nuevo portal web
+   Autor:     Andres Ruiz
+   Historia:  ---
+   Fecha:     2022-09-05
+
+=== CHANGELOG ============================
+
+2024-10-17 | Historia/épica: FDD-1359   | Autor: Tito García    | Prioriza comprobante digitalizado sobre imagen tomada por el courier en POD
+2024-11-11 | Historia/épica: FDAPI-3147 | Autor: Tito García    | Se agregan los campos IsVoucherRequired
+2026-01-17 | Historia/épica: FDAPI-5378 | Autor: Brandon Pedroza| Se obtienen checkpoints validos de guía (rowstatus = 1)
+
+=========================================== */
 CREATE PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
     @Guide_Serie NVARCHAR(2)
   , @Guide_Number BIGINT
@@ -521,6 +518,7 @@ BEGIN
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
               AND so.CatStatusTypeId = 2
+			  AND DOD.RowStatus = 1
         GROUP BY CONVERT(DATE, dod.DateCreated)
                , dod.Guide_Serie
                , dod.Guide_Number
