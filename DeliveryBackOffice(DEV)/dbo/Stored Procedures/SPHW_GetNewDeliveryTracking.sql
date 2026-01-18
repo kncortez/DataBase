@@ -1,13 +1,17 @@
-﻿-- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-10-11>
--- Description:	<Delivery Tracking - Método para obtener información del seguimiento de la guía personalizado al nuevo tracking.>
--- Description: <Contenerización - Se agrega TicketNumber para código de referencia y busca relación con una guía asociada.>
--- =============================================
--- Author:		<Brandon, Pedroza>
--- Modified:	<2025-02--14>
--- Description: <Contenerización - Se realiza ajuste para obtener numero de guia si no trae referencia>
--- =============================================
+﻿/* =================================================
+   SP:        SPHW_GetNewDeliveryTracking
+   Propósito: Delivery Tracking – Obtener información de seguimiento de guía personalizado al nuevo tracking.
+              Contenerización – Agrega TicketNumber como código de referencia y busca relación con guía asociada.
+   Autor:     Walter Orozco
+   Historia:  ---
+   Fecha:     2024-10-11
+
+=== CHANGELOG ============================
+
+2025-02-14 | Historia/épica: ---         | Autor: Brandon Pedroza | Contenerización – Ajuste para obtener número de guía cuando no se envía referencia
+2026-01-17 | Historia/épica: FDAPI-5378  | Autor: Brandon Pedroza | Se obtienen checkpoint validos  de guías(rowstatus = 1)
+
+=========================================== */
 
 CREATE PROCEDURE [dbo].[SPHW_GetNewDeliveryTracking]
 @TicketNumber NVARCHAR(300),
@@ -492,6 +496,8 @@ BEGIN TRY
 			WHERE dod.Guide_Serie = @GuideSerie
 				  AND dod.Guide_Number = @GuideNumber
 				  AND so.CatStatusTypeId = @ExternalTypeId
+				  AND DOD.RowStatus = 1
+				  
 		) RES
 		ORDER BY RES.[StageDate] DESC
 			   , RES.[EventID];
