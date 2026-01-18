@@ -6,13 +6,11 @@
    Fecha:     <2022-09-13>
 ============================================
 === CHANGELOG ================================
-2022-10-24 | Historia/épica:  | Autor: <Edelman Vasquez> |
--------------------------------
-2025-08-13 | Historia/épica:  | Autor: <Tito Garcia>  |
--------------------------------
 2025-09-05 | Historia/épica:  | Autor: <Tito Garcia>  |
 -------------------------------
 2025-10-28 | Historia/épica: <FDAPI-4871> | Autor: <Tito Garcia>  |
+-------------------------------
+2026-01-18 | Historia/épica: <FDAPI-5378> | Autor: <Brandon Pedroza>  | Se agrega respuesta para guias con reversión de entrega
 =========================================== */
 CREATE PROCEDURE [dbo].[GetWebhookDataForJSON]
     @WebhookTrackingQueueId BIGINT,
@@ -24,7 +22,7 @@ BEGIN
     DECLARE @IsCountryRequired AS BIT;
     DECLARE @IsPartyResponsibleRequired AS BIT;
     DECLARE @RestrictValidatedIncidents AS BIT;
-
+    DECLARE @ReversalDeliveryStatus INT = 57; -- Reversión de entrega desktop-- StatusOrder
     --========================================================================================================
     --===                                       STATUS CHANGE                                              ===
     --========================================================================================================
@@ -60,15 +58,16 @@ BEGIN
                    WTQ.GuideNumber,
                    ISNULL(WRBY.StatusExternalName, SO.OrderDescription) 'GuideStatus',
                    SO.StatusOrderId,
-                   (
+                   ISNULL((
                        SELECT TOP 1
                               DOD.DateCreated
                        FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
                        WHERE DOD.Guide_Serie = WTQ.GuideSerie
                              AND DOD.Guide_Number = WTQ.GuideNumber
                              AND DOD.StatusOrderId = WTQ.StatusOrderId
+                             AND DOD.RowStatus = 1
                        ORDER BY DOD.DateCreated DESC
-                   ) 'GuideStatusChange',
+                   ), WTQ.DateCreated) 'GuideStatusChange',
 				   WE.IsCountryRequired,
 				   WE.IsPartyResponsibleRequired,
 				   WTQ.CustomerId,
@@ -289,6 +288,16 @@ BEGIN
 						ORDER BY DA.Date_Created DESC
 					) DAP
                 END
+				ELSE IF (@StatusId IN (@ReversalDeliveryStatus))-- REVERSION DE ENTREGA DESKTOP
+				BEGIN
+					SELECT GSRT.GuideSerie,
+								GSRT.GuideNumber,
+								GSRT.GuideStatus,
+								GSRT.GuideStatusId,
+								GSRT.GuideStatusChange,
+								'Se ha realizado la reversión de entrega para la guía solicitada.' as DescriptionIncidence
+						FROM @GuideStatusResponseTable GSRT;
+				END
                 ELSE
                 BEGIN
 
