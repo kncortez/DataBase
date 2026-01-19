@@ -1,22 +1,16 @@
-﻿
--- Author:		<Bidcar Herrera>
--- Create date: <2023-09-25>
--- Description:	< Registro de incidencia>
--- =============================================
--- Author:		<Edelman>
--- Update date: <2024-03-07>
--- Description:	<Registrar incidencia para cliente DHL>
--- =============================================
--- Author:		<Tito Garcia>
--- Update date: <2024-07-18>
--- Description:	<Se confirma el tipo de incidencia por el currier, guardando Id original y comentario si hubiera cambio de tipo de incidencia>
--- =============================================
--- Author:      <Cristian Suazo> FDAPI-3278
--- =============================================
--- Author:		<Tito Garcia>
--- Update date: <2025-09-08>
--- Description:	<Se agrega restricción para encolar notificación unicamente si es real la incidencia para clientes configurados, se arregla indentación, se agregan with(nolock)>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[CreateIncidentRecord]
+   Propósito: <Registro de incidencia>
+   Autor:     <Bidcar Herrera>
+   Historia:  <>
+   Fecha:     2023-09-25
+============================================
+=== CHANGELOG ================================
+-- 2025-12-11 | Historia/épica: FDAPI-4775 | Autor: Tito Garcia |
+-- 2025-09-08 | Historia/épica:  | Autor: Tito Garcia |
+-- 2024-07-18 | Historia/épica:  | Autor: Tito Garcia |
+-- 2024-03-07 | Historia/épica:  | Autor: Edelman Vasquez  |
+=========================================== */
 CREATE PROCEDURE [dbo].[CreateIncidentRecord]
     @GuideSerie NVARCHAR(2) = 'FD'        --serie
   , @GuideNumber INT                      --número de guía
@@ -38,25 +32,24 @@ CREATE PROCEDURE [dbo].[CreateIncidentRecord]
   , @ConfirmedTypeIncidenceId INT = 0                        --Id del tipo de incidencia si es que se cambia en la validación 
   , @CommentOnConfirmedTypeIncidence NVARCHAR(600) = ''		-- Comentario del cambio del tipo de incidencia
   , @TicketNumber NVARCHAR(300) = NULL
+  , @StationId INT = NULL
 AS
 BEGIN
     DECLARE @StatusOrderId TINYINT;
     DECLARE @ValidatedIncidentStatus TINYINT = 50;
-    DECLARE @IncidentStatus TINYINT = 45;
     DECLARE @CatTypeConfirmationOfIncidenceId INT;
     DECLARE @FailedVisitStatusId INT;
-    DECLARE @IncidenceStatusId INT;
-    DECLARE @CatTypeCOIFailedVisitStatusId INT;
-    DECLARE @CatTypeCOIIncidenceStatusId INT;
+    DECLARE @IncidenceStatusId INT = 45; --'Incidencia en ruta'
+    DECLARE @CatTypeCOIFailedVisitStatusId INT; 
+    DECLARE @CatTypeCOIIncidenceStatusId INT = 1; --'Incidencia en Ruta'
     DECLARE @DeliveryAttemptId AS BIGINT = NULL;
     DECLARE @SytemOrigin AS INT = NULL;
     DECLARE @IdCountrySender AS NVARCHAR(2) = 'GT';
-
-    BEGIN TRANSACTION;
     DECLARE @OriginRouteId INT = NULL;
     DECLARE @NewRoutePreparation INT = 0;
     DECLARE @NewRouteManifest INT = 0;
     DECLARE @DeliverySettlementId INT = NULL;
+    DECLARE @Today DATE = CONVERT(DATE, GETDATE());
     DECLARE @InsertedRoutePreparation TABLE
     (
         IdRoutePreparation INT
@@ -65,22 +58,6 @@ BEGIN
     (
         IdRoutePreparationDetail INT
     );
-
-    SET @IncidenceStatusId =
-    (
-        SELECT TOP 1
-               StatusOrderId
-        FROM StatusOrder WITH (NOLOCK)
-        WHERE OrderDescription = 'Incidencia en ruta'
-    );
-    SET @CatTypeCOIIncidenceStatusId =
-    (
-        SELECT TOP 1
-               IdCatTypeConfirmationOfIncidence
-        FROM CatTypeConfirmationOfIncidence WITH (NOLOCK)
-        WHERE [Name] = 'Incidencia en Ruta'
-    );
-
     -- Variables de control de cambios
     DECLARE @UpdatedRP BIT = 0;
 
@@ -89,56 +66,53 @@ BEGIN
 	BEGIN
 		SELECT @GuideSerie = Guide_Serie,
 			   @GuideNumber = Guide_Number
-		FROM DeliveryOrder WITH(NOLOCK)
+		FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH(NOLOCK)
 		WHERE Ticket_Number = @TicketNumber 
 	END
 
     DECLARE @Terminal INT =
             (
-                SELECT TOP 1
-                       [SO].[CatCheckpointTypeId]
-                FROM [dbo].[DeliveryOrder]         [DO] WITH (NOLOCK)
-                    INNER JOIN [dbo].[StatusOrder] [SO] WITH (NOLOCK)
+                SELECT TOP 1 [SO].[CatCheckpointTypeId]
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder] [SO] WITH (NOLOCK)
                         ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
                 WHERE [SO].[RowStatus] = 1
-                      AND [DO].[Guide_Serie] = @GuideSerie
-                      AND [DO].[Guide_Number] = @GuideNumber
+                    AND [DO].[Guide_Serie] = @GuideSerie
+                    AND [DO].[Guide_Number] = @GuideNumber
             );
 
     SET @IdCountrySender  =
             (
-                SELECT TOP 1
-                       ISNULL([DO].[SenderCountryId],'GT')
-                  FROM [dbo].[DeliveryOrder]         [DO] WITH (NOLOCK)
-                 WHERE [DO].[Guide_Serie] = @GuideSerie
-                   AND [DO].[Guide_Number] = @GuideNumber
+                SELECT TOP 1 [DO].[SenderCountryId]
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
+                WHERE [DO].[Guide_Serie] = @GuideSerie
+                    AND [DO].[Guide_Number] = @GuideNumber
             );
 
     DECLARE @UserCreatedIncidence NVARCHAR(250) =
             (
-                SELECT TOP 1
-                       it.Username
-                FROM [dbo].[DeliveryOrderDetail]   ddd WITH (NOLOCK)
-                    LEFT JOIN [dbo].[TokenLog]     TL WITH (NOLOCK)
+                SELECT TOP 1 it.Username
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]   ddd WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[TokenLog]     TL WITH (NOLOCK)
                         ON ddd.UserCreated = TL.TknTokenCreated
-                    LEFT JOIN [dbo].[RegisterUser] RU WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[RegisterUser] RU WITH (NOLOCK)
                         ON TL.TknIdUser = RU.UsrIdUser
-                    LEFT JOIN dbo.InternalUser     it WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[InternalUser]     it WITH (NOLOCK)
                         ON it.RegisterUserID = RU.UsrIdUser
                 WHERE ddd.Guide_Serie = @GuideSerie
                       AND ddd.Guide_Number = @GuideNumber
-                      AND ddd.StatusOrderId = 50
-                      AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+                      AND ddd.StatusOrderId = @ValidatedIncidentStatus
+                      AND CONVERT(DATE, ddd.DateCreatedInSystem) = @Today
             );
 
     DECLARE @StatusIncidence INT =
             (
                 SELECT TOP 1
                        StatusOrderId
-                FROM dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
-                WHERE DOD.Guide_Serie = @GuideSerie AND --HOTFIX BNHL 14/11/2024 no tenía serie
-					  DOD.Guide_Number = @GuideNumber
-                      AND CONVERT(DATE, DOD.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
+                WHERE DOD.Guide_Serie = @GuideSerie 
+                    AND DOD.Guide_Number = @GuideNumber
+                      AND CONVERT(DATE, DOD.DateCreatedInSystem) = @Today
                 ORDER BY DOD.DateCreatedInSystem DESC
             );
 
@@ -146,14 +120,16 @@ BEGIN
             (
                 SELECT TOP 1
                        SO.OrderDescription
-                FROM [dbo].[DeliveryOrderDetail]   DOD WITH (NOLOCK)
-                    INNER JOIN [dbo].[StatusOrder] SO WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]   DOD WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
                         ON DOD.StatusOrderId = SO.StatusOrderId
-                WHERE DOD.Guide_Serie = @GuideSerie AND --HOTFIX BNHL 14/11/2024 no tenía serie
-					   DOD.Guide_Number = @GuideNumber
-                      AND CONVERT(DATE, DOD.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+                WHERE DOD.Guide_Serie = @GuideSerie 
+                    AND DOD.Guide_Number = @GuideNumber
+                    AND CONVERT(DATE, DOD.DateCreatedInSystem) = @Today
                 ORDER BY DOD.DateCreatedInSystem DESC
             );
+
+    BEGIN TRANSACTION;
 
     BEGIN TRY
         SET @StatusOrderId = @IncidenceStatusId;
@@ -166,14 +142,14 @@ BEGIN
         WHERE Guide_Serie = @GuideSerie
               AND Guide_Number = @GuideNumber
               AND RowStatus = 1
-              AND StatusOrderId = @IncidentStatus
+              AND StatusOrderId = @IncidenceStatusId
         ORDER BY DateCreatedInSystem DESC;
 
 -------------------------------------------------  Inicio Confirmando incidencia ------------------------------------------------
         UPDATE t1
         SET t1.TypeIncidenceId = A1.ID_Incident,
 			t1.CommentOnConfirmedTypeIncidence = @CommentOnConfirmedTypeIncidence
-        FROM dbo.ConfirmationOfIncidence                      t1 WITH (NOLOCK)
+        FROM [DeliveryBackOffice].dbo.ConfirmationOfIncidence t1 WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt A1 WITH (NOLOCK)
                 ON A1.ConfirmationOfIncidenceId = t1.IdConfirmationOfIncidence
         WHERE A1.Guide_Serie = @GuideSerie
@@ -198,11 +174,11 @@ BEGIN
             UPDATE [COI]
             SET [COI].[ValidGeolocationEvidence] = ISNULL(@ValidGeolocationEvidence, 0)
               , [COI].[ValidPhotographicEvidence] = ISNULL(@ValidPhotographicEvidence, 0)
-            FROM [dbo].[DeliveryOrder]                     [DO] WITH (NOLOCK)
-                INNER JOIN [dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
                     ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
                        AND [DO].[Guide_Number] = [DA].[Guide_Number]
-                INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                     ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
             WHERE DA.Guide_Serie = @GuideSerie
                   AND DA.Guide_Number = @GuideNumber
@@ -213,12 +189,11 @@ BEGIN
             BEGIN
 
                 UPDATE t1
-                --[dbo].[ConfirmationOfIncidence]
                 SET t1.[LastStatusOrderId] = [StatusOrderId]
                   , t1.[IsDenied] = 1
-                  , t1.[TokenUpdated] = @TokenCreated --'SetServiceTokenGuideData',
+                  , t1.[TokenUpdated] = @TokenCreated
                   , t1.[DateUpdated] = SYSDATETIME()
-                FROM dbo.ConfirmationOfIncidence                      t1 WITH (NOLOCK)
+                FROM DeliveryBackOffice.dbo.ConfirmationOfIncidence t1 WITH (NOLOCK)
                     INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt A1 WITH (NOLOCK)
                         ON A1.ConfirmationOfIncidenceId = t1.IdConfirmationOfIncidence
                 WHERE t1.RowStatus = 1
@@ -228,14 +203,13 @@ BEGIN
 
                 UPDATE dop
                 SET StatusOrderId = @StatusOrderId
-                FROM DeliveryOrderPiece                dop WITH (NOLOCK)
-                    INNER JOIN DeliveryAttempt         da WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].DeliveryOrderPiece dop WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].DeliveryAttempt da WITH (NOLOCK)
                         ON dop.GuideSerie = da.Guide_Serie
                            AND dop.GuideNumber = da.Guide_Number
-                    INNER JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].ConfirmationOfIncidence coi WITH (NOLOCK)
                         ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
-                WHERE --coi.ConfirmationOfIncidentToken = @GuideToken
-                    dop.GuideSerie = @GuideSerie
+                WHERE dop.GuideSerie = @GuideSerie
                     AND dop.GuideNumber = @GuideNumber
                     AND coi.RowStatus = 1
                     AND da.ID = @DeliveryAttemptId;
@@ -248,20 +222,20 @@ BEGIN
 					(
 						SELECT TOP 1
 							   1
-						FROM [dbo].[DeliveryAttempt]                   DA WITH (NOLOCK)
-							INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+						FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+							INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
 								ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-							INNER JOIN [dbo].[DeliveryOrderDetail]     DOD WITH (NOLOCK)
+							INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]     DOD WITH (NOLOCK)
 								ON DA.Guide_Serie = DOD.Guide_Serie
 								   AND DA.Guide_Number = DOD.Guide_Number
-							INNER JOIN [dbo].[CatTypeIncidence] CTP WITH (NOLOCK)
+							INNER JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTP WITH (NOLOCK)
 								ON DA.ID_Incident = CTP.IdIncidenceType
 						WHERE DA.Guide_Serie = @GuideSerie
 							  AND DA.Guide_Number = @GuideNumber
-							  AND DOD.StatusOrderId = 45
+							  AND DOD.StatusOrderId = @IncidenceStatusId
 							  AND DOD.SystemOrigin = 2
 							  AND CTP.IncidenceClasificationId = 1 --Contar intento solo cuando es de tipo de "intento fallido".
-							   AND DA.ID_Incident = @IdIncident
+							  AND DA.ID_Incident = @IdIncident
 					)
                 )
                 BEGIN
@@ -272,7 +246,7 @@ BEGIN
 								   1
 							FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
 							WHERE DOAD.GuideSerie = @GuideSerie
-							AND DOAD.GuideNumber = @GuideNumber
+							    AND DOAD.GuideNumber = @GuideNumber
 						)
                     )
                     BEGIN
@@ -299,10 +273,10 @@ BEGIN
                              , 1
                              , GETDATE()
                              , @TokenCreated
-                        FROM DeliveryOrder                    do WITH (NOLOCK)
-                            LEFT JOIN VisitPointClient        vpc WITH (NOLOCK)
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH (NOLOCK)
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
                                 ON do.Sender_ID = vpc.CodeOfReference
-                            INNER JOIN RatebyCustomer         rbc WITH (NOLOCK)
+                            INNER JOIN [DeliveryBackOffice].[dbo].[RatebyCustomer] rbc WITH (NOLOCK)
                                 ON ISNULL(do.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
                                    AND rbc.RbcRowStatus = 1
                                    AND
@@ -310,14 +284,14 @@ BEGIN
                                        rbc.RbcCodeOfReference = vpc.CodeOfReference
                                        OR rbc.RbcCodeOfReference IS NULL
                                    )
-                            INNER JOIN RateHeader             rh WITH (NOLOCK)
+                            INNER JOIN [DeliveryBackOffice].[dbo].[RateHeader]             rh WITH (NOLOCK)
                                 ON rbc.RbcIdRate = rh.RheId
-                            INNER JOIN DeliveryAttempt        da WITH (NOLOCK)
+                            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt]        da WITH (NOLOCK)
                                 ON do.Guide_Serie = da.Guide_Serie
                                    AND do.Guide_Number = da.Guide_Number
-                            LEFT JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] coi WITH (NOLOCK)
                                 ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
-                            LEFT JOIN StatusOrder             so
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrder]             so
                                 ON coi.StatusOrderId = so.StatusOrderId
                         WHERE do.Guide_Serie = @GuideSerie
                               AND do.Guide_Number = @GuideNumber
@@ -340,11 +314,11 @@ BEGIN
                     UPDATE [COI]
                     SET [COI].[ValidGeolocationEvidence] = @ValidGeolocationEvidence
                       , [COI].[ValidPhotographicEvidence] = @ValidPhotographicEvidence
-                    FROM [dbo].[DeliveryOrder]                     [DO] WITH (NOLOCK)
-                        INNER JOIN [dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
+                    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
+                        INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
                             ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
                                AND [DO].[Guide_Number] = [DA].[Guide_Number]
-                        INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                        INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                             ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
                     WHERE DA.Guide_Serie = @GuideSerie
                           AND DA.Guide_Number = @GuideNumber
@@ -366,7 +340,7 @@ BEGIN
               , t1.DateUpdated = GETDATE()
               , CourierContempt = 0                                        --quitar desacatos
               , t1.LiquidatorRemarks = @LiquidatorRemarks
-            FROM dbo.ConfirmationOfIncidence                      t1 WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.ConfirmationOfIncidence t1 WITH (NOLOCK)
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt A1 WITH (NOLOCK)
                     ON A1.ConfirmationOfIncidenceId = t1.IdConfirmationOfIncidence
             WHERE A1.Guide_Serie = @GuideSerie
@@ -378,7 +352,7 @@ BEGIN
             SET StatusOrderId = @ValidatedIncidentStatus,
 				[TokenUpdated] = @TokenCreated,
                 [DateUpdated] = getdate()
-            FROM dbo.DeliveryOrder do WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             WHERE do.Guide_Serie = @GuideSerie
                   AND do.Guide_Number = @GuideNumber;
 
@@ -398,6 +372,7 @@ BEGIN
               , RowStatus
               , DeliveryAttemptId
               , SystemOrigin
+              , StationId
             )
             VALUES
             (   @GuideSerie              -- Guide_Serie - nvarchar(2)
@@ -412,11 +387,12 @@ BEGIN
               , 1                        -- RowStatus - bit
               , @DeliveryAttemptId       -- DeliveryAttemptId - bigint
               , @SytemOrigin             -- SystemOrigin - int
-                );
+              , @StationId
+            );
 
             UPDATE dop
             SET StatusOrderId = @ValidatedIncidentStatus
-            FROM dbo.DeliveryOrderPiece dop WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
             WHERE dop.GuideSerie = @GuideSerie
                   AND dop.GuideNumber = @GuideNumber;
 
@@ -427,24 +403,16 @@ BEGIN
             DECLARE @GuideCurrentStatus INT = -1;
 
             BEGIN TRY
-                DECLARE @GuideStatusChangeWebhook INT =
-                        (
-                            SELECT TOP 1
-                                    WT.IdWebhookType
-                            FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                            WHERE WT.WebhookName = 'GuideStatusChange'
-                                    AND WT.RowStatus = 1
-                        );
+                DECLARE @GuideStatusChangeWebhook INT = 1; --'GuideStatusChange'
                           
                 SELECT TOP 1
                         @WebhookCustomerId =  DO.IdCustomer,
 						@GuideCurrentStatus = DO.StatusOrderId
                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                WHERE DO.Guide_Number = @GuideNumber
-                    AND DO.Guide_Serie = @GuideSerie
+                WHERE DO.Guide_Serie = @GuideSerie
+                    AND DO.Guide_Number = @GuideNumber
                               
-                SET @CustomerEndpointId
-                    = ISNULL(
+                SET @CustomerEndpointId = ISNULL(
                         (
                             SELECT TOP 1
                                     WE.IdWebhookEndpoint
@@ -453,7 +421,7 @@ BEGIN
                                 AND WE.WebhookTypeId = @GuideStatusChangeWebhook
                         ),
                         -1
-                            );             
+                    );             
 								 
                 -- Cliente tiene webhook configurado para el tipo especificado
                 -- Estado actual de la guía coincide dentro de las restricciónes por usuario
@@ -479,8 +447,8 @@ BEGIN
 					DECLARE @RestrictValidatedIncidents BIT;
 
 					SELECT top 1 @TypeConnect = TypeConnectionId, @RestrictValidatedIncidents = wh.RestrictValidatedIncidents 
-					FROM WebhookEndpoint wh WITH (NOLOCK)
-					INNER JOIN WebhookCatTypeConnection wc WITH (NOLOCK)
+					FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] wh WITH (NOLOCK)
+					INNER JOIN [DeliveryBackOffice].[dbo].[WebhookCatTypeConnection] wc WITH (NOLOCK)
 						ON wh.TypeConnectionId = wc.IdCatTypeConnection
 					WHERE wh.CustomerId = @WebhookCustomerId;							
 
@@ -541,11 +509,11 @@ BEGIN
 									dop.GuideSerie,dop.GuideNumber, 
 									@GuideCurrentStatus,
 									Count(dop.GuideNumber)
-								FROM DeliveryOrder do WITH(NOLOCK)
-								INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+								FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
 									ON do.Guide_Serie = dop.GuideSerie
 									AND do.Guide_Number = dop.GuideNumber
-								INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE WITH(NOLOCK)
 									ON do.IdCustomer = WHE.CustomerId
 								WHERE do.Guide_Serie = @GuideSerie
                                     AND do.Guide_Number = @GuideNumber
@@ -575,11 +543,11 @@ BEGIN
 								dop.GuideSerie,dop.GuideNumber, 
 								@GuideCurrentStatus,
 								Count(dop.GuideNumber)
-								FROM DeliveryOrder do WITH(NOLOCK)
-								INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+								FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
 									ON do.Guide_Serie = dop.GuideSerie
 									AND do.Guide_Number = dop.GuideNumber
-								INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE WITH(NOLOCK)
 									ON do.IdCustomer = WHE.CustomerId
 								WHERE do.Guide_Serie = @GuideSerie
                                     AND do.Guide_Number = @GuideNumber
@@ -588,12 +556,11 @@ BEGIN
 								GROUP BY dop.GuideSerie,dop.GuideNumber
 					  
 					  
-						IF EXISTS(SELECT TOP 1 1 FROM IncidentTypeRelation WITH (NOLOCK)
-									WHERE IncidenceTypeId = @IdIncident) AND @IsRealIncident = 1
-                                    AND  @IsServiceDesired = 1
+						IF EXISTS(SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[IncidentTypeRelation] WITH (NOLOCK) WHERE IncidenceTypeId = @IdIncident) 
+                                AND @IsRealIncident = 1 AND  @IsServiceDesired = 1
 						BEGIN
 
-					  		INSERT INTO WebhookTrackingQueueDetailForSFTP 
+					  		INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP]
 								(CustomerId,
 								GuideSerie,
 								GuideNumber,
@@ -610,11 +577,11 @@ BEGIN
 							SELECT @WebhookCustomerId,
 								dop.GuideSerie,dop.GuideNumber, dop.GuidePiece, do.Ticket_Number,dop.ExternalPieceId, 
 								@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@TokenCreated AS TokenCreated, @NewDeliveryDate, @DeliveryAttemptId
-							FROM DeliveryOrderPiece dop WITH(NOLOCK)
-							INNER JOIN DeliveryOrder do WITH(NOLOCK)
+							FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK)
+							INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
 								ON dop.GuideSerie = do.Guide_Serie
 								AND dop.GuideNumber = do.Guide_Number
-							INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+							INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE WITH(NOLOCK)
 								ON do.IdCustomer = WHE.CustomerId
 							INNER JOIN @GuidePiecesTable gpt
 								ON dop.GuideSerie = gpt.GuideSerie and --HOTFIX BNHL 14/11/2024 no tenía serie
@@ -647,11 +614,11 @@ BEGIN
                   , [DO].[Receiver_Phone] = IIF((LTRIM(RTRIM(ISNULL(@NewPhoneNumber, ''))) != '')
                                                 , @NewPhoneNumber
                                                 , ISNULL([DO].[Receiver_Phone], ''))
-                FROM [dbo].[DeliveryOrder]                     [DO] WITH (NOLOCK)
-                    INNER JOIN [dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                     [DO] WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
                         ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
                            AND [DO].[Guide_Number] = [DA].[Guide_Number]
-                    INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
                 WHERE DA.Guide_Serie = @GuideSerie
                       AND DA.Guide_Number = @GuideNumber
@@ -660,11 +627,11 @@ BEGIN
 
                 UPDATE [COI]
                 SET [COI].IsAddressModificationRequested = 1
-                FROM [dbo].[DeliveryOrder]                     [DO] WITH (NOLOCK)
-                    INNER JOIN [dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                     [DO] WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
                         ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
                            AND [DO].[Guide_Number] = [DA].[Guide_Number]
-                    INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
                 WHERE DA.Guide_Serie = @GuideSerie
                       AND DA.Guide_Number = @GuideNumber
@@ -709,20 +676,17 @@ BEGIN
 						ON RPD.RoutePreparationId = RP.IdRoutePreparation
                 WHERE Guide_Serie =  @GuideSerie
 					AND Guide_Number = @GuideNumber
-					AND  RP.DateRoutePreparation > CONVERT(DATE,GETDATE());
+					AND  RP.DateRoutePreparation > @Today;
 
-                IF (EXISTS
-                (
-                    SELECT TOP 1
-                           1
-                    FROM [DeliveryBackOffice].[dbo].RoutePreparation                   RP WITH (NOLOCK)
-                        INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-                            ON RPD.RoutePreparationId = RP.IdRoutePreparation
-                    WHERE RP.CatRouteId = @OriginRouteId
-                          AND RP.DateRoutePreparation = @NewDeliveryDate
-                          AND RP.RowStatus = 1
-                )
-                   )
+                IF (EXISTS(
+                            SELECT TOP 1 1
+                            FROM [DeliveryBackOffice].[dbo].RoutePreparation                   RP WITH (NOLOCK)
+                                INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+                                    ON RPD.RoutePreparationId = RP.IdRoutePreparation
+                            WHERE RP.CatRouteId = @OriginRouteId
+                                AND RP.DateRoutePreparation = @NewDeliveryDate
+                                AND RP.RowStatus = 1
+                        ))
                 BEGIN
 
                     INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetail]
@@ -742,7 +706,7 @@ BEGIN
                 END;
                 ELSE
                 BEGIN
-                    INSERT INTO [dbo].[RoutePreparation]
+                    INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparation]
                     (
                         [CatRouteId]
                       , [DateRoutePreparation]
@@ -805,7 +769,7 @@ BEGIN
                               AND IdCountry = @IdCountrySender
                         );
 
-                UPDATE dbo.DeliveryOrder
+                UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
                 SET Receiver_ID = @IdExpressCenter
                   , IdDeliveryOption = @NewDeliveryOptionID
                   , Receiver_Address = (CASE

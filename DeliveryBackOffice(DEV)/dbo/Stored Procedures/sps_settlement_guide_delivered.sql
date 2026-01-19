@@ -1,19 +1,23 @@
-﻿-- =============================================
--- Author:		<Cano, Carlos>
--- Create date: <2020-11-22>
--- Description:	<Registrar transacción de liquidación para comprobante de entrega>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-06-19>
--- Description:	<Se calcula la tasa de cambio y la conversion de la moneda del pais orgigen a pais destino>
--- =============================================
+﻿/* =================================================
+   SP:        sps_settlement_guide_delivered
+   Propósito: Registrar transacción de liquidación para comprobante de entrega
+   Autor:     Carlos Cano
+   Historia:  ---
+   Fecha:     2020-11-22
+
+=== CHANGELOG ============================
+
+2024-06-19 | Historia/épica: ---          | Autor: Cristian Suazo  | Se calcula la tasa de cambio y la conversión de la moneda del país origen al país destino
+2025-12-23 | Historia/épica: FDAPI-4748   | Autor: Brandon Pedroza | Se almacena idStation en liquidación de entrega
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_settlement_guide_delivered]
 		@GuideSerie AS VARCHAR(2),
 		@GuideNumber AS INT,
 		@Token NVARCHAR(50),
 		@IdManifest INT,
-		@NameReceiver NVARCHAR(200)
+		@NameReceiver NVARCHAR(200),
+		@StationId INT = NULL
 AS
 BEGIN
 	DECLARE @RModified INT
@@ -31,7 +35,8 @@ BEGIN
 			@SenderCountry NVARCHAR(2),
 			@GuideType NVARCHAR(3),
 			@CurrencyOrigin INT,
-			@CurrencyDestination INT;
+			@CurrencyDestination INT,
+			@Today DATE = CAST(GETDATE() AS DATE);
 
 	BEGIN TRANSACTION
 
@@ -60,8 +65,8 @@ BEGIN
 			
 				-- Insertar nuevo estado de guía en tabla histórica
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-				([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated],[DateCreatedInSystem])			
-				select @GuideSerie, @GuideNumber, @StatusId, @Token,CONVERT(Datetime,GETDATE(), 120), GETDATE()
+				([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated],[DateCreatedInSystem],[StationId])			
+				select @GuideSerie, @GuideNumber, @StatusId, @Token,CONVERT(Datetime,GETDATE(), 120), GETDATE(),@StationId
 				WHERE EXISTS
 				(
 					SELECT 1 
@@ -76,12 +81,12 @@ BEGIN
 				DECLARE @GuideCurrentStatus INT = -1;
 
 				BEGIN TRY
-					DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+					DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
-					SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
+					SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber),-1);
 					SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
 
-					SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie);
+					SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber);
 
 					-- Cliente tiene webhook configurado para el tipo especificado
 					-- Estado actual de la guía coincide dentro de las restricciónes por usuario
@@ -265,7 +270,7 @@ BEGIN
 					SELECT @OriginResult = CASE WHEN @SenderCountry = 'GT' THEN @Amount / ExchangeRate ELSE @Amount * ExchangeRate END  
 					FROM CurrencyExchangeRates WITH(NOLOCK) 
 					WHERE IdCountry = @SenderCountry 
-					AND CAST(ExchangeDate AS DATE) = CAST(GETDATE() AS DATE) 
+					AND CAST(ExchangeDate AS DATE) = @Today
 					AND SourceCurrency = @CurrencyOrigin
 					ORDER BY ExchangeDate DESC
 					
@@ -283,7 +288,7 @@ BEGIN
 							@ExchangeReceiver = ExchangeRate
 					FROM CurrencyExchangeRates WITH(NOLOCK) 
 					WHERE IdCountry = @ReceiverCountry
-					AND CAST(ExchangeDate AS DATE) = CAST(GETDATE() AS DATE) 
+					AND CAST(ExchangeDate AS DATE) = @Today
 					AND TargetCurrency = @Currencydestination
 					ORDER BY ExchangeDate DESC
 					
@@ -299,16 +304,16 @@ BEGIN
 					UPDATE DeliveryBackOffice.dbo.Cost
 					SET CODPaymentCurrency = @Currencydestination,
 						CODPaymentExchangeRate = @ExchangeReceiver
-					WHERE GuideNumber = @GuideNumber
-					AND GuideSerie = @GuideSerie
+					WHERE GuideSerie = @GuideSerie
+					AND GuideNumber = @GuideNumber
 				END
 				ELSE
 				BEGIN
 					UPDATE DeliveryBackOffice.dbo.Cost
 					SET DeliveryPaymentCurrency = @CurrencyDestination,
 						DeliveryPaymentExchangeRate = @ExchangeReceiver
-					WHERE GuideNumber = @GuideNumber
-					AND GuideSerie = @GuideSerie
+					WHERE GuideSerie = @GuideSerie
+					AND GuideNumber = @GuideNumber
 				END
 
 			END
@@ -322,16 +327,16 @@ BEGIN
 					UPDATE DeliveryBackOffice.dbo.Cost
 					SET CODPaymentCurrency = CodCurrency,
 						CODPaymentExchangeRate = CodExchangeRate
-					WHERE GuideNumber = @GuideNumber
-					AND GuideSerie = @GuideSerie
+					WHERE GuideSerie = @GuideSerie
+					AND  GuideNumber = @GuideNumber 
 				END
 				ELSE
 				BEGIN
 					UPDATE DeliveryBackOffice.dbo.Cost
 					SET DeliveryPaymentCurrency = ShippingCurrency,
 						DeliveryPaymentExchangeRate =ShippingExchangeRate
-					WHERE GuideNumber = @GuideNumber
-					AND GuideSerie = @GuideSerie
+					WHERE GuideSerie = @GuideSerie
+					AND GuideNumber = @GuideNumber
 				END
 			END
 
@@ -424,8 +429,8 @@ BEGIN
 				   , CONCAT(cur.Symbol, CONVERT(NVARCHAR,CAST(ROUND(@ResultDestination, 2) AS DECIMAL(12,2)))) AS 'CurrencySymbol'
 				FROM DeliveryOrder DOR WITH (NOLOCK)
 				LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]	co WITH (NOLOCK)
-					ON	DOR.Guide_Number= co.GuideNumber 
-					AND DOR.Guide_Serie = co.GuideSerie
+					ON	DOR.Guide_Serie = co.GuideSerie
+					AND DOR.Guide_Number= co.GuideNumber 
 				LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]	cur WITH (NOLOCK)
 					ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
 				LEFT JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
@@ -461,5 +466,3 @@ BEGIN
 				@Amount AS 'Amount',
 				0 AS 'SubStatusCode'
 END
-GO
-
