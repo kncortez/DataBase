@@ -230,7 +230,7 @@ BEGIN
                 LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiverLoginToken] SRLT WITH (NOLOCK)
                     ON [SRLT].[SenderReceiverId] = [sr].[ID]
             WHERE (
-                      sr.Phone LIKE '%' + @PhoneNumber + '%'
+                      sr.Phone LIKE @PhoneNumber + '%'
                       OR [sr].[UniqueCode] = @PhoneNumber
                       OR [SRLT].[LoginToken] = @PhoneNumber
                   )
