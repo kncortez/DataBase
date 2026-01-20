@@ -5,7 +5,7 @@ BEGIN TRY
     DECLARE @TypeWebhook INT;
 
 INSERT INTO WebhookType( 	WebhookName,	WebhookDescription,	RowStatus,	DateCreated,	TokenCreated,	DateUpdated,	TokenUpdated)
-VALUES('ReversalDeliveredGuides','Reversión de entrega de guías',1,GETDATE(),'SYS-BPEDROZA', NULL,NULL);
+VALUES('ReversalDeliveredGuides','ReversiÃ³n de entrega de guÃ­as',1,GETDATE(),'SYS-BPEDROZA', NULL,NULL);
 
  SET @TypeWebhook = SCOPE_IDENTITY();
 
