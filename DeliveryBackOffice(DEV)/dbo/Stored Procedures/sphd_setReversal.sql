@@ -26,7 +26,7 @@ BEGIN
             @dateBatchCOD DATE;
 	
 	DECLARE @ReversalDelivery INT = NULL -- bandera que indica Reversión de entrega -- 
-	DECLARE @WebhookReversalType INT = (SELECT IdWebhookType FROM WebhookType WITH(NOLOCK) WHERE WebhookName = 'ReversalDeliveredGuides')
+	DECLARE @WebhookReversalType INT = (SELECT IdWebhookType FROM DeliveryBackOffice.dbo.WebhookType WITH(NOLOCK) WHERE WebhookName = 'ReversalDeliveredGuides')
    --FDD-699
     SELECT 
         @current_BatchCODId  = ISNULL(PGD.BatchCODId,BDC.BatchCODId), 
