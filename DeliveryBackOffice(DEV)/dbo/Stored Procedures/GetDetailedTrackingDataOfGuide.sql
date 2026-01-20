@@ -1,5 +1,4 @@
-﻿
-/* =================================================
+﻿/* =================================================
    SP:        GetDetailedTrackingDataOfGuide
    Propósito: Detalle de rastreo interno para el nuevo portal web
    Autor:     Andres Ruiz
@@ -75,8 +74,8 @@ BEGIN
                                    = LTRIM(RTRIM(CONCAT(LTRIM(RTRIM(SR.First_Name)), ' ', LTRIM(RTRIM(SR.Last_Name)))))
     FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt]          DA WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryProof]  DP WITH (NOLOCK)
-            ON DA.Guide_Number = DP.Guide_Number
-               AND DA.Guide_Serie = DP.Guide_Serie
+            ON DA.Guide_Serie = DP.Guide_Serie 
+               AND DA.Guide_Number = DP.Guide_Number
         INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR WITH (NOLOCK)
             ON DA.ID_Courier = SR.ID
     WHERE DA.Guide_Serie = @Guide_Serie
@@ -470,8 +469,8 @@ BEGIN
                       FROM SenderReceiver            srv WITH (NOLOCK)
                           INNER JOIN DeliveryAttempt dat WITH (NOLOCK)
                               ON srv.ID = dat.ID_Courier
-                      WHERE dod.Guide_Number = @Guide_Number
-                            AND dod.Guide_Serie = @Guide_Serie 
+                      WHERE dod.Guide_Serie = @Guide_Serie
+                            AND dod.Guide_Number = @Guide_Number
                             AND dat.ID = dod.DeliveryAttemptId
                   )
                   ELSE
@@ -542,84 +541,82 @@ BEGIN
     CREATE NONCLUSTERED INDEX ix_OrdChkpnt_Token_StageDate_EventID
     ON #OrdChkpnt ([Token])INCLUDE([StageDate], [EventID]);
 
-    SELECT OrdChkPnt.[EventID]
-         , OrdChkPnt.[OrderId]
-         , OrdChkPnt.[CustomerFullname]
-         , OrdChkPnt.[OriginAdress]
-         , OrdChkPnt.[OriginLatitude]
-         , OrdChkPnt.[OriginLongitude]
-         , OrdChkPnt.[DestinyAddress]
-         , OrdChkPnt.[DestintyLatitude]
-         , OrdChkPnt.[DestinyLongitude]
-         , OrdChkPnt.[EstimatedDeliveryDate]
-         , OrdChkPnt.[CourierName]
-         , OrdChkPnt.[StageId]
-         , OrdChkPnt.[StageDate]
-         , OrdChkPnt.[StageTitle]
-         , OrdChkPnt.[StageSource]
-         , OrdChkPnt.[ClasificationIncident]
-         , LTRIM(RTRIM(ISNULL(
-                                 '[ '
-                                 + ISNULL(
-                                             vpc.DescriptionOfClient
-                                           , (
-                                                 SELECT TOP (1)
-                                                     hub.HubAbbreviation
-                                                 FROM DeliveryBackOffice.dbo.HubLogistics hub WITH (NOLOCK)
-                                                 WHERE hub.IdStation = epl.IdStation
-                                                       AND hub.HubStatus = 'TRUE'
-                                                 ORDER BY hub.IdStation
-                                             )
-                                         ) + ' ]' + --[Where]
-                                 '' --[Complement] 
-                               , ''
-                             ) + ' ' + ISNULL(OrdChkPnt.StageDescription, '')
-                      )
-                )                     AS [StageDescription]
-         , OrdChkPnt.[CheckpointIcon]
-         , OrdChkPnt.[ImagePath]
-         , OrdChkPnt.[Dry]
-         , OrdChkPnt.[Cold]
-         , OrdChkPnt.[NameOfReceiver]
-         , OrdChkPnt.[Place]
-         , OrdChkPnt.[ManifestNumber]
-         , OrdChkPnt.[Latitude]
-         , OrdChkPnt.[Longitude]
-         , @CurrencyPrice [CurrencyPrice]
-         , ISNULL(OrdChkPnt.Price, 0) Price
-	     , @CurrencyCOD [CurrencyCOD]
-         , ISNULL(OrdChkPnt.COD, 0)   COD
-         , OrdChkPnt.[NextSteps]
-         , OrdChkPnt.[UserIncident]
-         , OrdChkPnt.[Receiver_Phone]
-         , OrdChkPnt.ValidGeolocationEvidence
-         , OrdChkPnt.ValidPhotographicEvidence
-	     , OrdChkPnt.IsVoucherRequired
-    FROM #OrdChkpnt                                        OrdChkPnt
-        -- Obtener datos desde usuario Desktop
-        LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken      token WITH (NOLOCK)
-            ON OrdChkPnt.Token = token.SSN_IdToken
-        LEFT JOIN DenariusUser_Dev.dbo.LGN_User            duser WITH (NOLOCK)
-            ON duser.USR_IdUser = token.SSN_IdUser
-               AND duser.USR_Username = token.SSN_Username
-        LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl WITH (NOLOCK)
-            ON epl.IdEmployee = duser.USR_IdEmployee
-        -- Obtener datos desde usuario portal
-        LEFT JOIN DeliveryBackOffice.dbo.TokenLog          tl WITH (NOLOCK)
-            ON OrdChkPnt.Token = tl.TknIdToken
-        LEFT JOIN DeliveryBackOffice.dbo.RegisterUser      ru WITH (NOLOCK)
-            ON tl.TknIdUser = ru.UsrIdUser
-        LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser  vpbu WITH (NOLOCK)
-            ON ru.UsrIdUser = vpbu.RegisterUserID
-        LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient  vpc WITH (NOLOCK)
-            ON vpbu.IdVisitPointClient = vpc.IdVisitPointClient
-               --AND vpc.IdKindOfVPClient = 1
-               AND vpc.DescriptionOfClient LIKE 'FD%EXC%'
-        LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient kvpc WITH (NOLOCK)
-			ON vpc.IdKindOfVPClient = kvpc.IdKindOfVPClient 
-			   AND  kvpc.KindOfVPName = 'Express Center'
-    ORDER BY OrdChkPnt.[StageDate] DESC
-           , OrdChkPnt.[EventID];
+    SELECT
+      OrdChkPnt.[EventID]
+    , OrdChkPnt.[OrderId]
+    , OrdChkPnt.[CustomerFullname]
+    , OrdChkPnt.[OriginAdress]
+    , OrdChkPnt.[OriginLatitude]
+    , OrdChkPnt.[OriginLongitude]
+    , OrdChkPnt.[DestinyAddress]
+    , OrdChkPnt.[DestintyLatitude]
+    , OrdChkPnt.[DestinyLongitude]
+    , OrdChkPnt.[EstimatedDeliveryDate]
+    , OrdChkPnt.[CourierName]
+    , OrdChkPnt.[StageId]
+    , OrdChkPnt.[StageDate]
+    , OrdChkPnt.[StageTitle]
+    , OrdChkPnt.[StageSource]
+    , OrdChkPnt.[ClasificationIncident]
+    , LTRIM(RTRIM(
+        ISNULL(
+            '[ ' + ISNULL(
+                      vpc.DescriptionOfClient,
+                      hub.HubAbbreviation
+                  ) + ' ]'
+            , ''
+        ) + ' ' + ISNULL(OrdChkPnt.StageDescription, '')
+      )) AS [StageDescription]
+    , OrdChkPnt.[CheckpointIcon]
+    , OrdChkPnt.[ImagePath]
+    , OrdChkPnt.[Dry]
+    , OrdChkPnt.[Cold]
+    , OrdChkPnt.[NameOfReceiver]
+    , OrdChkPnt.[Place]
+    , OrdChkPnt.[ManifestNumber]
+    , OrdChkPnt.[Latitude]
+    , OrdChkPnt.[Longitude]
+    , @CurrencyPrice AS [CurrencyPrice]
+    , ISNULL(OrdChkPnt.Price, 0) AS Price
+    , @CurrencyCOD AS [CurrencyCOD]
+    , ISNULL(OrdChkPnt.COD, 0) AS COD
+    , OrdChkPnt.[NextSteps]
+    , OrdChkPnt.[UserIncident]
+    , OrdChkPnt.[Receiver_Phone]
+    , OrdChkPnt.ValidGeolocationEvidence
+    , OrdChkPnt.ValidPhotographicEvidence
+    , OrdChkPnt.IsVoucherRequired
+	FROM #OrdChkpnt OrdChkPnt
+	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token WITH (NOLOCK)
+		ON OrdChkPnt.Token = token.SSN_IdToken
+	LEFT JOIN DenariusUser_Dev.dbo.LGN_User duser WITH (NOLOCK)
+		ON duser.USR_IdUser = token.SSN_IdUser
+	   AND duser.USR_Username = token.SSN_Username
+	LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl WITH (NOLOCK)
+		ON epl.IdEmployee = duser.USR_IdEmployee
+	LEFT JOIN DeliveryBackOffice.dbo.TokenLog tl WITH (NOLOCK)
+		ON OrdChkPnt.Token = tl.TknIdToken
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser ru WITH (NOLOCK)
+		ON tl.TknIdUser = ru.UsrIdUser
+	LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser vpbu WITH (NOLOCK)
+		ON ru.UsrIdUser = vpbu.RegisterUserID
+	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
+		ON vpbu.IdVisitPointClient = vpc.IdVisitPointClient
+	   AND vpc.DescriptionOfClient LIKE 'FD%EXC%'        
+	LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient kvpc WITH (NOLOCK)
+		ON vpc.IdKindOfVPClient = kvpc.IdKindOfVPClient
+	   AND kvpc.KindOfVPName = 'Express Center'           
+	OUTER APPLY
+	(
+		SELECT TOP (1) hub.HubAbbreviation
+		FROM DeliveryBackOffice.dbo.HubLogistics hub WITH (NOLOCK)
+		WHERE hub.IdStation = epl.IdStation
+		  AND hub.HubStatus = 'TRUE'
+		ORDER BY hub.IdStation
+	) hub
+	ORDER BY
+      OrdChkPnt.[StageDate] DESC
+    , OrdChkPnt.[EventID];
 
     IF OBJECT_ID('tempdb.dbo.#OrdChkpnt', 'U') IS NOT NULL
         DROP TABLE #OrdChkpnt;
