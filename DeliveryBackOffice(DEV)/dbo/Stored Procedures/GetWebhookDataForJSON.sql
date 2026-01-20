@@ -6,10 +6,8 @@
    Fecha:     <2022-09-13>
 ============================================
 === CHANGELOG ================================
-2025-09-05 | Historia/épica:  | Autor: <Tito Garcia>  |
--------------------------------
-2025-10-28 | Historia/épica: <FDAPI-4871> | Autor: <Tito Garcia>  |
--------------------------------
+2025-09-05 | Historia/épica:              | Autor: <Tito Garcia>  | -------------------------------
+2025-10-28 | Historia/épica: <FDAPI-4871> | Autor: <Tito Garcia>  |-------------------------------
 2026-01-18 | Historia/épica: <FDAPI-5378> | Autor: <Brandon Pedroza>  | Se agrega respuesta para guias con reversión de entrega
 =========================================== */
 CREATE PROCEDURE [dbo].[GetWebhookDataForJSON]
@@ -22,7 +20,19 @@ BEGIN
     DECLARE @IsCountryRequired AS BIT;
     DECLARE @IsPartyResponsibleRequired AS BIT;
     DECLARE @RestrictValidatedIncidents AS BIT;
-    DECLARE @ReversalDeliveryStatus INT = 57; -- Reversión de entrega desktop-- StatusOrder
+
+	DECLARE @GuideStatusResponseTable AS TABLE
+		(
+			GuideSerie NVARCHAR(2),
+			GuideNumber INT,
+			GuideStatus NVARCHAR(200),
+			GuideStatusId INT,
+			GuideStatusChange DATETIME,
+			IsCountryRequired BIT,
+			IsPartyResponsibleRequired BIT,
+			CustomerId INT,
+			RestrictValidatedIncidents BIT
+		);
     --========================================================================================================
     --===                                       STATUS CHANGE                                              ===
     --========================================================================================================
@@ -30,18 +40,6 @@ BEGIN
     BEGIN
         BEGIN TRY
 
-            DECLARE @GuideStatusResponseTable AS TABLE
-            (
-                GuideSerie NVARCHAR(2),
-                GuideNumber INT,
-                GuideStatus NVARCHAR(200),
-                GuideStatusId INT,
-                GuideStatusChange DATETIME,
-				IsCountryRequired BIT,
-				IsPartyResponsibleRequired BIT,
-				CustomerId INT,
-				RestrictValidatedIncidents BIT
-            );
             INSERT INTO @GuideStatusResponseTable
             (
                 GuideSerie,
@@ -58,16 +56,16 @@ BEGIN
                    WTQ.GuideNumber,
                    ISNULL(WRBY.StatusExternalName, SO.OrderDescription) 'GuideStatus',
                    SO.StatusOrderId,
-                   ISNULL((
+                   (
                        SELECT TOP 1
                               DOD.DateCreated
                        FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
                        WHERE DOD.Guide_Serie = WTQ.GuideSerie
                              AND DOD.Guide_Number = WTQ.GuideNumber
                              AND DOD.StatusOrderId = WTQ.StatusOrderId
-                             AND DOD.RowStatus = 1
+							 AND DOD.RowStatus = 1
                        ORDER BY DOD.DateCreated DESC
-                   ), WTQ.DateCreated) 'GuideStatusChange',
+                   ) 'GuideStatusChange',
 				   WE.IsCountryRequired,
 				   WE.IsPartyResponsibleRequired,
 				   WTQ.CustomerId,
@@ -86,7 +84,7 @@ BEGIN
 
 			SELECT @StatusId = GuideStatusId, @IsCountryRequired = IsCountryRequired, @RestrictValidatedIncidents = RestrictValidatedIncidents, @IsPartyResponsibleRequired = IsPartyResponsibleRequired
 			FROM @GuideStatusResponseTable;
-
+			
             IF (EXISTS (SELECT 1 FROM @GuideStatusResponseTable))
             BEGIN
 
@@ -283,33 +281,10 @@ BEGIN
 							ON CTI.CatPartyResponsibleId = CPR.IdCatPartyResponsible
 						WHERE GSRT.GuideSerie = DA.Guide_Serie
 							  AND GSRT.GuideNumber = DA.Guide_Number
-                              AND CTI.RowStatus = 1
 							  AND CPR.RowStatus = 1
 						ORDER BY DA.Date_Created DESC
 					) DAP
                 END
-				ELSE IF (@StatusId IN (@ReversalDeliveryStatus))-- REVERSION DE ENTREGA DESKTOP
-				BEGIN
-					SELECT GSRT.GuideSerie,
-								GSRT.GuideNumber,
-								GSRT.GuideStatus,
-								GSRT.GuideStatusId,
-								GSRT.GuideStatusChange,
-								'Se ha realizado la reversión de entrega para la guía solicitada.' as DescriptionIncidence
-						FROM @GuideStatusResponseTable GSRT;
-				END
-                ELSE
-                BEGIN
-
-                    SELECT GSRT.GuideSerie,
-                           GSRT.GuideNumber,
-                           GSRT.GuideStatus,
-                           GSRT.GuideStatusId,
-                           GSRT.GuideStatusChange
-                    FROM @GuideStatusResponseTable GSRT;
-
-                END;
-
             END;
             ELSE
             BEGIN
@@ -328,6 +303,86 @@ BEGIN
 
         END CATCH;
     END;
+	ELSE IF(@WebhookTypeName = 'ReversalDeliveredGuides')
+	BEGIN
+        BEGIN TRY
+            INSERT INTO @GuideStatusResponseTable
+            (
+                GuideSerie,
+                GuideNumber,
+                GuideStatus,
+                GuideStatusId,
+                GuideStatusChange,
+				IsCountryRequired,
+				IsPartyResponsibleRequired,
+				CustomerId,
+				RestrictValidatedIncidents
+            )
+            SELECT WTQ.GuideSerie,
+                   WTQ.GuideNumber,
+                   NULL AS 'GuideStatus',
+                   NULL AS 'StatusOrderId',
+                   WTQ.DateCreated 'GuideStatusChange',
+				   WE.IsCountryRequired,
+				   WE.IsPartyResponsibleRequired,
+				   WTQ.CustomerId,
+				   WE.RestrictValidatedIncidents
+            FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
+				INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
+					ON WTQ.WebhookEndpointId = WE.IdWebhookEndpoint
+            WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId;
+
+			SELECT	@StatusId = GuideStatusId, 
+					@IsCountryRequired = IsCountryRequired,
+					@RestrictValidatedIncidents = RestrictValidatedIncidents,
+					@IsPartyResponsibleRequired = IsPartyResponsibleRequired
+			FROM @GuideStatusResponseTable;
+			
+            IF (EXISTS (SELECT 1 FROM @GuideStatusResponseTable))
+            BEGIN
+
+                SELECT CAST(1 AS BIT) [blnResult],
+                       'Exito obteniendo datos de webhook 2' [resultMessage];
+
+
+				IF (@StatusId IS NULL)-- REVERSION DE ENTREGA DESKTOP
+				BEGIN
+					SELECT GSRT.GuideSerie,
+								GSRT.GuideNumber,
+								'Reversión de Entrega' AS GuideStatus,
+								'500' AS GuideStatusId,
+								GSRT.GuideStatusChange,
+								'Se ha realizado la reversión de entrega para la guía solicitada.' as DescriptionIncidence
+						FROM @GuideStatusResponseTable GSRT;
+				END
+                ELSE
+                BEGIN
+
+                    SELECT GSRT.GuideSerie,
+                           GSRT.GuideNumber,
+                           GSRT.GuideStatus,
+                           GSRT.GuideStatusId,
+                           GSRT.GuideStatusChange
+                    FROM @GuideStatusResponseTable GSRT;
+
+                END;
+			END;
+			ELSE
+            BEGIN
+
+                SELECT CAST(0 AS BIT) [blnResult],
+                       'Error obteniendo datos de webhook' [resultMessage];
+
+            END;
+        END TRY
+        BEGIN CATCH
+
+            SELECT CAST(0 AS BIT) [blnResult],
+                   ERROR_MESSAGE() [resultMessage],
+                   @WebhookTypeName [webhookName];
+
+        END CATCH;
+	END;
     --========================================================================================================
     --===                                      NO WEBHOOK FOUND                                            ===
     --========================================================================================================

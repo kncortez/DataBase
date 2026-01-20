@@ -25,7 +25,8 @@ BEGIN
             @current_BatchCODIdCommission INT,
             @dateBatchCOD DATE;
 	
-	DECLARE @ReversalDeliveryStatus INT =57 -- Reversión de entrega desktop-- StatusOrder
+	DECLARE @ReversalDelivery INT = NULL -- bandera que indica Reversión de entrega -- 
+	DECLARE @WebhookReversalType INT = (SELECT IdWebhookType FROM WebhookType WITH(NOLOCK) WHERE WebhookName = 'ReversalDeliveredGuides')
    --FDD-699
     SELECT 
         @current_BatchCODId  = ISNULL(PGD.BatchCODId,BDC.BatchCODId), 
@@ -115,36 +116,29 @@ BEGIN
 				(
 					SELECT 
 						DO.IdCustomer,
-						@ReversalDeliveryStatus AS StatusOrderId,
+						@ReversalDelivery AS StatusOrderId,
 						WE.IdWebhookEndpoint,
 						WT.IdWebhookType
 					FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
-					INNER JOIN DeliveryBackOffice.dbo.WebhookType WT WITH (NOLOCK)
-						ON WT.WebhookName = 'GuideStatusChange'
 					LEFT JOIN DeliveryBackOffice.dbo.WebhookEndpoint WE WITH (NOLOCK)
 						ON WE.CustomerId = DO.IdCustomer
-						AND WE.WebhookTypeId = WT.IdWebhookType
-					WHERE WT.RowStatus = 1
-						AND DO.Guide_Serie  = @Guide_Serie
+					INNER JOIN DeliveryBackOffice.dbo.WebhookType WT WITH (NOLOCK)
+						ON WT.IdWebhookType = WE.WebhookTypeId
+					WHERE DO.Guide_Serie  = @Guide_Serie
 						AND DO.Guide_Number = @Guide_Number
+						AND WE.WebhookTypeId = @WebhookReversalType
+						AND WT.RowStatus = 1
 				)
 				SELECT TOP 1
 					@WebhookCustomerId      = ISNULL(IdCustomer, -1),
 					@CustomerEndpointId     = ISNULL(IdWebhookEndpoint, -1),
-					@GuideCurrentStatus     = ISNULL(StatusOrderId, -1),
+					@GuideCurrentStatus     = StatusOrderId,
 					@GuideStatusChangeWebhook = ISNULL(IdWebhookType, -1)
 				FROM GuideData;
 
 				-- Validar que el cliente y endpoint existan y que el estado esté permitido
 				IF (@WebhookCustomerId > 0
-					AND @CustomerEndpointId > 0
-					AND EXISTS (
-						SELECT 1
-						FROM DeliveryBackOffice.dbo.WebhookRestrinctionByUser WRBU WITH (NOLOCK)
-						WHERE WRBU.CustomerId   = @WebhookCustomerId
-							AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook
-							AND WRBU.StatusOrderId = @GuideCurrentStatus
-					))
+					AND @CustomerEndpointId > 0)
 				BEGIN
 					INSERT INTO DeliveryBackOffice.dbo.WebhookTrackingQueue
 					(
