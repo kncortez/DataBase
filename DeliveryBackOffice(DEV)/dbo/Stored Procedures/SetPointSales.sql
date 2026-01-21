@@ -1,8 +1,15 @@
-﻿-- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-09-17>
--- Description:	<Administración de lotes - Agregar/Eliminar un punto de venta a un lote>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SetPointSales]
+   Propósito: <Administración de lotes - Agregar/Eliminar un punto de venta a un lote>
+   Autor:     <Walter Orozco>
+   Historia:  <FDAPI-2914>
+   Fecha:     2024-09-172024-08-14
+============================================
+=== CHANGELOG ================================
+-- 2025-01-16 | Historia/épica: FDAPI-2982 | Autor: Cristian Azurdia |
+-- 2024-09-18 | Historia/épica: FDAPI-3049 | Autor: Walter Orozco |
+-- 2024-09-17 | Historia/épica: FDAPI-3047 | Autor: Walter Orozco |
+=========================================== */
 
 CREATE PROCEDURE [dbo].[SetPointSales]
 @IdLote             INT =  -1,
@@ -19,11 +26,11 @@ BEGIN TRY
 
     SELECT @FlagRelationship = IBR.RowStatus
           ,@TypeDocument = IBH.TypeDocument
-    FROM DeliveryBackOffice.dbo.InvoiceBatchHeader IBH
+    FROM DeliveryBackOffice.dbo.InvoiceBatchHeader IBH WITH (NOLOCK)
     LEFT JOIN DeliveryBackOffice.dbo.InvoiceBatchRelationships IBR WITH (NOLOCK)
-        ON IBR.Id_Lote = IBH.Id_Lote
-        AND IBR.CodeOfReference = @CodeOfReference
+        ON IBR.Id_Lote = IBH.Id_Lote        
     WHERE IBH.Id_Lote = @IdLote
+      AND IBR.CodeOfReference = @CodeOfReference
 
     IF(@Action = 1) --FLUJO PARA AGREGAR RELACION ENTRE PUNTO DE VISITA Y LOTE
     BEGIN
@@ -35,7 +42,7 @@ BEGIN TRY
             SET IBR.RowStatus = 0
                ,IBR.TokenUpdated = @Token
                ,IBR.DateUpdated = GETDATE()
-            FROM [dbo].[InvoiceBatchHeader] IBH
+            FROM [dbo].[InvoiceBatchHeader] IBH WITH (NOLOCK)
             LEFT JOIN [dbo].[InvoiceBatchRelationships] IBR ON
                  IBR.Id_Lote = IBH.Id_Lote
             WHERE IBH.TypeDocument = @TypeDocument
@@ -70,7 +77,7 @@ BEGIN TRY
             SET IBR.RowStatus = 0
                ,IBR.TokenUpdated = @Token
                ,IBR.DateUpdated = GETDATE()
-            FROM [dbo].[InvoiceBatchHeader] IBH
+            FROM [dbo].[InvoiceBatchHeader] IBH WITH (NOLOCK)
             LEFT JOIN [dbo].[InvoiceBatchRelationships] IBR ON
                  IBR.Id_Lote = IBH.Id_Lote
             WHERE IBH.TypeDocument = @TypeDocument

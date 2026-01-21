@@ -1,8 +1,13 @@
-﻿-- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-10-22>
--- Description:	<Administración de lotes - Obtener listado de tipo de documentos.>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SPHW_GetTypeDocument]
+   Propósito: <Administración de lotes - Obtener listado de tipo de documentos.>
+   Autor:     <Walter Orozco>
+   Historia:  <FADPI-3104>
+   Fecha:     2024-10-22
+============================================
+=== CHANGELOG ================================
+-- 2024-10-22 | Historia/épica: FADPI-3104 | Autor: Walter Orozco  |
+=========================================== */
 
 CREATE PROCEDURE [dbo].[SPHW_GetTypeDocument]
 @IdTypeDocument INT = -1

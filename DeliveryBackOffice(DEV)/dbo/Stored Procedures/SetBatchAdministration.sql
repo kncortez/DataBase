@@ -1,8 +1,15 @@
-﻿-- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-09-05>
--- Description:	<Administración de lotes - Creación de lotes>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SetBatchAdministration]
+   Propósito: <Administración de lotes - Creación de lotes>
+   Autor:     <Walter Orozco>
+   Historia:  <FDAPI-3044>
+   Fecha:     2024-09-06
+============================================
+=== CHANGELOG ================================
+-- 2025-01-16 | Historia/épica: FDAPI-2982 | Autor: Cristian Azurdia |
+-- 2024-09-18 | Historia/épica: FDAPI-3045 | Autor: Walter Orozco |
+-- 2024-09-11 | Historia/épica: FDAPI-3052 | Autor: Walter Orozco |
+=========================================== */
 
 CREATE PROCEDURE SetBatchAdministration
 @TblBatch AS TblBatch READONLY,

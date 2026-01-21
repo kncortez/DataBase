@@ -1,8 +1,15 @@
-﻿-- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-09-13>
--- Description:	<Administración de lotes - Consulta de lote especifico>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[GetBatchAdministrationSpecific]
+   Propósito: <Administración de lotes - Consulta de lote especifico>
+   Autor:     <Walter Orozco>
+   Historia:  <FDAPI-2997>
+   Fecha:     2024-09-13
+============================================
+=== CHANGELOG ================================
+-- 2025-01-16 | Historia/épica: FDAPI-2982 | Autor: Cristian Azurdia |
+-- 2024-10-22 | Historia/épica: FDAPI-3105 | Autor: Walter Orozco |
+-- 2024-09-13 | Historia/épica: FDAPI-2997 | Autor: Walter Orozco |
+=========================================== */
 
 CREATE PROCEDURE [dbo].[GetBatchAdministrationSpecific]
 @IdLote INT

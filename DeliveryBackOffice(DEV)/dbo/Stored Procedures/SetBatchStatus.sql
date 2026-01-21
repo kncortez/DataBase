@@ -1,8 +1,14 @@
-﻿-- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-09-10>
--- Description:	<Administración de lotes - Cambio de estado de lote>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SetBatchStatus]
+   Propósito: <Administración de lotes - Cambio de estado de lote>
+   Autor:     <Walter Orozco>
+   Historia:  <FDAPI-2993>
+   Fecha:     2024-09-10
+============================================
+=== CHANGELOG ================================
+-- 2025-01-14 | Historia/épica: FDAPI-2982 | Autor: Cristian Azurdia |
+-- 2024-08-14 | Historia/épica: FDAPI-2914 | Autor: Walter Orozco |
+=========================================== */
 
 CREATE PROCEDURE [dbo].[SetBatchStatus]
 @IdLote INT,

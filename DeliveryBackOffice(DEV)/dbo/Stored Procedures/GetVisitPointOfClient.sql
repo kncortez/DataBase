@@ -5,7 +5,7 @@
    Historia:  HR-2103
    Fecha:     2024-11-19
 ===== CHANGELOG ============================
-2025-11-03 | Historia/épica: FDAPI-4922 | Autor: Cristian |
+2025-11-03 | Historia/épica: FDAPI-4922 | Autor: Cristian Azurdia |
 2025-06-12 | Historia/épica: FDAPI-4083 | Autor: Brandon Pedroza |
 2024-11-28 | Historia/épica: FDD-1441 | Autor: Tito García  |
 2024-11-19 | Historia/épica: FDD-4021 | Autor: Daniel Ramirez  |
@@ -97,10 +97,10 @@ BEGIN
                                     TypeIdentificationDocumentCode,
                                     IdDocument,
                                     Inv_type
-                            FROM DeliveryBackOffice.dbo.BillingCustomerBySV
-                            LEFT JOIN dbo.DistrictByBillingSV DIS
+                            FROM DeliveryBackOffice.dbo.BillingCustomerBySV WITH(NOLOCK)
+                            LEFT JOIN dbo.DistrictByBillingSV DIS WITH(NOLOCK)
                                ON DistrictId = DIS.Id
-                            LEFT JOIN dbo.CatEconomicActivityBySV CAT
+                            LEFT JOIN dbo.CatEconomicActivityBySV CAT WITH(NOLOCK)
                                ON ActivityId = CAT.Id
                             WHERE cs.IdCustomer = IdCustomer
                         ) bcsvf
@@ -116,10 +116,10 @@ BEGIN
                                    NULL TypeIdentificationDocumentCode,
                                    NULL IdDocument,
                                    NULL Inv_type
-                            FROM DeliveryBackOffice.dbo.VisitPointClient vpc
-                            INNER JOIN DeliveryBackOffice.dbo.TownshipDistrictByBillingSV tdbsv
+                            FROM DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
+                            INNER JOIN DeliveryBackOffice.dbo.TownshipDistrictByBillingSV tdbsv WITH(NOLOCK)
                             ON tdbsv.TownshipId = vpc.IdTownship
-                            LEFT JOIN dbo.DistrictByBillingSV DIS
+                            LEFT JOIN dbo.DistrictByBillingSV DIS WITH(NOLOCK)
                             ON tdbsv.DistrictId = DIS.Id
                             WHERE cs.IdCustomer = vpc.CustomerID
                         ) vpcf

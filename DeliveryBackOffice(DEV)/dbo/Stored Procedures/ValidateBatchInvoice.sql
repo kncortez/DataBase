@@ -1,9 +1,16 @@
+/* =================================================
+   SP:        [dbo].[ValidateBatchInvoice]
+   Propósito: <Se agregan las validaciones necesarias para el lote de facturacion>
+   Autor:     <Daniel Ramirez>
+   Historia:  <FDAPI-2914>
+   Fecha:     2024-08-14
+============================================
+=== CHANGELOG ================================
+-- 2025-01-14 | Historia/épica: FDAPI-2982 | Autor: Cristian Azurdia |
+-- 2024-10-17 | Historia/épica: FDAPI-3099 | Autor: Daniel Ramirez |
+-- 2024-08-14 | Historia/épica: FDAPI-2914 | Autor: Daniel Ramirez |
+=========================================== */
 
--- =============================================
--- Author:      Daniel Ramirez
--- Create date: 2024-08-14
--- Description: Se agregan las validaciones necesarias para el lote de facturacion
--- =============================================
 CREATE PROCEDURE [ValidateBatchInvoice]
 (
   @IdLote          INT = 0,

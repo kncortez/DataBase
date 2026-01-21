@@ -1,4 +1,16 @@
-﻿CREATE TYPE [dbo].[TblBatch] AS TABLE (
+﻿/* =================================================
+   SP:        [dbo].[TblBatch]
+   Propósito: <Tipo de dato tabla para manejo de información de lotes de facturación electrónica>
+   Autor:     <Walter Orozco>
+   Historia:  <FDAPI-3044>
+   Fecha:     2024-08-14
+============================================
+=== CHANGELOG ================================
+-- 2024-09-11 | Historia/épica: FDAPI-3052 | Autor: Walter Orozco |
+-- 2024-09-06 | Historia/épica: FDAPI-3044 | Autor: Walter Orozco |
+=========================================== */
+
+CREATE TYPE [dbo].[TblBatch] AS TABLE (
 	[Id_Lote]                           INT             NULL,
     [RTN]                               NVARCHAR(50)    NULL,
     [NoDeclaracion]                     NVARCHAR(50)    NULL,
