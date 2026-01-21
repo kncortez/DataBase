@@ -4,7 +4,11 @@
 -- Create date: <2021-12-06>
 -- Description: <Obtener informacion para el mostrar los datos necesarios del Reporte Liquidaciones Última Milla>
 -- =============================================
-
+-- =============================================
+-- Author:      <Edelman>
+-- Create date: <2026-01-21>
+-- Description: <Agregar parámetro Voucher y  tipo de pago>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_LastMileSettlementsReport]
 (
     @fromDate AS DATE,

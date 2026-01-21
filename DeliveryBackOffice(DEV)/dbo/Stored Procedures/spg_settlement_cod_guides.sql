@@ -11,6 +11,11 @@
 -- Modification date: <2024-06-19>
 -- Description:	<Devuelve información para liquidación de COD filtrado por pais, y montos de moneda modificado para interpais, multimoneda y multipais>
 -- =============================================
+-- =============================================
+-- Author:      <Edelman>
+-- Create date: <2026-01-21>
+-- Description: <Agregar parámetro Voucher y  tipo de pago>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_settlement_cod_guides]
 		@IdManifest INT
 AS
