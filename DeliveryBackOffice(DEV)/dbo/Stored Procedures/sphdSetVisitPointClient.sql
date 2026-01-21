@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Edwin Ramirez>
 -- Create date: <2021-06-04>
 -- Description:	<creación o modificación de valores>
@@ -13,6 +12,10 @@
 -- Modified:	<Brandon Pedroza>
 -- Update date: <2025-08-14>
 -- Description:	<Guias Rapidas - Se guarda nuevo campo RestrictionByArticle, indica si restringue uso a tarifario por articulo>
+-- =============================================
+-- Modified:	<Bilkar Morataya>
+-- Update date: <2025-12-26>
+-- Description:	<Parser - Se guarda combinación de posibles tipos de guías a crear por un VisitPoint>
 -- =============================================
 CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     -- Add the parameters for the stored procedure here
@@ -59,7 +62,8 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
 	@CatBillingTimeId INT = 0,
 	@CatBillingVolumeId INT = 0,
 	@BillingCut_offDate AS DATE=NULL,
-	@RestrictionByArticle AS BIT = 'FALSE'
+	@RestrictionByArticle AS BIT = 'FALSE',
+	@ParserGuideTypes AS NVARCHAR(500) = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -127,7 +131,8 @@ BEGIN
 						ExcludeCommissionCOD,
 						CatBusinessSegmentId,
 						AllowScheduledPickups,
-						RestrictionByArticle
+						RestrictionByArticle,
+						ParserGuideTypes
                     )
                     VALUES
                     (   @CodeOfReference,        -- CodeOfReference - int
@@ -160,7 +165,8 @@ BEGIN
 						@CODExcludedCommission,
 						@CatBusinessSegmentId,
 						ISNULL(@AllowScheduledPickups, 1),
-						@RestrictionByArticle
+						@RestrictionByArticle,
+						@ParserGuideTypes
                         )
 					DECLARE @IDVP AS INT = -1
                     SET @IDVP = SCOPE_IDENTITY()
@@ -408,7 +414,8 @@ BEGIN
 						[ExcludeCommissionCOD] = @CODExcludedCommission,
 						[CatBusinessSegmentId] = @CatBusinessSegmentId,
 						[AllowScheduledPickups] = @AllowScheduledPickups,
-						[RestrictionByArticle] = @RestrictionByArticle
+						[RestrictionByArticle] = @RestrictionByArticle,
+						[ParserGuideTypes] = @ParserGuideTypes
                     WHERE [CodeOfReference] = @IdVisitPoint;
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 1 Affected VisitPointClient Updated - @IdVisitPoint'
@@ -505,7 +512,7 @@ BEGIN
 										PRINT @IDVCONF
                         DECLARE @IDROWFREQ AS BIGINT = -1;
                         --validar si existe frequency
-                        IF (EXISTS(SELECT vpfreq.IdVPFrequency FROM dbo.VisitPointFrequency vpfreq JOIN @TblVPFrequency tblfreq  
+                        IF (EXISTS(SELECT vpfreq.IdVPFrequency FROM dbo.VisitPointFrequency vpfreq INNER JOIN @TblVPFrequency tblfreq  
 																											ON tblfreq.IdVPFrequency = vpfreq.IdVPFrequency
 																											AND tblfreq.VPConfigurationID = vpfreq.VPConfigurationID
 																WHERE vpfreq.VPConfigurationID = @IDVCONF )
@@ -530,7 +537,7 @@ BEGIN
                             INNER JOIN @TblVPFrequency tblfreq
                                     ON Freq.[VPConfigurationID] = tblfreq.[VPConfigurationID]
                                        AND Freq.IdVPFrequency = tblfreq.IdVPFrequency
-									   AND Freq.VPConfigurationID = @IDVCONF
+                            WHERE Freq.VPConfigurationID = @IDVCONF
 									   
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 3 Se actualizaron registros VisitPointFrequency affected - @IDVCONF'
@@ -915,4 +922,3 @@ BEGIN
 
 
 END;
-

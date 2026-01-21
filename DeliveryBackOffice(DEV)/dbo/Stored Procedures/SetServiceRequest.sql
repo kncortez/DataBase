@@ -57,7 +57,7 @@ BEGIN
         Guide_Number INT NULL,          -- correlativo autogenerado
         Guide_Serie VARCHAR(2) NULL
     );
-	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
+	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WITH (NOLOCK) WHERE SalesPackageStatusName = 'Activa')
     BEGIN TRANSACTION;
     BEGIN TRY
         /*********************************************************************************************/
@@ -219,19 +219,19 @@ BEGIN
         SET SenderIdTownship =
             (
                 SELECT IdTownship
-                FROM [DeliveryBackOffice].[dbo].[Township]
+                FROM [DeliveryBackOffice].[dbo].[Township] WITH (NOLOCK)
                 WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Town)
                       AND IdProvince =
                       (
                           SELECT IdProvince
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
                       )
             ),
             SourceSystemId =
             (
                 SELECT SysIdSystem
-                FROM DeliveryBackOffice.dbo.CatSystem
+                FROM DeliveryBackOffice.dbo.CatSystem WITH (NOLOCK)
                 WHERE SysNameSystem = 'Parser'
                       AND SysRowStatus = 1
             )
@@ -257,7 +257,7 @@ BEGIN
             CatModuleId =
             (
                 SELECT ModIdModule
-                FROM DeliveryBackOffice.dbo.CatModule
+                FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
                 WHERE ModName = 'Parser'
             ),
             IdCustomer =
@@ -269,7 +269,7 @@ BEGIN
             SalePipeLineId =
             (
                 SELECT IdSalePipeLine
-                FROM DeliveryBackOffice.dbo.CatSalePipelines
+                FROM DeliveryBackOffice.dbo.CatSalePipelines WITH (NOLOCK)
                 WHERE Name = 'Parser'
             ),
             OrderUserCreated =
@@ -284,7 +284,7 @@ BEGIN
 			ReceiverCountryId =
 			(
 				SELECT TOP 1 IdCountry
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
 			),
 			-- SE MODIFICA ISCOLLECT SEGÚN EL TIPO DE SERVICIO
@@ -732,8 +732,8 @@ BEGIN
                    ord.Guide_Number
             FROM #GuideTable lst
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-                    ON ord.Guide_Number = lst.Guide_Number
-                       AND ord.Guide_Serie = lst.Guide_Serie
+                    ON ord.Guide_Serie = lst.Guide_Serie
+                       AND ord.Guide_Number = lst.Guide_Number
             WHERE ISNULL(ord.PriceShippment, 0) = 0;
 
 
@@ -855,9 +855,9 @@ BEGIN
 		SET @GuidePriority = (SELECT COUNT (do.Guide_Number)
                                 FROM DeliveryOrder do WITH (NOLOCK)
 		                            INNER JOIN @CorrelativeTable ct
-		                                ON do.Guide_Number = ct.Guide_Number
-                                        AND do.Guide_Serie = ct.Guide_Serie
-		                            INNER JOIN Membership mb
+		                                ON do.Guide_Serie = ct.Guide_Serie
+                                        AND do.Guide_Number = ct.Guide_Number
+		                            INNER JOIN Membership mb WITH (NOLOCK)
 		                                ON do.IdCustomer = mb.CustomerId
 		                        WHERE mb.CatMembershipStatusId = 3
 		                            AND mb.ExpirationDate >= GETDATE()
@@ -914,7 +914,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  --COLLATE Latin1_General_CI_AI
+			[KOVPC].[KindOfVPName] = 'Concesionario'
 	)
 	DECLARE @ExpressVisitPointTypeId INT =
 	(
@@ -924,7 +924,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI
+			[KOVPC].[KindOfVPName] = 'Express Center'
 	)
 	DECLARE @IndividualWebSys INT =
 	(
@@ -934,7 +934,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web' -- COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Hermes Web'
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -944,7 +944,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -954,7 +954,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -964,14 +964,14 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Parser'
 	)
 
 
   --Fin Nuevos datos para consumir nuevo formato guía
 
 		-- SE AGREGO EL PAIS --CRISTIAN SUAZO
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WITH (NOLOCK) WHERE BusinessSegmentName='B2B' AND IdCountry = @IdCountry);
 
 
         SELECT 1 AS 'StatusCode',
@@ -990,7 +990,7 @@ BEGIN
                PrvOri.[ProvinceAbbreviation] AS 'HubOrigin',
                (
                    SELECT HubAbbreviation
-                   FROM [DeliveryBackOffice].[dbo].[HubLogistics]
+                   FROM [DeliveryBackOffice].[dbo].[HubLogistics] WITH (NOLOCK)
                    WHERE IdHubLogistic = D.HubDestinationId
                ) AS 'HubDestination',
                -- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
@@ -1057,8 +1057,8 @@ BEGIN
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
-                ON C.Guide_Number = D.Guide_Number
-				AND C.Guide_Serie = D.Guide_Serie
+                ON C.Guide_Serie = D.Guide_Serie
+				AND C.Guide_Number = D.Guide_Number
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
@@ -1073,7 +1073,7 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK)
 				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Province] PrvOri  WITH(NOLOCK)
-				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]  COLLATE Latin1_General_CI_AI
+				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]
 			LEFT JOIN [dbo].[del_ParametrosFactura] DPF WITH(NOLOCK)
 			    ON  D.[OriginSenderId] = DPF.dpf_VpCodeOfReference
 			LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)

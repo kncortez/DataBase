@@ -1,3 +1,19 @@
+alter table dbo.VisitPointClient
+    add ParserGuideTypes NVARCHAR(100) default 'Crédito'
+go
+
+exec sp_addextendedproperty 'MS_Description', N'Tipos de guías permitidos que se puden crear desde Parsers', 'SCHEMA',
+     'dbo', 'TABLE', 'VisitPointClient', 'COLUMN', 'ParserGuideTypes'
+go
+
+-- IMPORTANTE PARA NO AFECTAR A TODOS LOS VISITPOINT EN SU FUNCIONAMIENTO PREVIO A IMPLEMENTAR LAS GUIAS STANDARD Y COLLECT,
+-- PARA QUE SIEMPRE SIGA CREANDO GUÍAS DE TIPO CREDITO
+UPDATE dbo.VisitPointClient SET ParserGuideTypes = 'Crédito'; -- ES NECESARIO APLICAR A TODOS LOS REGISTROS EXISTENTES
+
+
+
+
+-- CREACION DE BORRADO Y CREACION DE SP Y TABLE TYPE PARA AGREGAR GuideType
 DROP PROCEDURE [dbo].[SetServiceRequest];
 GO
 
@@ -122,7 +138,7 @@ BEGIN
         Guide_Number INT NULL,          -- correlativo autogenerado
         Guide_Serie VARCHAR(2) NULL
     );
-	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
+	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WITH (NOLOCK) WHERE SalesPackageStatusName = 'Activa')
     BEGIN TRANSACTION;
     BEGIN TRY
         /*********************************************************************************************/
@@ -211,10 +227,10 @@ BEGIN
                NULL 'HubDestinationId',
                NULL 'SourceSystemId',
                NULL 'CatSystemId',
-               NULL 'Segment',
+               CAST(NULL AS NVARCHAR(10)) 'Segment',
                NULL 'CatModuleId',
                NULL 'IdCustomer',
-               NULL 'OrderUserCreated',
+               CAST(NULL AS VARCHAR(100)) 'OrderUserCreated',
                NULL 'SalePipeLineId',
 			   -- SE MANDA EL PAIS CRISTIAN SUAZO
 			   '  ' AS 'ReceiverCountryId',
@@ -271,11 +287,6 @@ BEGIN
         --IF (@IdTransaction IS NOT NULL)
         --BEGIN
 
-        -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-        ALTER TABLE #GuideTable ALTER COLUMN Segment NVARCHAR(10);
-        ALTER TABLE #GuideTable ALTER COLUMN OrderUserCreated VARCHAR(100);
-
-        --Modifica el tipo de los campos que recibirán una cadena
 
         /*****************************************************************************/
         /* REALIZA LA BÚSQUEDA DE LOS ID'S DE LOS MUNICIPIOS Y LOS AGREGA A LA TABLA */
@@ -284,19 +295,19 @@ BEGIN
         SET SenderIdTownship =
             (
                 SELECT IdTownship
-                FROM [DeliveryBackOffice].[dbo].[Township]
+                FROM [DeliveryBackOffice].[dbo].[Township] WITH (NOLOCK)
                 WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Town)
                       AND IdProvince =
                       (
                           SELECT IdProvince
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
                       )
             ),
             SourceSystemId =
             (
                 SELECT SysIdSystem
-                FROM DeliveryBackOffice.dbo.CatSystem
+                FROM DeliveryBackOffice.dbo.CatSystem WITH (NOLOCK)
                 WHERE SysNameSystem = 'Parser'
                       AND SysRowStatus = 1
             )
@@ -322,7 +333,7 @@ BEGIN
             CatModuleId =
             (
                 SELECT ModIdModule
-                FROM DeliveryBackOffice.dbo.CatModule
+                FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
                 WHERE ModName = 'Parser'
             ),
             IdCustomer =
@@ -334,7 +345,7 @@ BEGIN
             SalePipeLineId =
             (
                 SELECT IdSalePipeLine
-                FROM DeliveryBackOffice.dbo.CatSalePipelines
+                FROM DeliveryBackOffice.dbo.CatSalePipelines WITH (NOLOCK)
                 WHERE Name = 'Parser'
             ),
             OrderUserCreated =
@@ -349,7 +360,7 @@ BEGIN
 			ReceiverCountryId =
 			(
 				SELECT TOP 1 IdCountry
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
 			),
 			-- SE MODIFICA ISCOLLECT SEGÚN EL TIPO DE SERVICIO
@@ -797,8 +808,8 @@ BEGIN
                    ord.Guide_Number
             FROM #GuideTable lst
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-                    ON ord.Guide_Number = lst.Guide_Number
-                       AND ord.Guide_Serie = lst.Guide_Serie
+                    ON ord.Guide_Serie = lst.Guide_Serie
+                       AND ord.Guide_Number = lst.Guide_Number
             WHERE ISNULL(ord.PriceShippment, 0) = 0;
 
 
@@ -920,8 +931,8 @@ BEGIN
 		SET @GuidePriority = (SELECT COUNT (do.Guide_Number)
                                 FROM DeliveryOrder do WITH (NOLOCK)
 		                            INNER JOIN @CorrelativeTable ct
-		                                ON do.Guide_Number = ct.Guide_Number
-                                        AND do.Guide_Serie = ct.Guide_Serie
+		                                ON do.Guide_Serie = ct.Guide_Serie
+                                        AND do.Guide_Number = ct.Guide_Number
 		                            INNER JOIN Membership mb
 		                                ON do.IdCustomer = mb.CustomerId
 		                        WHERE mb.CatMembershipStatusId = 3
@@ -979,7 +990,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  --COLLATE Latin1_General_CI_AI
+			[KOVPC].[KindOfVPName] = 'Concesionario'
 	)
 	DECLARE @ExpressVisitPointTypeId INT =
 	(
@@ -989,7 +1000,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI
+			[KOVPC].[KindOfVPName] = 'Express Center'
 	)
 	DECLARE @IndividualWebSys INT =
 	(
@@ -999,7 +1010,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web' -- COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Hermes Web'
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -1009,7 +1020,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -1019,7 +1030,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -1029,19 +1040,18 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI
+			[CS].[SysNameSystem] = 'Parser'
 	)
 
 
   --Fin Nuevos datos para consumir nuevo formato guía
 
 		-- SE AGREGO EL PAIS --CRISTIAN SUAZO
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WITH (NOLOCK) WHERE BusinessSegmentName='B2B' AND IdCountry = @IdCountry);
 
 
         SELECT 1 AS 'StatusCode',
                'Registros guardados correctamente' AS 'Description',
-               --@IdTransaction AS 'NumTransferID'
                @ManifestNumber AS 'NumTransferID';
         SELECT Manifest_Serie AS 'ManifestSerie',
                Manifest_Number AS 'ManifestNumber'
@@ -1055,7 +1065,7 @@ BEGIN
                PrvOri.[ProvinceAbbreviation] AS 'HubOrigin',
                (
                    SELECT HubAbbreviation
-                   FROM [DeliveryBackOffice].[dbo].[HubLogistics]
+                   FROM [DeliveryBackOffice].[dbo].[HubLogistics] WITH (NOLOCK)
                    WHERE IdHubLogistic = D.HubDestinationId
                ) AS 'HubDestination',
                -- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
@@ -1122,8 +1132,8 @@ BEGIN
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
-                ON C.Guide_Number = D.Guide_Number
-				AND C.Guide_Serie = D.Guide_Serie
+                ON C.Guide_Serie = D.Guide_Serie
+				AND C.Guide_Number = D.Guide_Number
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
