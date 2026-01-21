@@ -285,6 +285,17 @@ BEGIN
 						ORDER BY DA.Date_Created DESC
 					) DAP
                 END
+				ELSE
+				BEGIN
+
+                    SELECT GSRT.GuideSerie,
+                           GSRT.GuideNumber,
+                           GSRT.GuideStatus,
+                           GSRT.GuideStatusId,
+                           GSRT.GuideStatusChange
+                    FROM @GuideStatusResponseTable GSRT;
+
+                END;
             END;
             ELSE
             BEGIN
@@ -343,29 +354,16 @@ BEGIN
 
                 SELECT CAST(1 AS BIT) [blnResult],
                        'Exito obteniendo datos de webhook 2' [resultMessage];
+                
+                --REVERSION DE ENTREGAS
+				SELECT  GSRT.GuideSerie,
+						GSRT.GuideNumber,
+						'Reversión de Entrega' AS GuideStatus,
+						'500' AS GuideStatusId,
+						GSRT.GuideStatusChange,
+						'Se ha realizado la reversión de entrega para la guía solicitada.' as DescriptionIncidence
+					FROM @GuideStatusResponseTable GSRT;
 
-
-				IF (@StatusId IS NULL)-- REVERSION DE ENTREGA DESKTOP
-				BEGIN
-					SELECT GSRT.GuideSerie,
-								GSRT.GuideNumber,
-								'Reversión de Entrega' AS GuideStatus,
-								'500' AS GuideStatusId,
-								GSRT.GuideStatusChange,
-								'Se ha realizado la reversión de entrega para la guía solicitada.' as DescriptionIncidence
-						FROM @GuideStatusResponseTable GSRT;
-				END
-                ELSE
-                BEGIN
-
-                    SELECT GSRT.GuideSerie,
-                           GSRT.GuideNumber,
-                           GSRT.GuideStatus,
-                           GSRT.GuideStatusId,
-                           GSRT.GuideStatusChange
-                    FROM @GuideStatusResponseTable GSRT;
-
-                END;
 			END;
 			ELSE
             BEGIN
