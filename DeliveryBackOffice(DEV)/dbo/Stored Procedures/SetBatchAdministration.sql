@@ -58,14 +58,14 @@ BEGIN
 			IF (@Action = 1) --Agregar un nuevo lote
 			BEGIN
 				--CAI es único pero puede insertarse si es diferente tipo de documento el que se esta ingresando
-				IF NOT EXISTS( SELECT  1 FROM DeliveryBackOffice.dbo.InvoiceBatchHeader A
+				IF NOT EXISTS( SELECT  1 FROM DeliveryBackOffice.dbo.InvoiceBatchHeader A WITH (NOLOCK)
 								INNER JOIN @TblBatchTemp B ON A.CAI = B.CAI AND A.TypeDocument = B.TypeDocument)
 				BEGIN
 
 					--Eliminamos todos los registros que ya se encuentren ingresados
 					UPDATE B
 					SET B.RowStatus =  'false'
-					FROM DeliveryBackOffice.dbo.InvoiceBatchHeader A
+					FROM DeliveryBackOffice.dbo.InvoiceBatchHeader A WITH (NOLOCK)
 					INNER JOIN @TblBatchTemp B ON A.Emision_Point = B.Emision_Point 
 					AND A.Establishment = B.Establishment 
 					AND A.TypeDocument = B.TypeDocument 
@@ -76,7 +76,7 @@ BEGIN
 					--Cambiar de estado los detenidos a inactivos si se ingresa uno
 					UPDATE A
 					SET A.[Status] = 0, A.[Enable] = 1
-					FROM DeliveryBackOffice.dbo.InvoiceBatchHeader A
+					FROM DeliveryBackOffice.dbo.InvoiceBatchHeader A WITH (NOLOCK)
 					INNER JOIN @TblBatchTemp B ON A.Emision_Point = B.Emision_Point 
 					AND A.Establishment = B.Establishment 
 					AND A.TypeDocument = B.TypeDocument 
