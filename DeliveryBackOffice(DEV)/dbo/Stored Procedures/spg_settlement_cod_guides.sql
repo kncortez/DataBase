@@ -50,7 +50,15 @@ BEGIN
 					)),
 					ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0)) AS DECIMAL(18, 2)) Total,
 		   do.Receiver_ID Receiver_ID,
-		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol]
+		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
+		   cd.Voucher,
+		   CASE 
+		      WHEN cd.IdTypeOfMoney = 11 THEN 'Transferencia'
+			  WHEN cd.IdTypeOfMoney = 1  THEN 'Efectivo'
+			  WHEN cd.IdTypeOfMoney = 2  THEN 'Pago con Tarjeta'
+			  WHEN cd.IdTypeOfMoney = 10 THEN 'Zigi'
+	          ELSE 'Pago preautorizado'
+		  END PaymentMethod
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH(NOLOCK)
 			ON dsd.Guide_Serie = do.Guide_Serie
@@ -71,6 +79,8 @@ BEGIN
         LEFT JOIN dbo.CreditCardTransactionByCustomer A1 WITH (NOLOCK)
             ON A1.OrderNumber = do.Guide_Serie + CONVERT(VARCHAR, do.Guide_Number)
                AND A1.ReasonCode = '00'
+		LEFT JOIN dbo.CostDetail cd WITH (NOLOCK)
+            ON c.IdCost = cd.IdCost
 	WHERE dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 		  AND dsd.Guide_Discharged = 1 -- guía liquidada en COD
 		  AND
