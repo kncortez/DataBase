@@ -19,8 +19,7 @@ BEGIN
 		 'Transferencia' AS 'Tipo'
     FROM dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
     INNER JOIN DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-        ON C.ProductNumber = 
-           DSD.Guide_Serie + CAST(DSD.Guide_Number AS VARCHAR(20))
+        ON C.GuideSerie = DSD.Guide_Serie AND C.GuideNumber = DSD.Guide_Number
     INNER JOIN DeliveryBackOffice.dbo.CostDetail CD WITH (NOLOCK)
         ON CD.IdCost = C.IdCost
     WHERE
