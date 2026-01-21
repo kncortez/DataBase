@@ -12,7 +12,7 @@ BEGIN TRY
 	DECLARE @StationId INT;
 
 	SELECT @RusIdRol = RolIdRol FROM DeliveryBackOffice.dbo.CatRol
-	WHERE RolName = 'Facturación Honduras'
+	WHERE RolName = 'FacturaciÃ³n Honduras'
 
 	SELECT @RusIdSystem = SysIdSystem FROM DeliveryBackOffice.dbo.CatSystem
 	WHERE SysNameSystem = 'Hermes web operaciones'

@@ -1,4 +1,4 @@
---SCRIPT PARA AGREGAR NUEVO MODULO QUE SE LLAMA ADMINISTRACI覰 DE LOTES
+--SCRIPT PARA AGREGAR NUEVO MODULO QUE SE LLAMA ADMINISTRACI脫N DE LOTES
 
 SELECT * FROM DeliveryBackOffice.dbo.CatModule
 
@@ -20,10 +20,10 @@ BEGIN TRY
            ,[ModDateUpdated]
            ,[ModGroup])
      VALUES
-           ('Administraci髇 de lotes'
+           ('Administraci贸n de lotes'
            ,NULL --modulo padre
            ,'/operaciones/administracion-lotes'
-           ,'M骴ulo de administraci髇 de lotes, facturaci髇'
+           ,'M贸dulo de Administraci贸n de lotes, facturaci贸n'
            ,10 --<ModOrder, int,>
            ,'bi bi-receipt' --icon
            ,1

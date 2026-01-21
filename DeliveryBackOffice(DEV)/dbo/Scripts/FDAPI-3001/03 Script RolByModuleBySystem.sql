@@ -11,13 +11,13 @@ BEGIN TRY
 	DECLARE @RmsIdModule INT;
 
 	SELECT @RmsIdRol = RolIdRol FROM DeliveryBackOffice.dbo.CatRol
-	WHERE RolName = 'Facturación Honduras'
+	WHERE RolName = 'FacturaciÃ³n Honduras'
 
 	SELECT @RmsIdSystem = SysIdSystem FROM DeliveryBackOffice.dbo.CatSystem
 	WHERE SysNameSystem = 'Hermes web operaciones'
 
 	SELECT @RmsIdModule = ModIdModule FROM DeliveryBackOffice.dbo.CatModule
-	WHERE ModName = 'Administración de lotes'
+	WHERE ModName = 'AdministraciÃ³n de lotes'
     
     INSERT INTO [dbo].[RolByModuleBySystem]
            ([RmsIdRol]

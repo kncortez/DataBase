@@ -24,8 +24,8 @@ BEGIN TRY
 			   ,[RolAdminInternal])
 		 VALUES
 			   (@RolIdSystem
-			   ,'Facturación Honduras'
-			   ,'Administración de lotes'
+			   ,'FacturaciÃ³n Honduras'
+			   ,'AdministraciÃ³n de lotes'
 			   ,0
 			   ,0
 			   ,1
