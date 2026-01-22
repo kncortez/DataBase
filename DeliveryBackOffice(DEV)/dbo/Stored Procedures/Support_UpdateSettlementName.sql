@@ -6,7 +6,7 @@
    Fecha:     2026-01-02
 ============================================
 === CHANGELOG ================================
-2026-01-02 | Historia: FDAPI-5321 | Autor: IRVIN GONZALEZ |
+
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_UpdateSettlementName
@@ -91,14 +91,3 @@ BEGIN
 
 END
 GO
-
-
-/* =================================================
-EJEMPLO DE EJECUCIÓN
-====================================================
-EXEC dbo.Support_UpdateSettlementName
-     @IdSettlement  = 4029,
-     @NewSettlement = N'COMAYAGUELA',
-     @TokenUpdated  = N'SYS-IGONZALEZ',
-     @DateUpdated   = GETDATE();
-==================================================== */
