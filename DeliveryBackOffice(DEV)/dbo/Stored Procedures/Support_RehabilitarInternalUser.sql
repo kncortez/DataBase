@@ -6,13 +6,15 @@
    Fecha:     2026-01-10
 ============================================
 === CHANGELOG ================================
-2026-01-10 | Historia: FDAPI-5353 | Autor: IRVIN GONZALEZ |
-=========================================== */
 
+=========================================== */
 CREATE PROCEDURE dbo.Support_RehabilitarInternalUser
 (
-    @IdUserActual   INT,    -- IdUser actualmente incorrecto
-    @IdUserCorrecto INT     -- IdUser correcto a asignar
+    @IdUserActual INT,  
+    @IdUserNuevo INT,     
+    @TokenUpdated NVARCHAR(100),
+    @DateUpdated DATETIME,
+    @Comment NVARCHAR(200)
 )
 AS
 BEGIN
@@ -21,7 +23,7 @@ BEGIN
     BEGIN TRY
 
         -- PASO 1: Validaciones básicas
-        IF @IdUserActual IS NULL OR @IdUserCorrecto IS NULL
+        IF @IdUserActual IS NULL OR @IdUserNuevo IS NULL
         BEGIN
             SELECT
                 'Error' AS Estado,
@@ -29,7 +31,7 @@ BEGIN
             RETURN;
         END
 
-        IF @IdUserActual = @IdUserCorrecto
+        IF @IdUserActual = @IdUserNuevo
         BEGIN
             SELECT
                 'Error' AS Estado,
@@ -55,19 +57,23 @@ BEGIN
         IF EXISTS (
             SELECT 1
             FROM DeliveryBackOffice.dbo.InternalUser WITH (NOLOCK)
-            WHERE IdUser = @IdUserCorrecto
+            WHERE IdUser = @IdUserNuevo
         )
         BEGIN
             SELECT
                 'Error' AS Estado,
                 'El IdUser correcto ya existe y no puede ser reutilizado.' AS Mensaje,
-                @IdUserCorrecto AS IdUser;
+                @IdUserNuevo AS IdUser;
             RETURN;
         END
 
         -- PASO 4: Actualización del IdUser
         UPDATE DeliveryBackOffice.dbo.InternalUser
-        SET IdUser = @IdUserCorrecto
+        SET 
+            IdUser = @IdUserNuevo,
+            TokenUpdated = @TokenUpdated,
+            DateUpdated = @DateUpdated,
+            Comment = @Comment
         WHERE IdUser = @IdUserActual;
 
         -- PASO 5: Respuesta final
@@ -75,7 +81,7 @@ BEGIN
             'Exito' AS Estado,
             'La ficha fue rehabilitada correctamente.' AS Mensaje,
             @IdUserActual   AS IdUserAnterior,
-            @IdUserCorrecto AS IdUserActualizado;
+            @IdUserNuevo AS IdUserActualizado;
 
     END TRY
 
@@ -95,12 +101,3 @@ BEGIN
 
 END
 GO
-
-
-/* =================================================
-EJEMPLO DE EJECUCIÓN
-====================================================
-EXEC dbo.Support_RehabilitarInternalUser
-     @IdUserActual   = 180144,
-     @IdUserCorrecto = 00180144;
-==================================================== */
