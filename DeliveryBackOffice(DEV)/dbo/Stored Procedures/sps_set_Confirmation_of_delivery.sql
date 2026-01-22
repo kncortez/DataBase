@@ -199,6 +199,7 @@ IF(@IsStatusTerminal = 0)
 											FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) 
 											WHERE WRBU.CustomerId = @WebhookCustomerId 
 												AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook
+												AND WRBU.StatusOrderId = @GuideCurrentStatus
 								) ) )
 							BEGIN
 								DECLARE @TypeConnect INT = 0;
