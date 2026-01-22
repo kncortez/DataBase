@@ -1,4 +1,85 @@
-﻿-- =============================================
+alter table dbo.VisitPointClient
+    add ParserGuideTypes NVARCHAR(100) default 'Crédito'
+go
+
+exec sp_addextendedproperty 'MS_Description', N'Tipos de guías permitidos que se puden crear desde Parsers', 'SCHEMA',
+     'dbo', 'TABLE', 'VisitPointClient', 'COLUMN', 'ParserGuideTypes'
+go
+
+-- IMPORTANTE PARA NO AFECTAR A TODOS LOS VISITPOINT EN SU FUNCIONAMIENTO PREVIO A IMPLEMENTAR LAS GUIAS STANDARD Y COLLECT,
+-- PARA QUE SIEMPRE SIGA CREANDO GUÍAS DE TIPO CREDITO
+UPDATE dbo.VisitPointClient SET ParserGuideTypes = 'Crédito'; -- ES NECESARIO APLICAR A TODOS LOS REGISTROS EXISTENTES
+
+
+
+
+-- CREACION DE BORRADO Y CREACION DE SP Y TABLE TYPE PARA AGREGAR GuideType
+DROP PROCEDURE [dbo].[SetServiceRequest];
+GO
+
+-- Borrar el tipo
+DROP TYPE dbo.TblDeliveryOrders_v2;
+GO
+
+-- Crear el tipo con la columna GuideType
+CREATE TYPE dbo.TblDeliveryOrders_v2 AS TABLE
+(
+    RowNumber                            int     not null,
+    Ticket_Number                        nvarchar(150),
+    Order_Number                         int,
+    Preparation_Date                     datetime,
+    Shipping_Date                        datetime,
+    Pieces_Dry                           int,
+    Pieces_Cold                          int,
+    Consolidated_Number                  int,
+    Recipe_Number                        nvarchar(1000),
+    Sender_ID                            int,
+    Sender_FirstName                     nvarchar(100),
+    Sender_LastName                      nvarchar(100),
+    Sender_Address                       nvarchar(200),
+    Sender_Zone                          nvarchar(100),
+    Sender_Town                          nvarchar(100),
+    Sender_Department                    nvarchar(100),
+    Sender_Phone                         nvarchar(50),
+    Receiver_ID                          int,
+    Receiver_FirstName                   nvarchar(100),
+    Receiver_LastName                    nvarchar(100),
+    Receiver_Address                     nvarchar(600),
+    Receiver_Zone                        nvarchar(100),
+    Receiver_Town                        nvarchar(100),
+    Receiver_Department                  nvarchar(100),
+    Receiver_Phone                       nvarchar(100),
+    Receiver_Email                       nvarchar(200),
+    Receiver_SocialSecurity_ID           nvarchar(200),
+    Receiver_Alternant_ID                int,
+    Receiver_Alternant_FullName          nvarchar(200),
+    Receiver_Alternant_Address           nvarchar(200),
+    Receiver_Alternant_Zone              nvarchar(100),
+    Receiver_Alternant_Town              nvarchar(100),
+    Receiver_Alternant_Department        nvarchar(100),
+    Receiver_Alternant_Phone             nvarchar(100),
+    Receiver_Alternant_Email             nvarchar(200),
+    Receiver_Alternant_SocialSecurity_ID nvarchar(200),
+    Delivery_Max_Date                    datetime,
+    printedStatus                        tinyint,
+    StatusOrderId                        tinyint not null,
+    Receiver_CUI                         nvarchar(25),
+    Package_Description                  nvarchar(200),
+    Sender_Internal_Code                 nvarchar(50),
+    Receiver_Alternant_CUI               nvarchar(25),
+    Collect_OnDelivery                   decimal(14, 2),
+    ParcelCode                           nvarchar(1000),
+    IdCountrySender                      nvarchar(2),
+    ReceiverIdSettlement                 bigint,
+    ReceiverIdTownship                   int,
+    SenderIdSettlement                   bigint,
+    GuideType                            nvarchar(20) -- Columna agregada exitosamente
+)
+GO
+
+
+
+-- =============================================
 -- Author:    <Oscar Rodriguez>
 -- Description: Se regresa informacion de poblado de origen
 -- =============================================
@@ -146,10 +227,10 @@ BEGIN
                NULL 'HubDestinationId',
                NULL 'SourceSystemId',
                NULL 'CatSystemId',
-               NULL 'Segment',
+               CAST(NULL AS NVARCHAR(10)) 'Segment',
                NULL 'CatModuleId',
                NULL 'IdCustomer',
-               NULL 'OrderUserCreated',
+               CAST(NULL AS VARCHAR(100)) 'OrderUserCreated',
                NULL 'SalePipeLineId',
 			   -- SE MANDA EL PAIS CRISTIAN SUAZO
 			   '  ' AS 'ReceiverCountryId',
@@ -206,11 +287,6 @@ BEGIN
         --IF (@IdTransaction IS NOT NULL)
         --BEGIN
 
-        -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-        ALTER TABLE #GuideTable ALTER COLUMN Segment NVARCHAR(10);
-        ALTER TABLE #GuideTable ALTER COLUMN OrderUserCreated VARCHAR(100);
-
-        --Modifica el tipo de los campos que recibirán una cadena
 
         /*****************************************************************************/
         /* REALIZA LA BÚSQUEDA DE LOS ID'S DE LOS MUNICIPIOS Y LOS AGREGA A LA TABLA */
@@ -857,7 +933,7 @@ BEGIN
 		                            INNER JOIN @CorrelativeTable ct
 		                                ON do.Guide_Serie = ct.Guide_Serie
                                         AND do.Guide_Number = ct.Guide_Number
-		                            INNER JOIN Membership mb WITH (NOLOCK)
+		                            INNER JOIN Membership mb
 		                                ON do.IdCustomer = mb.CustomerId
 		                        WHERE mb.CatMembershipStatusId = 3
 		                            AND mb.ExpirationDate >= GETDATE()
@@ -976,7 +1052,6 @@ BEGIN
 
         SELECT 1 AS 'StatusCode',
                'Registros guardados correctamente' AS 'Description',
-               --@IdTransaction AS 'NumTransferID'
                @ManifestNumber AS 'NumTransferID';
         SELECT Manifest_Serie AS 'ManifestSerie',
                Manifest_Number AS 'ManifestNumber'
@@ -1073,7 +1148,7 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK)
 				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Province] PrvOri  WITH(NOLOCK)
-				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]
+				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]  COLLATE Latin1_General_CI_AI
 			LEFT JOIN [dbo].[del_ParametrosFactura] DPF WITH(NOLOCK)
 			    ON  D.[OriginSenderId] = DPF.dpf_VpCodeOfReference
 			LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
@@ -1098,3 +1173,4 @@ BEGIN
 			  ASC;
     END;
 END;
+go
