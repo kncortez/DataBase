@@ -1,12 +1,13 @@
--- =============================================
--- Author:		<Tito García>
--- Create date: <2025-06-23>
--- Description:	<Confirma servicio de recepción de guía en express center>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-11-06>
--- Description:	<Se guarda el parámetro @Voucher si es para tarjeta o para Zigi, caso contrario solo ''>
--- =============================================
+/* =================================================
+   SP:        [dbo].[sps_set_finishPickupService]
+   Propósito: <Confirma servicio de recepción de guía en express center>
+   Autor:     <Tito Garcia>
+   Historia:  <>
+   Fecha:     2025-06-23
+============================================
+=== CHANGELOG ================================
+-- 2025-12-14 | Historia/épica: FDAPI-4783 | Autor: Tito Garcia |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finishPickupService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
@@ -16,6 +17,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishPickupService]
   , @TblDetail AS TblPaymentList READONLY
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
+  , @StationId INT = NULL
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -25,7 +27,12 @@ BEGIN
         -- =====================================================================
         -- SECCIÓN 1: INICIALIZACIÓN Y PREPARACIÓN DE DATOS
         -- =====================================================================
-    
+    		
+		IF(@StationId = 0)
+		BEGIN
+			SET @StationId = NULL;
+		END
+
 		DECLARE @DateCreated DATETIME = GETDATE();
 		DECLARE @CatSalesPackageStatusId INT = 0;
 
@@ -240,6 +247,7 @@ BEGIN
 					, DateCreated
 					, DateCreatedInSystem
 					, Observations
+					, StationId
 				)
 				SELECT lge.Guide_Serie
 					, lge.Guide_Number
@@ -248,6 +256,7 @@ BEGIN
 					, @DateCreated DateCreated
 					, @DateCreated DateCreatedInSystem
 					, @observations
+					, @StationId
 				FROM #listGuidesEnabled lge;
 				
 				-- ==========================================================================================
@@ -273,11 +282,6 @@ BEGIN
                 WHERE dlo.Collect_OnDelivery > 0
                 AND lge.IsAnticipatedCOD = 1
 
-				CREATE TABLE #TempTable (
-                    code INT,
-                    Message NVARCHAR(200)
-                );
-
 				WHILE EXISTS (SELECT 1 FROM #GuidesToProcessTEMP)
                 BEGIN
                     SELECT TOP 1
@@ -285,11 +289,11 @@ BEGIN
                         @GuideNumberT = GuideNumberTEMP
                     FROM #GuidesToProcessTEMP;
 
-                    INSERT INTO #TempTable -- Guarda el resultado del SP para que no interfiera en el resultado final de este SP
                     EXEC [dbo].[SetServiceRecolectCODAnticipated] 
                         @GuideSerie = @GuideSerieT,  
                         @GuideNumber = @GuideNumberT,
                         @Token = @TokenP,
+						@StationId = @StationId,
                         @Code = @Code OUTPUT,
                         @Message = @Message OUTPUT;
 
@@ -337,8 +341,6 @@ BEGIN
                 END;
 
                 DROP TABLE #GuidesToProcessTEMP;						
-                DROP TABLE #TempTable;
-
 
 				-- FIN INSERTAR REGISTRO EN ProcessGuideCOD
 

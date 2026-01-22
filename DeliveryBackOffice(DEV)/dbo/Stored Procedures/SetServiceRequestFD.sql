@@ -5,7 +5,7 @@
    Historia:  <>
    Fecha:     <>
    === CHANGELOG ============================
-2025-12-01 | Historia/épica: <FDAPI-5214> | Autor: Tito Garcia |
+2025-12-22 | Historia/épica: <FDAPI-4786> | Autor: Tito Garcia |
 2024-11-19 | Historia/épica: <Se elimina llamada a funcion costosa (SplitUnlimited) que utiliza XML y se reemplaza por SplitOrdinal sin XML reducción 91% del costo> | Autor: Josue Villagran |
 2024-11-19 | Historia/épica: <Se agrego registro de informacion de poblado de origen en nuevo campo SenderIdSettlement> | Autor: Oscar Rodriguez |
 2024-09-30 | Historia/épica: <Se agrega la relación de una guía con un DeliveryLink.> | Autor: Walter Orozco  |
@@ -20,7 +20,8 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @SystemModule NVARCHAR(200) = NULL,
 @IdAccount BIGINT = NULL,
 @AddToServiceCart BIT = 0,
-@IdDeliveryLink INT = 0
+@IdDeliveryLink INT = 0,
+@StationId INT = NULL
 AS
 BEGIN
 	DECLARE @IdTransaction BIGINT = NULL
@@ -31,6 +32,7 @@ BEGIN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
 	DECLARE @StatusPackage INT = 2 --'Activa'
 	SET @IdCountryByCustomer =(SELECT TOP 1 CountryID FROM [DeliveryBackOffice].[dbo].[VisitPointClient] WITH(NOLOCK) WHERE CustomerID = @CustomerID )
+	
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -39,6 +41,11 @@ BEGIN
   IF(@UserAddressId = 0)
   BEGIN
   SET @UserAddressId = NULL;
+  END
+  
+  IF(@StationId = 0)
+  BEGIN
+  	SET @StationId = NULL;
   END
   
   DECLARE @system INT = NULL;
@@ -502,14 +509,16 @@ BEGIN
 			[StatusOrderId],
 			[UserCreated],
 			[DateCreated],
-			[DateCreatedInSystem])
+			[DateCreatedInSystem],
+			[StationId])
 		SELECT 
 			GT.Guide_Serie,
 			GT.Guide_Number,
 			GT.StatusOrderId,
 			'SYSTEM',
 			GETDATE(),
-			GETDATE()
+			GETDATE(),
+			@StationId
 		FROM #GuideTable GT
 
 		DECLARE @Route NVARCHAR(20) = (SELECT top 1 cov.RouteCode 
