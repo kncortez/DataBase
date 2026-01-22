@@ -615,6 +615,7 @@ BEGIN
                         AND WCT.WebhookType = WRBU.WebhookTypeId
                     INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint]          WHE WITH (NOLOCK)
                         ON WRBU.CustomerId = WHE.CustomerId
+						AND WHE.WebhookTypeId = WCT.WebhookType
                     LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]      WTQ WITH (NOLOCK)
                         ON WCT.GuideSerie = WTQ.GuideSerie
                         AND WCT.GuideNumber = WTQ.GuideNumber
