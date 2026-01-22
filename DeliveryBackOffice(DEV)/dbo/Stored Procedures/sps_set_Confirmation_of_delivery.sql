@@ -329,8 +329,8 @@ IF(@IsStatusTerminal = 0)
 												@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@TokenId AS TokenCreated
 												FROM DeliveryOrderPiece dop WITH(NOLOCK)
 												INNER JOIN DeliveryOrder do WITH(NOLOCK)
-													ON dop.GuideNumber = do.Guide_Number
-                                                    AND dop.GuideSerie = do.Guide_Serie
+													ON dop.GuideSerie = do.Guide_Serie
+                                                    AND dop.GuideNumber = do.Guide_Number
 												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 												    ON do.IdCustomer = WHE.CustomerId
 												INNER JOIN @GuidePiecesTable gpt
