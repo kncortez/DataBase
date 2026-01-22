@@ -166,7 +166,7 @@ BEGIN
 						@CatBusinessSegmentId,
 						ISNULL(@AllowScheduledPickups, 1),
 						@RestrictionByArticle,
-						@ParserGuideTypes
+					    ISNULL(NULLIF(@ParserGuideTypes, ''), 'Crédito')
                         )
 					DECLARE @IDVP AS INT = -1
                     SET @IDVP = SCOPE_IDENTITY()
@@ -415,7 +415,7 @@ BEGIN
 						[CatBusinessSegmentId] = @CatBusinessSegmentId,
 						[AllowScheduledPickups] = @AllowScheduledPickups,
 						[RestrictionByArticle] = @RestrictionByArticle,
-						[ParserGuideTypes] = @ParserGuideTypes
+    					[ParserGuideTypes] = @ParserGuideTypes
                     WHERE [CodeOfReference] = @IdVisitPoint;
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 1 Affected VisitPointClient Updated - @IdVisitPoint'
