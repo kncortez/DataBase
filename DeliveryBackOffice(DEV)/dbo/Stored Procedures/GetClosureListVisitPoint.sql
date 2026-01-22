@@ -1,15 +1,19 @@
 ﻿-- =============================================
--- Author:		<Alejandro Rodríguez>
+-- Author:        <Alejandro Rodríguez>
 -- Create date: <2022-03-29>
--- Description:	<SP para obtener la lista de cierres que se procesaron en un express center por VisitPoint>
+-- Description:    <SP para obtener la lista de cierres que se procesaron en un express center por VisitPoint>
 -- Nota: Es una copia de GetClosureList
 -- =============================================
 -- =============================================
--- Author:		<Cristian Suazo>
+-- Author:        <Cristian Suazo>
 -- Create date: <2024-07-04>
--- Description:	<Se agrega las cuentas y el simbolo de la moneda correspondiente para la vista de los cierres generales>
+-- Description:    <Se agrega las cuentas y el simbolo de la moneda correspondiente para la vista de los cierres generales>
 -- =============================================
-
+-- =============================================
+-- Author:        <Bilkar Morataya>
+-- Create date: <2024-11-06>
+-- Description:    <Se agrega campos para Zigi en la consulta de cierres>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetClosureListVisitPoint]
 @VisitPointId INT
 ,@StartDate datetime
@@ -19,7 +23,8 @@ BEGIN
 	
 	DECLARE @IdCountry NVARCHAR(2),
 		    @Account NVARCHAR(30),
-			@AccountCOD NVARCHAR(30);
+			@AccountCOD NVARCHAR(30),
+            @AccountZigi NVARCHAR(30);
 
 	SELECT @IdCountry = CountryId 
 	FROM VisitPointClient 
@@ -27,11 +32,16 @@ BEGIN
 
 	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
 	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+	WHERE Description = 'Cuenta Express Center' AND IdCountry = @IdCountry
 	
 	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
 	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+	WHERE Description = 'Cuenta Área COD' AND IdCountry = @IdCountry
+
+	-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
+	SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
+	WHERE Description = 'Cuenta Zigi' AND IdCountry = @IdCountry
 
 	SELECT ACH.IdAccountingClosuresHeaderVisitPoint 'ClosureId',
 		ACH.VisitPoint 'VisitPointId',vpc.DescriptionOfClient 'VisitPoinDescription'
@@ -51,8 +61,15 @@ BEGIN
 		,ACH.TotalAmountFacturaCashDeclared
 		,ACH.TotalAmountFacturaCard
 		,ACH.TotalAmountFacturaCardDeclared
+	     -- MODIFICACIÓN 17/10/2025 Bilkar Morataya
+       ,ACH.TotalAmountZigi
+       ,ACH.TotalAmountZigiDeclared
+       ,ACH.TotalAmountCODZigi
+       ,ACH.TotalAmountCODZigiDeclared
+       ,ACH.TotalAmountFacturaZigi
+       ,ACH.TotalAmountFacturaZigiDeclared
+	     -- FIN MODIFICACIÓN
 		,ISNULL(CCC.Symbol,'') CunrrencySymbol
-		-- FIN MODIFICACIÓN
 	FROM DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint ACH
 	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 		ON ACH.VisitPoint = VPC.CodeOfReference
