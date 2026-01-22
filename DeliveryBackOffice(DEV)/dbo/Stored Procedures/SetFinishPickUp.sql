@@ -101,7 +101,7 @@ BEGIN
 
         DECLARE @test INT =
                 (
-                 SELECT 1
+                 SELECT COUNT(*)
                    FROM #Temp
                 );
 
