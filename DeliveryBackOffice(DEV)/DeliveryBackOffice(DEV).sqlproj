@@ -1858,7 +1858,7 @@
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_ConfirmAddress.sql" />
-	<Build Include="dbo\Stored Procedures\ValidGuideReview.sql" />
+    <Build Include="dbo\Stored Procedures\ValidGuideReview.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
     <Build Include="dbo\User Defined Types\TblListGuidesWithAnticipatedCOD.sql" />
     <Build Include="dbo\Tables\DumpServiceCoverageLogGT.sql" />
@@ -2073,6 +2073,12 @@
     <Build Include="dbo\Stored Procedures\ValidateDepositBalance.sql" />
     <Build Include="dbo\Stored Procedures\sps_UpdateInvoiceForza.sql" />
     <Build Include="dbo\Functions\SplitOrdinal.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_0.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_2.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_3.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_4.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
