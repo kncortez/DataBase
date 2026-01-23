@@ -15,7 +15,7 @@ BEGIN
         CD.Voucher + '-' + C.ProductNumber AS Transaccion,
         CD.Voucher,
         C.CODAmount,
-        C.TotalAmount,
+        C.TotalAmount + C.CODAmount AS 'TotalAmount',
 		 'Transferencia' AS 'Tipo'
     FROM dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
     INNER JOIN DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
