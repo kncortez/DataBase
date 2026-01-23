@@ -87,6 +87,7 @@ BEGIN
 
     SELECT @Account AS AccounExp,
 		   @AccountCOD AS AccountCOD,
+		   @AccountZigi AS AccountZigi,
 		  Value 'URL'
     FROM ConfigParams
     WHERE Name = 'ClosureExpressCenter';
