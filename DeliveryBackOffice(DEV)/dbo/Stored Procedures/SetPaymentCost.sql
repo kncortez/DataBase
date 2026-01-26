@@ -9,8 +9,11 @@
 -- Create date: <2022-02-10>
 -- Description:	< Corrección de manejo de voucher >
 -- =============================================
-
-
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2026-01-14>
+-- Description:	<Guardar Voucher y Path de la imagen del voucher>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetPaymentCost]
     @TypeProduct INT,            -- = 1
     @ProductNumber VARCHAR(20),  -- = 'FD1990760'
@@ -19,7 +22,8 @@ CREATE PROCEDURE [dbo].[SetPaymentCost]
     @TypeCharge INT,             -- = 1
     @Token VARCHAR(50),          -- = 'SYS-CAQUINO'
     @CODPayment DECIMAL(12, 2) = 0,
-    @Responsible VARCHAR(100) = ''
+    @Responsible VARCHAR(100) = '',
+    @TransferImagePath  NVARCHAR(300) = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -34,8 +38,8 @@ BEGIN
 
     IF NOT EXISTS
     (
-        SELECT *
-        FROM dbo.Cost
+        SELECT Top 1 1
+        FROM dbo.Cost WITH (NOLOCK)
         WHERE IdProduct = @TypeProduct
               AND ProductNumber = @ProductNumber
     )
@@ -106,12 +110,13 @@ BEGIN
             [RowStatus],
             [TokenCreated],
             [DateCreated],
-            [Responsible]
+            [Responsible],
+            [VoucherPath]
         )
         SELECT @IdCost,
                det.IdTypeOfMoney,
                det.Amount,
-               IIF(det.IdTypeOfMoney = 6, det.Voucher, ''),
+               IIF(det.IdTypeOfMoney In (6,11), det.Voucher, ''),
                1, -- crear registro activo por default
                @Token,
                GETDATE(),

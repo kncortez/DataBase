@@ -1,18 +1,35 @@
-﻿/* =================================================
-   SP:        [dbo].[sps_proof_ondelivery_fd]
-   Propósito: <Registrar prueba de entrega en sitio <API Delivery>
-   Autor:     <Cesar Aquino>
-   Historia:  <>
-   Fecha:     2021-03-23
-============================================
-=== CHANGELOG ================================
--- 2025-12-11 | Historia/épica: FDAPI-4775 | Autor: Tito Garcia |
--- 2025-11-20 | Historia/épica:  | Autor: Tito Garcia |
--- 2025-01-12 | Historia/épica:  | Autor: <Cristian Suazo  |
--- 2024-09-03 | Historia/épica:  | Autor: Tito Garcia |
--- 2023-03-02 | Historia/épica:  | Autor: Edelman Vasquez  |
--- 2021-09-16 | Historia/épica: FDAPI-337 | Autor: Marco Jiménez  |
-=========================================== */
+
+-- =============================================
+-- Author:		<Aquino, César>
+-- Create date: <2021-03-23>
+-- Description:	<Registrar prueba de entrega en sitio <API Delivery >>
+-- =============================================
+-- =============================================
+-- Modiff:		<Marco,Jiménez>
+-- Create date: <2021-09-16>
+-- Description:	<Se agregan validaciones para NO insertar 
+--               el checkpoint Entregado cuando la entrega sea en un Express Center,
+--               en cambio se debe insertar el checkpoint Reenviado a Express Center>
+-- Hotfix: FDAPI-337
+-- =============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2023-03-02>
+-- Description:	<En proceso de entregas desde CourierApp, cuando sea flujo de guías marcadas para devolución, ingresar las guías marcadas para devolución al proceso de COD para lotes Collect>
+-- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <03-09-2024>
+-- Description:	<Se agrega la variable @Receiver_CUI para almacenar el CUI de la persona que recibe>
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Update date: <2025-01-12>
+-- Description:	<Se agrega la funcion del proceso por ticket number para las guías>
+-- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Update date: <2026-01-15>
+-- Description:	<Guardar Data de transferencia imagen de voucher y Idtransfer>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
@@ -32,7 +49,8 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @Receiver_CUI NVARCHAR(25) = '',
 	@IdCountry NVARCHAR(8) = 'GT',
 	@TicketNumber NVARCHAR(300) = NULL,
-	@StationId INT = NULL
+	@StationId INT = NULL,
+	@TransferImagePath NVARCHAR(300) = NULL
 AS
 BEGIN
 	
@@ -1119,7 +1137,8 @@ BEGIN
                                         @FullPayment = @FullPayment,
                                         @TypeCharge = 1,  -- 1 = costo de envío
                                         @Token = @Token,
-                                        @CODPayment = @CODPayment;
+                                        @CODPayment = @CODPayment,
+										@TransferImagePath = @TransferImagePath;
         END;
 
 		IF(EXISTS(SELECT  Top 1 1 FROM [dbo].[DeliveryOrder] dlo WITH (NOLOCK) WHERE dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1)) -- guía marcada para devolución

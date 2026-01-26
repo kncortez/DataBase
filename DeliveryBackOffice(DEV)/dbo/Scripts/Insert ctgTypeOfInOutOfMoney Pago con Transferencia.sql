@@ -1,0 +1,1 @@
+INSERT [dbo].[ctgTypeOfInOutOfMoney] ([tio_pk_id], [tio_pk_name], [tio_tokenCreated], [tio_dateCreated]) VALUES (11, N'Pago con Transferencia', N'SYS-EVASQUEZ', CAST(N'2026-01-15T13:11:01.000' AS DateTime))
