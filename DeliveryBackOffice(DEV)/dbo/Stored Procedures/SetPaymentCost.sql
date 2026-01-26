@@ -120,7 +120,8 @@ BEGIN
                1, -- crear registro activo por default
                @Token,
                GETDATE(),
-               det.Responsible
+               det.Responsible,
+               @TransferImagePath
         FROM @TblDetail det;
 
     END;
