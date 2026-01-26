@@ -277,8 +277,7 @@ BEGIN
                             LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
                                 ON do.Sender_ID = vpc.CodeOfReference
                             INNER JOIN [DeliveryBackOffice].[dbo].[RatebyCustomer] rbc WITH (NOLOCK)
-                                ON ISNULL(do.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
-                                   AND rbc.RbcRowStatus = 1
+                                ON ISNULL(do.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer                                   
                                    AND
                                    (
                                        rbc.RbcCodeOfReference = vpc.CodeOfReference
@@ -294,7 +293,8 @@ BEGIN
                             LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrder]             so
                                 ON coi.StatusOrderId = so.StatusOrderId
                         WHERE do.Guide_Serie = @GuideSerie
-                              AND do.Guide_Number = @GuideNumber
+                            AND do.Guide_Number = @GuideNumber
+                            AND rbc.RbcRowStatus = 1
                         ORDER BY rbc.RbcCodeOfReference DESC;
                     END;
                     ELSE
@@ -588,9 +588,9 @@ BEGIN
 								dop.GuideNumber = gpt.GuideNumber
 							INNER JOIN @PiecesGuideRelatedTable pgt
                                 ON gpt.GuideSerie = pgt.GuideSerie
-								    AND gpt.GuideNumber = pgt.GuideNumber
-							WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-								AND WHE.TypeConnectionId = 2;							
+								AND gpt.GuideNumber = pgt.GuideNumber
+                                AND gpt.NumberPieces = pgt.NumberRelatedPieces
+							WHERE WHE.TypeConnectionId = 2;							
 
                         END
 					END
@@ -617,7 +617,7 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                     [DO] WITH (NOLOCK)
                     INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
                         ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
-                           AND [DO].[Guide_Number] = [DA].[Guide_Number]
+                        AND [DO].[Guide_Number] = [DA].[Guide_Number]
                     INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
                 WHERE DA.Guide_Serie = @GuideSerie
@@ -630,7 +630,7 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                     [DO] WITH (NOLOCK)
                     INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
                         ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
-                           AND [DO].[Guide_Number] = [DA].[Guide_Number]
+                        AND [DO].[Guide_Number] = [DA].[Guide_Number]
                     INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
                 WHERE DA.Guide_Serie = @GuideSerie
@@ -649,9 +649,9 @@ BEGIN
                     INNER JOIN DeliveryBackOffice.dbo.RoutePreparationDetail RPD WITH (NOLOCK)
                            ON RP.IdRoutePreparation = RPD.RoutePreparationId
                 WHERE RP.RowStatus = 1
-                        AND RPD.Guide_Serie = @GuideSerie
-                        AND RPD.Guide_Number = @GuideNumber
-                        AND RPD.RowStatus = 1
+                  AND RPD.Guide_Serie = @GuideSerie
+                  AND RPD.Guide_Number = @GuideNumber
+                  AND RPD.RowStatus = 1
                 ORDER BY RP.DateRoutePreparation DESC;
 
                 -------- Obtener  Id de ruta de preparación del encabezado, esto si ya existe solo se inserta detalle
@@ -676,7 +676,7 @@ BEGIN
 						ON RPD.RoutePreparationId = RP.IdRoutePreparation
                 WHERE Guide_Serie =  @GuideSerie
 					AND Guide_Number = @GuideNumber
-					AND  RP.DateRoutePreparation > @Today;
+					AND RP.DateRoutePreparation > @Today;
 
                 IF (EXISTS(
                             SELECT TOP 1 1

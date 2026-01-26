@@ -62,7 +62,8 @@ BEGIN
             SELECT IH.inv_pk_id
                    , IH.IdCountry
                    , IH.inv_vpCodeOfReferences
-                   , ISNULL(IH.inv_certificationFEL, '') [inv_certificationFEL]    
+                   , ISNULL(vpc.DescriptionOfClient, '') [inv_nameCodeOfReferences]
+                   , ISNULL(IH.inv_certificationFEL, '') [inv_certificationFEL]
                    , ISNULL(IH.inv_serieFEL, '')         [inv_serieFEL]
                    , ISNULL(IH.inv_numberFEL, '')        [inv_numberFEL]
                    , IH.inv_FechaHoraFEL                 [inv_FechaHoraFEL]
@@ -91,6 +92,8 @@ BEGIN
               FROM InvoiceHeader AS IH WITH(NOLOCK)
                    INNER JOIN del_ParametrosFactura AS dpf WITH(NOLOCK) 
                    ON IH.inv_vpCodeOfReferences = dpf.dpf_VpCodeOfReference
+                   LEFT JOIN VisitPointClient as vpc  WITH(NOLOCK)
+                   ON IH.inv_vpCodeOfReferences = vpc.CodeOfReference
              WHERE IH.IdCountry = @IdCountry
                AND ISNULL(IH.inv_numberFEL,'') = ''
                AND ISNULL(IH.inv_FechaHoraFEL, '') = ''
