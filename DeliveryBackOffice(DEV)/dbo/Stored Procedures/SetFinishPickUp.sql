@@ -97,8 +97,6 @@ BEGIN
                @ContainerReferences=@ContainerReferences,  
                @IdCountry=@IdCountry; 
 
-        --CREATE NONCLUSTERED INDEX tempTemp ON #Temp (Guide);
-
         DECLARE @test INT =
                 (
                  SELECT COUNT(*)
@@ -296,13 +294,10 @@ BEGIN
                  FROM ServiceManagement
                 WHERE IdSchedulePickup = @IdPickup;
 
-
                 SELECT 200 as IdResult,
                        'Cambios realizados exitosamente' AS [Message]
 
             END;
-
-
 
         END;
         ELSE IF (@test > 0)
@@ -312,10 +307,6 @@ BEGIN
                    Guide AS Guides,
                    [Message]
               FROM #Temp
-             --WHERE Guide IN
-             --      (
-             --        SELECT Guide FROM #Temp
-             --      )
 
         END
         ELSE IF (@ValIdPickup IS NOT NULL)
