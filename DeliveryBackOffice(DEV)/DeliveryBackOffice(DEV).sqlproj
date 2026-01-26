@@ -68,7 +68,7 @@
     <Folder Include="dbo\Sequences\" />
     <Folder Include="Security\" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup>  
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
     <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
@@ -131,6 +131,7 @@
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersList.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrders_v2.sql" />
+    <Build Include="dbo\User Defined Types\TblDeliveryOrders_AP.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrders.sql" />
     <Build Include="dbo\User Defined Types\TblCustomerType.sql" />
     <Build Include="dbo\User Defined Types\TblCustomer.sql" />
@@ -615,6 +616,11 @@
     <Build Include="dbo\Tables\AccountBankFormatRule.sql" />
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
+    <Build Include="dbo\Tables\APGuidesControl.sql" />
+    <Build Include="dbo\Tables\APGuidesControlLogs.sql" />
+    <Build Include="dbo\Tables\APExecutionSchedule.sql" />
+    <Build Include="dbo\Tables\APExecutionServiceLog.sql" />
+    <Build Include="dbo\Tables\APRegionGuides.sql" />
     <Build Include="dbo\Tables\CatStatusGuideByContainer.sql" />
     <Build Include="dbo\Tables\DefaultValuesPerCountry.sql" />
     <Build Include="dbo\Tables\FinishPickUpContainerDetail.sql" />
@@ -1363,6 +1369,7 @@
     <Build Include="dbo\Stored Procedures\SetSettlementDispatched.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceTokenGuideData.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceRoutes.sql" />
+    <Build Include="dbo\Stored Procedures\SetServiceRequest_AP.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceRequest_TSE.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceRequestFD.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceRequest.sql" />
