@@ -48,6 +48,7 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @Receiver_CUI NVARCHAR(25) = '',
 	@IdCountry NVARCHAR(8) = 'GT',
 	@TicketNumber NVARCHAR(300) = NULL,
+	@StationId INT = NULL,
 	@TransferImagePath NVARCHAR(300) = NULL
 
 AS
@@ -426,14 +427,15 @@ BEGIN
                     DateCreated,
                     DateCreatedInSystem,
                     Temperature_Celsius,
-                    Observations
+                    Observations,
+					StationId
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber,
                  IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
                      @StatusEXC,
                      IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))), @Token, GETDATE(), GETDATE(),
-                 NULL, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
+                 NULL, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''), @StationId);
 
                 UPDATE acodh 
                     SET acodh.AgaintsBalance = ISNULL(acodh.AgaintsBalance,0) + ISNULL(bdcod.Amount,0),
