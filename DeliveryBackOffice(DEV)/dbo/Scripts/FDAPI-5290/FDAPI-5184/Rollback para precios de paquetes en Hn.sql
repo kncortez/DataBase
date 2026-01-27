@@ -88,7 +88,8 @@ BEGIN TRY
     SET SubscriptionDescription ='100 envíos L90.00 c/u',
         SubscriptionCost = 9000.00,
         DateUpdated=GETDATE(),
-        TokenUpdated = @TokenUpdated
+        TokenUpdated = @TokenUpdated,
+		Tag = NULL
     -- SELECT * FROM [dbo].[CatSubscription]
     WHERE  IdCatSubscription = @IdCatSubscriptionPLUS 
         AND  IdCountry = @Country
@@ -121,7 +122,8 @@ BEGIN TRY
     SET SubscriptionDescription ='200 envíos L80.00 c/u',
         SubscriptionCost = 16000.00,
         DateUpdated=GETDATE(),
-        TokenUpdated = @TokenUpdated
+        TokenUpdated = @TokenUpdated,
+		Tag = NULL
     -- SELECT * FROM [dbo].[CatSubscription]
     WHERE  IdCatSubscription = @IdCatSubscriptionGOLD  
         AND  IdCountry = @Country
@@ -155,7 +157,8 @@ BEGIN TRY
     SET SubscriptionDescription ='400 envíos L75.00 c/u',
         SubscriptionCost = 30000.00,
         DateUpdated = GETDATE(),
-        TokenUpdated = @TokenUpdated
+        TokenUpdated = @TokenUpdated,
+		Tag = NULL
     -- SELECT * FROM [dbo].[CatSubscription]
     WHERE  IdCatSubscription = @IdCatSubscriptionPLATINO  
         AND  IdCountry = @Country
@@ -188,7 +191,8 @@ BEGIN TRY
     SET SubscriptionDescription = '600 envíos L70.00 c/u',
         SubscriptionCost = 42000.00,
         DateUpdated = GETDATE(),
-        TokenUpdated = @TokenUpdated
+        TokenUpdated = @TokenUpdated,
+		Tag = NULL
     -- SELECT * FROM [dbo].[CatSubscription]
     WHERE  IdCatSubscription = @IdCatSubscriptionPRO  
         AND  IdCountry = @Country
@@ -221,7 +225,8 @@ BEGIN TRY
     SET SubscriptionDescription = '15 envíos L104.00 c/u',
         SubscriptionCost = 1558.00,
         DateUpdated = GETDATE(),
-        TokenUpdated = @TokenUpdated
+        TokenUpdated = @TokenUpdated,
+		Tag = NULL
     -- SELECT * FROM [dbo].[CatSubscription]
     WHERE  IdCatSubscription = @IdCatSubscriptionMICRO  
         AND  IdCountry = @Country
