@@ -129,16 +129,6 @@ BEGIN
               )
     ) AS s;
 
-	--quitar guias que hayan sido pagadas con zigi
-	DELETE GF
-	FROM @GuidesFound GF
-	LEFT JOIN PaymentZigi PZ
-	ON PZ.GuideNumber = GF.Guide_Number
-		  AND PZ.GuideSerie = GF.Guide_Serie
-		WHERE PZ.GuideNumber = GF.Guide_Number
-		  AND PZ.GuideSerie = GF.Guide_Serie
-		  AND (PZ.ZigiLinkStatus = 'PAID'OR PZ.AuthorizationNumberByUser IS NOT NULL)
-
     SELECT DISTINCT
            dbs.ID,
            dbs.Date_Dispatched,
