@@ -20,7 +20,11 @@ BEGIN
         END AS Voucher,
         C.CODAmount,
         C.TotalAmount + C.CODAmount AS 'TotalAmount',
-		 'Transferencia' AS 'Tipo'
+		 CASE 
+		    WHEN CD.IdTypeOfMoney = 11  THEN 'Transferencia'
+			WHEN CD.IdTypeOfMoney = 10  THEN 'Zigi'
+			ELSE CD.Voucher
+        END AS 'Tipo'
     FROM dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
     INNER JOIN DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
         ON C.GuideSerie = DSD.Guide_Serie AND C.GuideNumber = DSD.Guide_Number
