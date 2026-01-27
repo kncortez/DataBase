@@ -1,8 +1,13 @@
--- =============================================
--- Author:		<Tito García>
--- Create date: <2025-06-23>
--- Description:	<Confirma servicio de recepción de guía en express center>
--- =============================================
+/* =================================================
+   SP:        [dbo].[sps_set_finishPickupService]
+   Propósito: <Confirma servicio de recepción de guía en express center>
+   Autor:     <Tito Garcia>
+   Historia:  <>
+   Fecha:     2025-06-23
+============================================
+=== CHANGELOG ================================
+-- 2025-12-14 | Historia/épica: FDAPI-4783 | Autor: Tito Garcia |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finishPickupService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
@@ -12,6 +17,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishPickupService]
   , @TblDetail AS TblPaymentList READONLY
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
+  , @StationId INT = NULL
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -21,7 +27,12 @@ BEGIN
         -- =====================================================================
         -- SECCIÓN 1: INICIALIZACIÓN Y PREPARACIÓN DE DATOS
         -- =====================================================================
-    
+    		
+		IF(@StationId = 0)
+		BEGIN
+			SET @StationId = NULL;
+		END
+
 		DECLARE @DateCreated DATETIME = GETDATE();
 		DECLARE @CatSalesPackageStatusId INT = 0;
 
@@ -236,6 +247,7 @@ BEGIN
 					, DateCreated
 					, DateCreatedInSystem
 					, Observations
+					, StationId
 				)
 				SELECT lge.Guide_Serie
 					, lge.Guide_Number
@@ -244,6 +256,7 @@ BEGIN
 					, @DateCreated DateCreated
 					, @DateCreated DateCreatedInSystem
 					, @observations
+					, @StationId
 				FROM #listGuidesEnabled lge;
 				
 				-- ==========================================================================================
@@ -263,16 +276,11 @@ BEGIN
 				INSERT INTO #GuidesToProcessTEMP (GuideSerieTEMP, GuideNumberTEMP)
                 SELECT dlo.Guide_Serie, dlo.Guide_Number
                 FROM #listGuidesEnabled            lge
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]       dlo WITH (NOLOCK)
+                    INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
                         ON lge.Guide_Serie = dlo.Guide_Serie
                         AND lge.Guide_Number = dlo.Guide_Number
                 WHERE dlo.Collect_OnDelivery > 0
                 AND lge.IsAnticipatedCOD = 1
-
-				CREATE TABLE #TempTable (
-                    code INT,
-                    Message NVARCHAR(200)
-                );
 
 				WHILE EXISTS (SELECT 1 FROM #GuidesToProcessTEMP)
                 BEGIN
@@ -281,11 +289,11 @@ BEGIN
                         @GuideNumberT = GuideNumberTEMP
                     FROM #GuidesToProcessTEMP;
 
-                    INSERT INTO #TempTable -- Guarda el resultado del SP para que no interfiera en el resultado final de este SP
                     EXEC [dbo].[SetServiceRecolectCODAnticipated] 
                         @GuideSerie = @GuideSerieT,  
                         @GuideNumber = @GuideNumberT,
                         @Token = @TokenP,
+						@StationId = @StationId,
                         @Code = @Code OUTPUT,
                         @Message = @Message OUTPUT;
 
@@ -311,14 +319,14 @@ BEGIN
                                 , cus.IdCustomer
                                 , 1 AS 'IsAnticipatedCOD'
                         FROM #listGuidesEnabled            lge
-                            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]       dlo WITH (NOLOCK)
+                            INNER JOIN DeliveryOrder       dlo WITH (NOLOCK)
                                 ON lge.Guide_Serie = dlo.Guide_Serie
                                     AND lge.Guide_Number = dlo.Guide_Number
-                            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vp WITH (NOLOCK)
+                            LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                                 ON vp.CodeOfReference = dlo.Sender_ID
-                            LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]         cus WITH (NOLOCK)
+                            LEFT JOIN dbo.Customer         cus WITH (NOLOCK)
                                 ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-                            LEFT JOIN [DeliveryBackOffice].[dbo].[ProcessedGuideCOD]    pcd WITH (NOLOCK)
+                            LEFT JOIN ProcessedGuideCOD    pcd WITH (NOLOCK)
                                 ON pcd.GuideSerie = dlo.Guide_Serie
                                     AND pcd.GuideNumber = dlo.Guide_Number
                         WHERE dlo.Collect_OnDelivery > 0
@@ -333,8 +341,6 @@ BEGIN
                 END;
 
                 DROP TABLE #GuidesToProcessTEMP;						
-                DROP TABLE #TempTable;
-
 
 				-- FIN INSERTAR REGISTRO EN ProcessGuideCOD
 
@@ -343,14 +349,14 @@ BEGIN
 
 				UPDATE do
 					SET do.StatusOrderId = @NewStatusOrderId
-				FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                do WITH (NOLOCK)
+				FROM DeliveryOrder                do WITH (NOLOCK)
 				INNER JOIN #listGuidesEnabled lge
 					ON lge.Guide_Serie = do.Guide_Serie
 					AND lge.Guide_Number = do.Guide_Number;
 
 				UPDATE dop
 					SET StatusOrderId = @NewStatusOrderId
-				FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]           dop WITH (NOLOCK)
+				FROM DeliveryOrderPiece           dop WITH (NOLOCK)
 				INNER JOIN #listGuidesEnabled lge
 					ON lge.Guide_Serie = dop.GuideSerie
 					AND lge.Guide_Number = dop.GuideNumber;
@@ -497,7 +503,7 @@ BEGIN
 					SELECT ct.IdCost
 						, @IdTypeOfMoney
 						, ct.TotalAmountPaid
-						, IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '') AS Voucher
 						, 1 -- crear registro activo por default
 						, @TokenP
 						, GETDATE()
@@ -518,7 +524,7 @@ BEGIN
 					UPDATE CD
 						SET CD.Amount = ct.TotalAmountPaid
 						, CD.IdTypeOfMoney = @IdTypeOfMoney
-						, CD.Voucher = IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, CD.Voucher = IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '')
 						, CD.TokenUpdated = @TokenP
 						, CD.DateUpdated = GETDATE()
 					FROM Cost                                              ct WITH(NOLOCK)
@@ -615,6 +621,7 @@ BEGIN
                         AND WCT.WebhookType = WRBU.WebhookTypeId
                     INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint]          WHE WITH (NOLOCK)
                         ON WRBU.CustomerId = WHE.CustomerId
+						AND WHE.WebhookTypeId = WCT.WebhookType
                     LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]      WTQ WITH (NOLOCK)
                         ON WCT.GuideSerie = WTQ.GuideSerie
                         AND WCT.GuideNumber = WTQ.GuideNumber
