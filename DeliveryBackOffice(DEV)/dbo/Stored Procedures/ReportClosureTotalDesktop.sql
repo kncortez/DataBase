@@ -126,9 +126,9 @@ BEGIN
             ON DOPD.GuideSerie = ACD.GuideSerie
             AND DOPD.GuideNumber = ACD.GuideNumber
         WHERE CONVERT(DATE, ACH.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-            AND (@VisitPointId IS NULL OR ACH.VisitPoint IN (SELECT CodeOfReference FROM @tblVisitPointId))
-            AND (@IdCierre IS NULL OR ACH.IdAccountingClosuresHeader IN (SELECT CierreId FROM @tblIdCierre))
-            AND (@IdAccount IS NULL OR DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount))
+            AND (@VisitPointId IS NULL OR @VisitPointId = '-1' OR ACH.VisitPoint IN (SELECT CodeOfReference FROM @tblVisitPointId))
+            AND (@IdCierre IS NULL OR @IdCierre = '-1' OR ACH.IdAccountingClosuresHeader IN (SELECT CierreId FROM @tblIdCierre))
+            AND (@IdAccount IS NULL OR @IdAccount = '-1' OR DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount))
         GROUP BY ACH.IdAccountingClosuresHeader, VPC.CountryId, CCC.CodeISO) X
     GROUP BY CurrencySymbol
 END
