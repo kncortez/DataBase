@@ -1,8 +1,16 @@
-﻿-- =============================================
--- Author:      <Cristian, Azurdia>
--- Create date: <2025-01-09>
--- Description: <Retorna los datos de una factura, en base al codigo del cliente que se envía>
--- =============================================
+﻿
+/* =================================================
+   SP:        [dbo].[GetInvoiceListByClient]
+   Propósito: <Retorna los datos de una factura, en base al codigo del cliente que se envía>
+   Autor:     <Walter Orozco>
+   Historia:  <FDAPI-2986>
+   Fecha:     2025-01-09
+============================================
+=== CHANGELOG ================================
+-- 2026-01-19 | Historia/épica: FDD-1480 | Autor: Cristian Azurdia |
+-- 2025-01-09 | Historia/épica: FDD-1483 | Autor: Cristian Azurdia |
+=========================================== */
+
 CREATE PROCEDURE [dbo].[GetInvoiceListByClient]
 
     @ID NVARCHAR(16) = NULL,
@@ -33,7 +41,7 @@ BEGIN
 
     SELECT INH.inv_pk_id
           ,MIN(INH.inv_serieFEL)       inv_serieFEL
-          ,MIN(INH.inv_numberFEL)      inv_numberFEL
+          ,MIN(INH.inv_certificationFEL)      inv_numberFEL
           ,MIN(INH.inv_amount)         inv_amount
           ,(MIN(INH.inv_amount) - MIN(NCI.AmountNotesCredits)) inv_balance
           ,MIN(INH.inv_descriptionFEL) inv_descriptionFEL
@@ -73,11 +81,18 @@ BEGIN
         WHERE inv_invoiceOfCreditNote = INH.inv_pk_id
            AND inv_type = 2
     ) NCI
-    WHERE DOR.IdCustomer = @ID
-      AND DOR.SenderCountryId = @IdCountry 
-      AND DOR.DateCreated > '2025-01-25'
-      AND DOR.DateCreated < '2025-01-31'
+    WHERE DOR.DateCreated > '2025-01-31'
+      AND DOR.SenderCountryId = @IdCountry
+      AND DOR.IdCustomer = @ID
     GROUP BY INH.inv_pk_id
     ORDER BY INH.inv_pk_id
+
+    SELECT Id_Lote
+          ,RTN
+          ,CAI
+    FROM InvoiceBatchHeader
+    WHERE TypeDocument = 6
+      AND status = 1
+      AND enable = 1
 
 END
