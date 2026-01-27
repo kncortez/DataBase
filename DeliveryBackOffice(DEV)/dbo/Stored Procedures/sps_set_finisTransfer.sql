@@ -1,28 +1,40 @@
-﻿
+﻿/* =================================================
+   SP:        [dbo].[sps_set_finisTransfer]
+   Propósito: <>
+   Autor:     <>
+   Historia:  <>
+   Fecha:     <>
+============================================
+=== CHANGELOG ================================
+-- 2025-12-22 | Historia/épica: FDAPI-4784 | Autor: Tito Garcia |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finisTransfer]
     @TblListGuides AS TblListGuidesTransfer READONLY,
     @IdCourier INT,
     @CourierName VARCHAR(50),
     @DPI VARCHAR(15),
-    @TokenCreated VARCHAR(100)
+    @TokenCreated VARCHAR(100),
+    @StationId INT = NULL
 AS
 BEGIN
-
     SET NOCOUNT ON;
 
     IF OBJECT_ID('tempdb.dbo.#listGuidesEnabled', 'U') IS NOT NULL
         DROP TABLE #listGuidesEnabled;
 
-
     DECLARE @jsonResult NVARCHAR(MAX) = N'';
     DECLARE @errorMessage NVARCHAR(100);
+    DECLARE @Today DATE = GETDATE();
+    		
+    IF(@StationId = 0)
+    BEGIN
+        SET @StationId = NULL;
+    END
    
-
     BEGIN TRANSACTION;
 
     BEGIN TRY
 
-        -- INSERT INTO TEMPORARY TABLE
         SELECT [Guide_Serie],
                [Guide_Number],
                [IdIncidence],
@@ -30,9 +42,6 @@ BEGIN
                [Comentary]
         INTO #listGuidesEnabled
         FROM @TblListGuides;
-
-
-        -- INSERT INTO TRANSFERLOG SO WE CAN MONITOR ALL THE GUIDES THAT WERE TRANSFER TO A EXPRESS CENTER
 
         INSERT INTO DeliveryBackOffice.dbo.TransferLog
         (
@@ -60,60 +69,62 @@ BEGIN
         FROM #listGuidesEnabled lge;
 
         --UPDATE ON DELIVERY ORDER TO STATUS "Traslado a Express Center"
-        UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+        UPDATE do
         SET StatusOrderId = 20
-        FROM DeliveryBackOffice.dbo.DeliveryOrder do
+        FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             INNER JOIN #listGuidesEnabled lge
-                ON lge.Guide_Number = do.Guide_Number
-                   AND lge.Guide_Serie = do.Guide_Serie;
+                ON lge.Guide_Serie = do.Guide_Serie
+                    AND lge.Guide_Number = do.Guide_Number;
 
         -- Actualizar registros del detalle de manifiestos de entrega
-          UPDATE dsd
+        UPDATE dsd
         SET RowStatus = 0,
             TokenUpdated = @TokenCreated,
             DateUpdated = GETDATE(),
 			StatusOrderId = 20
-        FROM DeliveryBackOffice.dbo.DeliverySettlementDetail dsd
+        FROM DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH(NOLOCK)
             INNER JOIN #listGuidesEnabled lge
                 ON dsd.Guide_Serie = lge.Guide_Serie
                    AND lge.Guide_Number = dsd.Guide_Number
-			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement dobs
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement dobs WITH(NOLOCK)
 				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
 		WHERE dsd.RowStatus = 1
-		AND CAST(dobs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
-		AND dobs.ID_Courier = @IdCourier
+            AND dobs.Date_Dispatched >= @Today
+            AND dobs.Date_Dispatched < DATEADD(DAY, 1, @Today)
+            AND dobs.ID_Courier = @IdCourier;
 
 		UPDATE rpd 
 		SET RowStatus = 0,
 			TokenUpdated = @TokenCreated,
 			DateUpdated = GETDATE()
-		FROM RoutePreparationDetail rpd
+		FROM DeliveryBackOffice.dbo.RoutePreparationDetail rpd WITH(NOLOCK)
 		INNER JOIN #listGuidesEnabled lge
 			ON rpd.Guide_Serie = lge.Guide_Serie
-			AND rpd.Guide_Number = lge.Guide_Number
-		INNER JOIN RoutePreparation rp
+			    AND rpd.Guide_Number = lge.Guide_Number
+		INNER JOIN DeliveryBackOffice.dbo.RoutePreparation rp WITH(NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
 		WHERE rpd.RowStatus = 1
-			AND rp.DateRoutePreparation = CAST(GETDATE() AS DATE)
+            AND rp.DateRoutePreparation >= @Today
+            AND rp.DateRoutePreparation < DATEADD(DAY, 1, @Today);
 
         -- Actualizar registros del detalle de servicios de devolución
         UPDATE std
         SET std.RowStatus = 0,
             std.TokenUpdated = @TokenCreated,
             std.DateUpdated = GETDATE()
-        FROM dbo.SettlementByPickup stp WITH (NOLOCK)
-            LEFT JOIN dbo.SettlementByPickupDetail std WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.SettlementByPickup stp WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail std WITH (NOLOCK)
                 ON std.SettlementByPickupId = stp.Id
                    AND std.RowStatus = 1
             INNER JOIN #listGuidesEnabled lge
                 ON lge.Guide_Serie = std.GuideSerie
                    AND lge.Guide_Number = std.GuideNumber
-            LEFT JOIN dbo.DeliveryOrderPiece dpc WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dpc WITH (NOLOCK)
                 ON dpc.GuideSerie = std.GuideSerie
                    AND dpc.GuideNumber = std.GuideNumber
-            LEFT JOIN dbo.PieceByService pbs WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH (NOLOCK)
                 ON pbs.GuidePieceId = dpc.GuidePiece
-            LEFT JOIN dbo.ServiceManagement smg WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.ServiceManagement smg WITH (NOLOCK)
                 ON smg.IdServiceManagement = pbs.ServiceManagmentId
         WHERE smg.SubTypeServiceManagmentId = 3;
 
@@ -121,19 +132,19 @@ BEGIN
         SET pbs.RowStatus = 0,
             pbs.TokenUpdated = @TokenCreated,
             pbs.DateUpdated = GETDATE()
-        FROM dbo.SettlementByPickup stp WITH (NOLOCK)
-            LEFT JOIN dbo.SettlementByPickupDetail std WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.SettlementByPickup stp WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail std WITH (NOLOCK)
                 ON std.SettlementByPickupId = stp.Id
                    AND std.RowStatus = 1
-            JOIN #listGuidesEnabled lge
+            INNER JOIN #listGuidesEnabled lge
                 ON lge.Guide_Serie = std.GuideSerie
                    AND lge.Guide_Number = std.GuideNumber
-            LEFT JOIN dbo.DeliveryOrderPiece dpc WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dpc WITH (NOLOCK)
                 ON dpc.GuideSerie = std.GuideSerie
                    AND dpc.GuideNumber = std.GuideNumber
-            LEFT JOIN dbo.PieceByService pbs WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH (NOLOCK)
                 ON pbs.GuidePieceId = dpc.GuidePiece
-            LEFT JOIN dbo.ServiceManagement smg WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.ServiceManagement smg WITH (NOLOCK)
                 ON smg.IdServiceManagement = pbs.ServiceManagmentId
         WHERE smg.SubTypeServiceManagmentId = 3;
 
@@ -149,7 +160,8 @@ BEGIN
             [Observations],
             [Temperature_Celsius],
             [PieceId],
-            [RowStatus]
+            [RowStatus],
+            [StationId]
         )
         SELECT lge.Guide_Serie,
                lge.Guide_Number,
@@ -160,8 +172,11 @@ BEGIN
                NULL,
                NULL,
                NULL,
-               1
+               1,
+               @StationId
         FROM #listGuidesEnabled lge;
+
+        DROP TABLE #listGuidesEnabled;
 
     END TRY
     BEGIN CATCH
@@ -171,18 +186,10 @@ BEGIN
             SELECT CAST(ERROR_MESSAGE() AS VARCHAR(MAX)) AS ResultMessage
         );
 
-        SET @jsonResult =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT ',{"IdResult": 500,' + '"Message":"' + @errorMessage + '"}'
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'VARCHAR(max)'),
-                            1,
-                            1,
-                            ''
-                        )
-        );
+        SELECT
+        500				    AS 'IdResult'
+        , @errorMessage		AS 'Message'
+
         ROLLBACK TRANSACTION;
 
     END CATCH;
@@ -192,25 +199,10 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        SELECT
+        200				                        AS 'IdResult'
+        , 'Guías Procesadas exitosamente.'		AS 'Message'
 
-
-        SET @jsonResult =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT ',{"IdResult": 200,' + '"Message":"Guías Procesadas exitosamente."}'
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'VARCHAR(max)'),
-                            1,
-                            1,
-                            ''
-                        )
-        );
-
-
-    --- succesfull
     END;
-
-    SELECT ('[' + @jsonResult + ']') jsonResult;
 
 END;
