@@ -191,6 +191,7 @@ BEGIN
 						AND WCT.WebhookType = WRBU.WebhookTypeId
 				INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE WITH (NOLOCK)
 					ON WRBU.CustomerId = WHE.CustomerId
+					AND WHE.WebhookTypeId = WCT.WebhookType
 			WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
 					AND WHE.TypeConnectionId = 1
 

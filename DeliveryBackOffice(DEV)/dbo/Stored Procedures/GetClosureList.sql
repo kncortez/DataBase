@@ -3,8 +3,12 @@
 -- Create date: <2024-07-05>
 -- Description:	<Se agrega la moneda correspondiente al express center>
 -- =============================================
-
-CREATE PROCEDURE [dbo].[GetClosureList] 
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-10-17>
+-- Description:	<Se agrega el método de pago Zigi en los totales>
+-- =============================================
+CREATE PROCEDURE [dbo].[GetClosureList]
     @VisitPointId INT,
     @StartDate DATETIME,
     @EndDate DATETIME
@@ -12,19 +16,26 @@ AS
 BEGIN
 	DECLARE @IdCountry NVARCHAR(2),
 		    @Account NVARCHAR(30),
-			@AccountCOD NVARCHAR(30);
+			@AccountCOD NVARCHAR(30),
+            @AccountZigi NVARCHAR(30);
 
-	SELECT @IdCountry = CountryId 
-	FROM VisitPointClient 
+	SELECT @IdCountry = CountryId
+	FROM VisitPointClient
 	WHERE CodeOfReference = @VisitPointId
 
-	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
-	
-	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
+	WHERE Description = 'Cuenta Express Center' AND IdCountry = @IdCountry
+
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
+	WHERE Description = 'Cuenta Área COD' AND IdCountry = @IdCountry
+
+    -- MODIFICACIÓN [17/10/2025] - Campos para Zigi
+	SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
+	WHERE Description = 'Cuenta Zigi' AND IdCountry = @IdCountry
+
     SELECT ACH.IdAccountingClosuresHeader 'ClosureId',
            ACH.VisitPoint 'VisitPointId',
            VPC.DescriptionOfClient 'VisitPoinDescription',
@@ -46,6 +57,14 @@ BEGIN
            ACH.TotalAmountFacturaCashDeclared,
            ACH.TotalAmountFacturaCard,
            ACH.TotalAmountFacturaCardDeclared,
+           -- MODIFICACIÓN 17/10/2025 Bilkar Morataya
+           ACH.TotalAmountZigi,
+           ACH.TotalAmountZigiDeclared,
+           ACH.TotalAmountCODZigi,
+           ACH.TotalAmountCODZigiDeclared,
+           ACH.TotalAmountFacturaZigi,
+           ACH.TotalAmountFacturaZigiDeclared,
+           -- FIN MODIFICACIÓN
 		   ISNULL(CCC.Symbol,'') AS CurrencySymbol
     -- FIN MODIFICACIÓN
     FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
@@ -68,6 +87,7 @@ BEGIN
 
     SELECT @Account AS AccounExp,
 		   @AccountCOD AS AccountCOD,
+		   @AccountZigi AS AccountZigi,
 		  Value 'URL'
     FROM ConfigParams
     WHERE Name = 'ClosureExpressCenter';
