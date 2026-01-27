@@ -2079,6 +2079,7 @@
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_2.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_3.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_4.sql" />
+    <Build Include="dbo\Stored Procedures\SupportLHroutes.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
