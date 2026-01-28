@@ -6,7 +6,7 @@
    Fecha:     <2026-01-27>
    === CHANGELOG ============================
    =========================================== */
-ALTER PROCEDURE [dbo].[RptLastMileRoutesReportV3_HN]
+CREATE PROCEDURE [dbo].[RptLastMileRoutesReportV3_HN]
     @StartDate DATE,
     @EndDate DATE,
     @IdCountry VARCHAR(3) = 'GT'
@@ -91,7 +91,8 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                 ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
             INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
-                ON DOP.GuideNumber = DA.Guide_Number
+                ON DOP.GuideSerie = DA.Guide_Serie
+                    AND DOP.GuideNumber = DA.Guide_Number
         WHERE COI.RowStatus = 1
               AND DOBS.Date_Dispatched >= @StartDateTime
 			  AND DOBS.Date_Dispatched < @EndDateTime
