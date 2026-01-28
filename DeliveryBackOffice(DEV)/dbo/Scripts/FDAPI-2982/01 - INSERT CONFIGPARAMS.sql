@@ -18,6 +18,23 @@ INSERT INTO [dbo].[ConfigParams]
 		,'HN'
 		,NULL)
 
+INSERT INTO [dbo].[ConfigParams]
+		([Name]
+		,[Description]
+		,[Value]
+		,[Status]
+		,[CreateDate]
+		,[IdCountry]
+		,[IdCurrencyCOD])
+	VALUES
+		('NoDeclaracion'
+		,'Numero de Declaracion Jurada de Forza'
+		,'0'
+		,1
+		,GETDATE()
+		,'HN'
+		,NULL)
+
 	COMMIT TRANSACTION;
 
 END TRY
