@@ -12,6 +12,10 @@
 -- Create date: <10/10/2025>
 -- Description:	<Se agregan envios internacionales.>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-11-04>
+-- Description:	<Se agrega método de paago Zigi>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -93,13 +97,11 @@ BEGIN
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE
-			WHEN DOPD.TypeofInOutMoneyId = 1 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+			-- Modificación 21/10/2025
+	        WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 10) THEN UPPER(ctgmon.tio_pk_name)
 			WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-			WHEN DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
 			ELSE ''
+	        -- Fin de modificación
 		END 'PaymentType'
 	   ,CTS.NameTypeService AS 'ServiceType'
 
@@ -148,7 +150,7 @@ BEGIN
 	LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH(NOLOCK)
 		ON costd.IdCost = cost.IdCost
 			AND costd.Amount > 0
-			AND (DOPD.TypeofInOutMoneyId = 6
+			AND (DOPD.TypeofInOutMoneyId IN (6, 10)
 				AND costd.Voucher != '')
 
 	-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
@@ -187,13 +189,11 @@ BEGIN
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE
-			WHEN DOPD.TypeofInOutMoneyId = 1 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+			-- Modificación 21/10/2025
+	        WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 10) THEN UPPER(ctgmon.tio_pk_name)
 			WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-			WHEN DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
 			ELSE ''
+	        -- Fin de modificación
 		END 'PaymentType'
 	   ,CTS.NameTypeService AS 'ServiceType'
 
@@ -227,7 +227,6 @@ BEGIN
 	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 		--ON VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId)
 		ON DOPD.VisitPoint = VPC.CodeOfReference
-		OR (@VisitPointId = '-1' AND VPC.CodeOfReference = ACH.VisitPoint)
 	-- FIN MODIFICACIÓN
 
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
@@ -269,13 +268,11 @@ BEGIN
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE
-			WHEN DOPD.TypeofInOutMoneyId = 1 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-			WHEN DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+			-- Modificación 21/10/2025
+	        WHEN DOPD.TypeofInOutMoneyId IN (1, 2, 3, 4, 7, 10) THEN UPPER(ctgmon.tio_pk_name)
 			WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-			WHEN DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
 			ELSE ''
+	        -- Fin de modificación
 		END 'PaymentType'
 	   ,CTS.NameTypeService AS 'ServiceType'
 
@@ -287,6 +284,8 @@ BEGIN
 		,ISNULL(ACHVP.ClosurerPOS,'') 'CierrePOS'
 		-- FIN MODIFICACIÓN
 
+	--,DOPD.*
+	--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
 	FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
 
 	INNER JOIN CatTypeServiceClosure CTS WITH(NOLOCK)

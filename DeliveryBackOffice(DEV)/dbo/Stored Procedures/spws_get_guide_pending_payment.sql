@@ -1,12 +1,16 @@
-﻿-- =============================================
--- Author:		<César,Aquino>
--- Create date: <2021-05-21>
--- Description:	<Devuleve el monto a cobrar >
--- =============================================
--- Author:      <Juan Ramirez>
--- Create date: <2025-03-28>
--- Description: <Ajustes de optimización>
--- =============================================
+﻿/* =================================================
+   SP:        spws_get_guide_pending_payment
+   Propósito: Devuelve el monto a cobrar
+   Autor:     César Aquino
+   Historia:  ---
+   Fecha:     2021-05-21
+
+=== CHANGELOG ============================
+
+2025-03-28 | Historia/épica: ---          | Autor: Juan Ramirez    | Ajustes de optimización
+2025-12-29 | Historia/épica: FDAPI-4739   | Autor: Brandon Pedroza | Ajustes dba
+
+=========================================== */
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment]
     @InGuides VARCHAR(MAX),
     @InTime INT,
@@ -116,8 +120,8 @@ BEGIN
      CurrencyPriceSymbol      NVARCHAR(8),
     );
 
-    CREATE NONCLUSTERED INDEX idx_tempbrain ON #listGuidesBrain (ItemNumber, ItemSerie);
-    CREATE NONCLUSTERED INDEX IDX_TEMPPRICEBRAIN ON #TempPrice (IsCustomer, GuideNumber);
+    CREATE NONCLUSTERED INDEX idx_tempbrain ON #listGuidesBrain (ItemSerie, ItemNumber);
+    CREATE NONCLUSTERED INDEX IDX_TEMPPRICEBRAIN ON #TempPrice (IsCustomer,GuideSerie,GuideNumber);
 
     -- Clear existing data if needed
     TRUNCATE TABLE #listGuidesBrain;
@@ -295,12 +299,6 @@ BEGIN
                                ELSE -- cliente no tiene credito
                                    CASE
                                        WHEN tp.TimeSequence <= @InSequenceTime THEN
-                                           /*CASE @_InTime
-												WHEN 2 THEN
-													IIF(tp.IsCollect = 1, 0, tp.Price)
-												ELSE
-													IIF(tp.IsCollect = 1, tp.Price, 0)
-											END*/
                                            tp.Price
                                        ELSE
                                            0
@@ -349,6 +347,7 @@ BEGIN
            END [ReturnRate]
     FROM #TempPrice tp
     ORDER BY tp.IsCustomer,
+             tp.GuideSerie,
              tp.GuideNumber
 
     IF OBJECT_ID('tempdb.dbo.#listGuidesBrain', 'U') IS NOT NULL DROP TABLE #listGuidesBrain;

@@ -1,8 +1,12 @@
 ﻿-- =============================================
--- Author:	<Oscar Rodriguez>
+-- Author:    <Oscar Rodriguez>
 -- Description: Se regresa informacion de poblado de origen
 -- =============================================
-
+-- =============================================
+-- Author:    <Bilkar Morataya>
+-- Description: Manejo de creación de guías: Crédito, Collect y Estándar (primera fase: sin validación)
+-- Date <2024-12-23>
+-- =============================================
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
     @TblServiceRequest AS TblServiceRequest3 READONLY,
@@ -10,12 +14,12 @@ CREATE PROCEDURE [dbo].[SetServiceRequest]
 	@IsArticle BIT = 0
 AS
 BEGIN
-	
+
 	DECLARE @ParcelExists AS TABLE (RowNumber INT, Parcel NVARCHAR(20))
 
 	--CÓDIGOS DE ARTÍCULOS
 	IF @IsArticle = 1
-	BEGIN 
+	BEGIN
 
 		IF NOT EXISTS(SELECT 1 FROM @TblDeliveryOrders WHERE ParcelCode IS NULL OR ParcelCode = '')
 		BEGIN
@@ -53,7 +57,7 @@ BEGIN
         Guide_Number INT NULL,          -- correlativo autogenerado
         Guide_Serie VARCHAR(2) NULL
     );
-	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
+	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WITH (NOLOCK) WHERE SalesPackageStatusName = 'Activa')
     BEGIN TRANSACTION;
     BEGIN TRY
         /*********************************************************************************************/
@@ -137,7 +141,6 @@ BEGIN
 			   [ParcelCode],
 			   [IdCountrySender],
                -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-               --[Collect],
                NULL 'SenderIdTownship',
                NULL 'HubOriginId',
                NULL 'HubDestinationId',
@@ -153,7 +156,9 @@ BEGIN
         -- FIN MODIFICACION
                [ReceiverIdTownship],
 			   [ReceiverIdSettlement],
-			   [SenderIdSettlement]
+			   [SenderIdSettlement],
+			   [GuideType],
+			   CAST(0 AS BIT) AS [IsCollect]
 
         INTO #GuideTable
         FROM @TblDeliveryOrders
@@ -214,19 +219,19 @@ BEGIN
         SET SenderIdTownship =
             (
                 SELECT IdTownship
-                FROM [DeliveryBackOffice].[dbo].[Township]
+                FROM [DeliveryBackOffice].[dbo].[Township] WITH (NOLOCK)
                 WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Town)
                       AND IdProvince =
                       (
                           SELECT IdProvince
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
                       )
             ),
             SourceSystemId =
             (
                 SELECT SysIdSystem
-                FROM DeliveryBackOffice.dbo.CatSystem
+                FROM DeliveryBackOffice.dbo.CatSystem WITH (NOLOCK)
                 WHERE SysNameSystem = 'Parser'
                       AND SysRowStatus = 1
             )
@@ -252,7 +257,7 @@ BEGIN
             CatModuleId =
             (
                 SELECT ModIdModule
-                FROM DeliveryBackOffice.dbo.CatModule
+                FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
                 WHERE ModName = 'Parser'
             ),
             IdCustomer =
@@ -264,7 +269,7 @@ BEGIN
             SalePipeLineId =
             (
                 SELECT IdSalePipeLine
-                FROM DeliveryBackOffice.dbo.CatSalePipelines
+                FROM DeliveryBackOffice.dbo.CatSalePipelines WITH (NOLOCK)
                 WHERE Name = 'Parser'
             ),
             OrderUserCreated =
@@ -276,14 +281,14 @@ BEGIN
                 SELECT DeliveryBackOffice.dbo.fn_get_segment(t.Guide_Serie, t.Guide_Number)
             ),
 		    --SE AGREGA EL DESTINO PAIS CRISTIAN SUAZO
-			ReceiverCountryId = 
+			ReceiverCountryId =
 			(
 				SELECT TOP 1 IdCountry
-                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
-			)
-			----------------------------------------------
-
+			),
+			-- SE MODIFICA ISCOLLECT SEGÚN EL TIPO DE SERVICIO
+            IsCollect = CASE WHEN UPPER(LTRIM(RTRIM(ISNULL(t.GuideType,'')))) = 'COLLECT' THEN 1 ELSE 0 END
         FROM #GuideTable t;
 
         -- FIN MODIFICACION
@@ -352,7 +357,7 @@ BEGIN
             [Guide_Collected],
             [TypeService],
             -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-            --[IsCollect],
+            [IsCollect],
 
             [SenderIdTownship],
             [ReceiverIdTownship],
@@ -427,7 +432,7 @@ BEGIN
                0,                     -- Guide_Collected
                CASE WHEN GT.Collect_OnDelivery > 0 THEN 'COD' ELSE 'STD' END,
                                       -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-                                      --,GT.Collect
+                GT.IsCollect,
                GT.SenderIdTownship,
                GT.ReceiverIdTownship,
                GT.HubOriginId,
@@ -515,8 +520,8 @@ BEGIN
                         ON GT.Sender_ID = vpc.CodeOfReference
                     WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
                         AND rbc.RbcRowStatus = 1
-                        AND rbc.RbcCodeOfReference = vpc.CodeOfReference        
-                    UNION ALL        
+                        AND rbc.RbcCodeOfReference = vpc.CodeOfReference
+                    UNION ALL
                     SELECT TOP 1 rbc.RbcId, 2 AS Priority
                     FROM RatebyCustomer rbc WITH (NOLOCK)
                     INNER JOIN VisitPointClient vpc WITH (NOLOCK)
@@ -524,7 +529,7 @@ BEGIN
                     WHERE (GT.IdCustomer = rbc.RbcIdCustomer OR (GT.IdCustomer IS NULL AND vpc.CustomerID = rbc.RbcIdCustomer))
                         AND rbc.RbcRowStatus = 1
                         AND rbc.RbcCodeOfReference IS NULL
-                    ORDER BY rbc.RbcCodeOfReference DESC                           
+                    ORDER BY rbc.RbcCodeOfReference DESC
                 ) AS CombinedResults
                 ORDER BY Priority
             ) AS BestRate
@@ -727,8 +732,8 @@ BEGIN
                    ord.Guide_Number
             FROM #GuideTable lst
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-                    ON ord.Guide_Number = lst.Guide_Number
-                       AND ord.Guide_Serie = lst.Guide_Serie
+                    ON ord.Guide_Serie = lst.Guide_Serie
+                       AND ord.Guide_Number = lst.Guide_Number
             WHERE ISNULL(ord.PriceShippment, 0) = 0;
 
 
@@ -769,7 +774,53 @@ BEGIN
 
             END;
         END;
-		
+
+		-- INSERTAR DATA PARA PAYMENT DETAIL BASADO EN GUIDE TYPE
+        -- Se ejecuta después del revaluado para usar el precio calculado
+        -- Solo procesa si GuideType es 'COLLECT' o 'STANDARD' (no nulo, no blanco, no otros valores)
+        DECLARE @Token VARCHAR(50) = 'SetServiceRequest';
+
+        -- Procesar GuideType = 'COLLECT'
+        IF EXISTS(SELECT 1 FROM #GuideTable WHERE UPPER(LTRIM(RTRIM(ISNULL(GuideType,'')))) = 'COLLECT')
+        BEGIN
+            INSERT INTO DeliveryOrderPaymentDetail (GuideNumber, GuideSerie, PayTypeId, TypeofInOutMoneyId, TimePlaId, amount, TokenCreated, DateCreated)
+            SELECT DO_RESULT.Guide_Number,
+                   DO_RESULT.Guide_Serie,
+                   2, -- PayTypeId para COLLECT
+                   1, -- TypeofInOutMoneyId
+                   3, -- TimePlaId para COLLECT
+                   0, -- Tarifa calculada + monto a cobrar
+                   @Token,
+                   GETDATE()
+            FROM #GuideTable GIT
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO_RESULT WITH (NOLOCK)
+                ON GIT.Guide_Serie = DO_RESULT.Guide_Serie
+                AND GIT.Guide_Number = DO_RESULT.Guide_Number
+            WHERE UPPER(LTRIM(RTRIM(ISNULL(GIT.GuideType,'')))) = 'COLLECT';
+        END
+
+        -- Procesar GuideType = 'STANDARD'
+        IF EXISTS(SELECT 1 FROM #GuideTable WHERE UPPER(LTRIM(RTRIM(ISNULL(GuideType,'')))) = 'STANDARD')
+        BEGIN
+            INSERT INTO DeliveryOrderPaymentDetail (GuideNumber, GuideSerie, PayTypeId, TypeofInOutMoneyId, TimePlaId, amount, TokenCreated, DateCreated)
+            SELECT DO_RESULT.Guide_Number,
+                   DO_RESULT.Guide_Serie,
+                   1, -- PayTypeId para STANDARD
+                   2, -- TypeofInOutMoneyId
+                   1, -- TimePlaId para STANDARD
+                   0, -- Solo tarifa calculada
+                   @Token,
+                   GETDATE()
+            FROM #GuideTable GIT
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO_RESULT WITH (NOLOCK)
+                ON GIT.Guide_Serie = DO_RESULT.Guide_Serie
+                AND GIT.Guide_Number = DO_RESULT.Guide_Number
+            WHERE UPPER(LTRIM(RTRIM(ISNULL(GIT.GuideType,'')))) = 'STANDARD';
+        END
+
+        -- Nota: Si GuideType es nulo, blanco o tiene un valor distinto a 'COLLECT' o 'STANDARD',
+        -- no se inserta ningún registro en DeliveryOrderPaymentDetail
+
 		-- Proceso para registro de tiempo estimado de entrega
 		-- Andrés Ruíz - 2023-04-18
 		UPDATE
@@ -780,7 +831,7 @@ BEGIN
 					(CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Department],''))) <> '' THEN [DO].[Sender_Department] ELSE [VPC].[Department] END)
 					, (CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Town],''))) <> '' THEN [DO].[Sender_Town] ELSE [VPC].[Town] END)
 					, NULL
-					, [DO].[SenderCountryId] 
+					, [DO].[SenderCountryId]
 					, [DO].[Receiver_Department]
 					, [DO].[Receiver_Town]
 					, NULL
@@ -788,7 +839,7 @@ BEGIN
 					, [DO].[DateCreated]
 				)
 		FROM
-			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK)
 			INNER JOIN
 				[#GuideTable] GT
 				ON
@@ -796,17 +847,17 @@ BEGIN
 					AND
 					[DO].[Guide_Number] = [GT].[Guide_Number]
 			INNER JOIN
-				[DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
+				[DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK)
 				ON
 					[DO].[Sender_ID] = [VPC].[CodeOfReference]
 		------------------------------------------------------
 
-		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) 
+		SET @GuidePriority = (SELECT COUNT (do.Guide_Number)
                                 FROM DeliveryOrder do WITH (NOLOCK)
 		                            INNER JOIN @CorrelativeTable ct
-		                                ON do.Guide_Number = ct.Guide_Number
-                                        AND do.Guide_Serie = ct.Guide_Serie
-		                            INNER JOIN Membership mb
+		                                ON do.Guide_Serie = ct.Guide_Serie
+                                        AND do.Guide_Number = ct.Guide_Number
+		                            INNER JOIN Membership mb WITH (NOLOCK)
 		                                ON do.IdCustomer = mb.CustomerId
 		                        WHERE mb.CatMembershipStatusId = 3
 		                            AND mb.ExpirationDate >= GETDATE()
@@ -819,7 +870,7 @@ BEGIN
     END TRY
     BEGIN CATCH
 
-		
+
         SELECT 0 AS 'StatusCode',
                ERROR_MESSAGE() AS 'Description',
                CONVERT(BIGINT, 0) AS 'NumTransferID',
@@ -855,72 +906,72 @@ BEGIN
         COMMIT TRANSACTION;
 
 			---Nuevos datos para consumir nuevo formato guía
-  	DECLARE @FranchiseVisitPointTypeId INT = 
+  	DECLARE @FranchiseVisitPointTypeId INT =
 	(
-		SELECT 
-			TOP (1) 
-				[KOVPC].[IdKindOfVPClient] 
+		SELECT
+			TOP (1)
+				[KOVPC].[IdKindOfVPClient]
 		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  --COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario'
 	)
-	DECLARE @ExpressVisitPointTypeId INT = 
+	DECLARE @ExpressVisitPointTypeId INT =
 	(
-		SELECT 
-			TOP (1) 
-				[KOVPC].[IdKindOfVPClient] 
+		SELECT
+			TOP (1)
+				[KOVPC].[IdKindOfVPClient]
 		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'
 	)
 	DECLARE @IndividualWebSys INT =
 	(
-		SELECT 
+		SELECT
 			TOP 1
 				[CS].[SysIdSystem]
 		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web' -- COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web'
 	)
 	DECLARE @ExpressWebSys INT =
 	(
-		SELECT 
+		SELECT
 			TOP 1
 				[CS].[SysIdSystem]
 		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'
 	)
 	DECLARE @CorporateWebSys INT =
 	(
-		SELECT 
+		SELECT
 			TOP 1
 				[CS].[SysIdSystem]
 		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'
 	)
 	DECLARE @ParserSys INT =
 	(
-		SELECT 
+		SELECT
 			TOP 1
 				[CS].[SysIdSystem]
 		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Parser'
 	)
 
 
   --Fin Nuevos datos para consumir nuevo formato guía
 
 		-- SE AGREGO EL PAIS --CRISTIAN SUAZO
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WITH (NOLOCK) WHERE BusinessSegmentName='B2B' AND IdCountry = @IdCountry);
 
 
         SELECT 1 AS 'StatusCode',
@@ -939,23 +990,23 @@ BEGIN
                PrvOri.[ProvinceAbbreviation] AS 'HubOrigin',
                (
                    SELECT HubAbbreviation
-                   FROM [DeliveryBackOffice].[dbo].[HubLogistics]
+                   FROM [DeliveryBackOffice].[dbo].[HubLogistics] WITH (NOLOCK)
                    WHERE IdHubLogistic = D.HubDestinationId
                ) AS 'HubDestination',
                -- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                (
                    SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID, D.IdCustomer)
                ) AS 'Attempts',
-			   (CASE 
+			   (CASE
 					WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
-					WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
+					WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B'
 					ELSE 'E'
 					END) 'Priority',
 
 			  -- IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
 			   CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			   (CASE
-					WHEN 
+					WHEN
 						(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )
 						or ctm.Abbreviation IN ('IGSS','RENAP')
 
@@ -995,10 +1046,10 @@ BEGIN
 			D.ReceiverCountryId,
 			IIF(D.InsuranceAmount>800 AND D.IsInsuarance=1,1,0) 'IsInsured',
 			CASE
-									WHEN DOP.PiecePhysicalWeight > 0 THEN 
+									WHEN DOP.PiecePhysicalWeight > 0 THEN
 								  IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT))
-								ELSE 
-									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
+								ELSE
+									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END
 								'WeightLB',
 								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
 			ISNULL(DSC.RouteCode,'') AS 'RouteCode',
@@ -1006,8 +1057,8 @@ BEGIN
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
-                ON C.Guide_Number = D.Guide_Number
-				AND C.Guide_Serie = D.Guide_Serie
+                ON C.Guide_Serie = D.Guide_Serie
+				AND C.Guide_Number = D.Guide_Number
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
@@ -1019,10 +1070,10 @@ BEGIN
 				ON dopd.GuideSerie = d.Guide_Serie and DOPD.GuideNumber = D.Guide_Number
 			LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
 				ON vpct.CodeOfReference = D.Sender_ID
-			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
+			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK)
 				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
-			LEFT JOIN [DeliveryBackOffice].[dbo].[Province] PrvOri  WITH(NOLOCK) 
-				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+			LEFT JOIN [DeliveryBackOffice].[dbo].[Province] PrvOri  WITH(NOLOCK)
+				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]
 			LEFT JOIN [dbo].[del_ParametrosFactura] DPF WITH(NOLOCK)
 			    ON  D.[OriginSenderId] = DPF.dpf_VpCodeOfReference
 			LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
@@ -1047,4 +1098,3 @@ BEGIN
 			  ASC;
     END;
 END;
-
