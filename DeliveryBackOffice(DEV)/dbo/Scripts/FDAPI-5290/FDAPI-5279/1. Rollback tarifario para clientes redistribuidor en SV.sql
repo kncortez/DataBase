@@ -1,6 +1,6 @@
 /* =================================================
    Script:    Rollback tarifario para clientes redistribuidor en SV.
-   Propósito: Modificación de tarifario asignado a clientes redistribuidor en SV.
+   PropÃ³sito: ModificaciÃ³n de tarifario asignado a clientes redistribuidor en SV.
    Autor:     Walter Orozco
    Historia:  FDAPI-5290[FDAPI-5279]
    Fecha:     2025-12-23
@@ -25,7 +25,7 @@ BEGIN TRY
 	WHERE RbcIdCustomer IN (SELECT IdCustomer FROM Customer WITH(NOLOCK) WHERE CountryID = @IdCountry and IdCustomerType = @TypeCustomer);
  
 	COMMIT TRANSACTION;
-	PRINT 'Actualización realizada correctamente.'
+	PRINT 'ActualizaciÃ³n realizada correctamente.'
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
