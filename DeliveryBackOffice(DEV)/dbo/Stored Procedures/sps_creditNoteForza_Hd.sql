@@ -31,7 +31,7 @@ BEGIN
     DECLARE @detalles               INT;
     DECLARE @idNotaCredito          INT = NULL;
     DECLARE @vpCodeOfReferences     NVARCHAR(10);
-    DECLARE @TypeDocumentCreditNote INT = (SELECT IdRegister FROM CatTypeDocument WHERE [Name] = 'Nota de crédito')
+    DECLARE @TypeDocumentCreditNote INT = 2
     DECLARE @Establishment          NVARCHAR(150);
     DECLARE @IdCountry NVARCHAR(2) = 'GT';
 
@@ -130,7 +130,6 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].[invoiceDetail] WITH (NOLOCK)
             WHERE [dti_fk_header] = @idInvoice;
 
-
             INSERT INTO [dbo].[InOutOfMoneyDetail]
             (
                 [io_type],
@@ -152,7 +151,6 @@ BEGIN
                    GETDATE()
             FROM [DeliveryBackOffice].[dbo].[InOutOfMoneyDetail] WITH (NOLOCK)
             WHERE [io_invoice] = @idInvoice;
-
 
             SET @vpCodeOfReferences =
             (
@@ -192,7 +190,6 @@ BEGIN
     BEGIN
 
         --Variables para el manejo de IVA 
-        --DECLARE @IdCountry AS NVARCHAR(8);
         DECLARE @IVA AS DECIMAL(18, 2) = 1.12;
         DECLARE @secuencia BIGINT, @rowcount  INT;
 
@@ -221,7 +218,7 @@ BEGIN
             FROM invoiceHeader WITH (NOLOCK)
             WHERE inv_type = 2
               AND inv_invoiceOfCreditNote = @idInvoice;
-            --PRINT 'Monto de la factura: ' + CONVERT(NVARCHAR(20),@AmountINvoice) + ' Monto de las Notas de Credito: ' + CONVERT(NVARCHAR(20),@AmountNotesCredits);
+
             --Validación si la factura esta anulada o si el monto de la notas de crédito ya sobrepaso a la factura
             IF (@InvoideStatus <> -1 AND @AmountInvoice >= @AmountNotesCredits)
             BEGIN
@@ -558,9 +555,7 @@ BEGIN
                     ORDER BY dti_fk_orderSerie,
                              dti_fk_orderNumber,
                              SAPCode;
-                    --PRINT CONVERT(NVARCHAR(25),@LineNumber);
-                    --PRINT CONVERT(NVARCHAR(25),@SAPCode)
-                    --PRINT CONVERT(NVARCHAR(25),@LineAmount);
+
                     -- Validar si no hay más líneas por procesar
                     IF @LineNumber IS NULL
                        OR @LineAmount IS NULL

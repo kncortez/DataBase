@@ -1,13 +1,16 @@
-﻿-- =============================================
--- Author:      <Cristian, Azurdia>
--- Create date: <2025-01-09>
--- Description: <Retorna los datos de una factura, asi como su detalle y guías>
--- =============================================
--- =============================================
--- Author:      <Brandon, Pedroza>
--- Create date: <2025-07-30>
--- Description: <Facturacion SV - Se agrega validacion para obtener información para SV>
--- =============================================
+﻿
+/* =================================================
+   SP:        [dbo].[GetInvoiceData]
+   Propósito: <Obtener Informaciónd de facturas ya emitidas>
+   Autor:     <Cristian Azurdia>
+   Historia:  <>
+   Fecha:     2025-03-19
+============================================
+=== CHANGELOG ================================
+-- 2025-08-11 | Historia/épica: FDAPI-4143 | Autor: Cristian Azurdia |
+-- 2025-07-30 | Historia/épica: FDAPI-4159 | Autor: Brandon Pedroza  |
+-- 2025-03-19 | Historia/épica: FDD-1480   | Autor: Cristian Azurdia |
+=========================================== */
 
 CREATE PROCEDURE [dbo].[GetInvoiceData]
 
@@ -76,7 +79,6 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
        SET @InvoiceBalance = @InvoiceBalance - @AmountNotesCredits;
     END
 
-
     SELECT
             inv_pk_id
            ,inv_FechaHoraFEL
@@ -85,7 +87,6 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
            ,inv_certificationFEL
            ,inv_amount
            ,@InvoiceBalance inv_balance
-           --,*
     FROM invoiceHeader WITH(NOLOCK)
     WHERE inv_pk_id = @pk_id;
 
@@ -94,7 +95,6 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
            ,dti_fk_orderSerie
            ,dti_fk_orderNumber
            ,dti_amount
-           --,*
     FROM invoiceDetail WITH(NOLOCK)
     WHERE dti_fk_header = @pk_id;
 

@@ -66,9 +66,9 @@ BEGIN
         FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
                 ON IND.dti_fk_header = INH.inv_pk_id
-                  AND INH.inv_certificationFEL IS NOT NULL
-                  AND INH.inv_creditNote IS NULL
-                  AND INH.inv_motiveCreditNote IS NULL
+            WHERE INH.inv_certificationFEL IS NOT NULL
+              AND INH.inv_creditNote IS NULL
+              AND INH.inv_motiveCreditNote IS NULL
         GROUP BY IND.dti_fk_orderSerie,
                  IND.dti_fk_orderNumber
     ) INH
