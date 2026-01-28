@@ -1,6 +1,6 @@
 /* =================================================
    Script:    Rollback para precios de paquetes en Hn
-   Propósito: Modificación de membresia y suscripciones en precio de Hn.
+   PropÃ³sito: ModificaciÃ³n de membresia y suscripciones en precio de Hn.
    Autor:     Walter Orozco
    Historia:  FDAPI-5290[FDAPI-5184]
    Fecha:     2025-12-26
@@ -19,7 +19,7 @@ BEGIN TRY
 	DECLARE @IdCatSubscriptionPETIT INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Petit' AND IdCountry = @Country) --17
 
     UPDATE [dbo].[CatSubscription]
-    SET SubscriptionDescription = '25 envíos L100.00 c/u',
+    SET SubscriptionDescription = '25 envÃ­os L100.00 c/u',
         SubscriptionCost = 2500.00,
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
@@ -28,17 +28,17 @@ BEGIN TRY
 		AND  IdCountry = @Country
 
     UPDATE  [dbo].[CatSubscriptionDescription]
-    SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Petit y podrás obtener tus guías prepagadas de 25 envíos con tarifa única a todo el país a L100.00 c/u.',
+    SET [Description]='Compra en la tienda virtual y recibe las guÃ­as en tu correo electrÃ³nico. Prepara tus paquetes, completa la informaciÃ³n de envÃ­o y entrÃ©galos en las +90 agencias express center o puedes solicitar la recolecciÃ³n a tu casa u oficina. Rastrea el progreso del envÃ­o con el nÃºmero de guÃ­a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logÃ­sticos. Adquiere tu Paquete Petit y podrÃ¡s obtener tus guÃ­as prepagadas de 25 envÃ­os con tarifa Ãºnica a todo el paÃ­s a L100.00 c/u.',
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM [dbo].[CatSubscriptionDescription]
     WHERE CatSubscriptionId = @IdCatSubscriptionPETIT 
         AND RowStatus = 1 
-        AND Title = '¿Cómo Funciona?'
+        AND Title = 'Â¿CÃ³mo Funciona?'
 
     UPDATE dbo.CatSubscriptionAtribute
-    SET SubscriptionAttributeDescription = '25 guías a L100.00 c/u.',
-        SubscriptionAttributeDescriptionLong = '25 guías a L100.00 c/u.',
+    SET SubscriptionAttributeDescription = '25 guÃ­as a L100.00 c/u.',
+        SubscriptionAttributeDescriptionLong = '25 guÃ­as a L100.00 c/u.',
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM dbo.CatSubscriptionAtribute
@@ -49,10 +49,10 @@ BEGIN TRY
 	--						PAQUETE BASICO
 	--===========================================================
 
-	DECLARE @IdCatSubscriptionBASICO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Básico' AND IdCountry = @Country) --13
+	DECLARE @IdCatSubscriptionBASICO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete BÃ¡sico' AND IdCountry = @Country) --13
 
     UPDATE [dbo].[CatSubscription]
-    SET SubscriptionDescription ='50 envíos L95.00 c/u',
+    SET SubscriptionDescription ='50 envÃ­os L95.00 c/u',
         SubscriptionCost = 4750.00,
         DateUpdated=GETDATE(),
         TokenUpdated = @TokenUpdated
@@ -61,17 +61,17 @@ BEGIN TRY
         AND  IdCountry = @Country
 
     UPDATE  [dbo].[CatSubscriptionDescription]
-    SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Básico y podrás obtener tus guías prepagadas de 50 envíos con tarifa única a todo el país a L95.00 c/u.  ',
+    SET [Description]='Compra en la tienda virtual y recibe las guÃ­as en tu correo electrÃ³nico. Prepara tus paquetes, completa la informaciÃ³n de envÃ­o y entrÃ©galos en las +90 agencias express center o puedes solicitar la recolecciÃ³n a tu casa u oficina. Rastrea el progreso del envÃ­o con el nÃºmero de guÃ­a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logÃ­sticos. Adquiere tu Paquete BÃ¡sico y podrÃ¡s obtener tus guÃ­as prepagadas de 50 envÃ­os con tarifa Ãºnica a todo el paÃ­s a L95.00 c/u.  ',
         DateUpdated=GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM [dbo].[CatSubscriptionDescription]
     WHERE CatSubscriptionId = @IdCatSubscriptionBASICO 
         AND RowStatus=1 
-        AND Title='¿Cómo Funciona?'
+        AND Title='Â¿CÃ³mo Funciona?'
 
     UPDATE dbo.CatSubscriptionAtribute
-    SET SubscriptionAttributeDescription='50 guías a L95.00 c/u.',
-        SubscriptionAttributeDescriptionLong = '50 guías a L95.00 c/u.',
+    SET SubscriptionAttributeDescription='50 guÃ­as a L95.00 c/u.',
+        SubscriptionAttributeDescriptionLong = '50 guÃ­as a L95.00 c/u.',
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM dbo.CatSubscriptionAtribute
@@ -85,7 +85,7 @@ BEGIN TRY
 	DECLARE @IdCatSubscriptionPLUS INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Plus' AND IdCountry = @Country) --14
 
     UPDATE [dbo].[CatSubscription]
-    SET SubscriptionDescription ='100 envíos L90.00 c/u',
+    SET SubscriptionDescription ='100 envÃ­os L90.00 c/u',
         SubscriptionCost = 9000.00,
         DateUpdated=GETDATE(),
         TokenUpdated = @TokenUpdated,
@@ -95,17 +95,17 @@ BEGIN TRY
         AND  IdCountry = @Country
 
     UPDATE  [dbo].[CatSubscriptionDescription]
-    SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electronico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Plus y podrás obtener tus guías prepagadas de 100 envíos con tarifa única a todo el país a L90.00 c/u.',
+    SET [Description]='Compra en la tienda virtual y recibe las guÃ­as en tu correo electronico. Prepara tus paquetes, completa la informaciÃ³n de envÃ­o y entrÃ©galos en las +90 agencias express center o puedes solicitar la recolecciÃ³n a tu casa u oficina. Rastrea el progreso del envÃ­o con el nÃºmero de guÃ­a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logÃ­sticos. Adquiere tu Paquete Plus y podrÃ¡s obtener tus guÃ­as prepagadas de 100 envÃ­os con tarifa Ãºnica a todo el paÃ­s a L90.00 c/u.',
     DateUpdated=GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM [dbo].[CatSubscriptionDescription]
     WHERE CatSubscriptionId = @IdCatSubscriptionPLUS 
         AND RowStatus=1 
-        AND Title='¿Cómo Funciona?'
+        AND Title='Â¿CÃ³mo Funciona?'
 
     UPDATE dbo.CatSubscriptionAtribute
-    SET SubscriptionAttributeDescription='100 guías a L90.00 c/u.',
-        SubscriptionAttributeDescriptionLong = '100 guías a L90.00 c/u.',
+    SET SubscriptionAttributeDescription='100 guÃ­as a L90.00 c/u.',
+        SubscriptionAttributeDescriptionLong = '100 guÃ­as a L90.00 c/u.',
         DateUpdated=GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM dbo.CatSubscriptionAtribute
@@ -119,7 +119,7 @@ BEGIN TRY
 	DECLARE @IdCatSubscriptionGOLD INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Gold' AND IdCountry = @Country) --15
 
     UPDATE [dbo].[CatSubscription]
-    SET SubscriptionDescription ='200 envíos L80.00 c/u',
+    SET SubscriptionDescription ='200 envÃ­os L80.00 c/u',
         SubscriptionCost = 16000.00,
         DateUpdated=GETDATE(),
         TokenUpdated = @TokenUpdated,
@@ -130,17 +130,17 @@ BEGIN TRY
 
 
     UPDATE  [dbo].[CatSubscriptionDescription]
-    SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electronico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Gold y podrás obtener tus guías prepagadas de 200 envíos con tarifa única a todo el país a L80.00 c/u.  ',
+    SET [Description]='Compra en la tienda virtual y recibe las guÃ­as en tu correo electronico. Prepara tus paquetes, completa la informaciÃ³n de envÃ­o y entrÃ©galos en las +90 agencias express center o puedes solicitar la recolecciÃ³n a tu casa u oficina. Rastrea el progreso del envÃ­o con el nÃºmero de guÃ­a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logÃ­sticos. Adquiere tu Paquete Gold y podrÃ¡s obtener tus guÃ­as prepagadas de 200 envÃ­os con tarifa Ãºnica a todo el paÃ­s a L80.00 c/u.  ',
         DateUpdated=GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM  [dbo].[CatSubscriptionDescription]
     WHERE CatSubscriptionId = @IdCatSubscriptionGOLD  
         AND RowStatus=1 
-        AND Title='¿Cómo Funciona?'
+        AND Title='Â¿CÃ³mo Funciona?'
 
     UPDATE dbo.CatSubscriptionAtribute
-    SET SubscriptionAttributeDescription='200 guías a L80.00 c/u.',
-        SubscriptionAttributeDescriptionLong = '200 guías a L80.00 c/u.',
+    SET SubscriptionAttributeDescription='200 guÃ­as a L80.00 c/u.',
+        SubscriptionAttributeDescriptionLong = '200 guÃ­as a L80.00 c/u.',
         DateUpdated=GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM dbo.CatSubscriptionAtribute
@@ -154,7 +154,7 @@ BEGIN TRY
 	DECLARE @IdCatSubscriptionPLATINO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Platino' AND IdCountry = @Country) --18
 
     UPDATE [dbo].[CatSubscription]
-    SET SubscriptionDescription ='400 envíos L75.00 c/u',
+    SET SubscriptionDescription ='400 envÃ­os L75.00 c/u',
         SubscriptionCost = 30000.00,
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated,
@@ -164,17 +164,17 @@ BEGIN TRY
         AND  IdCountry = @Country
 
     UPDATE  [dbo].[CatSubscriptionDescription]
-    SET [Description]='Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Platino y podrás obtener tus guías prepagadas de 400 envíos con tarifa única a todo el país a L75.00 c/u.',
+    SET [Description]='Compra en la tienda virtual y recibe las guÃ­as en tu correo electrÃ³nico. Prepara tus paquetes, completa la informaciÃ³n de envÃ­o y entrÃ©galos en las +90 agencias express center o puedes solicitar la recolecciÃ³n a tu casa u oficina. Rastrea el progreso del envÃ­o con el nÃºmero de guÃ­a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logÃ­sticos. Adquiere tu Paquete Platino y podrÃ¡s obtener tus guÃ­as prepagadas de 400 envÃ­os con tarifa Ãºnica a todo el paÃ­s a L75.00 c/u.',
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM [dbo].[CatSubscriptionDescription]
     WHERE CatSubscriptionId = @IdCatSubscriptionPLATINO  
         AND RowStatus = 1 
-        AND Title = '¿Cómo Funciona?'
+        AND Title = 'Â¿CÃ³mo Funciona?'
 
     UPDATE dbo.CatSubscriptionAtribute
-    SET SubscriptionAttributeDescription='400 guías a L75.00 c/u.',
-        SubscriptionAttributeDescriptionLong = '400 guías a L75.00 c/u.',
+    SET SubscriptionAttributeDescription='400 guÃ­as a L75.00 c/u.',
+        SubscriptionAttributeDescriptionLong = '400 guÃ­as a L75.00 c/u.',
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM dbo.CatSubscriptionAtribute
@@ -188,7 +188,7 @@ BEGIN TRY
 	DECLARE @IdCatSubscriptionPRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete Pro' AND IdCountry = @Country) --19
 
     UPDATE [dbo].[CatSubscription]
-    SET SubscriptionDescription = '600 envíos L70.00 c/u',
+    SET SubscriptionDescription = '600 envÃ­os L70.00 c/u',
         SubscriptionCost = 42000.00,
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated,
@@ -198,17 +198,17 @@ BEGIN TRY
         AND  IdCountry = @Country
 
     UPDATE  [dbo].[CatSubscriptionDescription]
-    SET [Description] = 'Compra en la tienda virtual y recibe las guías en tu correo electrónico.  Prepara tus paquetes, completa la información de envío y entrégalos en las  +90 agencias express center o puedes solicitar la recolección a tu casa u  oficina. Rastrea el progreso del envío con el número de guía proporcionado  para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al  centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de  los detalles logísticos. Adquiere tu Paquete Pro y podrás obtener tus guías  prepagadas de 600 envíos con tarifa única a todo el país a L.70.00 c/u.',
+    SET [Description] = 'Compra en la tienda virtual y recibe las guÃ­as en tu correo electrÃ³nico.  Prepara tus paquetes, completa la informaciÃ³n de envÃ­o y entrÃ©galos en las  +90 agencias express center o puedes solicitar la recolecciÃ³n a tu casa u  oficina. Rastrea el progreso del envÃ­o con el nÃºmero de guÃ­a proporcionado  para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al  centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de  los detalles logÃ­sticos. Adquiere tu Paquete Pro y podrÃ¡s obtener tus guÃ­as  prepagadas de 600 envÃ­os con tarifa Ãºnica a todo el paÃ­s a L.70.00 c/u.',
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM [dbo].[CatSubscriptionDescription]
     WHERE CatSubscriptionId = @IdCatSubscriptionPRO  
         AND RowStatus = 1 
-        AND Title = '¿Cómo Funciona?'
+        AND Title = 'Â¿CÃ³mo Funciona?'
 
     UPDATE dbo.CatSubscriptionAtribute
-    SET SubscriptionAttributeDescription='600 guías a L70.00 c/u',
-        SubscriptionAttributeDescriptionLong = '600 guías a L70.00 c/u.',
+    SET SubscriptionAttributeDescription='600 guÃ­as a L70.00 c/u',
+        SubscriptionAttributeDescriptionLong = '600 guÃ­as a L70.00 c/u.',
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM dbo.CatSubscriptionAtribute
@@ -222,7 +222,7 @@ BEGIN TRY
 	DECLARE @IdCatSubscriptionMICRO INT =(SELECT IdCatSubscription FROM [dbo].[CatSubscription] WHERE SubscriptionName='Paquete MICRO' AND IdCountry = @Country) --29
 
     UPDATE [dbo].[CatSubscription]
-    SET SubscriptionDescription = '15 envíos L104.00 c/u',
+    SET SubscriptionDescription = '15 envÃ­os L104.00 c/u',
         SubscriptionCost = 1558.00,
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated,
@@ -232,17 +232,17 @@ BEGIN TRY
         AND  IdCountry = @Country
 
     UPDATE  [dbo].[CatSubscriptionDescription]
-    SET [Description] = 'Compra en la tienda virtual y recibe las guías en tu correo electrónico.     Prepara tus paquetes, completa la información de envío y entrégalos en las     +90 agencias express center o puedes solicitar la recolección a tu casa u     oficina. Rastrea el progreso del envío con el número de guía proporcionado     para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al     centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de     los detalles logísticos. Adquiere tu Paquete Micro y podrás obtener tus     guías prepagadas de 15 envíos con tarifa única a todo el país a L104.00     c/u.',
+    SET [Description] = 'Compra en la tienda virtual y recibe las guÃ­as en tu correo electrÃ³nico.     Prepara tus paquetes, completa la informaciÃ³n de envÃ­o y entrÃ©galos en las     +90 agencias express center o puedes solicitar la recolecciÃ³n a tu casa u     oficina. Rastrea el progreso del envÃ­o con el nÃºmero de guÃ­a proporcionado     para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al     centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de     los detalles logÃ­sticos. Adquiere tu Paquete Micro y podrÃ¡s obtener tus     guÃ­as prepagadas de 15 envÃ­os con tarifa Ãºnica a todo el paÃ­s a L104.00     c/u.',
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM [dbo].[CatSubscriptionDescription]
     WHERE CatSubscriptionId = @IdCatSubscriptionMICRO  
         AND RowStatus = 1 
-        AND Title = '¿Cómo Funciona?'
+        AND Title = 'Â¿CÃ³mo Funciona?'
 
     UPDATE dbo.CatSubscriptionAtribute
-    SET SubscriptionAttributeDescription='15 guías a L104.00 c/u.',
-        SubscriptionAttributeDescriptionLong = '15 guías a L104.00 c/u.',
+    SET SubscriptionAttributeDescription='15 guÃ­as a L104.00 c/u.',
+        SubscriptionAttributeDescriptionLong = '15 guÃ­as a L104.00 c/u.',
         DateUpdated = GETDATE(),
         TokenUpdated = @TokenUpdated
     -- SELECT * FROM dbo.CatSubscriptionAtribute
@@ -250,7 +250,7 @@ BEGIN TRY
         AND SubscriptionAttributePosition = 1
  
 	COMMIT TRANSACTION;
-	PRINT 'Actualización realizada correctamente.'
+	PRINT 'ActualizaciÃ³n realizada correctamente.'
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
