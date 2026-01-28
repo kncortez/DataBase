@@ -1524,6 +1524,7 @@
     <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspectionDetail.sql" />
     <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspection.sql" />
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
+    <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3_HN.sql" />
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReport.sql" />
     <Build Include="dbo\Stored Procedures\RptLastMileRoutes.sql" />
     <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartHeader.sql" />
