@@ -1,13 +1,17 @@
-﻿-- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-10-11>
--- Description:	<Delivery Tracking - Método para obtener información del seguimiento de la guía personalizado al nuevo tracking.>
--- Description: <Contenerización - Se agrega TicketNumber para código de referencia y busca relación con una guía asociada.>
--- =============================================
--- Author:		<Brandon, Pedroza>
--- Modified:	<2025-02--14>
--- Description: <Contenerización - Se realiza ajuste para obtener numero de guia si no trae referencia>
--- =============================================
+﻿/* =================================================
+   SP:        SPHW_GetNewDeliveryTracking
+   Propósito: Delivery Tracking – Obtener información de seguimiento de guía personalizado al nuevo tracking.
+              Contenerización – Agrega TicketNumber como código de referencia y busca relación con guía asociada.
+   Autor:     Walter Orozco
+   Historia:  ---
+   Fecha:     2024-10-11
+
+=== CHANGELOG ============================
+
+2025-02-14 | Historia/épica: ---         | Autor: Brandon Pedroza | Contenerización – Ajuste para obtener número de guía cuando no se envía referencia
+2026-01-17 | Historia/épica: FDAPI-5378  | Autor: Brandon Pedroza | Se obtienen checkpoint validos  de guías(rowstatus = 1)
+
+=========================================== */
 
 CREATE PROCEDURE [dbo].[SPHW_GetNewDeliveryTracking]
 @TicketNumber NVARCHAR(300),
@@ -29,7 +33,7 @@ BEGIN TRY
 			@GuideCount = COUNT(Guide_Number) OVER ()
 		FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
 		WHERE Ticket_Number = @TicketNumber 
-		AND (@IdCustomer IS NULL OR IdCustomer = @IdCustomer)
+		AND (@IdCustomer IS NULL OR IdCustomer = @IdCustomer);
 	END
 	ELSE
 	BEGIN
@@ -38,14 +42,13 @@ BEGIN TRY
 			@GuideNumber = ISNULL(Guide_Number,0),
 			@GuideCount = COUNT(Guide_Number) OVER ()
 		FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-		WHERE Guide_Number = @GuideNumber
-		AND	Guide_Serie = @GuideSerie		
+		WHERE Guide_Serie = @GuideSerie
+		AND Guide_Number = @GuideNumber;			
 	END;
 
 	IF(@GuideSerie != '' AND @GuideNumber > 0 AND @GuideCount = 1)
 	BEGIN
-		DECLARE @Receiver_Phone NVARCHAR(200) = (SELECT RIGHT(LTRIM(RTRIM(Receiver_Phone)), 8) FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-											 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
+		DECLARE @Receiver_Phone NVARCHAR(200) = (SELECT RIGHT(LTRIM(RTRIM(Receiver_Phone)), 8) FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber);
 
 		DECLARE @CodeArea NVARCHAR(5) = (
 			SELECT 
@@ -65,7 +68,7 @@ BEGIN TRY
 			LEFT JOIN DeliveryBackOffice.dbo.ConfigParams C WITH(NOLOCK)
 				ON C.[Name] = 'AreaCode' AND ISNULL(DO.ReceiverCountryId,'GT') = C.IdCountry
 			WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
-		)
+		);
 
 		--Validación del telefono
 		IF((@Phone = @Receiver_Phone) OR (@Phone = @CodeArea + @Receiver_Phone) OR (@Phone = '+' + @CodeArea + @Receiver_Phone))
@@ -73,13 +76,13 @@ BEGIN TRY
 			SELECT 
 				  200						 AS 'IdResult'
 				, 'Exitoso.'				 AS 'Message'
-		END
+		END;
 		ELSE
 		BEGIN
 			SELECT 
 				  201 AS 'IdResult'
 				, 'El número ingresado no coincide con el registrado para este envío.' AS 'Message'
-		END
+		END;
 
 		--------------------------------------------------------------------------------------------
 		------------------------------------TRACKING------------------------------------------------
@@ -135,8 +138,8 @@ BEGIN TRY
 			 , @GuideDeliveryLongitude = DA.Longitude
 		FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt]          DA WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryProof]  DP WITH (NOLOCK)
-				ON DA.Guide_Number = DP.Guide_Number
-				   AND DA.Guide_Serie = DP.Guide_Serie
+				ON DA.Guide_Serie = DP.Guide_Serie
+				   AND DA.Guide_Number = DP.Guide_Number
 		WHERE DA.Guide_Serie = @GuideSerie
 			  AND DA.Guide_Number = @GuideNumber
 			  AND DA.Delivered = 1
@@ -258,9 +261,6 @@ BEGIN TRY
 						WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 							so.OrderDescription
 						ELSE
-							--IIF(dod.Observations IS NULL OR dod.Observations = '',so.OrderDescription,
-							--so.OrderDescription + ', ' + 
-							--CAST(dod.Observations AS NVARCHAR(50)))
 							so.OrderDescription
                          
 					END)                                                                        AS [StageTitle]       
@@ -492,10 +492,12 @@ BEGIN TRY
 			WHERE dod.Guide_Serie = @GuideSerie
 				  AND dod.Guide_Number = @GuideNumber
 				  AND so.CatStatusTypeId = @ExternalTypeId
+				  AND DOD.RowStatus = 1
+				  
 		) RES
 		ORDER BY RES.[StageDate] DESC
 			   , RES.[EventID];
-	END
+	END;
 	ELSE
 	BEGIN
 		IF(@GuideCount > 1)
@@ -511,8 +513,8 @@ BEGIN TRY
 			LEFT JOIN DeliveryBackOffice.dbo.Customer C WITH(NOLOCK)
 				ON DO.IdCustomer = C.IdCustomer
 			WHERE DO.Ticket_Number = @TicketNumber 
-			AND (@IdCustomer IS NULL OR DO.IdCustomer = @IdCustomer)
-		END
+			AND (@IdCustomer IS NULL OR DO.IdCustomer = @IdCustomer);
+		END;
 		ELSE
 		BEGIN
 			SELECT 

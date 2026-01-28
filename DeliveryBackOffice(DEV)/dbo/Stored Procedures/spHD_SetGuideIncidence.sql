@@ -1,8 +1,12 @@
-﻿-- =============================================
--- Author:		<Andrés, Ruíz>
--- Create date: <2023-04-28>
--- Description:	< ingreso de incidencia manual desde hermes desktop >
--- =============================================
+﻿/* =================================================
+   SP:        spHD_SetGuideIncidence
+   Propósito: Ingreso de incidencia manual desde Hermes Desktop
+   Autor:     Andrés Ruíz
+   Historia:  ---
+   Fecha:     2023-04-28
+=== CHANGELOG ============================
+-- 2025-12-19 | Historia/épica:  FDAPI-4746   | Autor: Brandon Pedroza    | Almacenar idstation al registrar incidencia desktop
+=========================================== */
 CREATE PROCEDURE [dbo].[spHD_SetGuideIncidence]
 
 	@GuideSerie NVARCHAR(2),
@@ -10,7 +14,8 @@ CREATE PROCEDURE [dbo].[spHD_SetGuideIncidence]
 	@SimulatedDate DATETIME,
 	@Incidence INT,
 	@Observations NVARCHAR(200) = '',
-	@Token NVARCHAR(50)
+	@Token NVARCHAR(50),
+	@StationId INT = NULL
 
 AS
 BEGIN
@@ -27,7 +32,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)	
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Desktop'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Desktop'
 	);
 	DECLARE @EmailNotificationMedium INT = 
 	(
@@ -37,7 +42,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[CatNotificationMedium] CNM  WITH(NOLOCK) 
 		WHERE
-			[CNM].[NotificationMediumName] = 'Correo SMTP'  COLLATE Latin1_General_CI_AI 
+			[CNM].[NotificationMediumName] = 'Correo SMTP'
 	)
 	DECLARE @NotificationType BIGINT =
 	(
@@ -47,7 +52,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[CatNotificationType] CNT  WITH(NOLOCK) 
 		WHERE
-			[CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin'  COLLATE Latin1_General_CI_AI 
+			[CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin'
 	)
 	DECLARE @FailedDeliveryVisitStatus INT = 
 	(
@@ -57,7 +62,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			[SO].[OrderDescription] = 'Incidencia en ruta'  COLLATE Latin1_General_CI_AI 
+			[SO].[OrderDescription] = 'Incidencia en ruta'
 	);
 	DECLARE @OnRouteStatus INT = 
 	(
@@ -67,7 +72,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			[SO].[OrderDescription] = 'En ruta'  COLLATE Latin1_General_CI_AI 
+			[SO].[OrderDescription] = 'En ruta'  
 	);
 
 	-- Variables de control de flujo
@@ -118,8 +123,8 @@ BEGIN
 			 Select ISNULL([DOAD].[GuideDeliveryMaxAttemptCount],0) -ISNULL([DOAD].[GuideDeliveryAttemptCount],0) 
 				From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
 			 Where 
-			  doad.GuideNumber =  @GuideNumber
-			  AND DOAD.GuideSerie = @GuideSerie
+			  DOAD.GuideSerie = @GuideSerie
+			  AND doad.GuideNumber =  @GuideNumber
 			  
 	
 	);
@@ -130,8 +135,8 @@ BEGIN
 			       Inner Join 
 				   [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
 			  ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-			  where DA.Guide_Number =  @GuideNumber
-			  AND da.Guide_Serie = @GuideSerie
+			  where da.Guide_Serie = @GuideSerie
+			  AND DA.Guide_Number =  @GuideNumber
 			  And Convert(date,DA.Date_Created) = Convert(date,GETDATE())  
 	 
 	 
@@ -349,7 +354,8 @@ IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
 				[PieceId],
 				[RowStatus],
 				[DeliveryAttemptId],
-				[SystemOrigin]
+				[SystemOrigin],
+				[StationId]
 			)
 			OUTPUT [Inserted].[Guide_Number] INTO @DeliveryOrderDetailInserted ([IdDeliveryOrderDetail])
 			SELECT
@@ -365,7 +371,8 @@ IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
 					NULL,      -- PieceId - int
 					1,   -- RowStatus - bit
 					[DAI].[IdDeliveryAttempt],
-					@SystemOrigin
+					@SystemOrigin,
+					@StationId
 			FROM
 				@DeliveryAttemptInserted DAI
 

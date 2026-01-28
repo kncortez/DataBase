@@ -27,8 +27,18 @@
 -- Create date: <2024-12-18>
 -- Description: <Se realizan optimizaciones recomendadas por DBA>
 -- =============================================
+-- =============================================
+-- Author:      <Bilkar Morataya>
+-- Create date: <2025-09-02>
+-- Description: <Se incluyen las Guías pagas por Zigi dentro del objeto Rejects>
+-- =============================================
+-- =============================================
+-- Author:      <Bilkar Morataya>
+-- Create date: <2025-12-04>
+-- Description: <Se incluye el campo isNeedBilling>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
-    @InGuidesP VARCHAR(MAX),
+    @InGuidesP VARCHAR(1000),
     @IdModuleP INT,
     @ServiceType VARCHAR(100),
     @TokenP VARCHAR(100),
@@ -52,10 +62,6 @@ BEGIN
     IF OBJECT_ID('tempdb.dbo.#PendingPaymentTempId', 'U') IS NOT NULL
         DROP TABLE #PendingPaymentTempId;
 
-    --DECLARE @InGuidesP VARCHAR(MAX) = 'FD509086,FD509087,FD509088';
-    --DECLARE @IdModuleP INT = 35;
-    --DECLARE @ServiceType VARCHAR(100) = 'PICKUP';
-    --DECLARE @TokenP VARCHAR(100) = '3E9C2157FD6D5863CFBA2366C0838F8B';
     DECLARE @InTimeP INT;
     DECLARE @IsReturnP BIT;
 
@@ -123,58 +129,48 @@ BEGIN
         FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
         WHERE lg.Guide_Serie = do.Guide_Serie
               AND lg.Guide_Number = do.Guide_Number
-          AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
+          AND do.SenderCountryId = @IdCountry
     );
 
     CREATE NONCLUSTERED INDEX IX_LGNE_NGUIDES ON #listGuidesNotExist (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
-    ---- Obtener guias que si se pueden procesar con el modulo indicado ------------------------------------
-    SELECT lg.Guide_Serie,
-           lg.Guide_Number
-    INTO #listGuidesIncluded
+
+    ---- Crear tabla temporal para guías excluidas si no existe ----
+    CREATE TABLE #listGuidesExcluded (
+        Guide_Serie NVARCHAR(2),
+        Guide_Number INT,
+        StatusOrderId INT,
+        Description NVARCHAR(255)
+    );
+
+    -- 1. Crear tabla temporal de guías pagadas en Zigi
+    IF OBJECT_ID('tempdb.dbo.#listGuidesPaidZigi', 'U') IS NOT NULL
+        DROP TABLE #listGuidesPaidZigi;
+    SELECT lg.Guide_Serie, lg.Guide_Number
+    INTO #listGuidesPaidZigi
     FROM #listGuides lg
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
-            ON lg.Guide_Serie = do.Guide_Serie
-               AND lg.Guide_Number = do.Guide_Number
-        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
-            ON do.StatusOrderId = so.StatusOrderId
-    WHERE (
-              UPPER(@ServiceType) = 'PICKUP'
-              AND so.StatusOrderId IN ( 1, 15, 50, 45 )
-			  
-          )
-          OR
-          (
-              UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 )			  
-			  AND COALESCE(DO.IsLastMileReturn,0) = 0
-          )
-          OR
-          (
-              UPPER(@ServiceType) = 'RETURN'
-              AND so.StatusOrderId IN ( 10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35 )
-          )
-      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
+    INNER JOIN PaymentZigi pz WITH(NOLOCK)
+        ON lg.Guide_Serie = pz.GuideSerie AND lg.Guide_Number = pz.GuideNumber
+    WHERE pz.ZigiLinkStatus = 'PAID';
 
-    /*SELECT lg.Guide_Serie,
-			lg.Guide_Number
-	INTO #listGuidesIncluded
-	FROM #listGuides lg
-	WHERE NOT EXISTS (SELECT 1
-					  FROM #listGuidesNotExist lgne
-					  WHERE lgne.Guide_Serie = lg.Guide_Serie
-					  AND lgne.Guide_Number = lg.Guide_Number);*/
+    -- 2. Agregar guías pagadas a los excluidos (Rejects)
+    -- INSERT INTO #listGuidesExcluded (Guide_Serie, Guide_Number, StatusOrderId, Description)
+    -- SELECT Guide_Serie, Guide_Number, 999, 'Guía pagada en Zigi'
+    -- FROM #listGuidesPaidZigi;
 
-    CREATE NONCLUSTERED INDEX IX_LGI_GUIDES ON #listGuidesIncluded (Guide_Serie, Guide_Number);
-    -----------------------------------------------------------------------------------------------------------------
 
-    ---- Obtener guias que no se pueden procesar con el modulo indicado ------------------------------------
+
+    -- 3. Poblar #listGuidesIncluded se mueve después de poblar completamente #listGuidesExcluded
+    -- -----------------------------------------------------------------------------------------------------------------
+
+
+    -- Insertar guias que no se pueden procesar con el modulo indicado en #listGuidesExcluded
+    INSERT INTO #listGuidesExcluded (Guide_Serie, Guide_Number, StatusOrderId, Description)
     SELECT lg.Guide_Serie,
            lg.Guide_Number,
            so.StatusOrderId,
            so.OrderDescription 'Description'
-    INTO #listGuidesExcluded
     FROM #listGuides lg
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
@@ -183,24 +179,22 @@ BEGIN
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
-              AND (so.StatusOrderId NOT IN ( 1, 15, 50, 45 )
-			))
-          
+              AND (so.StatusOrderId NOT IN ( 1, 15, 50, 45 ))
+          )
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND (so.StatusOrderId NOT IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 )
-			  )
+              AND (so.StatusOrderId NOT IN ( 10, 11, 12, 20, 21, 50, 45, 48, 51 ))
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId NOT IN ( 10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35 )
-			
           )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
-		  
-  INSERT INTO #listGuidesExcluded
+
+    -- Insertar guias en estado terminal en #listGuidesExcluded
+    INSERT INTO #listGuidesExcluded (Guide_Serie, Guide_Number, StatusOrderId, Description)
     SELECT lg.Guide_Serie,
            lg.Guide_Number,
            so.StatusOrderId,
@@ -216,7 +210,7 @@ BEGIN
                                     FROM [dbo].[StatusOrder] SO  WITH(NOLOCK)
                                     WHERE [CatCheckpointTypeId] = 3 
                                         AND RowStatus = 1 ))
-		)
+        )
       AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
 
 ------------------------------------  Validación de estados terminales --------------------------------------------------
@@ -251,6 +245,32 @@ BEGIN
 			END
 
     CREATE NONCLUSTERED INDEX IX_LGE_GUIDES ON #listGuidesExcluded (Guide_Serie, Guide_Number);
+
+    -- Ahora sí, poblar #listGuidesIncluded después de poblar completamente #listGuidesExcluded
+    SELECT lg.Guide_Serie,
+           lg.Guide_Number
+    INTO #listGuidesIncluded
+    FROM #listGuides lg
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+            ON lg.Guide_Serie = do.Guide_Serie
+               AND lg.Guide_Number = do.Guide_Number
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
+            ON do.StatusOrderId = so.StatusOrderId
+    WHERE (
+            (UPPER(@ServiceType) = 'PICKUP' AND so.StatusOrderId IN (1, 15, 50, 45))
+         OR (UPPER(@ServiceType) = 'DELIVERY' AND so.StatusOrderId IN (10, 11, 12, 20, 21, 50, 45, 48, 51) AND COALESCE(DO.IsLastMileReturn,0) = 0)
+         OR (UPPER(@ServiceType) = 'RETURN' AND so.StatusOrderId IN (10, 11, 12, 20, 50, 45, 17, 32, 31, 34, 35))
+    )
+    AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
+    -- AND NOT EXISTS (
+          -- SELECT 1 FROM #listGuidesPaidZigi paid
+          -- WHERE paid.Guide_Serie = lg.Guide_Serie AND paid.Guide_Number = lg.Guide_Number
+    -- )
+    AND NOT EXISTS (
+          SELECT 1 FROM #listGuidesExcluded ex
+          WHERE ex.Guide_Serie = lg.Guide_Serie AND ex.Guide_Number = lg.Guide_Number
+    );
+    CREATE NONCLUSTERED INDEX IX_LGI_GUIDES ON #listGuidesIncluded (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
     ---- Asignar configuracion de parametros -------------------------------------------------------------
@@ -277,9 +297,9 @@ BEGIN
            ord.Guide_Number
     INTO #RevalueGuides
     FROM #listGuidesIncluded lst
-        JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-            ON ord.Guide_Number = lst.Guide_Number
-               AND ord.Guide_Serie = lst.Guide_Serie
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+            ON ord.Guide_Serie = lst.Guide_Serie
+            AND ord.Guide_Number = lst.Guide_Number 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 			ON lst.Guide_Serie = PC.GuideSerieDestination
 				AND lst.Guide_Number = PC.GuideNumberDestination
@@ -287,7 +307,7 @@ BEGIN
 		AND PC.IdPromoCoupon IS NULL
 		AND PC.FinalActiveDate >= GETDATE()
 		AND PC.RowStatus = 1
-        AND ISNULL(ord.SenderCountryId,'GT') = @IdCountry ;
+        AND ord.SenderCountryId = @IdCountry ;
 
     CREATE NONCLUSTERED INDEX tempFila ON #RevalueGuides (fila);
 
@@ -320,24 +340,13 @@ BEGIN
         FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
 		INNER JOIN Subscription sb WITH (NOLOCK)
 		ON sbl.SubscriptionId = sb.IdSubscription
-		WHERE sbl.LogGuideNumber = @RevalueGuide AND sbl.LogGuideSerie = @RevalueSerie )
+		WHERE sbl.LogGuideSerie = @RevalueSerie AND sbl.LogGuideNumber = @RevalueGuide)
 
 		IF(@TypeSubsId IS NULL)
 			BEGIN
 			SET @TypeSubsId = 0
 			END
 		-----Fin--------------------------------
-        --EXECUTE @RC = DeliveryBackOffice.dbo.spws_revalue_guide @GuideSerie = @RevalueSerie,
-        --                                                        @GuideNumber = @RevalueGuide,
-        --                                                        @CodeApp = '',
-        --                                                        @Format = 'Non',
-        --                                                        @CalculateTaxes = 'true',
-        --                                                        @IdModule = @IdModuleP,
-        --                                                        @SetUpdate = 'true',
-        --                                                        @Token = @TokenP,
-        --                                                        @IsReturn = 'false',
-								--								@TypeSubscriptionId =@TypeSubsId;
-
         SET @count = @count + 1;
     END;
     -----------------------------------------------------------------------------------------------------
@@ -561,7 +570,8 @@ BEGIN
 					'N/A'
 				)
 				)) AS TypePayment,
-	DO.IdCustomer
+	DO.IdCustomer,
+    CAST(1 AS BIT) AS IsNeedBilling
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
@@ -575,6 +585,21 @@ BEGIN
    WHERE do.SenderCountryId = @IdCountry;
 
     CREATE NONCLUSTERED INDEX IX_PPTID_ID ON #PendingPaymentTempId ([Id]);
+
+    ---------------------------------------------------------
+    -- Actualización masiva de IsNeedBilling
+    ---------------------------------------------------------
+    UPDATE T
+    SET IsNeedBilling = 0
+    FROM #PendingPaymentTempId T
+    INNER JOIN DeliveryBackOffice.dbo.invoiceDetail ID WITH (NOLOCK)
+        ON T.GuideSerie = ID.dti_fk_orderSerie 
+        AND T.GuideNumber = ID.dti_fk_orderNumber
+    INNER JOIN DeliveryBackOffice.dbo.invoiceHeader IH WITH (NOLOCK)
+        ON IH.inv_pk_id = ID.dti_fk_header
+    WHERE IH.inv_certificationFEL IS NOT NULL
+      AND LTRIM(RTRIM(IH.inv_certificationFEL)) <> ''
+    ---------------------------------------------------------
 
 	DECLARE @IdCountrySender NVARCHAR(2) = 
 	(
@@ -758,6 +783,7 @@ BEGIN
                          + ', ' + '"TypePayment": "' + pg.TypePayment +'"'
                          + ', ' + '"IsCollect": ' + CAST(ISNULL(pg.IsCollect, 0) AS VARCHAR) + ', ' + '"Pieces": '
                          + CAST(ISNULL(pg.Pieces, 0) AS VARCHAR) + ', ' + '"ServiceType": "' + pg.ServiceType + '", '
+                         + '"isNeedBilling": ' + CAST(pg.IsNeedBilling AS VARCHAR) + ', '
 						 + '"IdCustomer": ' + CAST(ISNULL(c.IdCustomer,0) AS VARCHAR) + ', '
 						 + '"IdPortafolio": ' + CAST(ISNULL(c.IdPortafolio,0) AS VARCHAR) + ', '
 						 + '"COD": ' + CAST(ISNULL(c.COD,0) AS VARCHAR) + ', '
@@ -883,5 +909,3 @@ BEGIN
 
     SELECT @Output FormatJson;
 END;
-
-
