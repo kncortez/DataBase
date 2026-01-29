@@ -11,7 +11,7 @@ CREATE TABLE [dbo].[APGuidesControl] (
     [AddressExtra]              NVARCHAR(500)   NULL,
     [HeaderCode]                NVARCHAR(5)     NULL, 
     [ReceiverIdTownship]        INT             NULL, 
-    [ReceiverIdSettlement]      INT             NULL, 
+    [ReceiverIdSettlement]      BIGINT          NULL, 
     [CountryCode]               CHAR(2)         NOT NULL,
     [PostalCode]                NVARCHAR(20)    NULL,
     [DeliveryInstructions]      NVARCHAR(500)   NULL,
