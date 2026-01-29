@@ -4,6 +4,7 @@ CREATE TABLE [dbo].[APExecutionSchedule] (
     [StartTime]                 TIME            NOT NULL,
     [Description]               NVARCHAR(100)   NULL,
     [AeroPostIdByCountry]       INT             NOT NULL,
+    [CodeOfReference]           INT             NOT NULL,
     [RowStatus]                 BIT             DEFAULT ((1)) NOT NULL,
     [TokenCreated]              NVARCHAR (50)   NOT NULL,
     [DateCreated]               DATETIME        NOT NULL,
@@ -25,6 +26,10 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción del horario de ejecución', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionSchedule', @level2type = N'COLUMN', @level2name = N'Description';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del registro (1=Activo, 0=Inactivo)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionSchedule', @level2type = N'COLUMN', @level2name = N'RowStatus';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'id de cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionSchedule', @level2type = N'COLUMN', @level2name = N'AeroPostIdByCountry';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'codigo de referencia del visit point', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionSchedule', @level2type = N'COLUMN', @level2name = N'CodeOfReference';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token del usuario que creó el registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionSchedule', @level2type = N'COLUMN', @level2name = N'TokenCreated';
 GO

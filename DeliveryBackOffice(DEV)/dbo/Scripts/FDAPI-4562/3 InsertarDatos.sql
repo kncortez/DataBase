@@ -2,14 +2,17 @@ SET NOCOUNT ON;
 
 BEGIN TRY
 
+    -- Cambiar datos según lo requerido
     DECLARE @TokenCreated NVARCHAR(20) = 'SYS-TGARCIA'
-    DECLARE @AeropostID INT = (SELECT IdCustomer FROM [dbo].[Customer] WITH(NOLOCK) WHERE CountryID = 'HN' AND RowSatus = 1 AND Name like '%AEROPOST%')
+    DECLARE @AeropostID INT = 95591;
+    DECLARE @CodeOfReference INT = 1666202;
 
     INSERT INTO [dbo].[APExecutionSchedule]
             ([CountryCode]
             ,[StartTime]
             ,[Description]
             ,[AeroPostIdByCountry]
+            ,[CodeOfReference]
             ,[RowStatus]
             ,[TokenCreated]
             ,[DateCreated]
@@ -17,25 +20,25 @@ BEGIN TRY
             ,[DateUpdated])
     SELECT * FROM (
         VALUES
-            ('HN','02:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','04:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','06:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','07:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','08:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','09:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','10:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','11:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','12:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','13:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','14:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','15:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','16:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','17:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','18:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','20:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','22:00','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL),
-            ('HN','23:59','Horiario de HN',@AeropostID,1,@TokenCreated,GETDATE(),NULL,NULL)
-    ) AS SourceData(CountryCode, StartTime, Description, AeroPostIdByCountry, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+            ('HN','02:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','04:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','06:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','07:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','08:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','09:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','10:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','11:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','12:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','13:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','14:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','15:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','16:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','17:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','18:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','20:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','22:00','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL),
+            ('HN','23:59','Horiario de HN',@AeropostID,@CodeOfReference,1,@TokenCreated,GETDATE(),NULL,NULL)
+    ) AS SourceData(CountryCode, StartTime, Description, AeroPostIdByCountry, CodeOfReference, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
     WHERE NOT EXISTS (
         SELECT 1 
         FROM [dbo].[APExecutionSchedule] WITH(NOLOCK)
