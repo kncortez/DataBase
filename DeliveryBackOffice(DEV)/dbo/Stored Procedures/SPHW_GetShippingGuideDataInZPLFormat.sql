@@ -156,7 +156,7 @@ BEGIN
 		   ON [vpori].[CodeOfReference] = [DO].[OriginSenderId]
 		LEFT JOIN [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 		   ON vp.IdKindOfVPClient = KOVPC.IdKindOfVPClient
-    WHERE DO.Order_Number = @Reference
+    WHERE DO.Ticket_Number = @Reference
 	      AND DO.StatusOrderId IN (@StatusGenerated, @StatusRequested, @StatusCollected) 
     ORDER BY DO.DateCreated DESC
 
