@@ -4,7 +4,7 @@
 -- Description:	<Description,Obtener data de guía para impresión en formato ZPL por medio de ña refernecia (OrderNUmber)>
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHW_GetShippingGuideDataInZPLFormat]
-@Reference INT
+@Reference NVARCHAR(150)
 AS
 BEGIN
 	SET NOCOUNT ON;
