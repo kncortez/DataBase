@@ -1222,7 +1222,8 @@ BEGIN
                        SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) [Piece],
                               CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)  [ReceiverName],
                               LEFT(do.Receiver_Address, 200)                             [ReceiverAddress],
-                              do.ReceiverCountryId                                       [ReceiverCountryId]
+                              do.ReceiverCountryId                                       [ReceiverCountryId],
+							  do.IndicationsToSendDestination                            [AdditionalIndications]
                        FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
                            INNER JOIN #listGuides lp
                                ON lp.ItemSerie = dop.GuideSerie
@@ -1236,7 +1237,8 @@ BEGIN
                                 do.Receiver_FirstName,
                                 do.Receiver_LastName,
                                 do.Receiver_Address,
-                                do.ReceiverCountryId
+                                do.ReceiverCountryId,
+								do.IndicationsToSendDestination
                        ORDER BY dop.GuideNumber ASC;
 
                     COMMIT TRAN Detail_SetFinishPickUpBatch
