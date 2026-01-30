@@ -9,6 +9,7 @@
 
 2025-05-02 | Historia/épica: ---         | Autor: Edelman         | 
 2025-12-12 | Historia/épica: FDAPI-4733  | Autor: Cristian Suazo  | 
+2026-01-29 | Historia/épica: FDAPI-4801  | Autor: Brandon Pedroza | Se obtiene campo indicaciones adicionales en manifiesto de recolecciones
 
 =========================================== */
 
