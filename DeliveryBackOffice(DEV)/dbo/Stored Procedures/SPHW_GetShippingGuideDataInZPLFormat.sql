@@ -127,7 +127,7 @@ BEGIN
     FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 		INNER JOIN [DeliveryBackOffice].[dbo].[Customer] CTM WITH (NOLOCK)
 		   ON   DO.IdCustomer= CTM.IdCustomer
-		INNER JOIN [DeliveryBackOffice].[dbo].[CatBusinessSegment] CBS WITH (NOLOCK)
+		LEFT JOIN [DeliveryBackOffice].[dbo].[CatBusinessSegment] CBS WITH (NOLOCK)
 		   ON CTM.BusinessSegmentID = CBS.IdBusinessSegment 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatDeliveryOptions] CDO WITH(NOLOCK)
 		   ON DO.IdDeliveryOption = CDO.IdDeliveryOption
@@ -136,7 +136,7 @@ BEGIN
 			 (DO.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
 		LEFT JOIN  [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK)
 		   ON RC.RbcIdRate= RH.RheId
-		INNER JOIN  [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+		LEFT JOIN  [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 		   ON DO.Guide_Serie = DOP.GuideSerie AND
 		      DO.Guide_Number = DOP.GuideNumber
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
@@ -148,7 +148,7 @@ BEGIN
 		   ON DSC.IdSettlement = DO.ReceiverIdSettlement
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC2 WITH(NOLOCK)
 		   ON DSC2.IdSettlement = DO.SenderIdSettlement
-		INNER JOIN [DeliveryBackOffice].[dbo].[Province] P WITH(NOLOCK)
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Province] P WITH(NOLOCK)
 		   ON P.ProvinceName = DO.Receiver_Department
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vp WITH (NOLOCK)
            ON vp.CodeOfReference = DO.Sender_ID
