@@ -1,20 +1,17 @@
--- =============================================
--- Author:      <Daniel Ramirez>
--- Create date: <2024-11-19>
--- Description: <Devuelve los puntos de visita relacionados a un cliente corporativo>
--- =============================================
--- Author:      <Tito García>
--- Update date: <2024-11-28>
--- Description: <Se agrega consulta para obtener los datos de facturación del cliente>
--- =============================================
--- Author:      <Brandon Pedroza>
--- Update date: <2025-06-12>
--- Description: <Facturacion SV - Se obtienen datos de cliente para facturar en El Salvador>
---=============================================
--- Author:      <Cristian Azurdia>
--- Update date: <2025-07-30>
--- Description: <Facturacion SV - Manejo de clientes corporativos nuevos>
---=============================================
+/* =================================================
+   SP:        [dbo].[GetVisitPointOfClient]
+   Propósito: Devolver los puntos de visita relacionados a un cliente corporativo.
+   Autor:     Daniel Ramirez
+   Historia:  FDD-1424
+   Fecha:     2024-11-25
+===== CHANGELOG ============================
+2025-11-03 | Historia/épica: FDAPI-4922 | Autor: Cristian |
+2025-08-05 | Historia/épica: FDAPI-4191 | Autor: Cristian |
+2025-06-12 | Historia/épica: FDAPI-4028 | Autor: Brandon Pedroza |
+2024-11-28 | Historia/épica: FDD-1422 | Autor: Tito García  |
+2024-11-25 | Historia/épica: FDD-1424 | Autor: Daniel Ramirez  |
+=========================================== */
+
 CREATE PROCEDURE [dbo].[GetVisitPointOfClient]
 (
  @IdCustomer   INT,
@@ -43,7 +40,7 @@ BEGIN
                WHERE (cs.IdCustomer = @IdCustomer
                      OR cs.SAPCardCode = @SAPCardCode)
                  AND cust.IdCustomerType = 1
-                 AND ISNULL(cs.CountryID,'GT') = @IdCountry
+                 AND cs.CountryID = @IdCountry
         )
         BEGIN
                 INSERT INTO #VisitPoints (IdVisitPointClient, DescriptionOfClient)
@@ -57,7 +54,7 @@ BEGIN
                  WHERE (cs.IdCustomer = @IdCustomer
                        OR cs.SAPCardCode = @SAPCardCode)
                        AND cust.IdCustomerType = 1
-                       AND ISNULL(cs.CountryID,'GT') = @IdCountry
+                       AND cs.CountryID = @IdCountry
 
                 -- Validar si hay registros en la tabla temporal
                 IF EXISTS (SELECT TOP 1 1 
@@ -82,7 +79,10 @@ BEGIN
                         IIF(bcsvf.[Description] IS NULL, vpcf.[Description], bcsvf.[Description]) [Description],
                         IIF(bcsvf.[NRC] IS NULL, vpcf.[NRC], bcsvf.[NRC]) [NRC],
                         IIF(bcsvf.[Phone] IS NULL, vpcf.[Phone], bcsvf.[Phone]) [Phone],
-                        IIF(bcsvf.[StateCode] IS NULL,1, 0) [IsNew]
+                        IIF(bcsvf.[TypeIdentificationDocumentCode] IS NULL, vpcf.[TypeIdentificationDocumentCode], bcsvf.[TypeIdentificationDocumentCode]) [TypeIdentificationDocumentCode],
+                        IIF(bcsvf.[IdDocument] IS NULL, vpcf.[IdDocument], bcsvf.[IdDocument]) [IdDocument],
+                        IIF(bcsvf.[Inv_type] IS NULL, vpcf.[Inv_type], bcsvf.[Inv_type]) [Inv_type],
+                        IIF(bcsvf.[Inv_type] IS NULL,1, 0) [isNew]
                     FROM DeliveryBackOffice.dbo.Customer cs WITH(NOLOCK) 
                         INNER JOIN DeliveryBackOffice.dbo.CustomerType cust WITH(NOLOCK)
                             ON cs.IdCustomerType = cust.IdCustomerType
@@ -93,11 +93,14 @@ BEGIN
                                     CAT.CodeActivity,
                                     CAT.[Description],
                                     NRC,
-                                    PHONE
-                            FROM DeliveryBackOffice.dbo.BillingCustomerBySV WITH(NOLOCK)
-                            LEFT JOIN dbo.DistrictByBillingSV DIS           WITH(NOLOCK)
+                                    PHONE,
+                                    TypeIdentificationDocumentCode,
+                                    IdDocument,
+                                    Inv_type
+                            FROM DeliveryBackOffice.dbo.BillingCustomerBySV
+                            LEFT JOIN dbo.DistrictByBillingSV DIS
                                ON DistrictId = DIS.Id
-                            LEFT JOIN dbo.CatEconomicActivityBySV CAT       WITH(NOLOCK)
+                            LEFT JOIN dbo.CatEconomicActivityBySV CAT
                                ON ActivityId = CAT.Id
                             WHERE cs.IdCustomer = IdCustomer
                         ) bcsvf
@@ -109,18 +112,22 @@ BEGIN
                                    NULL CodeActivity,
                                    NULL [Description],
                                    NULL NRC,
-                                   NULL PHONE
-                            FROM DeliveryBackOffice.dbo.VisitPointClient vpc                    WITH(NOLOCK)
-                            INNER JOIN DeliveryBackOffice.dbo.TownshipDistrictByBillingSV tdbsv WITH(NOLOCK)
+                                   NULL PHONE,
+                                   NULL TypeIdentificationDocumentCode,
+                                   NULL IdDocument,
+                                   NULL Inv_type
+                            FROM DeliveryBackOffice.dbo.VisitPointClient vpc
+                            INNER JOIN DeliveryBackOffice.dbo.TownshipDistrictByBillingSV tdbsv
                             ON tdbsv.TownshipId = vpc.IdTownship
-                            LEFT JOIN dbo.DistrictByBillingSV DIS                               WITH(NOLOCK)
+                            LEFT JOIN dbo.DistrictByBillingSV DIS
                             ON tdbsv.DistrictId = DIS.Id
                             WHERE cs.IdCustomer = vpc.CustomerID
                         ) vpcf
+                        
                     WHERE (cs.IdCustomer = @IdCustomer
                         OR cs.SAPCardCode = @SAPCardCode)
                         AND cust.IdCustomerType = 1
-                        AND ISNULL(cs.CountryID,'GT') = @IdCountry
+                        AND cs.CountryID = @IdCountry
 
                 END
                 ELSE
@@ -139,7 +146,7 @@ BEGIN
                WHERE (cs.IdCustomer = @IdCustomer
                      OR cs.SAPCardCode = @SAPCardCode)
                  AND cust.IdCustomerType = 1
-                 AND ISNULL(cs.CountryID,'GT') <> @IdCountry
+                 AND cs.CountryID <> @IdCountry
         )
         BEGIN 
                 SELECT 0 AS StatusCode, 
@@ -149,12 +156,12 @@ BEGIN
         IF EXISTS(
               SELECT TOP 1 1
                 FROM Customer cs WITH(NOLOCK)
-                     INNER JOIN DeliveryBackOffice.dbo.CustomerType cust WITH(NOLOCK)
-                           ON cs.IdCustomerType = cust.IdCustomerType
-               WHERE (cs.IdCustomer = @IdCustomer
+                INNER JOIN DeliveryBackOffice.dbo.CustomerType cust WITH(NOLOCK)
+                 ON cs.IdCustomerType = cust.IdCustomerType
+                WHERE (cs.IdCustomer = @IdCustomer
                      OR cs.SAPCardCode = @SAPCardCode)
                  AND cust.IdCustomerType <> 1
-                 AND ISNULL(cs.CountryID,'GT') = @IdCountry
+                 AND cs.CountryID = @IdCountry
         )
         BEGIN 
                 SELECT 0 AS StatusCode, 
@@ -164,12 +171,12 @@ BEGIN
         IF EXISTS(
               SELECT TOP 1 1
                 FROM Customer cs WITH(NOLOCK)
-                     INNER JOIN DeliveryBackOffice.dbo.CustomerType cust WITH(NOLOCK)
-                           ON cs.IdCustomerType = cust.IdCustomerType
-               WHERE (cs.IdCustomer = @IdCustomer
-                     OR cs.SAPCardCode = @SAPCardCode)
+                INNER JOIN DeliveryBackOffice.dbo.CustomerType cust WITH(NOLOCK)
+                    ON cs.IdCustomerType = cust.IdCustomerType
+                WHERE (cs.IdCustomer = @IdCustomer
+                 OR cs.SAPCardCode = @SAPCardCode)
                  AND cust.IdCustomerType <> 1
-                 AND ISNULL(cs.CountryID,'GT') <> @IdCountry
+                 AND cs.CountryID <> @IdCountry
         )
         BEGIN 
                 SELECT 0 AS StatusCode, 
