@@ -10,6 +10,7 @@
 2025-05-02 | Historia/épica: ---         | Autor: Edelman         | 
 2025-12-12 | Historia/épica: FDAPI-4733  | Autor: Cristian Suazo  | 
 2026-01-29 | Historia/épica: FDAPI-4801  | Autor: Brandon Pedroza | Se obtiene campo indicaciones adicionales en manifiesto de recolecciones
+2026-01-29 | Historia/épica: FDAPI-5313  | Autor: Brandon Pedroza | Se obtiene campo nombre paquete en manifiesto de recolecciones
 
 =========================================== */
 
@@ -1224,7 +1225,8 @@ BEGIN
                               CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)  [ReceiverName],
                               LEFT(do.Receiver_Address, 200)                             [ReceiverAddress],
                               do.ReceiverCountryId                                       [ReceiverCountryId],
-							  do.IndicationsToSendDestination                            [AdditionalIndications]
+                              do.IndicationsToSendDestination                            [AdditionalIndications],
+                              ca.ArtName                                                 [Article]
                        FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
                            INNER JOIN #listGuides lp
                                ON lp.ItemSerie = dop.GuideSerie
@@ -1232,6 +1234,10 @@ BEGIN
                            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                ON do.Guide_Serie = dop.GuideSerie
                                   AND do.Guide_Number = dop.GuideNumber
+                           LEFT JOIN DeliveryBackOffice.dbo.ArticleByCustomer abc WITH(NOLOCK)
+                               ON dop.ParcelCode = abc.Code
+                           LEFT JOIN DeliveryBackOffice.dbo.CatArticle ca WITH(NOLOCK)
+                               ON ca.ArtId = abc.AbcIdArticle
                        GROUP BY dop.GuideNumber,
                                 dop.GuideSerie,
                                 dop.NoPiece,
@@ -1239,7 +1245,8 @@ BEGIN
                                 do.Receiver_LastName,
                                 do.Receiver_Address,
                                 do.ReceiverCountryId,
-								do.IndicationsToSendDestination
+                                do.IndicationsToSendDestination,
+                                ca.ArtName
                        ORDER BY dop.GuideNumber ASC;
 
                     COMMIT TRAN Detail_SetFinishPickUpBatch
