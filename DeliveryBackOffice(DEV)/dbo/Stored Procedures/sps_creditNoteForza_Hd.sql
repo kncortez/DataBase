@@ -1,18 +1,26 @@
-﻿-- =============================================
--- Author:		Eduardo López
--- Create date: 26 Agosto 2022
--- Description:	Registra en base de datos local nueva nota de credito correspondiente a factura enviada
--- =============================================
--- Author:		<Brandon Pedroza>
--- Modified:	<30 Julio 2025>
--- Description:	<Facturacion SV - Se inserta registro para nota de credito y aumenta el secuencial>
--- =============================================
+﻿
+/* =================================================
+   SP:        [dbo].[sps_creditNoteForza_Hd]
+   Propósito: <Registra en base de datos local nueva nota de credito correspondiente a factura enviada>
+   Autor:     <Eduardo López>
+   Historia:  <FDAPI-2986>
+   Fecha:     2022-08-26
+============================================
+=== CHANGELOG ================================
+-- 2026-01-26 | Historia/épica: FDAPI-1480 | Autor: Cristian Azurdia |
+-- 2025-11-10 | Historia/épica: FDAPI-4961 | Autor: Daniel Ramirez |
+-- 2025-07-30 | Historia/épica: FDAPI-4164 | Autor: Brandon Pedroza |
+-- 2024-01-14 | Historia/épica: FDD-1464   | Autor: Cristian Azurdia |
+-- 2024-08-13 | Historia/épica: FDAPI-2434 | Autor: Oscar Rodriguez |
+=========================================== */
+
 CREATE PROCEDURE [dbo].[sps_creditNoteForza_Hd]
     -- Add the parameters for the stored procedure here
     @idInvoice INT,
-    @Amount DECIMAL(18, 2) = 0,
-    @motivoNotaCredito VARCHAR(2000),
     @token VARCHAR(50),
+    @Amount DECIMAL(18, 2) = 0,
+    @conceptNoteCredit NVARCHAR(16) = '',
+    @reasonNoteCredit VARCHAR(2000) = '',
     @TblCreditNoteData TblResponseCreditNoteSV READONLY
 AS
 BEGIN
@@ -20,27 +28,25 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    DECLARE @detalles AS INT;
-    DECLARE @idNotaCredito AS INT = NULL;
-    DECLARE @vpCodeOfReferences NVARCHAR(10);
-	DECLARE @TypeDocumentCreditNote INT = (SELECT IdRegister FROM CatTypeDocument WHERE [Name] = 'Nota de crédito')
-    DECLARE @Establishment         NVARCHAR(150);
+    DECLARE @detalles               INT;
+    DECLARE @idNotaCredito          INT = NULL;
+    DECLARE @vpCodeOfReferences     NVARCHAR(10);
+    DECLARE @TypeDocumentCreditNote INT = 2
+    DECLARE @Establishment          NVARCHAR(150);
+    DECLARE @IdCountry NVARCHAR(2) = 'GT';
 
-    DECLARE @Country NVARCHAR(2) = 'GT';
-    SET @Country =
+    SET @IdCountry =
     (
         SELECT IdCountry
         FROM DeliveryBackOffice.dbo.invoiceHeader WITH (NOLOCK)
         WHERE inv_pk_id = @idInvoice
     );
 
-    IF (@Country = 'GT')
+    IF (@IdCountry = 'GT')
     BEGIN
 
         --codigo anterior
         --SET NOCOUNT ON;
-
-
         BEGIN TRANSACTION;
         BEGIN TRY
             -- Insert statements for procedure here
@@ -80,7 +86,7 @@ BEGIN
                    @token,
                    2,
                    @idInvoice,
-                   @motivoNotaCredito,
+                   @reasonNoteCredit,
                    inv_date,
                    inv_certificationFEL,
                    IdCurrency,
@@ -124,7 +130,6 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].[invoiceDetail] WITH (NOLOCK)
             WHERE [dti_fk_header] = @idInvoice;
 
-
             INSERT INTO [dbo].[InOutOfMoneyDetail]
             (
                 [io_type],
@@ -146,7 +151,6 @@ BEGIN
                    GETDATE()
             FROM [DeliveryBackOffice].[dbo].[InOutOfMoneyDetail] WITH (NOLOCK)
             WHERE [io_invoice] = @idInvoice;
-
 
             SET @vpCodeOfReferences =
             (
@@ -186,18 +190,13 @@ BEGIN
     BEGIN
 
         --Variables para el manejo de IVA 
-        DECLARE @IdCountry AS NVARCHAR(8);
         DECLARE @IVA AS DECIMAL(18, 2) = 1.12;
-        DECLARE @secuencia BIGINT, @rowcount  INT;  
+        DECLARE @secuencia BIGINT, @rowcount  INT;
 
         --Variables para validaciones si la factura ya fue cancelada
         DECLARE @InvoideStatus INT = 0;
         DECLARE @AmountInvoice DECIMAL(18, 2) = 0;
         DECLARE @AmountNotesCredits DECIMAL(18, 2) = 0;
-
-        ----Variables para la generacion de la nota de credito
-        --DECLARE @idNotaCredito AS INT = NULL;
-        --DECLARE @vpCodeOfReferences NVARCHAR(10);
 
         BEGIN TRANSACTION;
         BEGIN TRY
@@ -217,9 +216,9 @@ BEGIN
             --CALCULOS DE MONTOS  NOTAS DE CREDITO
             SELECT @AmountNotesCredits = ISNULL(SUM(inv_amount), 0)
             FROM invoiceHeader WITH (NOLOCK)
-            WHERE inv_invoiceOfCreditNote = @idInvoice
-                  AND inv_type = 2;
-            --PRINT 'Monto de la factura: ' + CONVERT(NVARCHAR(20),@AmountINvoice) + ' Monto de las Notas de Credito: ' + CONVERT(NVARCHAR(20),@AmountNotesCredits);
+            WHERE inv_type = 2
+              AND inv_invoiceOfCreditNote = @idInvoice;
+
             --Validación si la factura esta anulada o si el monto de la notas de crédito ya sobrepaso a la factura
             IF (@InvoideStatus <> -1 AND @AmountInvoice >= @AmountNotesCredits)
             BEGIN
@@ -295,9 +294,9 @@ BEGIN
                 SELECT id.dti_fk_header,
                        id.dti_fk_orderSerie,
                        id.dti_fk_orderNumber,
-                       id.dti_identification,
-                       id.dti_category,
-                       id.dti_quantity,
+                       CASE WHEN @conceptNoteCredit = '' THEN dti_identification ELSE @conceptNoteCredit END dti_identification,
+                       CASE WHEN @conceptNoteCredit = '' THEN dti_category ELSE @conceptNoteCredit END dti_category,
+                       CASE WHEN @Amount = 0 THEN dti_quantity ELSE 1 END dti_quantity,
                        id.dti_measurement,
                        id.dti_priceUnit,
                        id.dti_description,
@@ -408,7 +407,7 @@ BEGIN
                            @token,
                            @TypeDocumentCreditNote,
                            @idInvoice,
-                           @motivoNotaCredito,
+                           @reasonNoteCredit,
                            [ih].inv_date,
                            [ih].inv_certificationFEL,
                            [ih].[inv_establecimientoFEL],
@@ -499,7 +498,7 @@ BEGIN
                            @token,
                            2,
                            @idInvoice,
-                           @motivoNotaCredito,
+                           @reasonNoteCredit,
                            inv_date,
                            inv_certificationFEL,
                            IdCurrency,
@@ -556,9 +555,7 @@ BEGIN
                     ORDER BY dti_fk_orderSerie,
                              dti_fk_orderNumber,
                              SAPCode;
-                    --PRINT CONVERT(NVARCHAR(25),@LineNumber);
-                    --PRINT CONVERT(NVARCHAR(25),@SAPCode)
-                    --PRINT CONVERT(NVARCHAR(25),@LineAmount);
+
                     -- Validar si no hay más líneas por procesar
                     IF @LineNumber IS NULL
                        OR @LineAmount IS NULL
