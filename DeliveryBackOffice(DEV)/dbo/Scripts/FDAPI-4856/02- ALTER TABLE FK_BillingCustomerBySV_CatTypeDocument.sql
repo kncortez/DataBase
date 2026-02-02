@@ -11,7 +11,7 @@ BEGIN TRY
     )
     BEGIN
         ALTER TABLE [dbo].[BillingCustomerBySV] 
-        CONSTRAINT [FK_BillingCustomerBySV_CatTypeDocument] 
+        ADD CONSTRAINT [FK_BillingCustomerBySV_CatTypeDocument] 
             FOREIGN KEY([Inv_type])
             REFERENCES [dbo].[CatTypeDocument] ([IdRegister])
     END
