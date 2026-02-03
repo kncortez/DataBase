@@ -1,7 +1,4 @@
-﻿
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Carlos, Cano>
 -- Create date: <2020-12-08>
 -- Description:	<Recupera detalle para generar manifiesto de liquidación (COD)>
@@ -56,7 +53,11 @@ BEGIN
 					ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0)) AS DECIMAL(18, 2)) Total,
 		   do.Receiver_ID Receiver_ID,
 		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
-		   cd.Voucher,
+		  CASE 
+		    WHEN cd.IdTypeOfMoney = 11  THEN cd.Voucher
+			WHEN cd.IdTypeOfMoney = 10  THEN PZ.ZigiTransactionId
+			ELSE cd.Voucher
+           END AS Voucher,
 		   CASE 
 		      WHEN cd.IdTypeOfMoney = 11 THEN 'Transferencia'
 			  WHEN cd.IdTypeOfMoney = 1  THEN 'Efectivo'
@@ -86,6 +87,10 @@ BEGIN
                AND A1.ReasonCode = '00'
 		LEFT JOIN dbo.CostDetail cd WITH (NOLOCK)
             ON c.IdCost = cd.IdCost
+		LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigi] PZ WITH (NOLOCK)
+            ON  PZ.GuideSerie  = dsd.Guide_Serie AND PZ.GuideNumber = dsd.Guide_Number
+        LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigiMulti] PZM WITH (NOLOCK)
+        ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
 	WHERE dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 		  AND dsd.Guide_Discharged = 1 -- guía liquidada en COD
 		  AND

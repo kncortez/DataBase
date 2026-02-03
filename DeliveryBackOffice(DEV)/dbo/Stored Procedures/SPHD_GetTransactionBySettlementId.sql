@@ -13,17 +13,30 @@ BEGIN
 
     SELECT
         CD.Voucher + '-' + C.ProductNumber AS Transaccion,
-        CD.Voucher,
+         CASE 
+		    WHEN CD.IdTypeOfMoney = 11  THEN CD.Voucher
+			WHEN CD.IdTypeOfMoney = 10  THEN PZ.ZigiTransactionId
+			ELSE CD.Voucher
+        END AS Voucher,
         C.CODAmount,
         C.TotalAmount + C.CODAmount AS 'TotalAmount',
-		 'Transferencia' AS 'Tipo'
+		 CASE 
+		    WHEN CD.IdTypeOfMoney = 11  THEN 'Transferencia'
+			WHEN CD.IdTypeOfMoney = 10  THEN 'Zigi'
+			ELSE CD.Voucher
+        END AS 'Tipo'
     FROM dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
     INNER JOIN DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
         ON C.GuideSerie = DSD.Guide_Serie AND C.GuideNumber = DSD.Guide_Number
     INNER JOIN DeliveryBackOffice.dbo.CostDetail CD WITH (NOLOCK)
         ON CD.IdCost = C.IdCost
+    LEFT JOIN dbo.PaymentZigi PZ WITH (NOLOCK)
+        ON  PZ.GuideSerie  = DSD.Guide_Serie
+    AND PZ.GuideNumber = DSD.Guide_Number
+    LEFT JOIN dbo.PaymentZigiMulti PZM WITH (NOLOCK)
+        ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
     WHERE
         DSD.ID_DeliveryOrderBySettlement = @ID_DeliveryOrderBySettlement
-        AND CD.IdTypeOfMoney = 11;
+        AND CD.IdTypeOfMoney IN (11,10);
 END
 GO

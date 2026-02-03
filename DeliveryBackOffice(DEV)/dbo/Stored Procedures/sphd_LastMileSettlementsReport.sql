@@ -27,7 +27,11 @@ BEGIN
            IIF(ord.IsCollect = 1, ord.PriceShippment, 0) 'Collect',
            (CASE WHEN [ord].[IsLastMileReturn] = 1 THEN 0 ELSE ord.Collect_OnDelivery END) 'COD',
 		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
-           cd.Voucher,
+           CASE 
+		    WHEN CD.IdTypeOfMoney = 11  THEN CD.Voucher
+			WHEN CD.IdTypeOfMoney = 10  THEN PZ.ZigiTransactionId
+			ELSE CD.Voucher
+           END AS Voucher,
 		   CASE 
 		      WHEN cd.IdTypeOfMoney = 11 THEN 'Transferencia'
 			  WHEN cd.IdTypeOfMoney = 1  THEN 'Efectivo'
@@ -52,6 +56,10 @@ BEGIN
             ON dc.IdCatCurrencyCOD = ISNULL(c.ShippingCurrency,1)
         LEFT JOIN dbo.CostDetail cd WITH (NOLOCK)
             ON c.IdCost = cd.IdCost
+        LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigi] PZ WITH (NOLOCK)
+            ON  PZ.GuideSerie  = dsd.Guide_Serie AND PZ.GuideNumber = dsd.Guide_Number
+        LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigiMulti] PZM WITH (NOLOCK)
+            ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
     WHERE CONVERT(DATE, dst.Date_Received)
           BETWEEN @fromDate AND @toDate
           AND dst.SettlementStationId IN
