@@ -4,7 +4,11 @@
 -- Create date: <2021-12-06>
 -- Description: <Obtener informacion para el mostrar los datos necesarios del Reporte Liquidaciones Última Milla>
 -- =============================================
-
+-- =============================================
+-- Author:      <Edelman>
+-- Create date: <2026-01-21>
+-- Description: <Agregar parámetro Voucher y  tipo de pago>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_LastMileSettlementsReport]
 (
     @fromDate AS DATE,
@@ -22,7 +26,19 @@ BEGIN
            CONCAT(sdr.First_Name, ' ', sdr.Last_Name) 'Piloto',
            IIF(ord.IsCollect = 1, ord.PriceShippment, 0) 'Collect',
            (CASE WHEN [ord].[IsLastMileReturn] = 1 THEN 0 ELSE ord.Collect_OnDelivery END) 'COD',
-		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol]
+		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
+           CASE 
+		    WHEN CD.IdTypeOfMoney = 11  THEN CD.Voucher
+			WHEN CD.IdTypeOfMoney = 10  THEN PZ.ZigiTransactionId
+			ELSE CD.Voucher
+           END AS Voucher,
+		   CASE 
+		      WHEN cd.IdTypeOfMoney = 11 THEN 'Transferencia'
+			  WHEN cd.IdTypeOfMoney = 1  THEN 'Efectivo'
+			  WHEN cd.IdTypeOfMoney = 2  THEN 'Pago con Tarjeta'
+			  WHEN cd.IdTypeOfMoney = 10 THEN 'Zigi'
+	          ELSE 'Pago preautorizado'
+		  END PaymentMethod
     FROM dbo.DeliveryOrderBySettlement dst
         INNER JOIN dbo.DeliverySettlementDetail dsd
             ON dsd.ID_DeliveryOrderBySettlement = dst.ID
@@ -38,6 +54,12 @@ BEGIN
             AND c.GuideNumber = ord.guide_number
 		LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
             ON dc.IdCatCurrencyCOD = ISNULL(c.ShippingCurrency,1)
+        LEFT JOIN dbo.CostDetail cd WITH (NOLOCK)
+            ON c.IdCost = cd.IdCost
+        LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigi] PZ WITH (NOLOCK)
+            ON  PZ.GuideSerie  = dsd.Guide_Serie AND PZ.GuideNumber = dsd.Guide_Number
+        LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigiMulti] PZM WITH (NOLOCK)
+            ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
     WHERE CONVERT(DATE, dst.Date_Received)
           BETWEEN @fromDate AND @toDate
           AND dst.SettlementStationId IN
