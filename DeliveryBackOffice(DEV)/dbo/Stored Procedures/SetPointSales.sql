@@ -121,7 +121,7 @@ BEGIN TRY
 
             SELECT 
                 '202' IdResult,
-                'Se elimino correctamente el punto de venta del lote.' MessageResult
+                'Se desactivo correctamente el punto de venta del lote.' MessageResult
 
         END;
         ELSE--0
