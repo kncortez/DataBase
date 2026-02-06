@@ -2,8 +2,12 @@
 -- Author:		<Walter Orozco>
 -- Create date: <2024-10-10>
 -- Description:	<Delivery Tracking - Obtener información de los paquetes, cantidad y precio total para pago de la guía.>
+-- ============================================
 -- =============================================
-
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-12-04>
+-- Description:	<Se agrega campo AmountCOD en la respuesta>
+-- ============================================
 CREATE PROCEDURE [dbo].[SPHW_GetInfoPackages]
 @GuideSerie NVARCHAR(4),
 @GuideNumber INT
@@ -46,6 +50,7 @@ BEGIN TRY
 			+ 'cm o ' + CAST(FLOOR(DOP.PieceWeight) AS NVARCHAR(10)) + 'lbs'		AS 'Description'
 			, COUNT(DOP.ParcelCode)		 AS 'Quantity'
 			, DO.PriceShippment			 AS 'Amount'
+			, DO.Collect_OnDelivery      AS 'AmountCOD'
 			, ISNULL(CCC.Symbol,'Q')	 AS 'CurrencySymbol'
 		FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
@@ -55,7 +60,7 @@ BEGIN TRY
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 			ON ISNULL(C.ShippingCurrency,C.CodCurrency) = CCC.IdCatCurrencyCOD
 		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
-		GROUP BY DOP.ParcelCode, DOP.Detail, DOP.PieceHeight,  DOP.PieceWeight, DO.PriceShippment, CCC.Symbol
+		GROUP BY DOP.ParcelCode, DOP.Detail, DOP.PieceHeight,  DOP.PieceWeight, DO.PriceShippment, CCC.Symbol, DO.Collect_OnDelivery
 
 	END;
 	ELSE

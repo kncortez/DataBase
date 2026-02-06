@@ -1,8 +1,13 @@
--- =============================================
--- Author:		<Tito García>
--- Create date: <2025-06-23>
--- Description:	<Confirma servicio de devoluciones de guías en express center>
--- =============================================
+/* =================================================
+   SP:        [dbo].[sps_set_finishReturnService]
+   Propósito: <Confirma servicio de devolucion de guía en express center>
+   Autor:     <Tito Garcia>
+   Historia:  <>
+   Fecha:     2025-06-23
+============================================
+=== CHANGELOG ================================
+-- 2025-12-14 | Historia/épica: FDAPI-4787 | Autor: Tito Garcia |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finishReturnService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
@@ -12,6 +17,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishReturnService]
   , @TblDetail AS TblPaymentList READONLY
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
+  , @StationId INT = NULL
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -20,7 +26,12 @@ BEGIN
 	BEGIN TRY
         -- =====================================================================
         -- SECCIÓN 1: INICIALIZACIÓN Y PREPARACIÓN DE DATOS
-        -- =====================================================================
+        -- =====================================================================    
+		
+		IF(@StationId = 0)
+		BEGIN
+			SET @StationId = NULL;
+		END
     
 		DECLARE @DateCreated DATETIME = GETDATE();
 		DECLARE @CatSalesPackageStatusId INT = 0;
@@ -243,6 +254,7 @@ BEGIN
 					, DateCreated
 					, DateCreatedInSystem
 					, Observations
+					, StationId
 				)
 				SELECT lge.Guide_Serie
 					, lge.Guide_Number
@@ -251,6 +263,7 @@ BEGIN
 					, @DateCreated DateCreated
 					, @DateCreated DateCreatedInSystem
 					, @observations
+					, @StationId
 				FROM #listGuidesEnabled lge;
 
 				UPDATE acodh
@@ -466,7 +479,7 @@ BEGIN
 					SELECT ct.IdCost
 						, @IdTypeOfMoney
 						, ct.TotalAmountPaid
-						, IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '') AS Voucher
 						, 1 -- crear registro activo por default
 						, @TokenP
 						, GETDATE()
@@ -487,7 +500,7 @@ BEGIN
 					UPDATE CD
 						SET CD.Amount = ct.TotalAmountPaid
 						, CD.IdTypeOfMoney = @IdTypeOfMoney
-						, CD.Voucher = IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, CD.Voucher = IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '')
 						, CD.TokenUpdated = @TokenP
 						, CD.DateUpdated = GETDATE()
 					FROM Cost                                              ct WITH(NOLOCK)
@@ -629,6 +642,7 @@ BEGIN
                         AND WCT.WebhookType = WRBU.WebhookTypeId
                     INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint]          WHE WITH (NOLOCK)
                         ON WRBU.CustomerId = WHE.CustomerId
+						AND WHE.WebhookTypeId = WCT.WebhookType
                     LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]      WTQ WITH (NOLOCK)
                         ON WCT.GuideSerie = WTQ.GuideSerie
                         AND WCT.GuideNumber = WTQ.GuideNumber
