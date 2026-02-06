@@ -1,4 +1,3 @@
-﻿
 /* =================================================
    SP:        [dbo].[GetInvoiceData]
    Propósito: <Obtener Informaciónd de facturas ya emitidas>
@@ -77,6 +76,16 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
            AND inv_type = 2;
 
        SET @InvoiceBalance = @InvoiceBalance - @AmountNotesCredits;
+    END
+
+    IF(@idCountry = 'HN')
+    BEGIN
+        SELECT Id_lote
+         , TypeDocument
+        FROM InvoiceBatchHeader WITH(NOLOCK)
+        WHERE [Status] = 1
+          AND [Enable] = 1
+          AND [RowStatus] = 1
     END
 
     SELECT
