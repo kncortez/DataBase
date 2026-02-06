@@ -64,8 +64,8 @@ BEGIN
                            'Puntos de visita obtenidos exitosamente' AS StatusMessage;
 
                     SELECT *
-                      FROM #VisitPoints
-                     ORDER BY DescriptionOfClient ASC;
+                    FROM #VisitPoints
+                    ORDER BY DescriptionOfClient ASC;
 
                     SELECT
                         cs.Name AS CompanyName,
@@ -122,12 +122,22 @@ BEGIN
                             LEFT JOIN dbo.DistrictByBillingSV DIS WITH(NOLOCK)
                             ON tdbsv.DistrictId = DIS.Id
                             WHERE cs.IdCustomer = vpc.CustomerID
-                        ) vpcf
-                        
+                        ) vpcf                        
                     WHERE (cs.IdCustomer = @IdCustomer
                         OR cs.SAPCardCode = @SAPCardCode)
                         AND cust.IdCustomerType = 1
                         AND cs.CountryID = @IdCountry
+
+
+                    IF(@IdCountry = 'HN')
+                    BEGIN
+                            SELECT Id_lote
+                                 , TypeDocument
+                            FROM InvoiceBatchHeader WITH(NOLOCK)
+                            WHERE [Status] = 1
+                              AND [Enable] = 1
+                              AND [RowStatus] = 1
+                    END
 
                 END
                 ELSE

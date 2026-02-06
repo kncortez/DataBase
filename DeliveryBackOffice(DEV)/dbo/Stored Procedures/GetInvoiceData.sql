@@ -1,12 +1,16 @@
-﻿-- =============================================
--- Author:      <Cristian, Azurdia>
--- Create date: <2025-01-09>
--- Description: <Retorna los datos de una factura, asi como su detalle y guías>
--- =============================================
--- Author:      <Brandon, Pedroza>
--- Create date: <2025-07-30>
--- Description: <Facturacion SV - Se agrega validacion para obtener información para SV>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[GetInvoiceData]
+   Propósito: <Obtener Informaciónd de facturas ya emitidas>
+   Autor:     <Cristian Azurdia>
+   Historia:  <>
+   Fecha:     2025-03-19
+============================================
+=== CHANGELOG ================================
+-- 2025-08-11 | Historia/épica: FDAPI-4143 | Autor: Cristian Azurdia |
+-- 2025-07-30 | Historia/épica: FDAPI-4159 | Autor: Brandon Pedroza  |
+-- 2025-03-19 | Historia/épica: FDD-1480   | Autor: Cristian Azurdia |
+=========================================== */
+
 CREATE PROCEDURE [dbo].[GetInvoiceData]
 
     @Inv_SerieFEL NVARCHAR(200) = NULL,
@@ -19,20 +23,22 @@ BEGIN
 DECLARE @pk_id INT = 0;
 DECLARE @InvoiceBalance DECIMAL(18,2) = 0;
 DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
-DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Comprobante Crédito Fiscal')
 
     IF(@idCountry = 'GT')
     BEGIN
+
         SELECT
               @pk_id = inv_pk_id
              ,@InvoiceBalance = inv_amount
-        FROM  InvoiceHeader WITH(NOLOCK)
+      FROM  InvoiceHeader WITH(NOLOCK)
         WHERE inv_SerieFEL = @Inv_SerieFEL
           AND inv_numberFEL = @Inv_NumberFEL
           AND IdCountry = @idCountry
+
     END
     ELSE IF(@idCountry = 'HN')
     BEGIN
+
         SELECT
               @pk_id = inv_pk_id
              ,@InvoiceBalance = inv_amount
@@ -50,15 +56,18 @@ DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK)
        SET @InvoiceBalance = @InvoiceBalance - @AmountNotesCredits;
 
     END
-	ELSE IF(@idCountry = 'SV')
-	BEGIN
-	        SELECT
+    ELSE IF(@idCountry = 'SV')
+    BEGIN
+
+        DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK) WHERE [Name] = 'Comprobante Crédito Fiscal')
+
+        SELECT
               @pk_id = inv_pk_id
              ,@InvoiceBalance = inv_amount
         FROM  InvoiceHeader WITH (NOLOCK)
         WHERE inv_numberFEL = @Inv_NumberFEL
           AND IdCountry = @idCountry
-		  AND inv_type = @TypeDocument --comprobante de credito fiscal
+          AND inv_type = @TypeDocument --comprobante de credito fiscal
 
         --CALCULOS DE MONTOS  NOTAS DE CREDITO
         SELECT @AmountNotesCredits = ISNULL(SUM(inv_amount),0)
@@ -67,7 +76,17 @@ DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK)
            AND inv_type = 2;
 
        SET @InvoiceBalance = @InvoiceBalance - @AmountNotesCredits;
-	END
+    END
+
+    IF(@idCountry = 'HN')
+    BEGIN
+        SELECT Id_lote
+         , TypeDocument
+        FROM InvoiceBatchHeader WITH(NOLOCK)
+        WHERE [Status] = 1
+          AND [Enable] = 1
+          AND [RowStatus] = 1
+    END
 
     SELECT
             inv_pk_id
@@ -77,7 +96,6 @@ DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK)
            ,inv_certificationFEL
            ,inv_amount
            ,@InvoiceBalance inv_balance
-           --,*
     FROM invoiceHeader WITH(NOLOCK)
     WHERE inv_pk_id = @pk_id;
 
@@ -86,7 +104,6 @@ DECLARE @TypeDocument INT = (SELECT IdRegister FROM CatTypeDocument WITH(NOLOCK)
            ,dti_fk_orderSerie
            ,dti_fk_orderNumber
            ,dti_amount
-           --,*
     FROM invoiceDetail WITH(NOLOCK)
     WHERE dti_fk_header = @pk_id;
 
