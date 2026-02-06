@@ -1226,7 +1226,7 @@ BEGIN
                               LEFT(do.Receiver_Address, 200)                             [ReceiverAddress],
                               do.ReceiverCountryId                                       [ReceiverCountryId],
                               do.IndicationsToSendDestination                            [AdditionalIndications],
-                              ca.ArtName                                                 [Article]
+                              ISNULL(dop.Detail,ca.ArtName)                              [Article]
                        FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
                            INNER JOIN #listGuides lp
                                ON lp.ItemSerie = dop.GuideSerie
@@ -1246,6 +1246,7 @@ BEGIN
                                 do.Receiver_Address,
                                 do.ReceiverCountryId,
                                 do.IndicationsToSendDestination,
+                                dop.Detail,
                                 ca.ArtName
                        ORDER BY dop.GuideNumber ASC;
 
