@@ -84,20 +84,18 @@ BEGIN
          [Message] VARCHAR(255),
         );
 
-        CREATE NONCLUSTERED INDEX tempTemp ON #Temp (Guide);
-
         INSERT INTO #Temp
         (
           Guide,
           [Message]
         )
           EXEC [dbo].[spws_get_validate_guides_pickup]
-             @InGuides = @InGuides,
-             @IdPickup = @IdPickup,
-             @Token = @Token,
-			       @ReferencesGuide=@ReferencesGuide,  
-	           @ContainerReferences=@ContainerReferences,  
-	           @IdCountry=@IdCountry; 
+               @InGuides = @InGuides,
+               @IdPickup = @IdPickup,
+               @Token = @Token,
+               @ReferencesGuide=@ReferencesGuide,  
+               @ContainerReferences=@ContainerReferences,  
+               @IdCountry=@IdCountry; 
 
         DECLARE @test INT =
                 (
@@ -111,8 +109,6 @@ BEGIN
             FROM FinishPickUpHeader
            WHERE SchedulePickupId = @IdPickup
         )
-
-     
 
         IF (@test = 0 AND 
             @ValIdPickup IS NULL )
@@ -186,15 +182,17 @@ BEGIN
                    ,DateUpdated
                   )
                   SELECT @IdPickup
-                         ,SUBSTRING(Item, 1, 2) AS GuideSerie
-                         ,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) AS GuideNumber
-                         ,REPLACE(SUBSTRING(Item, CHARINDEX('-', Item), LEN(Item)),'-','')  AS GuidePiece
+                         ,SUBSTRING(s.Item, 1, 2) AS GuideSerie
+                         ,SUBSTRING(s.Item, 3, IIF(ca.Pos = 0, (LEN(s.Item)), (ca.Pos - 3))) AS GuideNumber
+                         ,REPLACE(SUBSTRING(s.Item, ca.Pos, LEN(s.Item)),'-','')  AS GuidePiece
                          ,1
                          ,@Token
                          ,GETDATE()
                          ,NULL
                          ,NULL
-                    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+                    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',') s
+                         CROSS APPLY (VALUES (CHARINDEX('-', s.Item))) ca(Pos)
+                   WHERE ca.Pos > 0;
                 END;
 
           IF( EXISTS (SELECT 1 FROM @ReferencesGuide))
@@ -220,9 +218,9 @@ BEGIN
           
           END
 
-		IF( EXISTS (SELECT 1 FROM @ContainerReferences))
-		BEGIN
-		INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpContainerDetail]
+        IF( EXISTS (SELECT 1 FROM @ContainerReferences))
+        BEGIN
+        INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpContainerDetail]
                   (
                    SchedulePickupId
                    ,Container
@@ -240,8 +238,7 @@ BEGIN
                          ,NULL
                          ,NULL
                     FROM @ContainerReferences;
-		
-		END
+        END
 
             END TRY
             BEGIN CATCH
@@ -249,12 +246,10 @@ BEGIN
                 ROLLBACK TRANSACTION;
 
                 -- Retornar mensaje de error
-
-                    SELECT IdResult AS IdResult,  
-                            ERROR_MESSAGE() AS [Message] 
-                        FROM @responsemessage
-                    WHERE Id = 'Invalid'
-
+                SELECT IdResult AS IdResult,  
+                        ERROR_MESSAGE() AS [Message] 
+                  FROM @responsemessage
+                 WHERE Id = 'Invalid'
 
                 INSERT INTO dbo.RoutePreparationLogError
                 (
@@ -290,45 +285,36 @@ BEGIN
                         );
 
                 UPDATE ServiceManagement
-                SET ServiceStatusId = @StatusNew,
-                    PuSignaturePath = @PuSignaturePath,
-                    CiPuDate = @StartDate,
-                    CoPuDate = @EndDate,
-                    TokenUpdated = @Token,
-                    DateUpdated = GETDATE()
-                FROM ServiceManagement
+                   SET ServiceStatusId = @StatusNew,
+                       PuSignaturePath = @PuSignaturePath,
+                       CiPuDate = @StartDate,
+                       CoPuDate = @EndDate,
+                       TokenUpdated = @Token,
+                       DateUpdated = GETDATE()
+                 FROM ServiceManagement
                 WHERE IdSchedulePickup = @IdPickup;
 
-                
                 SELECT 200 as IdResult,
-					  'Cambios realizados exitosamente' AS [Message]
-
+                       'Cambios realizados exitosamente' AS [Message]
 
             END;
-
-
 
         END;
         ELSE IF (@test > 0)
         BEGIN
 
             SELECT 412 AS IdResult,
-			       Guide AS Guides,
-					[Message]
-                FROM #Temp
-            WHERE Guide IN
-                    (
-                        SELECT Guide FROM #Temp
-                    )
+                   Guide AS Guides,
+                   [Message]
+              FROM #Temp
 
         END
         ELSE IF (@ValIdPickup IS NOT NULL)
         BEGIN
 
-            SELECT  413 AS IdResult,
-					@IdPickup AS Error,
-					'El id de servicio de recolección ya ha sido procesado anteriormente' AS [Message]
-  
+            SELECT 413 AS IdResult,
+                   @IdPickup AS Error,
+                   'El id de servicio de recolección ya ha sido procesado anteriormente' AS [Message]
         END
 
     IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL

@@ -10,6 +10,7 @@
 2022-06-07 | Historia/épica: ---        | Autor: Edelman Vásquez | Control de mensajes de error indicando por qué una anulación no procede
 2025-08-25 | Historia/épica: ---        | Autor: Tito García     | Encolamiento de notificación webhook para estado Paquete dañado; se corrige indentación
 2025-12-30 | Historia/épica: ---        | Autor: Brandon Pedroza | Se almacena IdStation al cambiar el estado de la guía en el administrador de estados
+2025-01-16 | Historia/épica: FDAPI-5388       | Autor: Tito García |
 
 =========================================== */
 CREATE PROCEDURE [dbo].[sphd_UpdateGuideStatus]
@@ -26,7 +27,7 @@ BEGIN
 	DECLARE @RowStatus1 BIT = 0;
 	DECLARE @ResultOperation VARCHAR(200);
 	DECLARE @ResultCode INT;
-	DECLARE @VoidStatus INT = 7; --StatusOrder -> 'Anulado'
+	DECLARE @VoidStatus INT = 7; -- 'Anulado'
 	SET @RowStatus1  = ISNULL((SELECT top 1 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH(NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND StatusOrderId <> 7),0);
 	
 	--Variabes Membresías y suscripciones
