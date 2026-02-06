@@ -1,27 +1,25 @@
-﻿-- =============================================
--- Author:		<César, Sazo>
--- Create date: <20/10/2021>
--- Description:	< Cambio de estado de pantalla de administración de checkpoints >
--- =============================================
--- =============================================
--- Author:		<Andres, Ruiz>
--- Update date: <01/06/2022>
--- Description:	< liberación de cupones y anulación de los mismos >
--- =============================================
--- Author:		<Edelman Vásquez>
--- Update date: <07/06/2022>
--- Description:	<Control de mensajes de errores, indicando por que una anulación no procede>
--- =============================================
--- Author:		<Tito García>
--- Update date: <25/08/2025>
--- Description:	<Se agrega encolamiento de notificación webhook para el estado Paquete dañado, se arregla indentación, se elimina COLLATE innecesario>
--- =============================================
+﻿/* =================================================
+   SP:        sphd_UpdateGuideStatus
+   Propósito: Cambio de estado desde la pantalla de administración de checkpoints
+   Autor:     César Sazo
+   Historia:  ---
+   Fecha:     2021-10-20
+
+=== CHANGELOG ============================
+
+2022-06-07 | Historia/épica: ---        | Autor: Edelman Vásquez | Control de mensajes de error indicando por qué una anulación no procede
+2025-08-25 | Historia/épica: ---        | Autor: Tito García     | Encolamiento de notificación webhook para estado Paquete dañado; se corrige indentación
+2025-12-30 | Historia/épica: ---        | Autor: Brandon Pedroza | Se almacena IdStation al cambiar el estado de la guía en el administrador de estados
+2025-01-16 | Historia/épica: FDAPI-5388       | Autor: Tito García |
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sphd_UpdateGuideStatus]
 	@Guide_Serie VARCHAR(2),
 	@Guide_Number INT,  
 	@newStatus INT,
 	@UserToken VARCHAR(50),
-	@Observations VARCHAR(200)
+	@Observations VARCHAR(200),
+	@StationId INT = NULL
 AS
 BEGIN
 	DECLARE @IsCouponOrigin   BIT = 0;
@@ -29,7 +27,7 @@ BEGIN
 	DECLARE @RowStatus1 BIT = 0;
 	DECLARE @ResultOperation VARCHAR(200);
 	DECLARE @ResultCode INT;
-	DECLARE @VoidStatus INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado')
+	DECLARE @VoidStatus INT = 7; -- 'Anulado'
 	SET @RowStatus1  = ISNULL((SELECT top 1 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH(NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND StatusOrderId <> 7),0);
 	
 	--Variabes Membresías y suscripciones
@@ -104,9 +102,9 @@ BEGIN
 					AND	Guide_Number = @Guide_Number
 
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-					(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations)
+					(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, StationId)
 				VALUES 
-					(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations) 
+					(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations, @StationId) 
 					
 				--Membresías y suscripciones
 				--Oscar Morales 25/07/2022
@@ -215,9 +213,9 @@ BEGIN
 				AND	Guide_Number = @Guide_Number
 
 			INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations)
+				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, StationId)
 			VALUES 
-				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations) 
+				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations, @StationId) 
 			
 			--Membresías y suscripciones
 			--Oscar Morales 25/07/2022
@@ -309,9 +307,9 @@ BEGIN
 				AND Guide_Number = @Guide_Number
 
 			INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations)
+				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, StationId)
 			VALUES 
-				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations)
+				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations, @StationId)
 				
 			--Membresías y suscripciones
 			--Oscar Morales 25/07/2022
@@ -385,8 +383,10 @@ BEGIN
 			-- Termina puntos forza
 
 			-----------------WEBHOOK.INI-----------------------
-			DECLARE @PackageDamagedId INT =  (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Paquete Dañado')  -- 35
-			if(@newStatus = @PackageDamagedId)
+			DECLARE @PackageDamagedId INT =  35; -- 'Paquete Dañado'
+			DECLARE @PackageByWarranty INT =  42; -- 'Paquete liquidado por garantía'
+
+			if(@newStatus = @PackageDamagedId OR @newStatus = @PackageByWarranty)
 			BEGIN		
 
 				DECLARE @WebhookCustomerId INT = -1;
