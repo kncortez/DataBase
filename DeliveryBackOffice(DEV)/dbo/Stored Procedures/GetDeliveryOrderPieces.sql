@@ -6,6 +6,7 @@
    Fecha:     2022-09-13
 
 === CHANGELOG ============================
+2026-02-06 | Historia/épica: FDAPI-5372  | Autor: Brandon Pedroza | Se mejora la obtencion de campo articulo
 
 =========================================== */
 CREATE PROCEDURE [dbo].[GetDeliveryOrderPieces]
@@ -16,7 +17,7 @@ BEGIN
 
     SELECT 
         CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece)     AS [Piece],
-        ca.ArtName                                                    AS [Article],
+        ISNULL(dop.Detail,ca.ArtName)                                 AS [Article],
         do.IndicationsToSendDestination                               AS [AdditionalIndications]
     FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
