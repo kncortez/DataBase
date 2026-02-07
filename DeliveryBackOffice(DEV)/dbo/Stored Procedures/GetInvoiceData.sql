@@ -98,4 +98,14 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
     FROM invoiceDetail WITH(NOLOCK)
     WHERE dti_fk_header = @pk_id;
 
+    IF(@idCountry = 'HN')
+    BEGIN
+        SELECT Id_lote
+         , TypeDocument
+        FROM InvoiceBatchHeader WITH(NOLOCK)
+        WHERE [Status] = 1
+          AND [Enable] = 1
+          AND [RowStatus] = 1
+    END
+
 END
