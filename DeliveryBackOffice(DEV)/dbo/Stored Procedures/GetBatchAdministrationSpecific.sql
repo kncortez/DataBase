@@ -12,7 +12,8 @@
 =========================================== */
 
 CREATE PROCEDURE [dbo].[GetBatchAdministrationSpecific]
-@IdLote INT
+    @IdLote INT,
+    @TypeDocument INT
 AS
 BEGIN
     BEGIN TRY
