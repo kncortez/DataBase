@@ -78,16 +78,6 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
        SET @InvoiceBalance = @InvoiceBalance - @AmountNotesCredits;
     END
 
-    IF(@idCountry = 'HN')
-    BEGIN
-        SELECT Id_lote
-         , TypeDocument
-        FROM InvoiceBatchHeader WITH(NOLOCK)
-        WHERE [Status] = 1
-          AND [Enable] = 1
-          AND [RowStatus] = 1
-    END
-
     SELECT
             inv_pk_id
            ,inv_FechaHoraFEL
@@ -116,5 +106,5 @@ DECLARE @AmountNotesCredits DECIMAL(18,2) = 0;
           AND [Enable] = 1
           AND [RowStatus] = 1
     END
-
+    
 END
