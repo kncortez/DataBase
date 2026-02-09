@@ -38,6 +38,6 @@ BEGIN
         ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
     WHERE
         DSD.ID_DeliveryOrderBySettlement = @ID_DeliveryOrderBySettlement
-        AND CD.IdTypeOfMoney IN (11,10,2);
+        AND CD.IdTypeOfMoney IN (11,10);
 END
 GO
