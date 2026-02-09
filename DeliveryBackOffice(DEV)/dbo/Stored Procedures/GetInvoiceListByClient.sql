@@ -87,12 +87,4 @@ BEGIN
     GROUP BY INH.inv_pk_id
     ORDER BY INH.inv_pk_id
 
-    SELECT Id_Lote
-          ,RTN
-          ,CAI
-    FROM InvoiceBatchHeader
-    WHERE TypeDocument = 6
-      AND status = 1
-      AND enable = 1
-
 END
