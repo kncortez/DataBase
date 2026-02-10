@@ -4,15 +4,11 @@
    Autor:     IRVIN GONZALEZ
    Historia:  FDAPI-5094
    Fecha:     2025-11-13
-============================================
-============== CHANGELOG ===================
-2025-11-13 | Historia: FDAPI-5094 | Autor: IRVIN GONZALEZ |
-
 ================================================= */
 CREATE PROCEDURE dbo.Support_DisableStation
     @IdStation INT,
-    @TokenUpdated NVARCHAR(100),                         
-    @DateUpdated DATETIME                              
+    @TokenUpdated NVARCHAR(50)                         
+    
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -20,14 +16,25 @@ BEGIN
     DECLARE @TranStarted BIT = 0;
     
     BEGIN TRY
-        -- Iniciar transacción
-        IF @@TRANCOUNT = 0
+
+        -- Validar campos obligatorios
+        IF @TokenUpdated IS NULL OR LTRIM(RTRIM(@TokenUpdated)) = ''
         BEGIN
-            BEGIN TRANSACTION;
-            SET @TranStarted = 1;
+            SELECT 
+                'Error' AS Estado, 
+                'TokenUpdated es obligatorio.' AS Mensaje;
+            RETURN;
         END
-        
-        -- PASO 1: Validar existencia de la estación
+
+        IF @IdStation IS NULL OR LTRIM(RTRIM(@IdStation)) = ''
+        BEGIN
+            SELECT 
+                'Error' AS Estado, 
+                'IdStation es obligatorio.' AS Mensaje;
+            RETURN;
+        END
+
+        -- Validar existencia de la estación
         IF NOT EXISTS (
             SELECT TOP 1 1
             FROM dbo.CatStation WITH (NOLOCK)
@@ -38,12 +45,13 @@ BEGIN
                 'Error' AS Estado,
                 'No fue posible realizar el cambio: no se encontró la estación.' AS Mensaje,
                 @IdStation AS IdStation;
-            
-            -- Rollback si iniciamos la transacción
-            IF @TranStarted = 1
-                ROLLBACK TRANSACTION;
-            
             RETURN;
+        END
+        -- Iniciar transacción
+        IF @@TRANCOUNT = 0
+        BEGIN
+            BEGIN TRANSACTION;
+            SET @TranStarted = 1;
         END
         
         -- PASO 2: Obtener CodeOfReference
@@ -67,7 +75,6 @@ BEGIN
                 'No fue posible realizar el cambio: no se encontró relación con VisitPointClient.' AS Mensaje,
                 @IdStation AS IdStation;
             
-            -- Rollback si iniciamos la transacción
             IF @TranStarted = 1
                 ROLLBACK TRANSACTION;
             
@@ -79,7 +86,7 @@ BEGIN
         SET 
             RowStatus = 0,
             TokenUpdated = @TokenUpdated,
-            DateUpdated = @DateUpdated
+            DateUpdated = GETDATE()
         WHERE IdStation = @IdStation;
         
         -- PASO 5: Deshabilitar VisitPointClient asociado
@@ -87,10 +94,9 @@ BEGIN
         SET 
             StatusClient = 0,
             TokenUpdated = @TokenUpdated,
-            DateUpdated = @DateUpdated
+            DateUpdated = GETDATE()
         WHERE IdVisitPointClient = @IdVisitPointClient;
         
-        -- Confirmar transacción si todo fue exitoso
         IF @TranStarted = 1
             COMMIT TRANSACTION;
         
@@ -118,14 +124,3 @@ BEGIN
     END CATCH
 END
 GO
-
-/*
-================================================================================
-EJEMPLO DE EJECUCIÓN
-================================================================================
-EXEC dbo.Support_DisableStation
-     @IdStation = 125,
-     @TokenUpdated = N'SYS-IGONZALEZ',
-     @DateUpdated = GETDATE();
-================================================================================
-*/
