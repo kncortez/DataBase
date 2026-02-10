@@ -4,14 +4,10 @@
    Autor:     IRVIN GONZALEZ
    Historia:  FDAPI-5209
    Fecha:     2025-10-16
-============================================
-=== CHANGELOG ============================
-2025-10-16 | Historia/épica: FDAPI-5209 | Autor: IRVIN GONZALEZ |
-
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_CheckGuideInsurance
-    @GuideSerie  VARCHAR(10) = 'FD',
+    @GuideSerie  NVARCHAR(2) = 'FD',
     @GuideNumber INT
     
 AS
@@ -40,7 +36,7 @@ BEGIN
 
         DECLARE
             @IsInsurance BIT,
-            @InsuranceAmount DECIMAL(10,2);
+            @InsuranceAmount DECIMAL(12,2);
 
         SELECT TOP 1
             @IsInsurance     = IsInsuarance,
@@ -60,6 +56,7 @@ BEGIN
                 @InsuranceAmount AS MontoAsegurado;
             RETURN;
         END
+
         ELSE
         BEGIN
             SELECT
@@ -85,13 +82,3 @@ BEGIN
     END CATCH
 END
 GO
-
-/*
-================================================================================
-EJEMPLO DE EJECUCIÓN
-================================================================================
-EXEC dbo.Support_CheckGuideInsurance
-     @GuideSerie  = 'FD',
-     @GuideNumber = 12345678;
-================================================================================
-*/
