@@ -191,7 +191,7 @@ BEGIN
                               ),
 
                         --sino es una devolución que hago?
-                        IIF(A1.ReasonCode = '00', 0, do.PriceShippment)),
+                        IIF(A1.ReasonCode = '00', do.PriceShippment, do.PriceShippment)),
                     0) AS DECIMAL(18, 2)) AS Price,
            CAST(ISNULL(
                           (CASE
@@ -374,7 +374,7 @@ BEGIN
 
     END;
 
-     SELECT SUM(Total) - ISNULL(rdm.TotalApplied,0) AS COD_Manifest
+     SELECT SUM(gd.Price) + SUM(Total) - ISNULL(rdm.TotalApplied,0) AS COD_Manifest
     FROM @GuidesDetail gd
 	LEFT JOIN (
 			SELECT 
