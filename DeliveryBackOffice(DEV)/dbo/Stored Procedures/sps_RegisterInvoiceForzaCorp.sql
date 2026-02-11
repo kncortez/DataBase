@@ -1,12 +1,16 @@
--- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-11-26>
--- Description: <Se agrego procedimiento para registrar factura para cliente corporativo>
--- =============================================
--- Author:      <Brandon, Pedroza>
--- Create date: <2025-07-30>
--- Description: <Facturacion SV - se guardan datos de factura emitida para SV>
--- =============================================
+/* =================================================
+   SP:        [dbo].[sps_RegisterInvoiceForzaCorp]
+   Propósito: Se agrego procedimiento para registrar factura para cliente corporativo.
+   Autor:     Daniel Ramirez
+   Historia:  ---
+   Fecha:     2024-11-26
+
+=== CHANGELOG ============================
+
+2025-07-30 | Historia/épica: ---          | Autor: Brandon Pedroza |
+2025-11-21 | Historia/épica: FDAPI-4961   | Autor: Brandon Pedroza |
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForzaCorp]
 (
   @VpCodeOfReferences int
@@ -179,7 +183,8 @@ BEGIN
                                   TokenCreated,
                                   DateCreated,
                                   TokenUpdated,
-                                  DateUpdated
+                                  DateUpdated,
+                                  OperationConditionCode
                                   )
                           SELECT @invoiceHeaderId
                                  ,BI.DistrictCode
@@ -195,6 +200,7 @@ BEGIN
                                  ,GETDATE()
                                  ,NULL
                                  ,NULL
+                                 ,BI.OperationConditionCode
                              FROM @TblBuyerInfo BI
                       END
 

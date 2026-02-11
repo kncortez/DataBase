@@ -1,42 +1,18 @@
-﻿-- =============================================
--- Author:		<Hugo,Gomez>
--- Create date: <2021-02-06>
--- Description:	<Finaliza el proceso de recoleccion insertando informacion en las tablas de costos>
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-01-27>
--- Description:	< Actualización de logica para registro de pagos en efectivo desde CourierApp >
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-02-10>
--- Description:	< Manejo correcto de voucher y registro de pago >
--- =============================================
--- =============================================
--- Author:		<Michael,Espinoza>
--- Create date: <2022-02-10>
--- Description:	< Integracion de logica que permitira generar un manifiesto de piezas escaneada >
--- =============================================
--- =============================================
--- Author:		<Edelman,Vásquez>
--- Create date: <2022-06-20>
--- Description:	<Agregar filtro para validar que no tiene pagos de TC o Datafono, en dbo.CostDetail>
--- =============================================
--- Author:		<Tito Garcia>
--- Updated date:<18-11-2024>
--- Description:	<Se agrega nueva validación IsCompleted>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Updated date:<20-03-2025>
--- Description:	<Se pasa a entidades el Json>
--- =============================================
--- =============================================
--- Author:		<Edelman>
--- Updated date:<20-05-2025>
--- Description:	<Recolección por referencia y contenerización flujo POD>
--- =============================================
+﻿/* =================================================
+   SP:        SetFinishPickUp
+   Propósito: Finaliza el proceso de recolección insertando información en las tablas de costos
+   Autor:     Hugo Gomez
+   Historia:  ---
+   Fecha:     2021-02-06
+
+=== CHANGELOG ============================
+
+2025-03-20 | Historia/épica: ---          | Autor: Cristian Suazo  | 
+2025-05-20 | Historia/épica: ---          | Autor: Edelman         | 
+2025-12-11 | Historia/épica: FDAPI-4733   | Autor: Cristian Suazo  | 
+
+=========================================== */
+
 CREATE PROCEDURE [dbo].[SetFinishPickUp]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD22221,FD22361,FD22223,FD22359,FD22226',
@@ -55,7 +31,8 @@ CREATE PROCEDURE [dbo].[SetFinishPickUp]
     @PickupEmail NVARCHAR(50) = '',
     @ReferencesGuide TblReferencesList READONLY,  
 	  @ContainerReferences TblContainerList READONLY,
-	  @IdCountry NVARCHAR(2)= 'GT'
+	  @IdCountry NVARCHAR(2)= 'GT',
+   @StationId INT = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -107,20 +84,18 @@ BEGIN
          [Message] VARCHAR(255),
         );
 
-        CREATE NONCLUSTERED INDEX tempTemp ON #Temp (Guide);
-
         INSERT INTO #Temp
         (
           Guide,
           [Message]
         )
           EXEC [dbo].[spws_get_validate_guides_pickup]
-             @InGuides = @InGuides,
-             @IdPickup = @IdPickup,
-             @Token = @Token,
-			       @ReferencesGuide=@ReferencesGuide,  
-	           @ContainerReferences=@ContainerReferences,  
-	           @IdCountry=@IdCountry; 
+               @InGuides = @InGuides,
+               @IdPickup = @IdPickup,
+               @Token = @Token,
+               @ReferencesGuide=@ReferencesGuide,  
+               @ContainerReferences=@ContainerReferences,  
+               @IdCountry=@IdCountry; 
 
         DECLARE @test INT =
                 (
@@ -134,8 +109,6 @@ BEGIN
             FROM FinishPickUpHeader
            WHERE SchedulePickupId = @IdPickup
         )
-
-     
 
         IF (@test = 0 AND 
             @ValIdPickup IS NULL )
@@ -170,6 +143,7 @@ BEGIN
                    ,DateCreated
                    ,TokenUpdated
                    ,DateUpdated
+				   ,StationId
                   )
                   VALUES
                   (
@@ -190,6 +164,7 @@ BEGIN
                     ,GETDATE()
                     ,NULL
                     ,NULL
+					,@StationId
                   )
                
                IF(@InGuides <>'')
@@ -207,15 +182,17 @@ BEGIN
                    ,DateUpdated
                   )
                   SELECT @IdPickup
-                         ,SUBSTRING(Item, 1, 2) AS GuideSerie
-                         ,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) AS GuideNumber
-                         ,REPLACE(SUBSTRING(Item, CHARINDEX('-', Item), LEN(Item)),'-','')  AS GuidePiece
+                         ,SUBSTRING(s.Item, 1, 2) AS GuideSerie
+                         ,SUBSTRING(s.Item, 3, IIF(ca.Pos = 0, (LEN(s.Item)), (ca.Pos - 3))) AS GuideNumber
+                         ,REPLACE(SUBSTRING(s.Item, ca.Pos, LEN(s.Item)),'-','')  AS GuidePiece
                          ,1
                          ,@Token
                          ,GETDATE()
                          ,NULL
                          ,NULL
-                    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+                    FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',') s
+                         CROSS APPLY (VALUES (CHARINDEX('-', s.Item))) ca(Pos)
+                   WHERE ca.Pos > 0;
                 END;
 
           IF( EXISTS (SELECT 1 FROM @ReferencesGuide))
@@ -241,9 +218,9 @@ BEGIN
           
           END
 
-		IF( EXISTS (SELECT 1 FROM @ContainerReferences))
-		BEGIN
-		INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpContainerDetail]
+        IF( EXISTS (SELECT 1 FROM @ContainerReferences))
+        BEGIN
+        INSERT INTO [DeliveryBackOffice].[dbo].[FinishPickUpContainerDetail]
                   (
                    SchedulePickupId
                    ,Container
@@ -261,8 +238,7 @@ BEGIN
                          ,NULL
                          ,NULL
                     FROM @ContainerReferences;
-		
-		END
+        END
 
             END TRY
             BEGIN CATCH
@@ -270,12 +246,10 @@ BEGIN
                 ROLLBACK TRANSACTION;
 
                 -- Retornar mensaje de error
-
-                    SELECT IdResult AS IdResult,  
-                            ERROR_MESSAGE() AS [Message] 
-                        FROM @responsemessage
-                    WHERE Id = 'Invalid'
-
+                SELECT IdResult AS IdResult,  
+                        ERROR_MESSAGE() AS [Message] 
+                  FROM @responsemessage
+                 WHERE Id = 'Invalid'
 
                 INSERT INTO dbo.RoutePreparationLogError
                 (
@@ -311,45 +285,36 @@ BEGIN
                         );
 
                 UPDATE ServiceManagement
-                SET ServiceStatusId = @StatusNew,
-                    PuSignaturePath = @PuSignaturePath,
-                    CiPuDate = @StartDate,
-                    CoPuDate = @EndDate,
-                    TokenUpdated = @Token,
-                    DateUpdated = GETDATE()
-                FROM ServiceManagement
+                   SET ServiceStatusId = @StatusNew,
+                       PuSignaturePath = @PuSignaturePath,
+                       CiPuDate = @StartDate,
+                       CoPuDate = @EndDate,
+                       TokenUpdated = @Token,
+                       DateUpdated = GETDATE()
+                 FROM ServiceManagement
                 WHERE IdSchedulePickup = @IdPickup;
 
-                
                 SELECT 200 as IdResult,
-					  'Cambios realizados exitosamente' AS [Message]
-
+                       'Cambios realizados exitosamente' AS [Message]
 
             END;
-
-
 
         END;
         ELSE IF (@test > 0)
         BEGIN
 
             SELECT 412 AS IdResult,
-			       Guide AS Guides,
-					[Message]
-                FROM #Temp
-            WHERE Guide IN
-                    (
-                        SELECT Guide FROM #Temp
-                    )
+                   Guide AS Guides,
+                   [Message]
+              FROM #Temp
 
         END
         ELSE IF (@ValIdPickup IS NOT NULL)
         BEGIN
 
-            SELECT  413 AS IdResult,
-					@IdPickup AS Error,
-					'El id de servicio de recolección ya ha sido procesado anteriormente' AS [Message]
-  
+            SELECT 413 AS IdResult,
+                   @IdPickup AS Error,
+                   'El id de servicio de recolección ya ha sido procesado anteriormente' AS [Message]
         END
 
     IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL

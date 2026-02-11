@@ -1,17 +1,23 @@
-﻿-- =============================================
--- Author:		<Tito García>
--- Create date: <2025-06-23>
--- Description:	<Confirma servicio de entrega de guía en express center>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sps_set_finishDeliveryService]
+   Propósito: <Confirma servicio de entrega de guía en express center>
+   Autor:     <Tito Garcia>
+   Historia:  <>
+   Fecha:     2025-06-23
+============================================
+=== CHANGELOG ================================
+-- 2025-12-14 | Historia/épica: FDAPI-4785 | Autor: Tito Garcia |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finishDeliveryService]
     @IdModuleP INT
   , @TokenP VARCHAR(100)
   , @CUI VARCHAR(100)
   , @Name VARCHAR(100)
   , @TblListGuides AS TblListGuidesWithAnticipatedCOD READONLY
-  , @TblDetail AS TblPaymentList READONLY
+  , @TblDetail AS TblPaymentList READONLY	
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
+  , @StationId INT = NULL
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -22,6 +28,11 @@ BEGIN
         -- SECCIÓN 1: INICIALIZACIÓN Y PREPARACIÓN DE DATOS
         -- =====================================================================
     
+		IF(@StationId = 0)
+		BEGIN
+			SET @StationId = NULL;
+		END
+
 		DECLARE @DateCreated DATETIME = GETDATE();
 		DECLARE @CatSalesPackageStatusId INT = 0;
 
@@ -93,6 +104,7 @@ BEGIN
 			WHERE lg.Guide_Serie = do.Guide_Serie 
 				AND lg.Guide_Number = do.Guide_Number
 		);	
+
 
 		-- Si hay guías que no existen, terminar el proceso con error
 		IF ((SELECT COUNT(1) FROM #listGuidesNotExist) > 0)
@@ -213,6 +225,7 @@ BEGIN
 			FROM #TblListGuidesTwo tlg
 			WHERE tlg.ExcludeCOD = 0;
 
+
 			DECLARE @TotalGuidesInclude DECIMAL(18, 2);
 			SET @TotalGuidesInclude =
 			(
@@ -249,6 +262,7 @@ BEGIN
 					, DateCreated
 					, DateCreatedInSystem
 					, Observations
+					, StationId
 				)
 				SELECT lge.Guide_Serie
 					, lge.Guide_Number
@@ -257,6 +271,7 @@ BEGIN
 					, @DateCreated DateCreated
 					, @DateCreated DateCreatedInSystem
 					, @observations
+					, @StationId
 				FROM #listGuidesEnabled lge;
 
 				UPDATE dot
@@ -268,7 +283,6 @@ BEGIN
 						AND lge.Guide_Number = dot.Guide_Number
 				WHERE lge.ExcludeCOD = 1
 				AND dot.StatusOrderId = 22;
-
 				
 				-- ==============================================================================
 				-- SECCIÓN 6: INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA ENTREGA Y SEA COD
@@ -424,7 +438,6 @@ BEGIN
 					ON DOPD.GuideSerie = CG.GuideSerie
 					AND DOPD.GuideNumber = CG.GuideNumber;
 
-
 				-- =====================================================================
 				-- SECCIÓN 7: REGISTRO DE COSTOS Y PAGOS
 				-- =====================================================================
@@ -534,7 +547,7 @@ BEGIN
 						ct.IdCost,
 						@IdTypeOfMoney,
 						ct.TotalAmountPaid,
-						IIF(@IdTypeOfMoney = 6, @Voucher, '') AS Voucher,
+						IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '') AS Voucher,
 						1 AS IsActive,
 						@TokenP AS Token,
 						GETDATE() AS DateCreated,
@@ -553,7 +566,7 @@ BEGIN
 					UPDATE CD
 						SET CD.Amount = ct.TotalAmountPaid
 						, CD.IdTypeOfMoney = @IdTypeOfMoney
-						, CD.Voucher = IIF(@IdTypeOfMoney = 6, @Voucher, '')
+						, CD.Voucher = IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '')
 						, CD.TokenUpdated = @TokenP
 						, CD.DateUpdated = GETDATE()
 					FROM Cost                                              ct WITH(NOLOCK)
@@ -563,6 +576,7 @@ BEGIN
 						INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
 							ON ct.IdCost = CD.IdCost
 					WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0;
+
 				END;
 				-- FIN Guardar Costos
 		
@@ -813,7 +827,7 @@ BEGIN
                     );
 
 				END;
-				
+
 				-- =====================================================================
 				-- SECCIÓN 9: SERVICIO WEBHOOK
 				-- =====================================================================
@@ -899,6 +913,7 @@ BEGIN
                         AND WCT.WebhookType = WRBU.WebhookTypeId
                     INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint]          WHE WITH (NOLOCK)
                         ON WRBU.CustomerId = WHE.CustomerId
+						AND WHE.WebhookTypeId = WCT.WebhookType
                     LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]      WTQ WITH (NOLOCK)
                         ON WCT.GuideSerie = WTQ.GuideSerie
                         AND WCT.GuideNumber = WTQ.GuideNumber

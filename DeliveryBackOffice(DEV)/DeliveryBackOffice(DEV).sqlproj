@@ -1234,6 +1234,8 @@
     <Build Include="dbo\Stored Procedures\spHM_CancelOpenProcessesPreparationDeliveries.sql" />
     <Build Include="dbo\Stored Procedures\spHM_CancelOpenProcessLiquidationUnifiedRoutes.sql" />
     <Build Include="dbo\Stored Procedures\spHM_AddContainerInStopOverToLinehaulRoutePreparation.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetGuidesInRevision.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_ReleaseGuideFromReview.sql" />
     <Build Include="dbo\Stored Procedures\spHD_VerifyGuideStatus.sql" />
     <Build Include="dbo\Stored Procedures\spHD_ValidateVisitPointStatusByCodeOfReference.sql" />
     <Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttempsUpdateAdress.sql" />
@@ -1856,6 +1858,7 @@
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_ConfirmAddress.sql" />
+    <Build Include="dbo\Stored Procedures\ValidGuideReview.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
     <Build Include="dbo\User Defined Types\TblListGuidesWithAnticipatedCOD.sql" />
     <Build Include="dbo\Tables\DumpServiceCoverageLogGT.sql" />
@@ -2074,6 +2077,13 @@
     <Build Include="dbo\Stored Procedures\SLGuideReturn.sql" />
     <Build Include="dbo\Stored Procedures\SLGuideDelivery.sql" />
     <Build Include="dbo\Stored Procedures\SLGuideReturnPickUp.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_0.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_2.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_3.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_4.sql" />
+    <Build Include="dbo\Stored Procedures\SupportLHroutes.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

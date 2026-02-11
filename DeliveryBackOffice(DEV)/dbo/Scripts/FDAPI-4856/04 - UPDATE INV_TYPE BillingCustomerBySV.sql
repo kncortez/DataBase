@@ -1,0 +1,24 @@
+/***
+-- ACTUALIZACIÓN DEL METODO DE FACTURACIÓN FAVORITO DE CLIENTES CORPORATIVOS
+***/
+
+BEGIN TRANSACTION;
+BEGIN TRY
+
+    UPDATE [dbo].[BillingCustomerBySV]
+    SET Inv_Type = 4
+    WHERE ISNULL(Inv_Type,'') = ''
+    COMMIT TRANSACTION;
+
+END TRY
+BEGIN CATCH
+
+    ROLLBACK TRANSACTION;
+
+    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+    DECLARE @ErrorState INT = ERROR_STATE();
+
+    RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+
+END CATCH
