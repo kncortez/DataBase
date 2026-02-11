@@ -2081,6 +2081,10 @@
     <Build Include="dbo\Stored Procedures\ValidateDepositBalance.sql" />
     <Build Include="dbo\Stored Procedures\sps_UpdateInvoiceForza.sql" />
     <Build Include="dbo\Functions\SplitOrdinal.sql" />
+    <Build Include="dbo\Stored Procedures\SLGuideReception.sql" />
+    <Build Include="dbo\Stored Procedures\SLGuideReturn.sql" />
+    <Build Include="dbo\Stored Procedures\SLGuideDelivery.sql" />
+    <Build Include="dbo\Stored Procedures\SLGuideReturnPickUp.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_0.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_1.sql" />
