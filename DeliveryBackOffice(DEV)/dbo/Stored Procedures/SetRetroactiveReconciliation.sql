@@ -9,7 +9,7 @@
 -- 2026-02-02 | Historia/épica: FDAPI-5383 | Autor: Cristian Azurdia |
 =========================================== */
 
-ALTER PROCEDURE [dbo].[SetRetroactiveReconciliation]
+CREATE PROCEDURE [dbo].[SetRetroactiveReconciliation]
 
 AS
 BEGIN
