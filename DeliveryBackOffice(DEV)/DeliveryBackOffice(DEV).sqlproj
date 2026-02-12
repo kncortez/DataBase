@@ -1590,6 +1590,7 @@
     <Build Include="dbo\Stored Procedures\GetTotalAmountOfBatchCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetStatusOrderValid.sql" />
     <Build Include="dbo\Stored Procedures\GetStations.sql" />
+    <Build Include="dbo\Stored Procedures\GetStationsByType.sql" />
     <Build Include="dbo\Stored Procedures\GetStationLocation.sql" />
     <Build Include="dbo\Stored Procedures\GetSettlementToReprintByRoute.sql" />
     <Build Include="dbo\Stored Procedures\GetSettlementNotArrivedPickUpRabbit.sql" />
