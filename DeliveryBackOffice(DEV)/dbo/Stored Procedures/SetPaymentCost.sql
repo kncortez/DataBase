@@ -90,7 +90,7 @@ BEGIN
     -- set @CODPayment = (Select top 1 CODAmount from #TempCost)
     END;
 
-    IF (@TotalAmountPaid = 0) -- El producto no esta pagado
+    IF (@TotalAmountPaid >= 0) -- El producto no esta pagado
     BEGIN
 
         UPDATE [dbo].[Cost]
@@ -101,31 +101,54 @@ BEGIN
             [CODAmount] = @CODPayment
         WHERE IdCost = @IdCost;
 
-        INSERT INTO [dbo].[CostDetail]
-        (
-            [IdCost],
-            [IdTypeOfMoney],
-            [Amount],
-            [Voucher],
-            [RowStatus],
-            [TokenCreated],
-            [DateCreated],
-            [Responsible],
-            [VoucherPath]
-        )
-        SELECT @IdCost,
-               det.IdTypeOfMoney,
-               det.Amount,
-               IIF(det.IdTypeOfMoney In (6,11), det.Voucher, ''),
-               1, -- crear registro activo por default
-               @Token,
-               GETDATE(),
-               det.Responsible,
-               @TransferImagePath
-        FROM @TblDetail det;
+         IF(NOT EXISTS(Select TOP 1  1 From [dbo].[CostDetail]
+             WHERE [IdCost] = @IdCost
+			)
+         )
+		 BEGIN
+			INSERT INTO [dbo].[CostDetail]
+			(
+				[IdCost],
+				[IdTypeOfMoney],
+				[Amount],
+				[Voucher],
+				[RowStatus],
+				[TokenCreated],
+				[DateCreated],
+				[Responsible],
+				[VoucherPath]
+			)
+			SELECT @IdCost,
+				   det.IdTypeOfMoney,
+				   det.Amount,
+				   IIF(det.IdTypeOfMoney in (6,11), det.Voucher, ''),
+				   1, -- crear registro activo por default
+				   @Token,
+				   GETDATE(),
+				   det.Responsible,
+				   IIF(det.IdTypeOfMoney in (11),@TransferImagePath,'')
+			FROM @TblDetail det;
+		END
+		   ELSE
+		       IF(@CODPayment>0)
+			   BEGIN
+			     
+				   DECLARE @Voucher NVARCHAR(300);
+				   DECLARE @IdTypeOfMoney INT;
+				   DECLARE @Amount DECIMAL(18,2);
 
-    END;
+				   (SELECT @Voucher = det.Voucher,
+				           @IdTypeOfMoney = det.IdTypeOfMoney,
+						   @Amount  = det.Amount
+				     FROM @TblDetail det);
+
+				   UPDATE [dbo].[CostDetail] 
+				        SET [Voucher] = IIF(@IdTypeOfMoney in (11), @Voucher, ''),
+                            [IdTypeOfMoney] = @IdTypeOfMoney,
+							[Amount] = @Amount
+					WHERE [IdCost] = @IdCost;
+			   END;
+		END;
 END;
-
 
 
