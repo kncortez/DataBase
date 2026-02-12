@@ -18,8 +18,7 @@ BEGIN
 			WHEN CD.IdTypeOfMoney = 10  THEN PZ.ZigiTransactionId
 			ELSE CD.Voucher
         END AS Voucher,
-         ISNULL(C.TotalAmount,0) + ISNULL(C.CODAmount,0) AS 'TotalAmount',
-        C.TotalAmount + C.CODAmount AS 'TotalAmount',
+          ISNULL(C.CODAmount,0) AS 'TotalAmount',
 		 CASE 
 		    WHEN CD.IdTypeOfMoney = 11  THEN 'Transferencia'
 			WHEN CD.IdTypeOfMoney = 10  THEN 'Zigi'
