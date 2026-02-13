@@ -430,6 +430,7 @@ BEGIN
 			StatusOrderValid,
 			DescriptionStatusOrderValid
 		FROM Applied
+        WHERE COD > 0
 		ORDER BY id ASC;
 
 END;
