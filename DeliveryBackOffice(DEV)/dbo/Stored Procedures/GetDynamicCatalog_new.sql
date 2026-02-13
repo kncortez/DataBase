@@ -218,6 +218,23 @@ BEGIN
            AND Name IN ('Camión','Panel','Motocicleta')
            AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
     END;
+	    ELSE IF (@TypeMethod = 'GetSystem')
+    BEGIN
+        SELECT [SysIdSystem]    AS [Id]
+             , [SysNameSystem]  AS [Name]
+             , [SysDescription] AS [Description]
+          FROM CatSystem WITH(NOLOCK)
+         WHERE SysRowStatus = 1
+    END;
+    ELSE IF (@TypeMethod = 'GetFinalStatusOrder')
+    BEGIN
+        SELECT StatusOrderId     [Id]
+             , OrderDescription  [Name]
+             , StatusMessage     [Description]
+        FROM StatusOrder WITH (NOLOCK)
+        WHERE CatCheckpointTypeId = 3
+          AND RowStatus = 1;
+    END;
     ELSE 
     BEGIN
 
