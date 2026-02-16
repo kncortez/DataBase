@@ -28,17 +28,29 @@ BEGIN
            (CASE WHEN [ord].[IsLastMileReturn] = 1 THEN 0 ELSE ord.Collect_OnDelivery END) 'COD',
 		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
            CASE 
-		    WHEN CD.IdTypeOfMoney = 11  THEN CD.Voucher
-			WHEN CD.IdTypeOfMoney = 10  THEN PZ.ZigiTransactionId
+		    WHEN CD.IdTypeOfMoneyCollect = 11  THEN CD.Voucher
+			WHEN CD.IdTypeOfMoneyCollect = 10  THEN PZ.ZigiTransactionId
 			ELSE CD.Voucher
-           END AS Voucher,
+           END AS VoucherCollect,
+           CASE 
+		    WHEN CD.IdTypeOfMoneyCOD = 11  THEN CD.Voucher
+			WHEN CD.IdTypeOfMoneyCOD = 10  THEN PZ.ZigiTransactionId
+			ELSE CD.Voucher
+           END AS VoucherCOD,
 		   CASE 
-		      WHEN cd.IdTypeOfMoney = 11 THEN 'Transferencia'
-			  WHEN cd.IdTypeOfMoney = 1  THEN 'Efectivo'
-			  WHEN cd.IdTypeOfMoney = 2  THEN 'Pago con Tarjeta'
-			  WHEN cd.IdTypeOfMoney = 10 THEN 'Zigi'
-	          ELSE 'Pago preautorizado'
-		  END PaymentMethod
+		      WHEN cd.IdTypeOfMoneyCollect = 11 THEN 'Transferencia'
+			  WHEN cd.IdTypeOfMoneyCollect = 1  THEN 'Efectivo'
+			  WHEN cd.IdTypeOfMoneyCollect = 2  THEN 'Pago con Tarjeta'
+			  WHEN cd.IdTypeOfMoneyCollect = 10 THEN 'Zigi'
+	          ELSE ''
+		  END AS PaymentMethodCollect,
+           CASE 
+		      WHEN cd.IdTypeOfMoneyCOD = 11 THEN 'Transferencia'
+			  WHEN cd.IdTypeOfMoneyCOD = 1  THEN 'Efectivo'
+			  WHEN cd.IdTypeOfMoneyCOD = 2  THEN 'Pago con Tarjeta'
+			  WHEN cd.IdTypeOfMoneyCOD = 10 THEN 'Zigi'
+	          ELSE ''
+		  END AS PaymentMethodCOD
     FROM dbo.DeliveryOrderBySettlement dst
         INNER JOIN dbo.DeliverySettlementDetail dsd
             ON dsd.ID_DeliveryOrderBySettlement = dst.ID
