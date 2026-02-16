@@ -1,31 +1,42 @@
-﻿CREATE PROCEDURE dbo.support_ActualizarFechaExpiracionSubscription
+/* =================================================
+   SP:        [dbo].[support_ActualizarFechaExpiracionSubscription]
+   Propósito: Actualizar la fecha de expiración de una suscripción.
+   Autor:     Cristian De Leon
+   Historia:  FDAPI-5287
+   Fecha:     2026-02-16
+============================================
+=== CHANGELOG ================================
+2026-02-16 | Historia/épica: FDAPI-5287 | Autor: Cristian De Leon |
+-----
+=========================================== */
+CREATE OR ALTER PROCEDURE dbo.support_ActualizarFechaExpiracionSubscription
 (
     @IdSubscription INT,
     @NuevaFecha     DATE,
-    @Usuario        VARCHAR(50) 
+    @Usuario        NVARCHAR(100)
 )
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    /*  Validación */
+    /* Validación */
     IF NOT EXISTS (
         SELECT 1
-        FROM Subscription
+        FROM DeliveryBackOffice.dbo.Subscription WITH (NOLOCK)
         WHERE IdSubscription = @IdSubscription
     )
     BEGIN
-        RAISERROR('La suscripción no existe.',16,1);
+        RAISERROR('La suscripción no existe.', 16, 1);
         RETURN;
     END
 
     BEGIN TRY
         BEGIN TRAN;
 
-        UPDATE Subscription
+        UPDATE DeliveryBackOffice.dbo.Subscription
         SET
-            ExpirationDate = CAST(@NuevaFecha AS DATE), -- solo fecha
+            ExpirationDate = @NuevaFecha,
             TokenUpdated   = @Usuario,
             DateUpdated    = GETDATE()
         WHERE IdSubscription = @IdSubscription;
@@ -39,7 +50,7 @@ BEGIN
             ROLLBACK TRAN;
 
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        RAISERROR(@ErrorMessage,16,1);
+        RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END;
 GO
