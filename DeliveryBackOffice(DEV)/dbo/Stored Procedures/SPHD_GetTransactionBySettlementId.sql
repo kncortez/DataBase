@@ -18,11 +18,11 @@ BEGIN
 			WHEN CD.IdTypeOfMoney = 10  THEN PZ.ZigiTransactionId
 			ELSE CD.Voucher
         END AS Voucher,
-            ISNULL(DO.Collect_OnDelivery,0)+ISNULL(DO.PriceShippment,0) AS 'TotalAmount',
+          ISNULL(DO.Collect_OnDelivery,0)+ISNULL(DO.PriceShippment,0) AS 'TotalAmount',
 		 CASE 
-		    WHEN CD.IdTypeOfMoney = 11  THEN 'Transferencia'
-			WHEN CD.IdTypeOfMoney = 10  THEN 'Zigi'
-			WHEN CD.IdTypeOfMoney = 2  THEN 'Tarjeta'
+		    WHEN CD.IdTypeOfMoneyCOD = 11  THEN 'Transferencia'
+			WHEN CD.IdTypeOfMoneyCOD = 10  THEN 'Zigi'
+			WHEN CD.IdTypeOfMoneyCollect = 2  THEN 'Tarjeta'
 			ELSE 'N/A'
         END AS 'PaymentType'
     FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)

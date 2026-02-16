@@ -68,14 +68,14 @@ BEGIN
 			  WHEN cd.IdTypeOfMoneyCollect = 1  THEN 'Efectivo'
 			  WHEN cd.IdTypeOfMoneyCollect = 2  THEN 'Pago con Tarjeta'
 			  WHEN cd.IdTypeOfMoneyCollect = 10 THEN 'Zigi'
-	          ELSE 'Pago preautorizado'
+	          ELSE ''
 		  END AS PaymentMethodCollect,
            CASE 
 		      WHEN cd.IdTypeOfMoneyCOD = 11 THEN 'Transferencia'
 			  WHEN cd.IdTypeOfMoneyCOD = 1  THEN 'Efectivo'
 			  WHEN cd.IdTypeOfMoneyCOD = 2  THEN 'Pago con Tarjeta'
 			  WHEN cd.IdTypeOfMoneyCOD = 10 THEN 'Zigi'
-	          ELSE 'Pago preautorizado'
+	          ELSE ''
 		  END AS PaymentMethodCOD
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH(NOLOCK)
