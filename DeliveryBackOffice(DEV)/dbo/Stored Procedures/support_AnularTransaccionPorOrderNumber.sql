@@ -1,12 +1,12 @@
 /* =================================================
    SP:        [dbo].[support_AnularTransaccionPorOrderNumber]
-   Prop髎ito: Anular transacci髇 por OrderNumber seg鷑 modo de ejecuci髇.
+   Prop贸sito: Anular transacci贸n por OrderNumber seg煤n modo de ejecuci贸n.
    Autor:     Cristian De Leon
    Historia:  FDAPI-5278
    Fecha:     2026-02-16
 ============================================
 === CHANGELOG ================================
-2026-02-16 | Historia/閜ica: FDAPI-5278 | Autor: Cristian De Leon |
+2026-02-16 | Historia/茅pica: FDAPI-5278 | Autor: Cristian De Leon |
 -----
 =========================================== */
 CREATE OR ALTER PROCEDURE dbo.support_AnularTransaccionPorOrderNumber
@@ -88,12 +88,12 @@ BEGIN
             ON s.IdSubscription = spl.SubscriptionId
         WHERE spl.[Authorization] = @OrderNumber;
 
-        PRINT 'VALIDACI覰 EXITOSA: Es posible realizar el cambio.';
+        PRINT 'VALIDACI脫N EXITOSA: Es posible realizar el cambio.';
         RETURN;
     END
 
     /* ==============================
-        MODO 2 - EJECUCI覰 COMPLETA
+        MODO 2 - EJECUCI脫N COMPLETA
        ============================== */
     IF @Mode = 2
     BEGIN
@@ -122,7 +122,7 @@ BEGIN
 
             COMMIT TRAN;
 
-            PRINT 'EJECUCI覰 COMPLETADA: Cambios aplicados correctamente.';
+            PRINT 'EJECUCI脫N COMPLETADA: Cambios aplicados correctamente.';
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRAN;
@@ -149,7 +149,7 @@ BEGIN
 
             COMMIT TRAN;
 
-            PRINT 'MODO 3 EJECUTADO: Actualizaci髇 solo en Process.';
+            PRINT 'MODO 3 EJECUTADO: Actualizaci贸n solo en Process.';
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRAN;
@@ -160,8 +160,8 @@ BEGIN
     END
 
     /* ==============================
-        MODO INV罫IDO
+        MODO INV脕LIDO
        ============================== */
-    RAISERROR('Modo inv醠ido. Use 1, 2 o 3.',16,1);
+    RAISERROR('Modo inv谩lido. Use 1, 2 o 3.',16,1);
 END;
 GO
