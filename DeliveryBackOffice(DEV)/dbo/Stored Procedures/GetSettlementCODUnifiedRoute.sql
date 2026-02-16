@@ -327,7 +327,7 @@ BEGIN
                                                                                      0
                                                                                  ELSE
                                                                                      do.Collect_OnDelivery
-                                                                             END > 0
+                                                                             END >= 0
               )
           )
           AND
@@ -420,7 +420,7 @@ BEGIN
 			Price,
 			COD,
 			CASE
-				WHEN TotalApplied <= ISNULL(RunningBefore, 0) THEN Total
+				WHEN TotalApplied <= ISNULL(RunningBefore, 0) THEN (ISNULL(Price,0) + ISNULL(Total,0))
 				WHEN TotalApplied >= RunningTotal THEN 0
 				ELSE (RunningTotal - TotalApplied)
 			END AS Total,
@@ -430,7 +430,6 @@ BEGIN
 			StatusOrderValid,
 			DescriptionStatusOrderValid
 		FROM Applied
-        WHERE COD > 0
 		ORDER BY id ASC;
 
 END;
