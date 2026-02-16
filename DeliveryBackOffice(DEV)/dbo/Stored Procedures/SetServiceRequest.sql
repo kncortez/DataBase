@@ -7,6 +7,10 @@
 -- Description: Manejo de creación de guías: Crédito, Collect y Estándar (primera fase: sin validación)
 -- Date <2024-12-23>
 -- =============================================
+-- Author:    <Bilkar Morataya>
+-- Description: Correción de precio para guías: Crédito, Collect y Estándar
+-- Date <2024-02-16>
+-- =============================================
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
     @TblServiceRequest AS TblServiceRequest3 READONLY,
@@ -789,7 +793,7 @@ BEGIN
                    2, -- PayTypeId para COLLECT
                    1, -- TypeofInOutMoneyId
                    3, -- TimePlaId para COLLECT
-                   0, -- Tarifa calculada + monto a cobrar
+                   ISNULL(DO_RESULT.PriceShippment, 0), -- Monto a cobrar calculado por spws_revalue_guide
                    @Token,
                    GETDATE()
             FROM #GuideTable GIT
@@ -808,7 +812,7 @@ BEGIN
                    1, -- PayTypeId para STANDARD
                    2, -- TypeofInOutMoneyId
                    1, -- TimePlaId para STANDARD
-                   0, -- Solo tarifa calculada
+                   ISNULL(DO_RESULT.PriceShippment, 0), -- Tarifa calculada por spws_revalue_guide
                    @Token,
                    GETDATE()
             FROM #GuideTable GIT
