@@ -1,23 +1,33 @@
-ÔªøCREATE PROCEDURE dbo.support_AnularTransaccionPorOrderNumber
-    @OrderNumber       VARCHAR(50),
-    @ComentarioSoporte VARCHAR(50),
-    @Modo              INT  -- 1 = Preview | 2 = Ejecutar | 3 = Telemercadeo
+/* =================================================
+   SP:        [dbo].[support_AnularTransaccionPorOrderNumber]
+   PropÛsito: Anular transacciÛn por OrderNumber seg˙n modo de ejecuciÛn.
+   Autor:     Cristian De Leon
+   Historia:  FDAPI-5278
+   Fecha:     2026-02-16
+============================================
+=== CHANGELOG ================================
+2026-02-16 | Historia/Èpica: FDAPI-5278 | Autor: Cristian De Leon |
+-----
+=========================================== */
+CREATE OR ALTER PROCEDURE dbo.support_AnularTransaccionPorOrderNumber
+    @OrderNumber     NVARCHAR(50),
+    @SupportComment  NVARCHAR(50),
+    @Mode            INT  -- 1 = Preview | 2 = Ejecutar | 3 = Telemercadeo
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @NuevoOrderNumber VARCHAR(150);
+    DECLARE @NewOrderNumber NVARCHAR(150);
 
-    SET @NuevoOrderNumber =
-        'x_' + @ComentarioSoporte + '_' + @OrderNumber;
+    SET @NewOrderNumber = N'x_' + @SupportComment + N'_' + @OrderNumber;
 
     /* ==============================
         VALIDACIONES GENERALES
        ============================== */
     IF NOT EXISTS (
         SELECT 1
-        FROM RegistrationofTransactionProcessStates WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.RegistrationofTransactionProcessStates WITH (NOLOCK)
         WHERE OrderNumber = @OrderNumber
     )
     BEGIN
@@ -27,7 +37,7 @@ BEGIN
 
     IF NOT EXISTS (
         SELECT 1
-        FROM SubscriptionPaymentLog WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.SubscriptionPaymentLog WITH (NOLOCK)
         WHERE [Authorization] = @OrderNumber
     )
     BEGIN
@@ -37,8 +47,8 @@ BEGIN
 
     IF NOT EXISTS (
         SELECT 1
-        FROM Subscription s WITH (NOLOCK)
-        INNER JOIN SubscriptionPaymentLog spl WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.Subscription s WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.SubscriptionPaymentLog spl WITH (NOLOCK)
             ON s.IdSubscription = spl.SubscriptionId
         WHERE spl.[Authorization] = @OrderNumber
     )
@@ -48,16 +58,16 @@ BEGIN
     END
 
     /* ==============================
-       üëÅÔ∏è MODO 1 - PREVIEW
+        MODO 1 - PREVIEW
        ============================== */
-    IF @Modo = 1
+    IF @Mode = 1
     BEGIN
         SELECT 
             'RegistrationofTransactionProcessStates' AS Tabla,
             OrderNumber AS OrderNumber_Actual,
             Vaucher     AS Vaucher_Actual,
-            @NuevoOrderNumber AS Nuevo_Valor
-        FROM RegistrationofTransactionProcessStates WITH (NOLOCK)
+            @NewOrderNumber AS Nuevo_Valor
+        FROM DeliveryBackOffice.dbo.RegistrationofTransactionProcessStates WITH (NOLOCK)
         WHERE OrderNumber = @OrderNumber;
 
         SELECT 
@@ -65,7 +75,7 @@ BEGIN
             [Authorization] AS Authorization,
             RowStatus       AS RowStatus_Actual,
             0               AS RowStatus_Nuevo
-        FROM SubscriptionPaymentLog WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.SubscriptionPaymentLog WITH (NOLOCK)
         WHERE [Authorization] = @OrderNumber;
 
         SELECT 
@@ -73,46 +83,46 @@ BEGIN
             s.IdSubscription,
             s.RowStatus AS RowStatus_Actual,
             0           AS RowStatus_Nuevo
-        FROM Subscription s WITH (NOLOCK)
-        INNER JOIN SubscriptionPaymentLog spl WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.Subscription s WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.SubscriptionPaymentLog spl WITH (NOLOCK)
             ON s.IdSubscription = spl.SubscriptionId
         WHERE spl.[Authorization] = @OrderNumber;
 
-        PRINT 'VALIDACI√ìN EXITOSA: Es posible realizar el cambio.';
+        PRINT 'VALIDACI”N EXITOSA: Es posible realizar el cambio.';
         RETURN;
     END
 
     /* ==============================
-        MODO 2 - EJECUCI√ìN COMPLETA
+        MODO 2 - EJECUCI”N COMPLETA
        ============================== */
-    IF @Modo = 2
+    IF @Mode = 2
     BEGIN
         BEGIN TRY
             BEGIN TRAN;
 
             UPDATE rg
             SET 
-                rg.OrderNumber = @NuevoOrderNumber,
-                rg.Vaucher     = @NuevoOrderNumber
-            FROM RegistrationofTransactionProcessStates rg
-            INNER JOIN SubscriptionPaymentLog spl WITH (NOLOCK)
+                rg.OrderNumber = @NewOrderNumber,
+                rg.Vaucher     = @NewOrderNumber
+            FROM DeliveryBackOffice.dbo.RegistrationofTransactionProcessStates rg
+            INNER JOIN DeliveryBackOffice.dbo.SubscriptionPaymentLog spl WITH (NOLOCK)
                 ON rg.OrderNumber = spl.[Authorization]
             WHERE rg.OrderNumber = @OrderNumber;
 
-            UPDATE SubscriptionPaymentLog
+            UPDATE DeliveryBackOffice.dbo.SubscriptionPaymentLog
             SET RowStatus = 0
             WHERE [Authorization] = @OrderNumber;
 
             UPDATE s
             SET RowStatus = 0
-            FROM Subscription s
-            INNER JOIN SubscriptionPaymentLog spl WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.Subscription s
+            INNER JOIN DeliveryBackOffice.dbo.SubscriptionPaymentLog spl WITH (NOLOCK)
                 ON s.IdSubscription = spl.SubscriptionId
             WHERE spl.[Authorization] = @OrderNumber;
 
             COMMIT TRAN;
 
-            PRINT 'EJECUCI√ìN COMPLETADA: Cambios aplicados correctamente.';
+            PRINT 'EJECUCI”N COMPLETADA: Cambios aplicados correctamente.';
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRAN;
@@ -124,22 +134,22 @@ BEGIN
 
     /* ==============================
         MODO 3 - TELEMERCADEO
-       (Solo Process)
+        (Solo Process)
        ============================== */
-    IF @Modo = 3
+    IF @Mode = 3
     BEGIN
         BEGIN TRY
             BEGIN TRAN;
 
-            UPDATE RegistrationofTransactionProcessStates
+            UPDATE DeliveryBackOffice.dbo.RegistrationofTransactionProcessStates
             SET 
-                OrderNumber = @NuevoOrderNumber,
-                Vaucher     = @NuevoOrderNumber
+                OrderNumber = @NewOrderNumber,
+                Vaucher     = @NewOrderNumber
             WHERE OrderNumber = @OrderNumber;
 
             COMMIT TRAN;
 
-            PRINT 'MODO 3 EJECUTADO: Actualizaci√≥n solo en Process.';
+            PRINT 'MODO 3 EJECUTADO: ActualizaciÛn solo en Process.';
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRAN;
@@ -150,10 +160,8 @@ BEGIN
     END
 
     /* ==============================
-        MODO INV√ÅLIDO
+        MODO INV¡LIDO
        ============================== */
-    RAISERROR('Modo inv√°lido. Use 1, 2 o 3.',16,1);
+    RAISERROR('Modo inv·lido. Use 1, 2 o 3.',16,1);
 END;
 GO
-
-
