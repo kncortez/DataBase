@@ -1,6 +1,6 @@
 /* =================================================
    SP:        [dbo].[support_CrearContainers]
-   Propósito: Crear contenedores de forma masiva validando duplicados por descripcion.
+   PropÃ³sito: Crear contenedores de forma masiva validando duplicados por descripcion.
    Autor:     Cristian De Leon
    Historia:  FDAPI-5286
    Fecha:     2026-02-16
@@ -13,9 +13,9 @@ CREATE OR ALTER PROCEDURE dbo.support_CrearContainers
 (
     @CatTypeContainerId INT,          -- Tipo de contenedor
     @Prefijo            NVARCHAR(20),  -- BOX, LH, EXT, etc
-    @StartNumber        INT,           -- Número inicial
+    @StartNumber        INT,           -- NÃºmero inicial
     @Total              INT,           -- Cantidad a crear
-    @CantidadCeros      INT,           -- Total de dígitos (ej. 5 -> 00301)
+    @CantidadCeros      INT,           -- Total de dÃ­gitos (ej. 5 -> 00301)
     @Usuario            NVARCHAR(50) = N'SYS-CDELEON'
 )
 AS
