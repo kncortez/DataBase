@@ -235,6 +235,19 @@ BEGIN
         WHERE CatCheckpointTypeId = 3
           AND RowStatus = 1;
     END;
+	ELSE IF (@TypeMethod = 'GetConditionPayment')
+    BEGIN
+        SELECT IdConditionOfPayment           [Id]
+             , CASE 
+                   WHEN RIGHT(ConditionOfPaymenAbbreviation, 1) LIKE '[0-9]' 
+                   THEN LEFT(ConditionOfPaymenAbbreviation, LEN(ConditionOfPaymenAbbreviation) - 1)
+                   ELSE ConditionOfPaymenAbbreviation
+               END AS [Name]
+             , ConditionOfPayment            [Description]
+        FROM CatConditionOfPayment WITH (NOLOCK)
+        WHERE IdConditionOfPayment in (1,2)
+          AND RowStatus = 1;
+    END;
     ELSE 
     BEGIN
 
