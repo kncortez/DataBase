@@ -53,18 +53,30 @@ BEGIN
 					ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0)) AS DECIMAL(18, 2)) Total,
 		   do.Receiver_ID Receiver_ID,
 		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
-		  CASE 
-		    WHEN cd.IdTypeOfMoney = 11  THEN cd.Voucher
-			WHEN cd.IdTypeOfMoney = 10  THEN PZ.ZigiTransactionId
-			ELSE cd.Voucher
-           END AS Voucher,
 		   CASE 
-		      WHEN cd.IdTypeOfMoney = 11 THEN 'Transferencia'
-			  WHEN cd.IdTypeOfMoney = 1  THEN 'Efectivo'
-			  WHEN cd.IdTypeOfMoney = 2  THEN 'Pago con Tarjeta'
-			  WHEN cd.IdTypeOfMoney = 10 THEN 'Zigi'
+		      WHEN CD.IdTypeOfMoneyCollect = 11  THEN CD.Voucher
+			  WHEN CD.IdTypeOfMoneyCollect = 10  THEN PZ.ZigiTransactionId
+			  ELSE CD.Voucher
+           END AS VoucherCollect,
+           CASE 
+		      WHEN CD.IdTypeOfMoneyCOD = 11  THEN CD.Voucher
+			  WHEN CD.IdTypeOfMoneyCOD = 10  THEN PZ.ZigiTransactionId
+			  ELSE CD.Voucher
+           END AS VoucherCOD,
+		   CASE 
+		      WHEN cd.IdTypeOfMoneyCollect = 11 THEN 'Transferencia'
+			  WHEN cd.IdTypeOfMoneyCollect = 1  THEN 'Efectivo'
+			  WHEN cd.IdTypeOfMoneyCollect = 2  THEN 'Pago con Tarjeta'
+			  WHEN cd.IdTypeOfMoneyCollect = 10 THEN 'Zigi'
 	          ELSE 'Pago preautorizado'
-		  END PaymentMethod
+		  END AS PaymentMethodCollect,
+           CASE 
+		      WHEN cd.IdTypeOfMoneyCOD = 11 THEN 'Transferencia'
+			  WHEN cd.IdTypeOfMoneyCOD = 1  THEN 'Efectivo'
+			  WHEN cd.IdTypeOfMoneyCOD = 2  THEN 'Pago con Tarjeta'
+			  WHEN cd.IdTypeOfMoneyCOD = 10 THEN 'Zigi'
+	          ELSE 'Pago preautorizado'
+		  END AS PaymentMethodCOD
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH(NOLOCK)
 			ON dsd.Guide_Serie = do.Guide_Serie
