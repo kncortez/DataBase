@@ -1,12 +1,19 @@
+ï»¿
+-- ==========================================================================
+-- Author:		<Kevin,Oliva>
+-- Create date: <2025-02-17>
+-- Description:	<Cambiar contraseÃ±a de hermes desktop>
+-- ==========================================================================
+
 CREATE PROCEDURE SUPPORTCHANGEINTERNALPASSWORD 
     @USR_IdUser INT,
     @USR_UpdateToken VARCHAR(25),
     @USR_Password VARCHAR(150)
 AS
 BEGIN
-    -- Configuración inicial
+    -- ConfiguraciÃ³n inicial
     SET NOCOUNT ON;
-    SET XACT_ABORT ON; -- Garantiza rollback automático en errores críticos
+    SET XACT_ABORT ON; -- Garantiza rollback automÃ¡tico en errores crÃ­ticos
     
     DECLARE @RegisterUserID INT;
     DECLARE @ErrorMessage NVARCHAR(4000);
@@ -14,17 +21,17 @@ BEGIN
     DECLARE @ErrorState INT;
     
     BEGIN TRY
-        -- Inicia la transacción
+        -- Inicia la transacciÃ³n
         BEGIN TRANSACTION;
         
-        -- Validación: Verificar que el usuario existe
+        -- ValidaciÃ³n: Verificar que el usuario existe
         IF NOT EXISTS (
             SELECT 1
             FROM DenariusUser_Dev.dbo.LGN_User WITH (NOLOCK)
             WHERE USR_IdUser = @USR_IdUser
         )
         BEGIN
-            RAISERROR('No se encontró el usuario con ID: %d', 16, 1, @USR_IdUser);
+            RAISERROR('No se encontrÃ³ el usuario con ID: %d', 16, 1, @USR_IdUser);
             RETURN;
         END;
         
@@ -36,10 +43,10 @@ BEGIN
             USR_UpdateDate = GETDATE()
         WHERE USR_IdUser = @USR_IdUser;
         
-        -- Verificar que el update afectó exactamente 1 registro
+        -- Verificar que el update afectÃ³ exactamente 1 registro
         IF @@ROWCOUNT = 0
         BEGIN
-            RAISERROR('No se pudo actualizar la contraseña en LGN_User', 16, 1);
+            RAISERROR('No se pudo actualizar la contraseÃ±a en LGN_User', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN;
         END;
@@ -62,19 +69,19 @@ BEGIN
             -- Verificar que el update fue exitoso
             IF @@ROWCOUNT = 0
             BEGIN
-                RAISERROR('No se pudo actualizar la contraseña en RegisterUser', 16, 1);
+                RAISERROR('No se pudo actualizar la contraseÃ±a en RegisterUser', 16, 1);
                 ROLLBACK TRANSACTION;
                 RETURN;
             END;
         END;
         
-        -- Si todo fue exitoso, confirmar la transacción
+        -- Si todo fue exitoso, confirmar la transacciÃ³n
         COMMIT TRANSACTION;
         
         -- Retornar los datos actualizados
         SELECT 
-            'Contraseña actualizada exitosamente' AS Resultado,
-            'ÉXITO' AS Estado,
+            'ContraseÃ±a actualizada exitosamente' AS Resultado,
+            'Ã‰XITO' AS Estado,
             GETDATE() AS FechaActualizacion;
             
         -- Datos de LGN_User actualizados
@@ -106,18 +113,18 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        -- Si hay una transacción activa, revertirla
+        -- Si hay una transacciÃ³n activa, revertirla
         IF @@TRANCOUNT > 0
         BEGIN
             ROLLBACK TRANSACTION;
         END;
         
-        -- Capturar información del error
+        -- Capturar informaciÃ³n del error
         SELECT @ErrorMessage = ERROR_MESSAGE(),
                @ErrorSeverity = ERROR_SEVERITY(),
                @ErrorState = ERROR_STATE();
         
-        -- Retornar información detallada del error
+        -- Retornar informaciÃ³n detallada del error
         SELECT 
             'ERROR' AS Estado,
             @ErrorMessage AS MensajeError,
@@ -125,7 +132,7 @@ BEGIN
             ERROR_LINE() AS LineaError,
             @ErrorSeverity AS Severidad,
             @ErrorState AS EstadoError,
-            'La transacción ha sido revertida' AS Accion;
+            'La transacciÃ³n ha sido revertida' AS Accion;
             
     END CATCH;
 END;
