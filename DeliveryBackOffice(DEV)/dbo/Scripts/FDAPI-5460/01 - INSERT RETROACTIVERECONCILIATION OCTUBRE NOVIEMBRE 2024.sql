@@ -14,18 +14,21 @@
       AND RowStatus = 1;
 
     INSERT INTO RetroactiveReconciliation
-    SELECT do.dateCreated                                       [Guidedate]
+    SELECT CAST(do.dateCreated AS DATE)                         [Guidedate]
          , concat(do.Guide_Serie,'-',do.Guide_Number)           [Guide]
          , cs.[IdCustomer]                                      [CustomerId]
          , cs.[Name]                                            [CustomerName]
-         , cts.CtsId                                            [TypeSaleId]
-         , cts.CtsName                                          [TypeSale]
+         , ISNULL(cs.ConditionOfPaymentID, 1)                   [TypeSaleId]
+         , IIF(ISNULL(cs.ConditionOfPaymentID, 1) = 1 , 'CONTADO', 'CREDITO') [TypeSale]
          , so.StatusOrderId                                     [StatusId]
          , so.OrderDescription                                  [Status]
          , ISNULL(cas.SysIdSystem,-1)                           [SystemId]
-         , ISNULL(cas.SysNameSystem,'No Reconocido')            [NameSystem]
+         , ISNULL(cas.SysNameSystem,'No definido')            [SystemName]
+         , inv.PaymentMethodId                                  [PaymentMethodId]
+         , inv.PaymentMethod                                    [PaymentMethod]
+         , cts.CtsId                                            [TypePurchaseId]
+         , cts.CtsName                                          [TypePurchase]
          , Concat(do.Sender_FirstName, ' ', do.Sender_LastName) [Sender]
-         , IIF(ISNULL(cs.ConditionOfPaymentID, 1) = 1 , 'CONTADO', 'CREDITO') [Payment_method]
          , ISNULL(inv.invoice,'Pendiente')                      [Invoice]
          , att.attempt                                          [Attempt]
          , ISNULL(bop.Amount,0)                                 [Overweight]
@@ -49,9 +52,15 @@
                  SELECT IIF( IH.IdCountry = 'SV', IH.inv_NumberFEL, IH.inv_certificationFEL) [invoice]
                       , ID.dti_fk_orderSerie    [Guide_Serie]
                       , ID.dti_fk_orderNumber   [Guide_number]
+                      , ISNULL(iomd.io_type,0)                  [PaymentMethodId]
+                      , ISNULL(tiomd.tio_pk_name,'NO Definido') [PaymentMethod]
                  FROM invoiceDetail ID WITH(NOLOCK)
                  INNER JOIN invoiceHeader IH WITH(NOLOCK)
                    ON IH.inv_pk_id = ID.dti_fk_header
+                 INNER JOIN dbo.InOutOfMoneyDetail iomd  WITH(NOLOCK)
+                   ON iomd.io_invoice = inv_pk_id
+                 INNER JOIN dbo.ctgTypeOfInOutOfMoney tiomd WITH(NOLOCK)
+                   ON iomd.io_type = tiomd.tio_pk_id
                  WHERE ID.dti_fk_orderSerie = do.Guide_Serie
                    AND ID.dti_fk_orderNumber = do.Guide_number
                ) inv
@@ -62,7 +71,8 @@
                    AND da.Guide_Number = do.Guide_Number
                ) att
     WHERE do.DateCreated >= '2024-10-01'
-      AND do.DateCreated <=  '2024-11-30'
+      AND do.DateCreated <=  '2024-12-31'
+      AND do.StatusOrderId in (Select StatusOrderId from @StatusOrderFinish)
 
     END TRY
     BEGIN CATCH
