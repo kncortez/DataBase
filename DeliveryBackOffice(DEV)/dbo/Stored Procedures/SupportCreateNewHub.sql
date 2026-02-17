@@ -1,7 +1,13 @@
+ï»¿-- =============================================
+-- Author:		<Kevin Oliva>
+-- Create date: <17-02-2026>
+-- Description:	<Crear un nuevo hub>
+-- =============================================
+
 CREATE PROCEDURE SupportCreateNewHub
     @HubName NVARCHAR(200),
     @HubAbbreviation NVARCHAR(10),
-    @CountryId CHAR(2),
+    @CountryId NVARCHAR(2),
     @StationName NVARCHAR(100),
     @DescriptionCC NVARCHAR(500) = NULL,
     @HubLatitude DECIMAL(10,6) = NULL,
@@ -45,7 +51,7 @@ BEGIN
             NULL
         );
         
-        -- Obtener el ID de la estación recién creada
+        -- Obtener el ID de la estaciÃ³n reciÃ©n creada
         SET @IdStation = SCOPE_IDENTITY();
         
         -- 2. Insertar en HubLogistics
@@ -80,7 +86,7 @@ BEGIN
             @DescriptionCC
         );
         
-        -- Obtener el ID del hub recién creado
+        -- Obtener el ID del hub reciÃ©n creado
         SET @IdHubLogistic = SCOPE_IDENTITY();
         
         -- 3. Actualizar CatStation con el HubLogisticId
@@ -97,7 +103,7 @@ BEGIN
             @IdStation AS IdStation,
             @IdHubLogistic AS IdHubLogistic,
             'SUCCESS' AS Status,
-            'Hub y Estación creados correctamente' AS Message;
+            'Hub y EstaciÃ³n creados correctamente' AS Message;
             
     END TRY
     BEGIN CATCH
