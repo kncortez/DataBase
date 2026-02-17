@@ -1,4 +1,8 @@
-
+ï»¿-- =============================================
+-- Author:        <Kevin Oliva>
+-- Create date:   <2026-02-17>
+-- Description:   <Agregar coberturas a Rutas Rutas LH>
+-- =============================================
 CREATE PROCEDURE SupportLHRoutes
     @CatRouteId INT,
     @HubOriginId INT,
@@ -61,7 +65,7 @@ BEGIN
         ELSE IF @ExistsRoute > 0             
             SET @CoverageState = 0;          -- Misma ruta, otro origen
         ELSE
-            SET @CoverageState = NULL;       -- No existe nada aún
+            SET @CoverageState = NULL;       -- No existe nada aÃºn
 
 
         -- Caso 2: Update (origen + destino exacto)
@@ -107,7 +111,7 @@ BEGIN
             );
         END
 
-        -- Caso inicial: No existe ninguna cobertura aún
+        -- Caso inicial: No existe ninguna cobertura aÃºn
         ELSE IF @CoverageState IS NULL
         BEGIN
             INSERT INTO LinehaulCoverage
