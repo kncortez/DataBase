@@ -15,9 +15,15 @@
 -- Description:	<Se agrega la generacion de kiokocode automatica>
 -- =============================================
 
+-- =============================================
+-- Author:		<Kevin Oliva>
+-- Create date: <2026-02-17>
+-- Description:	<se cambia instruccion de Alter a Create>
+-- =============================================
+
 =========================================== */
 
-ALTER PROCEDURE [dbo].[supportCreateNewExcV2]
+CREATE PROCEDURE [dbo].[supportCreateNewExcV2]
     @DescriptionOfClient NVARCHAR(100),
     @TokenSupport NVARCHAR(50),
     @Address NVARCHAR(600),
