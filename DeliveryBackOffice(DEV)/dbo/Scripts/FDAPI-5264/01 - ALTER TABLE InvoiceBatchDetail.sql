@@ -14,6 +14,8 @@ BEGIN TRY
         ,@level2type=N'COLUMN'
         ,@level2name=N'IsCompleted';
 
+    COMMIT TRANSACTION;
+
 END TRY
 BEGIN CATCH
     ROLLBACK TRANSACTION;
