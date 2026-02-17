@@ -1,3 +1,8 @@
+ï»¿-- =============================================
+-- Author:		<Kevin,Oliva>
+-- Create date: <2026-02-17>
+-- Description:	<Sp para cambiar correo a usuarios corporativos>
+-- =============================================
 CREATE PROCEDURE SupportUserEmail
     @UsrIdUser INT,
     @UsrEmail VARCHAR(100),
@@ -11,7 +16,7 @@ BEGIN
     DECLARE @OLDUsrTokenUpdated VARCHAR(50);
     
     BEGIN TRY
-        -- Iniciar transacción
+        -- Iniciar transacciÃ³n
         BEGIN TRANSACTION;
         
         -- Validar existencia del usuario
@@ -31,11 +36,11 @@ BEGIN
         SELECT  
             @OLDUsrEmail = UsrEmail,
             @OLDUsrTokenUpdated = UsrTokenUpdated
-        FROM RegisterUser WITH(UPDLOCK) -- Lock para actualización
+        FROM RegisterUser WITH(NOLOCK)
         WHERE UsrIdUser = @UsrIdUser 
           AND UsrRowStatus = 1;
         
-        -- Realizar actualización
+        -- Realizar actualizaciÃ³n
         UPDATE RegisterUser
         SET 
             UsrEmail = @UsrEmail, 
@@ -44,7 +49,7 @@ BEGIN
         WHERE UsrIdUser = @UsrIdUser
           AND UsrRowStatus = 1;
         
-        -- Confirmar transacción
+        -- Confirmar transacciÃ³n
         COMMIT TRANSACTION;
         
         -- Mostrar valor anterior
@@ -66,11 +71,11 @@ BEGIN
           
     END TRY
     BEGIN CATCH
-        -- Si hay error, revertir transacción
+        -- Si hay error, revertir transacciÃ³n
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
         
-        -- Retornar información del error
+        -- Retornar informaciÃ³n del error
         SELECT 
             ERROR_NUMBER() AS ErrorNumber,
             ERROR_MESSAGE() AS ErrorMessage,
