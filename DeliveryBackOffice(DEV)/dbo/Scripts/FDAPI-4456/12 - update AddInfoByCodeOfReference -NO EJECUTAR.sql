@@ -1,0 +1,25 @@
+/***
+-- ACTUALIZACION AddInfoByCodeOfReference
+-- PARA FACTURACIÓN EN EL SALVADOR
+-- AMBIENTE QA
+***/
+
+BEGIN TRANSACTION;
+BEGIN TRY
+
+UPDATE AddInfoByCodeOfReference SET CodeOfReference = 1378846 WHERE CodeOfReference =  1160901
+
+    COMMIT TRANSACTION;
+
+END TRY
+BEGIN CATCH
+
+    ROLLBACK TRANSACTION;
+
+    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+    DECLARE @ErrorState INT = ERROR_STATE();
+
+    RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+
+END CATCH

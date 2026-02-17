@@ -1,73 +1,39 @@
-﻿-- =============================================
--- Author:		<Brandon Pedroza>
--- Create date: <2024-11-20>
--- Description:	<Kiosko - Registra guia pasa a estado Depositada en buzon>
--- =============================================
--- Author:      <Brandon Pedroza>
--- Modified:    <2024-11-21>
--- Description: <Se agrega parametro para busqueda de estacion>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sphwUpdateCheckpointKiosk]
+   Propósito: Kiosko - Registra guia pasa a estado Depositada en buzon
+   Autor:     <Brando Pedroza>
+   Historia:  <>
+   Fecha:     <2024-11-20>
+   === CHANGELOG ============================
+2025-12-19 | Historia/épica: <FDAPI-4954> | Autor: Tito Garcia |
+2025-10-02 | Historia/épica: <> | Autor: Juan Ramirez |
+2024-11-21 | Historia/épica: <> | Autor: Brandon Pedroza |
+=========================================== */
 CREATE PROCEDURE [dbo].[sphwUpdateCheckpointKiosk]
-    @GuideNumber INT,
-    @GuideSerie NVARCHAR(5),
-    @IdCountry NVARCHAR(2),
-	@CodeOfReference INT
+    @GuidesKiosko    AS dbo.GuidesKiosko READONLY,
+    @IdCountry       AS NVARCHAR(2),
+    @CodeOfReference INT,
+    @StationId INT = NULL
 AS
 BEGIN
-    BEGIN TRANSACTION
+    BEGIN TRANSACTION KioskoTran
     BEGIN TRY
         DECLARE @StatusOrderSolicitado AS INT,
-				@StatusOrderGenerado AS INT,
-				@StatusOrderDepositado AS INT,
+                @StatusOrderGenerado AS INT,
+                @StatusOrderDepositado AS INT,
                 @StatusOrderRecepcionado AS INT,
-				@IdStation AS INT;
+                @IdStation AS INT;
 
-        -- Obtener valores de los estados
-        SET @StatusOrderDepositado =
-        (
-            SELECT StatusOrderId
-            FROM StatusOrder WITH (NOLOCK)
-            WHERE OrderDescription = 'Depositado en buzón'
-        );
-        SET @StatusOrderRecepcionado =
-        (
-            SELECT StatusOrderId
-            FROM StatusOrder WITH (NOLOCK)
-            WHERE OrderDescription = 'Recibido En Express Center'
-        );
-		SET @StatusOrderSolicitado =
-        (
-            SELECT StatusOrderId
-            FROM StatusOrder WITH (NOLOCK)
-            WHERE OrderDescription = 'Solicitado'
-        );
-        SET @StatusOrderGenerado =
-        (
-            SELECT StatusOrderId
-            FROM StatusOrder WITH (NOLOCK)
-            WHERE OrderDescription = 'Generado'
-        );
+        SET @StatusOrderDepositado = 51; --'Depositado en buzón' 
+        SET @StatusOrderRecepcionado = 21; --'Recibido En Express Center'
+		SET @StatusOrderSolicitado = 1; --'Solicitado'
+        SET @StatusOrderGenerado = 15; --'Generado'
         		
-		SET @IdStation = (SELECT TOP 1 IdStation FROM CatStation With(NOLOCK) WHERE CodeOfReference = @CodeOfReference)
+		IF(@StationId = 0)
+		BEGIN
+			SET @StationId = NULL;
+		END
 
-        -- Validar existencia de la guía
-        IF NOT EXISTS
-        (
-            SELECT 1
-            FROM DeliveryOrder WITH (NOLOCK)
-            WHERE Guide_Serie = @GuideSerie
-                  AND Guide_Number = @GuideNumber
-                  AND SenderCountryId = @IdCountry
-                  AND StatusOrderId IN ( @StatusOrderSolicitado, @StatusOrderGenerado )
-        )
-        BEGIN
-            ROLLBACK TRANSACTION
-            SELECT 400									AS 'StatusCode',
-                   'El estado de la guía no es válido'	AS 'Description'
-            RETURN
-        END
-
-		-- Insertar en DeliveryOrderDetail estado Recepcionado en Express center
         INSERT INTO [dbo].[DeliveryOrderDetail]
         (
             [Guide_Serie],
@@ -82,29 +48,31 @@ BEGIN
             [RowStatus],
             [DeliveryAttemptId],
             [SystemOrigin],
-			[StationId]
+            [StationId]
         )
-        VALUES
-        (@GuideSerie,
-         @GuideNumber,
-         @StatusOrderRecepcionado,
-         'SYSTEM-KIOSK',
-         GETDATE(),
-         GETDATE(),
-         NULL,
-         NULL,
-         NULL,
-         1  ,
-         NULL,
-         NULL,
-		 @IdStation
-        );
+        SELECT gk.Guide_Serie,
+               gk.Guide_Number,
+               @StatusOrderRecepcionado,
+               'SYSTEM-KIOSK',
+               GETDATE(),
+               GETDATE(),
+               NULL,
+               NULL,
+               NULL,
+               1  ,
+               NULL,
+               NULL,
+               @StationId
+          FROM @GuidesKiosko gk
 
-		-- Actualizar DeliveryOrder
-        UPDATE DeliveryOrder
-        SET StatusOrderId = @StatusOrderRecepcionado
-        WHERE Guide_Number = @GuideNumber
-              AND Guide_Serie = @GuideSerie;
+        -- Actualizar DeliveryOrder
+        UPDATE do
+           SET do.StatusOrderId = @StatusOrderRecepcionado
+          FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+               INNER JOIN @GuidesKiosko gk 
+                  ON  do.Guide_Serie = gk.Guide_Serie
+                    AND do.Guide_Number = gk.Guide_Number
+                        AND do.SenderCountryId = gk.IdCountry;
 
         -- Insertar en DeliveryOrderDetail estado Depositado en Buzon
         INSERT INTO [dbo].[DeliveryOrderDetail]
@@ -121,39 +89,42 @@ BEGIN
             [RowStatus],
             [DeliveryAttemptId],
             [SystemOrigin],
-			[StationId]
+            [StationId]
         )
-        VALUES
-        (@GuideSerie,
-         @GuideNumber,
-         @StatusOrderDepositado,
-         'SYSTEM-KIOSK',
-         GETDATE(),
-         GETDATE(),
-         'Depositado en buzón',
-         NULL,
-         NULL,
-         1  ,
-         NULL,
-         NULL,
-		 @IdStation
-        );
+        SELECT gk.Guide_Serie,
+               gk.Guide_Number,
+               @StatusOrderDepositado,
+               'SYSTEM-KIOSK',
+               GETDATE(),
+               GETDATE(),
+               'Depositado en buzón',
+               NULL,
+               NULL,
+               1  ,
+               NULL,
+               NULL,
+               @StationId
+          FROM @GuidesKiosko gk
 
         -- Actualizar DeliveryOrder
-        UPDATE DeliveryOrder
-        SET StatusOrderId = @StatusOrderDepositado
-        WHERE Guide_Number = @GuideNumber
-              AND Guide_Serie = @GuideSerie;
+         UPDATE do
+            SET do.StatusOrderId = @StatusOrderDepositado
+           FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+                INNER JOIN @GuidesKiosko gk 
+                    ON do.Guide_Serie = gk.Guide_Serie
+                        AND do.Guide_Number = gk.Guide_Number
+                        AND do.SenderCountryId = gk.IdCountry;
 
-        COMMIT TRANSACTION
-        SELECT 200															AS 'StatusCode',
-               'Informacion actualizada'									AS 'Description',
-			   'El paquete ha sido depositado en el buzón correctamente'	AS 'Message',
-               @GuideNumber													AS 'GuideNumber',
-               @GuideSerie													AS 'GuideSerie';
+        COMMIT TRANSACTION KioskoTran
+
+        SELECT 200                                                        AS 'StatusCode',
+               'Informacion actualizada'                                  AS 'Description',
+               'Hemos validado y recibido tus paquetes con éxito'         AS 'Message'
+
     END TRY
     BEGIN CATCH
-        ROLLBACK TRANSACTION
+        ROLLBACK TRANSACTION KioskoTran
+
         SELECT 400 AS 'StatusCode',
                'Error al registrar checkpoint' AS 'Description',
                ERROR_MESSAGE() AS 'ErrorMessage'

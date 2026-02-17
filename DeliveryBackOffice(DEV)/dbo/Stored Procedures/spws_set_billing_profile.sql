@@ -8,6 +8,12 @@
 --	Cambiar tabla temporal messagelist a variable tipo tabla @TblMessageList
 --	Author: Jerson Ochoa - <05-01-2023>
 
+-- =============================================
+-- Author:		<Cristian, Azurdia>
+-- Create date: <2025-09-12>
+-- Description:	<Actualización de datos favoritos facturación el Salvador>
+-- ===========================================
+
 CREATE PROCEDURE [dbo].[spws_set_billing_profile]
     -- Add the parameters for the stored procedure here
 
@@ -17,6 +23,13 @@ CREATE PROCEDURE [dbo].[spws_set_billing_profile]
     @Address NVARCHAR(200),
     @TaxId NVARCHAR(50),
     @Status INT = 1,
+    @Inv_type INT = 1, -- factura (factura "normal" en todos los países)
+    @NRC NVARCHAR(200) ='',
+    @TypeIdentificationDocumentCode NVARCHAR(100) = '',
+    @IdDocument NVARCHAR(20) = '0',
+    @DistrictId INT = 0,
+    @StateId INT = 0,
+    @ActivityCode NVARCHAR(100) = '',
     @Token NVARCHAR(200),
     @IsDefault BIT = 0
 AS
@@ -30,7 +43,7 @@ BEGIN
                 SELECT TOP 1
                        CR.RolIdRol
                 FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH (NOLOCK)
-                WHERE CR.RolName = 'Ventas telemercadeo' COLLATE Latin1_General_CI_AI
+                WHERE CR.RolName = 'Ventas telemercadeo' 
             );
 
     DECLARE @jsonResult NVARCHAR(MAX);
@@ -99,7 +112,7 @@ BEGIN
                     WHERE RBUBA.RusIdUser = @IdUser
                           AND RBUBA.RusIdRol = @TelemarketingRole
                           AND RBUBA.RusRowStatus = 1
-                );
+                );        
 
         IF (
                (EXISTS
@@ -175,6 +188,13 @@ BEGIN
                         [BlpName] = @Name,
                         [BlpAddress] = @Address,
                         [BlpTaxId] = @TaxId,
+                        [Inv_Type] = @Inv_type,
+                        [NRC] = @NRC,
+                        [TypeIdentificationDocumentCode] = @TypeIdentificationDocumentCode,
+                        [IdDocument] = @IdDocument,
+                        [DistrictId] = @DistrictId,
+                        [StateId] =@StateId,
+                        [ActivityCode] = @ActivityCode,
                         [BlpTokenUpdated] = @Token,
                         [BlpDateUpdated] = GETDATE(),
                         [IsDefault] = @IsDefault
@@ -228,6 +248,13 @@ BEGIN
                     [BlpName],
                     [BlpAddress],
                     [BlpTaxId],
+                    [NRC],
+                    [TypeIdentificationDocumentCode],
+                    [IdDocument],
+                    [DistrictId],
+                    [StateId],
+                    [ActivityCode],
+                    [Inv_type],
                     [BlpRowStatus],
                     [BlpTokenCreated],
                     [BlpDateCreated],
@@ -236,7 +263,10 @@ BEGIN
                     [IsDefault]
                 )
                 VALUES
-                (   @IdAccount, @Name, @Address, @TaxId, 1, -- se crean los registros activos por default 
+                (   @IdAccount, @Name, @Address, @TaxId,
+                    @NRC, @TypeIdentificationDocumentCode,
+                    @IdDocument, @DistrictId, @StateId,
+                    @ActivityCode,@Inv_type, 1, -- se crean los registros activos por default 
                     @Token, GETDATE(), NULL, NULL, @IsDefault);
 
                 SET @IdBilling = SCOPE_IDENTITY();
@@ -310,6 +340,3 @@ BEGIN
 
     SELECT ('[{' + @jsonResult + ']') jsonResult;
 END;
-
-
-

@@ -1,12 +1,17 @@
-﻿-- =============================================
--- Author:		Eduardo López
--- Create date: 22 Agost 2022
--- Description:	Retorna informacion de la factura para la creacion de Nota de Credito
--- =============================================
--- Author:		<Brandon Pedroza>
--- Modified:	<30 Julio 2025>
--- Description:	<Facturacion SV - Obtener informacion de factura para SV>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[spg_InformationInvoiceNote]
+   Propósito: Retorna información de la factura para la creación de Nota de Crédito
+   Autor:     Eduardo López
+   Historia:  ---
+   Fecha:     2022-08-22
+
+=== CHANGELOG ============================
+
+2025-07-30 | Historia/épica: ---        | Autor: Brandon Pedroza
+2025-09-01 | Historia/épica: ---        | Autor: Oscar Rodriguez 
+
+=========================================== */
+
 CREATE PROCEDURE [dbo].[spg_InformationInvoiceNote]
     -- Add the parameters for the stored procedure here
     @fel nvarchar(100),
@@ -27,7 +32,7 @@ begin
 			select inv_pk_id
 			from [dbo].[invoiceHeader] with (nolock)
 			where inv_certificationFEL = @fel
-			AND ISNULL(IdCountry,'GT') = @IdCountry
+			AND IdCountry = @IdCountry
 		);
 	END
 	ELSE IF(@IdCountry = 'SV')
@@ -37,8 +42,8 @@ begin
 			select inv_pk_id
 			from [dbo].[invoiceHeader] with (nolock)
 			where inv_numberFEL = @fel
-			AND ISNULL(IdCountry,'GT') = @IdCountry
-			AND CatInvoiceTypeId = @IdTypeDocument
+			AND IdCountry = @IdCountry
+			AND inv_type = @IdTypeDocument
 		);
 	END
 	ELSE
@@ -47,12 +52,9 @@ begin
 		(
 			select ih.inv_pk_id
 			from [dbo].[invoiceHeader] ih with (nolock)
-			LEFT JOIN dbo.InvoiceBatchHeader ibh with (nolock) ON ih.inv_serieFEL = ibh.CAI
 			where ih.inv_certificationFEL = @fel
-			AND ISNULL(ih.IdCountry,'GT') = @IdCountry
+			AND ih.IdCountry = @IdCountry
 			AND ih.inv_serieFEL = @CAI
-			AND ibh.RowStatus = 1
-			AND ibh.TypeDocument = 1
 		);
 	END
 
@@ -128,6 +130,7 @@ begin
     from [dbo].[invoiceDetail]  ivd with (nolock)
         left join DeliveryOrder do with (nolock)
             on ivd.dti_fk_orderNumber = do.Guide_Number
+            and ivd.dti_fk_orderSerie = do.Guide_Serie
     where dti_fk_header = @idinvoice
     order by dti_dateRegister;
 

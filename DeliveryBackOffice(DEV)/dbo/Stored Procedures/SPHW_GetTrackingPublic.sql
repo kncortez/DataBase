@@ -10,6 +10,17 @@
 -- Create date: <2024-11-04>
 -- Description:	<Se agrega el DeliveryETA para el trackin y muestra nuevo estado en timeline >
 -- =============================================
+-- =============================================
+-- Propósito: Obtener deshabilitaido temporalmente "Recibir Alertas",
+-- Autor:     <Freddy Camposeco>
+-- Historia:  <FDAPI-4780>
+-- Fecha:     <2025-10-08>
+-- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2024-11-25>
+-- Description:	<Se agregan campos en respuesta de isZigiPay y isNeedBilling>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetTrackingPublic]
     @GuideSerie NVARCHAR(4)
@@ -23,7 +34,8 @@ BEGIN
               , @Hub             AS NVARCHAR(20)
               , @StatusGuide     AS NVARCHAR(20)
               , @StatusDelivered AS INT
-              , @HubCourier      AS NVARCHAR(25);
+              , @HubCourier      AS NVARCHAR(25)
+			  , @StatusArribal AS INT;
         --Encabezados
         DECLARE @EncabezadoRastreo TABLE
         (
@@ -37,56 +49,42 @@ BEGIN
             SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Entregado'
         );
 
+		SET @StatusArribal =
+		(
+			SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Arribó a las instalaciones'
+		);
+
+         -- 1) Carga 1 fila de DeliveryOrder
+        SELECT
+          DO.Guide_Serie, DO.Guide_Number, DO.StatusOrderId, DO.Sender_FirstName, DO.Sender_LastName,
+          DO.Receiver_FirstName, DO.Receiver_LastName, DO.ReceiverIdSettlement, DO.ReceiverIdTownship,
+          DO.ReceiverCountryId, DO.DeliveryETA, DO.IdDeliveryOption, DO.IsLastMileReturn, DO.IdCustomer,
+          DO.NameOfReceiver,DO.Receiver_Phone
+        INTO #DO
+        FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+        WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber;
+
+        -- 2) Carga todo el historial de esa guía
+        SELECT DOD.Guide_Serie, DOD.Guide_Number, DOD.StatusOrderId, DOD.DateCreated, DOD.UserCreated
+        INTO #DOD
+        FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
+        WHERE DOD.Guide_Serie = @GuideSerie AND DOD.Guide_Number = @GuideNumber;
+
+        -- Opcional: índices temporales (baratos y útiles)
+        CREATE CLUSTERED INDEX IX_DOD_GuideDate ON #DOD (StatusOrderId, DateCreated DESC);
+
+
         ----NOTA EL HUB QUEDA PENDIENTE DE VALIDAR, SEGUN SEAN LOS NUEVOS REQUERIMIENTOS
         SELECT @SenderName   = CONCAT(ISNULL(DO.Sender_FirstName, ''), ' ', ISNULL(DO.Sender_LastName, ''))
              , @ReceiverName = DO.NameOfReceiver
              , @StatusGuide  = CST.NameStatusProcess
-        FROM DeliveryOrder                                DO WITH (NOLOCK)
+        FROM #DO                                DO WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
             INNER JOIN CatStatusProcess                   CST WITH (NOLOCK)
                 ON SO.CatStatusProcessId = CST.IdStatusProcess
         WHERE DO.Guide_Serie = @GuideSerie
               AND DO.Guide_Number = @GuideNumber;
-
-
-        ----CALCULO DEL HUB---------
-        --SET @Hub =
-        --(
-        --	SELECT TOP 1 TB.Hub
-        --	FROM(
-        --		SELECT dat.DateCreated,
-        --			COALESCE(
-        --			(
-        --				SELECT TOP 1
-        --					ISNULL(HSB.HubName, VP.DescriptionOfClient) StationName
-        --				FROM dbo.RolByUserBySystem rua WITH (NOLOCK)
-        --					INNER JOIN dbo.CatStation ct WITH (NOLOCK)
-        --						ON ct.IdStation = rua.StationId
-        --					LEFT JOIN dbo.HubLogistics HSB WITH (NOLOCK)
-        --						ON HSB.IdHubLogistic = ct.HubLogisticId
-        --					LEFT JOIN dbo.VisitPointClient VP WITH (NOLOCK)
-        --						ON VP.CodeOfReference = ct.CodeOfReference
-        --				WHERE rua.RusIdUser = rg.UsrIdUser
-        --			), hb.HubName) AS Hub
-        --		FROM dbo.DeliveryOrderDetail dat WITH (NOLOCK)
-        --			LEFT JOIN dbo.TokenLog tk WITH (NOLOCK)
-        --				ON tk.TknIdToken = dat.UserCreated
-        --			LEFT JOIN dbo.RegisterUser rg WITH (NOLOCK)
-        --				ON rg.UsrIdUser = tk.TknIdUser
-        --			LEFT JOIN dbo.LogTokenPOD tpd WITH (NOLOCK)
-        --				ON tpd.LogTokenPOD = dat.UserCreated
-        --			LEFT JOIN dbo.SenderReceiver sr WITH (NOLOCK)
-        --				ON sr.ID = tpd.IdCourierman
-        --			LEFT JOIN dbo.HubLogistics hb WITH (NOLOCK)
-        --				ON hb.IdHubLogistic = sr.HubLogisticId
-        --		WHERE DAT.Guide_Number = @GuideNumber
-        --		  AND DAT.Guide_Serie = @GuideSerie
-        --		--ORDER BY daT.DateCreated DESC
-        --	) AS TB
-        --	WHERE TB.Hub IS NOT NULL
-        --	ORDER BY TB.DateCreated DESC
-        --)
 
         IF (@Hub IS NULL)
         BEGIN
@@ -111,14 +109,14 @@ BEGIN
                                     )
                                   , ''
                                    ) AS Hub
-                    FROM dbo.DeliveryOrderDetail                      dat WITH (NOLOCK)
+                    FROM #DOD                      dat WITH (NOLOCK)
                         LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tkd WITH (NOLOCK)
                             ON tkd.SSN_IdToken = dat.UserCreated
                         LEFT JOIN dbo.InternalUser                    it WITH (NOLOCK)
                             ON it.IdUser = tkd.SSN_IdUser
                                AND it.Username = tkd.SSN_Username
-                    WHERE dat.Guide_Number = @GuideNumber
-                          AND dat.Guide_Serie = @GuideSerie
+                    WHERE dat.Guide_Serie = @GuideSerie
+                            AND dat.Guide_Number = @GuideNumber
                 ) AS TB2
                 WHERE TB2.Hub IS NOT NULL
                 ORDER BY TB2.DateCreated DESC
@@ -163,7 +161,7 @@ BEGIN
                           )
                         , ''
                          ) AS Hub
-            FROM DeliveryOrderDetail                               DOD WITH (NOLOCK)
+            FROM #DOD                               DOD WITH (NOLOCK)
                 LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken      token WITH (NOLOCK)
                     ON DOD.UserCreated = token.SSN_IdToken
                 LEFT JOIN DenariusUser_Dev.dbo.LGN_User            duser WITH (NOLOCK)
@@ -172,7 +170,7 @@ BEGIN
                 LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl WITH (NOLOCK)
                     ON epl.IdEmployee = duser.USR_IdEmployee
                 LEFT JOIN DeliveryBackOffice.dbo.InternalUser      IU WITH (NOLOCK)
-                    ON epl.CodeEmployee = IU.IdUser
+                    ON epl.CodeEmployee = CAST(IU.IdUser AS VARCHAR(20))
                 INNER JOIN StatusOrder                             SO WITH (NOLOCK)
                     ON DOD.StatusOrderId = SO.StatusOrderId
                 INNER JOIN CatStatusProcess                        CT WITH (NOLOCK)
@@ -231,13 +229,13 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -245,13 +243,13 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -259,13 +257,13 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -273,13 +271,13 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -287,13 +285,13 @@ BEGIN
                    (
                        SELECT TOP 1
                               DO.DateCreated
-                       FROM DeliveryOrderDetail        DO WITH (NOLOCK)
+                       FROM #DOD        DO WITH (NOLOCK)
                            INNER JOIN StatusOrder      SO WITH (NOLOCK)
                                ON DO.StatusOrderId = SO.StatusOrderId
                            INNER JOIN CatStatusProcess CSC WITH (NOLOCK)
                                ON SO.CatStatusProcessId = CSC.IdStatusProcess
-                       WHERE DO.Guide_Number = @GuideNumber
-                             AND DO.Guide_Serie = @GuideSerie
+                       WHERE DO.Guide_Serie = @GuideSerie
+                                AND DO.Guide_Number = @GuideNumber
                              AND CSC.NameStatusProcess = CST.NameStatusProcess
                        ORDER BY DO.DateCreated DESC
                    )
@@ -328,77 +326,135 @@ BEGIN
               AND DO.Guide_Number = @GuideNumber;
 
 
-        --Informacion pública
-        SELECT CONCAT(ISNULL(DO.Sender_FirstName, ''), ' ', ISNULL(DO.Sender_LastName, ''))     AS 'SenderName'
-             , CONCAT(ISNULL(DO.Receiver_FirstName, ''), ' ', ISNULL(DO.Receiver_LastName, '')) AS 'ReceiverName'
-             , ISNULL(S.Settlement, '')                                                         AS 'Poblado'
-             , IIF(T.TownshipName IS NOT NULL, T.TownshipName, ISNULL(T2.TownshipName, ''))     AS 'Municipio'
-             , IIF(P.ProvinceName IS NOT NULL, P.ProvinceName, ISNULL(P2.ProvinceName, ''))     AS 'Departamento'
-             , ISNULL(@Piezas, '')                                                              AS 'Pieces'
-             , ISNULL(@Description, '')                                                         AS 'Description'
-             , ISNULL(DO.ReceiverCountryId, 'GT')                                               AS 'Country'
-             , SO.CatStatusProcessId                                                            AS 'StatusTracking'
-             , ISNULL(ER.Nombre, '')                                                            AS 'StatusTrackingTitle'
-             , ISNULL(ER.Descripcion, '')                                                       AS 'StatusTrackingDescription'
-             , CASE
-                   -- Caso 1: El número comienza con '+' y tiene al menos 11 dígitos (ej. +50244444444)
-                   WHEN LEFT(Receiver_Phone, 1) = '+'
-                        AND LEN(Receiver_Phone) >= 11 THEN
-                       SUBSTRING(Receiver_Phone, 2, 3)
-
-                   -- Caso 2: El número comienza con un código de área sin '+' y tiene al menos 10 dígitos (ej. 50244444444)
-                   WHEN LEN(Receiver_Phone) >= 10
-                        AND ISNUMERIC(LEFT(Receiver_Phone, 3)) = 1 THEN
-                       LEFT(Receiver_Phone, 3)
-
-                   -- Caso 3: Si no tiene código de área válido, devuelve NULL (ej. 2345-6789)
-                   ELSE
-                       ISNULL(CP.[Value], '502')
-               END                                                                              AS 'AreaCode'
-             , CASE
-                   WHEN ER.Nombre = 'Entregado' THEN
-                   (
-                       SELECT TOP 1
-                              CAST(DateCreated AS DATE)
-                       FROM DeliveryOrderDetail D WITH (NOLOCK)
-                       WHERE D.Guide_Serie = DO.Guide_Serie
-                             AND D.Guide_Number = DO.Guide_Number
-                       --AND D.StatusOrderId = @StatusDelivered
-                       ORDER BY D.DateCreated DESC
-                   )
-                   WHEN ER.Nombre = 'En ruta' THEN
-                       CAST(GETDATE() AS DATE)
-                   WHEN ER.Nombre = 'En ruta'
-                        AND DO.DeliveryETA < GETDATE() THEN
-                       CAST(DATEADD(DAY, 1, GETDATE()) AS DATE)
-                   WHEN ER.Nombre != 'En ruta'
-                        AND DO.DeliveryETA > GETDATE() THEN
+        --Información pública
+        SELECT 
+              CONCAT(ISNULL(DO.Sender_FirstName, ''), ' ', ISNULL(DO.Sender_LastName, ''))     AS SenderName
+            , CONCAT(ISNULL(DO.Receiver_FirstName, ''), ' ', ISNULL(DO.Receiver_LastName, '')) AS ReceiverName
+            , ISNULL(S.Settlement, '')                                                         AS Poblado
+            , IIF(T.TownshipName IS NOT NULL, T.TownshipName, ISNULL(T2.TownshipName, ''))     AS Municipio
+            , IIF(P.ProvinceName IS NOT NULL, P.ProvinceName, ISNULL(P2.ProvinceName, ''))     AS Departamento
+            , ISNULL(@Piezas, '')                                                              AS Pieces
+            , ISNULL(@Description, '')                                                         AS Description
+            , ISNULL(DO.ReceiverCountryId, 'GT')                                               AS Country
+            , SO.CatStatusProcessId                                                            AS StatusTracking
+            , ISNULL(ER.Nombre, '')                                                            AS StatusTrackingTitle
+            , ISNULL(ER.Descripcion, '')                                                       AS StatusTrackingDescription
+        
+            -----------------------------------------------------------------
+            -- NUEVO CAMPO: isNeedBilling (BIT) - usa invoiceDetail + invoiceHeader
+            -----------------------------------------------------------------
+            , CAST(
+                  CASE 
+                       WHEN IH.inv_certificationFEL IS NOT NULL 
+                            AND LTRIM(RTRIM(IH.inv_certificationFEL)) <> '' 
+                            THEN 0
+                       ELSE 1
+                  END 
+              AS BIT)                                                                          AS isNeedBilling
+        
+            -----------------------------------------------------------------
+            -- NUEVO CAMPO: isZigiPay (BIT) - PaymentZigi y PaymentZigiMulti
+            -----------------------------------------------------------------
+            , CAST(
+                  CASE 
+                       WHEN PZ.ZigiLinkStatus = 'PAID'
+                            OR PZ2.ZigiLinkStatus = 'PAID'
+                            THEN 1
+                       ELSE 0
+                  END
+              AS BIT)                                                                          AS isZigiPay
+        
+            -----------------------------------------------------------------
+            -- Área telefónica
+            -----------------------------------------------------------------
+            , CASE
+                  WHEN LEFT(Receiver_Phone, 1) = '+'
+                       AND LEN(Receiver_Phone) >= 11 THEN SUBSTRING(Receiver_Phone, 2, 3)
+                  WHEN LEN(Receiver_Phone) >= 10
+                       AND ISNUMERIC(LEFT(Receiver_Phone, 3)) = 1 THEN LEFT(Receiver_Phone, 3)
+                  ELSE ISNULL(CP.[Value], '502')
+              END                                                                              AS AreaCode
+        
+            -----------------------------------------------------------------
+            -- DeliveryETA
+            -----------------------------------------------------------------
+            , CASE
+                  WHEN ER.Nombre = 'Entregado' THEN
+                       (SELECT TOP 1 CAST(DateCreated AS DATE)
+                        FROM #DOD D WITH (NOLOCK)
+                        WHERE D.Guide_Serie = DO.Guide_Serie
+                          AND D.Guide_Number = DO.Guide_Number
+                        ORDER BY D.DateCreated DESC)
+        
+                  WHEN ER.Nombre = 'En ruta' THEN CAST(GETDATE() AS DATE)
+        
+                  WHEN ER.Nombre = 'En ruta'
+                       AND DO.DeliveryETA < GETDATE() THEN CAST(DATEADD(DAY, 1, GETDATE()) AS DATE)
+        
+                  WHEN ER.Nombre != 'En ruta'
+                       AND DO.DeliveryETA > GETDATE() THEN
                        IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
-                   WHEN CONVERT(DATE, DO.DeliveryETA) < CONVERT(DATE, GETDATE()) THEN
+        
+                  WHEN CONVERT(DATE, DO.DeliveryETA) < CONVERT(DATE, GETDATE()) THEN
                        CAST(DATEADD(DAY, 1, GETDATE()) AS DATE)
-                   ELSE
+        
+                  ELSE
                        IIF(DO.DeliveryETA IS NULL, GETDATE(), CAST(DO.DeliveryETA AS DATE))
-               END                                                                              AS DeliveryETA
-        FROM DeliveryBackOffice.dbo.DeliveryOrder         DO WITH (NOLOCK)
+              END                                                                              AS DeliveryETA
+        
+        FROM #DO         DO WITH (NOLOCK)
+        
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
-            LEFT JOIN DeliveryBackOffice.dbo.Settlement   S WITH (NOLOCK)
+        
+            LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH (NOLOCK)
                 ON DO.ReceiverIdSettlement = S.IdSettlement
-            LEFT JOIN DeliveryBackOffice.dbo.Township     T WITH (NOLOCK)
+        
+            LEFT JOIN DeliveryBackOffice.dbo.Township T WITH (NOLOCK)
                 ON S.IdTownship = T.IdTownship
-            LEFT JOIN DeliveryBackOffice.dbo.Province     P WITH (NOLOCK)
+        
+            LEFT JOIN DeliveryBackOffice.dbo.Province P WITH (NOLOCK)
                 ON S.IdProvince = P.IdProvince
-            LEFT JOIN DeliveryBackOffice.dbo.Township     T2 WITH (NOLOCK)
+        
+            LEFT JOIN DeliveryBackOffice.dbo.Township T2 WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = T2.IdTownship
-            LEFT JOIN DeliveryBackOffice.dbo.Province     P2 WITH (NOLOCK)
+        
+            LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH (NOLOCK)
                 ON T2.IdProvince = P2.IdProvince
+        
             LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH (NOLOCK)
                 ON CP.[Name] = 'AreaCode'
-                   AND ISNULL(DO.ReceiverCountryId, 'GT') = CP.IdCountry
-            LEFT JOIN @EncabezadoRastreo                  ER
+               AND DO.ReceiverCountryId = CP.IdCountry
+        
+            LEFT JOIN @EncabezadoRastreo ER
                 ON SO.CatStatusProcessId = ER.Id
+        
+            --------------------------------------------------------
+            -- JOINs para Facturación (invoiceDetail → invoiceHeader)
+            --------------------------------------------------------
+            LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail ID WITH (NOLOCK)
+                ON ID.dti_fk_orderSerie  = DO.Guide_Serie
+               AND ID.dti_fk_orderNumber = DO.Guide_Number
+        
+            LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader IH WITH (NOLOCK)
+                ON IH.inv_pk_id = ID.dti_fk_header
+        
+            --------------------------------------------------------
+            -- JOINs para Pagos Zigi (PaymentZigi / PaymentZigiMulti)
+            --------------------------------------------------------
+            LEFT JOIN DeliveryBackOffice.dbo.PaymentZigi PZ WITH (NOLOCK)
+                ON PZ.GuideSerie  = DO.Guide_Serie
+               AND PZ.GuideNumber = DO.Guide_Number
+        
+            LEFT JOIN DeliveryBackOffice.dbo.PaymentZigiMulti PZM WITH (NOLOCK)
+                ON PZM.GuideSerie  = DO.Guide_Serie
+               AND PZM.GuideNumber = DO.Guide_Number
+        
+            LEFT JOIN DeliveryBackOffice.dbo.PaymentZigi PZ2 WITH (NOLOCK)
+                ON PZ2.ZigiPaymentId = PZM.Id_PaymentZigi
+        
         WHERE DO.Guide_Serie = @GuideSerie
-              AND DO.Guide_Number = @GuideNumber;
+          AND DO.Guide_Number = @GuideNumber;
 
         DECLARE @StatusIncVal INT =
                 (
@@ -444,7 +500,7 @@ BEGIN
                                ELSE
                                    'true'
                            END AS 'flagRescheduleDelivery'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder         DO WITH (NOLOCK)
+                    FROM #DO         DO WITH (NOLOCK)
                         INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
                             ON DO.StatusOrderId = SO.StatusOrderId
                     WHERE Guide_Serie = @GuideSerie
@@ -477,7 +533,7 @@ BEGIN
                                ELSE
                                    'true'
                            END AS 'flagChangeAdress'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder         DO WITH (NOLOCK)
+                    FROM #DO        DO WITH (NOLOCK)
                         INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
                             ON DO.StatusOrderId = SO.StatusOrderId
                     WHERE Guide_Serie = @GuideSerie
@@ -499,7 +555,7 @@ BEGIN
                                ELSE
                                    'true'
                            END AS 'flagPayDelivery'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder                  DO WITH (NOLOCK)
+                    FROM #DO                  DO WITH (NOLOCK)
                         INNER JOIN DeliveryBackOffice.dbo.StatusOrder          SO WITH (NOLOCK)
                             ON DO.StatusOrderId = SO.StatusOrderId
                         INNER JOIN DeliveryBackOffice.dbo.Customer             CU WITH (NOLOCK)
@@ -513,29 +569,8 @@ BEGIN
                           AND DO.Guide_Number = @GuideNumber
                 );
 
-        DECLARE @f4 NVARCHAR(10)
-            =
-                (
-                    SELECT CASE
-                               WHEN
-                               (
-                                   SELECT CatCheckpointTypeId
-                                   FROM DeliveryBackOffice.dbo.StatusOrder WITH (NOLOCK)
-                                   WHERE StatusOrderId = DO.StatusOrderId
-                               ) = @CheckpointType --NO ESTAR EN ESTADO FINAL
-                               OR SO.CatStatusProcessId = @StatusProcessFinal --LA GUÍA SE ENCUENTRA EN UN ESTADO ENTREGADO
-                        THEN
-                                   'false'
-                               ELSE
-                                   'true'
-                           END AS 'flagNotifications'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder         DO WITH (NOLOCK)
-                        INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
-                            ON DO.StatusOrderId = SO.StatusOrderId
-                    WHERE DO.Guide_Serie = @GuideSerie
-                          AND DO.Guide_Number = @GuideNumber
-                );
-
+        DECLARE @f4 NVARCHAR(10) = 'false';
+        -- "Recibir Alertas" SE DEJA DESHABILITADA "FDAPI-4778: Deshabilitación temporal de notificaciones de rastreo"
         DECLARE @f5 NVARCHAR(10) =
                 (
                     SELECT CASE
@@ -550,7 +585,7 @@ BEGIN
                                ELSE
                                    'true'
                            END AS 'flagQualify'
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+                    FROM #DO DO WITH (NOLOCK)
                     WHERE DO.Guide_Serie = @GuideSerie
                           AND DO.Guide_Number = @GuideNumber
                 );
@@ -560,7 +595,8 @@ BEGIN
               , @HasDry       BIT
               , @HasCold      BIT
               , @HasLatitude  BIT
-              , @HasLongitude BIT;
+              , @HasLongitude BIT
+			  , @ConfirmGuide NVARCHAR(10);
 
         -- Consultamos los valores y asignamos las variables
         SET @HasImagePath = IIF(
@@ -569,7 +605,7 @@ BEGIN
                                     SELECT TOP 1
                                            1
                                     FROM DeliveryProof                                        dp WITH (NOLOCK)
-                                        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                        INNER JOIN #DOD dod WITH (NOLOCK)
                                             ON dp.Guide_Serie = dod.Guide_Serie
                                                AND dp.Guide_Number = dod.Guide_Number
                                     WHERE dp.Guide_Serie = @GuideSerie
@@ -595,7 +631,7 @@ BEGIN
                                   INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt     da WITH (NOLOCK)
                                       ON da.Guide_Serie = dp.Guide_Serie
                                          AND da.Guide_Number = dp.Guide_Number
-                                  INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                  INNER JOIN #DOD dod WITH (NOLOCK)
                                       ON dp.Guide_Serie = dod.Guide_Serie
                                          AND dp.Guide_Number = dod.Guide_Number
                               WHERE dp.Guide_Serie = @GuideSerie
@@ -617,7 +653,7 @@ BEGIN
                                    INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt     da WITH (NOLOCK)
                                        ON da.Guide_Serie = dp.Guide_Serie
                                           AND da.Guide_Number = dp.Guide_Number
-                                   INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                   INNER JOIN #DOD dod
                                        ON dp.Guide_Serie = dod.Guide_Serie
                                           AND dp.Guide_Number = dod.Guide_Number
                                WHERE dp.Guide_Serie = @GuideSerie
@@ -636,7 +672,7 @@ BEGIN
                                    SELECT TOP 1
                                           1
                                    FROM DeliveryBackOffice.dbo.DeliveryAttempt               DA WITH (NOLOCK)
-                                       INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                       INNER JOIN #DOD dod WITH (NOLOCK)
                                            ON DA.Guide_Serie = dod.Guide_Serie
                                               AND DA.Guide_Number = dod.Guide_Number
                                    WHERE DA.Guide_Serie = @GuideSerie
@@ -655,7 +691,7 @@ BEGIN
                                     SELECT TOP 1
                                            1
                                     FROM DeliveryBackOffice.dbo.DeliveryAttempt               DA WITH (NOLOCK)
-                                        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+                                        INNER JOIN #DOD dod WITH (NOLOCK)
                                             ON DA.Guide_Serie = dod.Guide_Serie
                                                AND DA.Guide_Number = dod.Guide_Number
                                     WHERE DA.Guide_Serie = @GuideSerie
@@ -668,6 +704,16 @@ BEGIN
                               , 1
                               , 0);
 
+		SET @ConfirmGuide = 
+		(
+			SELECT CASE WHEN DO.StatusOrderId = @StatusArribal THEN 'true' ELSE 'false' END 
+			FROM #DO DO WITH (NOLOCK)
+			WHERE DO.Guide_Serie = @GuideSerie
+				AND DO.Guide_Number = @GuideNumber
+		);
+
+		
+
         --Banderas
         SELECT ISNULL(@f1, 'false')                                                                         AS 'flagRescheduleDelivery'
              , ISNULL(@f2, 'false')                                                                         AS 'flagChangeAdress'
@@ -676,7 +722,8 @@ BEGIN
              , IIF(@HasImagePath = 1, 'true', IIF(@HasDry = 1, 'true', IIF(@HasCold = 1, 'true', 'false'))) AS 'flagShowImage'
              , IIF(@HasLatitude = 1 AND @HasLongitude = 1, 'true', 'false')                                 AS 'flagShowMapa'
              , 'true'                                                                                       AS 'flagRequestHelp' --Esta bandera siempre va visible para frontend
-             , ISNULL(@f5, 'false')                                                                         AS 'flagQualify';
+             , ISNULL(@f5, 'false')                                                                         AS 'flagQualify'
+			 , @ConfirmGuide																				AS 'flagConfirmAdress';
 
     END TRY
     BEGIN CATCH

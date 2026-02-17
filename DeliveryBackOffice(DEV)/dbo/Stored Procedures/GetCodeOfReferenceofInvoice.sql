@@ -28,4 +28,5 @@ BEGIN
     FROM invoiceHeader WITH(NOLOCK)
     WHERE inv_certificationFEL = @NumberFel
 	ORDER BY inv_pk_id desc;
+END
 END;

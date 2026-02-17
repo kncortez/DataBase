@@ -7,6 +7,10 @@
 -- Create date: <2025-09-12>
 -- Description:	<Se agrega sumatoria de los depositos de Efectibox en el monto total liquidado.>
 -- =============================================
+-- Author:		<Freddy, Camposeco>
+-- Create date: <2025-10-17>
+-- Description:	<Se agrega campo TotalVouchers para mostrar el total de vouchers Efectibox aplicados al manifiesto de liquidación.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_settlement_cod]
 		@IdManifest INT
 AS
@@ -16,6 +20,7 @@ BEGIN
 	DECLARE @AmountMoney DECIMAL(8,2) = 0;
 	DECLARE @AmountDeposit DECIMAL(8,2) = 0;
 	DECLARE @AmountTotal DECIMAL(8,2) = 0;
+	DECLARE @TotalVouchers DECIMAL(19,4) = 0;
 
 	SET NOCOUNT ON;
 
@@ -44,6 +49,14 @@ BEGIN
 	--Monto Total
 	SET @AmountTotal = @AmountMoney + @AmountDeposit;
 
+	-- Calcular el total de vouchers Efectibox aplicados al manifiesto
+	SET @TotalVouchers = (
+		SELECT ISNULL(SUM(rdm.AmountApplied), 0)
+		FROM DeliveryBackOffice.dbo.RelDepositManifest rdm WITH(NOLOCK)
+		WHERE rdm.DeliveryOrderBySettlementId = @IdManifest
+		  AND rdm.RowStatus = 1
+	);
+
 	SELECT 
 			dobs.ID, 
 			dobs.Date_Received_COD AS Date_Received, 
@@ -57,7 +70,8 @@ BEGIN
 			(SELECT Value
 				FROM Contingency WITH(NOLOCK)
 				WHERE DeliveryOrderBySettlementId = @IdManifest) Amount_Difference,
-			cs.StationName Hub
+			cs.StationName Hub,
+			@TotalVouchers as TotalVouchers  -- Nuevo campo: Total de vouchers aplicados
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK) 
 			ON sr.ID = dobs.ID_Courier

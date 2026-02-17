@@ -7,5 +7,6 @@
 	NRC					VARCHAR (20) NULL,
 	TypeDocument		VARCHAR (100) NULL,
 	IdDocument			VARCHAR (100) NULL,
-	Phone				VARCHAR (100) NULL
+	Phone				VARCHAR (100) NULL,
+	OpConditionCode		INT           NULL
 )

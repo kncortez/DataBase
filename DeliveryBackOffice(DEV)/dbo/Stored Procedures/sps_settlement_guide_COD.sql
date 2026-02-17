@@ -26,7 +26,8 @@ CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
 	@RouteId INT = 0,
 	@TotalNumberOfPieces INT = 0,
 	@CatManifestSettlementIncidenceTypeId INT = 0,
-	@Deposits TblDeposit READONLY
+	@Deposits TblDeposit READONLY,
+    @Partialliquidation bit = 0
 AS
 BEGIN
     -- control transacción
@@ -71,22 +72,38 @@ BEGIN
         SELECT CAST(Item AS INT)
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@GuideNumbers, ',');
 
-        -- actualizar guía debido al proceso de liquidación
-        UPDATE [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]
-        SET GuideDischarged_TokenCreated = @Token,
-            GuideDischarged_DateCreated = GETDATE(),
-            Guide_Discharged = 1 -- guía liquidada en COD
-        WHERE Guide_Serie = @GuideSerie
-              AND Guide_Number IN
-                  (
-                      SELECT Guide_Number FROM @GuidesTable
-                  )
-              AND Guide_Settlement = 1; -- guía liquidada previamente en bodega
-
-        IF COALESCE(@@rowcount, 0) > 0
-		BEGIN
-            SET @ValidateOperation = @ValidateOperation + 1;
-		END
+          -- actualizar guía debido al proceso de liquidación
+        IF(@Partialliquidation=0)
+		  BEGIN
+			UPDATE [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]
+			SET GuideDischarged_TokenCreated = @Token,
+				GuideDischarged_DateCreated = GETDATE(),
+				Guide_Discharged = 1 -- guía liquidada en COD
+			WHERE Guide_Serie = @GuideSerie
+				  AND Guide_Number IN
+					  (
+						  SELECT Guide_Number FROM @GuidesTable
+					  )
+				  AND Guide_Settlement = 1; -- guía liquidada previamente en bodega
+				IF COALESCE(@@rowcount, 0) > 0
+				BEGIN
+					SET @ValidateOperation = @ValidateOperation + 1;
+				END;
+			END
+				ELSE
+				BEGIN
+					-- En caso de liquidación parcial, validar si existen guías afectadas
+					IF EXISTS (
+						SELECT 1
+						FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WITH(NOLOCK)
+						WHERE Guide_Serie = @GuideSerie
+							  AND Guide_Number IN (SELECT Guide_Number FROM @GuidesTable)
+							  AND Guide_Settlement = 1
+					)
+					BEGIN
+						SET @ValidateOperation = @ValidateOperation + 1;
+					END
+				END;
 
         -- insertar guía en la tabla de guías procesadas COD
         -- Se insertar guías en tabla temporal
@@ -237,28 +254,28 @@ BEGIN
 			WHERE ord.Guide_Serie = @GuideSerie AND ord.Guide_Number = @GuideNumber
 
 			IF @Isreturn = 1
+			BEGIN
+                IF(@Partialliquidation=0)
+		        BEGIN
+                    --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
+                    UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+                    SET StatusOrderId = 24
+                    WHERE Guide_Serie = @GuideSerie 
+                    AND Guide_Number = @GuideNumber;
 
-				BEGIN
+                    --Actualiza es stado a "COD liquidado" en tabla DeliveryOrderDetail si la guia tuviera COD
 
-                --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
-                UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-                SET StatusOrderId = 24
-                WHERE Guide_Serie = @GuideSerie 
-                  AND Guide_Number = @GuideNumber;
-
-                --Actualiza es stado a "COD liquidado" en tabla DeliveryOrderDetail si la guia tuviera COD
-
-                INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-                (
-                    Guide_Serie,
-                    Guide_Number,
-                    StatusOrderId,
-                    UserCreated,
-                    DateCreated
-                )
-                VALUES
-                (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
-
+                    INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
+                    (
+                        Guide_Serie,
+                        Guide_Number,
+                        StatusOrderId,
+                        UserCreated,
+                        DateCreated
+                    )
+                    VALUES
+                    (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
+                END;
 			END;
 
             END;
@@ -308,7 +325,7 @@ BEGIN
                Quantity
         FROM @Money
         WHERE Quantity IS NOT NULL
-              AND Quantity > 0;
+              AND Quantity >= 0;
 
 		IF COALESCE(@@rowcount, 0) > 0
 		BEGIN
@@ -319,222 +336,125 @@ BEGIN
 		--======== Guardar depositos y relacion con su manifiesto =========
 		--=================================================================
 
-		IF OBJECT_ID('tempdb..#DepParam') IS NOT NULL
-			DROP TABLE #DepParam;
-
-		CREATE TABLE #DepParam
-		(
-			RowId                INT IDENTITY(1,1) PRIMARY KEY,
-			TransactionNumber    BIGINT          NOT NULL,
-			TransactionDate      DATETIME        NOT NULL,
-			TransactionCode      INT             NOT NULL,
-			Reference            NVARCHAR(15)    NOT NULL,
-			Amount               DECIMAL(19,4)   NOT NULL,
-			Balance              DECIMAL(19,4)   NOT NULL,
-			UserIdDeposit        NVARCHAR(50)    NOT NULL,
-			UserNameDeposit      NVARCHAR(50)    NOT NULL,
-			UserNickNameDeposit  NVARCHAR(50)    NOT NULL,
-			UserDocumentNumber   NVARCHAR(20)    NOT NULL,
-			CurrencyISO          NVARCHAR(10)    NOT NULL,
-			CurrencyIdExternal   INT             NOT NULL,
-			ClientIdExternal     BIGINT          NOT NULL,
-			ClientCardCode       NVARCHAR(15)    NOT NULL,
-			ClientNameExternal   NVARCHAR(500)   NOT NULL,
-			VisitPointIdExternal BIGINT          NOT NULL,
-			VisitPointName       NVARCHAR(100)   NOT NULL,
-			BankIdExternal       INT             NOT NULL,
-			BankCardCode         NVARCHAR(50)    NOT NULL,
-			BankNameExternal     NVARCHAR(50)    NOT NULL,
-			BankAccountNumber    NVARCHAR(50)    NOT NULL,
-			BankAccountIsMak     BIT             NOT NULL,
-			BankAccountIsIBAN    BIT             NOT NULL,
-			BankAccountIsSWIFT   BIT             NOT NULL,
-			TerminalId           INT             NOT NULL,
-			TerminalSerie        NVARCHAR(50)    NOT NULL
-		);
-
-		INSERT INTO #DepParam
-		(
-			TransactionNumber, TransactionDate, TransactionCode, Reference,
-			Amount, Balance, UserIdDeposit, UserNameDeposit, UserNickNameDeposit, UserDocumentNumber,
-			CurrencyISO, CurrencyIdExternal, ClientIdExternal, ClientCardCode, ClientNameExternal,
-			VisitPointIdExternal, VisitPointName, BankIdExternal, BankCardCode, BankNameExternal,
-			BankAccountNumber, BankAccountIsMak, BankAccountIsIBAN, BankAccountIsSWIFT,
-			TerminalId, TerminalSerie
-		)
-		SELECT
-			d.TransactionNumber, d.TransactionDate, d.TransactionCode, d.Reference,
-			d.Amount, d.Balance, d.UserIdDeposit, d.UserNameDeposit, d.UserNickNameDeposit, d.UserDocumentNumber,
-			d.CurrencyISO, d.CurrencyIdExternal, d.ClientIdExternal, d.ClientCardCode, d.ClientNameExternal,
-			d.VisitPointIdExternal, d.VisitPointName, d.BankIdExternal, d.BankCardCode, d.BankNameExternal,
-			d.BankAccountNumber, d.BankAccountIsMak, d.BankAccountIsIBAN, d.BankAccountIsSWIFT,
-			d.TerminalId, d.TerminalSerie
-		FROM @Deposits AS d;
-
-		DECLARE @row     INT = 1;
-		DECLARE @rowMax  INT = (SELECT MAX(RowId) FROM #DepParam);
-
-		-- Variables por fila
-		DECLARE
-			@TransactionNumber    BIGINT,
-			@TransactionDate      DATETIME,
-			@TransactionCode      INT,
-			@Reference            NVARCHAR(15),
-			@Amount               DECIMAL(19,4),
-			@BalanceParam         DECIMAL(19,4),
-			@UserIdDeposit        NVARCHAR(50),
-			@UserNameDeposit      NVARCHAR(50),
-			@UserNickNameDeposit  NVARCHAR(50),
-			@UserDocumentNumber   NVARCHAR(20),
-			@CurrencyISO          NVARCHAR(10),
-			@CurrencyIdExternal   INT,
-			@ClientIdExternal     BIGINT,
-			@ClientCardCode       NVARCHAR(15),
-			@ClientNameExternal   NVARCHAR(500),
-			@VisitPointIdExternal BIGINT,
-			@VisitPointName       NVARCHAR(100),
-			@BankIdExternal       INT,
-			@BankCardCode         NVARCHAR(50),
-			@BankNameExternal     NVARCHAR(50),
-			@BankAccountNumber    NVARCHAR(50),
-			@BankAccountIsMak     BIT,
-			@BankAccountIsIBAN    BIT,
-			@BankAccountIsSWIFT   BIT,
-			@TerminalId           INT,
-			@TerminalSerie        NVARCHAR(50),
-			@IdDeposit            BIGINT,
-			@CurrentBalance       DECIMAL(19,4),
-			@Applied              DECIMAL(19,4);
-
-		WHILE @row <= @rowMax
+		IF EXISTS (SELECT 1 FROM @Deposits)
 		BEGIN
+			DECLARE @DepositSummary TABLE
+			(
+				TransactionNumber BIGINT PRIMARY KEY,
+				ExistsDeposit     BIT         NOT NULL,
+				Applied           DECIMAL(19,4) NOT NULL
+			);
 
+			INSERT INTO @DepositSummary (TransactionNumber, ExistsDeposit, Applied)
 			SELECT
-				@TransactionNumber    = TransactionNumber,
-				@TransactionDate      = TransactionDate,
-				@TransactionCode      = TransactionCode,
-				@Reference            = Reference,
-				@Amount               = Amount,
-				@BalanceParam         = Balance,
-				@UserIdDeposit        = UserIdDeposit,
-				@UserNameDeposit      = UserNameDeposit,
-				@UserNickNameDeposit  = UserNickNameDeposit,
-				@UserDocumentNumber   = UserDocumentNumber,
-				@CurrencyISO          = CurrencyISO,
-				@CurrencyIdExternal   = CurrencyIdExternal,
-				@ClientIdExternal     = ClientIdExternal,
-				@ClientCardCode       = ClientCardCode,
-				@ClientNameExternal   = ClientNameExternal,
-				@VisitPointIdExternal = VisitPointIdExternal,
-				@VisitPointName       = VisitPointName,
-				@BankIdExternal       = BankIdExternal,
-				@BankCardCode         = BankCardCode,
-				@BankNameExternal     = BankNameExternal,
-				@BankAccountNumber    = BankAccountNumber,
-				@BankAccountIsMak     = BankAccountIsMak,
-				@BankAccountIsIBAN    = BankAccountIsIBAN,
-				@BankAccountIsSWIFT   = BankAccountIsSWIFT,
-				@TerminalId           = TerminalId,
-				@TerminalSerie        = TerminalSerie
-			FROM #DepParam
-			WHERE RowId = @row;
+				p.TransactionNumber,
+				CASE WHEN d.IdDeposit IS NULL THEN 0 ELSE 1 END AS ExistsDeposit,
+				 CASE
+					WHEN d.IdDeposit IS NOT NULL 
+						THEN (d.Balance - p.Balance)	-- existe
+						ELSE (p.Amount - p.Balance)		-- nuevo
+				END AS Applied
+			FROM @Deposits AS p
+			LEFT JOIN DeliveryBackOffice.dbo.Deposit AS d WITH(NOLOCK)
+				ON d.TransactionNumber = p.TransactionNumber;
 
-			SET @IdDeposit      = NULL;
-			SET @CurrentBalance = NULL;
-
-			SET @Applied = @Amount - @BalanceParam;
-			IF @Applied < 0 SET @Applied = 0;
-
-			SELECT
-				@IdDeposit      = d.IdDeposit,
-				@CurrentBalance = d.Balance
-			FROM DeliveryBackOffice.dbo.Deposit AS d WITH (NOLOCK)
-			WHERE d.TransactionNumber = @TransactionNumber;
-
-			IF @IdDeposit IS NOT NULL
+			IF EXISTS (SELECT 1 FROM @DepositSummary WHERE Applied <= 0)
 			BEGIN
-				SET @Applied = @CurrentBalance - @BalanceParam;
-				IF @Applied < 0 SET @Applied = 0;
-				IF @Applied <= 0
-				BEGIN
-					SET @ValidateOperation = 1;
-					BREAK;
-				END
-				ELSE
-				BEGIN
-					UPDATE dbo.Deposit
-					SET Balance      = CASE WHEN @BalanceParam < 0 THEN 0 ELSE @BalanceParam END,
-					   TokenUpdated = @Token,
-					   DateUpdated  = GETDATE()
-					WHERE IdDeposit = @IdDeposit;
-				END
+
+				--Caso en que el monto a aplicar sea mayor al saldo actual
+				SET @ValidateOperation = 1; 
 			END
 			ELSE
 			BEGIN
-				INSERT INTO dbo.Deposit
-				(
-					TransactionNumber, TransactionDate, TransactionCode, Reference,
-					Amount, Balance,
-					UserIdDeposit, UserNameDeposit, UserNickNameDeposit, UserDocumentNumber,
-					CurrencyISO, CurrencyIdExternal, ClientIdExternal, ClientCardCode, ClientNameExternal,
-					VisitPointIdExternal, VisitPointName,
-					BankIdExternal, BankCardCode, BankNameExternal, BankAccountNumber,
-					BankAccountIsMak, BankAccountIsIBAN, BankAccountIsSWIFT,
-					TerminalId, TerminalSerie,
-					RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated
-				)
-				VALUES
-				(
-					@TransactionNumber, @TransactionDate, @TransactionCode, @Reference,
-					@Amount, @BalanceParam, 
-					@UserIdDeposit, @UserNameDeposit, @UserNickNameDeposit, @UserDocumentNumber,
-					@CurrencyISO, @CurrencyIdExternal, @ClientIdExternal, @ClientCardCode, @ClientNameExternal,
-					@VisitPointIdExternal, @VisitPointName,
-					@BankIdExternal, @BankCardCode, @BankNameExternal, @BankAccountNumber,
-					@BankAccountIsMak, @BankAccountIsIBAN, @BankAccountIsSWIFT,
-					@TerminalId, @TerminalSerie,
-					1, @Token, GETDATE(), NULL, NULL
-				);
 
-				SET @IdDeposit = SCOPE_IDENTITY();
-			END
-
-			INSERT INTO dbo.RelDepositManifest
-			(
-				IdDeposit,
-				DeliveryOrderBySettlementId,
-				AmountApplied,
-				RowStatus,
-				TokenCreated,
-				DateCreated,
-				TokenUpdated,
-				DateUpdated
-			)
-			VALUES
-			(
-				@IdDeposit,
-				@IdDeliveryOrderBySettlement,
-				@Applied,
-				1,
-				@Token,
-				GETDATE(),
-				NULL,
-				NULL
-			);
-
-			IF COALESCE(@@rowcount, 0) > 0
-			BEGIN
-				IF @ValidateOperation < 2
+				--Ingresar depositos existentes
+				IF EXISTS (SELECT 1 FROM @DepositSummary WHERE ExistsDeposit = 1)
 				BEGIN
-					SET @ValidateOperation = @ValidateOperation + 1;
+
+					UPDATE d
+					SET  d.Balance      = dp.Balance,
+						 d.TokenUpdated = @Token,
+						 d.DateUpdated  = GETDATE()
+					FROM dbo.Deposit AS d WITH(NOLOCK)
+					INNER JOIN @DepositSummary AS s
+					  ON s.TransactionNumber = d.TransactionNumber
+					INNER JOIN @Deposits AS dp
+					  ON dp.TransactionNumber = d.TransactionNumber
+					WHERE dp.Balance IS NOT NULL AND s.ExistsDeposit = 1;
+
 				END
-			END
+				--Ingresar depositos nuevos
+				IF EXISTS (SELECT 1 FROM @DepositSummary WHERE ExistsDeposit = 0)
+				BEGIN
 
-			SET @row = @row + 1;
-		END
+					INSERT INTO dbo.Deposit
+					(
+						TransactionNumber, TransactionDate, TransactionCode, Reference,
+						Amount, Balance,
+						UserIdDeposit, UserNameDeposit, UserNickNameDeposit, UserDocumentNumber,
+						CurrencyISO, CurrencyIdExternal, ClientIdExternal, ClientCardCode, ClientNameExternal,
+						VisitPointIdExternal, VisitPointName,
+						BankIdExternal, BankCardCode, BankNameExternal, BankAccountNumber,
+						BankAccountIsMak, BankAccountIsIBAN, BankAccountIsSWIFT,
+						TerminalId, TerminalSerie,
+						RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated
+					)
+					SELECT
+						dp.TransactionNumber, dp.TransactionDate, dp.TransactionCode, dp.Reference,
+						dp.Amount, dp.Balance,
+						dp.UserIdDeposit, dp.UserNameDeposit, dp.UserNickNameDeposit, dp.UserDocumentNumber,
+						dp.CurrencyISO, dp.CurrencyIdExternal, dp.ClientIdExternal, dp.ClientCardCode, dp.ClientNameExternal,
+						dp.VisitPointIdExternal, dp.VisitPointName,
+						dp.BankIdExternal, dp.BankCardCode, dp.BankNameExternal, dp.BankAccountNumber,
+						dp.BankAccountIsMak, dp.BankAccountIsIBAN, dp.BankAccountIsSWIFT,
+						dp.TerminalId, dp.TerminalSerie,
+						1, @Token, GETDATE(), NULL, NULL
+					FROM @Deposits AS dp
+					INNER JOIN @DepositSummary AS s
+						ON s.TransactionNumber = dp.TransactionNumber
+					WHERE s.ExistsDeposit = 0 AND dp.Balance IS NOT NULL;
 
-		IF OBJECT_ID('tempdb..#DepParam') IS NOT NULL
-			DROP TABLE #DepParam;
+				END
+
+				--Relacion entre manifiesto y deposito
+				INSERT INTO dbo.RelDepositManifest
+				(
+					IdDeposit,
+					DeliveryOrderBySettlementId,
+					AmountApplied,
+					RowStatus,
+					TokenCreated,
+					DateCreated,
+					TokenUpdated,
+					DateUpdated
+				)
+				SELECT
+					D.IdDeposit,
+					@IdDeliveryOrderBySettlement,
+					S.Applied,
+					1,
+					@Token,
+					GETDATE(),
+					NULL,
+					NULL
+				FROM @DepositSummary AS S
+				INNER JOIN @Deposits AS DP
+					ON DP.TransactionNumber = S.TransactionNumber
+				INNER JOIN DeliveryBackOffice.dbo.Deposit AS D WITH(NOLOCK)
+					ON S.TransactionNumber = D.TransactionNumber
+				WHERE S.Applied > 0;
+
+				--Aplicar valor para continuar flujo del sp
+				IF COALESCE(@@rowcount, 0) > 0
+				BEGIN
+					IF @ValidateOperation < 2
+					BEGIN
+						SET @ValidateOperation = @ValidateOperation + 1;
+					END
+				END;
+			END;
+		END;
+
 		--=================================================================
 		--===== Fin de Guardar depositos y relacion con su manifiesto =====
 		--=================================================================
@@ -604,17 +524,31 @@ BEGIN
         END;
 		
         -- Actualizar registro en control de manifiestos de despacho
-        UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
-        SET User_Received_COD = @Token,
-            Date_Received_COD = GETDATE(),
-            Guides_Received_COD = @GuideQuantityCOD,
-            Route_Received_COD = GETDATE()
-        WHERE ID = @IdDeliveryOrderBySettlement;
-		
-        IF COALESCE(@@rowcount, 0) > 0
-		BEGIN
-            SET @ValidateOperation = @ValidateOperation + 1;
-	    END
+		IF(@Partialliquidation=0)
+		  BEGIN
+			UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
+			SET User_Received_COD = @Token,
+				Date_Received_COD = GETDATE(),
+				Guides_Received_COD = @GuideQuantityCOD,
+				Route_Received_COD = GETDATE()
+			WHERE ID = @IdDeliveryOrderBySettlement;
+			IF COALESCE(@@rowcount, 0) > 0
+			BEGIN
+				SET @ValidateOperation = @ValidateOperation + 1;
+			END
+		  END
+			ELSE
+			BEGIN
+				-- Validar si el registro existe aunque no se actualice
+				IF EXISTS (
+					SELECT 1
+					FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] WITH(NOLOCK)
+					WHERE ID = @IdDeliveryOrderBySettlement
+				)
+				BEGIN
+					SET @ValidateOperation = @ValidateOperation + 1;
+				END
+			END
     END TRY
     BEGIN CATCH
 		SELECT 0 AS 'StatusCode',

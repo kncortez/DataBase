@@ -563,6 +563,7 @@
     <Build Include="dbo\Tables\CatDataLinkStatus.sql" />
     <Build Include="dbo\Tables\CatCurrencyCOD.sql" />
     <Build Include="dbo\Tables\CatCountry.sql" />
+    <Build Include="dbo\Tables\CatPartyResponsible.sql" />
     <Build Include="dbo\Tables\CatCorrelativeCOD.sql" />
     <Build Include="dbo\Tables\CatContainerSubtype.sql" />
     <Build Include="dbo\Tables\CatConfigurableService.sql" />
@@ -1233,6 +1234,8 @@
     <Build Include="dbo\Stored Procedures\spHM_CancelOpenProcessesPreparationDeliveries.sql" />
     <Build Include="dbo\Stored Procedures\spHM_CancelOpenProcessLiquidationUnifiedRoutes.sql" />
     <Build Include="dbo\Stored Procedures\spHM_AddContainerInStopOverToLinehaulRoutePreparation.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetGuidesInRevision.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_ReleaseGuideFromReview.sql" />
     <Build Include="dbo\Stored Procedures\spHD_VerifyGuideStatus.sql" />
     <Build Include="dbo\Stored Procedures\spHD_ValidateVisitPointStatusByCodeOfReference.sql" />
     <Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttempsUpdateAdress.sql" />
@@ -1855,6 +1858,7 @@
     <Build Include="dbo\Stored Procedures\sphwGetGuideInformationKiosk.sql" />
     <Build Include="dbo\Stored Procedures\sphwUpdateCheckpointKiosk.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_ConfirmAddress.sql" />
+    <Build Include="dbo\Stored Procedures\ValidGuideReview.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
     <Build Include="dbo\User Defined Types\TblListGuidesWithAnticipatedCOD.sql" />
     <Build Include="dbo\Tables\DumpServiceCoverageLogGT.sql" />
@@ -2040,6 +2044,8 @@
     <Build Include="Security\ECS-DB-DENARIUS_deliveryreport_1.sql" />
     <Build Include="Security\Permissions.sql" />
     <Build Include="dbo\Stored Procedures\Support_AddMembershipSuscription.sql" />
+    <Build Include="dbo\Stored Procedures\ValidatePaymentZigiTracking.sql" />
+    <Build Include="dbo\Stored Procedures\sms_ZigiSend.sql" />
     <Build Include="dbo\Tables\StateByBillingSV.sql" />
     <Build Include="dbo\Tables\DistrictByBillingSV.sql" />
     <Build Include="dbo\Tables\CatEconomicActivityBySV.sql" />
@@ -2065,6 +2071,15 @@
     <Build Include="dbo\Tables\RelDepositManifest.sql" />
     <Build Include="dbo\User Defined Types\TblDeposit.sql" />
     <Build Include="dbo\Stored Procedures\ValidateDepositBalance.sql" />
+    <Build Include="dbo\Stored Procedures\sps_UpdateInvoiceForza.sql" />
+    <Build Include="dbo\Functions\SplitOrdinal.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_0.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_2.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_3.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_4.sql" />
+    <Build Include="dbo\Stored Procedures\SupportLHroutes.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
