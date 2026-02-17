@@ -1,3 +1,8 @@
+ï»¿-- =============================================
+-- Author:		<Kevin,Oliva>
+-- Create date: <2026-02-17>
+-- Description:	<Administrar permisos para validacion de inicidenicas>
+-- =============================================
 CREATE PROCEDURE Supportauthincidentlvl
     @IdUser INT,
     @CatManagementLevelId INT,
@@ -19,7 +24,7 @@ BEGIN
         END;
 
         -- 2. Validar existencia del nivel solicitado
-        IF NOT EXISTS (SELECT 1 FROM CatManagementLevel WHERE IdCatManagementLevel = @CatManagementLevelId)
+        IF NOT EXISTS (SELECT 1 FROM CatManagementLevel WITH(NOLOCK) WHERE IdCatManagementLevel = @CatManagementLevelId)
         BEGIN
             RAISERROR('Nivel de manejo no existe.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -32,11 +37,11 @@ BEGIN
         FROM InternalUser WITH(NOLOCK)
         WHERE IdUser = @IdUser;
 
-        -- 4. Validaciones sobre roles y estación
+        -- 4. Validaciones sobre roles y estaciÃ³n
 
         -- 4.1 Validar que el usuario tenga roles
         IF NOT EXISTS (
-            SELECT 1 FROM RolByUserBySystem 
+            SELECT 1 FROM RolByUserBySystem WITH(NOLOCK)
             WHERE RusIdUser = @RegisterUserID
         )
         BEGIN
@@ -45,13 +50,13 @@ BEGIN
             RETURN;
         END;
 
-        -- 4.2 Validar que no existan roles sin estación
+        -- 4.2 Validar que no existan roles sin estaciÃ³n
         IF EXISTS (
-            SELECT 1 FROM RolByUserBySystem 
+            SELECT 1 FROM RolByUserBySystem WITH(NOLOCK)
             WHERE RusIdUser = @RegisterUserID AND StationId IS NULL
         )
         BEGIN
-            RAISERROR('Asignar una estación al usuario.', 16, 1);
+            RAISERROR('Asignar una estaciÃ³n al usuario.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN;
         END;
@@ -59,7 +64,7 @@ BEGIN
         -- 4.3 Validar que todas las estaciones sean iguales
         IF (
             SELECT COUNT(DISTINCT StationId)
-            FROM RolByUserBySystem
+            FROM RolByUserBySystem WITH(NOLOCK)
             WHERE RusIdUser = @RegisterUserID
         ) > 1
         BEGIN
@@ -79,7 +84,7 @@ BEGIN
         INNER JOIN CatStation cs WITH(NOLOCK) ON cs.IdStation = rl.StationId
         WHERE rl.RusIdUser = @RegisterUserID;
 
-        -- 6. Validar que el nivel corresponde al país
+        -- 6. Validar que el nivel corresponde al paÃ­s
         
         IF NOT EXISTS (
             SELECT 1 
@@ -88,12 +93,12 @@ BEGIN
               AND CountryId = @CountryID
         )
         BEGIN
-            RAISERROR('ERROR: El permiso no corresponde al país del usuario.', 16, 1);
+            RAISERROR('ERROR: El permiso no corresponde al paÃ­s del usuario.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN;
         END;
 
-        -- 7. Insert / Update según exista en ManagementLevelByUser
+        -- 7. Insert / Update segÃºn exista en ManagementLevelByUser
         IF NOT EXISTS (
             SELECT 1 FROM ManagementLevelByUser WITH(NOLOCK)
             WHERE RegisterUserId = @RegisterUserID
@@ -123,7 +128,7 @@ BEGIN
         END
         ELSE
         BEGIN
-            -- UPDATE: RowStatus viene desde el parámetro
+            -- UPDATE: RowStatus viene desde el parÃ¡metro
             UPDATE ManagementLevelByUser
             SET 
                 CatManagementLevelId = @CatManagementLevelId,
