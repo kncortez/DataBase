@@ -30,12 +30,12 @@ BEGIN
            CASE 
 		    WHEN CD.IdTypeOfMoneyCollect = 11  THEN CD.Voucher
 			WHEN CD.IdTypeOfMoneyCollect = 10  THEN PZ.ZigiTransactionId
-			ELSE CD.Voucher
+			ELSE ''
            END AS VoucherCollect,
            CASE 
 		    WHEN CD.IdTypeOfMoneyCOD = 11  THEN CD.Voucher
 			WHEN CD.IdTypeOfMoneyCOD = 10  THEN PZ.ZigiTransactionId
-			ELSE CD.Voucher
+			ELSE ''
            END AS VoucherCOD,
 		   CASE 
 		      WHEN cd.IdTypeOfMoneyCollect = 11 THEN 'Transferencia'

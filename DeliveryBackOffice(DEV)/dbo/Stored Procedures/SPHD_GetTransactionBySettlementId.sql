@@ -55,7 +55,7 @@ BEGIN
 		 CASE 
 		    WHEN CD.IdTypeOfMoney = 11  THEN CD.Voucher
 			WHEN CD.IdTypeOfMoney = 10  THEN PZ.ZigiTransactionId
-			ELSE CD.Voucher
+			ELSE ''
         END AS Voucher,
          ISNULL(DO.PriceShippment,0) AS 'TotalAmount',
 		 CASE 
