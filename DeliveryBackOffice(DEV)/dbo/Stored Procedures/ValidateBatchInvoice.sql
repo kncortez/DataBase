@@ -8,6 +8,7 @@ CREATE PROCEDURE [ValidateBatchInvoice]
 (
   @TypeDocument    SMALLINT = 1,
   @CodeOfReference INT = 0,
+  @document        INT = 0,
   @Code            SMALLINT OUTPUT,
   @Message         NVARCHAR(250) OUTPUT
 )
@@ -108,6 +109,27 @@ BEGIN
                  @Message AS [Message];
           RETURN;
      END
+
+       IF(@document > 0)
+       BEGIN
+              IF NOT EXISTS (
+                            SELECT TOP 1 1
+                                   FROM InvoiceBatchHeader ibh WITH(NOLOCK)
+                                   INNER JOIN InvoiceBatchDetail ibd WITH(NOLOCK)
+                                          ON ibh.Id_Lote = ibh.Id_Lote
+                            WHERE ibd.inv_pk_id = @document
+                                   AND ibd.[RowStatus] = 1
+                                   AND ibd.IsCompleted = 1
+                            )
+              BEGIN
+                     SELECT @Code = 0,
+                            @Message = 'Documento de facturación ya fue certificado'
+
+                     SELECT @Code AS code,
+                            @Message AS [Message];
+                     RETURN;
+              END
+       END
 
           SELECT @Code = 1,
                  @Message = 'Lote validado correctamente';

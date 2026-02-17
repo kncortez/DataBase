@@ -134,6 +134,7 @@ BEGIN
                     INNER JOIN InvoiceBatchHeader ibh WITH(NOLOCK)
                             ON ibd.Id_Lote = ibh.Id_Lote
               WHERE SendEmail = 0
+                AND ibd.isCompleted = 1
                 AND ibh.TypeDocument = 1
                 AND ibh.[Status] = 1
                 AND ibh.[Enable] = 1

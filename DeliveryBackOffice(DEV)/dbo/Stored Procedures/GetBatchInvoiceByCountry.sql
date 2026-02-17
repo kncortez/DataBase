@@ -36,6 +36,7 @@ BEGIN
      */
 
     EXEC [ValidateBatchInvoice] @TypeDocument    = 1,
+                                @document        = @idInvoice,
                                 @CodeOfReference = @CodeOfReference,
                                 @Code            = @Code OUTPUT,
                                 @Message         = @Message OUTPUT
@@ -71,6 +72,7 @@ BEGIN
                  ProcessedCorrelative,
                  inv_pk_id,
                  SendEmail,
+                 IsCompleted,
                  RowStatus,
                  TokenCreated,
                  DateCreated
@@ -79,6 +81,7 @@ BEGIN
                  @Batch,
                  @LastProcessed,
                  @idInvoice,
+                 0,
                  0,
                  1,
                  @user,
