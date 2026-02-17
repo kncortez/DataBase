@@ -1,3 +1,8 @@
+﻿-- =============================================
+-- Author:      <Kevin,Oliva>
+-- Create date: <2025-02-17>
+-- Description: <Administrar roles de usuarios.>
+-- =============================================
 CREATE PROCEDURE SUPPORTACTIVATEROL
     @RusIdUser INT,
     @RusIdRol INT,
@@ -40,7 +45,7 @@ BEGIN TRY
       AND RusIdRol = @RusIdRol 
       AND RusIdSystem = @RusIdSystem;
 
-    -- Realizar actualizaci�n
+    -- Realizar actualización
     UPDATE RolByUserBySystem
     SET 
         RusRowStatus = @RusRowStatus, 
