@@ -1,3 +1,9 @@
+ï»¿-- =============================================
+-- Author:		<Kevin,Oliva>
+-- Create date: <2026-02-17>
+-- Description:	<Sp para activar o inactivar EXC y CNC>
+-- =============================================
+
 CREATE PROCEDURE SupportActivateInactivateEXCandCNC
     @CodeOfReference INT,
     @RowStatus INT
@@ -12,25 +18,25 @@ BEGIN
         IF NOT EXISTS 
         (
             SELECT TOP 1 1
-            FROM dbo.VisitPointClient WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.VisitPointClient WITH(NOLOCK)
             WHERE CodeOfReference = @CodeOfReference
         )
         BEGIN
-            RAISERROR('No se encontró EXC O CNC', 16, 1);
+            RAISERROR('No se encontrÃ³ EXC O CNC', 16, 1);
             RETURN;
         END;
         
         -- Activar o desactivar en la Settlement
-        UPDATE VisitPointClient 
+        UPDATE DeliveryBackOffice.dbo.VisitPointClient 
         SET StatusClient = @RowStatus 
         WHERE CodeOfReference = @CodeOfReference;
         
         -- Activar o desactivar en DumpServiceCoverage
-        UPDATE CatStation
+        UPDATE DeliveryBackOffice.dbo.CatStation
         SET RowStatus = @RowStatus
         WHERE CodeOfReference = @CodeOfReference;
         
-        -- Confirmar la transacción
+        -- Confirmar la transacciÃ³n
         COMMIT TRANSACTION;
         
         -- Mostrar valores actualizados
@@ -38,19 +44,19 @@ BEGIN
                CodeOfReference,
 			   DescriptionOfClient,
                StatusClient 
-        FROM VisitPointClient WITH(NOLOCK) 
+        FROM DeliveryBackOffice.dbo.VisitPointClient WITH(NOLOCK) 
         WHERE CodeOfReference = @CodeOfReference;
         
         SELECT 'CatStation ACTUALIZADO' AS Descripcion, 
                CodeOfReference, 
 			   StationName,
                RowStatus 
-        FROM CatStation WITH(NOLOCK) 
+        FROM DeliveryBackOffice.dbo.CatStation WITH(NOLOCK) 
         WHERE CodeOfReference = @CodeOfReference;
         
     END TRY
     BEGIN CATCH
-        -- Si hay un error, revertir la transacción
+        -- Si hay un error, revertir la transacciÃ³n
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
         
