@@ -1,3 +1,9 @@
+ï»¿-- =============================================
+-- Author:		<Kevin,Oliva>
+-- Create date: <2026-02-17>
+-- Description:	<Administracion de Poblados >
+-- ===========================================
+
 CREATE PROCEDURE SupportServiceCoverage
     @IdSettlement INT,
     @RowStatus INT
@@ -12,43 +18,43 @@ BEGIN
         IF NOT EXISTS 
         (
             SELECT TOP 1 1
-            FROM dbo.Settlement WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.Settlement WITH(NOLOCK)
             WHERE IdSettlement = @IdSettlement
         )
         BEGIN
-            RAISERROR('No se encontró poblado', 16, 1);
+            RAISERROR('No se encontrÃ³ poblado', 16, 1);
             RETURN;
         END;
         
         -- Activar o desactivar en la Settlement
-        UPDATE Settlement 
+        UPDATE DeliveryBackOffice.dbo.Settlement 
         SET SettlementSatus = @RowStatus 
         WHERE IdSettlement = @IdSettlement;
         
         -- Activar o desactivar en DumpServiceCoverage
-        UPDATE DumpServiceCoverage
+        UPDATE DeliveryBackOffice.dbo.DumpServiceCoverage
         SET RowStatus = @RowStatus
         WHERE IdSettlement = @IdSettlement;
         
-        -- Confirmar la transacción
+        -- Confirmar la transacciÃ³n
         COMMIT TRANSACTION;
         
         -- Mostrar valores actualizados
         SELECT 'Settlement ACTUALIZADO' AS Descripcion, 
                IdSettlement, 
                SettlementSatus 
-        FROM Settlement WITH(NOLOCK) 
+        FROM DeliveryBackOffice.dbo.Settlement WITH(NOLOCK) 
         WHERE IdSettlement = @IdSettlement;
         
         SELECT 'DumpServiceCoverage ACTUALIZADO' AS Descripcion, 
                IdSettlement, 
                RowStatus 
-        FROM DumpServiceCoverage WITH(NOLOCK) 
+        FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK) 
         WHERE IdSettlement = @IdSettlement;
         
     END TRY
     BEGIN CATCH
-        -- Si hay un error, revertir la transacción
+        -- Si hay un error, revertir la transacciÃ³n
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
         
