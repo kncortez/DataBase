@@ -28,7 +28,9 @@ BEGIN
 		 CASE
 		     WHEN CD.IdTypeOfMoneyCOD = 10 AND CD.IdTypeOfMoneyCollect = 10 THEN (ISNULL(DO.priceShippment,0) + ISNULL(DO.Collect_OnDelivery,0))
 			 WHEN CD.IdTypeOfMoneyCOD = 11 AND CD.IdTypeOfMoneyCollect = 11 THEN (ISNULL(DO.PriceShippment,0) + ISNULL(DO.Collect_OnDelivery,0))
-			 ELSE ISNULL(DO.Collect_OnDelivery,0) END
+             WHEN CD.IdTypeOfMoneyCOD = 11 AND CD.IdTypeOfMoneyCollect <> 11 THEN  ISNULL(DO.Collect_OnDelivery,0)
+             WHEN CD.IdTypeOfMoneyCOD = 11 AND CD.IdTypeOfMoneyCollect IS NULL THEN ISNULL(DO.Collect_OnDelivery,0)
+			 ELSE 0 END
 			 AS 'TotalAmount',
 		 CASE 
 		    WHEN CD.IdTypeOfMoneyCOD = 11  THEN 'Transferencia'
