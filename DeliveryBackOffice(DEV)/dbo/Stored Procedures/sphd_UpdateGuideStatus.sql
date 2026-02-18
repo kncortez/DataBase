@@ -9,6 +9,7 @@
 
 2022-06-07 | Historia/épica: ---        | Autor: Edelman Vásquez | Control de mensajes de error indicando por qué una anulación no procede
 2025-08-25 | Historia/épica: ---        | Autor: Tito García     | Encolamiento de notificación webhook para estado Paquete dañado; se corrige indentación
+2025-12-30 | Historia/épica: ---        | Autor: Brandon Pedroza | Se almacena IdStation al cambiar el estado de la guía en el administrador de estados
 2025-01-16 | Historia/épica: FDAPI-5388       | Autor: Tito García |
 
 =========================================== */
@@ -17,7 +18,8 @@ CREATE PROCEDURE [dbo].[sphd_UpdateGuideStatus]
 	@Guide_Number INT,  
 	@newStatus INT,
 	@UserToken VARCHAR(50),
-	@Observations VARCHAR(200)
+	@Observations VARCHAR(200),
+	@StationId INT = NULL
 AS
 BEGIN
 	DECLARE @IsCouponOrigin   BIT = 0;
@@ -100,9 +102,9 @@ BEGIN
 					AND	Guide_Number = @Guide_Number
 
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-					(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations)
+					(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, StationId)
 				VALUES 
-					(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations) 
+					(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations, @StationId) 
 					
 				--Membresías y suscripciones
 				--Oscar Morales 25/07/2022
@@ -211,9 +213,9 @@ BEGIN
 				AND	Guide_Number = @Guide_Number
 
 			INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations)
+				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, StationId)
 			VALUES 
-				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations) 
+				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations, @StationId) 
 			
 			--Membresías y suscripciones
 			--Oscar Morales 25/07/2022
@@ -305,9 +307,9 @@ BEGIN
 				AND Guide_Number = @Guide_Number
 
 			INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations)
+				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, StationId)
 			VALUES 
-				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations)
+				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations, @StationId)
 				
 			--Membresías y suscripciones
 			--Oscar Morales 25/07/2022
