@@ -165,8 +165,8 @@ BEGIN
                 ON st.StatusOrderId = dr.StatusOrderId
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dr.StatusOrderId
-                   AND so.CatCheckpointTypeId = 3
-                   AND so.RowStatus = 1;
+        WHERE so.CatCheckpointTypeId = 3
+        AND so.RowStatus = 1;
       
         CREATE NONCLUSTERED INDEX IX_ErrorGuides_Exist ON #ErrorGuides (exist);
 
