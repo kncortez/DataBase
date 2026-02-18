@@ -39,7 +39,7 @@ BEGIN
 	)
 --Monto liquidado con Transferencia
 	SET @TotalTransfer =(
-				SELECT
+				SELECT 
 					SUM(
 						CASE 
 							WHEN E.IdTypeOfMoneyCOD = 11 AND E.IdTypeOfMoneyCOLLECT = 11
@@ -119,7 +119,7 @@ BEGIN
 						  FROM DeliveryBackOffice.dbo.RelDepositManifest WITH(NOLOCK)
 						  WHERE DeliveryOrderBySettlementId = @IdManifest AND RowStatus = 1);
 	--Monto Total
-	SET @AmountTotal = @AmountMoney + @AmountDeposit + @TotalTransfer + @TotalZigi;
+	SET @AmountTotal = ISNULL(@AmountMoney,0) + ISNULL(@AmountDeposit,0) + ISNULL(@TotalTransfer,0) + ISNULL(@TotalZigi,0);
 	
 
 	-- Calcular el total de vouchers Efectibox aplicados al manifiesto
