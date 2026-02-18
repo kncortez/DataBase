@@ -21,6 +21,8 @@ BEGIN
 	DECLARE @AmountDeposit DECIMAL(8,2) = 0;
 	DECLARE @AmountTotal DECIMAL(8,2) = 0;
 	DECLARE @TotalVouchers DECIMAL(19,4) = 0;
+	DECLARE @TotalTransfer DECIMAL(19,4) = 0;
+	DECLARE @TotalZigi DECIMAL(19,4) = 0;
 
 	SET NOCOUNT ON;
 
@@ -35,7 +37,77 @@ BEGIN
 		AND dsd.Guide_Discharged = 1  -- guía liquidada vía COD
 		AND dsd.RowStatus = 1
 	)
-
+--Monto liquidado con Transferencia
+	SET @TotalTransfer =(
+				SELECT
+					SUM(
+						CASE 
+							WHEN E.IdTypeOfMoneyCOD = 11 AND E.IdTypeOfMoneyCOLLECT = 11
+								THEN ISNULL(C.PriceShippment,0) + ISNULL(C.Collect_OnDelivery,0)
+							ELSE 0
+						END
+					)
+				  + SUM(
+						CASE 
+							WHEN E.IdTypeOfMoneyCOLLECT = 11 AND E.IdTypeOfMoneyCOD IS NULL
+								THEN ISNULL(C.PriceShippment,0)
+							ELSE 0 
+						END
+					) 
+				  + SUM(
+						CASE 
+							WHEN E.IdTypeOfMoneyCOD = 11 AND E.IdTypeOfMoneyCOLLECT IS NULL 
+								THEN ISNULL(C.Collect_OnDelivery,0)
+							ELSE 0
+						END
+					) 
+				  + SUM(
+						CASE 
+							WHEN E.IdTypeOfMoneyCOD = 11 AND E.IdTypeOfMoneyCOLLECT <> 11
+								THEN ISNULL(C.Collect_OnDelivery,0)
+							ELSE 0
+						END
+					) 
+				  + SUM(
+						CASE 
+							WHEN E.IdTypeOfMoneyCOLLECT = 11 AND E.IdTypeOfMoneyCOD <> 11
+								THEN ISNULL(C.PriceShippment,0)
+							ELSE 0 
+						END
+					) 
+					AS Total
+			FROM  [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] A WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] B WITH (NOLOCK)
+				ON A.ID = B.ID_DeliveryOrderBySettlement
+			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] C WITH(NOLOCK)
+				ON B.Guide_Serie = C.Guide_Serie AND B.Guide_number = C.Guide_number
+			INNER JOIN [DeliveryBackOffice].[dbo].[Cost] D WITH(NOLOCK)
+				ON D.GuideSerie = C.Guide_Serie AND D.GuideNumber = C.Guide_number
+			INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] E WITH(NOLOCK)
+				ON D.IdCost = E.IdCost
+			WHERE A.ID  = @IdManifest
+	
+	);
+	--Monto liqudiado con Zigi
+	SET @TotalZigi =(SELECT SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0))
+						  FROM  [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] A WITH (NOLOCK)
+							  INNER JOIN 
+							    [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] B WITH (NOLOCK)
+								ON A.ID = B.ID_DeliveryOrderBySettlement
+							  INNER JOIN 
+							   [DeliveryBackOffice].[dbo].[DeliveryOrder] C WITH(NOLOCK)
+							   ON B.Guide_Serie = C.Guide_Serie AND B.Guide_number = C.Guide_number
+							  INNER JOIN 
+							   [DeliveryBackOffice].[dbo].[Cost] D WITH(NOLOCK)
+							   ON D.GuideSerie = C.Guide_Serie AND D.GuideNumber = C.Guide_number
+							  INNER JOIN 
+							   [DeliveryBackOffice].[dbo].[CostDetail] E WITH(NOLOCK)
+							   ON D.IdCost = E.IdCost
+						  WHERE A.ID  = @IdManifest
+						  AND E.IdTypeOfMoneyCOD in(10)
+						  AND E.IdTypeOfMoneyCOLLECT in(10)
+					 
+					 );
 	--Monto liquidado Billetes/monedas
 	SET  @AmountMoney = (SELECT COALESCE(SUM(mdos.Quantity*cm.Value), 0) TotalAmountCount
 						FROM MoneyByDeliveryOrderBySettlement mdos WITH(NOLOCK)
@@ -47,7 +119,8 @@ BEGIN
 						  FROM DeliveryBackOffice.dbo.RelDepositManifest WITH(NOLOCK)
 						  WHERE DeliveryOrderBySettlementId = @IdManifest AND RowStatus = 1);
 	--Monto Total
-	SET @AmountTotal = @AmountMoney + @AmountDeposit;
+	SET @AmountTotal = @AmountMoney + @AmountDeposit + @TotalTransfer + @TotalZigi;
+	
 
 	-- Calcular el total de vouchers Efectibox aplicados al manifiesto
 	SET @TotalVouchers = (
