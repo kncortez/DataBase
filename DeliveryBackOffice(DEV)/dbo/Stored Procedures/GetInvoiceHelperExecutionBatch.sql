@@ -62,8 +62,7 @@ BEGIN
             SELECT IH.inv_pk_id
                    , IH.IdCountry
                    , IH.inv_vpCodeOfReferences
-                   , ISNULL(vpc.DescriptionOfClient, '') [inv_nameCodeOfReferences]
-                   , ISNULL(IH.inv_certificationFEL, '') [inv_certificationFEL]
+                   , ISNULL(IH.inv_certificationFEL, '') [inv_certificationFEL]    
                    , ISNULL(IH.inv_serieFEL, '')         [inv_serieFEL]
                    , ISNULL(IH.inv_numberFEL, '')        [inv_numberFEL]
                    , IH.inv_FechaHoraFEL                 [inv_FechaHoraFEL]
@@ -92,8 +91,6 @@ BEGIN
               FROM InvoiceHeader AS IH WITH(NOLOCK)
                    INNER JOIN del_ParametrosFactura AS dpf WITH(NOLOCK) 
                    ON IH.inv_vpCodeOfReferences = dpf.dpf_VpCodeOfReference
-                   LEFT JOIN VisitPointClient as vpc  WITH(NOLOCK)
-                   ON IH.inv_vpCodeOfReferences = vpc.CodeOfReference
              WHERE IH.IdCountry = @IdCountry
                AND ISNULL(IH.inv_numberFEL,'') = ''
                AND ISNULL(IH.inv_FechaHoraFEL, '') = ''
@@ -137,7 +134,7 @@ BEGIN
                     INNER JOIN InvoiceBatchHeader ibh WITH(NOLOCK)
                             ON ibd.Id_Lote = ibh.Id_Lote
               WHERE SendEmail = 0
-                AND IsCompleted = 1
+                AND ibd.isCompleted = 1
                 AND ibh.TypeDocument = 1
                 AND ibh.[Status] = 1
                 AND ibh.[Enable] = 1

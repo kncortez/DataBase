@@ -1,23 +1,14 @@
-/* =================================================
-   SP:        [dbo].[ValidateBatchInvoice]
-   Propósito: <Se agregan las validaciones necesarias para el lote de facturacion>
-   Autor:     <Daniel Ramirez>
-   Historia:  <FDAPI-2914>
-   Fecha:     2024-08-14
-============================================
-=== CHANGELOG ================================
--- 2026-0-14 | Historia/épica: FDAPI-2982 | Autor: Cristian Azurdia |
--- 2025-01-14 | Historia/épica: FDAPI-2982 | Autor: Cristian Azurdia |
--- 2024-10-17 | Historia/épica: FDAPI-3099 | Autor: Daniel Ramirez |
--- 2024-08-14 | Historia/épica: FDAPI-2914 | Autor: Daniel Ramirez |
-=========================================== */
 
+-- =============================================
+-- Author:      Daniel Ramirez
+-- Create date: 2024-08-14
+-- Description: Se agregan las validaciones necesarias para el lote de facturacion
+-- =============================================
 CREATE PROCEDURE [ValidateBatchInvoice]
 (
-  @IdLote          INT = 0,
+  @TypeDocument    SMALLINT = 1,
   @CodeOfReference INT = 0,
   @document        INT = 0,
-  @TypeDocument    SMALLINT = 1,
   @Code            SMALLINT OUTPUT,
   @Message         NVARCHAR(250) OUTPUT
 )
@@ -33,7 +24,6 @@ BEGIN
                            INNER JOIN InvoiceBatchRelationships ibr WITH(NOLOCK)
                              ON ibh.Id_Lote = ibr.Id_Lote
                      WHERE ibr.CodeOfReference = @CodeOfReference
-                       AND ibh.IdLote = @IdLote
                        AND ibh.[Status] = 1
                        AND ibh.[Enable] = 1
                        AND ibh.[RowStatus] = 1
@@ -55,7 +45,6 @@ BEGIN
                        INNER JOIN InvoiceBatchRelationships ibr WITH(NOLOCK)
                          ON ibh.Id_Lote = ibr.Id_Lote
                  WHERE ibr.CodeOfReference = @CodeOfReference
-                   AND ibh.IdLote = @IdLote
                    AND ibh.[Status] = 1
                    AND ibh.[Enable] = 1
                    AND ibh.[RowStatus] = 1
@@ -84,7 +73,6 @@ BEGIN
                            INNER JOIN InvoiceBatchRelationships ibr WITH(NOLOCK)
                              ON ibh.Id_Lote = ibr.Id_Lote
                      WHERE ibr.CodeOfReference = @CodeOfReference
-                       AND ibh.IdLote = @IdLote
                        AND ibh.[Status] = 1
                        AND ibh.[Enable] = 1
                        AND ibr.[RowStatus] = 1
@@ -107,7 +95,6 @@ BEGIN
                        INNER JOIN InvoiceBatchRelationships ibr WITH(NOLOCK)
                          ON ibh.Id_Lote = ibr.Id_Lote
                  WHERE ibr.CodeOfReference = @CodeOfReference
-                   AND ibh.IdLote = @IdLote
                    AND ibh.[Status] = 1
                    AND ibh.[Enable] = 1
                    AND ibr.[RowStatus] = 1
@@ -122,28 +109,9 @@ BEGIN
                  @Message AS [Message];
           RETURN;
      END
-       
+
        IF(@document > 0)
        BEGIN
-
-              IF NOT EXISTS (
-                            SELECT TOP 1 1
-                            FROM InvoiceBatchHeader ibh WITH(NOLOCK)
-                                   INNER JOIN InvoiceBatchDetail ibd WITH(NOLOCK)
-                                   ON ibh.Id_Lote = ibh.Id_Lote
-                            WHERE ibd.inv_pk_id = @document
-                            AND ibd.[RowStatus] = 1
-                            AND ibd.IsCompleted = 0
-                            )
-              BEGIN
-                     SELECT @Code = 0,
-                            @Message = 'Documento de facturación ya se encuentra en proceso de facturación'
-
-                     SELECT @Code AS code,
-                            @Message AS [Message];
-                     RETURN;
-              END
-
               IF NOT EXISTS (
                             SELECT TOP 1 1
                                    FROM InvoiceBatchHeader ibh WITH(NOLOCK)
@@ -163,7 +131,6 @@ BEGIN
               END
        END
 
-
           SELECT @Code = 1,
                  @Message = 'Lote validado correctamente';
 
@@ -171,7 +138,6 @@ BEGIN
                  @Message AS [Message];
 
           RETURN;
-          
  END -- Fin conditions type document 1
 
  IF(@TypeDocument = 6)

@@ -20,7 +20,6 @@ CREATE PROCEDURE [dbo].[GetBatchInvoiceByCountry]
 AS
 BEGIN
      DECLARE @Batch                BIGINT,
-             @BatchAux             BIGINT,
              @InitialRange         BIGINT,
              @FinalRange           BIGINT,
              @CAI                  NVARCHAR(100),
@@ -36,18 +35,8 @@ BEGIN
        status = 1 y enable = 0 es cuando no se puede facturar, porque se detuvo facturación (Ya viene lote nuevo ejemplo)
      */
 
-    SELECT @BatchAux = invHe.idlote
-    FROM InvoiceBatchHeader invHe
-        INNER JOIN InvoiceBatchRelationships ibr WITH(NOLOCK)
-            ON invHe.Id_Lote = ibr.Id_Lote
-    WHERE ibr.CodeOfReference = @CodeOfReference
-    AND [Status] = 1
-    AND [Enable] = 1
-    AND TypeDocument = 1
-
     EXEC [ValidateBatchInvoice] @TypeDocument    = 1,
-                                @IdLote          = @BAtchAux,
-                                @document        = idInvoice,
+                                @document        = @idInvoice,
                                 @CodeOfReference = @CodeOfReference,
                                 @Code            = @Code OUTPUT,
                                 @Message         = @Message OUTPUT
