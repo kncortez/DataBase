@@ -39,7 +39,7 @@ BEGIN
 	)
 --Monto liquidado con Transferencia
 	SET @TotalTransfer =(
-				SELECT ISNULL(
+				SELECT 
 					SUM(
 						CASE 
 							WHEN E.IdTypeOfMoneyCOD = 11 AND E.IdTypeOfMoneyCOLLECT = 11
@@ -74,7 +74,7 @@ BEGIN
 								THEN ISNULL(C.PriceShippment,0)
 							ELSE 0 
 						END
-					),0) 
+					) 
 					AS Total
 			FROM  [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] A WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] B WITH (NOLOCK)
@@ -89,7 +89,7 @@ BEGIN
 	
 	);
 	--Monto liqudiado con Zigi
-	SET @TotalZigi =(SELECT ISNULL(SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0),0))
+	SET @TotalZigi =(SELECT SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0))
 						  FROM  [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] A WITH (NOLOCK)
 							  INNER JOIN 
 							    [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] B WITH (NOLOCK)
@@ -119,7 +119,7 @@ BEGIN
 						  FROM DeliveryBackOffice.dbo.RelDepositManifest WITH(NOLOCK)
 						  WHERE DeliveryOrderBySettlementId = @IdManifest AND RowStatus = 1);
 	--Monto Total
-	SET @AmountTotal = @AmountMoney + @AmountDeposit + @TotalTransfer + @TotalZigi;
+	SET @AmountTotal = ISNULL(@AmountMoney,0) + ISNULL(@AmountDeposit,0) + ISNULL(@TotalTransfer,0) + ISNULL(@TotalZigi,0);
 	
 
 	-- Calcular el total de vouchers Efectibox aplicados al manifiesto
