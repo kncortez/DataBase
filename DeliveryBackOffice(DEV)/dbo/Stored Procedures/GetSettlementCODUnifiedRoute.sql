@@ -420,7 +420,7 @@ BEGIN
 			Price,
 			COD,
 			CASE
-				WHEN TotalApplied <= ISNULL(RunningBefore, 0) THEN (ISNULL(Price,0) + ISNULL(COD,0))
+				WHEN TotalApplied <= ISNULL(RunningBefore, 0) THEN ISNULL(COD,0)
 				WHEN TotalApplied >= RunningTotal THEN 0
 				ELSE (RunningTotal - TotalApplied)
 			END AS Total,
