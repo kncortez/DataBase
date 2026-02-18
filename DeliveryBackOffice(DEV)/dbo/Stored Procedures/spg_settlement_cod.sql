@@ -39,7 +39,7 @@ BEGIN
 	)
 --Monto liquidado con Transferencia
 	SET @TotalTransfer =(
-				SELECT
+				SELECT ISNULL(
 					SUM(
 						CASE 
 							WHEN E.IdTypeOfMoneyCOD = 11 AND E.IdTypeOfMoneyCOLLECT = 11
@@ -74,7 +74,7 @@ BEGIN
 								THEN ISNULL(C.PriceShippment,0)
 							ELSE 0 
 						END
-					) 
+					),0) 
 					AS Total
 			FROM  [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] A WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] B WITH (NOLOCK)
@@ -89,7 +89,7 @@ BEGIN
 	
 	);
 	--Monto liqudiado con Zigi
-	SET @TotalZigi =(SELECT SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0))
+	SET @TotalZigi =(SELECT ISNULL(SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0),0))
 						  FROM  [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] A WITH (NOLOCK)
 							  INNER JOIN 
 							    [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] B WITH (NOLOCK)
