@@ -248,6 +248,17 @@ BEGIN
         WHERE IdConditionOfPayment in (1,2)
           AND RowStatus = 1;
     END;
+	ELSE IF (@TypeMethod = 'GetCorporateCustomers')
+    BEGIN
+        SELECT CONVERT(NVARCHAR, ISNULL(IdCustomer, 0)) AS [Id]
+             , REPLACE(ISNULL([Name], 'N/A'), '"', '') AS [Name]
+             , ISNULL([CustomerPhone], '') AS [Phone]
+             , ISNULL([ContactEmail], '') AS [Email]
+        FROM Customer WITH (NOLOCK)
+        WHERE CountryID = @IdCountry
+          AND IdCustomerType = 1 
+          AND RowSatus = 1
+    END;
     ELSE 
     BEGIN
 
