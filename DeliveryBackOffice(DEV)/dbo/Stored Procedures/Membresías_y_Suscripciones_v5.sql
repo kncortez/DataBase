@@ -37,6 +37,7 @@ SELECT A1.IdMembership Id, 'M'+ CAST(A1.IdMembership AS NVARCHAR) [IdClubForza],
 ,IIF(R2.[Authorization] IS NOT NULL,R2.[Authorization],R2.TransactionOrder) [Order]    
 ,R2.PaymentImageURL    
 ,A1.TokenCreated    
+,A2.IdCountry  
 FROM DeliveryBackOffice.dbo.Membership A1 WITH(NOLOCK)    
 INNER JOIN DeliveryBackOffice.dbo.CatMembership A2 WITH(NOLOCK) ON A2.IdCatMembership = A1.CatMembershipId    
 OUTER APPLY    
@@ -55,7 +56,7 @@ OUTER APPLY
  ORDER BY 1 DESC    
 ) A3     
 OUTER APPLY(    
- SELECT TOP 1 IHD.inv_pk_id,IHD.inv_certificationFEL,IHD.inv_SAPDocEntry,IHD.inv_SAPError     
+ SELECT TOP 1 IHD.inv_pk_id,IHD.inv_certificationFEL,IHD.inv_SAPDocEntry,IHD.inv_SAPError  ,IHD.IdCountry   
  FROM DeliveryBackOffice.dbo.invoiceHeader IHD WITH(NOLOCK)    
  INNER JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH(NOLOCK)    
  ON IND.MembershipId = A1.IdMembership AND IHD.inv_pk_id = IND.dti_fk_header  
@@ -68,9 +69,6 @@ OUTER APPLY
 )R2    
 WHERE    
  A1.CatMembershipStatusId <> 4    
---A1.RowStatus = 1    
---AND A1.DateCreated >= '2024-01-01 00:00:00'    
---AND A1.DateCreated <= '2024-01-10 23:59:59'    
     
     
 UNION -- SUSCRIPCIONES = planes y paquetes    
@@ -97,6 +95,7 @@ A3.IdSubscription Id,'S' + CAST(A3.IdSubscription AS NVARCHAR) [IdClubForza],A4.
 --,R1.[Authorization]    
 ,R1.PaymentImageURL    
 ,A3.TokenCreated    
+,A4.IdCountry  
 FROM DeliveryBackOffice.dbo.Subscription A3 WITH(NOLOCK)    
 INNER JOIN DeliveryBackOffice.dbo.CatSubscription A4 WITH(NOLOCK) ON A3.CatSubscriptionId = A4.IdCatSubscription    
 OUTER APPLY    
@@ -116,7 +115,7 @@ OUTER APPLY
  ORDER BY 1 desc    
 ) A5    
 OUTER apply(    
- SELECT TOP 1 IHD.inv_pk_id, IHD.inv_certificationFEL,IHD.inv_SAPDocEntry,IHD.inv_SAPError     
+ SELECT TOP 1 IHD.inv_pk_id, IHD.inv_certificationFEL,IHD.inv_SAPDocEntry,IHD.inv_SAPError , IHD.IdCountry    
  FROM DeliveryBackOffice.dbo.invoiceHeader IHD WITH(NOLOCK)    
  INNER JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH(NOLOCK)    
  ON IHD.inv_pk_id = IND.dti_fk_header AND IND.SubscriptionId = A3.IdSubscription    
@@ -131,4 +130,4 @@ OUTER APPLY
 )R1    
 WHERE     
  A3.CatSubscriptionStatusId <>4    
-END     
+END  

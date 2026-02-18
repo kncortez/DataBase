@@ -539,7 +539,7 @@ BEGIN
             NULL,
             NULL,
             NULL,
-            NULL,
+            1,
             NULL,
             NULL,
             NULL,
@@ -547,7 +547,7 @@ BEGIN
             NULL,
             NULL,
             1,
-            GTB.Pieces_Dry,
+            1,
             NULL
         FROM #GuideTable GTB
         LEFT JOIN DeliveryCurrency DC
