@@ -152,7 +152,7 @@ BEGIN
 						  FROM DeliveryBackOffice.dbo.RelDepositManifest WITH(NOLOCK)
 						  WHERE DeliveryOrderBySettlementId = @IdManifest AND RowStatus = 1);
 	--Monto Total
-	SET @AmountTotal = @AmountMoney + @AmountDeposit + @TotalTransfer + @TotalZigi + @TotalCardCollect;
+	SET @AmountTotal = ISNULL(@AmountMoney,0) + ISNULL(@AmountDeposit,0) + ISNULL(@TotalTransfer,0) + ISNULL(@TotalZigi,0) + ISNULL(@TotalCardCollect,0);
 
 	-- Calcular el total de vouchers Efectibox aplicados al manifiesto
 	SET @TotalVouchers = (
@@ -176,11 +176,11 @@ BEGIN
 				FROM Contingency WITH(NOLOCK)
 				WHERE DeliveryOrderBySettlementId = @IdManifest) Amount_Difference,
 			cs.StationName Hub,
-			@TotalVouchers as TotalVouchers,  -- Nuevo campo: Total de vouchers aplicados
-			@AmountMoney   as TotalCash, -- Total liquidado en efectivo
-			@TotalTransfer as TotalTransfer,
-			@TotalZigi     as TotalZigi,
-			@TotalCardCollect as TotalCard
+			ISNULL(@TotalVouchers,0) as TotalVouchers,  -- Nuevo campo: Total de vouchers aplicados
+			ISNULL(@AmountMoney,0)   as TotalCash, -- Total liquidado en efectivo
+			ISNULL(@TotalTransfer,0) as TotalTransfer,
+			ISNULL(@TotalZigi,0)     as TotalZigi,
+			ISNULL(@TotalCardCollect,0) as TotalCard
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK) 
 			ON sr.ID = dobs.ID_Courier
