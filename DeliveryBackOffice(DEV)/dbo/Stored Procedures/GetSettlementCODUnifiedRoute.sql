@@ -308,7 +308,7 @@ BEGIN
                        0
                    ELSE
                        do.Collect_OnDelivery
-               END > 0
+               END >= 0
               )
               OR
               (
