@@ -13,7 +13,7 @@
 -- Create date: <2026-01-21>
 -- Description: <Agregar parámetro Voucher y  tipo de pago>
 -- =============================================
-ALTER PROCEDURE [dbo].[spg_settlement_cod_guides]
+CREATE PROCEDURE [dbo].[spg_settlement_cod_guides]
 		@IdManifest INT
 AS
 BEGIN
