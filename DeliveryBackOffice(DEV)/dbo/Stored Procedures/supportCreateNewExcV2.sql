@@ -118,7 +118,7 @@ BEGIN
             BEGIN
                 SELECT TOP 1 @IdCustomer = IdCustomer
                 FROM Customer WITH(NOLOCK)
-                WHERE Name like '%FD EXPRESS CENTER%'
+                WHERE Name like 'FD EXPRESS CENTER%'
                       --AND IdCustomer IN(81, 68381)
                       AND CountryID = @IdCountry
             END
@@ -126,7 +126,7 @@ BEGIN
             BEGIN
                 SELECT TOP 1 @IdCustomer = IdCustomer
                 FROM Customer WITH(NOLOCK)
-                WHERE Name like '%FD EXPRESS CENTER ' + @IdCountry + '%'
+                WHERE Name like 'FD EXPRESS CENTER ' + @IdCountry + '%'
                       --AND IdCustomer IN(81, 68381)
                       AND CountryID = @IdCountry
             END
