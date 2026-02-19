@@ -35,6 +35,7 @@ SET NOCOUNT ON;
         ON DO.Guide_Serie = DSD.Guide_Serie 
        AND DO.Guide_Number = DSD.Guide_Number
     WHERE DSD.ID_DeliveryOrderBySettlement = @ID_DeliveryOrderBySettlement
+    AND DO.IsLastMileReturn = 0
 )
 
 --BLOQUE 1: COD (Transferencia / Zigi)
