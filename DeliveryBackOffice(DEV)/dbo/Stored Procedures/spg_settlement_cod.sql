@@ -20,15 +20,14 @@ CREATE PROCEDURE [dbo].[spg_settlement_cod]
 		@IdManifest INT
 AS
 BEGIN
-	
 	DECLARE @GuideCount INT
 	DECLARE @AmountMoney DECIMAL(8,2) = 0;
 	DECLARE @AmountDeposit DECIMAL(8,2) = 0;
 	DECLARE @AmountTotal DECIMAL(8,2) = 0;
-	DECLARE @TotalVouchers DECIMAL(19,4) = 0;
-	DECLARE @TotalCardCollect DECIMAL(19,4) = 0;
-	DECLARE @TotalTransfer DECIMAL(19,4) = 0;
-	DECLARE @TotalZigi DECIMAL(19,4) = 0;
+	DECLARE @TotalVouchers DECIMAL(19,2) = 0;
+	DECLARE @TotalCardCollect DECIMAL(19,2) = 0;
+	DECLARE @TotalTransfer DECIMAL(19,2) = 0;
+	DECLARE @TotalZigi DECIMAL(19,2) = 0;
 
 	SET NOCOUNT ON;
 
@@ -173,11 +172,15 @@ BEGIN
 			dobs.Route_Received_COD AS Route_Received,
 			CONVERT(NVARCHAR,lbt.SSN_IdUser) + ' - ' + lbt.SSN_Username AS IdUser_Username_Received,
 			COALESCE(@AmountTotal,0) AS Amount_Received,
-			(SELECT Value
+			(SELECT ISNULL(Value,0)
 				FROM Contingency WITH(NOLOCK)
 				WHERE DeliveryOrderBySettlementId = @IdManifest) Amount_Difference,
 			cs.StationName Hub,
-			@TotalVouchers as TotalVouchers  -- Nuevo campo: Total de vouchers aplicados
+			@TotalVouchers as TotalVouchers,  -- Nuevo campo: Total de vouchers aplicados
+			@AmountMoney   as TotalCash, -- Total liquidado en efectivo
+			@TotalTransfer as TotalTransfer,
+			@TotalZigi     as TotalZigi,
+			@TotalCardCollect as TotalCard
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK) 
 			ON sr.ID = dobs.ID_Courier
@@ -185,6 +188,7 @@ BEGIN
 			ON lbt.SSN_IdToken = dobs.User_Received_COD
 		LEFT JOIN CatStation cs WITH(NOLOCK)
 			ON cs.IdStation = dobs.SettlementStationId  
-		WHERE dobs.ID = @IdManifest
+		WHERE dobs.ID = @IdManifest	
+
 
 END
