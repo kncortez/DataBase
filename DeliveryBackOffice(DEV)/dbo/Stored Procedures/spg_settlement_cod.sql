@@ -172,9 +172,9 @@ BEGIN
 			dobs.Route_Received_COD AS Route_Received,
 			CONVERT(NVARCHAR,lbt.SSN_IdUser) + ' - ' + lbt.SSN_Username AS IdUser_Username_Received,
 			COALESCE(@AmountTotal,0) AS Amount_Received,
-			(SELECT ISNULL(Value,0)
+			ISNULL((SELECT ISNULL(Value,0)
 				FROM Contingency WITH(NOLOCK)
-				WHERE DeliveryOrderBySettlementId = @IdManifest) Amount_Difference,
+				WHERE DeliveryOrderBySettlementId = @IdManifest),0)  Amount_Difference,
 			cs.StationName Hub,
 			ISNULL(@TotalVouchers,0) as TotalVouchers,  -- Nuevo campo: Total de vouchers aplicados
 			ISNULL(@AmountMoney,0)   as TotalCash, -- Total liquidado en efectivo
