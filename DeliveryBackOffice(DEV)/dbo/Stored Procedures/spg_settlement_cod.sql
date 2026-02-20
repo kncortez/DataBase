@@ -122,7 +122,14 @@ BEGIN
 	
 	);
 	--Monto liqudiado con Zigi
-	SET @TotalZigi =(SELECT SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0))
+	SET @TotalZigi =(SELECT
+	                        CASE
+      	                        WHEN E.IdTypeOfMoneyCOD in(10) AND E.IdTypeOfMoneyCOLLECT in(10) THEN
+	                              SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0))
+                                WHEN E.IdTypeOfMoneyCOD IS NULL AND E.IdTypeOfMoneyCOLLECT in(10) THEN
+								  SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0))
+								 ELSE 0
+								 END 
 						  FROM  [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] A WITH (NOLOCK)
 							  INNER JOIN 
 							    [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] B WITH (NOLOCK)
