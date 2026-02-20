@@ -126,7 +126,7 @@ BEGIN
 	                        CASE
       	                        WHEN E.IdTypeOfMoneyCOD in(10) AND E.IdTypeOfMoneyCOLLECT in(10) THEN
 	                              SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0))
-                                WHEN E.IdTypeOfMoneyCOD IS NULL AND E.IdTypeOfMoneyCOLLECT in(10) THEN
+                                WHEN E.IdTypeOfMoneyCOLLECT in(10) THEN
 								  SUM(ISNULL(C.PriceShippment,0)) + SUM(ISNULL(C.Collect_OnDelivery,0))
 								 ELSE 0
 								 END 
@@ -144,9 +144,6 @@ BEGIN
 							   [DeliveryBackOffice].[dbo].[CostDetail] E WITH(NOLOCK)
 							   ON D.IdCost = E.IdCost
 						  WHERE A.ID  = @IdManifest
-						  AND E.IdTypeOfMoneyCOD in(10)
-						  AND E.IdTypeOfMoneyCOLLECT in(10)
-					 
 					 );
 	--Monto liquidado Billetes/monedas
 	SET  @AmountMoney = (SELECT COALESCE(SUM(mdos.Quantity*cm.Value), 0) TotalAmountCount

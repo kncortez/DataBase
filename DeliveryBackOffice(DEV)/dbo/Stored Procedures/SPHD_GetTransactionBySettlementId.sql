@@ -59,6 +59,8 @@ SET NOCOUNT ON;
 								THEN Collect_OnDelivery
 							WHEN IdTypeOfMoneyCOD = 10
 								THEN Collect_OnDelivery
+							WHEN IdTypeOfMoneyCollect = 10
+							    THEN PriceShippment
 						END AS TotalAmount
 					FROM BaseData
 					WHERE IdTypeOfMoneyCOD IN (10,11)
