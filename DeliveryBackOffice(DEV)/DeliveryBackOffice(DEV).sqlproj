@@ -1640,6 +1640,7 @@
     <Build Include="dbo\Stored Procedures\GetManifestFromGuidesGroup.sql" />
     <Build Include="dbo\Stored Procedures\GetManifestByRouteLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceProcessedToUpdate.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestByRoute.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoicePaymentCommissionCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionBatch.sql" />
