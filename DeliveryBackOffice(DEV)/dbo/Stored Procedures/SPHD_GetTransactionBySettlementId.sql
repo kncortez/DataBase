@@ -43,27 +43,34 @@ SET NOCOUNT ON;
 					  CASE 
 							WHEN IdTypeOfMoneyCOD = 11 THEN 'Transferencia'
 							WHEN IdTypeOfMoneyCOD = 10 THEN 'Zigi'
+							WHEN IdTypeOfMoneyCollect = 11 THEN 'Transferencia'
+							WHEN IdTypeOfMoneyCollect = 10 THEN 'Zigi'
 						END AS PaymentType,
 						Voucher + ProductNumber AS Transaccion,
 						CASE 
 							WHEN IdTypeOfMoneyCOD = 11 THEN Voucher
 							WHEN IdTypeOfMoneyCOD = 10 THEN ZigiTransactionId
+							WHEN IdTypeOfMoneyCollect = 11 THEN Voucher
+							WHEN IdTypeOfMoneyCollect = 10 THEN ZigiTransactionId
 							ELSE ''
 						END AS Voucher,
 						CASE
 							WHEN IdTypeOfMoneyCOD = 10 AND IdTypeOfMoneyCollect = 10 
-								THEN PriceShippment + Collect_OnDelivery
+								THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
 							WHEN IdTypeOfMoneyCOD = 11 AND IdTypeOfMoneyCollect = 11 
-								THEN PriceShippment + Collect_OnDelivery
-							WHEN IdTypeOfMoneyCOD = 11 
-								THEN Collect_OnDelivery
-							WHEN IdTypeOfMoneyCOD = 10
-								THEN Collect_OnDelivery
-							WHEN IdTypeOfMoneyCollect = 10
-							    THEN PriceShippment
+								THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
+							WHEN IdTypeOfMoneyCOD = 11  AND IdTypeOfMoneyCollect IS NULL
+								THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
+							WHEN IdTypeOfMoneyCOD = 10 AND IdTypeOfMoneyCollect IS NULL
+								THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
+							WHEN IdTypeOfMoneyCollect = 11  AND IdTypeOfMoneyCOD IS NULL
+								THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
+							WHEN IdTypeOfMoneyCollect = 10 AND IdTypeOfMoneyCOD IS NULL
+								THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
 						END AS TotalAmount
 					FROM BaseData
 					WHERE IdTypeOfMoneyCOD IN (10,11)
+					OR IdTypeOfMoneyCollect  IN (10,11)
 			UNION ALL
 			-- BLOQUE 2: Tarjeta (Collect = 2)
 			SELECT
@@ -73,15 +80,5 @@ SET NOCOUNT ON;
 				PriceShippment
 			FROM BaseData
 			WHERE IdTypeOfMoneyCollect = 2
-			UNION ALL
-			-- BLOQUE 3: Transferencia solo en Collect
-			SELECT
-			    'Transferencia',
-				Voucher + ProductNumber,
-				Voucher,
-				PriceShippment
-			FROM BaseData
-			WHERE IdTypeOfMoneyCollect = 11
-			  AND IdTypeOfMoneyCOD IS NULL
-			  ORDER BY 1 DESC;
+			
 END
