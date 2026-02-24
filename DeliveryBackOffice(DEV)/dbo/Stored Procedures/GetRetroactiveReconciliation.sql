@@ -41,6 +41,7 @@ BEGIN
          , [Attempt]
          , [Overweight]
          , [CountryId]
+         , [Amount]
     FROM RetroActiveReconciliation
     WHERE CountryId = @IdCountry
       AND GuideDate >= @BeginDate

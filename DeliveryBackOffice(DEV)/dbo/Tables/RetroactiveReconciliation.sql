@@ -19,6 +19,7 @@
     [Attempt] [int] NOT NULL,
     [Overweight] [decimal](16, 2) NOT NULL,
     [CountryId]  [nvarchar](4) NOT NULL,
+    [Amount] [decimal](14,2) NOT NULL,    
 
     CONSTRAINT [PK_RetroactiveReconciliation] PRIMARY KEY CLUSTERED ([IdRetroactiveReconciliation] ASC)
 );
@@ -233,6 +234,17 @@ EXECUTE sp_addextendedproperty
         @level1name = N'RetroactiveReconciliation', 
         @level2type = N'COLUMN', 
         @level2name = N'CountryId';
+
+GO
+EXECUTE sp_addextendedproperty 
+        @name = N'MS_Description', 
+        @value = N'Monto de la guía', 
+        @level0type = N'SCHEMA', 
+        @level0name = N'dbo', 
+        @level1type = N'TABLE', 
+        @level1name = N'RetroactiveReconciliation', 
+        @level2type = N'COLUMN', 
+        @level2name = N'Amount';
 
 GO
 EXECUTE sp_addextendedproperty 

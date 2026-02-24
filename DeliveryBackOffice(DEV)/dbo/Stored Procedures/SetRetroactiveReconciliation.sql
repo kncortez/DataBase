@@ -48,6 +48,7 @@ BEGIN
          , att.attempt                                          [Attempt]
          , ISNULL(bop.Amount,0)                                 [Overweight]
          , do.SenderCountryId                                   [CountryId]
+         , (ISNULL(do.PriceShippment,0) + ISNULL(do.Collect_OnDelivery, 0)) [Amount]
     FROM DeliveryOrder do     WITH (NOLOCK)
     INNER JOIN StatusOrder so WITH (NOLOCK)
         ON so.StatusOrderId = do.StatusOrderId
