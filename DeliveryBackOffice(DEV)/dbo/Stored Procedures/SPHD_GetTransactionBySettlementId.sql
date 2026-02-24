@@ -67,6 +67,10 @@ SET NOCOUNT ON;
 								THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
 							WHEN IdTypeOfMoneyCollect = 10 AND IdTypeOfMoneyCOD IS NULL
 								THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
+							WHEN IdTypeOfMoneyCOD = 11  AND IdTypeOfMoneyCollect <> 11
+							    THEN ISNULL(Collect_OnDelivery,0)
+							WHEN IdTypeOfMoneyCOD <> 11  AND IdTypeOfMoneyCollect = 11
+							    THEN ISNULL(PriceShippment,0) 
 						END AS TotalAmount
 					FROM BaseData
 					WHERE IdTypeOfMoneyCOD IN (10,11)
@@ -77,7 +81,16 @@ SET NOCOUNT ON;
 			    'Tarjeta',
 				Voucher + ProductNumber,
 				'',
-				PriceShippment
+				CASE 
+				   WHEN  IdTypeOfMoneyCOD = 2 AND IdTypeOfMoneyCollect = 2  THEN
+				   ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
+				   WHEN  IdTypeOfMoneyCOD = 2 AND IdTypeOfMoneyCollect <> 2  THEN
+				     ISNULL(Collect_OnDelivery,0)
+				   WHEN  IdTypeOfMoneyCOD <> 2 AND IdTypeOfMoneyCollect = 2  THEN
+					 ISNULL(PriceShippment,0)
+				    WHEN  IdTypeOfMoneyCOD IS NULL AND IdTypeOfMoneyCollect = 2  THEN
+					 ISNULL(PriceShippment,0)
+				END 
 			FROM BaseData
 			WHERE IdTypeOfMoneyCollect = 2
 			
