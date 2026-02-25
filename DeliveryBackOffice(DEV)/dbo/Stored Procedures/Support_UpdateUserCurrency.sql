@@ -4,24 +4,20 @@
    Autor:     IRVIN GONZALEZ
    Historia:  FDAPI-5210
    Fecha:     2025-11-28
-============================================
-=== CHANGELOG ============================
-2025-11-28 | Historia/épica: FDAPI-5210 | Autor: IRVIN GONZALEZ |
-
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_UpdateUserCurrency
 (
     @UsrIdUser      INT,
     @NuevaMoneda    NVARCHAR(10),
-    @TokenUpdated   NVARCHAR(100),
-    @DateUpdated    DATETIME
+    @TokenUpdated   NVARCHAR(50)
 )
 AS
 BEGIN
     SET NOCOUNT ON;
 
     BEGIN TRY
+
 
         -- PASO 1: Validar existencia del usuario
 
@@ -38,19 +34,24 @@ BEGIN
             RETURN;
         END
 
-        -- PASO 2: Obtener datos actuales del usuario
+
+        -- PASO 2: Obtener datos actuales del usuario + Nacionalidad
 
         DECLARE
-            @RowStatus BIT,
-            @PrefixCallingCode NVARCHAR(10),
-            @MonedaActual VARCHAR(10);
+            @RowStatus        BIT,
+            @MonedaActual     NVARCHAR(10),
+            @Nationality      NVARCHAR(10),
+            @NationalityEsperada NVARCHAR(10);
 
         SELECT
-            @RowStatus         = UsrRowStatus,
-            @PrefixCallingCode = PrefixCallingCode,
-            @MonedaActual      = UsrCurrency
-        FROM dbo.RegisterUser WITH (NOLOCK)
-        WHERE UsrIdUser = @UsrIdUser;
+            @RowStatus    = r.UsrRowStatus,
+            @MonedaActual = r.UsrCurrency,
+            @Nationality  = p.PerNationality
+        FROM dbo.RegisterUser r WITH (NOLOCK)
+        INNER JOIN dbo.Person p WITH (NOLOCK)
+            ON p.PerIdPerson = r.UsrIdPerson
+        WHERE r.UsrIdUser = @UsrIdUser;
+
 
         -- PASO 3: Validar usuario activo
 
@@ -63,6 +64,7 @@ BEGIN
             RETURN;
         END
 
+
         -- PASO 4: Validar que la moneda sea permitida
 
         IF @NuevaMoneda NOT IN (N'GTQ', N'USD', N'HNL')
@@ -74,25 +76,25 @@ BEGIN
             RETURN;
         END
 
-        -- PASO 5: Validar relación entre moneda y país
 
-        DECLARE @PrefixEsperado VARCHAR(10);
+        -- PASO 5: Validar relación entre moneda y nacionalidad
 
-        SET @PrefixEsperado = CASE @NuevaMoneda
-                                WHEN N'GTQ' THEN '+502'
-                                WHEN N'USD' THEN '+503'
-                                WHEN N'HNL' THEN '+504'
-                              END;
+        SET @NationalityEsperada = CASE @NuevaMoneda
+                                      WHEN N'GTQ' THEN N'GT'
+                                      WHEN N'USD' THEN N'SV'
+                                      WHEN N'HNL' THEN N'HN'
+                                   END;
 
-        IF @PrefixCallingCode <> @PrefixEsperado
+        IF @Nationality <> @NationalityEsperada
         BEGIN
             SELECT
                 'Error' AS Estado,
-                'La moneda no corresponde al país del usuario.' AS Mensaje,
-                @PrefixCallingCode AS PrefixActual,
-                @PrefixEsperado    AS PrefixRequerido;
+                'La moneda no corresponde a la nacionalidad del usuario.' AS Mensaje,
+                @Nationality          AS NacionalidadActual,
+                @NationalityEsperada  AS NacionalidadRequerida;
             RETURN;
         END
+
 
         -- PASO 6: Aplicar el cambio en RegisterUser
 
@@ -100,14 +102,15 @@ BEGIN
         SET
             UsrCurrency     = @NuevaMoneda,
             UsrTokenUpdated = @TokenUpdated,
-            UsrDateUpdated  = @DateUpdated
+            UsrDateUpdated  = GETDATE()
         WHERE UsrIdUser = @UsrIdUser;
+
 
         -- PASO 7: Resultado final
 
         SELECT
-            'Éxito' AS Estado,
-            'Moneda actualizada correctamente.' AS Mensaje,
+            N'Éxito' AS Estado,
+            N'Moneda actualizada correctamente.' AS Mensaje,
             @MonedaActual AS Moneda_Anterior,
             @NuevaMoneda  AS Moneda_Actual,
             @UsrIdUser    AS RegisterUser;
@@ -127,15 +130,3 @@ BEGIN
     END CATCH
 END
 GO
-
-/*
-================================================================================
-EJEMPLO DE EJECUCIÓN
-================================================================================
-EXEC dbo.Support_UpdateUserCurrency
-     @UsrIdUser    = 73872,
-     @NuevaMoneda  = N'GTQ',
-     @TokenUpdated = N'SYS-IGONZALEZ',
-     @DateUpdated  = GETDATE();
-================================================================================
-*/
