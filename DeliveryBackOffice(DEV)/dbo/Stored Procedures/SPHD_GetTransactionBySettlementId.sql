@@ -31,6 +31,8 @@ SET NOCOUNT ON;
     LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigi] PZ WITH (NOLOCK)
         ON PZ.GuideSerie  = DSD.Guide_Serie 
        AND PZ.GuideNumber = DSD.Guide_Number
+    LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigiMulti] PZM WITH (NOLOCK)
+        ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
     LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
         ON DO.Guide_Serie = DSD.Guide_Serie 
        AND DO.Guide_Number = DSD.Guide_Number
