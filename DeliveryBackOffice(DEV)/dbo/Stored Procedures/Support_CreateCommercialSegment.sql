@@ -4,18 +4,13 @@
    Autor:     IGONZALEZ
    Historia:  FDAPI-5315
    Fecha:     2026-01-02
-============================================
-=== CHANGELOG ================================
-2026-01-02 | Historia/épica: FDAPI-5315 | Autor: IGONZALEZ |
-
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_CreateCommercialSegment
 (
-    @SegmentName        VARCHAR(100),  
+    @SegmentName        VARCHAR(50),  
     @SegmentDescription VARCHAR(200),  
-    @TokenCreated       VARCHAR(100),  
-    @DateCreated        DATETIME       
+    @TokenCreated       VARCHAR(50) 
 )
 AS
 BEGIN
@@ -101,7 +96,7 @@ BEGIN
         (
             @SegmentName,
             @TokenCreated,
-            @DateCreated,
+            GETDATE (),
             NULL,
             NULL,
             1
@@ -127,7 +122,7 @@ BEGIN
             @SegmentDescription,
             1,
             @TokenCreated,
-            @DateCreated,
+            GETDATE (),
             NULL,
             NULL
         );
@@ -142,7 +137,7 @@ BEGIN
             @SegmentName AS SegmentoCreado,
             @SegmentDescription AS Descripcion,
             @TokenCreated AS UsuarioCreacion,
-            @DateCreated AS FechaCreacion;
+            GETDATE () AS FechaCreacion;
 
     END TRY
 
