@@ -4,18 +4,13 @@
    Autor:     IGONZALEZ
    Historia:  FDAPI-5316
    Fecha:     2026-01-02
-============================================
-=== CHANGELOG ================================
-2026-01-02 | Historia/épica: FDAPI-5316 | Autor: IGONZALEZ |
-
 =========================================== */
 CREATE PROCEDURE dbo.Support_ToggleCommercialSegment
 (
     @IdCommercialSegment INT, 
     @IdSalesChannel      INT, 
     @RowStatus           BIT, 
-    @TokenUpdated        VARCHAR(100),
-    @DateUpdated         DATETIME
+    @TokenUpdated        VARCHAR(50)
 )
 AS
 BEGIN
@@ -103,7 +98,7 @@ BEGIN
         SET 
             RowStatus    = @RowStatus,
             TokenUpdated = @TokenUpdated,
-            DateUpdated  = @DateUpdated
+            DateUpdated  = GETDATE ()
         WHERE IdCommercialSegment = @IdCommercialSegment;
 
 
@@ -113,7 +108,7 @@ BEGIN
         SET 
             RowStatus    = @RowStatus,
             TokenUpdated = @TokenUpdated,
-            DateUpdated  = @DateUpdated
+            DateUpdated  = GETDATE ()
         WHERE IdSalesChannel = @IdSalesChannel;
 
 
@@ -136,7 +131,7 @@ BEGIN
             @RowStatus AS Sales_RowStatus_Nuevo,
 
             @TokenUpdated AS UsuarioActualizacion,
-            @DateUpdated AS FechaActualizacion;
+            GETDATE () AS FechaActualizacion;
 
     END TRY
 
