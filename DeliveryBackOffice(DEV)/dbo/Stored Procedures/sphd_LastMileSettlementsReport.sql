@@ -81,7 +81,7 @@ BEGIN
               (
                   SELECT Name FROM splitstring(@hubsIds, ',')
               )
-		  AND IIF(ord.IsCollect = 1, ord.PriceShippment + ord.Collect_OnDelivery, ord.Collect_OnDelivery) > 0
+		--  AND IIF(ord.IsCollect = 1, ord.PriceShippment + ord.Collect_OnDelivery, ord.Collect_OnDelivery) > 0
           AND dsd.Guide_Delivered = 'true'
           AND dsd.Guide_Discharged IS NOT NULL
           AND dsd.RowStatus = 1
@@ -228,7 +228,7 @@ BEGIN
               (
                   SELECT Name FROM splitstring(@hubsIds, ',')
               )
-		  AND IIF(ord.IsCollect = 1, ord.PriceShippment + ord.Collect_OnDelivery, ord.Collect_OnDelivery) > 0
+		--  AND IIF(ord.IsCollect = 1, ord.PriceShippment + ord.Collect_OnDelivery, ord.Collect_OnDelivery) > 0
           AND dsd.Guide_Delivered = 'true'
           AND dsd.Guide_Discharged IS NOT NULL
           AND dsd.RowStatus = 1
