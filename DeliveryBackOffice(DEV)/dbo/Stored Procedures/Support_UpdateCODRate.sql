@@ -4,98 +4,78 @@
    Autor:     IRVIN GONZALEZ
    Historia:  FDAPI-5095
    Fecha:     2025-11-21
-============================================
-=== CHANGELOG ================================
-2025-11-21 | Historia: FDAPI-5095 | Autor: IRVIN GONZALEZ |
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_UpdateCODRate
-    @RateId INT,
-    @NewCODRate DECIMAL(10,2),
-    @TokenUpdated VARCHAR(100),
-    @DateUpdated DATETIME
+    @IdRateCOD     INT,
+    @NewCODRate    DECIMAL(12,2),
+    @TokenUpdated  NVARCHAR(50)
 AS
 BEGIN
     SET NOCOUNT ON;
 
     BEGIN TRY
 
-        
-        -- PASO 1: Validar existencia de RateHeader
-        
+
+        -- PASO 1: Validar existencia de RateCOD
+
         IF NOT EXISTS (
-            SELECT TOP 1
-            FROM DeliveryBackOffice.dbo.RateHeader WITH (NOLOCK)
-            WHERE RHEId = @RateId
+            SELECT 1
+            FROM DeliveryBackOffice.dbo.RateCOD WITH (NOLOCK)
+            WHERE IdRateCOD = @IdRateCOD
         )
         BEGIN
             SELECT 
                 'Error' AS Estado,
-                'El RateHeader consultado no existe. No se aplicó el cambio.' AS Mensaje,
-                @RateId AS RateId;
+                'El IdRateCOD consultado no existe. No se aplicó el cambio.' AS Mensaje,
+                @IdRateCOD AS IdRateCOD;
             RETURN;
         END
 
-        
+
         -- PASO 2: Consultar valor actual de CODRate
-        
-        SELECT TOP 10
+
+        SELECT
             crs.CrsName,
-            rco.RateId,
+            rco.IdRateCOD,
             rco.CODRate AS PorcentajeCODAnterior
         FROM DeliveryBackOffice.dbo.RateCOD rco WITH (NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.CatRateSegment crs WITH (NOLOCK) 
             ON crs.CrsId = rco.TypeSegmentId
-        WHERE rco.RateId = @RateId
-        ORDER BY rco.DateCreated DESC;
+        WHERE rco.IdRateCOD = @IdRateCOD;
 
-        
+
         -- PASO 3: Aplicar UPDATE del CODRate
-        
+
         UPDATE DeliveryBackOffice.dbo.RateCOD
         SET 
-            CODRate = @NewCODRate,
+            CODRate      = @NewCODRate,
             TokenUpdated = @TokenUpdated,
-            DateUpdated = @DateUpdated
-        WHERE RateId = @RateId;
+            DateUpdated  = GETDATE()
+        WHERE IdRateCOD = @IdRateCOD;
 
-        
+
         -- PASO 4: Mostrar valor actualizado
-        
-        SELECT TOP 10
+
+        SELECT 
             crs.CrsName,
-            rco.RateId,
+            rco.IdRateCOD,
             rco.CODRate AS PorcentajeCODActualizado
         FROM DeliveryBackOffice.dbo.RateCOD rco WITH (NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.CatRateSegment crs WITH (NOLOCK) 
             ON crs.CrsId = rco.TypeSegmentId
-        WHERE rco.RateId = @RateId
-        ORDER BY rco.DateUpdated DESC;
+        WHERE rco.IdRateCOD = @IdRateCOD;
 
     END TRY
-
     BEGIN CATCH
         SELECT 
             'Error' AS Estado,
             'Ocurrió un error durante la ejecución del procedimiento.' AS Mensaje,
-            ERROR_NUMBER() AS ErrorNumero,
+            ERROR_NUMBER()  AS ErrorNumero,
             ERROR_MESSAGE() AS ErrorDescripcion,
-            ERROR_LINE() AS ErrorLinea;
+            ERROR_LINE()    AS ErrorLinea;
             
         THROW;
-
     END CATCH
 END
 GO
-
-/*
-================================================================================
-EJEMPLO DE EJECUCIÓN
-================================================================================
-EXEC dbo.Support_UpdateCODRate
-     @RateId = 5309,
-     @NewCODRate = 2.00,
-     @TokenUpdated = 'SYS-IGONZALEZ',
-     @DateUpdated = GETDATE();
-================================================================================
-*/
