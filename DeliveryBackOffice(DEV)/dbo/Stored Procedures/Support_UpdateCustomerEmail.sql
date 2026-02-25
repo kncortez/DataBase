@@ -4,18 +4,13 @@
    Autor:     IRVIN GONZALEZ
    Historia:  FDAPI-5241
    Fecha:     2025-12-04
-============================================
-=== CHANGELOG ============================
-2025-12-04 | Historia: FDAPI-5241 | Autor: IRVIN GONZALEZ |
------
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_UpdateCustomerEmail
 (
     @IdCustomer   INT,
     @NewEmail     NVARCHAR(100),
-    @TokenUpdated NVARCHAR(100),
-    @DateUpdated  DATETIME
+    @TokenUpdated NVARCHAR(50)
 )
 AS
 BEGIN
@@ -23,11 +18,12 @@ BEGIN
 
     BEGIN TRY
 
+
         -- PASO 1: Validar existencia del cliente
 
         IF NOT EXISTS (
             SELECT 1
-            FROM dbo.Customer WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.Customer WITH (NOLOCK)
             WHERE IdCustomer = @IdCustomer
         )
         BEGIN
@@ -38,21 +34,43 @@ BEGIN
             RETURN;
         END
 
-        -- PASO 2: Capturar valores actuales (antes del UPDATE)
+
+        -- PASO 2: Validar tipo de cliente
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM DeliveryBackOffice.dbo.Customer WITH (NOLOCK)
+            WHERE IdCustomer = @IdCustomer
+              AND IdCustomerType = 1
+        )
+        BEGIN
+            SELECT
+                'Error' AS Estado,
+                'El cliente no es corporativo.' AS Mensaje,
+                @IdCustomer AS IdCustomer;
+            RETURN;
+        END
+
+
+        -- PASO 3: Capturar valores actuales
 
         DECLARE
             @PrevRegexEmail NVARCHAR(100),
-            @PrevDomain     NVARCHAR(100);
+            @PrevDomain     NVARCHAR(50);
 
         SELECT
             @PrevRegexEmail = RegexEmail,
             @PrevDomain     = Domain
-        FROM dbo.Customer WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.Customer WITH (NOLOCK)
         WHERE IdCustomer = @IdCustomer;
 
-        -- PASO 3: Validar correo ingresado
 
-        IF @NewEmail NOT LIKE N'%_@%.%'
+        -- PASO 4: Validar correo ingresado
+
+        IF (
+            LEN(@NewEmail) - LEN(REPLACE(@NewEmail, '@', '')) <> 1
+            OR @NewEmail NOT LIKE N'%_@%.%'
+        )
         BEGIN
             SELECT
                 'Error' AS Estado,
@@ -61,47 +79,48 @@ BEGIN
             RETURN;
         END
 
-        -- PASO 4: Normalizar correo (minúsculas)
+
+        -- PASO 5: Normalizar correo
 
         SET @NewEmail = LOWER(@NewEmail);
 
-        -- PASO 5: Crear formato RegexEmail (^correo$)
+
+        -- PASO 6: Crear formato RegexEmail (^correo$)
 
         DECLARE @EmailRegex NVARCHAR(100);
         SET @EmailRegex = '^' + @NewEmail + '$';
 
-        -- PASO 6: Extraer dominio y crear formato Domain (^@dominio$)
 
-        DECLARE @Domain NVARCHAR(100);
-        DECLARE @DomainRegex NVARCHAR(100);
+        -- PASO 7: Extraer dominio y crear formato Domain (^@dominio$)
+
+        DECLARE @Domain NVARCHAR(50);
+        DECLARE @DomainRegex NVARCHAR(50);
 
         SET @Domain = SUBSTRING(@NewEmail, CHARINDEX('@', @NewEmail), LEN(@NewEmail));
         SET @DomainRegex = '^' + @Domain + '$';
 
-        -- PASO 7: Actualizar Customer
 
-        UPDATE dbo.Customer
+        -- PASO 8: Actualizar Customer
+
+        UPDATE DeliveryBackOffice.dbo.Customer
         SET
             RegexEmail   = @EmailRegex,
             Domain       = @DomainRegex,
             TokenUpdated = @TokenUpdated,
-            DateUpdated  = @DateUpdated
+            DateUpdated  = GETDATE()
         WHERE IdCustomer = @IdCustomer;
 
-        -- PASO 8: Respuesta final
+
+        -- PASO 9: Respuesta final
 
         SELECT
             'Éxito' AS Estado,
             'El correo fue actualizado correctamente.' AS Mensaje,
             @IdCustomer AS IdCustomer,
-
-            -- Valores anteriores
             @PrevRegexEmail AS RegexEmail_Anterior,
             @PrevDomain     AS Domain_Anterior,
-
-            -- Valores nuevos
-            @EmailRegex AS RegexEmail_Nuevo,
-            @DomainRegex AS Domain_Nuevo;
+            @EmailRegex     AS RegexEmail_Nuevo,
+            @DomainRegex    AS Domain_Nuevo;
 
     END TRY
     BEGIN CATCH
@@ -118,15 +137,3 @@ BEGIN
     END CATCH
 END
 GO
-
-/*
-================================================================================
-EJEMPLO DE EJECUCIÓN
-================================================================================
-EXEC dbo.Support_UpdateCustomerEmail
-     @IdCustomer   = 73623,
-     @NewEmail     = N'ejemplo@gmail.com',
-     @TokenUpdated = N'SYS-IGONZALEZ',
-     @DateUpdated  = GETDATE();
-================================================================================
-*/
