@@ -20,7 +20,7 @@ CREATE PROCEDURE [dbo].[GetClosureListVisitPoint]
 ,@EndDate datetime
 AS
 BEGIN
-	
+	SET NOCOUNT ON;
 	DECLARE @IdCountry NVARCHAR(2),
 		    @Account NVARCHAR(30),
 			@AccountCOD NVARCHAR(30),
