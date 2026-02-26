@@ -6,7 +6,8 @@ CREATE TABLE ZPLFilesStatusLog (
     [IsDeleted]             BIT NOT NULL DEFAULT 0,
     [IsProcessed]           BIT NOT NULL DEFAULT 0,
     [JobId]                 NVARCHAR(75) NOT NULL DEFAULT '',
-    [Guide]                 NVARCHAR(75) NOT NULL DEFAULT '',
+    [GuideSerie]            NVARCHAR (2)    NOT NULL,
+    [GuideNumber]           INT             NOT NULL,
     [DateCreatedQueue]      DATETIME NOT NULL DEFAULT SYSDATETIME(),
     [TokenCreated]          NVARCHAR(50) NOT NULL DEFAULT '',
     [DateCreated]           DATETIME NOT NULL DEFAULT SYSDATETIME(),
@@ -15,6 +16,10 @@ CREATE TABLE ZPLFilesStatusLog (
     CONSTRAINT FK_ZPLFilesStatusLog_Customer
         FOREIGN KEY (IdCustomer)
         REFERENCES Customer(IdCustomer)
+        ON DELETE CASCADE,
+    CONSTRAINT FK_ZPLFilesStatusLog_DeliveryOrder
+        FOREIGN KEY (GuideSerie, GuideNumber)
+        REFERENCES DeliveryOrder(Guide_Serie, Guide_Number)
         ON DELETE CASCADE
 );
 
@@ -39,7 +44,10 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de Job' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ZPLFilesStatusLog', @level2type=N'COLUMN',@level2name=N'JobId'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de guía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ZPLFilesStatusLog', @level2type=N'COLUMN',@level2name=N'Guide'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Serie de guía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ZPLFilesStatusLog', @level2type=N'COLUMN',@level2name=N'GuideSerie'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de guía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ZPLFilesStatusLog', @level2type=N'COLUMN',@level2name=N'GuideNumber'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Ingreso a cola SQS' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ZPLFilesStatusLog', @level2type=N'COLUMN',@level2name=N'DateCreatedQueue'
@@ -60,12 +68,8 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Registro histórico de archivos ZPL procesados' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ZPLFilesStatusLog'
 GO
 
-CREATE NONCLUSTERED INDEX IDX_ZPLFilesStatusLog_TicketNumber
-ON ZPLFilesStatusLog(TicketNumber)
-INCLUDE (
-    IdCustomer,
-    FileName,
-    IsDeleted,
-    IsProcessed,
-    DateCreated
-);
+CREATE NONCLUSTERED INDEX IDX_ZPLFilesStatusLog_FileName
+ON ZPLFilesStatusLog(Filename);
+
+CREATE NONCLUSTERED INDEX IDX_ZPLFilesStatusLog_Guide
+ON ZPLFilesStatusLog(GuideSerie, GuideNumber);
