@@ -7,7 +7,8 @@
 -- Definir la tabla temporal 
 CREATE TYPE dbo.TicketList AS TABLE
 (
-    TicketNumber NVARCHAR(150) NOT NULL
+	[IdCustomer]            INT NOT NULL,
+    [TicketNumber] NVARCHAR(150) NOT NULL
 );
 GO
 
@@ -149,7 +150,7 @@ BEGIN
 				ELSE ISNULL(DSC.RouteCode,'') END AS 'Route_Code'
     FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 		INNER JOIN @Tickets T
-            ON DO.Ticket_Number = T.TicketNumber
+            ON DO.Ticket_Number = T.TicketNumber and DO.IdCustomer = T.IdCustomer
 		INNER JOIN [DeliveryBackOffice].[dbo].[Customer] CTM WITH (NOLOCK)
 		   ON   DO.IdCustomer= CTM.IdCustomer
 		INNER JOIN [DeliveryBackOffice].[dbo].[CatBusinessSegment] CBS WITH (NOLOCK)
