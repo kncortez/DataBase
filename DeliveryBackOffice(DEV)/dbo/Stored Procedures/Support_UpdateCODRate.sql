@@ -32,8 +32,20 @@ BEGIN
             RETURN;
         END
 
+        -- PASO 2: Validar rango permitido del CODRate
 
-        -- PASO 2: Consultar valor actual de CODRate
+        IF @NewCODRate IS NULL
+           OR @NewCODRate < 1.00
+           OR @NewCODRate > 5.00
+        BEGIN
+            SELECT 
+                'Error' AS Estado,
+                'El porcentaje COD debe estar entre 1.00 y 5.00.' AS Mensaje,
+                @NewCODRate AS ValorIngresado;
+            RETURN;
+        END
+
+        -- PASO 3: Consultar valor actual de CODRate
 
         SELECT
             crs.CrsName,
@@ -45,7 +57,7 @@ BEGIN
         WHERE rco.IdRateCOD = @IdRateCOD;
 
 
-        -- PASO 3: Aplicar UPDATE del CODRate
+        -- PASO 4: Aplicar UPDATE del CODRate
 
         UPDATE DeliveryBackOffice.dbo.RateCOD
         SET 
@@ -55,7 +67,7 @@ BEGIN
         WHERE IdRateCOD = @IdRateCOD;
 
 
-        -- PASO 4: Mostrar valor actualizado
+        -- PASO 5: Mostrar valor actualizado
 
         SELECT 
             crs.CrsName,
