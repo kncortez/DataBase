@@ -115,11 +115,10 @@ BEGIN
 		 AND dsd.Guide_Delivered =1
 		 AND dsd.ID_DeliveryOrderBySettlement = @IdManifest
 		 AND dsd.RowStatus = 1
+		 AND (CD.IdTypeOfMoneyCOD IS NOT NULL AND CD.IdTypeOfMoneyCollect IS NOT NULL) 
 	ORDER BY Receiver_Departament ASC,
 			 Receiver_Town ASC,
 			 Receiver_Zone ASC,
 			 Receiver_Address ASC;
-		--SELECT * FROM @temp
-		--order by Receiver_Departament asc, Receiver_Town asc, Receiver_Zone asc, Receiver_Address asc
 
 END
