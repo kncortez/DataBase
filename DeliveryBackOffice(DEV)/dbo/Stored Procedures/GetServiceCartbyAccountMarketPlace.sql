@@ -15,6 +15,11 @@
 -- Create date: <2024-08-07>
 -- Description:	<Agregar país para obtener carrito de compra>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2026-03-02>
+-- Description:	<Se agregan campos IdCatTypeSubscription, CatTypeSubscriptionName y CatProductUsualPrice>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetServiceCartbyAccountMarketPlace]
 	@IdAccount BIGINT,
 	@Token NVARCHAR(50),
@@ -73,13 +78,18 @@ BEGIN
 					   CASE WHEN ISNULL(cp.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 					   mpcm.IdMarketplaceCartDetail,
 					   cp.SubscriptionFixedValue   [CatProductDiscountValue],
-					   IIF(cp.SubscriptionValidity = 1, CONVERT(Varchar,cp.SubscriptionValidity)+' mes', CONVERT(Varchar,cp.SubscriptionValidity)+' meses') [ExpirationProduct]
+					   IIF(cp.SubscriptionValidity = 1, CONVERT(Varchar,cp.SubscriptionValidity)+' mes', CONVERT(Varchar,cp.SubscriptionValidity)+' meses') [ExpirationProduct],
+					   ISNULL(cts.IdCatTypeSubscription, 1) [IdCatTypeSubscription],
+					   ISNULL(cts.CatTypeSubscriptionName, N'Membresía') [CatTypeSubscriptionName],
+					   cp.SubscriptionUsualPrice [CatProductUsualPrice]
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
 				AND mpcm.TypeProduct <> 'Club Forza'
 				INNER JOIN dbo.CatSubscription cp with (nolock)
 				on mpcm.CatProductId = cp.IdCatSubscription
+				LEFT JOIN dbo.CatTypeSubscription cts with (nolock)
+				on cp.CatTypeSubscriptionId = cts.IdCatTypeSubscription
 				WHERE  ISNULL(mpc.AccountId,0) = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
@@ -94,7 +104,10 @@ BEGIN
 					   CASE WHEN ISNULL(cp.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 					   mpcm.IdMarketplaceCartDetail,
 					   cp.MembershipFixedValue   [CatProductDiscountValue],
-					   IIF(cp.MembershipValidity = 1, CONVERT(Varchar,cp.MembershipValidity)+' mes', CONVERT(Varchar,cp.MembershipValidity)+' meses') [ExpirationProduct]
+					   IIF(cp.MembershipValidity = 1, CONVERT(Varchar,cp.MembershipValidity)+' mes', CONVERT(Varchar,cp.MembershipValidity)+' meses') [ExpirationProduct],
+					   1 [IdCatTypeSubscription],
+					   N'Membresía' [CatTypeSubscriptionName],
+					   cp.MembershipUsualPrice [CatProductUsualPrice]
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
@@ -125,13 +138,18 @@ BEGIN
 					   CASE WHEN ISNULL(cp.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 					   mpcm.IdMarketplaceCartDetail,
 					   cp.SubscriptionFixedValue   [CatProductDiscountValue],
-					   IIF(cp.SubscriptionValidity = 1, CONVERT(Varchar,cp.SubscriptionValidity)+' mes', CONVERT(Varchar,cp.SubscriptionValidity)+' meses') [ExpirationProduct]
+					   IIF(cp.SubscriptionValidity = 1, CONVERT(Varchar,cp.SubscriptionValidity)+' mes', CONVERT(Varchar,cp.SubscriptionValidity)+' meses') [ExpirationProduct],
+					   ISNULL(cts.IdCatTypeSubscription, 1) [IdCatTypeSubscription],
+					   ISNULL(cts.CatTypeSubscriptionName, N'Membresía') [CatTypeSubscriptionName],
+					   cp.SubscriptionUsualPrice [CatProductUsualPrice]
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
 				AND mpcm.TypeProduct <> 'Club Forza'
 				INNER JOIN dbo.CatSubscription cp with (nolock)
 				on mpcm.CatProductId = cp.IdCatSubscription
+				LEFT JOIN dbo.CatTypeSubscription cts with (nolock)
+				on cp.CatTypeSubscriptionId = cts.IdCatTypeSubscription
 				WHERE  ISNULL(mpc.RegisterUserId,0) = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
@@ -146,7 +164,10 @@ BEGIN
 					   CASE WHEN ISNULL(cp.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 					   mpcm.IdMarketplaceCartDetail,
 					   cp.MembershipFixedValue   [CatProductDiscountValue],
-					   IIF(cp.MembershipValidity = 1, CONVERT(Varchar,cp.MembershipValidity)+' mes', CONVERT(Varchar,cp.MembershipValidity)+' meses') [ExpirationProduct]
+					   IIF(cp.MembershipValidity = 1, CONVERT(Varchar,cp.MembershipValidity)+' mes', CONVERT(Varchar,cp.MembershipValidity)+' meses') [ExpirationProduct],
+					   1 [IdCatTypeSubscription],
+					   N'Membresía' [CatTypeSubscriptionName],
+					   cp.MembershipUsualPrice [CatProductUsualPrice]
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
