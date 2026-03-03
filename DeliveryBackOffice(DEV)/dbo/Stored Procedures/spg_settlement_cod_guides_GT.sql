@@ -8,7 +8,12 @@
 -- Modification date: <2024-06-19>
 -- Description:	<Devuelve información para liquidación de COD filtrado por pais, y montos de moneda modificado para interpais, multimoneda y multipais>
 -- =============================================
-ALTER PROCEDURE [dbo].[spg_settlement_cod_guides]
+-- =============================================
+-- Author:      <Edelman>
+-- Create date: <2026-01-21>
+-- Description: <Agregar parámetro Voucher y  tipo de pago>
+-- =============================================
+CREATE PROCEDURE [dbo].[spg_settlement_cod_guides_GT]
 		@IdManifest INT
 AS
 BEGIN
@@ -32,22 +37,49 @@ BEGIN
 		   (
 			   SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)
 		   ) Rack_Position,
-		   CAST(IIF(do.IsCollect = 'TRUE', IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), 
-		   
+		    CAST(IIF(do.IsCollect = 'TRUE', IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), 
 		    --sino es una devolución que hago?
                         IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
-		   --do.PriceShippment
-		   
 		   ), 0) AS DECIMAL(18, 2)) Price,
 		   CAST(ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) AS DECIMAL(18, 2)) Collect_on_Delivery,
-		   CAST(IIF(do.IsCollect = 'TRUE',
-					(ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) + IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.PriceShippment / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.PriceShippment * c.codExchangeRate) * c.CODPaymentExchangeRate), do.PriceShippment) END, 0), 
-					--do.PriceShippment
+		    CAST(IIF(do.IsCollect = 'TRUE',
+					(ISNULL((CASE 
+					            WHEN do.[IsLastMileReturn] = 1 THEN 0 
+								ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) + IIF(do.IsLastMileReturn = 1, 
+							ISNULL(CASE 
+							          WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 
+									  ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.PriceShippment / c.codExchangeRate) *  c.CODPaymentExchangeRate, (do.PriceShippment * c.codExchangeRate) * c.CODPaymentExchangeRate), do.PriceShippment) END, 0), 
 					 IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
 					)),
-					ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0)) AS DECIMAL(18, 2)) Total,
+					ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 
+					ELSE IIF(do.GuideType = 'INT', 
+					IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0)) AS DECIMAL(18, 2)) Total,
 		   do.Receiver_ID Receiver_ID,
-		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol]
+		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
+		   CASE 
+		      WHEN CD.IdTypeOfMoneyCollect = 11  THEN CD.Voucher
+			  WHEN CD.IdTypeOfMoneyCollect = 10  THEN PZ.ZigiTransactionId
+			  ELSE ''
+           END AS VoucherCollect,
+           CASE 
+		      WHEN CD.IdTypeOfMoneyCOD = 11  THEN CD.Voucher
+			  WHEN CD.IdTypeOfMoneyCOD = 10  THEN PZ.ZigiTransactionId
+			  ELSE ''
+           END AS VoucherCOD,
+		   CASE 
+		      WHEN cd.IdTypeOfMoneyCollect = 11 THEN 'Transferencia'
+			  WHEN cd.IdTypeOfMoneyCollect = 1  THEN 'Efectivo'
+			  WHEN cd.IdTypeOfMoneyCollect = 2  THEN 'Pago con Tarjeta'
+			  WHEN cd.IdTypeOfMoneyCollect = 10 THEN 'Zigi'
+	          ELSE ''
+		  END AS PaymentMethodCollect,
+           CASE 
+		      WHEN cd.IdTypeOfMoneyCOD = 11 THEN 'Transferencia'
+			  WHEN cd.IdTypeOfMoneyCOD = 1  THEN 'Efectivo'
+			--  WHEN cd.IdTypeOfMoneyCOD = 2  THEN 'Pago con Tarjeta'
+			  WHEN cd.IdTypeOfMoneyCOD = 10 THEN 'Zigi'
+	          ELSE ''
+		  END AS PaymentMethodCOD
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH(NOLOCK)
 			ON dsd.Guide_Serie = do.Guide_Serie
@@ -68,6 +100,12 @@ BEGIN
         LEFT JOIN dbo.CreditCardTransactionByCustomer A1 WITH (NOLOCK)
             ON A1.OrderNumber = do.Guide_Serie + CONVERT(VARCHAR, do.Guide_Number)
                AND A1.ReasonCode = '00'
+		LEFT JOIN dbo.CostDetail cd WITH (NOLOCK)
+            ON c.IdCost = cd.IdCost
+		LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigi] PZ WITH (NOLOCK)
+            ON  PZ.GuideSerie  = dsd.Guide_Serie AND PZ.GuideNumber = dsd.Guide_Number
+        LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigiMulti] PZM WITH (NOLOCK)
+        ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
 	WHERE dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 		  AND dsd.Guide_Discharged = 1 -- guía liquidada en COD
 		  AND
@@ -82,7 +120,6 @@ BEGIN
 			 Receiver_Town ASC,
 			 Receiver_Zone ASC,
 			 Receiver_Address ASC;
-		--SELECT * FROM @temp
-		--order by Receiver_Departament asc, Receiver_Town asc, Receiver_Zone asc, Receiver_Address asc
+		
 
 END
