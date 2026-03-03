@@ -17,6 +17,7 @@ ALTER PROCEDURE [dbo].[spGetInsuranceTypeCustomerMC]
 AS
 BEGIN
 
+    DECLARE @TypeCustomer INT;
     DECLARE @INSURANCEEXC TABLE
     (
          Insuranceid INT IDENTITY(1,1) PRIMARY KEY
@@ -29,27 +30,76 @@ BEGIN
     IF (@pTypeCustomer = 0) --INDIVIDUAL O CORPORATIVO
     BEGIN
 
-        INSERT INTO @INSURANCEEXC (
-             InsuranceRate
-            ,InsuranceCharge
-            ,InsuranceExempt
-            ,CollectRate
-        )
-        SELECT DISTINCT
-        IIF(ISNULL(RH.CollectRate,0) > 0, 0,ISNULL(RH.InsuranceRate,0)) [InsuranceRate],
-        ISNULL(RH.InsuranceCharge,0)    [InsuranceCharge],
-        ISNULL(RH.InsuranceExempt,0)    [InsuranceExempt],
-        ISNULL(RH.CollectRate,0)        [CollectRate]
-        FROM DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
-        INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
-        	ON RH.RheId = RBC.RbcIdRate
-        INNER JOIN DeliveryBackOffice.dbo.Customer C WITH(NOLOCK)
-        	ON RBC.RbcIdCustomer = C.IdCustomer
-        WHERE C.IdCustomer = @pId 
-        AND RH.CountryId = @pIdCountry 
-        AND RH.RheRowStatus = 1
-        AND RBC.RbcRowStatus = 1 
-        --AND C.RowSatus = 1
+        SELECT @TypeCustomer = IdCustomerType
+        FROM Customer
+        WHERE IdCustomer = @pId
+
+        IF(@TypeCustomer = 1) --CORPORATIVO
+        BEGIN
+
+            INSERT INTO @INSURANCEEXC (
+                 InsuranceRate
+                ,InsuranceCharge
+                ,InsuranceExempt
+                ,CollectRate
+            )
+            SELECT DISTINCT
+            ISNULL(RH.InsuranceRate,0)      [InsuranceRate],
+            0                               [InsuranceCharge],
+            ISNULL(RH.InsuranceExempt,0)    [InsuranceExempt],
+            ISNULL(RH.CollectRate,0)        [CollectRate]
+            FROM DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
+                ON RH.RheId = RBC.RbcIdRate
+            INNER JOIN DeliveryBackOffice.dbo.Customer C WITH(NOLOCK)
+                ON RBC.RbcIdCustomer = C.IdCustomer
+            WHERE C.IdCustomer = @pId 
+            AND RH.CountryId = @pIdCountry 
+            AND RH.RheRowStatus = 1
+            AND RBC.RbcRowStatus = 1 
+            --AND C.RowSatus = 1
+
+        END
+        ELSE IF(@TypeCustomer = 3) --INDIVIDUAL
+        BEGIN
+
+            INSERT INTO @INSURANCEEXC (
+                 InsuranceRate
+                ,InsuranceCharge
+                ,InsuranceExempt
+                ,CollectRate
+            )
+            SELECT DISTINCT
+            IIF(ISNULL(RH.CollectRate,0) > 0, 0,ISNULL(RH.InsuranceRate,0)) [InsuranceRate],
+            ISNULL(RH.InsuranceCharge,0)    [InsuranceCharge],
+            ISNULL(RH.InsuranceExempt,0)    [InsuranceExempt],
+            ISNULL(RH.CollectRate,0)        [CollectRate]
+            FROM DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
+                ON RH.RheId = RBC.RbcIdRate
+            INNER JOIN DeliveryBackOffice.dbo.Customer C WITH(NOLOCK)
+                ON RBC.RbcIdCustomer = C.IdCustomer
+            WHERE C.IdCustomer = @pId 
+            AND RH.CountryId = @pIdCountry 
+            AND RH.RheRowStatus = 1
+            AND RBC.RbcRowStatus = 1 
+            --AND C.RowSatus = 1
+
+            INSERT INTO @INSURANCEEXC (
+                 InsuranceRate
+                ,InsuranceCharge
+                ,InsuranceExempt
+                ,CollectRate
+            )
+            VALUES(
+                1.5
+               ,0.0
+               ,5000
+               ,4.00
+            )
+
+        END
+
 
     END;
     ELSE --CLIENTE CARTERA O EXC @pTypeCustomer = 1
@@ -76,8 +126,6 @@ BEGIN
           AND RH.RheRowStatus = 1 
           AND RBC.RbcRowStatus = 1
 
-    END;
-
         INSERT INTO @INSURANCEEXC (
              InsuranceRate
             ,InsuranceCharge
@@ -85,11 +133,13 @@ BEGIN
             ,CollectRate
         )
         VALUES(
-            1.8
+            1.5
            ,0.0
            ,5000
            ,4.00
         )
+
+    END;
 
         SELECT
              InsuranceRate
