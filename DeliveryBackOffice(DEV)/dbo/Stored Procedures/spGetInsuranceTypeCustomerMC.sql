@@ -10,7 +10,7 @@
 -- 2024-07-19 | Historia/épica: FDAPI-2737 | Autor: Walter Orozco |
 =========================================== */
 
-ALTER PROCEDURE [dbo].[spGetInsuranceTypeCustomerMC]
+CREATE PROCEDURE [dbo].[spGetInsuranceTypeCustomerMC]
     @pTypeCustomer INT,
     @pId INT,
     @pIdCountry NVARCHAR(2) = 'GT'
@@ -18,14 +18,24 @@ AS
 BEGIN
 
     DECLARE @TypeCustomer INT;
+    DECLARE @InsuranceRate DECIMAL(12,2);
+    DECLARE @InsuranceCharge DECIMAL(12,2);
+    DECLARE @InsuranceExempt DECIMAL(12,2);
+    DECLARE @CollectRate DECIMAL(12,2);
+
     DECLARE @INSURANCEEXC TABLE
     (
          Insuranceid INT IDENTITY(1,1) PRIMARY KEY
         ,InsuranceRate   DECIMAL(12,2)
         ,InsuranceCharge DECIMAL(12,2)
         ,InsuranceExempt DECIMAL(12,2)
-        ,CollectRate      DECIMAL(12,2)
+        ,CollectRate     DECIMAL(12,2)
     )
+
+    SET @InsuranceRate = 1.5;
+    SET @InsuranceCharge = 0.00;
+    SET @InsuranceExempt = 5000;
+    SET @CollectRate = 4.00;
 
     IF (@pTypeCustomer = 0) --INDIVIDUAL O CORPORATIVO
     BEGIN
@@ -92,14 +102,13 @@ BEGIN
                 ,CollectRate
             )
             VALUES(
-                1.5
-               ,0.0
-               ,5000
-               ,4.00
-            )
+                    @InsuranceRate
+                   ,@InsuranceCharge
+                   ,@InsuranceExempt
+                   ,@CollectRate
+                  )
 
         END
-
 
     END;
     ELSE --CLIENTE CARTERA O EXC @pTypeCustomer = 1
@@ -133,11 +142,11 @@ BEGIN
             ,CollectRate
         )
         VALUES(
-            1.5
-           ,0.0
-           ,5000
-           ,4.00
-        )
+                @InsuranceRate
+               ,@InsuranceCharge
+               ,@InsuranceExempt
+               ,@CollectRate
+              )
 
     END;
 
