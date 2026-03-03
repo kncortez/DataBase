@@ -37,23 +37,28 @@ BEGIN
 		   (
 			   SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)
 		   ) Rack_Position,
-		    CAST(IIF(do.IsCollect = 'TRUE', IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), 
+		    CAST(IIF(do.IsCollect = 'TRUE', 
+			        IIF(do.IsLastMileReturn = 1, ISNULL(CASE 
+					                                      WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1  THEN 0
+														  ELSE do.PriceShippment END, 0), 
 		    --sino es una devolución que hago?
-                        IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
+                CASE 
+					WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 
+					THEN IIF(A1.ReasonCode = '00',do.PriceShippment,0)
+														  ELSE do.PriceShippment END    
 		   ), 0) AS DECIMAL(18, 2)) Price,
 		   CAST(ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) AS DECIMAL(18, 2)) Collect_on_Delivery,
-		    CAST(IIF(do.IsCollect = 'TRUE',
-					(ISNULL((CASE 
-					            WHEN do.[IsLastMileReturn] = 1 THEN 0 
-								ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) + IIF(do.IsLastMileReturn = 1, 
-							ISNULL(CASE 
-							          WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 
-									  ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.PriceShippment / c.codExchangeRate) *  c.CODPaymentExchangeRate, (do.PriceShippment * c.codExchangeRate) * c.CODPaymentExchangeRate), do.PriceShippment) END, 0), 
-					 IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
-					)),
-					ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 
-					ELSE IIF(do.GuideType = 'INT', 
-					IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0)) AS DECIMAL(18, 2)) Total,
+		    CAST(IIF(do.IsCollect = 'TRUE', 
+			        IIF(do.IsLastMileReturn = 1, ISNULL(CASE 
+					                                      WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1  THEN 0
+														  ELSE do.PriceShippment END, 0), 
+		    --sino es una devolución que hago?
+                CASE 
+					WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 
+					THEN IIF(A1.ReasonCode = '00',do.PriceShippment,0)
+														  ELSE do.PriceShippment END    
+		   ), 0) AS DECIMAL(18, 2)) +
+		   CAST(ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) AS DECIMAL(18, 2)) as Total ,
 		   do.Receiver_ID Receiver_ID,
 		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
 		   CASE 
@@ -92,14 +97,14 @@ BEGIN
 			ON ISNULL(do.[IdCustomer], vps.CustomerID) = cu.[IdCustomer]
 		LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
             ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
-               AND cdp.IdConditionOfPayment > 1
+           --    AND cdp.IdConditionOfPayment > 1
 		LEFT JOIN dbo.Cost c WITH (NOLOCK)
             ON c.GuideSerie	= do.guide_Serie AND c.GuideNumber = do.guide_number
 		LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
             ON dc.IdCatCurrencyCOD = ISNULL(c.ShippingCurrency,1)
         LEFT JOIN dbo.CreditCardTransactionByCustomer A1 WITH (NOLOCK)
             ON A1.OrderNumber = do.Guide_Serie + CONVERT(VARCHAR, do.Guide_Number)
-               AND A1.ReasonCode = '00'
+            --   AND A1.ReasonCode = '00'
 		LEFT JOIN dbo.CostDetail cd WITH (NOLOCK)
             ON c.IdCost = cd.IdCost
 		LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigi] PZ WITH (NOLOCK)
