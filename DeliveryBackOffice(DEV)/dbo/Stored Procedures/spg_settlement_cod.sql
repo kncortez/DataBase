@@ -11,7 +11,7 @@
 -- Create date: <2025-10-17>
 -- Description:	<Se agrega campo TotalVouchers para mostrar el total de vouchers Efectibox aplicados al manifiesto de liquidación.>
 -- =============================================
-ALTER PROCEDURE [dbo].[spg_settlement_cod]
+CREATE PROCEDURE [dbo].[spg_settlement_cod]
 		@IdManifest INT
 AS
 BEGIN

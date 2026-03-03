@@ -47,6 +47,7 @@ BEGIN
 								 SUM(
 									CASE 
 										WHEN E.IdTypeOfMoneyCOLLECT = 2 AND E.IdTypeOfMoneyCOD IS NULL
+										   AND C.IsCollect = 1
 											THEN ISNULL(C.PriceShippment,0)
 										ELSE 0 
 									END
@@ -54,6 +55,7 @@ BEGIN
 							  + SUM(
 									CASE 
 										WHEN E.IdTypeOfMoneyCOD <> 2 AND E.IdTypeOfMoneyCOLLECT = 2 
+										     AND C.IsCollect = 1
 											THEN ISNULL(C.PriceShippment,0)
 										ELSE 0
 									END
@@ -156,7 +158,7 @@ BEGIN
 						  FROM DeliveryBackOffice.dbo.RelDepositManifest WITH(NOLOCK)
 						  WHERE DeliveryOrderBySettlementId = @IdManifest AND RowStatus = 1);
 	--Monto Total
-	SET @AmountTotal = ISNULL(@AmountMoney,0) + ISNULL(@AmountDeposit,0) + ISNULL(@TotalTransfer,0) + ISNULL(@TotalZigi,0); --+ ISNULL(@TotalCardCollect,0);
+	SET @AmountTotal = ISNULL(@AmountMoney,0) + ISNULL(@AmountDeposit,0) + ISNULL(@TotalTransfer,0) + ISNULL(@TotalZigi,0) + ISNULL(@TotalCardCollect,0);
 
 	-- Calcular el total de vouchers Efectibox aplicados al manifiesto
 	SET @TotalVouchers = (
@@ -184,8 +186,7 @@ BEGIN
 			ISNULL(@AmountMoney,0)   as TotalCash, -- Total liquidado en efectivo
 			ISNULL(@TotalTransfer,0) as TotalTransfer,
 			ISNULL(@TotalZigi,0)     as TotalZigi,
-			--ISNULL(@TotalCardCollect,0)
-            0 as TotalCard
+			ISNULL(@TotalCardCollect,0) as TotalCard
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK) 
 			ON sr.ID = dobs.ID_Courier
