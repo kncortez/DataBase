@@ -44,6 +44,8 @@ BEGIN
 		    --sino es una devolución que hago?
                 CASE 
 					WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 
+                    AND cd.IdTypeOfMoneyCollect IS NULL 
+                     AND cd.IdTypeOfMoneyCod IS NULL
 					THEN IIF(A1.ReasonCode = '00',do.PriceShippment,0)
 														  ELSE do.PriceShippment END    
 		   ), 0) AS DECIMAL(18, 2)) Price,
@@ -54,7 +56,9 @@ BEGIN
 														  ELSE do.PriceShippment END, 0), 
 		    --sino es una devolución que hago?
                 CASE 
-					WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 
+					WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1
+                     AND cd.IdTypeOfMoneyCollect IS NULL 
+                     AND cd.IdTypeOfMoneyCod IS NULL
 					THEN IIF(A1.ReasonCode = '00',do.PriceShippment,0)
 														  ELSE do.PriceShippment END    
 		   ), 0) AS DECIMAL(18, 2)) +
