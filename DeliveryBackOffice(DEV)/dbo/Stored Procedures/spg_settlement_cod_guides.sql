@@ -37,22 +37,23 @@ BEGIN
 		   (
 			   SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)
 		   ) Rack_Position,
-		   --CAST(IIF(do.IsCollect = 'TRUE', IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), 
-		   
-		   -- --sino es una devolución que hago?
-     --                   IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
-		   do.PriceShippment AS Price,
-		   
-		   --), 0) AS DECIMAL(18, 2)) Price,
+		    CAST(IIF(do.IsCollect = 'TRUE', IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), 
+		    --sino es una devolución que hago?
+                        IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
+		   ), 0) AS DECIMAL(18, 2)) Price,
 		   CAST(ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) AS DECIMAL(18, 2)) Collect_on_Delivery,
-		   --CAST(IIF(do.IsCollect = 'TRUE',
-					--(ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) + IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.PriceShippment / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.PriceShippment * c.codExchangeRate) * c.CODPaymentExchangeRate), do.PriceShippment) END, 0), 
-					----do.PriceShippment
-					-- IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
-					--)),
-					ISNULL(CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 
-					             ELSE ISNULL(do.PriceShippment,0) + ISNULL(do.Collect_OnDelivery,0) 
-							END,0) Total,
+		    CAST(IIF(do.IsCollect = 'TRUE',
+					(ISNULL((CASE 
+					            WHEN do.[IsLastMileReturn] = 1 THEN 0 
+								ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) + IIF(do.IsLastMileReturn = 1, 
+							ISNULL(CASE 
+							          WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 
+									  ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.PriceShippment / c.codExchangeRate) *  c.CODPaymentExchangeRate, (do.PriceShippment * c.codExchangeRate) * c.CODPaymentExchangeRate), do.PriceShippment) END, 0), 
+					 IIF(A1.ReasonCode = '00', 0, do.PriceShippment)
+					)),
+					ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 
+					ELSE IIF(do.GuideType = 'INT', 
+					IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0)) AS DECIMAL(18, 2)) Total,
 		   do.Receiver_ID Receiver_ID,
 		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
 		   CASE 
@@ -115,10 +116,10 @@ BEGIN
 		 AND dsd.Guide_Delivered =1
 		 AND dsd.ID_DeliveryOrderBySettlement = @IdManifest
 		 AND dsd.RowStatus = 1
-		 AND (CD.IdTypeOfMoneyCOD IS NOT NULL AND CD.IdTypeOfMoneyCollect IS NOT NULL) 
 	ORDER BY Receiver_Departament ASC,
 			 Receiver_Town ASC,
 			 Receiver_Zone ASC,
 			 Receiver_Address ASC;
+		
 
 END
