@@ -128,8 +128,8 @@ BEGIN
 	                         SUM(CASE
       	                        WHEN E.IdTypeOfMoneyCOD in(10) AND E.IdTypeOfMoneyCOLLECT in(10) THEN
 	                              ISNULL(C.PriceShippment,0) + ISNULL(C.Collect_OnDelivery,0)
-                                WHEN E.IdTypeOfMoneyCOLLECT in(10) THEN
-								  ISNULL(C.PriceShippment,0) + ISNULL(C.Collect_OnDelivery,0)
+                                WHEN E.IdTypeOfMoneyCOLLECT = 10 AND E.IdTypeOfMoneyCOD IS NULL  THEN
+								  ISNULL(C.PriceShippment,0) 
 								 ELSE 0
 								 END) 
 						  FROM  [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] A WITH (NOLOCK)
