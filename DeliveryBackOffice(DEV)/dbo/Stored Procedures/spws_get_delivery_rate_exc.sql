@@ -358,11 +358,6 @@ BEGIN
         END;
     END;
 
-    PRINT '@RateId';  
-    PRINT  @RateId; 
-    PRINT '@RateTypeId'
-    PRINT  @RateTypeId;
-
     DECLARE @TypeSubscriptionId INT;
 
     SET @TypeSubscriptionId =  
@@ -736,7 +731,7 @@ BEGIN
             );  
   
         END;  
-        --PRINT 'FIN IF DE LA ZONA'  
+
         IF @IdSettlement IS NULL -- si no se puede identificar el settlement trae el primero del municipio proporcionado  
         BEGIN  
             SET @IdSettlement =  
@@ -1351,8 +1346,6 @@ BEGIN
     ELSE IF @RateTypeId = 3 -- tarifas por articulo  
     BEGIN  
 
-        PRINT 'Tarifas por articulo'
-
         SET @CountPiece =  
         (  
             SELECT COUNT(*)  
@@ -1403,6 +1396,7 @@ BEGIN
                   WHERE sg.CrsShortName = 'FOR';  
             END;  
 
+            -- Cálculo de precios  
             -- Cálculo de precios  
             IF OBJECT_ID('tempdb.dbo.#ParcelAmountPerType', 'U') IS NOT NULL  
                 DROP TABLE #ParcelAmountPerType;  
@@ -1611,7 +1605,6 @@ BEGIN
     -- FDD-671 INI  
     ELSE IF @RateTypeId = 5 -- tarifas por peso  
     BEGIN  
-        --PRINT 'tarifas por peso'  
   
         --Cálcular las piezas que no entran en rangos  
         DECLARE @tblNotInRange AS TABLE  
