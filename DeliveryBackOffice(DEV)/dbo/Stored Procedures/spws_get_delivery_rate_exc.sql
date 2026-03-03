@@ -1,4 +1,4 @@
-﻿/* =================================================
+/* =================================================
    SP:        [dbo].[spws_get_delivery_rate_exc]
    Propósito: <Manejo de tarifarios y valores de una guía>
    Autor:     <Cristian Azurdia>
@@ -419,7 +419,7 @@ BEGIN
         IF (ISNULL(@CustomerHasActiveSubscription, 0) > 0)  
         BEGIN  
 
-            -- Destino es un express center activo, aplicar tarifa destino express center de suscripci�n  
+            -- Destino es un express center activo, aplicar tarifa destino express center de suscripción  
             IF (EXISTS  
             (  
                 SELECT TOP 1  
@@ -443,7 +443,7 @@ BEGIN
             END;  
             ELSE  
             BEGIN  
-                -- Destino no es express center activo, aplicar tarifa base de suscripci�n 
+                -- Destino no es express center activo, aplicar tarifa base de suscripción 
                 -- Si falla en encontrar tarifa "valida", defecto la tarifa actual  
                 SELECT @IdRate = ISNULL(ISNULL(SC.RateHeaderId, CS.RateHeaderId), @RateId)  
                 FROM [DeliveryBackOffice].[dbo].[Subscription]              SC WITH (NOLOCK)  
@@ -642,22 +642,22 @@ BEGIN
                                                                                                                                       , '~'  
                                                                                                                                       , ''  
                                                                                                                                     )  
-                                                                                                                           , '�'  
+                                                                                                                           , '¡'  
                                                                                                                            , ''  
                                                                                                                          )  
-                                                                                                                , '�'  
+                                                                                                                , '¿'  
                                                                                                                 , ''  
                                                                                                               )  
-                                                                                                     , '�'  
+                                                                                                     , '°'  
                                                                                                      , ''  
                                                                                                    )  
-                                                                                          , '�'  
+                                                                                          , '¬'  
                                                                                           , ''  
                                                                                         )  
-                 , '�'  
+                                                                                  , '´'  
                                                                                , ''  
                                                                              )  
-                                                                    , '�'  
+                                                                    , '¨'  
                                                                     , ''  
                                                                   )  
                                                          , '&Quot;'  
@@ -681,7 +681,7 @@ BEGIN
   
     DECLARE @IdSettlement BIGINT;  
  
-    IF @IdSettlementDestiny <= 0 --  no se envio el id settlement desde front por lo tanto intenta determinarlo con base a la direcci�n  
+    IF @IdSettlementDestiny <= 0 --  no se envio el id settlement desde front por lo tanto intenta determinarlo con base a la dirección  
     BEGIN  
         -- separar en un arrglo la direccion   
   
@@ -861,7 +861,7 @@ BEGIN
 
     END;  
   
-    IF @IdSegment IS NULL -- si no se encuentra una configuracion v�lida para determinar el segmento tomar el foraneo como predeterminado.  
+    IF @IdSegment IS NULL -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.  
     BEGIN  
         SELECT TOP 1  
                @IdSegment = sg.CrsId  
@@ -1395,7 +1395,7 @@ BEGIN
                   AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)  
                   AND RTC.RowStatus = 1;  
 
-            IF (@IdSegment IS NULL) -- si no se encuentra una configuracion v�lida para determinar el segmento tomar el foraneo como predeterminado.  
+            IF (@IdSegment IS NULL) -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.  
             BEGIN  
                  SELECT TOP 1  
                         @IdSegment = sg.CrsId  
@@ -1403,7 +1403,7 @@ BEGIN
                   WHERE sg.CrsShortName = 'FOR';  
             END;  
 
-            -- C�lculo de precios  
+            -- Cálculo de precios  
             IF OBJECT_ID('tempdb.dbo.#ParcelAmountPerType', 'U') IS NOT NULL  
                 DROP TABLE #ParcelAmountPerType;  
             IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerType', 'U') IS NOT NULL  
@@ -1613,7 +1613,7 @@ BEGIN
     BEGIN  
         --PRINT 'tarifas por peso'  
   
-        --C�lcular las piezas que no entran en rangos  
+        --Cálcular las piezas que no entran en rangos  
         DECLARE @tblNotInRange AS TABLE  
         (  
             ID INT NULL  
@@ -1869,9 +1869,9 @@ BEGIN
         PRINT 'error no se encontro un tarifario';  
     END;  
   
-    /* Membres�as y Suscripciones */  
+    /* Membresías y Suscripciones */  
     -- Oscar Morales 2022-07-18  
-    /* Actualizaci�n: Aplicar descuento �nicamente a costo base   
+    /* Actualización: Aplicar descuento únicamente a costo base   
     Autor: Jerson Ochoa 30-12-2022 */  
     IF (  
            @CalculateMembership = 'true'  
@@ -2054,7 +2054,7 @@ BEGIN
   
         END;  
   
-        --Se busca membres�a por rango de servicios2  
+        --Se busca membresía por rango de servicios2  
         PRINT @DiscountValue;  
         SELECT TOP 1  
                @DiscountValue = DiscountValue  
@@ -2120,7 +2120,7 @@ BEGIN
             IF @PriceShippment IS NOT NULL  
                AND @PriceShippment > 0  
             BEGIN  
-                --Si existe una suscripci�n  
+                --Si existe una suscripción  
                 IF @SubscriptionId IS NOT NULL  
                 BEGIN  
                     --Si es tarifa fija  
@@ -2184,7 +2184,7 @@ BEGIN
                 IF @SubscriptionId IS NULL  
                    OR @Discount = 0  
                 BEGIN  
-                    --Tarifa por rango de servicios (Membres�a)  
+                    --Tarifa por rango de servicios (Membresía)  
                     IF @DiscountValue2 IS NOT NULL  
                     BEGIN  
                         IF @Type2 = 'Porcentaje'  
@@ -2223,20 +2223,20 @@ BEGIN
             BEGIN  
                 UPDATE @TempRate  
                 SET Discount = 0  
-                  , DiscountName = 'No puede utilizar la suscripci�n de monto fijo con un servicio collect'  
+                  , DiscountName = 'No puede utilizar la suscripción de monto fijo con un servicio collect'  
                 WHERE Id = @i;  
             END;  
             ELSE IF (@Discount > 0)  
             BEGIN  
                 UPDATE @TempRate  
                 SET Discount = @Discount  
-                  , DiscountName = 'Descuento membres�a'  
+                  , DiscountName = 'Descuento membresía'  
                 WHERE Id = @i;  
             END;  
         END;  
     END;  
 
-    /* Termina membres�as y suscripciones */  
+    /* Termina membresías y suscripciones */  
   
     SET @CalculateTaxes = 'false';
     SET @jsonResult =  
@@ -2381,7 +2381,7 @@ BEGIN
                                                        )  
                                             ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
                                    + IIF(tr.FragilRate > 0  
-                                       , ',{"Description":"' + 'Fr�gil' + '",' + '"Price":"'  
+                                       , ',{"Description":"' + 'Frágil' + '",' + '"Price":"'  
                                          + CONVERT(  
                                                       VARCHAR(20)  
                                                     , CONVERT(  
