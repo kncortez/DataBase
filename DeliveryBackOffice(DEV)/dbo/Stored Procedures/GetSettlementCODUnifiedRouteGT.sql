@@ -12,7 +12,7 @@
 -- Create date: <2025-10-02>
 -- Description:	<Obtener DPI del piloto y filtrar por día actual los manifiestos liquidados y pendientes>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetSettlementCODUnifiedRoute] @IdRoute INT
+CREATE PROCEDURE [dbo].[GetSettlementCODUnifiedRouteGT] @IdRoute INT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -65,8 +65,8 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                 ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
             INNER JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
-                ON DOR.Guide_Serie = dsd.Guide_Serie
-                   AND DOR.Guide_Number = dsd.Guide_Number
+                ON DOR.Guide_Serie = dsd.Guide_Serie AND 
+                   DOR.Guide_Number = dsd.Guide_Number
             LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH (NOLOCK)
                 ON dbs.ID = msi.ManifestNumber
             LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
@@ -106,7 +106,7 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                 ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
             INNER JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
-                ON DOR.Guide_Serie = dsd.Guide_Serie
+                ON DOR.Guide_Serie = dsd.Guide_Serie 
                    AND DOR.Guide_Number = dsd.Guide_Number
             LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH (NOLOCK)
                 ON dbs.ID = msi.ManifestNumber
@@ -128,16 +128,6 @@ BEGIN
                   )
               )
     ) AS s;
-
-	--quitar guias que hayan sido pagadas con zigi
-	DELETE GF
-	FROM @GuidesFound GF
-	LEFT JOIN PaymentZigi PZ
-	ON PZ.GuideSerie = GF.Guide_Serie
-		  AND PZ.GuideNumber = GF.Guide_Number
-		WHERE PZ.GuideSerie = GF.Guide_Serie
-		  AND PZ.GuideNumber = GF.Guide_Number
-		  AND (PZ.ZigiLinkStatus = 'PAID'OR PZ.AuthorizationNumberByUser IS NOT NULL)
 
     SELECT DISTINCT
            dbs.ID,
@@ -189,20 +179,21 @@ BEGIN
             0
                   )
            ) AS Delivered,
-           CAST(IIF(do.IsCollect = 'TRUE',
-                    IIF(do.IsLastMileReturn = 1,
-                        ISNULL(   CASE
-                                      WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN
-                                          0
-                                      ELSE
+           --CAST(IIF(do.IsCollect = 'TRUE',
+           --         IIF(do.IsLastMileReturn = 1,
+           --             ISNULL(   CASE
+           --                           WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN
+           --                               0
+           --                           ELSE
                                           do.PriceShippment
-                                  END,
-                                  0
-                              ),
+                              --    END,
+                              --    0
+                              --),
 
                         --sino es una devolución que hago?
-                        IIF(A1.ReasonCode = '00', 0, do.PriceShippment)),
-                    0) AS DECIMAL(18, 2)) AS Price,
+                    --    IIF(A1.ReasonCode = '00', do.PriceShippment, do.PriceShippment)),
+                    --0) AS DECIMAL(18, 2))
+					AS Price,
            CAST(ISNULL(
                           (CASE
                                WHEN [do].[IsLastMileReturn] = 1 THEN
@@ -317,7 +308,7 @@ BEGIN
                        0
                    ELSE
                        do.Collect_OnDelivery
-               END > 0
+               END >= 0
               )
               OR
               (
@@ -337,7 +328,7 @@ BEGIN
                                                                                      0
                                                                                  ELSE
                                                                                      do.Collect_OnDelivery
-                                                                             END > 0
+                                                                             END >= 0
               )
           )
           AND
@@ -384,7 +375,7 @@ BEGIN
 
     END;
 
-     SELECT SUM(Total) - ISNULL(rdm.TotalApplied,0) AS COD_Manifest
+     SELECT  SUM(Total) - ISNULL(rdm.TotalApplied,0) AS COD_Manifest
     FROM @GuidesDetail gd
 	LEFT JOIN (
 			SELECT 
@@ -422,24 +413,28 @@ BEGIN
 				ON gd.id = r.DeliveryOrderBySettlementId
 		)
 		SELECT
-			id,
-			Guide,
-			GuideSerie,
-			GuideNumber,
-			Delivered,
-			Price,
-			COD,
+			A.id,
+			A.Guide,
+			A.GuideSerie,
+			A.GuideNumber,
+			A.Delivered,
+			A.Price,
+			A.COD,
 			CASE
-				WHEN TotalApplied <= ISNULL(RunningBefore, 0) THEN Total
+				WHEN TotalApplied <= ISNULL(RunningBefore, 0)   THEN (ISNULL(Price,0) + ISNULL(COD,0))
 				WHEN TotalApplied >= RunningTotal THEN 0
 				ELSE (RunningTotal - TotalApplied)
 			END AS Total,
-			FEL,
-			StatusOrderId,
-			OrderDescription,
-			StatusOrderValid,
-			DescriptionStatusOrderValid
-		FROM Applied
+			A.FEL,
+			A.StatusOrderId,
+			A.OrderDescription,
+			A.StatusOrderValid,
+			A.DescriptionStatusOrderValid
+		FROM Applied A
+		INNER JOIN [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+        ON C.GuideSerie = A.GuideSerie AND C.GuideNumber = A.GuideNumber
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+        ON CD.IdCost = C.IdCost
 		ORDER BY id ASC;
 
 END;
