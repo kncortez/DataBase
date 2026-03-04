@@ -20,6 +20,10 @@
 -- Create date: <2026-03-02>
 -- Description:	<Se agregan campos IdCatTypeSubscription, CatTypeSubscriptionName y CatProductUsualPrice>
 -- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2026-03-03>
+-- Description:	<Se agregan campos StartDate y EndDate, y RTRIM a CatTypeSubscriptionName>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetServiceCartbyAccountMarketPlace]
 	@IdAccount BIGINT,
 	@Token NVARCHAR(50),
@@ -80,8 +84,10 @@ BEGIN
 					   cp.SubscriptionFixedValue   [CatProductDiscountValue],
 					   IIF(cp.SubscriptionValidity = 1, CONVERT(Varchar,cp.SubscriptionValidity)+' mes', CONVERT(Varchar,cp.SubscriptionValidity)+' meses') [ExpirationProduct],
 					   ISNULL(cts.IdCatTypeSubscription, 1) [IdCatTypeSubscription],
-					   ISNULL(cts.CatTypeSubscriptionName, N'Membresía') [CatTypeSubscriptionName],
-					   cp.SubscriptionUsualPrice [CatProductUsualPrice]
+					   ISNULL(RTRIM(cts.CatTypeSubscriptionName), N'Membresía') [CatTypeSubscriptionName],
+					   cp.SubscriptionUsualPrice [CatProductUsualPrice],
+					   cp.StartDate,
+					   cp.EndDate
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
@@ -107,7 +113,9 @@ BEGIN
 					   IIF(cp.MembershipValidity = 1, CONVERT(Varchar,cp.MembershipValidity)+' mes', CONVERT(Varchar,cp.MembershipValidity)+' meses') [ExpirationProduct],
 					   1 [IdCatTypeSubscription],
 					   N'Membresía' [CatTypeSubscriptionName],
-					   cp.MembershipUsualPrice [CatProductUsualPrice]
+					   cp.MembershipUsualPrice [CatProductUsualPrice],
+					   cp.StartDate,
+					   cp.EndDate
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
@@ -140,8 +148,10 @@ BEGIN
 					   cp.SubscriptionFixedValue   [CatProductDiscountValue],
 					   IIF(cp.SubscriptionValidity = 1, CONVERT(Varchar,cp.SubscriptionValidity)+' mes', CONVERT(Varchar,cp.SubscriptionValidity)+' meses') [ExpirationProduct],
 					   ISNULL(cts.IdCatTypeSubscription, 1) [IdCatTypeSubscription],
-					   ISNULL(cts.CatTypeSubscriptionName, N'Membresía') [CatTypeSubscriptionName],
-					   cp.SubscriptionUsualPrice [CatProductUsualPrice]
+					   ISNULL(RTRIM(cts.CatTypeSubscriptionName), N'Membresía') [CatTypeSubscriptionName],
+					   cp.SubscriptionUsualPrice [CatProductUsualPrice],
+					   cp.StartDate,
+					   cp.EndDate
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
@@ -167,7 +177,9 @@ BEGIN
 					   IIF(cp.MembershipValidity = 1, CONVERT(Varchar,cp.MembershipValidity)+' mes', CONVERT(Varchar,cp.MembershipValidity)+' meses') [ExpirationProduct],
 					   1 [IdCatTypeSubscription],
 					   N'Membresía' [CatTypeSubscriptionName],
-					   cp.MembershipUsualPrice [CatProductUsualPrice]
+					   cp.MembershipUsualPrice [CatProductUsualPrice],
+					   cp.StartDate,
+					   cp.EndDate
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
