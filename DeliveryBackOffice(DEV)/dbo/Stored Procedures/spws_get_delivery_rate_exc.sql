@@ -1740,7 +1740,7 @@ BEGIN
                     ON cts.CtsId = rd.TypeServiceId  
                 LEFT JOIN CatTypeRate     ctr       WITH (NOLOCK)
                     ON ctr.IdTypeRate = rh.RateTypeId  
-                INNER JOIN @tblNotInRange pw        WITH (NOLOCK)
+                INNER JOIN @tblNotInRange pw
                     ON pw.CatTypeServiceId = rd.TypeServiceId  
             WHERE rh.RheId = @RateId
                   AND rd.RowStatus = 1  
