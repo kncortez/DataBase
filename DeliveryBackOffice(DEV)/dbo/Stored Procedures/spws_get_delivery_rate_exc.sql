@@ -79,7 +79,7 @@ BEGIN
         );
 
         SELECT @CustomerType = C.IdCustomerType
-        FROM dbo.Customer C
+        FROM dbo.Customer C WITH (NOLOCK)
         WHERE IdCustomer = @CustomerId;
 
     END;
@@ -89,7 +89,7 @@ BEGIN
         SET @CustomerId = @IdCustomerParams;
 
         SELECT @CustomerType = C.IdCustomerType
-        FROM dbo.Customer C
+        FROM dbo.Customer C WITH (NOLOCK)
         WHERE IdCustomer = @CustomerId;
 
     END;
@@ -106,7 +106,7 @@ BEGIN
                 (  
                     SELECT TOP 1
                            AccIdAccount
-                    FROM dbo.Account
+                    FROM dbo.Account WITH (NOLOCK)
                     WHERE IdCustomer = @CustomerId
                           AND AccRowStatus = 1
                 );  
@@ -126,7 +126,7 @@ BEGIN
 
         SELECT TOP 1  
                @TechnicalDescription = TechnicalDescription  
-        FROM CatProductCategory  
+        FROM CatProductCategory  WITH (NOLOCK)
         WHERE IdCatProductCategory = @CategoryProductId  
               AND RowStatus = 1;  
 
@@ -134,11 +134,11 @@ BEGIN
 
         SELECT TOP 1  
                @NewProductId = ProductId  
-        FROM @ActiveProducts  
+        FROM @ActiveProducts
         WHERE CatProductCategoryId =  
         (  
             SELECT IdCatProductCategory  
-            FROM CatProductCategory  
+            FROM CatProductCategory  WITH (NOLOCK)
             WHERE TechnicalDescription = @TechnicalDescription  
                   AND RowStatus = 1  
                   AND  
@@ -364,10 +364,10 @@ BEGIN
     (  
         SELECT TOP 1  
                cts.IdCatTypeSubscription  
-        FROM CatSubscription               csp  
-            INNER JOIN CatTypeSubscription cts  
+        FROM CatSubscription               csp WITH (NOLOCK)
+            INNER JOIN CatTypeSubscription cts WITH (NOLOCK)
                 ON csp.CatTypeSubscriptionId = cts.IdCatTypeSubscription  
-            INNER JOIN CatProductCategory  cpc  
+            INNER JOIN CatProductCategory  cpc WITH (NOLOCK)
                 ON csp.CatProductCategoryId = cpc.IdCatProductCategory  
         WHERE cpc.IdCatProductCategory = @CategoryProductId  
     );  
@@ -378,8 +378,8 @@ BEGIN
         (  
             SELECT TOP 1  
                    cvt.IdCatValueType  
-            FROM CatValueType                      cvt  
-                INNER JOIN MembershipDiscountRange mdr  
+            FROM CatValueType                      cvt WITH (NOLOCK)
+                INNER JOIN MembershipDiscountRange mdr WITH (NOLOCK)
                     ON cvt.IdCatValueType = mdr.ValueTypeId  
                 INNER JOIN Membership              mbs  
                     ON mdr.MembershipId = mbs.IdMembership  
@@ -699,7 +699,7 @@ BEGIN
                     ON tw.HeaderCode = @HeaderCodeDestiny  
                 LEFT JOIN dbo.Settlement st WITH (NOLOCK)  
                     ON st.IdTownship = tw.IdTownship  
-                       AND st.Settlement LIKE CONCAT('%', i.Item, '%')  
+                    AND st.Settlement LIKE CONCAT('%', i.Item, '%')
             WHERE LEN(i.Item) > 3  
                   AND st.IdSettlement IS NOT NULL  
             GROUP BY st.IdSettlement  
@@ -713,7 +713,6 @@ BEGIN
             (  
                 SELECT TOP 1 IdSettlement FROM #SettlementList  
             );  
-  
   
         END;  
         ELSE  
@@ -1072,11 +1071,11 @@ BEGIN
                   AND pc.Item NOT IN  
                       (  
                           SELECT Code  
-                          FROM DeliveryBackOffice.dbo.ArticleByCustomer  
+                          FROM DeliveryBackOffice.dbo.ArticleByCustomer     WITH (NOLOCK)
                           WHERE AbcIdArticle IN  
                                 (  
                                     SELECT ArtId  
-                                    FROM DeliveryBackOffice.dbo.CatArticle  
+                                    FROM DeliveryBackOffice.dbo.CatArticle  WITH (NOLOCK)
                                     WHERE ArtName IN ( 'Paquete pequeño', 'Paquete mediano', 'Paquete grande'  
                                                      , 'Paquete extra grande', 'Paquete sobredimensionado'  
                                                      )  
@@ -1104,9 +1103,9 @@ BEGIN
         (  
             SELECT SUM(ISNULL(ra.RateValue, ISNULL(ar.PriceDefault, 0)))  
             FROM #ListCode2                      ls  
-                INNER JOIN dbo.ArticleByCustomer ar  
+                INNER JOIN dbo.ArticleByCustomer ar  WITH (NOLOCK)
                     ON ar.Code = ls.Item  
-                INNER JOIN dbo.RateData          ra  
+                INNER JOIN dbo.RateData          ra  WITH (NOLOCK)
                     ON ra.ArticleId = ar.AbcId  
             WHERE ra.TypeSegmentId = @IdSegment  
                   AND ra.RateId = @RateId  
@@ -1169,7 +1168,7 @@ BEGIN
                   AND (rd.TypeServiceId IN  
                        (  
                            SELECT CtsId  
-                           FROM dbo.CatTypeService  
+                           FROM dbo.CatTypeService  WITH (NOLOCK)
                            WHERE RateGroup = @IdRateGroup  
                                  AND CtsRowStatus = 1  
                        )  
@@ -1246,7 +1245,7 @@ BEGIN
                   AND (rd.TypeServiceId IN  
                        (  
                            SELECT CtsId  
-                           FROM dbo.CatTypeService  
+                           FROM dbo.CatTypeService  WITH (NOLOCK)
                            WHERE RateGroup = @IdRateGroup  
                                  AND CtsRowStatus = 1  
                        )  
@@ -1329,7 +1328,7 @@ BEGIN
               AND (rd.TypeServiceId IN  
                    (  
                        SELECT CtsId  
-                       FROM dbo.CatTypeService  
+                       FROM dbo.CatTypeService  WITH (NOLOCK)
                        WHERE RateGroup = @IdRateGroup  
                              AND CtsRowStatus = 1  
                    )  
@@ -1408,8 +1407,8 @@ BEGIN
                  , CTS.CtsId                 'ServiceType'  
                  , CAST(0 AS DECIMAL(18, 2)) 'TotalAmount'  
             INTO #ParcelAmountPerType  
-            FROM [DeliveryBackOffice].[dbo].[CatRateSegment]           CRS  
-                CROSS JOIN [DeliveryBackOffice].[dbo].[CatTypeService] CTS;  
+            FROM [DeliveryBackOffice].[dbo].[CatRateSegment]           CRS WITH (NOLOCK)
+                CROSS JOIN [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK);  
 
             -- Paquetes con su peso indicado  
             DECLARE @ExpectedWeight DECIMAL(12, 2) = 0;  
@@ -1455,11 +1454,11 @@ BEGIN
                      , rd.TypeServiceId  AddedServiceType  
                      , SUM(rd.RateValue) 'AddedTotalAmount'  
                 FROM dbo.RateHeader                  rh  
-                    INNER JOIN dbo.RateData          rd  
+                    INNER JOIN dbo.RateData          rd  WITH (NOLOCK)
                         ON rd.RateId = rh.RheId  
-                    INNER JOIN dbo.ArticleByCustomer abc  
+                    INNER JOIN dbo.ArticleByCustomer abc WITH (NOLOCK)
                         ON rd.ArticleId = abc.AbcId  
-                    INNER JOIN #ListCode             LC  
+                    INNER JOIN #ListCode             LC  WITH (NOLOCK)
                         ON abc.Code = LC.Item  
                 WHERE rh.RheId = @RateId
                       AND rd.RowStatus = 'true'  
@@ -1478,9 +1477,9 @@ BEGIN
                 SELECT rd.TypeSegmentId                            AddedSegmentType  
                      , SUM(ISNULL(rd.RateValue, abc.PriceDefault)) 'AddedTotalAmount'  
                 FROM #ListCode                       lc  
-                    INNER JOIN dbo.ArticleByCustomer abc  
+                    INNER JOIN dbo.ArticleByCustomer abc  WITH (NOLOCK)
                         ON abc.Code = lc.Item  
-                    INNER JOIN dbo.RateData          rd  
+                    INNER JOIN dbo.RateData          rd   WITH (NOLOCK)
                         ON rd.ArticleId = abc.AbcId  
                 WHERE rd.TypeServiceId IS NULL  
                       AND rd.TypeSegmentId = @IdSegment  
@@ -1557,17 +1556,17 @@ BEGIN
                     0)                                                                             AS InsuranceRate 
                  , ISNULL(RH.InsuranceCharge,0)                                                    AS InsuranceCharge
                  , ISNULL(RH.InsuranceExempt,0)                                                    AS InsuranceExempt
-            FROM dbo.RateHeader                 rh  
-                INNER JOIN dbo.RateData         rd  
+            FROM dbo.RateHeader                 rh   WITH (NOLOCK)
+                INNER JOIN dbo.RateData         rd   WITH (NOLOCK)
                     ON rd.RateId = rh.RheId  
                 INNER JOIN #ParcelAmountPerType papt  
                     ON rd.TypeSegmentId = papt.SegmentType  
                        AND rd.TypeServiceId = papt.ServiceType  
-                LEFT JOIN dbo.CatRateSegment    sg  
+                LEFT JOIN dbo.CatRateSegment    sg   WITH (NOLOCK)
                     ON sg.CrsId = rd.TypeSegmentId  
-                LEFT JOIN dbo.CatTypeService    sv  
+                LEFT JOIN dbo.CatTypeService    sv   WITH (NOLOCK)
                     ON sv.CtsId = rd.TypeServiceId  
-                LEFT JOIN dbo.CatTypeRate       cr  
+                LEFT JOIN dbo.CatTypeRate       cr   WITH (NOLOCK)
                     ON cr.IdTypeRate = rh.RateTypeId  
             WHERE rh.RheId = @RateId  
                   AND rd.RowStatus = 'true' 
@@ -1623,7 +1622,7 @@ BEGIN
         WHERE NOT EXISTS  
         (  
             SELECT 1  
-            FROM RateData  
+            FROM RateData  WITH (NOLOCK)
             WHERE RateId = @RateId
                   AND TypeSegmentId = @IdSegment  
                   AND TypeServiceId = cts.CtsId  
@@ -1674,16 +1673,16 @@ BEGIN
                  , ISNULL(cts.CtsDescription, '')                                      AS CtsDescription  
                  , ISNULL(rh.ReturnRate, 0)                                            AS ReturnRate  
                  , ISNULL(rh.AdditionalWeightRate, 0)                                  AdditionalWeightRate  
-            FROM RateHeader              rh  
-                INNER JOIN RateData      rd  
+            FROM RateHeader              rh          WITH (NOLOCK)
+                INNER JOIN RateData      rd          WITH (NOLOCK)
                     ON rd.RateId = rh.RheId  
-                LEFT JOIN CatRateSegment crs  
+                LEFT JOIN CatRateSegment crs         WITH (NOLOCK)
                     ON crs.CrsId = rd.TypeSegmentId  
-                LEFT JOIN CatTypeService cts  
+                LEFT JOIN CatTypeService cts         WITH (NOLOCK)
                     ON cts.CtsId = rd.TypeServiceId  
-                LEFT JOIN CatTypeRate    ctr  
+                LEFT JOIN CatTypeRate    ctr         WITH (NOLOCK)
                     ON ctr.IdTypeRate = rh.RateTypeId  
-                INNER JOIN #ParceWeigth  pw  
+                INNER JOIN #ParceWeigth  pw          WITH (NOLOCK)
                     ON pw.Item  
                        BETWEEN rd.WeightFrom AND rd.WeightTo  
             WHERE rh.RheId = @RateId
@@ -1692,7 +1691,7 @@ BEGIN
                   AND (rd.TypeServiceId IN  
                        (  
                            SELECT CtsId  
-                           FROM CatTypeService  
+                           FROM CatTypeService        WITH (NOLOCK)
                            WHERE RateGroup = @IdRateGroup  
                                  AND CtsRowStatus = 1  
                        )  
@@ -1732,16 +1731,16 @@ BEGIN
                  , ISNULL(cts.CtsDescription, '')                                        AS CtsDescription  
                  , ISNULL(rh.ReturnRate, 0)                                              AS ReturnRate  
                  , ISNULL(rh.AdditionalWeightRate, 0)                                    AdditionalWeightRate  
-            FROM RateHeader              rh  
-                INNER JOIN RateData       rd  
+            FROM RateHeader               rh        WITH (NOLOCK)
+                INNER JOIN RateData       rd        WITH (NOLOCK)
                     ON rd.RateId = rh.RheId  
-                LEFT JOIN CatRateSegment  crs  
+                LEFT JOIN CatRateSegment  crs       WITH (NOLOCK)
                     ON crs.CrsId = rd.TypeSegmentId  
-                LEFT JOIN CatTypeService  cts  
+                LEFT JOIN CatTypeService  cts       WITH (NOLOCK)
                     ON cts.CtsId = rd.TypeServiceId  
-                LEFT JOIN CatTypeRate     ctr  
+                LEFT JOIN CatTypeRate     ctr       WITH (NOLOCK)
                     ON ctr.IdTypeRate = rh.RateTypeId  
-                INNER JOIN @tblNotInRange pw  
+                INNER JOIN @tblNotInRange pw        WITH (NOLOCK)
                     ON pw.CatTypeServiceId = rd.TypeServiceId  
             WHERE rh.RheId = @RateId
                   AND rd.RowStatus = 1  
@@ -1749,7 +1748,7 @@ BEGIN
                   (  
                       SELECT TOP 1  
                              IdRateData  
-                      FROM RateData  
+                      FROM RateData                 WITH (NOLOCK)
                       WHERE RateId = @RateId
                             AND TypeSegmentId = @IdSegment  
                             AND TypeServiceId = cts.CtsId  
@@ -1843,7 +1842,7 @@ BEGIN
               AND (rd.TypeServiceId IN  
                    (  
                        SELECT CtsId  
-                       FROM dbo.CatTypeService  
+                       FROM dbo.CatTypeService   WITH (NOLOCK)
                        WHERE RateGroup = @IdRateGroup  
                              AND CtsRowStatus = 1  
                    )  
@@ -2076,8 +2075,8 @@ BEGIN
             SELECT TOP 1  
                    @DiscountValue = DiscountValue  
                  , @Type          = cvt.ValueTypeName  
-            FROM MembershipDiscountRange sdr  
-                INNER JOIN Membership    sc WITH (NOLOCK)  
+            FROM MembershipDiscountRange sdr WITH (NOLOCK)
+                INNER JOIN Membership    sc  WITH (NOLOCK)  
                     ON sc.IdMembership = sdr.MembershipId  
                 INNER JOIN CatValueType  cvt WITH (NOLOCK)  
                     ON sdr.ValueTypeId = cvt.IdCatValueType  
