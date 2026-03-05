@@ -45,7 +45,7 @@ BEGIN
                 CASE 
 					WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 
                     AND cd.IdTypeOfMoneyCollect IS NULL 
-                     AND cd.IdTypeOfMoneyCod IS NULL
+                    AND cd.IdTypeOfMoneyCod IS NULL
 					THEN IIF(A1.ReasonCode = '00',do.PriceShippment,0)
 														  ELSE do.PriceShippment END    
 		   ), 0) AS DECIMAL(18, 2)) Price,
@@ -109,8 +109,16 @@ BEGIN
         LEFT JOIN dbo.CreditCardTransactionByCustomer A1 WITH (NOLOCK)
             ON A1.OrderNumber = do.Guide_Serie + CONVERT(VARCHAR, do.Guide_Number)
             --   AND A1.ReasonCode = '00'
-		LEFT JOIN dbo.CostDetail cd WITH (NOLOCK)
-            ON c.IdCost = cd.IdCost
+		OUTER APPLY
+			(
+				SELECT TOP 1
+					   IdTypeOfMoneyCollect,
+					   IdTypeOfMoneyCOD,
+					   Voucher
+				FROM dbo.CostDetail cd WITH (NOLOCK)
+				WHERE cd.IdCost = c.IdCost
+				ORDER BY cd.IdCost
+			) cd
 		LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigi] PZ WITH (NOLOCK)
             ON  PZ.GuideSerie  = dsd.Guide_Serie AND PZ.GuideNumber = dsd.Guide_Number
         LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigiMulti] PZM WITH (NOLOCK)
