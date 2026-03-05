@@ -54,50 +54,84 @@ BEGIN
         AND DO.IsLastMileReturn = 0
     )
 
-    -- BLOQUE 1: COD (Transferencia / Zigi)
-    SELECT
+-- BLOQUE 1: COD (TRANSFERENCIAS)
+  SELECT
         CASE 
             WHEN IdTypeOfMoneyCOD = 11 THEN 'Transferencia'
-            WHEN IdTypeOfMoneyCOD = 10 THEN 'Zigi'
             WHEN IdTypeOfMoneyCollect = 11 THEN 'Transferencia'
-            WHEN IdTypeOfMoneyCollect = 10 THEN 'Zigi'
         END AS PaymentType,
 
         Voucher + ProductNumber AS Transaccion,
 
         CASE 
             WHEN IdTypeOfMoneyCOD = 11 THEN Voucher
-            WHEN IdTypeOfMoneyCOD = 10 THEN ZigiTransactionId
             WHEN IdTypeOfMoneyCollect = 11 THEN Voucher
+            ELSE ''
+        END AS Voucher,
+
+        CASE
+            WHEN IdTypeOfMoneyCOD IN (11) 
+                 AND IdTypeOfMoneyCollect IN (11)
+                THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
+            WHEN IdTypeOfMoneyCOD IN (11) 
+                 AND IdTypeOfMoneyCollect IS NULL
+                THEN ISNULL(Collect_OnDelivery,0)
+            WHEN IdTypeOfMoneyCollect IN (11) 
+                 AND IdTypeOfMoneyCOD IS NULL
+                THEN ISNULL(PriceShippment,0) 
+			WHEN IdTypeOfMoneyCOD IN (11) 
+                 AND IdTypeOfMoneyCollect <> 11
+                THEN ISNULL(Collect_OnDelivery,0)
+			WHEN IdTypeOfMoneyCOD <> 11 
+                 AND IdTypeOfMoneyCollect = 11
+                THEN ISNULL(Collect_OnDelivery,0)
+        END AS TotalAmount
+
+    FROM BaseData
+    WHERE IdTypeOfMoneyCOD IN (11)
+       OR IdTypeOfMoneyCollect IN (11)
+
+  UNION ALL
+    -- BLOQUE 1: COD ( Zigi)
+    SELECT
+        CASE 
+            WHEN IdTypeOfMoneyCOD = 10 THEN 'Zigi'
+            WHEN IdTypeOfMoneyCollect = 10 THEN 'Zigi'
+        END AS PaymentType,
+
+        Voucher + ProductNumber AS Transaccion,
+
+        CASE 
+            WHEN IdTypeOfMoneyCOD = 10 THEN ZigiTransactionId
             WHEN IdTypeOfMoneyCollect = 10 THEN ZigiTransactionId
             ELSE ''
         END AS Voucher,
 
         CASE
-            WHEN IdTypeOfMoneyCOD IN (10,11) 
-                 AND IdTypeOfMoneyCollect IN (10,11)
+            WHEN IdTypeOfMoneyCOD IN (10) 
+                 AND IdTypeOfMoneyCollect IN (10)
                 THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
 
-            WHEN IdTypeOfMoneyCOD IN (10,11) 
+            WHEN IdTypeOfMoneyCOD IN (10) 
                  AND IdTypeOfMoneyCollect IS NULL
                 THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
 
-            WHEN IdTypeOfMoneyCollect IN (10,11) 
+            WHEN IdTypeOfMoneyCollect IN (10) 
                  AND IdTypeOfMoneyCOD IS NULL
                 THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
 
-            WHEN IdTypeOfMoneyCOD IN (10,11) 
-                 AND IdTypeOfMoneyCollect NOT IN (10,11)
+            WHEN IdTypeOfMoneyCOD IN (10) 
+                 AND IdTypeOfMoneyCollect NOT IN (10)
                 THEN ISNULL(Collect_OnDelivery,0)
 
-            WHEN IdTypeOfMoneyCollect IN (10,11) 
-                 AND IdTypeOfMoneyCOD NOT IN (10,11)
+            WHEN IdTypeOfMoneyCollect IN (10) 
+                 AND IdTypeOfMoneyCOD NOT IN (10)
                 THEN ISNULL(PriceShippment,0)
         END AS TotalAmount
 
     FROM BaseData
-    WHERE IdTypeOfMoneyCOD IN (10,11)
-       OR IdTypeOfMoneyCollect IN (10,11)
+    WHERE IdTypeOfMoneyCOD IN (10)
+       OR IdTypeOfMoneyCollect IN (10)
 
     UNION ALL
 
@@ -124,6 +158,9 @@ BEGIN
 
             WHEN IdTypeOfMoneyCOD IS NULL 
                  AND IdTypeOfMoneyCollect = 2
+                THEN ISNULL(PriceShippment,0)
+			WHEN IdTypeOfMoneyCOD = 2
+                 AND IdTypeOfMoneyCollect IS NULL
                 THEN ISNULL(PriceShippment,0)
         END
 
