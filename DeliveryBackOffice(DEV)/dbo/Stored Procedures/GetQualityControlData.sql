@@ -377,13 +377,13 @@ BEGIN
 				), 1, 0),
 			Id_Incident = DA.ID_Incident,
 			IdUser = IIF(TCD.SystemOrigin IN (2, 5), tk2.SSN_IdUser, NULL),
-			Username = IIF(TCD.SystemOrigin IN (2, 5), tk2.SSN_Username, NULL),
+			Username = IIF(TCD.SystemOrigin IN (2, 5), ISNULL(tk2.SSN_Username, 'EXC/CNC'), ''),
 			RouteDescription = CASE 
 				WHEN TCD.SystemOrigin = 2 THEN 'Usuario Desktop'
-				WHEN TCD.SystemOrigin = 5 THEN 'Usuario Portal EXC/CNC'
+				WHEN TCD.SystemOrigin = 5 THEN 'Usuario Portal'
 				ELSE 'Vendedor Rutero'
 			END,
-			[User] = IIF(TCD.SystemOrigin IN (2, 5), NULL, CONCAT(ISNULL(SR.First_Name, ''), ' ', ISNULL(SR.Last_Name, ''))),
+			[User] = IIF(TCD.SystemOrigin IN (2, 5), ISNULL(tk2.SSN_Username, ''), CONCAT(ISNULL(SR.First_Name, ''), ' ', ISNULL(SR.Last_Name, ''))),
 			TypeOfIncident = ISNULL(CIC.IncidenceTypeName, ''),
 			Incident = CTI.NameIncidence,
 			EventDate = TCD.DateCheckpoint,
