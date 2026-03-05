@@ -50,7 +50,7 @@ BEGIN
            ACH.TotalAmountCashDeclared,
            ACH.TotalAmountCredit,
            ACH.TotalAmountCreditDeclared,
-           ACH.TotalAmountCODCash,
+           ISNULL(ACH.TotalAmountCODCash,0 ) - ISNULL(ACH.TotalAmountCODZigi,0) as TotalAmountCODCash,
            -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
            ACH.TotalAmountCODCashDeclared,
            ACH.TotalAmountFacturaCash,
@@ -58,24 +58,24 @@ BEGIN
            ACH.TotalAmountFacturaCard,
            ACH.TotalAmountFacturaCardDeclared,
            -- MODIFICACIÓN 17/10/2025 Bilkar Morataya
-           ACH.TotalAmountZigi,
-           ACH.TotalAmountZigiDeclared,
+           ISNULL(ACH.TotalAmountFacturaZigi,0) + ISNULL(ACH.TotalAmountCODZigi,0) as 'TotalAmountZigi',
+           ISNULL(ACH.TotalAmountFacturaZigiDeclared,0) + ISNULL(ACH.TotalAmountCODZigiDeclared,0) as TotalAmountZigiDeclared,
            ACH.TotalAmountCODZigi,
            ACH.TotalAmountCODZigiDeclared,
            ACH.TotalAmountFacturaZigi,
            ACH.TotalAmountFacturaZigiDeclared,
            -- FIN MODIFICACIÓN
-		   ISNULL(CCC.Symbol,'') AS CurrencySymbol
+           ISNULL(CCC.Symbol,'') AS CurrencySymbol
     -- FIN MODIFICACIÓN
     FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
         INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
             ON ACH.VisitPoint = VPC.CodeOfReference
         INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU
             ON REU.UsrIdUser = ACH.UserId
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-			ON VPC.CountryId = DC.Currency_IdCountry
-		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH (NOLOCK)
+            ON VPC.CountryId = DC.Currency_IdCountry
+        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
+            ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
     WHERE CAST(ACH.DateCreated AS DATE)
           BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)
           AND DC.DefaultPerCountry = 1
