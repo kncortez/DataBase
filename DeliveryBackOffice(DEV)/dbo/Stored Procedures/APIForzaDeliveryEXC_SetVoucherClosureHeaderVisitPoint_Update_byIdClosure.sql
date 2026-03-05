@@ -39,10 +39,26 @@ BEGIN
         END;
 
         UPDATE H
-           SET H.Voucher1 = @Voucher1,
-               H.Bag1     = @Bag1,
-               H.Voucher2 = @Voucher2,
-               H.Bag2     = @Bag2,
+           SET H.Voucher1 = CASE 
+                   WHEN @Voucher1 <> N'0' THEN @Voucher1
+                   WHEN H.Voucher1 IS NULL THEN @Voucher1
+                   ELSE H.Voucher1
+               END,
+               H.Bag1 = CASE 
+                   WHEN @Bag1 <> N'0' THEN @Bag1
+                   WHEN H.Bag1 IS NULL THEN @Bag1
+                   ELSE H.Bag1
+               END,
+               H.Voucher2 = CASE 
+                   WHEN @Voucher2 <> N'0' THEN @Voucher2
+                   WHEN H.Voucher2 IS NULL THEN @Voucher2
+                   ELSE H.Voucher2
+               END,
+               H.Bag2 = CASE 
+                   WHEN @Bag2 <> N'0' THEN @Bag2
+                   WHEN H.Bag2 IS NULL THEN @Bag2
+                   ELSE H.Bag2
+               END,
                H.TokenUpdated = @TokenUpdated,
                H.DateUpdated = GETDATE()
         FROM DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint AS H
