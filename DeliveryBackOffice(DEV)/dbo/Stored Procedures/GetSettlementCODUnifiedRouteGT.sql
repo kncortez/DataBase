@@ -12,7 +12,7 @@
 -- Create date: <2025-10-02>
 -- Description:	<Obtener DPI del piloto y filtrar por día actual los manifiestos liquidados y pendientes>
 -- =============================================
-ALTER PROCEDURE [dbo].[GetSettlementCODUnifiedRouteGT] @IdRoute INT
+CREATE PROCEDURE [dbo].[GetSettlementCODUnifiedRouteGT] @IdRoute INT
 AS
 BEGIN
     SET NOCOUNT ON;
