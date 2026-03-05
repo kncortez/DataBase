@@ -1,8 +1,10 @@
 -- EJECUTAR EN EL ORDEN --
+-- PRIMERO: DDL (Estructura)
+-- SEGUNDO: DML (Datos) - Ver sección al final con TRY/CATCH
 
--- CREACION DEL NUEVO SISTEMA
-INSERT INTO DeliveryBackOffice.dbo.CatSystem (SysNameSystem, SysPlataform, SysDescription, SysRowStatus, SysTokenCreated, SysDateCreated, SysTokenUpdated, SysDateUpdated) VALUES (N'Gestion de Paquetes', N'subscriptions.package.admin', N'CRM Gestión de Paquetes y suscripciones', 1, N'SYS-BILKAR', N'2026-01-14 12:33:50.000', null, null)
-
+-- =============================================
+-- SECCION 1: DDL - CAMBIOS DE ESTRUCTURA
+-- =============================================
 
 -- ACTUALIZACION DE TABLA DE CatRol
 alter table dbo.CatRol
@@ -13,10 +15,6 @@ exec sp_addextendedproperty 'MS_Description',
      N'Indica si este rol tiene privilegios de administrador al sistema al que está asignado', 'SCHEMA', 'dbo', 'TABLE',
      'CatRol', 'COLUMN', 'RolAdminSystem'
 go
-
--- Actualizar los roles existentes para establecer RolAdminSystem en 0
-UPDATE CatRol SET RolAdminSystem = 0;
-
 
 -- ACTUALIZACION DE TABLA DE RegisterUser
 alter table dbo.RegisterUser
@@ -86,7 +84,7 @@ CREATE INDEX IDX_AuthRefreshTokens_TokenHash ON AuthRefreshTokens(TokenHash);
 
 
 -- Tabla: AuthLoginAttempts
--- Propósito: Registrar intentos de login para prevenir ataques de fuerza bruta
+-- Propósito: Registrar intentos de login para prevenir
 -- Relación: Cada intento pertenece a un usuario o se identifica por email
 
 CREATE TABLE AuthLoginAttempts (
@@ -144,7 +142,7 @@ CREATE INDEX IDX_AuthRefreshTokens_TokenHash ON AuthRefreshTokens(TokenHash);
 
 
 -- Tabla: AuthLoginAttempts
--- Propósito: Registrar intentos de login para prevenir ataques de fuerza bruta
+-- Propósito: Registrar intentos de login para prevenir ataques
 -- Relación: Cada intento pertenece a un usuario o se identifica por email
 
 CREATE TABLE AuthLoginAttempts (
@@ -280,87 +278,6 @@ CREATE INDEX IDX_AuthAuditLog_ActionType ON AuthAuditLog(ActionType);
 
 
 
---- ACTUALIZACIÓN DE DESCRIPCIONES DE CAMPOS DE TABLAS EXISTENTES ---
---- ES POSIBLE QUE ALGUNOS FALLEN PORQUE YA EXISTEN LAS DESCRIPCIONES PERO DEBENM SER REEMPLAZADOS ---
-exec sp_updateextendedproperty 'MS_Description', N'Descripción e la suscripción', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'SubscriptionDescription'
-go
-
-exec sp_updateextendedproperty 'MS_Description', 'Precio normal del paquete', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'SubscriptionCost'
-go
-
-exec sp_updateextendedproperty 'MS_Description', N'Canidad máxima de servicios incluídos', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'SubscriptionMaxServiceFixedValue'
-go
-
-exec sp_updateextendedproperty 'MS_Description', N'Tiempo máximo de uso del paquete (expresado en meses)', 'SCHEMA',
-     'dbo', 'TABLE', 'CatSubscription', 'COLUMN', 'SubscriptionValidity'
-go
-
-exec sp_updateextendedproperty 'MS_Description', N'Peso máximo incluído en el paquete', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'SubscriptionWeight'
-go
-
-exec sp_updateextendedproperty 'MS_Description', 'Estado el registro', 'SCHEMA', 'dbo', 'TABLE', 'CatSubscription',
-     'COLUMN', 'RowStatus'
-go
-
-exec sp_updateextendedproperty 'MS_Description', 'Token del creador del paquete', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'TokenCreated'
-go
-
-exec sp_updateextendedproperty 'MS_Description', N'Fecha de creación del regisro del paquete', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'DateCreated'
-go
-
-exec sp_updateextendedproperty 'MS_Description', N'Token de la última modificación del paquete', 'SCHEMA', 'dbo',
-     'TABLE', 'CatSubscription', 'COLUMN', 'TokenUpdated'
-go
-
-exec sp_updateextendedproperty 'MS_Description', N'Fecha de última modificación del paquete', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'DateUpdated'
-go
-
-exec sp_updateextendedproperty 'MS_Description', 'Icono del paquete', 'SCHEMA', 'dbo', 'TABLE', 'CatSubscription',
-     'COLUMN', 'Icon'
-go
-
-exec sp_updateextendedproperty 'MS_Description', 'Banner del paquete', 'SCHEMA', 'dbo', 'TABLE', 'CatSubscription',
-     'COLUMN', 'NextSalesPackageBanner'
-go
-
-exec sp_updateextendedproperty 'MS_Description', 'Identificador del tipo de suscripcion', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'CatTypeSubscriptionId'
-go
-
-exec sp_updateextendedproperty 'MS_Description', N'Identificador de la categoría del paquete', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'CatProductCategoryId'
-go
-
-exec sp_updateextendedproperty 'MS_Description', 'Etiquetas del paquete', 'SCHEMA', 'dbo', 'TABLE', 'CatSubscription',
-     'COLUMN', 'Tag'
-go
-
-exec sp_updateextendedproperty 'MS_Description', N'Posición de orden entre los demás registros del paquete', 'SCHEMA',
-     'dbo', 'TABLE', 'CatSubscription', 'COLUMN', 'Position'
-go
-
-exec sp_updateextendedproperty 'MS_Description', N'Identificador del país del paquete', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'IdCountry'
-go
-
-exec sp_updateextendedproperty 'MS_Description', 'Identificador de la moneda del paquete', 'SCHEMA', 'dbo', 'TABLE',
-     'CatSubscription', 'COLUMN', 'IdCatCurrencyCOD'
-go
-
-
-
-
-
-
-
-
 
 --- Se agregan campos nuevos a tablas CatSubscription y Membership
 alter table dbo.CatSubscription
@@ -395,10 +312,6 @@ exec sp_addextendedproperty 'MS_Description',
      N'Precio habitual de la suscripción (sin descuento, se puede considerar como el precio normal)', 'SCHEMA', 'dbo',
      'TABLE', 'CatSubscription', 'COLUMN', 'SubscriptionUsualPrice'
 go
-
-
-UPDATE dbo.CatSubscription SET SubscriptionUsualPrice = SubscriptionCost;
-
 
 
 
@@ -458,19 +371,6 @@ exec sp_addextendedproperty 'MS_Description',
 go
 
 
-
-
-
--- Preparativos para separar los precios normal y con descuento
-UPDATE dbo.CatSubscription SET SubscriptionUsualPrice = SubscriptionCost;
-UPDATE dbo.CatMembership SET MembershipUsualPrice = MembershipCost;
-UPDATE dbo.CatSubscription SET PermanentlyDisabled=0;
-UPDATE dbo.CatMembership SET PermanentlyDisabled=0;
-
-
-
-
-
 CREATE TABLE dbo.ProductChangeHistory (
     IdChangeHistory BIGINT IDENTITY(1,1) NOT NULL,
     EntityType NVARCHAR(50) NOT NULL,
@@ -507,5 +407,70 @@ ON dbo.ProductChangeHistory (ChangeTimestamp DESC);
 GO
 
 PRINT 'Tabla ProductChangeHistory creada exitosamente (sin constraints)';
+GO
+
+
+-- =============================================
+-- SECCION 2: DML - INSERCION Y ACTUALIZACION DE DATOS
+-- =============================================
+-- Esta sección contiene todas las operaciones de datos
+-- con control transaccional para rollback en caso de error
+
+BEGIN TRY
+    BEGIN TRANSACTION;
+    
+    -- CREACION DEL NUEVO SISTEMA
+    INSERT INTO DeliveryBackOffice.dbo.CatSystem (
+        SysNameSystem, SysPlataform, SysDescription, SysRowStatus, 
+        SysTokenCreated, SysDateCreated, SysTokenUpdated, SysDateUpdated
+    ) VALUES (
+        N'Gestion de Paquetes', 
+        N'subscriptions.package.admin', 
+        N'CRM Gestión de Paquetes y suscripciones', 
+        1, 
+        N'SYS-BILKAR', 
+        N'2026-01-14 12:33:50.000', 
+        NULL, 
+        NULL
+    );
+    PRINT 'Sistema "Gestion de Paquetes" insertado correctamente.';
+
+    -- Actualizar los roles existentes para establecer RolAdminSystem en 0
+    UPDATE CatRol SET RolAdminSystem = 0;
+    PRINT 'CatRol.RolAdminSystem actualizado a 0 en todos los registros.';
+
+    -- Preparativos para separar los precios normal y con descuento
+    UPDATE dbo.CatSubscription SET SubscriptionUsualPrice = SubscriptionCost;
+    UPDATE dbo.CatMembership SET MembershipUsualPrice = MembershipCost;
+    PRINT 'Precios habituales copiados desde precios actuales.';
+
+    UPDATE dbo.CatSubscription SET PermanentlyDisabled = 0;
+    UPDATE dbo.CatMembership SET PermanentlyDisabled = 0;
+    PRINT 'PermanentlyDisabled establecido en 0.';
+
+    UPDATE CatSubscription SET 
+        StartDate = '2026-03-04 00:00:00', 
+        EndDate = '2026-03-04 23:59:59' 
+    WHERE StartDate IS NULL AND EndDate IS NULL;
+    
+    UPDATE CatMembership SET 
+        StartDate = '2026-03-04 00:00:00', 
+        EndDate = '2026-03-04 23:59:59' 
+    WHERE StartDate IS NULL AND EndDate IS NULL;
+    PRINT 'Fechas de inicio y fin establecidas para registros sin fecha.';
+
+    COMMIT TRANSACTION;
+    PRINT '=== TODAS LAS OPERACIONES DML COMPLETADAS EXITOSAMENTE ===';
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
+    
+    PRINT '=== ERROR EN OPERACIONES DML - ROLLBACK EJECUTADO ===';
+    PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS NVARCHAR(10));
+    PRINT 'Error Message: ' + ERROR_MESSAGE();
+    PRINT 'Error Line: ' + CAST(ERROR_LINE() AS NVARCHAR(10));
+    THROW;
+END CATCH
 GO
 
