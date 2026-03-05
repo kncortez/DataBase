@@ -179,22 +179,21 @@ BEGIN
             0
                   )
            ) AS Delivered,
-           --CAST(IIF(do.IsCollect = 'TRUE',
-           --         IIF(do.IsLastMileReturn = 1,
-           --             ISNULL(   CASE
-           --                           WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN
-           --                               0
-           --                           ELSE
+          CAST(IIF(do.IsCollect = 'TRUE',
+                    IIF(do.IsLastMileReturn = 1,
+                        ISNULL(   CASE
+                                      WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN
+                                          0
+                                      ELSE
                                           do.PriceShippment
-                              --    END,
-                              --    0
-                              --),
+                                  END,
+                                  0
+                              ),
 
                         --sino es una devolución que hago?
-                    --    IIF(A1.ReasonCode = '00', do.PriceShippment, do.PriceShippment)),
-                    --0) AS DECIMAL(18, 2))
-					AS Price,
-           CAST(ISNULL(
+                        IIF(A1.ReasonCode = '00', 0, do.PriceShippment)),
+                    0) AS DECIMAL(18, 2)) AS Price,
+          CAST(ISNULL(
                           (CASE
                                WHEN [do].[IsLastMileReturn] = 1 THEN
                                    0
