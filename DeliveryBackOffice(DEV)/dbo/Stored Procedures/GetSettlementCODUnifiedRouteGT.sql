@@ -12,7 +12,7 @@
 -- Create date: <2025-10-02>
 -- Description:	<Obtener DPI del piloto y filtrar por día actual los manifiestos liquidados y pendientes>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetSettlementCODUnifiedRouteGT] @IdRoute INT
+ALTER PROCEDURE [dbo].[GetSettlementCODUnifiedRouteGT] @IdRoute INT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -179,21 +179,19 @@ BEGIN
             0
                   )
            ) AS Delivered,
-          CAST(IIF(do.IsCollect = 'TRUE',
-                    IIF(do.IsLastMileReturn = 1,
-                        ISNULL(   CASE
-                                      WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN
-                                          0
-                                      ELSE
-                                          do.PriceShippment
-                                  END,
-                                  0
-                              ),
-
-                        --sino es una devolución que hago?
-                        IIF(A1.ReasonCode = '00', 0, do.PriceShippment)),
-                    0) AS DECIMAL(18, 2)) AS Price,
-          CAST(ISNULL(
+             CAST(IIF(do.IsCollect = 'TRUE', 
+			        IIF(do.IsLastMileReturn = 1, ISNULL(CASE 
+					                                      WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1  THEN 0
+														  ELSE do.PriceShippment END, 0), 
+		    --sino es una devolución que hago?
+                CASE 
+					WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 
+					AND cd.IdTypeOfMoneyCollect IS NULL 
+                    AND cd.IdTypeOfMoneyCod IS NULL
+					THEN IIF(A1.ReasonCode = '00',do.PriceShippment,0)
+														  ELSE do.PriceShippment END    
+		   ), 0) AS DECIMAL(18, 2)) Price,
+           CAST(ISNULL(
                           (CASE
                                WHEN [do].[IsLastMileReturn] = 1 THEN
                                    0
@@ -301,6 +299,8 @@ BEGIN
         LEFT JOIN dbo.CreditCardTransactionByCustomer A1 WITH (NOLOCK)
             ON A1.OrderNumber = do.Guide_Serie + CONVERT(VARCHAR, do.Guide_Number)
                AND A1.ReasonCode = '00'
+		LEFT JOIN dbo.CostDetail cd WITH (NOLOCK)
+            ON c.IdCost = cd.IdCost
     WHERE (
               (CASE
                    WHEN do.IsLastMileReturn = 1 THEN
