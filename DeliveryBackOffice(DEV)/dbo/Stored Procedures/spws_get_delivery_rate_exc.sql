@@ -1134,9 +1134,9 @@ BEGIN
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceCharge, 0)
+                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
                                    THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceCharge, 0) 
+                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
                                     AND @InsuranceAmount < 5000
                                    THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
                                WHEN @InsuranceAmount >= 5000
@@ -1211,9 +1211,9 @@ BEGIN
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceCharge, 0)
+                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
                                    THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceCharge, 0) 
+                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
                                     AND @InsuranceAmount < 5000
                                    THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
                                WHEN @InsuranceAmount >= 5000
@@ -1294,9 +1294,9 @@ BEGIN
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceCharge, 0)
+                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
                                    THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceCharge, 0) 
+                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
                                     AND @InsuranceAmount < 5000
                                    THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
                                WHEN @InsuranceAmount >= 5000
@@ -1538,9 +1538,9 @@ BEGIN
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceCharge, 0)
+                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
                                    THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceCharge, 0) 
+                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
                                     AND @InsuranceAmount < 5000
                                    THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
                                WHEN @InsuranceAmount >= 5000
@@ -1808,9 +1808,9 @@ BEGIN
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceCharge, 0)
+                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
                                    THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceCharge, 0) 
+                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
                                     AND @InsuranceAmount < 5000
                                    THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
                                WHEN @InsuranceAmount >= 5000
