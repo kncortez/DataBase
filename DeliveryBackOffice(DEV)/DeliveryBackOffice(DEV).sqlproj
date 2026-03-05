@@ -167,6 +167,7 @@
     <Build Include="dbo\Tables\WebhookEndpoint.sql" />
     <Build Include="dbo\Tables\WebhookCatTypeConnection.sql" />
     <Build Include="dbo\Tables\Warehouse.sql" />
+    <Build Include="dbo\Tables\Workflow.sql" />
     <Build Include="dbo\Tables\VisitPointItinerary_Copy.sql" />
     <Build Include="dbo\Tables\VisitPointItinerary.sql" />
     <Build Include="dbo\Tables\VisitPointFrequency.sql" />
@@ -1315,6 +1316,7 @@
     <Build Include="dbo\Stored Procedures\UpdateInvoiceHelperExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\UpdateExternalPlatformServicePendingAction.sql" />
     <Build Include="dbo\Stored Procedures\UpadateDeliverySettlementDetail.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateWorkflow.sql" />
     <Build Include="dbo\Stored Procedures\TrackRequestedGuides.sql" />
     <Build Include="dbo\Stored Procedures\TestTSE.sql" />
     <Build Include="dbo\Stored Procedures\SupportSetReversalStatus.sql" />
@@ -1766,6 +1768,7 @@
     <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />
     <Build Include="dbo\Stored Procedures\CreateCredentialsIntegration.sql" />
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
+    <Build Include="dbo\Stored Procedures\CreateWorkflow.sql" />
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
     <Build Include="dbo\Stored Procedures\CompleteGuideGenerationExpressCenter.sql" />
     <Build Include="dbo\Stored Procedures\CollectRouteReport.sql" />
