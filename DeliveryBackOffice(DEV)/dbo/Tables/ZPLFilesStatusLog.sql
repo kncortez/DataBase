@@ -69,7 +69,7 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Registro hist√
 GO
 
 CREATE NONCLUSTERED INDEX IDX_ZPLFilesStatusLog_FileName
-ON ZPLFilesStatusLog(Filename);
+ON ZPLFilesStatusLog(FileName);
 
-CREATE NONCLUSTERED INDEX IDX_ZPLFilesStatusLog_Guide
+CREATE NONCLUSTERED INDEX IDX_ZPLFilesStatusLog_GuideSerie_GuideNumber
 ON ZPLFilesStatusLog(GuideSerie, GuideNumber);
