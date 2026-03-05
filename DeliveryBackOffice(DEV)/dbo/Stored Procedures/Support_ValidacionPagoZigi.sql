@@ -13,7 +13,6 @@ AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRY
-
         -- PASO 1: Validar que se hayan enviado guías
         IF @Guides IS NULL OR LTRIM(RTRIM(@Guides)) = ''
         BEGIN
@@ -23,7 +22,6 @@ BEGIN
 
         -- PASO 2: Parsear la lista de guías en una tabla temporal
         DROP TABLE IF EXISTS #Guides;
-
         SELECT 
             TRY_CAST(LTRIM(RTRIM(value)) AS INT) AS GuideNumber
         INTO #Guides
@@ -39,19 +37,23 @@ BEGIN
 
         -- PASO 4: Consulta de pagos ZIGI
         SELECT
-            'Exito' AS Estado,
+            CASE 
+                WHEN PZ.ZigiTransactionId IS NULL THEN 'Sin registro'
+                WHEN PZ.ZigiLinkStatus != 'PAID'  THEN 'No pagado'
+                ELSE 'Exito' 
+            END AS Estado,
             PZ.ZigiLinkStatus,
             CONCAT(PZ.GuideSerie, PZ.GuideNumber) AS Guia,
+            G.GuideNumber AS GuideNumberBuscado,
             PZ.ZigiTransactionId,
             PZ.PaidAmount,
             PZ.CollectValue,
             PZ.CODValue,
             PZ.DateCreated
-        FROM DeliveryBackOffice.dbo.PaymentZigi PZ WITH(NOLOCK)
-        INNER JOIN #Guides G
+        FROM #Guides G
+        LEFT JOIN DeliveryBackOffice.dbo.PaymentZigi PZ WITH(NOLOCK)
             ON G.GuideNumber = PZ.GuideNumber
-        WHERE PZ.ZigiLinkStatus = 'PAID'
-          AND PZ.GuideSerie = 'FD'
+           AND PZ.GuideSerie = 'FD'
         ORDER BY PZ.DateCreated DESC;
 
     END TRY
