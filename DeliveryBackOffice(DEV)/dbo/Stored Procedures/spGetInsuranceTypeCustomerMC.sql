@@ -14,7 +14,7 @@ CREATE PROCEDURE [dbo].[spGetInsuranceTypeCustomerMC]
     @pTypeCustomer INT,
     @pId INT,
     @pIdCountry NVARCHAR(2) = 'GT',
-    @AppCode NVARCHAR(8) = ''
+    @AppOrigin NVARCHAR(8) = ''
 AS
 BEGIN
 
@@ -38,7 +38,7 @@ BEGIN
     SET @InsuranceExempt = 5000;
     SET @CollectRate = 4.00;
 
-    IF (@pIdCountry = 'GT' AND @AppCode = 'EXC')
+    IF (@pIdCountry = 'GT' AND @AppOrigin = 'EXC')
     BEGIN
 
          IF (@pTypeCustomer = 0) --INDIVIDUAL O CORPORATIVO
@@ -158,6 +158,13 @@ BEGIN
                     ,@InsuranceExempt
                     ,@CollectRate
                    )
+
+             SELECT
+                  InsuranceRate
+                 ,InsuranceCharge
+                 ,InsuranceExempt
+                 ,CollectRate
+             FROM @INSURANCEEXC
 
     END;
     END
