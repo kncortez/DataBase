@@ -1356,6 +1356,7 @@ BEGIN
               , Voucher = @OrderNumber
               , TokenUpdated = @TokenUpdated
               , DateUpdated = GETDATE()
+              , IdTypeOfMoneyCollect = 2
             FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
                 INNER JOIN @CostUpdated                  CU
                     ON CD.IdCost = CU.IdCost;
