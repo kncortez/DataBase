@@ -2,7 +2,7 @@
    SP:        UpdateWorkflow
    Propósito: Se actualiza un flujo de trabajo
    Autor:     Erick Hernandez
-   Historia:  ---
+   Historia:  FDAPI-5687
    Fecha:     2026-03-04
 
 === CHANGELOG ============================
