@@ -61,6 +61,7 @@ BEGIN
 		,CONVERT(VARCHAR, dod.DateCreated, 103) AS Delivery_Date
 		,CONVERT(VARCHAR(5), dod.DateCreated, 108) as Delivery_Time
 		,CAST( CAST( SUBSTRING(dp.PathSignature, CHARINDEX('id=', dp.PathSignature) + 3, LEN(dp.PathSignature) - CHARINDEX('id=', dp.PathSignature) + 3 + 1) AS XML ).value('text()[1]','VARBINARY(MAX)') AS VARCHAR(MAX) ) AS SignatureFileName
+		,dp.PathSignature AS URLIMG
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN [DeliveryBackOffice].[dbo].deliveryorderdetail dod WITH(NOLOCK) 
 			ON do.Guide_Serie = dod.Guide_Serie AND do.Guide_Number = dod.Guide_Number   

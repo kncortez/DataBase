@@ -1,15 +1,21 @@
-﻿-- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2022-08-29>
--- Description:	<SP para Modificar bandera de devolución (IsLastMileReturn)>
--- =============================================
--- Author:		<Brandon Pedroza>
--- Create date: <2024-05-29>
--- Description:	<Se realiza modificacion para invertir los codigos de pais para origen y destino al hacer una devolucion>
--- =============================================
-CREATE procedure [dbo].[SPHD_ModifyReturnStatement]
+﻿/* =================================================
+   SP:        SPHD_ModifyReturnStatement
+   Propósito: SP para modificar bandera de devolución (IsLastMileReturn)
+   Autor:     Edelman Vásquez
+   Historia:  ---
+   Fecha:     2022-08-29
+
+=== CHANGELOG ============================
+
+2024-05-29 | Historia/épica: ---          | Autor: Brandon Pedroza | Se realiza modificación para invertir los códigos de país de origen y destino al realizar una devolución
+2025-12-30 | Historia/épica: FDAPI-4762   | Autor: Brandon Pedroza | Se almacena IdStation al declarar devolucion en desktop
+2025-12-30 | Historia/épica: FDAPI-4763   | Autor: Brandon Pedroza | Se almacena IdStation al hacer reversion de declaracion de devolucion
+
+=========================================== */
+CREATE PROCEDURE [dbo].[SPHD_ModifyReturnStatement]
     @TblListGuideActa TblListGuideActa readonly
   , @Token nvarchar(50)
+  , @StationId INT = NULL
 as
 begin
 
@@ -23,19 +29,8 @@ begin
         declare @Numero as int;
         declare @Serie as nvarchar(2);
         declare @STATUS as int;
-        declare @STATUSDECLAREDRETURNED_DO int =
-                (
-                    select top 1
-                           [SO].[StatusOrderId]
-                    from [dbo].[StatusOrder] [SO] with (nolock)
-                    where [OrderDescription] = 'Declarado para Devolución'
-                );
-        declare @StatusReversal int =
-                (
-                    select [StatusOrderId]
-                    from [dbo].[StatusOrder]
-                    where [OrderDescription] = 'Guía revertida para entrega'
-                );
+        declare @STATUSDECLAREDRETURNED_DO int = 32; --StatusOrder -> 'Declarado para Devolución'
+        declare @StatusReversal int =48; --StatusOrder -> 'Guía revertida para entrega'
         declare @RevalueGuides as table
         (
             [GuideSerie] nvarchar(2)
@@ -61,8 +56,8 @@ begin
             from @RevalueGuides [rg];
 
             select @STATUS = [DOD].[StatusOrderId],
-				   @SenderCountryId = ISNULL([DO].[SenderCountryId],'GT'),
-				   @ReceiverCountryId = ISNULL([DO].[ReceiverCountryId],'GT')
+				   @SenderCountryId = [DO].[SenderCountryId],
+				   @ReceiverCountryId = [DO].[ReceiverCountryId]
             from [dbo].[DeliveryOrderDetail] DOD with (nolock)
 			inner join [dbo].[DeliveryOrder] DO with (nolock)
 			on [DOD].[Guide_Serie] = [DO].[Guide_Serie] and [DOD].[Guide_Number] = [DO].[Guide_Number]
@@ -113,9 +108,10 @@ begin
                   , [DateCreated]
                   , [DateCreatedInSystem]
                   , [RowStatus]
+                  , [StationId]
                 )
                 values
-                (@Serie, @Numero, @STATUSDECLAREDRETURNED_DO, @Token, getdate(), getdate(), 1);
+                (@Serie, @Numero, @STATUSDECLAREDRETURNED_DO, @Token, getdate(), getdate(), 1,@StationId);
             end;
             else
             begin
@@ -145,9 +141,10 @@ begin
                   , [DateCreated]
                   , [DateCreatedInSystem]
                   , [RowStatus]
+                  , [StationId]
                 )
                 values
-                (@Serie, @Numero, @StatusReversal, @Token, getdate(), getdate(), 1);
+                (@Serie, @Numero, @StatusReversal, @Token, getdate(), getdate(), 1, @StationId);
 
                 insert into @GuidesModify
                 (
