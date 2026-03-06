@@ -168,6 +168,7 @@
     <Build Include="dbo\Tables\WebhookCatTypeConnection.sql" />
     <Build Include="dbo\Tables\Warehouse.sql" />
     <Build Include="dbo\Tables\Workflow.sql" />
+    <Build Include="dbo\Tables\WorkflowStatusMap.sql" />
     <Build Include="dbo\Tables\VisitPointItinerary_Copy.sql" />
     <Build Include="dbo\Tables\VisitPointItinerary.sql" />
     <Build Include="dbo\Tables\VisitPointFrequency.sql" />
@@ -1744,6 +1745,7 @@
     <Build Include="dbo\Stored Procedures\GetBatchGuideRemissionByCountry.sql" />
     <Build Include="dbo\Stored Procedures\GetArticlesSAP.sql" />
     <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
+    <Build Include="dbo\Stored Procedures\GetAllWorkflows.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertsOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_TEST.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_BNHL.sql" />
