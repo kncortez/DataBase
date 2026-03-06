@@ -3,6 +3,11 @@
 -- Create date: <2025-11-25>
 -- Description:	<Obtener data de cliente para forzaPay>
 -- =============================================
+-- =============================================
+-- Author:		<Marcelo Del Aguila>
+-- Create date: <2026-03-06>
+-- Description:	<Ajuste en nombre mostrado según tipo de cuenta>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_GetCustomerFullData]
     @IdCustomer INT
 AS
@@ -10,24 +15,29 @@ BEGIN
     SET NOCOUNT ON;
 
     -- 1. DATOS PRINCIPALES
-    SELECT 
-        p.PerFirstName AS Nombres,
-        p.PerLastName AS Apellidos,
-        p.PerIdentification AS DPI,
-        p.PerBirthdate AS FechaNacimiento,
-        p.PerGender AS Genero,
-        p.PerNationality AS Nacionalidad,
-        c.Abbreviation AS SobreNombre,
-		ru.PrefixCallingCode AS PrefijoTelefono,
-        ru.Phone AS Telefono,
-		c.CommercialName AS NombreComercial,
-		ru.UsrEmail AS Correo
-    FROM [DeliveryBackOffice].[dbo].[Customer] c WITH(NOLOCK)
-    INNER JOIN [DeliveryBackOffice].[dbo].[Account] a WITH(NOLOCK) ON a.IdCustomer = c.IdCustomer
-    INNER JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] rua WITH(NOLOCK) ON rua.RuaIdAccount = a.AccIdAccount
-    INNER JOIN [DeliveryBackOffice].[dbo].[RegisterUser] ru WITH(NOLOCK) ON ru.UsrIdUser = rua.RuaIdUser
-    INNER JOIN [DeliveryBackOffice].[dbo].[Person] p WITH(NOLOCK) ON p.PerIdPerson = ru.UsrIdPerson
-    WHERE c.IdCustomer = @IdCustomer;
+    SELECT
+    p.PerFirstName AS Nombres,
+    p.PerLastName AS Apellidos,
+    p.PerIdentification AS DPI,
+    p.PerBirthdate AS FechaNacimiento,
+    p.PerGender AS Genero,
+    p.PerNationality AS Nacionalidad,
+    c.Abbreviation AS SobreNombre,
+    ru.PreFixCallingCode AS PrefijoTelefono,
+    ru.Phone AS Telefono,
+    CASE
+        WHEN a.AccIdTypeAccount = 1
+            THEN COALESCE(NULLIF(ru.UsrNickName, ''), ru.CommercialName)
+        ELSE
+            ru.CommercialName
+    END AS NombreComercial,
+    ru.UsrEmail AS Correo
+FROM [DeliveryBackOffice].[dbo].[Customer] c WITH(NOLOCK)
+INNER JOIN [DeliveryBackOffice].[dbo].[Account] a WITH(NOLOCK) ON a.IdCustomer = c.IdCustomer
+INNER JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] rua WITH(NOLOCK) ON rua.RuaIdAccount = a.AccIdAccount
+INNER JOIN [DeliveryBackOffice].[dbo].[RegisterUser] ru WITH(NOLOCK) ON ru.UsrIdUser = rua.RuaIdUser
+INNER JOIN [DeliveryBackOffice].[dbo].[Person] p WITH(NOLOCK) ON p.PerIdPerson = ru.UsrIdPerson
+WHERE c.IdCustomer = @IdCustomer;
 
     -- 2. DATOS DE FACTURACIÓN
     SELECT DISTINCT
