@@ -1182,7 +1182,8 @@ BEGIN
             UPDATE rd
             SET rd.RowStatus = 'FALSE',
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1195,7 +1196,8 @@ BEGIN
             UPDATE rd
             SET rd.RowStatus = 'FALSE',
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1209,7 +1211,8 @@ BEGIN
             SET rd.WeightTo = twr.WeightTo,
                 rd.RateValue = twr.Local,
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1217,6 +1220,7 @@ BEGIN
             WHERE twr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
                   AND rd.TypeSegmentId = @LOC
+                  AND rd.RateId = @IdRate
                   AND twr.State = 2;
 
             --Actualizar rango de pesos STD MET
@@ -1224,7 +1228,8 @@ BEGIN
             SET rd.WeightTo = twr.WeightTo,
                 rd.RateValue = twr.Metro,
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1232,6 +1237,7 @@ BEGIN
             WHERE twr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
                   AND rd.TypeSegmentId = @MET
+                  AND rd.RateId = @IdRate
                   AND twr.State = 2;
 
             --Actualizar rango de pesos STD FOR
@@ -1239,7 +1245,8 @@ BEGIN
             SET rd.WeightTo = twr.WeightTo,
                 rd.RateValue = twr.Foraneo,
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1247,6 +1254,7 @@ BEGIN
             WHERE twr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
                   AND rd.TypeSegmentId = @FOR
+                  AND rd.RateId = @IdRate
                   AND twr.State = 2;
 
             --Actualizar rango de pesos STD ESP
@@ -1254,7 +1262,8 @@ BEGIN
             SET rd.WeightTo = twr.WeightTo,
                 rd.RateValue = twr.Especial,
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1262,6 +1271,7 @@ BEGIN
             WHERE twr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
                   AND rd.TypeSegmentId = @ESP
+                  AND rd.RateId = @IdRate
                   AND twr.State = 2;
 
             --Actualizar rango de pesos COD LOCAL
@@ -1269,7 +1279,8 @@ BEGIN
             SET rd.WeightTo = twr.WeightTo,
                 rd.RateValue = twr.Local,
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1277,6 +1288,7 @@ BEGIN
             WHERE twr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
                   AND rd.TypeSegmentId = @LOC
+                  AND rd.RateId = @IdRate
                   AND twr.State = 2;
 
             --Actualizar rango de pesos COD MET
@@ -1284,7 +1296,8 @@ BEGIN
             SET rd.WeightTo = twr.WeightTo,
                 rd.RateValue = twr.Metro,
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1292,6 +1305,7 @@ BEGIN
             WHERE twr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
                   AND rd.TypeSegmentId = @MET
+                  AND rd.RateId = @IdRate
                   AND twr.State = 2;
 
             --Actualizar rango de pesos COD FOR
@@ -1299,7 +1313,8 @@ BEGIN
             SET rd.WeightTo = twr.WeightTo,
                 rd.RateValue = twr.Foraneo,
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1307,6 +1322,7 @@ BEGIN
             WHERE twr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
                   AND rd.TypeSegmentId = @FOR
+                  AND rd.RateId = @IdRate
                   AND twr.State = 2;
 
             --Actualizar rango de pesos COD ESP
@@ -1314,7 +1330,8 @@ BEGIN
             SET rd.WeightTo = twr.WeightTo,
                 rd.RateValue = twr.Especial,
                 rd.TokenUpdated = @Token,
-                rd.DateUpdated = GETDATE()
+                rd.DateUpdated = GETDATE(),
+                rd.RateIdUpdated = @IdRate
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
@@ -1322,6 +1339,7 @@ BEGIN
             WHERE twr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
                   AND rd.TypeSegmentId = @ESP
+                  AND rd.RateId = @IdRate
                   AND twr.State = 2;
 
             --Insertar rango de pesos STD LOC
@@ -1335,7 +1353,8 @@ BEGIN
                 TokenCreated,
                 DateCreated,
                 WeightFrom,
-                WeightTo
+                WeightTo,
+                RateIdUpdated
             )
             SELECT @IdRate,
                    @STD,
@@ -1345,7 +1364,8 @@ BEGIN
                    @Token,
                    GETDATE(),
                    WeightFrom,
-                   WeightTo
+                   WeightTo,
+                   @IdRate
             FROM @TblWeightRate
             WHERE CatTypeService = 1
                   AND State = 1;
@@ -1361,7 +1381,8 @@ BEGIN
                 TokenCreated,
                 DateCreated,
                 WeightFrom,
-                WeightTo
+                WeightTo,
+                RateIdUpdated
             )
             SELECT @IdRate,
                    @STD,
@@ -1371,7 +1392,8 @@ BEGIN
                    @Token,
                    GETDATE(),
                    WeightFrom,
-                   WeightTo
+                   WeightTo,
+                   @IdRate
             FROM @TblWeightRate
             WHERE CatTypeService = 1
                   AND State = 1;
@@ -1387,7 +1409,8 @@ BEGIN
                 TokenCreated,
                 DateCreated,
                 WeightFrom,
-                WeightTo
+                WeightTo,
+                RateIdUpdated
             )
             SELECT @IdRate,
                    @STD,
@@ -1397,7 +1420,8 @@ BEGIN
                    @Token,
                    GETDATE(),
                    WeightFrom,
-                   WeightTo
+                   WeightTo,
+                   @IdRate
             FROM @TblWeightRate
             WHERE CatTypeService = 1
                   AND State = 1;
@@ -1413,7 +1437,8 @@ BEGIN
                 TokenCreated,
                 DateCreated,
                 WeightFrom,
-                WeightTo
+                WeightTo,
+                RateIdUpdated
             )
             SELECT @IdRate,
                    @STD,
@@ -1423,7 +1448,8 @@ BEGIN
                    @Token,
                    GETDATE(),
                    WeightFrom,
-                   WeightTo
+                   WeightTo,
+                   @IdRate
             FROM @TblWeightRate
             WHERE CatTypeService = 1
                   AND State = 1;
@@ -1439,7 +1465,8 @@ BEGIN
                 TokenCreated,
                 DateCreated,
                 WeightFrom,
-                WeightTo
+                WeightTo,
+                RateIdUpdated
             )
             SELECT @IdRate,
                    @COD,
@@ -1449,7 +1476,8 @@ BEGIN
                    @Token,
                    GETDATE(),
                    WeightFrom,
-                   WeightTo
+                   WeightTo,
+                   @IdRate
             FROM @TblWeightRate
             WHERE CatTypeService = 2
                   AND State = 1;
@@ -1465,7 +1493,8 @@ BEGIN
                 TokenCreated,
                 DateCreated,
                 WeightFrom,
-                WeightTo
+                WeightTo,
+                RateIdUpdated
             )
             SELECT @IdRate,
                    @COD,
@@ -1475,7 +1504,8 @@ BEGIN
                    @Token,
                    GETDATE(),
                    WeightFrom,
-                   WeightTo
+                   WeightTo,
+                   @IdRate
             FROM @TblWeightRate
             WHERE CatTypeService = 2
                   AND State = 1;
@@ -1491,7 +1521,8 @@ BEGIN
                 TokenCreated,
                 DateCreated,
                 WeightFrom,
-                WeightTo
+                WeightTo,
+                RateIdUpdated
             )
             SELECT @IdRate,
                    @COD,
@@ -1501,7 +1532,8 @@ BEGIN
                    @Token,
                    GETDATE(),
                    WeightFrom,
-                   WeightTo
+                   WeightTo,
+                   @IdRate
             FROM @TblWeightRate
             WHERE CatTypeService = 2
                   AND State = 1;
@@ -1517,7 +1549,8 @@ BEGIN
                 TokenCreated,
                 DateCreated,
                 WeightFrom,
-                WeightTo
+                WeightTo,
+                RateIdUpdated
             )
             SELECT @IdRate,
                    @COD,
@@ -1527,7 +1560,8 @@ BEGIN
                    @Token,
                    GETDATE(),
                    WeightFrom,
-                   WeightTo
+                   WeightTo,
+                   @IdRate
             FROM @TblWeightRate
             WHERE CatTypeService = 2
                   AND State = 1;
