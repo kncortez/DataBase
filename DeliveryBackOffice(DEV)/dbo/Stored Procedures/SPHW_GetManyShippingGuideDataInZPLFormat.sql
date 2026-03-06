@@ -4,6 +4,8 @@
 -- Description:	<Description, Obtain data from several guides, for printing in ZPL format using the reference number (OrderNUmber)>
 -- =============================================
 
+DROP PROCEDURE SPHW_GetManyShippingGuideDataInZPLFormat
+
 -- Tabla temporal, formato de respuesta
 CREATE TYPE dbo.TblTicketList AS TABLE
 (
@@ -178,8 +180,7 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatDeliveryOptions] CDO WITH(NOLOCK)
 			   ON DO.IdDeliveryOption = CDO.IdDeliveryOption
 			LEFT JOIN [DeliveryBackOffice].[dbo].[RatebyCustomer] RC WITH(NOLOCK)
-			   ON DO.IdCustomer = RC.RbcIdCustomer  AND RC.RbcRowStatus = 1 AND
-				 (DO.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
+			   ON DO.IdCustomer = RC.RbcIdCustomer  AND RC.RbcRowStatus = 1
 			LEFT JOIN  [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK)
 			   ON RC.RbcIdRate= RH.RheId
 			INNER JOIN  [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
@@ -203,6 +204,7 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 			   ON vp.IdKindOfVPClient = KOVPC.IdKindOfVPClient
 		WHERE DO.StatusOrderId IN (@StatusGenerated, @StatusRequested, @StatusCollected) 
+			AND (DO.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
 		ORDER BY DO.DateCreated DESC;
 
 	END TRY
