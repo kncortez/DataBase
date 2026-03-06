@@ -1,18 +1,13 @@
--- =============================================
--- Author:		<Author,Erick Guerra>
--- Create date: <Create Date,2026-02-27>
--- Description:	<Description, Obtain data from several guides, for printing in ZPL format using the reference number (OrderNUmber)>
--- =============================================
-
-DROP PROCEDURE SPHW_GetManyShippingGuideDataInZPLFormat
-
--- Tabla temporal, formato de respuesta
-CREATE TYPE dbo.TblTicketList AS TABLE
-(
-	[IdCustomer]            INT NOT NULL,
-    [TicketNumber] NVARCHAR(150) NOT NULL
-);
-GO
+/* =================================================
+   SP:        [dbo].[SPHW_GetManyShippingGuideDataInZPLFormat]
+   Propósito: Obtener datos de varias guías, para procesar archivo ZPL, según TicketNumber.
+   Autor:     Erick Guerra
+   Historia:  FDAPI-5660
+   Fecha:     2026-02-27
+============================================
+=== CHANGELOG ================================
+2026-03-06	|	Épica: FDAPI-5556	|	Autor: Erick	|
+=========================================== */
 
 CREATE PROCEDURE [dbo].[SPHW_GetManyShippingGuideDataInZPLFormat]
 (
@@ -38,33 +33,13 @@ BEGIN
             RETURN;
         END;
 
-		DECLARE @StatusGenerated INT,
-			@StatusRequested INT,
-			@StatusCollected INT,
-			@IndividualWebSys INT,
-			@ExpressWebSys INT,
-			@CorporateWebSys INT,
-			@ParserSys INT;
-	
-		SELECT
-			@StatusGenerated = MAX(CASE WHEN SO.OrderDescription = 'Generado' THEN SO.StatusOrderId END),
-			@StatusRequested = MAX(CASE WHEN SO.OrderDescription = 'Solicitado' THEN SO.StatusOrderId END),
-			@StatusCollected = MAX(CASE WHEN SO.OrderDescription = 'Recolectado' THEN SO.StatusOrderId END)
-		FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
-		WHERE SO.OrderDescription IN ('Generado','Solicitado','Recolectado');
-
-		SELECT
-			@IndividualWebSys = MAX(CASE WHEN SysNameSystem = 'Hermes Web' THEN SysIdSystem END),
-			@ExpressWebSys    = MAX(CASE WHEN SysNameSystem = 'Hermes Web-ExpressCenter' THEN SysIdSystem END),
-			@CorporateWebSys  = MAX(CASE WHEN SysNameSystem = 'Hermes Web-Corporativo' THEN SysIdSystem END),
-			@ParserSys        = MAX(CASE WHEN SysNameSystem = 'Parser' THEN SysIdSystem END)
-		FROM [DeliveryBackOffice].[dbo].[CatSystem] WITH (NOLOCK)
-		WHERE SysNameSystem IN (
-			'Hermes Web',
-			'Hermes Web-ExpressCenter',
-			'Hermes Web-Corporativo',
-			'Parser'
-		);
+		DECLARE @StatusGenerated INT = 15,
+			@StatusRequested INT = 1,
+			@StatusCollected INT = 2,
+			@IndividualWebSys INT = 1,
+			@ExpressWebSys INT = 10,
+			@CorporateWebSys INT = 11,
+			@ParserSys INT = 7;
 
 		SELECT
             200 AS ResponseCode,
@@ -183,9 +158,26 @@ BEGIN
 			   ON DO.IdCustomer = RC.RbcIdCustomer  AND RC.RbcRowStatus = 1
 			LEFT JOIN  [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK)
 			   ON RC.RbcIdRate= RH.RheId
-			INNER JOIN  [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
-			   ON DO.Guide_Serie = DOP.GuideSerie AND
-				  DO.Guide_Number = DOP.GuideNumber
+			INNER JOIN (
+				SELECT 
+					dop.GuideSerie,
+					dop.GuideNumber,
+					SUM(dop.PieceWeight) AS PieceWeight,
+					SUM(dop.PiecePhysicalWeight) AS PiecePhysicalWeight,
+					STRING_AGG(CAST(dop.Detail AS VARCHAR(MAX)), ', ') AS Detail
+				FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder dof WITH(NOLOCK)
+					ON dop.GuideSerie = dof.Guide_Serie
+					AND dop.GuideNumber = dof.Guide_Number
+				INNER JOIN @Tickets t
+					ON dof.Ticket_Number = t.TicketNumber
+					AND dof.IdCustomer = t.IdCustomer
+				GROUP BY 
+					dop.GuideSerie,
+					dop.GuideNumber
+			) DOP
+			ON DO.Guide_Serie = DOP.GuideSerie
+			AND DO.Guide_Number = DOP.GuideNumber
 			LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
 			   ON  DOPD.GuideSerie = DO.Guide_Serie AND  
 				   DOPD.GuideNumber = DO.Guide_Number
@@ -204,8 +196,7 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK)
 			   ON vp.IdKindOfVPClient = KOVPC.IdKindOfVPClient
 		WHERE DO.StatusOrderId IN (@StatusGenerated, @StatusRequested, @StatusCollected) 
-			AND (DO.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
-		ORDER BY DO.DateCreated DESC;
+			AND DO.Sender_ID = ISNULL(RC.RbcCodeOfReference, DO.Sender_ID);
 
 	END TRY
 	BEGIN CATCH

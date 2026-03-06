@@ -1,6 +1,6 @@
 CREATE TABLE ClientConfigurationZPL (
     [IdCustomer]        INT PRIMARY KEY,
-    [IsActiveService]   BIT NOT NULL DEFAULT 0,
+    [RowStatus]   BIT NOT NULL DEFAULT 0,
     [TokenCreated]      NVARCHAR(50) NOT NULL,
     [DateCreated]       DATETIME NOT NULL DEFAULT SYSDATETIME(),
     [TokenUpdated]      NVARCHAR(50) NULL,
@@ -14,7 +14,7 @@ CREATE TABLE ClientConfigurationZPL (
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador único de cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ClientConfigurationZPL', @level2type=N'COLUMN',@level2name=N'IdCustomer'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'El servicio de impresión ZPL está habilitado para el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ClientConfigurationZPL', @level2type=N'COLUMN',@level2name=N'IsActiveService'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'El servicio de impresión ZPL está habilitado para el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ClientConfigurationZPL', @level2type=N'COLUMN',@level2name=N'RowStatus'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creación' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ClientConfigurationZPL', @level2type=N'COLUMN',@level2name=N'TokenCreated'
