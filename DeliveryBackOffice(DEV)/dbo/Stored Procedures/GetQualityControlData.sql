@@ -28,8 +28,8 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie											NVARCHAR(2) = ''
-  , @GuideNumber										INT
-  , @TblHubLogistic				TblHubLogistic			READONLY
+  , @GuideNumber										INT = NULL  -- NULL = sin filtro por guía específica
+  , @TblHubLogistic			TblHubLogistic			READONLY
   , @TblCustomerType			TblCustomerType			READONLY
   , @TblCustomer				TblCustomer				READONLY
   , @TblVisitPointClient		TblVisitPointClient		READONLY
@@ -46,7 +46,8 @@ BEGIN
 		--VARIABLES: contadores en ruta y entregadas
         DECLARE @Pending_Counter	INT = 0,
                 @Delivered_Counter	INT = 0,
-				@DateToday			DATE = GETDATE(); 
+				@DateToday			DATE = GETDATE(),
+				@DateTomorrow		DATE = DATEADD(DAY, 1, GETDATE()); 
 
 		--======================================================================================================
 		--======================================= TABLAS TEMPORALES ============================================
@@ -155,7 +156,7 @@ BEGIN
 				AND ( NOT EXISTS (SELECT 1 FROM @TblHubLogistic) OR HBL.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic))
 			) HUbs
 		WHERE 
-			DSD.DateCreated >= @DateToday AND DSD.DateCreated < DATEADD(DAY, 1, @DateToday)
+			DSD.DateCreated >= @DateToday AND DSD.DateCreated < @DateTomorrow
             AND DO.StatusOrderId NOT IN (45,50)
             AND DSD.RowStatus = 1
 			AND ISNULL(DSD.Guide_Settlement,0) = 0
@@ -178,9 +179,10 @@ BEGIN
 			FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DS WITH (NOLOCK)
 				ON DSD.ID_DeliveryORderBYSettlement = DS.ID
-			WHERE DSD.DateCreated >= @DateToday AND DSD.DateCreated < DATEADD(DAY, 1, @DateToday)
+			WHERE DSD.DateCreated >= @DateToday AND DSD.DateCreated < @DateTomorrow
 				AND DSD.rowstatus = 1
-				AND (@GuideNumber = 0 OR (DSD.Guide_Serie = @GuideSerie AND DSD.Guide_Number = @GuideNumber))
+				-- OR para filtro opcional: NULL = todas las guías, valor = guía específica. OPTION (RECOMPILE) optimiza el plan.
+				AND (@GuideNumber IS NULL OR (DSD.Guide_Serie = @GuideSerie AND DSD.Guide_Number = @GuideNumber))
 		)
 		-- Paso 2: OUTER APPLY solo sobre liquidaciones filtradas
 		INSERT INTO #TodaysCheckpointsDetail
@@ -217,10 +219,12 @@ BEGIN
 			ORDER BY DateCreated DESC
 		) GDD
 		WHERE GDD.statusorderid IN ( 45, 50 ) --solo incidencias confirmadas y pendientes para el detalle
+			-- OR: sin guía específica filtra por país; con guía específica ignora país (permite buscar guía de cualquier país)
 			AND 
-				((@GuideNumber = 0 AND ISNULL(GDD.SenderCountryId, 'GT') = @IdCountry) 
+				((@GuideNumber IS NULL AND ISNULL(GDD.SenderCountryId, 'GT') = @IdCountry) 
 				OR 
-				(GDD.Guide_Serie = @GuideSerie AND GDD.guide_number = @GuideNumber));
+				(GDD.Guide_Serie = @GuideSerie AND GDD.guide_number = @GuideNumber))
+		OPTION (RECOMPILE);
 
 
 		;WITH FilteredGuides AS (
@@ -239,11 +243,12 @@ BEGIN
 				ON DO.Guide_Serie = DOD.Guide_Serie AND DO.Guide_Number = DOD.Guide_Number
 				AND DO.StatusOrderId = DOD.StatusOrderId
 			WHERE 
-				DOD.DateCreated >= @DateToday AND DOD.DateCreated < DATEADD(DAY, 1, @DateToday)
+				DOD.DateCreated >= @DateToday AND DOD.DateCreated < @DateTomorrow
 				AND DOD.StatusOrderId IN (45, 50)
 				AND DOD.SystemOrigin IN (2, 5)
+				-- OR: sin guía específica filtra por país; con guía específica ignora país (permite buscar guía de cualquier país)
 				AND 
-					((@GuideNumber = 0 AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry) 
+					((@GuideNumber IS NULL AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry) 
 					OR 
 					(DOD.Guide_Serie = @GuideSerie AND DOD.Guide_Number = @GuideNumber))
 		)
@@ -275,10 +280,12 @@ BEGIN
 			WHERE 
 				DSD.Guide_Serie = FG.Guide_Serie 
 				AND DSD.Guide_Number = FG.Guide_Number
+				-- OR: incluye liquidaciones de días anteriores o registros sin liquidación asociada
 				AND (DSD.ID IS NULL OR DSD.DateCreated < @DateToday)
 				AND DSD.RowStatus = 1
 			ORDER BY FG.DateCreated DESC, DSD.DateCreated DESC
-		) AS AP;
+		) AS AP
+		OPTION (RECOMPILE);
 
 		--======================================================================================================
 		--============================= INSERT DetailGetQualityControlData =====================================
@@ -482,7 +489,8 @@ BEGIN
 			[ShippmentCurrencySymbol],
 			[CODCurrencySymbol]
 		FROM #DetailGetQualityControlData
-		WHERE UnConfirmationIncidents = 1 OR ConfirmationIncidents = 1
+		-- Se lee como "tiene al menos una incidencia"
+		WHERE (UnConfirmationIncidents + ConfirmationIncidents) >= 1
 		ORDER BY ConfirmationIncidents ASC, EventDate ASC;
 
 
