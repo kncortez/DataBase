@@ -52,6 +52,7 @@ BEGIN
            AND DO.Guide_Number = DSD.Guide_Number
         WHERE DSD.ID_DeliveryOrderBySettlement = @ID_DeliveryOrderBySettlement
         AND DO.IsLastMileReturn = 0
+        AND DO.IsCollect = 1
     )
 
 -- BLOQUE 1: COD (TRANSFERENCIAS)
