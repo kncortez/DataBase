@@ -4,48 +4,46 @@
    Autor:     IRVIN GONZALEZ
    Historia:  FDAPI-5301
    Fecha:     2025-12-19
-============================================
-=== CHANGELOG ============================
-2025-12-19 | Historia: FDAPI-5301 | Autor: IRVIN GONZALEZ |
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_RefacturacionSuscripcion
-    @CodigoCertificacionFEL NVARCHAR(100),   -- Código de certificación FEL
-    @NumeroVoucher NVARCHAR(100),             -- Número de voucher/autorización
-    @TokenUpdate NVARCHAR(100)                -- Token del usuario que realiza el cambio
+    @CodigoCertificacionFEL NVARCHAR(200), 
+    @NumeroVoucher NVARCHAR(50)
 AS
 BEGIN
     SET NOCOUNT ON;
 
     BEGIN TRY
         
-        -- PASO 1: Validar existencia y estado de la factura (InvoiceHeader)
+        -- PASO 1: Validar existencia y estado de la factura
         DECLARE @InvoiceHeaderId INT;
-        DECLARE @InvoiceStatus INT;
+        DECLARE @InvoiceStatus   INT;
+        DECLARE @PaisFactura     NVARCHAR(4);
 
         SELECT TOP 1
             @InvoiceHeaderId = INV_PK_Id,
-            @InvoiceStatus = inv_status
+            @InvoiceStatus   = inv_status,
+            @PaisFactura     = inv_CountryFEL
         FROM DeliveryBackOffice.dbo.InvoiceHeader WITH (NOLOCK)
         WHERE inv_certificationFEL = @CodigoCertificacionFEL;
 
         IF @InvoiceHeaderId IS NULL
         BEGIN
             SELECT 
-                'Error' AS Estado,
+                'Error'                                           AS Estado,
                 'No fue posible encontrar la factura solicitada.' AS Mensaje,
-                @CodigoCertificacionFEL AS CodigoCertificacionFEL;
+                @CodigoCertificacionFEL                           AS CodigoCertificacionFEL;
             RETURN;
         END
 
         IF @InvoiceStatus = -1
         BEGIN
             SELECT 
-                'Error' AS Estado,
+                'Error'                                                                       AS Estado,
                 'La factura se encuentra en estado ANULADO. No se puede asociar suscripción.' AS Mensaje,
-                @CodigoCertificacionFEL AS CodigoCertificacionFEL,
-                @InvoiceHeaderId AS InvoiceHeaderId,
-                @InvoiceStatus AS EstadoFactura;
+                @CodigoCertificacionFEL                                                       AS CodigoCertificacionFEL,
+                @InvoiceHeaderId                                                              AS InvoiceHeaderId,
+                @InvoiceStatus                                                                AS EstadoFactura;
             RETURN;
         END
 
@@ -60,10 +58,10 @@ BEGIN
         IF @SubscriptionIdActual IS NOT NULL AND @SubscriptionIdActual <> 0
         BEGIN
             SELECT 
-                'Error' AS Estado,
+                'Error'                                          AS Estado,
                 'La factura ya está asociada a una suscripción.' AS Mensaje,
-                @InvoiceHeaderId AS InvoiceHeaderId,
-                @SubscriptionIdActual AS SuscripcionActual;
+                @InvoiceHeaderId                                 AS InvoiceHeaderId,
+                @SubscriptionIdActual                            AS SuscripcionActual;
             RETURN;
         END
 
@@ -75,9 +73,41 @@ BEGIN
         )
         BEGIN
             SELECT 
-                'Error' AS Estado,
-                'Voucher no encontrado en el registro de transacciones. Validar con departamento comercial.' AS Mensaje,
-                @NumeroVoucher AS NumeroVoucher;
+                'Error'                                                  AS Estado,
+                'Voucher no encontrado en el registro de transacciones.' AS Mensaje,
+                @NumeroVoucher                                           AS NumeroVoucher;
+            RETURN;
+        END
+
+        -- PASO 3.5: Validar que el país de la factura coincida con el país del cliente en la transacción
+        DECLARE @PaisTransaccion NVARCHAR(2);
+
+        SELECT TOP 1
+            @PaisTransaccion = C.CountryID
+        FROM DeliveryBackOffice.dbo.RegistrationofTransactionProcessStates RT WITH (NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.Customer C WITH (NOLOCK)
+            ON C.IdCustomer = RT.CustomerId
+        WHERE RT.OrderNumber = @NumeroVoucher;
+
+        IF @PaisTransaccion IS NULL
+        BEGIN
+            SELECT 
+                'Error'                                                          AS Estado,
+                'No se pudo determinar el país del cliente asociado al voucher.' AS Mensaje,
+                @NumeroVoucher                                                   AS NumeroVoucher;
+            RETURN;
+        END
+
+        IF @PaisFactura <> @PaisTransaccion
+        BEGIN
+            SELECT 
+                'Error'                                                                        AS Estado,
+                'El país de la factura no coincide con el país del cliente en la transacción.' AS Mensaje,
+                @CodigoCertificacionFEL                                                        AS CodigoCertificacionFEL,
+                @InvoiceHeaderId                                                               AS InvoiceHeaderId,
+                @PaisFactura                                                                   AS PaisFactura,
+                @NumeroVoucher                                                                 AS NumeroVoucher,
+                @PaisTransaccion                                                               AS PaisTransaccion;
             RETURN;
         END
 
@@ -92,9 +122,9 @@ BEGIN
         IF @SubscriptionIdNuevo IS NULL
         BEGIN
             SELECT 
-                'Error' AS Estado,
+                'Error'                                                             AS Estado,
                 'No se encontró una suscripción asociada al voucher proporcionado.' AS Mensaje,
-                @NumeroVoucher AS NumeroVoucher;
+                @NumeroVoucher                                                      AS NumeroVoucher;
             RETURN;
         END
 
@@ -106,43 +136,29 @@ BEGIN
         FROM DeliveryBackOffice.dbo.InvoiceDetail WITH (NOLOCK)
         WHERE DTI_FK_Header = @InvoiceHeaderId;
 
-        UPDATE dbo.InvoiceDetail
+        UPDATE DeliveryBackOffice.dbo.InvoiceDetail
         SET 
             SubscriptionId = @SubscriptionIdNuevo
-       WHERE DTI_FK_Header = @InvoiceHeaderId;
+        WHERE DTI_FK_Header = @InvoiceHeaderId;
 
         -- RESULTADO EXITOSO: Mostrar antes y después
         SELECT 
-            'Éxito' AS Estado,
+            'Éxito'                                                      AS Estado,
             'Se ha asociado la suscripción con la factura exitosamente.' AS Mensaje,
-            @InvoiceHeaderId AS InvoiceHeaderId,
-            @SubscriptionIdAntes AS SubscriptionId_Antes,
-            @SubscriptionIdNuevo AS SubscriptionId_Despues,
-            @TokenUpdate AS UsuarioModificacion,
-            GETDATE() AS FechaModificacion;
+            @InvoiceHeaderId                                             AS InvoiceHeaderId,
+            @SubscriptionIdAntes                                         AS SubscriptionId_Antes,
+            @SubscriptionIdNuevo                                         AS SubscriptionId_Despues;
 
     END TRY
     BEGIN CATCH
         SELECT 
-            'Error' AS Estado,
+            'Error'                                                    AS Estado,
             'Ocurrió un error durante la ejecución del procedimiento.' AS Mensaje,
-            ERROR_NUMBER() AS ErrorNumero,
-            ERROR_MESSAGE() AS ErrorDescripcion,
-            ERROR_LINE() AS ErrorLinea;
+            ERROR_NUMBER()                                             AS ErrorNumero,
+            ERROR_MESSAGE()                                            AS ErrorDescripcion,
+            ERROR_LINE()                                               AS ErrorLinea;
 
         THROW;
     END CATCH
 END
 GO
-
-/*
-================================================================================
-EJEMPLO DE EJECUCIÓN
-================================================================================
-
-EXEC dbo.Support_RefacturacionSuscripcion 
-    @CodigoCertificacionFEL = N'C8457275-C3B7-4FC6-8DC6-34F806887CC1',
-    @NumeroVoucher           = N'214345',
-    @TokenUpdate             = N'SYS-IGONZALEZ';
-================================================================================
-*/
