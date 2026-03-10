@@ -4,9 +4,6 @@
    Autor:     IRVIN GONZALEZ
    Historia:  FDAPI-5302
    Fecha:     2025-12-19
-============================================
-=== CHANGELOG ============================
-2025-12-19 | Historia: FDAPI-5302 | Autor: IRVIN GONZALEZ |
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_CambioEstacionDespacho
@@ -20,34 +17,32 @@ BEGIN
     BEGIN TRY
         
         -- PASO 1: Validar existencia del manifiesto
-        
+        IF NOT EXISTS (
+            SELECT 1 FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement WITH (NOLOCK)
+            WHERE Id = @ManifiestoId
+        )
+        BEGIN
+            SELECT 'Error' AS Estado, 'El manifiesto solicitado no existe' AS Mensaje,
+            @ManifiestoId AS ManifiestoId;
+            RETURN;
+        END
+
+        -- PASO 2: Capturar estado anterior
         DECLARE @DispatchedStationIdAntes INT;
         DECLARE @SettlementStationIdAntes INT;
 
         SELECT TOP 1
             @DispatchedStationIdAntes = DispatchedStationId,
             @SettlementStationIdAntes = SettlementStationId
-        FROM dbo.DeliveryOrderBySettlement WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement WITH (NOLOCK)
         WHERE Id = @ManifiestoId;
-
-        -- Validar si el manifiesto existe
-        IF @DispatchedStationIdAntes IS NULL AND @SettlementStationIdAntes IS NULL
-        BEGIN
-            SELECT 
-                'Error' AS Estado,
-                'El manifiesto solicitado no existe' AS Mensaje,
-                @ManifiestoId AS ManifiestoId;
-            RETURN;
-        END
 
         -- PASO 2: Actualizar estación de despacho y liquidación
         
-        UPDATE dbo.DeliveryOrderBySettlement
+        UPDATE DeliveryBackOffice.dbo.DeliveryOrderBySettlement
         SET 
             DispatchedStationId = @NuevaEstacionId,
-            SettlementStationId = @NuevaEstacionId,
-            TokenUpdated = @TokenUpdate,
-            DateUpdated = GETDATE()
+            SettlementStationId = @NuevaEstacionId
         WHERE Id = @ManifiestoId;
 
         -- RESULTADO EXITOSO: Mostrar antes y después
@@ -59,9 +54,7 @@ BEGIN
             @DispatchedStationIdAntes AS DispatchedStationId_Antes,
             @NuevaEstacionId AS DispatchedStationId_Despues,
             @SettlementStationIdAntes AS SettlementStationId_Antes,
-            @NuevaEstacionId AS SettlementStationId_Despues,
-            @TokenUpdate AS UsuarioModificacion,
-            GETDATE() AS FechaModificacion;
+            @NuevaEstacionId AS SettlementStationId_Despues;
 
     END TRY
 
@@ -78,14 +71,3 @@ BEGIN
     END CATCH
 END
 GO
-
-/*
-================================================================================
-EJEMPLO DE EJECUCIÓN
-================================================================================
-EXEC dbo.Support_CambioEstacionDespacho 
-    @ManifiestoId = 654037,
-    @NuevaEstacionId = 360,
-    @TokenUpdate = 'SYS-IGONZALEZ';
-================================================================================
-*/
