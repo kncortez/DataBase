@@ -52,8 +52,8 @@ BEGIN
             PZ.DateCreated
         FROM #Guides G
         LEFT JOIN DeliveryBackOffice.dbo.PaymentZigi PZ WITH(NOLOCK)
-            ON G.GuideNumber = PZ.GuideNumber
-           AND PZ.GuideSerie = 'FD'
+            ON PZ.GuideSerie = 'FD'
+           AND G.GuideNumber = PZ.GuideNumber
         ORDER BY PZ.DateCreated DESC;
 
     END TRY
