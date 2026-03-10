@@ -4,10 +4,6 @@
    Autor:     IRVIN GONZALEZ
    Historia:  FDAPI-5391
    Fecha:     2026-01-17
-============================================
-=== CHANGELOG ================================
-2026-01-17 | Historia: FDAPI-5391 | Autor: IRVIN GONZALEZ |
-
 =========================================== */
 CREATE PROCEDURE dbo.Support_SetActivateandBlockCorporateUser
     @Status BIT,        
@@ -92,50 +88,50 @@ BEGIN
         DECLARE @NewAccessRetries INT = CASE WHEN @Status = 1 THEN 10 ELSE 0 END;
 
         -- UPDATE 1: InternalUser
-        UPDATE DeliveryBackOffice.dbo.InternalUser
+        UPDATE it
         SET 
             RowStatus = @Status,
             TokenUpdated = @Token,
             DateUpdated = GETDATE(),
             Comment = @Comment
-        FROM DeliveryBackOffice.dbo.InternalUser it
+        FROM DeliveryBackOffice.dbo.InternalUser it WITH(NOLOCK)
         INNER JOIN @UserData ud ON it.IdUser = ud.IdUser;
 
         -- UPDATE 2: RegisterUser
-        UPDATE DeliveryBackOffice.dbo.RegisterUser
+        UPDATE rg
         SET 
             UsrRowStatus = @Status,
             UsrTokenUpdated = @Token,
             UsrDateUpdated = GETDATE()
-        FROM DeliveryBackOffice.dbo.RegisterUser rg
+        FROM DeliveryBackOffice.dbo.RegisterUser rg WITH(NOLOCK)
         INNER JOIN @UserData ud ON rg.UsrIdUser = ud.RegisterUserID;
 
         -- UPDATE 3: Person
-        UPDATE DeliveryBackOffice.dbo.Person
+        UPDATE per
         SET 
             PerRowStatus = @Status,
             PerTokenUpdated = @Token,
             PerDateUpdated = GETDATE()
-        FROM DeliveryBackOffice.dbo.Person per
+        FROM DeliveryBackOffice.dbo.Person per WITH(NOLOCK)
         INNER JOIN @UserData ud ON per.PerIdPerson = ud.IdPerson;
 
         -- UPDATE 4: UserSystemRestriction
-        UPDATE DeliveryBackOffice.dbo.UserSystemRestriction
+        UPDATE res
         SET 
             UstStatus = @NewStatus,
             UstOperationDate = GETDATE(),
             UstAccessRetries = @NewAccessRetries,
             UstRetries = ISNULL(@NewRetries, res.UstRetries)
-        FROM DeliveryBackOffice.dbo.UserSystemRestriction res
+        FROM DeliveryBackOffice.dbo.UserSystemRestriction res WITH(NOLOCK)
         INNER JOIN @UserData ud ON res.UstIdUser = ud.RegisterUserID
         WHERE (@Status = 0 OR ud.CurrentUserStatus = 'BLOCKED');
 
         -- UPDATE 5: LGN_Restriction (Denarius)
-        UPDATE DenariusUser_Dev.dbo.LGN_Restriction
+        UPDATE lgn
         SET 
             RST_Status = @NewStatus,
             RST_Retries = ISNULL(@NewRetries, lgn.RST_Retries)
-        FROM DenariusUser_Dev.dbo.LGN_Restriction lgn
+        FROM DenariusUser_Dev.dbo.LGN_Restriction lgn WITH(NOLOCK)
         INNER JOIN @UserData ud ON lgn.RST_IdUser = ud.IdUser AND lgn.RST_Username = ud.Username
         WHERE (@Status = 0 OR lgn.RST_Status = 'BLOCKED');
 
