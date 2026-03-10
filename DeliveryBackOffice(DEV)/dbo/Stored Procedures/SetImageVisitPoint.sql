@@ -10,10 +10,9 @@
 =========================================== */
 
 CREATE PROCEDURE [dbo].[SetImageVisitPoint]
-	-- Add the parameters for the stored procedure here	
 	@TblIncidenceLink AS TblIncidenceLink READONLY,
 	@CodeOfReference  INT = 0,
-	@Accuracy    VARCHAR (200) = '44',
+	@Accuracy    NVARCHAR (200) = '44',
 	@Latitude VARCHAR  (200) = '55798797342',
 	@Longitude VARCHAR  (200) = '546689',
 	@Token VARCHAR (200) = '545656asdf564afd'
