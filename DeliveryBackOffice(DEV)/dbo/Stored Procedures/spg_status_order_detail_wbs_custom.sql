@@ -5,8 +5,9 @@
    Historia:  <FDAPI-5729>
    Fecha:     2026-03-04
 === CHANGELOG ================================
+2026-03-10 | Historia/épica: FDAPI-5785 | Autor: Tito García |
 =========================================== */
-ALTER PROCEDURE [dbo].[spg_status_order_detail_wbs_custom]
+CREATE PROCEDURE [dbo].[spg_status_order_detail_wbs_custom]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number INT
 AS
@@ -26,7 +27,8 @@ BEGIN
         Delivery_Max_Date DATETIME,
         NameOfReceiver NVARCHAR(400),
         Manifest_Serie NVARCHAR(50),
-        Manifest_Number INT
+        Manifest_Number INT,
+        Receiver_Phone NVARCHAR(50)
     );
 
     DECLARE @DeliveryOrderDetail TABLE
@@ -67,7 +69,8 @@ BEGIN
            do.Delivery_Max_Date,
            do.NameOfReceiver,
            do.Manifest_Serie,
-           do.Manifest_Number
+           do.Manifest_Number,
+           ISNULL(DO.Receiver_Phone, '')
     FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
     WHERE do.Guide_Serie = @Guide_Serie
           AND do.Guide_Number = @Guide_Number;
@@ -141,7 +144,8 @@ BEGIN
            RES.[CommentOnIncident],
            RES.[Timezone],
            RES.[TownshipName],
-           RES.[TownshipHeaderCode]
+           RES.[TownshipHeaderCode],
+           RES.[ReceiverPhone]
     FROM
     (
         SELECT 0 [EventID],
@@ -169,7 +173,8 @@ BEGIN
                '' AS [CommentOnIncident],
                '' AS [Timezone],
                '' AS [TownshipName],
-               '' AS [TownshipHeaderCode]
+               '' AS [TownshipHeaderCode],
+               do.Receiver_Phone AS [ReceiverPhone]
         FROM @DeliveryOrder do
             LEFT JOIN @DeliveryAttempt da
                 ON da.Guide_Serie = do.Guide_Serie
@@ -220,7 +225,8 @@ BEGIN
                CommentOnIncident,
                'GTM-6' AS [Timezone],
                DOD.TownshipName AS [TownshipName],
-               DOD.HeaderCode AS [TownshipHeaderCode]
+               DOD.HeaderCode AS [TownshipHeaderCode],
+               '' AS [ReceiverPhone]
         FROM @DeliveryOrderDetail DOD
             LEFT JOIN @DeliveryAttempt DA
                 ON DOD.Guide_Serie = DA.Guide_Serie
