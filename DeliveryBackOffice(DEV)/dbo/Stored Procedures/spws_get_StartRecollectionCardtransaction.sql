@@ -33,7 +33,7 @@ BEGIN
 	(
 		ITERATOR int Identity(1,1) 
 		,GuideNumber INT 
-		,SerieGuide VARCHAR(2)
+		,SerieGuide NVARCHAR(2)
 	);
 
 	;WITH CTE AS 
@@ -78,16 +78,32 @@ BEGIN
 	LEFT JOIN CTE1 C1 
 		ON C1.RN = C.RN;
 
-	SELECT 
-		@TOTALPAGAR = COUNT(1) 
-	FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail O WITH(NOLOCK)
-		INNER JOIN @TBGUIDES T
-			ON O.ProductNumber = T.GuideNumber 
-			AND O.SerieNumber = T.SerieGuide
-		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder D
-			ON D.Guide_Number = T.GuideNumber 
-			AND D.Guide_Serie = T.SerieGuide
-	where (D.IsCollect <> 1 OR D.IsCollect IS NULL);
+	SELECT
+    @TOTALPAGAR = COUNT(1)
+	FROM
+	(
+		SELECT CCTBC.ProductNumber
+		FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBC WITH(NOLOCK)
+		INNER JOIN @TBGUIDES GUIDE
+			ON CCTBC.SerieNumber = GUIDE.SerieGuide
+			AND CCTBC.ProductNumber = GUIDE.GuideNumber
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO
+			ON DO.Guide_Serie = GUIDE.SerieGuide
+			AND DO.Guide_Number = GUIDE.GuideNumber
+		WHERE DO.IsCollect <> 1
+
+		UNION ALL
+
+		SELECT CCTBC.ProductNumber
+		FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBC WITH(NOLOCK)
+		INNER JOIN @TBGUIDES GUIDE
+			ON CCTBC.SerieNumber = GUIDE.SerieGuide
+			AND CCTBC.ProductNumber = GUIDE.GuideNumber
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO
+			ON DO.Guide_Serie = GUIDE.SerieGuide
+			AND DO.Guide_Number = GUIDE.GuideNumber
+		WHERE DO.IsCollect IS NULL
+	) AS GUIDESTOPAY;
 		
 	IF (@TOTALPAGAR = 0) ---INTENTO 1 DE PAGO
 	BEGIN
@@ -128,8 +144,7 @@ BEGIN
 		
 		SET @IdTransaction = isnull(@@Identity,0)
 		
-		SELECT @TOTALPAGAR = COUNT(1) 
-		FROM @TBGUIDES T
+		SELECT @TOTALPAGAR = COUNT(1) FROM @TBGUIDES
 		
 		INSERT INTO 
 		DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail
@@ -138,22 +153,41 @@ BEGIN
 			,ProductNumber
 			,SerieNumber
 		)
-		SELECT distinct 
-			'HR'+CONVERT(VARCHAR,@IdTransaction), 
-			T.GuideNumber, 
-			T.SerieGuide 
-		FROM @TBGUIDES T
-			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder D WITH(NOLOCK)
-				ON D.Guide_Number = T.GuideNumber 
-				AND D.Guide_Serie = T.SerieGuide
-		WHERE (D.IsCollect <> 1 OR D.IsCollect IS NULL);
+		SELECT DISTINCT
+		GUIDESTOPAY.TransactionNumber,
+		GUIDESTOPAY.GuideNumber,
+		GUIDESTOPAY.SerieGuide
+		FROM
+		(
+			SELECT
+				CONCAT('HR' , @IdTransaction) AS TransactionNumber,
+				GUIDE.GuideNumber,
+				GUIDE.SerieGuide
+			FROM @TBGUIDES GUIDE
+				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+					ON DO.Guide_Number = GUIDE.GuideNumber
+					AND DO.Guide_Serie = GUIDE.SerieGuide
+			WHERE DO.IsCollect <> 1
+
+			UNION ALL
+
+			SELECT
+				CONCAT('HR' ,  @IdTransaction) AS TransactionNumber,
+				GUIDE.GuideNumber,
+				GUIDE.SerieGuide
+			FROM @TBGUIDES GUIDE
+				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+					ON DO.Guide_Number = GUIDE.GuideNumber
+					AND DO.Guide_Serie = GUIDE.SerieGuide
+			WHERE DO.IsCollect IS NULL
+		) AS GUIDESTOPAY;
 		
 
 		UPDATE DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-		SET OrderNumber =  'HR'+CONVERT(VARCHAR,@IdTransaction)
+		SET OrderNumber =  CONCAT('HR' , @IdTransaction)
 		WHERE IdTransaction = @IdTransaction
 
-		SELECT 'HR'+CONVERT(VARCHAR,@IdTransaction) OrderNumber, @TOTALPAGAR TOTAL; 
+		SELECT CONCAT('HR',@IdTransaction) OrderNumber, @TOTALPAGAR TOTAL; 
 	END
 	ELSE 
 		IF (@TOTALPAGAR > 0) ---REINTENTO DE PAGO
@@ -161,16 +195,16 @@ BEGIN
 			DECLARE @TMPOrderNumber VARCHAR(50) = '';
 
 			--validar si el pago es exitoso o sino generar otro No. de orden
-			SELECT top 1 @TMPOrderNumber = ISNULL(O.OrderNumber,'HR0') 
-			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail O WITH(NOLOCK)
-				INNER JOIN @TBGUIDES T
-					ON  O.ProductNumber = T.GuideNumber 
-					AND O.SerieNumber = T.SerieGuide;
+			SELECT top 1 @TMPOrderNumber = ISNULL(CCTBC.OrderNumber,'HR0') 
+			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBC WITH(NOLOCK)
+				INNER JOIN @TBGUIDES GUIDE
+					ON  CCTBC.ProductNumber = GUIDE.GuideNumber 
+					AND CCTBC.SerieNumber = GUIDE.SerieGuide;
 
 			SELECT @TOTALPAGAR = COUNT(1) 
-			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
-			WHERE OrderNumber = @TMPOrderNumber  
-			AND (StatusSend <> 1 or StatusSend is null)
+			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH(NOLOCK)
+			WHERE CCTBC.OrderNumber = @TMPOrderNumber  
+			AND (CCTBC.StatusSend <> 1 or CCTBC.StatusSend is null)
 	
 			select @TMPOrderNumber OrderNumber, @TOTALPAGAR TOTAL;
 		END 
