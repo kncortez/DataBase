@@ -16,6 +16,10 @@
 -- Create date: <2024-06-20>
 -- Description:	<Se elimina el filtro de pais para la tabla CatTypeRate>
 -- =============================================
+-- Modified:	<Mario, Herrarte>
+-- Create date: <2026-03-10>
+-- Description:	<En actualización de tarifario por rango de peso, se agregó como filtro el RateId>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_set_Rate_Data]
     @IdRate INT = -1,
     @RateName NVARCHAR(50),
