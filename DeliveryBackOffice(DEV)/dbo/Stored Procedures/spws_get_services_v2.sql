@@ -95,9 +95,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -184,9 +184,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -872,9 +872,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -955,9 +955,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -1539,9 +1539,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -1622,9 +1622,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -2242,9 +2242,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -2325,9 +2325,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -2904,9 +2904,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -2971,7 +2971,7 @@ set arithabort off
 						AND gb.RowStatus = 1
 					INNER JOIN #temp tp
 						ON ord.Sender_ID = tp.CodeOfReference
-				WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+				WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 					AND ord.StatusOrderId <> IIF(@CancelGuides = 0, 7, 0)
 				ORDER BY ord.Guide_Number DESC;
 			END
@@ -2987,9 +2987,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -3052,7 +3052,7 @@ set arithabort off
 						ON gb.GuideNumber = ord.Guide_Number
 						AND gb.GuideSeries = ord.Guide_Serie
 						AND gb.RowStatus = 1
-				WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+				WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 					AND
 					(
 						ord.Sender_ID IN (SELECT tp.CodeOfReference FROM #temp tp)
@@ -3275,7 +3275,7 @@ set arithabort off
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
-										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+										WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
 										ORDER BY ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
@@ -3505,7 +3505,7 @@ set arithabort off
 													PBSL.PointsConsumed > 0
 													AND
 													PBSL.PointsReceived = 0
-										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+										WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
 
 											OR	ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
@@ -3558,9 +3558,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -3625,7 +3625,7 @@ set arithabort off
 						AND gb.RowStatus = 1
 					INNER JOIN #temp tp
 						ON ord.Sender_ID = tp.CodeOfReference
-				WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+				WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 					AND ord.StatusOrderId = 15
 				ORDER BY ord.Guide_Number DESC;
 			END
@@ -3641,9 +3641,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -3713,7 +3713,7 @@ set arithabort off
 						AND ord.Guide_Number = PBSL.GuideNumber
 						AND PBSL.PointsConsumed > 0
 						AND PBSL.PointsReceived = 0
-				WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+				WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 					AND
 					(
 						ord.Sender_ID IN (SELECT tp.CodeOfReference FROM #temp tp)
@@ -3909,7 +3909,7 @@ set arithabort off
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
-										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+										WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 									
 										ORDER BY ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
@@ -4108,7 +4108,7 @@ set arithabort off
 													PBSL.PointsConsumed > 0
 													AND
 													PBSL.PointsReceived = 0
-										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+										WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
 
 											OR	ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
@@ -4161,9 +4161,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -4228,7 +4228,7 @@ set arithabort off
 						AND gb.RowStatus = 1
 					INNER JOIN #temp tp
 						ON ord.Sender_ID = tp.CodeOfReference
-				WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+				WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 					AND ISNULL(ord.StatusOrderId, 15) NOT IN (15, 5, 7, 22)
 				ORDER BY ord.Guide_Number DESC;
 			END
@@ -4244,9 +4244,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -4316,7 +4316,7 @@ set arithabort off
 						AND ord.Guide_Number = PBSL.GuideNumber
 						AND PBSL.PointsConsumed > 0
 						AND PBSL.PointsReceived = 0
-				WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+				WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 					AND
 					(
 						ord.Sender_ID IN (SELECT tp.CodeOfReference FROM #temp tp)
@@ -4534,7 +4534,7 @@ set arithabort off
 												ON
 													ord.Sender_ID = tp.CodeOfReference
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
-										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+										WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
 										ORDER BY ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
@@ -4758,7 +4758,7 @@ set arithabort off
 													AND
 													PBSL.PointsReceived = 0
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
-										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+										WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
 
 											OR	ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
@@ -4811,9 +4811,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -4878,7 +4878,7 @@ set arithabort off
 						AND gb.RowStatus = 1
 					INNER JOIN #temp tp
 						ON ord.Sender_ID = tp.CodeOfReference
-				WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+				WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 					AND ord.StatusOrderId IN (5, 22)
 				ORDER BY ord.Guide_Number DESC;
 			END
@@ -4894,9 +4894,9 @@ set arithabort off
 					ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') AS RequestDate,
 					ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') AS Source,
 					ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') AS Destiny,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A') AS NameofSender,
-					ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A') AS NameReceiver,
-					ISNULL(ord.Sender_Address, 'N/A') AS AddresofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Sender_FirstName, '')), ' ', UPPER(ISNULL(ord.Sender_LastName, ''))))), 'N/A'), ' ') AS NameofSender,
+					CONCAT(ISNULL(LTRIM(RTRIM(CONCAT(UPPER(ISNULL(ord.Receiver_FirstName, '')), ' ', UPPER(ISNULL(ord.Receiver_LastName, ''))))), 'N/A'), ' ') AS NameReceiver,
+					LEFT(UPPER(ISNULL(ord.Sender_Address, 'N/A')), 30) AS AddresofSender,
 					CASE WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN 'true' ELSE 'false' END AS Impersonate,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A') AS DateRecoleccion,
 					ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') AS DateProgramadaEntrega,
@@ -4966,7 +4966,7 @@ set arithabort off
 						AND ord.Guide_Number = PBSL.GuideNumber
 						AND PBSL.PointsConsumed > 0
 						AND PBSL.PointsReceived = 0
-				WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+				WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 					AND
 					(
 						ord.Sender_ID IN (SELECT tp.CodeOfReference FROM #temp tp)
@@ -5160,7 +5160,7 @@ set arithabort off
 												ON
 													ord.Sender_ID = tp.CodeOfReference
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
-										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+										WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 									
 										ORDER BY ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
@@ -5362,7 +5362,7 @@ set arithabort off
 													AND
 													PBSL.PointsReceived = 0
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
-										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+										WHERE CONVERT(DATE, ord.DateCreated) >= @StartDate AND CONVERT(DATE, ord.DateCreated) <= @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
 
 											OR	ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
