@@ -52,6 +52,7 @@ CREATE PROCEDURE [dbo].[spws_revalue_guide]
   , @UseMembership BIT = 0
   , @CategoryProductId AS INT = 0
   , @ProductId AS INT = 0
+  , @AppOrigin nvarchar(4) = ''
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -556,36 +557,74 @@ BEGIN
 	--FIN FIx 20250603
 	------------------------------------------------------------------------------------------------------------------------------------
 
-    INSERT INTO @TempRate
-    EXECUTE [dbo].[spws_get_delivery_rate] @CodApp = @CodeApp
-                                         , @IdCustomerParams = @IdCustomer
-                                         , @HeaderCodeDestiny = @HeaderCodeDestiny
-                                         , @HeaderCodeSource = @HeaderCodeSource
-                                         , @Country = @ReceiverCountryId 
-                                         , @CountPiecesParams = @PiecesCount
-                                         , @IsFragile = 'false'
-                                         , @IsCollected = @IsCollect
-                                         , @IsInsurance = @IsInsurance
-                                         , @WeigthParcels = @Pesos
-                                         , @InsuranceAmount = @InsuranceAmount
-                                         , @IsCreditCardPayment = @IsCreditCard
-                                         , @ParcelCode = @Parcel
-                                         , @Zone = 0
-                                         , @AddressParse = @AddressParse
-                                         , @IdSettlementSource = @IdSettlement
-                                         , @IdSettlementDestiny = 0
-                                         , @CodeOfReferenceSource = @VisitPointClient
-                                         , @CodeOfReferenceDestiny = @VisitPointClientDestiny
-                                         , @IdSalePipeLine = @IdSalePipeLine
-                                         , @FormatResponse = 'DataTable'
-                                         , @CalculateTaxes = @CalculateTaxes
-                                         , @CalculateMembership = @UseMembership
-										 , @RevaluedGuide = @RevaluedGuide
-										 , @CategoryProductId = @CategoryProductId
-										 , @ProductId = @ProductId
-										 , @FetchActivePRoduct=0										 
+    IF(NOT(@AppOrigin = 'EXC' AND @SenderCountryId = 'GT'))
+    BEGIN
 
+        INSERT INTO @TempRate
+        EXECUTE [dbo].[spws_get_delivery_rate]
+                                               @CodApp = @CodeApp
+                                             , @IdCustomerParams = @IdCustomer
+                                             , @HeaderCodeDestiny = @HeaderCodeDestiny
+                                             , @HeaderCodeSource = @HeaderCodeSource
+                                             , @Country = @ReceiverCountryId 
+                                             , @CountPiecesParams = @PiecesCount
+                                             , @IsFragile = 'false'
+                                             , @IsCollected = @IsCollect
+                                             , @IsInsurance = @IsInsurance
+                                             , @WeigthParcels = @Pesos
+                                             , @InsuranceAmount = @InsuranceAmount
+                                             , @IsCreditCardPayment = @IsCreditCard
+                                             , @ParcelCode = @Parcel
+                                             , @Zone = 0
+                                             , @AddressParse = @AddressParse
+                                             , @IdSettlementSource = @IdSettlement
+                                             , @IdSettlementDestiny = 0
+                                             , @CodeOfReferenceSource = @VisitPointClient
+                                             , @CodeOfReferenceDestiny = @VisitPointClientDestiny
+                                             , @IdSalePipeLine = @IdSalePipeLine
+                                             , @FormatResponse = 'DataTable'
+                                             , @CalculateTaxes = @CalculateTaxes
+                                             , @CalculateMembership = @UseMembership
+                                             , @RevaluedGuide = @RevaluedGuide
+                                             , @CategoryProductId = @CategoryProductId
+                                             , @ProductId = @ProductId
+                                             , @FetchActivePRoduct=0
 
+    END
+    ELSE
+    BEGIN
+
+        INSERT INTO @TempRate
+        EXECUTE [dbo].[spws_get_delivery_rate_exc] 
+                                               @CodApp = @CodeApp
+                                             , @IdCustomerParams = @IdCustomer
+                                             , @HeaderCodeDestiny = @HeaderCodeDestiny
+                                             , @HeaderCodeSource = @HeaderCodeSource
+                                             , @Country = @ReceiverCountryId 
+                                             , @CountPiecesParams = @PiecesCount
+                                             , @IsFragile = 'false'
+                                             , @IsCollected = @IsCollect
+                                             , @IsInsurance = @IsInsurance
+                                             , @WeigthParcels = @Pesos
+                                             , @InsuranceAmount = @InsuranceAmount
+                                             , @IsCreditCardPayment = @IsCreditCard
+                                             , @ParcelCode = @Parcel
+                                             , @Zone = 0
+                                             , @AddressParse = @AddressParse
+                                             , @IdSettlementSource = @IdSettlement
+                                             , @IdSettlementDestiny = 0
+                                             , @CodeOfReferenceSource = @VisitPointClient
+                                             , @CodeOfReferenceDestiny = @VisitPointClientDestiny
+                                             , @IdSalePipeLine = @IdSalePipeLine
+                                             , @FormatResponse = 'DataTable'
+                                             , @CalculateTaxes = @CalculateTaxes
+                                             , @CalculateMembership = @UseMembership
+                                             , @RevaluedGuide = @RevaluedGuide
+                                             , @CategoryProductId = @CategoryProductId
+                                             , @ProductId = @ProductId
+                                             , @FetchActivePRoduct=0
+
+    END
 
      IF (@UseMembership = 1 AND @CategoryProductId >0 AND @ProductId >0 )
     BEGIN
