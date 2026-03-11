@@ -98,6 +98,7 @@ BEGIN
      FROM invoiceHeader invH WITH(NOLOCK)
           INNER JOIN InvoiceBatchDetail invBD WITH(NOLOCK) 
                   ON invH.inv_pk_id = invBD.inv_pk_id 
+                  AND invH.inv_numberFEL = invBD.ProcessedCorrelative
           INNER JOIN InvoiceBatchHeader invHe WITH(NOLOCK) 
                   ON invBD.Id_Lote = invHe.Id_Lote
           INNER JOIN del_ParametrosFactura parFac WITH(NOLOCK)
