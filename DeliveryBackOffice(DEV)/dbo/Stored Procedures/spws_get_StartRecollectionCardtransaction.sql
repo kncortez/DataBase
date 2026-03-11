@@ -92,7 +92,7 @@ BEGIN
 			AND DO.Guide_Number = GUIDE.GuideNumber
 		WHERE DO.IsCollect <> 1
 
-		UNION ALL
+		UNION 
 
 		SELECT CCTBC.ProductNumber
 		FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBC WITH(NOLOCK)
@@ -165,8 +165,8 @@ BEGIN
 				GUIDE.SerieGuide
 			FROM @TBGUIDES GUIDE
 				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
-					ON DO.Guide_Number = GUIDE.GuideNumber
-					AND DO.Guide_Serie = GUIDE.SerieGuide
+					ON  DO.Guide_Serie = GUIDE.SerieGuide
+					AND DO.Guide_Number = GUIDE.GuideNumber
 			WHERE DO.IsCollect <> 1
 
 			UNION ALL
@@ -177,8 +177,8 @@ BEGIN
 				GUIDE.SerieGuide
 			FROM @TBGUIDES GUIDE
 				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
-					ON DO.Guide_Number = GUIDE.GuideNumber
-					AND DO.Guide_Serie = GUIDE.SerieGuide
+					ON DO.Guide_Serie = GUIDE.SerieGuide
+					AND DO.Guide_Number = GUIDE.GuideNumber
 			WHERE DO.IsCollect IS NULL
 		) AS GUIDESTOPAY;
 		
@@ -198,13 +198,24 @@ BEGIN
 			SELECT top 1 @TMPOrderNumber = ISNULL(CCTBC.OrderNumber,'HR0') 
 			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBC WITH(NOLOCK)
 				INNER JOIN @TBGUIDES GUIDE
-					ON  CCTBC.ProductNumber = GUIDE.GuideNumber 
-					AND CCTBC.SerieNumber = GUIDE.SerieGuide;
+					ON  CCTBC.SerieNumber = GUIDE.SerieGuide
+					AND CCTBC.ProductNumber = GUIDE.GuideNumber;
 
-			SELECT @TOTALPAGAR = COUNT(1) 
-			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH(NOLOCK)
-			WHERE CCTBC.OrderNumber = @TMPOrderNumber  
-			AND (CCTBC.StatusSend <> 1 or CCTBC.StatusSend is null)
+			SELECT @TOTALPAGAR = COUNT(1)
+			FROM
+			(
+				SELECT CCTBC.OrderNumber
+				FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH(NOLOCK)
+				WHERE CCTBC.OrderNumber = @TMPOrderNumber
+				  AND CCTBC.StatusSend <> 1
+
+				UNION
+
+				SELECT CCTBC.OrderNumber
+				FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH(NOLOCK)
+				WHERE CCTBC.OrderNumber = @TMPOrderNumber
+				  AND CCTBC.StatusSend IS NULL
+			) AS GUIDESTOPAY;
 	
 			select @TMPOrderNumber OrderNumber, @TOTALPAGAR TOTAL;
 		END 
