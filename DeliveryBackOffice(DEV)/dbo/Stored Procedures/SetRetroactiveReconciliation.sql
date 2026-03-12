@@ -28,6 +28,13 @@ BEGIN
     WHERE CatCheckpointTypeId = 3
       AND RowStatus = 1;
 
+    DECLARE @todayDate DATE = CAST(GETDATE() AS DATE);
+    DECLARE @beginDate DATE = CAST(DATEADD(MONTH, -6, @FechaHoy) AS DATE);
+
+    DELETE FROM RetroactiveReconciliation
+    WHERE GuideDate >= @beginDate
+      AND GuideDate <  @todayDate
+
     INSERT INTO RetroactiveReconciliation
     SELECT CAST(do.dateCreated AS DATE)                                                        [Guidedate]
          , concat(do.Guide_Serie,'-',do.Guide_Number)                                          [Guide]
@@ -39,10 +46,9 @@ BEGIN
          , so.OrderDescription                                                                 [Status]
          , ISNULL(cas.SysIdSystem,-1)                                                          [SystemId]
          , ISNULL(cas.SysNameSystem,'No definido')                                             [SystemName]
-         , ISNULL(inv.PaymentMethodId,0)                                                       [PaymentMethodId]
-         , ISNULL(inv.PaymentMethod,'No Definido')                                             [PaymentMethod]
+         , ISNULL(c.PaymentMethodId,0)                                                       [PaymentMethodId]
+         , ISNULL(c.PaymentMethod,'No Definido')                                             [PaymentMethod]
          , ISNULL(cts.CtsId,0)                                                                 [TypePurchaseId]
-         --, ISNULL(cts.CtsName,'No Definido')                                                 [TypePurchase]
          , IIF((mbl.SubscriptionId IS NULL AND mbl.MembershipId IS NULL), 'NORMAL', 'PAQUETE') [TypePurchase]
          , Concat(do.Sender_FirstName, ' ', do.Sender_LastName)                                [Sender]
          , ISNULL(inv.invoice,'Pendiente')                                                     [Invoice]
@@ -89,8 +95,13 @@ BEGIN
                  WHERE da.Guide_Serie = do.Guide_Serie
                    AND da.Guide_Number = do.Guide_Number
                ) att
-    WHERE cast(do.DateCreated as date) = cast(DATEADD(DAY,-1,GETDATE()) AS date)
-      AND do.StatusOrderId in (Select StatusOrderId from @StatusOrderFinish)
+    WHERE do.DateCreated >= @beginDate
+      AND do.DateCreated <  @todayDate
+      AND EXISTS (
+            SELECT 1
+            FROM @StatusOrderFinish sf
+            WHERE sf.StatusOrderId = do.StatusOrderId
+          )
 
     END TRY
     BEGIN CATCH

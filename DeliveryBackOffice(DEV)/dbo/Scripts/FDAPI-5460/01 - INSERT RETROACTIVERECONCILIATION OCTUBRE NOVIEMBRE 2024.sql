@@ -14,25 +14,26 @@
       AND RowStatus = 1;
 
     INSERT INTO RetroactiveReconciliation
-    SELECT CAST(do.dateCreated AS DATE)                         [Guidedate]
-         , concat(do.Guide_Serie,'-',do.Guide_Number)           [Guide]
-         , cs.[IdCustomer]                                      [CustomerId]
-         , cs.[Name]                                            [CustomerName]
-         , ISNULL(cs.ConditionOfPaymentID, 1)                   [TypeSaleId]
-         , IIF(ISNULL(cs.ConditionOfPaymentID, 1) = 1 , 'CONTADO', 'CREDITO') [TypeSale]
-         , so.StatusOrderId                                     [StatusId]
-         , so.OrderDescription                                  [Status]
-         , ISNULL(cas.SysIdSystem,-1)                           [SystemId]
-         , ISNULL(cas.SysNameSystem,'No definido')              [SystemName]
-         , ISNULL(inv.PaymentMethodId,0)                        [PaymentMethodId]
-         , ISNULL(inv.PaymentMethod,'No Definido')              [PaymentMethod]
-         , ISNULL(cts.CtsId,0)                                  [TypePurchaseId]
-         , ISNULL(cts.CtsName,'No Definido')                    [TypePurchase]
-         , Concat(do.Sender_FirstName, ' ', do.Sender_LastName) [Sender]
-         , ISNULL(inv.invoice,'Pendiente')                      [Invoice]
-         , att.attempt                                          [Attempt]
-         , ISNULL(bop.Amount,0)                                 [Overweight]
-         , do.SenderCountryId                                   [CountryId]
+    SELECT CAST(do.dateCreated AS DATE)                                                        [Guidedate]
+         , concat(do.Guide_Serie,'-',do.Guide_Number)                                          [Guide]
+         , cs.[IdCustomer]                                                                     [CustomerId]
+         , cs.[Name]                                                                           [CustomerName]
+         , ISNULL(cs.ConditionOfPaymentID, 1)                                                  [TypeSaleId]
+         , IIF(ISNULL(cs.ConditionOfPaymentID, 1) = 1 , 'CONTADO', 'CREDITO')                  [TypeSale]
+         , so.StatusOrderId                                                                    [StatusId]
+         , so.OrderDescription                                                                 [Status]
+         , ISNULL(cas.SysIdSystem,-1)                                                          [SystemId]
+         , ISNULL(cas.SysNameSystem,'No definido')                                             [SystemName]
+         , ISNULL(c.PaymentMethodId,0)                                                       [PaymentMethodId]
+         , ISNULL(c.PaymentMethod,'No Definido')                                             [PaymentMethod]
+         , ISNULL(cts.CtsId,0)                                                                 [TypePurchaseId]
+         , IIF((mbl.SubscriptionId IS NULL AND mbl.MembershipId IS NULL), 'NORMAL', 'PAQUETE') [TypePurchase]
+         , Concat(do.Sender_FirstName, ' ', do.Sender_LastName)                                [Sender]
+         , ISNULL(inv.invoice,'Pendiente')                                                     [Invoice]
+         , att.attempt                                                                         [Attempt]
+         , ISNULL(bop.Amount,0)                                                                [Overweight]
+         , do.SenderCountryId                                                                  [CountryId]
+         , (ISNULL(do.PriceShippment,0) + ISNULL(do.Collect_OnDelivery, 0))                    [Amount]
     FROM DeliveryOrder do     WITH (NOLOCK)
     INNER JOIN StatusOrder so WITH (NOLOCK)
         ON so.StatusOrderId = do.StatusOrderId
@@ -48,11 +49,13 @@
         ON do.TypeService = cts.CtsShortName
     LEFT JOIN CatSystem cas WITH (NOLOCK)
         ON cas.SysIdSystem = do.CatSystemId
+    LEFT JOIN MembershipSubscriptionLog mbl 
+        ON mbl.LogGuideSerie = do.Guide_Serie And mbl.LogGuideNumber = do.Guide_Number
     OUTER APPLY(
                  SELECT IIF( IH.IdCountry = 'SV', IH.inv_NumberFEL, IH.inv_certificationFEL) [invoice]
                       , ID.dti_fk_orderSerie    [Guide_Serie]
                       , ID.dti_fk_orderNumber   [Guide_number]
-                      , ISNULL(iomd.io_type,0)                  [PaymentMethodId]
+                      ,  ISNULL(iomd.io_type,0)                  [PaymentMethodId]
                       , ISNULL(tiomd.tio_pk_name,'NO Definido') [PaymentMethod]
                  FROM invoiceDetail ID WITH(NOLOCK)
                  INNER JOIN invoiceHeader IH WITH(NOLOCK)
@@ -72,7 +75,11 @@
                ) att
     WHERE do.DateCreated >= '2024-10-01'
       AND do.DateCreated <=  '2024-12-31'
-      AND do.StatusOrderId in (Select StatusOrderId from @StatusOrderFinish)
+      AND EXISTS (
+            SELECT 1
+            FROM @StatusOrderFinish sf
+            WHERE sf.StatusOrderId = do.StatusOrderId
+          )
 
     END TRY
     BEGIN CATCH
