@@ -87,7 +87,7 @@ BEGIN
 		INNER JOIN @TBGUIDES GUIDE
 			ON CCTBC.SerieNumber = GUIDE.SerieGuide
 			AND CCTBC.ProductNumber = GUIDE.GuideNumber
-		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			ON DO.Guide_Serie = GUIDE.SerieGuide
 			AND DO.Guide_Number = GUIDE.GuideNumber
 		WHERE DO.IsCollect <> 1
@@ -99,7 +99,7 @@ BEGIN
 		INNER JOIN @TBGUIDES GUIDE
 			ON CCTBC.SerieNumber = GUIDE.SerieGuide
 			AND CCTBC.ProductNumber = GUIDE.GuideNumber
-		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			ON DO.Guide_Serie = GUIDE.SerieGuide
 			AND DO.Guide_Number = GUIDE.GuideNumber
 		WHERE DO.IsCollect IS NULL
