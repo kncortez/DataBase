@@ -24,7 +24,7 @@ BEGIN
 				AND WSM.RowStatus = 1
 				FOR XML PATH(''), TYPE
 			).value('.', 'NVARCHAR(MAX)')
-		,1,1,''), '') AS Statuses
+		,1,2,''), '') AS Statuses
 	FROM Workflow W
 	WHERE W.RowStatus = 1;
 END;
