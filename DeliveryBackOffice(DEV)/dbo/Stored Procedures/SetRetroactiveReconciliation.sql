@@ -29,7 +29,7 @@ BEGIN
       AND RowStatus = 1;
 
     DECLARE @todayDate DATE = CAST(GETDATE() AS DATE);
-    DECLARE @beginDate DATE = CAST(DATEADD(MONTH, -6, @FechaHoy) AS DATE);
+    DECLARE @beginDate DATE = CAST(DATEADD(MONTH, -6, @todayDate) AS DATE);
 
     DELETE FROM RetroactiveReconciliation
     WHERE GuideDate >= @beginDate
@@ -68,9 +68,6 @@ BEGIN
     LEFT JOIN MembershipSubscriptionLog mbl 
         ON mbl.LogGuideSerie = do.Guide_Serie 
        AND mbl.LogGuideNumber = do.Guide_Number
-    LEFT JOIN dbo.BreakdownOfPayment bop WITH(NOLOCK)
-        ON c.IdCost = bop.IdCost
-       AND bop.[Description] = 'Recargo por Peso'
     OUTER APPLY(
                   SELECT (GuideDeliveryAttemptCount + GuideReturnAttemptCount) [attempt]
                   FROM DeliveryOrderAttemptData doad WITH(NOLOCK)
@@ -99,6 +96,9 @@ BEGIN
             WHERE co.GuideSerie =  do.Guide_Serie
               AND co.GuideNumber = do.Guide_Number
             ) c
+    LEFT JOIN dbo.BreakdownOfPayment bop WITH(NOLOCK)
+        ON c.IdCost = bop.IdCost
+       AND bop.[Description] = 'Recargo por Peso'
     WHERE do.DateCreated >= @beginDate
       AND do.DateCreated <  @todayDate
       AND EXISTS (

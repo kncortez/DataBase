@@ -25,7 +25,7 @@
          , ISNULL(cas.SysIdSystem,-1)                                                          [SystemId]
          , ISNULL(cas.SysNameSystem,'No definido')                                             [SystemName]
          , ISNULL(c.PaymentMethodId,0)                                                         [PaymentMethodId]
-         , ISNULL(c.PaymentMethod,'No Definido')                                              [PaymentMethod]
+         , ISNULL(c.PaymentMethod,'No Definido')                                               [PaymentMethod]
          , ISNULL(cts.CtsId,0)                                                                 [TypePurchaseId]
          , IIF((mbl.SubscriptionId IS NULL AND mbl.MembershipId IS NULL), 'NORMAL', 'PAQUETE') [TypePurchase]
          , Concat(do.Sender_FirstName, ' ', do.Sender_LastName)                                [Sender]
@@ -46,9 +46,6 @@
     LEFT JOIN MembershipSubscriptionLog mbl 
         ON mbl.LogGuideSerie = do.Guide_Serie 
        AND mbl.LogGuideNumber = do.Guide_Number
-    LEFT JOIN dbo.BreakdownOfPayment bop WITH(NOLOCK)
-        ON c.IdCost = bop.IdCost
-       AND bop.[Description] = 'Recargo por Peso'
     OUTER APPLY(
                   SELECT (GuideDeliveryAttemptCount + GuideReturnAttemptCount) [attempt]
                   FROM DeliveryOrderAttemptData doad WITH(NOLOCK)
@@ -77,6 +74,9 @@
             WHERE co.GuideSerie =  do.Guide_Serie
               AND co.GuideNumber = do.Guide_Number
             ) c
+    LEFT JOIN dbo.BreakdownOfPayment bop WITH(NOLOCK)
+        ON c.IdCost = bop.IdCost
+       AND bop.[Description] = 'Recargo por Peso'
     WHERE do.DateCreated >= '2024-10-01'
       AND do.DateCreated <=  '2024-12-31'
       AND EXISTS (
