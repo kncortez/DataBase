@@ -1374,24 +1374,29 @@ BEGIN
         END;
         ELSE
         BEGIN
-			DECLARE @CurrencyReceiver INT,
-				    @ExchangeRateReceiver DECIMAL(12,6),
-					@CurrencySender INT,
-					@ExchangeSender DECIMAL(12,6)
-			/******************DATOS DE MONEDA ORIGEN*************************/
-			SELECT TOP 1 
-				   @CurrencySender = C.IdCatCurrencyCOD, 
-				   @ExchangeSender = CE.ExchangeRate
-			  FROM CurrencyExchangeRates CE WITH(NOLOCK)
-			       INNER JOIN CatCurrencyCOD C WITH(NOLOCK)
-                      ON C.IdCatCurrencyCOD = CE.SourceCurrency
-                   INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
-                      ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
-			 WHERE DC.Currency_IdCountry = @SenderCountryId
+
+            DECLARE @CurrencyReceiver INT,
+                    @ExchangeRateReceiver DECIMAL(12,6),
+                    @CurrencySender INT,
+                    @ExchangeSender DECIMAL(12,6)
+
+        /******************DATOS DE MONEDA ORIGEN*************************/
+            SELECT TOP 1 
+                  @CurrencySender = C.IdCatCurrencyCOD
+              FROM DeliveryCurrency DC WITH(NOLOCK)
+              INNER JOIN CatCurrencyCOD C WITH(NOLOCK)
+              ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
+              WHERE DC.Currency_IdCountry = @SenderCountryId
                AND DC.Currency_Status = 1 
                AND DC.DefaultPerCountry = 1
-			 ORDER BY CE.ExchangeDate DESC
-			
+
+              SELECT TOP 1 
+                  @ExchangeSender = CER.ExchangeRate
+              FROM DeliveryBackOffice.dbo.CurrencyExchangeRates CER WITH(NOLOCK)
+              WHERE CER.IdCountry = @SenderCountryId
+                AND cer.SourceCurrency = @CurrencySender
+              ORDER BY cer.ExchangeDate DESC
+              
             PRINT 'registro no existe , hay que crearlo';
 			IF @ServiceShortName = 'COD'
 			BEGIN

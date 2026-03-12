@@ -1053,7 +1053,7 @@ BEGIN
     );  
   
     ----------------- Fin Variable tipo tabla para almacenar tarifas --------------------------------------------------------------------  
-  
+	PRINT ('AFUERA IF @RateTypeId'+CONVERT(nvarchar(100),@RateTypeId))
     IF @RateTypeId = 1 -- tarifas estandar  
     BEGIN  
         --print 'aqui van las tarifas standar'  
@@ -1343,8 +1343,8 @@ BEGIN
                                                          );  
     END;  
     ELSE IF @RateTypeId = 3 -- tarifas por articulo  
-    BEGIN  
-
+    BEGIN
+        PRINT('ENTRA ID 3')
         SET @CountPiece =  
         (  
             SELECT COUNT(*)  
@@ -1363,178 +1363,364 @@ BEGIN
         --select * from #ListCode  
         DECLARE @ParcelPrice DECIMAL(12, 2) = 0;  
 
-        SET @IdSegment = NULL;  
+        IF (@RateId IN ( 
+                        @NewMainRates, @NewAlternativeRates
+                       ,@NewAutoSalesMainRates, @NewRateGeneral
+                       ,@NewRateGeneralDiscount
+                       )
+           )
+        BEGIN
 
-        IF (EXISTS (SELECT TOP 1 1 FROM #ListCode)  
-            AND LTRIM(RTRIM((  
-                                SELECT TOP 1 Item FROM #ListCode  
-                            )  
-                           )  
-                     ) <> ''  
-           )  
-        BEGIN 
+            SET @IdSegment = NULL; 
 
-            -- HeaderCodes  - revisar tabla  
-            SELECT TOP 1  
-                   @IdSegment = RTC.SegmentTypeId  
-            FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)  
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)  
-                    ON RTC.TownshipSourceId = TwnSource.IdTownship  
-                INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)  
-                    ON RTC.TownshipDestinyId = TwnDestiny.IdTownship  
-            WHERE RTC.RateId = @RateId
-                  AND (TwnSource.HeaderCode = @HeaderCodeSource)  
-                  AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)  
-                  AND RTC.RowStatus = 1;  
+            IF (EXISTS (SELECT TOP 1 1 FROM #ListCode)  
+                AND LTRIM(RTRIM((  
+                                    SELECT TOP 1 Item FROM #ListCode  
+                                )  
+                               )  
+                         ) <> ''  
+               )  
+            BEGIN 
+		    	
+		    	PRINT(@HeaderCodeSource+' VALOR @@HeaderCodeSource')
+		    	PRINT(@HeaderCodeDestiny+' VALOR @@@HeaderCodeDestiny')
+		    	PRINT(CONVERT(NVARCHAR(100),@RateId)+' VALOR @@@@RateId')
+                -- HeaderCodes  - revisar tabla  
+                SELECT TOP 1  
+                       @IdSegment = RTC.SegmentTypeId  
+                FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnSource WITH (NOLOCK)  
+                        ON RTC.TownshipSourceId = TwnSource.IdTownship  
+                    INNER JOIN [DeliveryBackOffice].[dbo].[Township]   TwnDestiny WITH (NOLOCK)  
+                        ON RTC.TownshipDestinyId = TwnDestiny.IdTownship  
+                WHERE RTC.RateId = @RateId
+                      AND (TwnSource.HeaderCode = @HeaderCodeSource)  
+                      AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)  
+                      AND RTC.RowStatus = 1; 
 
-            IF (@IdSegment IS NULL) -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.  
-            BEGIN  
-                 SELECT TOP 1  
-                        @IdSegment = sg.CrsId  
-                   FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)  
-                  WHERE sg.CrsShortName = 'FOR';  
-            END;  
-
-            -- Cálculo de precios  
-            -- Cálculo de precios  
-            IF OBJECT_ID('tempdb.dbo.#ParcelAmountPerType', 'U') IS NOT NULL  
-                DROP TABLE #ParcelAmountPerType;  
-            IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerType', 'U') IS NOT NULL  
-                DROP TABLE #ParcelOverweightPerType;  
-
-            -- Servicios y segmentos  
-            SELECT CRS.CrsId                 'SegmentType'  
-                 , CTS.CtsId                 'ServiceType'  
-                 , CAST(0 AS DECIMAL(18, 2)) 'TotalAmount'  
-            INTO #ParcelAmountPerType  
-            FROM [DeliveryBackOffice].[dbo].[CatRateSegment]           CRS WITH (NOLOCK)
-                CROSS JOIN [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK);  
-
-            -- Paquetes con su peso indicado  
-            DECLARE @ExpectedWeight DECIMAL(12, 2) = 0;  
-
-            SELECT p.ID           'RowNumber'  
-                 , ABC.Code       'ParcelCode'  
-                 , ABC.MassWeight 'ParcelWeight'  
-            INTO #ParcelOverweightPerType  
-            FROM #ParceCode                                               p  
-                INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)  
-                    ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI  
-            WHERE ABC.AbcRowStatus = 1;  
-
-            SET @ExpectedWeight =  
-            (  
-                SELECT SUM(POPT.ParcelWeight)FROM #ParcelOverweightPerType POPT  
-            );  
-
-            BEGIN TRY  
-
-                SET @OverWeight =  
+            
+                IF (@IdSegment IS NULL) -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.  
+                BEGIN  
+                     SELECT TOP 1  
+                            @IdSegment = sg.CrsId  
+                       FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)  
+                      WHERE sg.CrsShortName = 'FOR';  
+                END;  
+            
+                -- Cálculo de precios  
+                -- Cálculo de precios  
+                IF OBJECT_ID('tempdb.dbo.#ParcelAmountPerType', 'U') IS NOT NULL  
+                    DROP TABLE #ParcelAmountPerType;  
+                IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerType', 'U') IS NOT NULL  
+                    DROP TABLE #ParcelOverweightPerType;  
+            
+                -- Servicios y segmentos  
+                SELECT CRS.CrsId                 'SegmentType'  
+                     , CTS.CtsId                 'ServiceType'  
+                     , CAST(0 AS DECIMAL(18, 2)) 'TotalAmount'  
+                INTO #ParcelAmountPerType  
+                FROM [DeliveryBackOffice].[dbo].[CatRateSegment]           CRS WITH (NOLOCK)
+                    CROSS JOIN [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK);  
+            
+                -- Paquetes con su peso indicado  
+                DECLARE @ExpectedWeight DECIMAL(12, 2) = 0;  
+            
+                SELECT p.ID           'RowNumber'  
+                     , ABC.Code       'ParcelCode'  
+                     , ABC.MassWeight 'ParcelWeight'  
+                INTO #ParcelOverweightPerType  
+                FROM #ParceCode                                               p  
+                    INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)  
+                        ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI  
+                WHERE ABC.AbcRowStatus = 1;  
+            
+                SET @ExpectedWeight =  
                 (  
-                    SELECT SUM(CAST(ROUND(CAST(PW.Item AS DECIMAL(12, 2)), 0) AS INT))  
-                    FROM #ParceWeigth PW  
+                    SELECT SUM(POPT.ParcelWeight)FROM #ParcelOverweightPerType POPT  
                 );  
-
-            END TRY  
-            BEGIN CATCH  
-
-                SET @OverWeight = @ExpectedWeight;  
-
-            END CATCH;  
-
-            DECLARE @NewOverWeight DECIMAL(12, 2) = 0;  
-            SET @NewOverWeight = (@OverWeight - @ExpectedWeight);  
-
-            -- Actualizar con los que esten dentro del tarifario por tipo de servicio y tipo de segmento  
-            UPDATE #ParcelAmountPerType  
-            SET TotalAmount = TotalAmount + AddedTotalAmount  
-            FROM  
-            (  
-                SELECT rd.TypeSegmentId  AddedSegmentType  
-                     , rd.TypeServiceId  AddedServiceType  
-                     , SUM(rd.RateValue) 'AddedTotalAmount'  
-                FROM dbo.RateHeader                  rh  
-                    INNER JOIN dbo.RateData          rd  WITH (NOLOCK)
-                        ON rd.RateId = rh.RheId  
-                    INNER JOIN dbo.ArticleByCustomer abc WITH (NOLOCK)
-                        ON rd.ArticleId = abc.AbcId  
-                    INNER JOIN #ListCode             LC  WITH (NOLOCK)
-                        ON abc.Code = LC.Item  
-                WHERE rh.RheId = @RateId
-                      AND rd.RowStatus = 'true'  
-                      AND rd.TypeSegmentId = @IdSegment  
-                GROUP BY rd.TypeSegmentId  
-                       , rd.TypeServiceId  
-            ) TempValues  
-            WHERE TempValues.AddedSegmentType = #ParcelAmountPerType.SegmentType  
-                  AND TempValues.AddedServiceType = #ParcelAmountPerType.ServiceType;  
-
-            -- Actualizar con los que NO esten dentro del tarifario por tipo de servicio y tipo de segmento  
-            UPDATE #ParcelAmountPerType  
-            SET TotalAmount = TotalAmount + AddedTotalAmount  
-            FROM  
-            (  
-                SELECT rd.TypeSegmentId                            AddedSegmentType  
-                     , SUM(ISNULL(rd.RateValue, abc.PriceDefault)) 'AddedTotalAmount'  
-                FROM #ListCode                       lc  
-                    INNER JOIN dbo.ArticleByCustomer abc  WITH (NOLOCK)
-                        ON abc.Code = lc.Item  
-                    INNER JOIN dbo.RateData          rd   WITH (NOLOCK)
-                        ON rd.ArticleId = abc.AbcId  
-                WHERE rd.TypeServiceId IS NULL  
-                      AND rd.TypeSegmentId = @IdSegment  
-                      AND rd.RateId = @RateId
-                GROUP BY rd.TypeSegmentId  
-            ) TempValues  
-            WHERE TempValues.AddedSegmentType = SegmentType;  
-
-            DECLARE @RealRateGroup AS TABLE  
-            (  
-                ServiceTypeId INT NOT NULL  
-              , RowStatus BIT NOT NULL  
-                    DEFAULT 1  
-            );  
-
-            INSERT INTO @RealRateGroup  
-            (  
-                ServiceTypeId  
-            )  
-            SELECT CtsId  
-            FROM [DeliveryBackOffice].dbo.CatTypeService CTS WITH (NOLOCK)  
-            WHERE RateGroup = @IdRateGroup  
-                  AND CtsRowStatus = 1;  
-
-            DECLARE @SDDTypeId INT =  
+            
+                BEGIN TRY  
+            
+                    SET @OverWeight =  
                     (  
-                        SELECT TOP 1  
-                               CTS.CtsId  
-                        FROM [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK)  
-                        WHERE CTS.CtsShortName = 'SDD'  
+                        SELECT SUM(CAST(ROUND(CAST(PW.Item AS DECIMAL(12, 2)), 0) AS INT))  
+                        FROM #ParceWeigth PW  
                     );  
-            IF (@IsSDD = 0)  
-                UPDATE @RealRateGroup  
-                SET RowStatus = 0  
-                WHERE ServiceTypeId = @SDDTypeId;  
+            
+                END TRY  
+                BEGIN CATCH  
+            
+                    SET @OverWeight = @ExpectedWeight;  
+            
+                END CATCH;  
+            
+                DECLARE @NewOverWeight DECIMAL(12, 2) = 0;  
+                SET @NewOverWeight = (@OverWeight - @ExpectedWeight);  
+            
+                -- Actualizar con los que esten dentro del tarifario por tipo de servicio y tipo de segmento  
+                UPDATE #ParcelAmountPerType  
+                SET TotalAmount = TotalAmount + AddedTotalAmount  
+                FROM  
+                (  
+                    SELECT rd.TypeSegmentId  AddedSegmentType  
+                         , rd.TypeServiceId  AddedServiceType  
+                         , SUM(rd.RateValue) 'AddedTotalAmount'  
+                    FROM dbo.RateHeader                  rh  
+                        INNER JOIN dbo.RateData          rd  WITH (NOLOCK)
+                            ON rd.RateId = rh.RheId  
+                        INNER JOIN dbo.ArticleByCustomer abc WITH (NOLOCK)
+                            ON rd.ArticleId = abc.AbcId  
+                        INNER JOIN #ListCode             LC  WITH (NOLOCK)
+                            ON abc.Code = LC.Item  
+                    WHERE rh.RheId = @RateId
+                          AND rd.RowStatus = 'true'  
+                          AND rd.TypeSegmentId = @IdSegment  
+                    GROUP BY rd.TypeSegmentId  
+                           , rd.TypeServiceId  
+                ) TempValues  
+                WHERE TempValues.AddedSegmentType = #ParcelAmountPerType.SegmentType  
+                      AND TempValues.AddedServiceType = #ParcelAmountPerType.ServiceType;  
+            
+                -- Actualizar con los que NO esten dentro del tarifario por tipo de servicio y tipo de segmento  
+                UPDATE #ParcelAmountPerType  
+                SET TotalAmount = TotalAmount + AddedTotalAmount  
+                FROM  
+                (  
+                    SELECT rd.TypeSegmentId                            AddedSegmentType  
+                         , SUM(ISNULL(rd.RateValue, abc.PriceDefault)) 'AddedTotalAmount'  
+                    FROM #ListCode                       lc  
+                        INNER JOIN dbo.ArticleByCustomer abc  WITH (NOLOCK)
+                            ON abc.Code = lc.Item  
+                        INNER JOIN dbo.RateData          rd   WITH (NOLOCK)
+                            ON rd.ArticleId = abc.AbcId  
+                    WHERE rd.TypeServiceId IS NULL  
+                          AND rd.TypeSegmentId = @IdSegment  
+                          AND rd.RateId = @RateId
+                    GROUP BY rd.TypeSegmentId  
+                ) TempValues  
+                WHERE TempValues.AddedSegmentType = SegmentType;  
+            
+                DECLARE @RealRateGroup AS TABLE  
+                (  
+                    ServiceTypeId INT NOT NULL  
+                  , RowStatus BIT NOT NULL  
+                        DEFAULT 1  
+                );  
+            
+                INSERT INTO @RealRateGroup  
+                (  
+                    ServiceTypeId  
+                )  
+                SELECT CtsId  
+                FROM [DeliveryBackOffice].dbo.CatTypeService CTS WITH (NOLOCK)  
+                WHERE RateGroup = @IdRateGroup  
+                      AND CtsRowStatus = 1;  
+            
+                DECLARE @SDDTypeId INT =  
+                        (  
+                            SELECT TOP 1  
+                                   CTS.CtsId  
+                            FROM [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK)  
+                            WHERE CTS.CtsShortName = 'SDD'  
+                        );  
+                IF (@IsSDD = 0)  
+                    UPDATE @RealRateGroup  
+                    SET RowStatus = 0  
+                    WHERE ServiceTypeId = @SDDTypeId;  
+            
+                -- Tarifas finales  
+            
+                INSERT INTO @TempRate  
+                SELECT DISTINCT
+                          (ISNULL(rd.RateValue, 0) * @CountPiece)                                         AS BaseRate
+                        , ISNULL(rh.ReturnRate, 0)                                                        AS ReturnRate
+                        , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)                           AS fragilRate
+                        , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)                        AS CollectRate
+                        , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0)             AS CreditCardRate
+                        , IIF(@NewOverWeight > 0, @NewOverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) AS OverWeightRate
+                        , ISNULL(papt.TotalAmount, 0)                                                     AS IrregularParcelRate
+                        , ISNULL(cr.Name, '')                                                             AS TypeRate
+                        , ISNULL(sg.CrsShortName, '')                                                     AS Segment
+                        , ISNULL(sv.CtsShortName, '')                                                     AS Service
+                        , ISNULL(sv.CtsName, '')                                                          AS ServiceName
+                        , 0                                                                               AS Discount
+                        , ''                                                                              AS DiscountName
+                        , ISNULL(sv.CtsDescription, '')                                                   AS ServiceDescription
+                        , IIF(@IsInsurance = 'true'
+                           , IIF(@CustomerType IN (2, 3)
+                                   -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                                   , CASE
+                                       WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
+                                           THEN 0
+                                       WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
+                                            AND @InsuranceAmount < 5000
+                                           THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
+                                       WHEN @InsuranceAmount >= 5000
+                                           THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                       ELSE 0
+                                     END
+                                   -- Tipo 1: comportamiento original
+                                   , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                                       , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                       , 0)
+                                 )
+                               , 
+                          0)                                                                           AS InsuranceRate
+                     , ISNULL(RH.InsuranceCharge,0)                                                    AS InsuranceCharge
+                     , ISNULL(RH.InsuranceExempt,0)                                                    AS InsuranceExempt
+                FROM dbo.RateHeader                 rh   WITH (NOLOCK)
+                    INNER JOIN dbo.RateData         rd   WITH (NOLOCK)
+                        ON rd.RateId = rh.RheId  
+                    INNER JOIN #ParcelAmountPerType papt  
+                        ON rd.TypeSegmentId = papt.SegmentType  
+                           AND rd.TypeServiceId = papt.ServiceType  
+                    LEFT JOIN dbo.CatRateSegment    sg   WITH (NOLOCK)
+                        ON sg.CrsId = rd.TypeSegmentId  
+                    LEFT JOIN dbo.CatTypeService    sv   WITH (NOLOCK)
+                        ON sv.CtsId = rd.TypeServiceId  
+                    LEFT JOIN dbo.CatTypeRate       cr   WITH (NOLOCK)
+                        ON cr.IdTypeRate = rh.RateTypeId  
+                WHERE rh.RheId = @RateId  
+                      AND rd.RowStatus = 'true' 
+                      AND rd.TypeSegmentId = @IdSegment  
+                      AND (rd.TypeServiceId IN  
+                           (  
+                               SELECT RRG.ServiceTypeId FROM @RealRateGroup RRG WHERE RRG.RowStatus = 1  
+                           )  
+                          )  
+                      AND CONVERT(DATETIME, @Time, 108) <= ISNULL(  
+                                                                     CONVERT(  
+                                                                                DATETIME  
+                                                                              , ISNULL(  
+                              rd.LimitHourPickup  
+                                                                                        , sv.LimitHourPickup  
+                                                                                      )  
+                                                                              , 108  
+                                                                            )  
+                                                                   , CONVERT(DATETIME, '23:59:59', 108)  
+                                                                 );  
+            
+                IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerType', 'U') IS NOT NULL  
+                    DROP TABLE #ParcelOverweightPerType;  
+                IF OBJECT_ID('tempdb.dbo.#ParcelAmountPerType', 'U') IS NOT NULL  
+                    DROP TABLE #ParcelAmountPerType;  
+            END;  
+        END
+        ELSE
+        BEGIN
 
-            -- Tarifas finales  
+            -- Paquetes con su peso indicado
+            IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerTypeCorp', 'U') IS NOT NULL
+                DROP TABLE #ParcelOverweightPerTypeCorp;
 
-            INSERT INTO @TempRate  
-            SELECT DISTINCT  
-                   (ISNULL(rd.RateValue, 0) * @CountPiece)                                         AS BaseRate
-                 , ISNULL(rh.ReturnRate, 0)                                                        AS ReturnRate
-                 , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)                           AS fragilRate
-                 , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)                        AS CollectRate
-                 , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0)             AS CreditCardRate
-                 , IIF(@NewOverWeight > 0, @NewOverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) AS OverWeightRate
-                 , ISNULL(papt.TotalAmount, 0)                                                     AS IrregularParcelRate 
-                 , ISNULL(cr.Name, '')                                                             AS TypeRate  
-                 , ISNULL(sg.CrsShortName, '')                                                     AS Segment  
-                 , ISNULL(sv.CtsShortName, '')                                                     AS Service 
-                 , ISNULL(sv.CtsName, '')                                                          AS ServiceName
-                 , 0                                                                               AS Discount
-                 , ''                                                                              AS DiscountName                     
-                 , ISNULL(sv.CtsDescription, '')                                                   AS ServiceDescription
-                 , IIF(@IsInsurance = 'true'
+            DECLARE @DefaultWeighRatetOfRate DECIMAL(12, 2) = 0;
+            DECLARE @DefaultWeightOfRate DECIMAL(18, 2) = 0;
+
+            SET @DefaultWeighRatetOfRate =
+            (
+                SELECT TOP (1)
+                       RH.[AdditionalWeightRate]
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.[RheId] = @RateId
+            );
+
+            SET @DefaultWeightOfRate =
+            (
+                SELECT TOP (1)
+                       RH.[WeightLimit]
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.[RheId] = @RateId
+            );
+
+            DECLARE @ExpectedWeightCorp DECIMAL(12, 2) = 0;
+
+            SELECT p.ID     'RowNumber'
+                 , ABC.Code 'ParcelCode'
+                 , (CASE
+                        WHEN RD.[IdRateData] IS NULL THEN
+                            @DefaultWeightOfRate
+                        ELSE
+                            CAST(PW.[Item] AS DECIMAL(12, 2))
+                    END
+                   )        'ParcelWeight'
+            INTO #ParcelOverweightPerTypeCorp
+            FROM #ParceCode                                               p
+                INNER JOIN [#ParceWeigth]                                 PW
+                    ON p.[ID] = PW.[ID]
+                INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
+                    ON p.Item = ABC.Code
+                OUTER APPLY
+            (
+                SELECT TOP (1)
+                       RD.[IdRateData]
+                FROM [DeliveryBackOffice].[dbo].[RateData] RD WITH (NOLOCK)
+                WHERE [RD].[ArticleId] = [ABC].[AbcId]
+                      AND [RD].[RateId] = @RateId
+            )                                                             RD
+            WHERE ABC.AbcRowStatus = 1;
+
+            SET @ExpectedWeightCorp =
+            (
+                SELECT SUM(POPT.ParcelWeight)FROM #ParcelOverweightPerTypeCorp POPT
+            );
+
+            BEGIN TRY
+
+                SET @OverWeight =
+                (
+                    SELECT SUM(CAST(ROUND(CAST(PW.Item AS DECIMAL(12, 2)), 0) AS INT))
+                    FROM #ParceWeigth PW
+                );
+
+            END TRY
+            BEGIN CATCH
+
+                SET @OverWeight = @ExpectedWeightCorp;
+
+            END CATCH;
+
+            DECLARE @NewOverWeightCorp DECIMAL(12, 2) = 0;
+            SET @NewOverWeightCorp = (@OverWeight - @ExpectedWeightCorp);
+
+            -------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
+            INSERT INTO @TempRate
+            SELECT 
+                   SUM(x.BaseRate)
+                 , x.ReturnRate
+                 , x.fragilRate
+                 , x.CollectedRate
+                 , x.CreditCardRate
+                 , x.OverWeightRate
+                 , SUM(x.IrregularParcelRate)
+                 , x.TypeRate
+                 , x.Segment
+                 , x.Service
+                 , x.ServiceName
+                 , SUM(x.Discount)
+                 , x.DiscountName
+                 , x.ServiceDescription
+                 , SUM(x.InsuranceRate)
+                   + CAST((IIF(@NewOverWeightCorp > 0, @NewOverWeightCorp * ISNULL(@DefaultWeighRatetOfRate, 0), 0)) AS DECIMAL(12, 2))
+                 , MAX(x.InsuranceCharge)
+                 , MAX(x.InsuranceExempt)
+            FROM
+            (
+                SELECT 
+                       (ISNULL(rd.RateValue, 0) * @CountPiece)                             AS BaseRate
+                     , ISNULL(rh.ReturnRate, 0)                                            AS ReturnRate
+                     , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)               AS fragilRate
+                     , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)            AS CollectedRate
+                     , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate
+                     , 0                                                                   AS OverWeightRate
+                     , ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0))                    AS IrregularParcelRate
+                     , ISNULL(cr.Name, '')                                                 AS TypeRate
+                     , ISNULL(sg.CrsShortName, '')                                         AS Segment
+                     , ISNULL(sv.CtsShortName, '')                                         AS Service
+                     , ISNULL(sv.CtsName, '')                                              AS ServiceName
+                     , 0                                                                   AS Discount
+                     , ''                                                                  AS DiscountName
+                     , ISNULL(sv.CtsDescription, '')                                       AS ServiceDescription
+                     , IIF(@IsInsurance = 'true'
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
@@ -1553,46 +1739,117 @@ BEGIN
                                , 0)
                          )
                        , 
-                    0)                                                                             AS InsuranceRate 
-                 , ISNULL(RH.InsuranceCharge,0)                                                    AS InsuranceCharge
-                 , ISNULL(RH.InsuranceExempt,0)                                                    AS InsuranceExempt
-            FROM dbo.RateHeader                 rh   WITH (NOLOCK)
-                INNER JOIN dbo.RateData         rd   WITH (NOLOCK)
-                    ON rd.RateId = rh.RheId  
-                INNER JOIN #ParcelAmountPerType papt  
-                    ON rd.TypeSegmentId = papt.SegmentType  
-                       AND rd.TypeServiceId = papt.ServiceType  
-                LEFT JOIN dbo.CatRateSegment    sg   WITH (NOLOCK)
-                    ON sg.CrsId = rd.TypeSegmentId  
-                LEFT JOIN dbo.CatTypeService    sv   WITH (NOLOCK)
-                    ON sv.CtsId = rd.TypeServiceId  
-                LEFT JOIN dbo.CatTypeRate       cr   WITH (NOLOCK)
-                    ON cr.IdTypeRate = rh.RateTypeId  
-            WHERE rh.RheId = @RateId  
-                  AND rd.RowStatus = 'true' 
-                  AND rd.TypeSegmentId = @IdSegment  
-                  AND (rd.TypeServiceId IN  
-                       (  
-                           SELECT RRG.ServiceTypeId FROM @RealRateGroup RRG WHERE RRG.RowStatus = 1  
-                       )  
-                      )  
-                  AND CONVERT(DATETIME, @Time, 108) <= ISNULL(  
-                                                                 CONVERT(  
-                                                                            DATETIME  
-                                                                          , ISNULL(  
-                          rd.LimitHourPickup  
-                                                                                    , sv.LimitHourPickup  
-                                                                                  )  
-                                                                          , 108  
-                                                                        )  
-                                                               , CONVERT(DATETIME, '23:59:59', 108)  
-                                                             );  
+                    0)                                                                                             AS InsuranceRate
+                 , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
+                 , ISNULL(RH.InsuranceExempt,0)                                                                    AS InsuranceExempt
+                FROM #ParceCode                      ls
+                    INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
+                        ON ar.Code = ls.Item
+                    INNER JOIN dbo.RateHeader        rh WITH (NOLOCK)
+                        ON rh.RheId = @RateId
+                    INNER JOIN dbo.RateData          rd WITH (NOLOCK)
+                        ON rd.ArticleId = ar.AbcId
+                           AND rd.RateId = rh.RheId
+                    LEFT JOIN dbo.CatRateSegment     sg WITH (NOLOCK)
+                        ON sg.CrsId = rd.TypeSegmentId
+                    LEFT JOIN dbo.CatTypeService     sv WITH (NOLOCK)
+                        ON sv.CtsId = rd.TypeServiceId
+                    LEFT JOIN dbo.CatTypeRate        cr WITH (NOLOCK)
+                        ON cr.IdTypeRate = rh.RateTypeId
+                WHERE rd.TypeSegmentId = @IdSegment
+                      AND rd.RowStatus = 'true'
+                      AND (rd.TypeServiceId IN
+                           (
+                               SELECT CtsId
+                               FROM dbo.CatTypeService WITH (NOLOCK)
+                               WHERE RateGroup = @IdRateGroup
+                                     AND CtsRowStatus = 1
+                           )
+                          )
+                UNION ALL
+                SELECT
+                       (ISNULL(rd.RateValue, 0) * @CountPiece)                             AS BaseRate
+                     , ISNULL(rh.ReturnRate, 0)                                            AS ReturnRate
+                     , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)               AS fragilRate
+                     , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)            AS CollectedRate
+                     , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate
+                     , 0                                                                   AS OverWeightRate
+                     , ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0))                    AS IrregularParcelRate
+                     , ISNULL(cr.Name, '')                                                 AS TypeRate
+                     , ISNULL(sg.CrsShortName, '')                                         AS Segment
+                     , ISNULL(sv.CtsShortName, '')                                         AS Service
+                     , ISNULL(sv.CtsName, '')                                              AS ServiceName
+                     , 0                                                                   AS Discount
+                     , ''                                                                  AS DiscountName
+                     , ISNULL(sv.CtsDescription, '')                                       AS ServiceDescription
+                     , IIF(@IsInsurance = 'true'
+                           , IIF(@CustomerType IN (2, 3)
+                               -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                               , CASE
+                                   WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
+                                       THEN 0
+                                   WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
+                                        AND @InsuranceAmount < 5000
+                                       THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
+                                   WHEN @InsuranceAmount >= 5000
+                                       THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                   ELSE 0
+                                 END
+                               -- Tipo 1: comportamiento original
+                               , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                                   , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                   , 0)
+                             )
+                           , 
+                        0)                                                                                             AS InsuranceRate
+                     , ISNULL(rh.InsuranceCharge,0)                                                                    AS InsuranceCharge
+                     , ISNULL(rh.InsuranceExempt,0)                                                                    AS InsuranceExempt
+                FROM #ParceCode                      ls
+                    INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
+                        ON ar.Code = ls.Item
+                    INNER JOIN dbo.RateHeader        rh WITH (NOLOCK)
+                        ON rh.RheId = @RateId
+                    LEFT JOIN dbo.RateData           rdignore WITH (NOLOCK) -- Ignorar artículos sin codigo dentro de tarifario
+                        ON rdignore.ArticleId = ar.AbcId
+                           AND rdignore.RateId = rh.RheId
+                           AND rdignore.RowStatus = 'true'
+                    LEFT JOIN dbo.RateData           rd WITH (NOLOCK)
+                        ON rd.ArticleId IS NULL
+                           AND rd.RateId = rh.RheId
+                           AND rd.RowStatus = 'true'
+                    LEFT JOIN dbo.CatRateSegment     sg WITH (NOLOCK)
+                        ON sg.CrsId = rd.TypeSegmentId
+                    LEFT JOIN dbo.CatTypeService     sv WITH (NOLOCK)
+                        ON sv.CtsId = rd.TypeServiceId
+                    LEFT JOIN dbo.CatTypeRate        cr WITH (NOLOCK)
+                        ON cr.IdTypeRate = rh.RateTypeId
+                WHERE rdignore.IdRateData IS NULL -- Ignorar artículos sin codigo dentro de tarifario
+                      AND rd.TypeSegmentId = @IdSegment
+                      AND (rd.TypeServiceId IN
+                           (
+                               SELECT CtsId
+                               FROM dbo.CatTypeService WITH (NOLOCK)
+                               WHERE RateGroup = @IdRateGroup
+                                     AND CtsRowStatus = 1
+                           )
+                          )
+            ) x
+            GROUP BY x.TypeRate
+                   , x.Segment
+                   , x.Service
+                   , x.DiscountName
+                   , x.fragilRate
+                   , x.CollectedRate
+                   , x.ServiceName
+                   , x.CreditCardRate
+                   , x.OverWeightRate
+                   , x.ServiceDescription
+                   , x.ReturnRate;
 
-            IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerType', 'U') IS NOT NULL  
-                DROP TABLE #ParcelOverweightPerType;  
-            IF OBJECT_ID('tempdb.dbo.#ParcelAmountPerType', 'U') IS NOT NULL  
-                DROP TABLE #ParcelAmountPerType;  
-        END;  
+            IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerTypeCorp', 'U') IS NOT NULL
+                DROP TABLE #ParcelOverweightPerTypeCorp;
+
+        END
 
        -- PRINT @INSURANCEAMOUNT
 
@@ -1860,7 +2117,7 @@ BEGIN
     BEGIN  
         PRINT 'error no se encontro un tarifario';  
     END;  
-  
+
     /* Membresías y Suscripciones */  
     -- Oscar Morales 2022-07-18  
     /* Actualización: Aplicar descuento únicamente a costo base   
@@ -2229,332 +2486,386 @@ BEGIN
     END;  
 
     /* Termina membresías y suscripciones */  
-  
-    SET @CalculateTaxes = 'false';
-    SET @jsonResult =  
-    (  
-        SELECT STUFF(  
-                        (  
-                            SELECT ',{"Title":"' + ISNULL(tr.ServiceName, '') + '",' + '"UseMembership":"'  
-                                   + CONVERT(VARCHAR(1), @CalculateMembership) + '",' + '"Service":"'  
-                                   + IIF(@IdCustomerParams = 0 AND @CustomerId = 6  
-                                         , ISNULL(tr.ServiceName, '')  
-                                         , ISNULL(tr.Segment, '')) + '",' + '"ServiceDescription":"'  
-                                   + ISNULL(tr.ServiceDescription, '') + '",' + '"ServiceShortName":"'  
-                                   + ISNULL(tr.Service, '') + '",' + '"DeliveryDate":"'  
-                                   + CONVERT(VARCHAR(24), @FechaCompra, 120) + '",' + '"Price":"'  
-                                   + CONVERT(  
-                                                VARCHAR(20)  
-                                              , CONVERT(  
-                                                           DECIMAL(12, 2)  
-                                                         , dbo.fnt_Iva_Calculator(  
-                                                                                     @CalculateTaxes  
-                                                                                   , @Country  
-                                                                                   , tr.BaseRate  
-                                                                                     + tr.IrregularPieceRate  
-                                                                                   , 'false'  
-                                                                                 )  
-                                                       )  
-                                                + CONVERT(  
-                                                             DECIMAL(12, 2)  
-                                                           , (dbo.fnt_Iva_Calculator(  
+    IF @FormatResponse = 'Json'
+    BEGIN
+
+        -- Desplegar valor base sin IVA
+        IF (
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral
+                          , @NewRateGeneralDiscount
+                          )
+               AND @IdCustomerParams != 0
+           )
+
+            SET @CalculateTaxes = 'false';
+            SET @jsonResult =  
+            (  
+                SELECT STUFF(  
+                                (  
+                                    SELECT ',{"Title":"' + ISNULL(tr.ServiceName, '') + '",' + '"UseMembership":"'  
+                                           + CONVERT(VARCHAR(1), @CalculateMembership) + '",' + '"Service":"'  
+                                           + IIF(@IdCustomerParams = 0 AND @CustomerId = 6  
+                                                 , ISNULL(tr.ServiceName, '')  
+                                                 , ISNULL(tr.Segment, '')) + '",' + '"ServiceDescription":"'  
+                                           + ISNULL(tr.ServiceDescription, '') + '",' + '"ServiceShortName":"'  
+                                           + ISNULL(tr.Service, '') + '",' + '"DeliveryDate":"'  
+                                           + CONVERT(VARCHAR(24), @FechaCompra, 120) + '",' + '"Price":"'  
+                                           + CONVERT(  
+                                                        VARCHAR(20)  
+                                                      , CONVERT(  
+                                                                   DECIMAL(12, 2)  
+                                                                 , dbo.fnt_Iva_Calculator(  
+                                                                                             @CalculateTaxes  
+                                                                                           , @Country  
+                                                                                           , tr.BaseRate  
+                                                                                             + tr.IrregularPieceRate  
+                                                                                           , 'false'  
+                                                                                         )  
+                                                               )  
+                                                        + CONVERT(  
+                                                                     DECIMAL(12, 2)  
+                                                                   , (dbo.fnt_Iva_Calculator(  
+                                                                                                @CalculateTaxes  
+                                                                                              , @Country  
+                                                                                              , (tr.Discount * -1)  
+                                                                                              , 'false'  
+                                                                                            )  
+                                                                     )  
+                                                                 )  
+                                                        + CONVERT(  
+                                                                     DECIMAL(12, 2)  
+                                                                   , dbo.fnt_Iva_Calculator(  
+                                                                                               @CalculateTaxes  
+                                               , @Country  
+                                                                                             , tr.FragilRate  
+                                                                                             , 'false'  
+                                                                                           )  
+                                                                 )  
+                                                        + CONVERT(  
+                                                                     DECIMAL(12, 2)  
+                                                                   , dbo.fnt_Iva_Calculator(  
+                                                                                               @CalculateTaxes  
+                                                                                             , @Country  
+                                                                                             , tr.CollectedRate  
+                                                                                             , 'false'  
+                                                                                           )  
+                                                                 )  
+                                                        + CONVERT(  
+                                                                     VARCHAR(20)  
+                                                                   , CONVERT(  
+                                                                                DECIMAL(12, 2)  
+                                                                              , dbo.fnt_Iva_Calculator(  
+                                                                                                          @CalculateTaxes  
+                                                                                                        , @Country  
+                                                                                                        , tr.InsuranceRate  
+                                                                                                        , 'false'  
+                                                                                                      )  
+                                                                            )  
+                                                                 )  
+                                                        + CONVERT(  
+                                                                     VARCHAR(20)  
+                                                                   , dbo.fnt_Iva_Calculator(  
+                                                                                               @CalculateTaxes  
+                                                                                             , @Country  
+                                                                                             , tr.CreditCardRate  
+                                                                                             , 'false'  
+                                                                                           )  
+                                                                 )  
+                                                        + CONVERT(  
+                                                                     VARCHAR(20)  
+                                                                   , CONVERT(  
+                                                                                DECIMAL(12, 2)  
+                                                                              , dbo.fnt_Iva_Calculator(  
+                                                                                                          @CalculateTaxes  
+                                                                                                        , @Country  
+                                                                                                        , tr.OverWeightRate  
+                                                                                                        , 'false'  
+                                                                                                      )  
+                                                                            )  
+                                                                 )  
+                                                        + CONVERT(  
+                                                                     DECIMAL(12, 2)  
+                                                                   , dbo.fnt_Iva_Calculator(  
+                                                                                               @CalculateTaxes  
+                                                                                             , @Country  
+                                                                                             , (CONVERT(  
+                                                                                                           DECIMAL(12, 2)  
+                                                                                                         , tr.BaseRate  
+                                                                                                       )  
+                                                                                                - CONVERT(  
+                                                                                                             DECIMAL(12, 2)  
+                                                                                                           , tr.Discount  
+                                                                                                         )  
+                                                                                                + CONVERT(  
+                                                                                                             DECIMAL(12, 2)  
+                                                                                                           , tr.FragilRate  
+                                                                                                         )  
+                                                                                                + CONVERT(  
+                                                                                                             DECIMAL(12, 2)  
+                                                                                                           , tr.CollectedRate  
+                                                                                                         )  
+                                                                                                + CONVERT(  
+                                                                                                             DECIMAL(12, 2)  
+                                                                                                           , tr.InsuranceRate  
+                                                                                                         )  
+                                                                                                + CONVERT(  
+                                                                                                             DECIMAL(12, 2)  
+                                                                                                           , tr.CreditCardRate  
+                                                                                                         )  
+                                                                                                + CONVERT(  
+                                                                                                             DECIMAL(12, 2)  
+                                                                                                           , tr.OverWeightRate  
+                                                                                                         )  
+                                                                                                + CONVERT(  
+                                                      DECIMAL(12, 2)  
+                                                                                                           , tr.IrregularPieceRate  
+                                                                                                         )  
+                                                                                               )  
+                                                                                             , 'true'  
+                                                                                           )  
+                                                                 )  
+                                                    ) + '",' + '"Currency":"' + @Currency + '",'  
+                                           + '"Integration":[{"Description":"' + 'Servicio' + '",' + '"Price":"'  
+                                           + CONVERT(  
+                                                        VARCHAR(20)  
+                                                      , CONVERT(  
+                                                                   DECIMAL(12, 2)  
+                                                                 , dbo.fnt_Iva_Calculator(  
+                                                                                             @CalculateTaxes  
+                                                                                           , @Country  
+                                                                                           , tr.BaseRate  
+                                                                                             + tr.IrregularPieceRate  
+                                                                                           , 'false'  
+                                                                                         )  
+                                                               )  
+                                                    ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
+                                           + IIF(tr.FragilRate > 0  
+                                               , ',{"Description":"' + 'Frágil' + '",' + '"Price":"'  
+                                                 + CONVERT(  
+                                                              VARCHAR(20)  
+                                                            , CONVERT(  
+                                                                         DECIMAL(12, 2)  
+                                                                       , dbo.fnt_Iva_Calculator(  
+                                                                                                   @CalculateTaxes  
+                                                                                                 , @Country  
+                                                                                                 , tr.FragilRate  
+                                                                                                 , 'false'  
+                                                                                               )  
+                                                                     )  
+                                                          ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
+                                               , ' ')  
+                                           + IIF(tr.InsuranceRate > 0  
+                                               , ',{"Description":"' + 'Seguro' + '",' + '"Price":"'  
+                                                 + CONVERT(  
+                                                              VARCHAR(20)  
+                                                            , CONVERT(  
+                                                                         DECIMAL(12, 2)  
+                                                                       , dbo.fnt_Iva_Calculator(  
+                                                                                                   @CalculateTaxes  
+                                                                                                 , @Country  
+                                                                                                 , tr.InsuranceRate  
+                                                                                                 , 'false'  
+                                                                                               )  
+                                                                     )  
+                                                          ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
+                                               , ' ')  
+                                           + IIF(tr.CollectedRate > 0  
+                                               , ',{"Description":"' + 'Pago en Destino' + '",' + '"Price":"'  
+                                                 + CONVERT(  
+                                                              VARCHAR(20)  
+                                                            , CONVERT(  
+                                                                         DECIMAL(12, 2)  
+                                                                       , dbo.fnt_Iva_Calculator(  
+                                                                                                   @CalculateTaxes  
+                                                                                                 , @Country  
+                                                                                                 , tr.CollectedRate  
+                                                                                                 , 'false'  
+                                                                                               )  
+                                                                     )  
+                                                          ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
+                                               , ' ')  
+                                           + IIF((tr.OverWeightRate) > 0  
+                                               , ',{"Description":"' + 'Recargo por Peso' + '",' + '"Price":"'  
+                                                 + CONVERT(  
+                                                              VARCHAR(20)  
+                                                            , CONVERT(  
+                                                                         DECIMAL(12, 2)  
+                                                                       , dbo.fnt_Iva_Calculator(  
+                                                                                                   @CalculateTaxes  
+                                                                                                 , @Country  
+                                                                                                 , tr.OverWeightRate  
+                                                                                                 , 'false'  
+                                                                                               )  
+                                                                     )  
+                                                          ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
+                                               , ' ')  
+                                           + IIF((tr.CreditCardRate) > 0  
+                                               , ',{"Description":"' + 'Otros recargos' + '",' + '"Price":"'  
+                                                 + CONVERT(  
+                                                              VARCHAR(20)  
+                                                            , dbo.fnt_Iva_Calculator(  
                                                                                         @CalculateTaxes  
                                                                                       , @Country  
-                                                                                      , (tr.Discount * -1)  
+                                                                                      , tr.CreditCardRate  
                                                                                       , 'false'  
-                                                                                    )  
-                                                             )  
-                                                         )  
-                                                + CONVERT(  
-                                                             DECIMAL(12, 2)  
-                                                           , dbo.fnt_Iva_Calculator(  
-                                                                                       @CalculateTaxes  
-                                       , @Country  
-                                                                                     , tr.FragilRate  
-                                                                                     , 'false'  
-                                                                                   )  
-                                                         )  
-                                                + CONVERT(  
-                                                             DECIMAL(12, 2)  
-                                                           , dbo.fnt_Iva_Calculator(  
-                                                                                       @CalculateTaxes  
-                                                                                     , @Country  
-                                                                                     , tr.CollectedRate  
-                                                                                     , 'false'  
-                                                                                   )  
-                                                         )  
-                                                + CONVERT(  
-                                                             VARCHAR(20)  
-                                                           , CONVERT(  
-                                                                        DECIMAL(12, 2)  
-                                                                      , dbo.fnt_Iva_Calculator(  
-                                                                                                  @CalculateTaxes  
-                                                                                                , @Country  
-                                                                                                , tr.InsuranceRate  
-                                                                                                , 'false'  
-                                                                                              )  
-                                                                    )  
-                                                         )  
-                                                + CONVERT(  
-                                                             VARCHAR(20)  
-                                                           , dbo.fnt_Iva_Calculator(  
-                                                                                       @CalculateTaxes  
-                                                                                     , @Country  
-                                                                                     , tr.CreditCardRate  
-                                                                                     , 'false'  
-                                                                                   )  
-                                                         )  
-                                                + CONVERT(  
-                                                             VARCHAR(20)  
-                                                           , CONVERT(  
-                                                                        DECIMAL(12, 2)  
-                                                                      , dbo.fnt_Iva_Calculator(  
-                                                                                                  @CalculateTaxes  
-                                                                                                , @Country  
-                                                                                                , tr.OverWeightRate  
-                                                                                                , 'false'  
-                                                                                              )  
-                                                                    )  
-                                                         )  
-                                                + CONVERT(  
-                                                             DECIMAL(12, 2)  
-                                                           , dbo.fnt_Iva_Calculator(  
-                                                                                       @CalculateTaxes  
-                                                                                     , @Country  
-                                                                                     , (CONVERT(  
-                                                                                                   DECIMAL(12, 2)  
-                                                                                                 , tr.BaseRate  
-                                                                                               )  
-                                                                                        - CONVERT(  
-                                                                                                     DECIMAL(12, 2)  
-                                                                                                   , tr.Discount  
-                                                                                                 )  
-                                                                                        + CONVERT(  
-                                                                                                     DECIMAL(12, 2)  
-                                                                                                   , tr.FragilRate  
-                                                                                                 )  
-                                                                                        + CONVERT(  
-                                                                                                     DECIMAL(12, 2)  
-                                                                                                   , tr.CollectedRate  
-                                                                                                 )  
-                                                                                        + CONVERT(  
-                                                                                                     DECIMAL(12, 2)  
-                                                                                                   , tr.InsuranceRate  
-                                                                                                 )  
-                                                                                        + CONVERT(  
-                                                                                                     DECIMAL(12, 2)  
-                                                                                                   , tr.CreditCardRate  
-                                                                                                 )  
-                                                                                        + CONVERT(  
-                                                                                                     DECIMAL(12, 2)  
-                                                                                                   , tr.OverWeightRate  
-                                                                                                 )  
-                                                                                        + CONVERT(  
-                                              DECIMAL(12, 2)  
-                                                                                                   , tr.IrregularPieceRate  
-                                                                                                 )  
-                                                                                       )  
-                                                                                     , 'true'  
-                                                                                   )  
-                                                         )  
-                                            ) + '",' + '"Currency":"' + @Currency + '",'  
-                                   + '"Integration":[{"Description":"' + 'Servicio' + '",' + '"Price":"'  
-                                   + CONVERT(  
-                                                VARCHAR(20)  
-                                              , CONVERT(  
-                                                           DECIMAL(12, 2)  
-                                                         , dbo.fnt_Iva_Calculator(  
-                                                                                     @CalculateTaxes  
-                                                                                   , @Country  
-                                                                                   , tr.BaseRate  
-                                                                                     + tr.IrregularPieceRate  
-                                                                                   , 'false'  
-                                                                                 )  
-                                                       )  
-                                            ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
-                                   + IIF(tr.FragilRate > 0  
-                                       , ',{"Description":"' + 'Frágil' + '",' + '"Price":"'  
-                                         + CONVERT(  
-                                                      VARCHAR(20)  
-                                                    , CONVERT(  
-                                                                 DECIMAL(12, 2)  
-                                                               , dbo.fnt_Iva_Calculator(  
-                                                                                           @CalculateTaxes  
-                                                                                         , @Country  
-                                                                                         , tr.FragilRate  
-                                                                                         , 'false'  
-                                                                                       )  
-                                                             )  
-                                                  ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
-                                       , ' ')  
-                                   + IIF(tr.InsuranceRate > 0  
-                                       , ',{"Description":"' + 'Seguro' + '",' + '"Price":"'  
-                                         + CONVERT(  
-                                                      VARCHAR(20)  
-                                                    , CONVERT(  
-                                                                 DECIMAL(12, 2)  
-                                                               , dbo.fnt_Iva_Calculator(  
-                                                                                           @CalculateTaxes  
-                                                                                         , @Country  
-                                                                                         , tr.InsuranceRate  
-                                                                                         , 'false'  
-                                                                                       )  
-                                                             )  
-                                                  ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
-                                       , ' ')  
-                                   + IIF(tr.CollectedRate > 0  
-                                       , ',{"Description":"' + 'Pago en Destino' + '",' + '"Price":"'  
-                                         + CONVERT(  
-                                                      VARCHAR(20)  
-                                                    , CONVERT(  
-                                                                 DECIMAL(12, 2)  
-                                                               , dbo.fnt_Iva_Calculator(  
-                                                                                           @CalculateTaxes  
-                                                                                         , @Country  
-                                                                                         , tr.CollectedRate  
-                                                                                         , 'false'  
-                                                                                       )  
-                                                             )  
-                                                  ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
-                                       , ' ')  
-                                   + IIF((tr.OverWeightRate) > 0  
-                                       , ',{"Description":"' + 'Recargo por Peso' + '",' + '"Price":"'  
-                                         + CONVERT(  
-                                                      VARCHAR(20)  
-                                                    , CONVERT(  
-                                                                 DECIMAL(12, 2)  
-                                                               , dbo.fnt_Iva_Calculator(  
-                                                                                           @CalculateTaxes  
-                                                                                         , @Country  
-                                                                                         , tr.OverWeightRate  
-                                                                                         , 'false'  
-                                                                                       )  
-                                                             )  
-                                                  ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
-                                       , ' ')  
-                                   + IIF((tr.CreditCardRate) > 0  
-                                       , ',{"Description":"' + 'Otros recargos' + '",' + '"Price":"'  
-                                         + CONVERT(  
-                                                      VARCHAR(20)  
-                                                    , dbo.fnt_Iva_Calculator(  
-                                                                                @CalculateTaxes  
-                                                                              , @Country  
-                                                                              , tr.CreditCardRate  
-                                                                              , 'false'  
-                                                                          )  
-                                                  ) + '",' + '"Currency":"' + COALESCE(@Currency, '') + '"' + '}'  
-                                       , ' ')  
-                                   + IIF((ISNULL(tr.Discount, 0)) > 0  
-                                       , ',{"Description":"' + ISNULL(tr.DiscountName, '') + '",' + '"Price":"'  
-                                         + CONVERT(  
-                                                      VARCHAR  
-                                                    , CONVERT(  
-                                                                 DECIMAL(12, 2)  
-                                                               , (dbo.fnt_Iva_Calculator(  
-                                                                                            @CalculateTaxes  
-                                                                                          , @Country  
-                                                                                          , (tr.Discount * -1)  
-                                                                                          , 'false'  
-                                                                                        )  
-                                                                 )  
-                                                             )  
-                                                  ) + '",' + '"Currency":"' + COALESCE(@Currency, '') + '"' + '}'  
-                                       , ' ')  
-                                   + IIF((ISNULL(  
-                                                    dbo.fnt_Iva_Calculator(  
-                                                                              @CalculateTaxes  
-                                                                            , @Country  
-                                                                            , (CONVERT(DECIMAL(12, 2), tr.BaseRate)  
-                                                                               - CONVERT(  
-                                                                                            DECIMAL(12, 2)  
-                                                                                          , tr.Discount  
-                                                                                        )  
-                                                                               + CONVERT(  
-                                                                                            DECIMAL(12, 2)  
-                                                                                          , tr.FragilRate  
-                                                                                        )  
-                                                                               + CONVERT(  
-                                                                                            DECIMAL(12, 2)  
-                                                                                          , tr.CollectedRate  
-                                                                                        )  
-                                                                               + CONVERT(  
-                                                                                            DECIMAL(12, 2)  
-                                                                                          , tr.InsuranceRate  
-                                                                                        )  
-                                                                               + CONVERT(  
-                                                                                            DECIMAL(12, 2)  
-                                                                                          , tr.CreditCardRate  
-                                                                                        )  
-                                                                               + CONVERT(  
-                                                                                            DECIMAL(12, 2)  
-                                                                                          , tr.OverWeightRate  
-                                                                                        )  
-                                                                               + CONVERT(  
-                                                                                            DECIMAL(12, 2)  
-                                                                                          , tr.IrregularPieceRate  
-                                                                                        )  
-                                                                              )  
-                                                                            , 'true'  
-                                                                          )  
-                                                  , 0  
-                                                )  
-                                         ) > 0  
-                                       , ',{"Description":"' + 'IVA' + '",' + '"Price":"'  
-                                         + CONVERT(  
-                                                      VARCHAR(20)  
-                                                    , CONVERT(  
-                                                                 DECIMAL(12, 2)  
-                                                               , dbo.fnt_Iva_Calculator(  
-                                                                                           @CalculateTaxes  
-                                                                                         , @Country  
-                                                                                         , (CONVERT(  
-                                                                                                       DECIMAL(12, 2)  
-                                                                                                     , tr.BaseRate  
+                                                                                  )  
+                                                          ) + '",' + '"Currency":"' + COALESCE(@Currency, '') + '"' + '}'  
+                                               , ' ')  
+                                           + IIF((ISNULL(tr.Discount, 0)) > 0  
+                                               , ',{"Description":"' + ISNULL(tr.DiscountName, '') + '",' + '"Price":"'  
+                                                 + CONVERT(  
+                                                              VARCHAR  
+                                                            , CONVERT(  
+                                                                         DECIMAL(12, 2)  
+                                                                       , (dbo.fnt_Iva_Calculator(  
+                                                                                                    @CalculateTaxes  
+                                                                                                  , @Country  
+                                                                                                  , (tr.Discount * -1)  
+                                                                                                  , 'false'  
+                                                                                                )  
+                                                                         )  
+                                                                     )  
+                                                          ) + '",' + '"Currency":"' + COALESCE(@Currency, '') + '"' + '}'  
+                                               , ' ')  
+                                           + IIF((ISNULL(  
+                                                            dbo.fnt_Iva_Calculator(  
+                                                                                      @CalculateTaxes  
+                                                                                    , @Country  
+                                                                                    , (CONVERT(DECIMAL(12, 2), tr.BaseRate)  
+                                                                                       - CONVERT(  
+                                                                                                    DECIMAL(12, 2)  
+                                                                                                  , tr.Discount  
+                                                                                                )  
+                                                                                       + CONVERT(  
+                                                                                                    DECIMAL(12, 2)  
+                                                                                                  , tr.FragilRate  
+                                                                                                )  
+                                                                                       + CONVERT(  
+                                                                                                    DECIMAL(12, 2)  
+                                                                                                  , tr.CollectedRate  
+                                                                                                )  
+                                                                                       + CONVERT(  
+                                                                                                    DECIMAL(12, 2)  
+                                                                                                  , tr.InsuranceRate  
+                                                                                                )  
+                                                                                       + CONVERT(  
+                                                                                                    DECIMAL(12, 2)  
+                                                                                                  , tr.CreditCardRate  
+                                                                                                )  
+                                                                                       + CONVERT(  
+                                                                                                    DECIMAL(12, 2)  
+                                                                                                  , tr.OverWeightRate  
+                                                                                                )  
+                                                                                       + CONVERT(  
+                                                                                                    DECIMAL(12, 2)  
+                                                                                                  , tr.IrregularPieceRate  
+                                                                                                )  
+                                                                                      )  
+                                                                                    , 'true'  
+                                                                                  )  
+                                                          , 0  
+                                                        )  
+                                                 ) > 0  
+                                               , ',{"Description":"' + 'IVA' + '",' + '"Price":"'  
+                                                 + CONVERT(  
+                                                              VARCHAR(20)  
+                                                            , CONVERT(  
+                                                                         DECIMAL(12, 2)  
+                                                                       , dbo.fnt_Iva_Calculator(  
+                                                                                                   @CalculateTaxes  
+                                                                                                 , @Country  
+                                                                                                 , (CONVERT(  
+                                                                                                               DECIMAL(12, 2)  
+                                                                                                             , tr.BaseRate  
+                                                                                                           )  
+                                                                                                    - CONVERT(  
+                                                                                                                 DECIMAL(12, 2)  
+                                                                                                               , tr.Discount  
+                                                                                                             )  
+                                                                                                    + CONVERT(  
+                                                                                                                 DECIMAL(12, 2)  
+                                                                                                               , tr.FragilRate  
+                                                                                                             )  
+                                                                                                    + CONVERT(  
+                                                                                                                 DECIMAL(12, 2)  
+                                                                                                               , tr.CollectedRate  
+                                                                                                             )  
+                                                                                                    + CONVERT(  
+                                                                                                                 DECIMAL(12, 2)  
+                                                                                                               , tr.InsuranceRate  
+                                                                                                             )  
+                                                                                                    + CONVERT(  
+                                                                                                                 DECIMAL(12, 2)  
+                                                                                                               , tr.CreditCardRate  
+                                                                                                             )  
+                                                                                                    + CONVERT(  
+                                                                                                                 DECIMAL(12, 2)  
+                                                                                                               , tr.OverWeightRate  
+                                                                                                             )  
+                                                                                                    + CONVERT(  
+                                                                                                                 DECIMAL(12, 2)  
+                                                                                                               , tr.IrregularPieceRate  
+                                                                                                             )  
                                                                                                    )  
-                                                                                            - CONVERT(  
-                                                                                                         DECIMAL(12, 2)  
-                                                                                                       , tr.Discount  
-                                                                                                     )  
-                                                                                            + CONVERT(  
-                                                                                                         DECIMAL(12, 2)  
-                                                                                                       , tr.FragilRate  
-                                                                                                     )  
-                                                                                            + CONVERT(  
-                                                                                                         DECIMAL(12, 2)  
-                                                                                                       , tr.CollectedRate  
-                                                                                                     )  
-                                                                                            + CONVERT(  
-                                                                                                         DECIMAL(12, 2)  
-                                                                                                       , tr.InsuranceRate  
-                                                                                                     )  
-                                                                                            + CONVERT(  
-                                                                                                         DECIMAL(12, 2)  
-                                                                                                       , tr.CreditCardRate  
-                                                                                                     )  
-                                                                                            + CONVERT(  
-                                                                                                         DECIMAL(12, 2)  
-                                                                                                       , tr.OverWeightRate  
-                                                                                                     )  
-                                                                                            + CONVERT(  
-                                                                                                         DECIMAL(12, 2)  
-                                                                                                       , tr.IrregularPieceRate  
-                                                                                                     )  
-                                                                                           )  
-                                                                                         , 'true'  
-                                                                                       )  
-                                                             )  
-                                                  ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
-                                       , ' ') + ' ]}'  
-                            FROM @TempRate tr  
-                            -- where us.UsrEmail = @UserName and us.UsrRowStatus = 1   
-                            FOR XML PATH(''), TYPE  
-                        ).value('.', 'varchar(max)')  
-                      , 1  
-                      , 1  
-                      , ''  
-                    )  
-    );
+                                                                                                 , 'true'  
+                                                                                               )  
+                                                                     )  
+                                                          ) + '",' + '"Currency":"' + @Currency + '"' + '}'  
+                                               , ' ') + ' ]}'  
+                                    FROM @TempRate tr  
+                                    -- where us.UsrEmail = @UserName and us.UsrRowStatus = 1   
+                                    FOR XML PATH(''), TYPE  
+                                ).value('.', 'varchar(max)')  
+                              , 1  
+                              , 1  
+                              , ''  
+                            )  
+            );
 
-    SELECT '[' + @jsonResult + ']';  
+            SELECT '[' + @jsonResult + ']';
+        END
+    ELSE
+    BEGIN
+
+         -- Desplegar valor base sin IVA
+         IF (
+                @RateId IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral
+                           , @NewRateGeneralDiscount
+                           )
+                AND @IdCustomerParams != 0
+            )
+             SET @CalculateTaxes = 'false';
+
+         SELECT tr.TypeRate
+              , tr.Segment
+              , tr.Service
+              , IIF(@PriceWithCreditCard = 1
+                  , (tr.BaseRate - tr.Discount + tr.IrregularPieceRate + tr.CreditCardRate)
+                  , (tr.BaseRate - tr.Discount + tr.IrregularPieceRate))                          AS Price --  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
+              , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.BaseRate, 'false')           AS BaseRate
+              , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, (tr.Discount * -1), 'false')    AS DiscountValue
+              , tr.DiscountName
+              , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.FragilRate, 'false')         AS FragilRate
+              , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.CollectedRate, 'false')      AS CollectedRate
+              , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.InsuranceRate, 'false')      AS InsuranceRate
+              , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.OverWeightRate, 'false')     AS OverWeightRate
+              , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.IrregularPieceRate, 'false') AS IrregularPieceRate
+              , dbo.fnt_Iva_Calculator(@CalculateTaxes, @Country, tr.CreditCardRate, 'false')     AS CreditCardRate
+              , dbo.fnt_Iva_Calculator(
+                                          @CalculateTaxes
+                                        , @Country
+                                        , (tr.BaseRate - tr.Discount + tr.FragilRate + tr.CollectedRate
+                                           + tr.InsuranceRate + tr.CreditCardRate + tr.OverWeightRate
+                                           + tr.IrregularPieceRate
+                                          )
+                                        , 'true'
+                                      )                                                       AS Iva
+              , @FechaCompra                                                                  [FechaCompra]
+              , @Currency                                                                     [Currency]
+              , tr.ReturnRate                                                                 [ReturnRate]
+              , @CurrencyId                                                                   [CurrencyId]
+         FROM @TempRate tr;
+    END;
+
 
 END;
