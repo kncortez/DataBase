@@ -73,6 +73,10 @@ BEGIN
 			,@GuideNumber = LG.ItemNumber
 	FROM
 		@ListGuides LG
+    
+    DECLARE  @CurrencySender INT,
+    @ExchangeSender DECIMAL(12,6),
+    @SenderCountryId NVARCHAR(4);
 
     SELECT TOP 1 
         @CurrencySender = C.IdCatCurrencyCOD
