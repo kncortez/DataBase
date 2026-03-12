@@ -24,8 +24,8 @@
          , so.OrderDescription                                                                 [Status]
          , ISNULL(cas.SysIdSystem,-1)                                                          [SystemId]
          , ISNULL(cas.SysNameSystem,'No definido')                                             [SystemName]
-         , ISNULL(c.PaymentMethodId,0)                                                       [PaymentMethodId]
-         , ISNULL(c.PaymentMethod,'No Definido')                                             [PaymentMethod]
+         , ISNULL(c.PaymentMethodId,0)                                                         [PaymentMethodId]
+         , ISNULL(c.PaymentMethod,'No Definido')                                              [PaymentMethod]
          , ISNULL(cts.CtsId,0)                                                                 [TypePurchaseId]
          , IIF((mbl.SubscriptionId IS NULL AND mbl.MembershipId IS NULL), 'NORMAL', 'PAQUETE') [TypePurchase]
          , Concat(do.Sender_FirstName, ' ', do.Sender_LastName)                                [Sender]
@@ -35,44 +35,48 @@
          , do.SenderCountryId                                                                  [CountryId]
          , (ISNULL(do.PriceShippment,0) + ISNULL(do.Collect_OnDelivery, 0))                    [Amount]
     FROM DeliveryOrder do     WITH (NOLOCK)
+    LEFT JOIN CatSystem cas WITH (NOLOCK)
+        ON cas.SysIdSystem = do.CatSystemId
     INNER JOIN StatusOrder so WITH (NOLOCK)
         ON so.StatusOrderId = do.StatusOrderId
-    INNER JOIN dbo.cost c     WITH(NOLOCK)
-        ON c.GuideSerie = do.Guide_serie
-       AND c.GuideNumber = do.Guide_Number
-    LEFT JOIN dbo.BreakdownOfPayment bop WITH(NOLOCK)
-        ON c.IdCost = bop.IdCost
-       AND bop.[Description] = 'Recargo por Peso'
     INNER JOIN dbo.Customer cs WITH(NOLOCK)
         ON cs.IdCustomer = do.IdCustomer
     LEFT JOIN CatTypeService cts WITH (NOLOCK)
         ON do.TypeService = cts.CtsShortName
-    LEFT JOIN CatSystem cas WITH (NOLOCK)
-        ON cas.SysIdSystem = do.CatSystemId
     LEFT JOIN MembershipSubscriptionLog mbl 
-        ON mbl.LogGuideSerie = do.Guide_Serie And mbl.LogGuideNumber = do.Guide_Number
+        ON mbl.LogGuideSerie = do.Guide_Serie 
+       AND mbl.LogGuideNumber = do.Guide_Number
+    LEFT JOIN dbo.BreakdownOfPayment bop WITH(NOLOCK)
+        ON c.IdCost = bop.IdCost
+       AND bop.[Description] = 'Recargo por Peso'
     OUTER APPLY(
-                 SELECT IIF( IH.IdCountry = 'SV', IH.inv_NumberFEL, IH.inv_certificationFEL) [invoice]
-                      , ID.dti_fk_orderSerie    [Guide_Serie]
-                      , ID.dti_fk_orderNumber   [Guide_number]
-                      ,  ISNULL(iomd.io_type,0)                  [PaymentMethodId]
-                      , ISNULL(tiomd.tio_pk_name,'NO Definido') [PaymentMethod]
-                 FROM invoiceDetail ID WITH(NOLOCK)
-                 INNER JOIN invoiceHeader IH WITH(NOLOCK)
-                   ON IH.inv_pk_id = ID.dti_fk_header
-                 INNER JOIN dbo.InOutOfMoneyDetail iomd  WITH(NOLOCK)
-                   ON iomd.io_invoice = inv_pk_id
-                 INNER JOIN dbo.ctgTypeOfInOutOfMoney tiomd WITH(NOLOCK)
-                   ON iomd.io_type = tiomd.tio_pk_id
-                 WHERE ID.dti_fk_orderSerie = do.Guide_Serie
-                   AND ID.dti_fk_orderNumber = do.Guide_number
-               ) inv
+                  SELECT (GuideDeliveryAttemptCount + GuideReturnAttemptCount) [attempt]
+                  FROM DeliveryOrderAttemptData doad WITH(NOLOCK)
+                  WHERE doad.GuideSerie = do.Guide_Serie
+                  AND doad.GuideNumber = do.Guide_Number
+                ) att
     OUTER APPLY(
-                 SELECT count(*) [attempt]
-                 FROM DeliveryAttempt da WITH(NOLOCK)
-                 WHERE da.Guide_Serie = do.Guide_Serie
-                   AND da.Guide_Number = do.Guide_Number
-               ) att
+              SELECT IIF( MAX(IH.IdCountry) = 'SV', MAX(IH.inv_NumberFEL), MAX(IH.inv_certificationFEL)) [invoice]
+                  , MAX(ID.dti_fk_orderSerie)                     [Guide_Serie]
+                  , MAX(ID.dti_fk_orderNumber)                    [Guide_number]
+              FROM invoiceDetail ID WITH(NOLOCK)
+              INNER JOIN invoiceHeader IH WITH(NOLOCK)
+                ON IH.inv_pk_id = ID.dti_fk_header
+              WHERE ID.dti_fk_orderSerie = do.Guide_Serie
+                AND ID.dti_fk_orderNumber = do.Guide_number
+            ) inv
+        OUTER APPLY(
+            SELECT  MAX(co.IdCost)                                [IdCost]
+                  , ISNULL(MAX(cd.IdTypeOfMoney),0)               [PaymentMethodId]
+                  , ISNULL(MAX(tiomd.tio_pk_name),'NO Definido')  [PaymentMethod]
+            FROM dbo.cost co     WITH(NOLOCK)
+            INNER JOIN dbo.CostDetail cd WITH(NOLOCK)
+                ON co.IdCost = cd.IdCost
+            INNER JOIN dbo.ctgTypeOfInOutOfMoney tiomd WITH(NOLOCK)
+                ON cd.IdTypeOfMoney = tiomd.tio_pk_id
+            WHERE co.GuideSerie =  do.Guide_Serie
+              AND co.GuideNumber = do.Guide_Number
+            ) c
     WHERE do.DateCreated >= '2024-10-01'
       AND do.DateCreated <=  '2024-12-31'
       AND EXISTS (
