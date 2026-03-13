@@ -1,6 +1,6 @@
 CREATE TABLE [dbo].[CustomerTownshipMapping] (
     [IdCustomerTownshipMapping] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
-    [IdTownship]                BIGINT        NOT NULL,
+    [IdTownship]                INT        NOT NULL,
     [IdCustomer]                INT           NOT NULL,
     [ExternalTownshipId]        NVARCHAR(200) NULL, -- Puede ser NULL si el cliente solo manda el nombre
     [ExternalTownshipName]      NVARCHAR(200) NULL, -- Puede ser NULL si el cliente solo manda el ID
