@@ -20,7 +20,7 @@ SELECT
 FROM DeliveryBackOffice.dbo.Settlement st WITH(NOLOCK)
 INNER JOIN DeliveryBackOffice.dbo.Province pr WITH(NOLOCK) ON pr.IdProvince = st.IdProvince
 INNER JOIN DeliveryBackOffice.dbo.Township tw WITH(NOLOCK) ON tw.IdTownship = st.IdTownship
-WHERE ISNULL(st.IdCountry,'GT') = @IdCountry
+WHERE st.IdCountry = @IdCountry
 AND st.SettlementSatus = 1
 AND tw.TownshipStatus = 1
 AND pr.ProvinceStatus = 1

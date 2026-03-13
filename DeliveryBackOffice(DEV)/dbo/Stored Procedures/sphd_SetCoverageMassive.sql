@@ -72,17 +72,21 @@ BEGIN
 				INNER JOIN @dataToSet DS ON  SERV.IdDump= CAST(DS.TextParameter AS bigint))
 		--END SAVE LOG
 		--START SET NEW DATA
-        UPDATE DBO.DumpServiceCoverage SET 
-            Hub=(case when (@flag in ('ALL','HUB')) then @hubcode else Hub end),
-            RouteCode=(case when (@flag in ('ALL','ROUTE')) then @routecode else RouteCode end),
-            SDD=(case when (@flag in ('ALL','TYPESERVICE')) then @SDD else SDD end),
-            NDD=(case when (@flag in ('ALL','TYPESERVICE')) then @NDD else NDD end),
-            TDA=(case when (@flag in ('ALL','TYPESERVICE')) then @TDA else TDA end), 
-			DeliveryTime=(case when (@flag in ('ALL','TYPESERVICE')) then @deliveryTime else DeliveryTime end), 
-            Coverage=(case when (@flag in ('ALL','COVERAGE')) then @ConcatedCov else Coverage end),			
-			TokenUpdated=@userToken,
-			DateUpdated=GETDATE()
-            where IdDump in (SELECT TextParameter FROM @dataToSet);
+		UPDATE dsc SET 
+            dsc.Hub=(case when (@flag in ('ALL','HUB')) then @hubcode else dsc.Hub end),
+            dsc.RouteCode=(case when (@flag in ('ALL','ROUTE')) then @routecode else dsc.RouteCode end),
+            dsc.SDD=(case when (@flag in ('ALL','TYPESERVICE')) then @SDD else dsc.SDD end),
+            dsc.NDD=(case when (@flag in ('ALL','TYPESERVICE')) then @NDD else dsc.NDD end),
+            dsc.TDA=(case when (@flag in ('ALL','TYPESERVICE')) then @TDA else dsc.TDA end), 
+			dsc.DeliveryTime=(case when (@flag in ('ALL','TYPESERVICE')) then @deliveryTime else dsc.DeliveryTime end), 
+            dsc.Coverage=(case when (@flag in ('ALL','COVERAGE')) then @ConcatedCov else dsc.Coverage end),			
+			dsc.TokenUpdated=@userToken,
+			dsc.DateUpdated=GETDATE()
+			from DBO.DumpServiceCoverage dsc
+			INNER JOIN @dataToSet dts
+				ON dsc.IdDump = CAST(dts.TextParameter AS bigint);
+
+
             select 0,@hubcode,@routecode,@deliveryTime;
 			
 		IF ((SELECT COUNT(1) FROM @LocationDataToSet) > 0)
