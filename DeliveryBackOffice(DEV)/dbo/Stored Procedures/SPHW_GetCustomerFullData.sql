@@ -1,10 +1,3 @@
-USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[SPHW_GetCustomerFullData]    Script Date: 3/12/2026 5:20:41 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- =============================================
 -- Author:		<Edelman>
 -- Create date: <2025-11-25>
@@ -15,7 +8,7 @@ GO
 -- Create date: <2026-03-06>
 -- Description:	<Ajuste en nombre mostrado según tipo de cuenta>
 -- =============================================
-ALTER PROCEDURE [dbo].[SPHW_GetCustomerFullData]
+CREATE PROCEDURE [dbo].[SPHW_GetCustomerFullData]
     @IdCustomer INT
 AS
 BEGIN
@@ -82,4 +75,3 @@ BEGIN
     INNER JOIN [DeliveryBackOffice].[dbo].[Account] a WITH(NOLOCK) ON a.AccIdAccount = ua.UadIdAccount
     WHERE a.IdCustomer = @IdCustomer;
 END
-
