@@ -8,14 +8,19 @@
 -- Create date: <2022-05-11>
 -- Description:	< Adición de manejo de edición de ubicaciones de poblados >
 -- =============================================
+-- Author:		<Mario, Herrarte>
+-- Create date: <2026-03-12>
+-- Description:	<Se agrego el campo TypeSettlement para identificar poblados privados y publicos>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_SetCoverageMassive]
-	@idHub int = NULL,
-	@idRoute int =NULL,
-	@SDD		bit =NULL,
-	@NDD		bit =NULL,
-	@TDA		bit =NULL,
-	@ConcatedCov nvarchar(50)=NULL,
-	@flag		nvarchar(50), --Este campo indica si se van a editar todos los campos o si solo se quiere modificar uno en especifico
+	@idHub          int = NULL,
+	@idRoute        int =NULL,
+	@TypeSettlement int = NULL,
+	@SDD		    bit =NULL,
+	@NDD		    bit =NULL,
+	@TDA		    bit =NULL,
+	@ConcatedCov    nvarchar(50)=NULL,
+	@flag		    nvarchar(50), --Este campo indica si se van a editar todos los campos o si solo se quiere modificar uno en especifico
 	--Para el parametro flag:
 		--'HUB' editara el hub
 		--'ROUTE' editara la ruta
@@ -88,6 +93,7 @@ BEGIN
 			SET
 				Sttlmnt.SettlementLatitud = CAST(IIF(LEN(LDTS.PlaceLatitude) > 9, SUBSTRING(LDTS.PlaceLatitude,1,9), LDTS.PlaceLatitude) AS DECIMAL(9,6))
 				,Sttlmnt.SettlementLongitud = CAST(IIF(LEN(LDTS.PlaceLongitude) > 9, SUBSTRING(LDTS.PlaceLongitude,1,9), LDTS.PlaceLongitude) AS DECIMAL(9,6))
+				,Sttlmnt.TypeSettlement = @TypeSettlement
 				,Sttlmnt.TokenUpdated = @userToken
 				,Sttlmnt.DateUpdated = GETDATE()
 			FROM

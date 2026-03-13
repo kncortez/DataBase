@@ -1,3 +1,8 @@
+-- =============================================
+-- Author:		<Mario, Herrarte>
+-- Create date: <2026-03-12>
+-- Description:	<Se filtra por el campo TypeSettlement para mostrar solo poblados publicos>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphwd_GetSettlements]
   @IdCountry varchar(2) = 'GT'
 AS 
@@ -21,5 +26,5 @@ AND tw.TownshipStatus = 1
 AND pr.ProvinceStatus = 1
 AND st.IdTownship = tw.IdTownship
 AND st.IdProvince = tw.IdProvince
-
+AND st.TypeSettlement = 0
 END;
