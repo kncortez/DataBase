@@ -36,44 +36,41 @@ BEGIN
       AND GuideDate <  @todayDate
 
     INSERT INTO RetroactiveReconciliation
-    SELECT CAST(do.dateCreated AS DATE)                                                        [Guidedate]
-         , concat(do.Guide_Serie,'-',do.Guide_Number)                                          [Guide]
-         , cs.[IdCustomer]                                                                     [CustomerId]
-         , cs.[Name]                                                                           [CustomerName]
-         , ISNULL(cs.ConditionOfPaymentID, 1)                                                  [TypeSaleId]
-         , IIF(ISNULL(cs.ConditionOfPaymentID, 1) = 1 , 'CONTADO', 'CREDITO')                  [TypeSale]
-         , so.StatusOrderId                                                                    [StatusId]
-         , so.OrderDescription                                                                 [Status]
-         , ISNULL(cas.SysIdSystem,-1)                                                          [SystemId]
-         , ISNULL(cas.SysNameSystem,'No definido')                                             [SystemName]
-         , ISNULL(c.PaymentMethodId,0)                                                         [PaymentMethodId]
-         , ISNULL(c.PaymentMethod,'No Definido')                                               [PaymentMethod]
-         , ISNULL(cts.CtsId,0)                                                                 [TypePurchaseId]
-         , IIF((mbl.SubscriptionId IS NULL AND mbl.MembershipId IS NULL), 'NORMAL', 'PAQUETE') [TypePurchase]
-         , Concat(do.Sender_FirstName, ' ', do.Sender_LastName)                                [Sender]
-         , ISNULL(inv.invoice,'Pendiente')                                                     [Invoice]
-         , att.attempt                                                                         [Attempt]
-         , ISNULL(bop.Amount,0)                                                                [Overweight]
-         , do.SenderCountryId                                                                  [CountryId]
-         , (ISNULL(do.PriceShippment,0) + ISNULL(do.Collect_OnDelivery, 0))                    [Amount]
+    SELECT CAST(do.dateCreated AS DATE)                                                       [Guidedate]
+        , concat(do.Guide_Serie,'-',do.Guide_Number)                                          [Guide]
+        , cs.[IdCustomer]                                                                     [CustomerId]
+        , cs.[Name]                                                                           [CustomerName]
+        , ISNULL(cs.ConditionOfPaymentID, 1)                                                  [TypeSaleId]
+        , IIF(ISNULL(cs.ConditionOfPaymentID, 1) = 1 , 'CONTADO', 'CREDITO')                  [TypeSale]
+        , so.StatusOrderId                                                                    [StatusId]
+        , StatusOrderDescription                                                              [Status]
+        , ISNULL(cas.SysIdSystem,-1)                                                          [SystemId]
+        , ISNULL(cas.SysNameSystem,'No definido')                                             [SystemName]
+        , ISNULL(c.PaymentMethodId,0)                                                         [PaymentMethodId]
+        , ISNULL(c.PaymentMethod,'No Definido')                                               [PaymentMethod]
+        , ISNULL(cts.CtsId,0)                                                                 [TypePurchaseId]
+        , IIF((mbl.SubscriptionId IS NULL AND mbl.MembershipId IS NULL), 'NORMAL', 'PAQUETE') [TypePurchase]
+        , Concat(do.Sender_FirstName, ' ', do.Sender_LastName)                                [Sender]
+        , ISNULL(inv.invoice,'Pendiente')                                                     [Invoice]
+        , ISNULL(doad.GuideDeliveryAttemptCount, 0) + ISNULL(doad.GuideReturnAttemptCount, 0) [Attempt]
+        , ISNULL(bop.Amount,0)                                                                [Overweight]
+        , do.SenderCountryId                                                                  [CountryId]
+        , (ISNULL(do.PriceShippment,0) + ISNULL(do.Collect_OnDelivery, 0))                    [Amount]
     FROM DeliveryOrder do     WITH (NOLOCK)
+    INNER JOIN @StatusOrderFinish so
+        ON so.StatusOrderId = do.StatusOrderId
     LEFT JOIN CatSystem cas WITH (NOLOCK)
         ON cas.SysIdSystem = do.CatSystemId
-    INNER JOIN StatusOrder so WITH (NOLOCK)
-        ON so.StatusOrderId = do.StatusOrderId
     INNER JOIN dbo.Customer cs WITH(NOLOCK)
         ON cs.IdCustomer = do.IdCustomer
     LEFT JOIN CatTypeService cts WITH (NOLOCK)
         ON do.TypeService = cts.CtsShortName
-    LEFT JOIN MembershipSubscriptionLog mbl 
+    LEFT JOIN MembershipSubscriptionLog mbl WITH (NOLOCK)
         ON mbl.LogGuideSerie = do.Guide_Serie 
-       AND mbl.LogGuideNumber = do.Guide_Number
-    OUTER APPLY(
-                  SELECT (GuideDeliveryAttemptCount + GuideReturnAttemptCount) [attempt]
-                  FROM DeliveryOrderAttemptData doad WITH(NOLOCK)
-                  WHERE doad.GuideSerie = do.Guide_Serie
-                  AND doad.GuideNumber = do.Guide_Number
-                ) att
+      AND mbl.LogGuideNumber = do.Guide_Number
+    LEFT JOIN DeliveryOrderAttemptData doad WITH(NOLOCK)
+        ON doad.GuideSerie  = do.Guide_Serie
+      AND doad.GuideNumber = do.Guide_Number
     OUTER APPLY(
               SELECT IIF( MAX(IH.IdCountry) = 'SV', MAX(IH.inv_NumberFEL), MAX(IH.inv_certificationFEL)) [invoice]
                   , MAX(ID.dti_fk_orderSerie)                     [Guide_Serie]
@@ -97,15 +94,10 @@ BEGIN
               AND co.GuideNumber = do.Guide_Number
             ) c
     LEFT JOIN dbo.BreakdownOfPayment bop WITH(NOLOCK)
-        ON c.IdCost = bop.IdCost
-       AND bop.[Description] = 'Recargo por Peso'
+        ON bop.IdCost = c.IdCost
+      AND bop.[Description] = 'Recargo por Peso'
     WHERE do.DateCreated >= @beginDate
       AND do.DateCreated <  @todayDate
-      AND EXISTS (
-            SELECT 1
-            FROM @StatusOrderFinish sf
-            WHERE sf.StatusOrderId = do.StatusOrderId
-          )
 
     END TRY
     BEGIN CATCH
