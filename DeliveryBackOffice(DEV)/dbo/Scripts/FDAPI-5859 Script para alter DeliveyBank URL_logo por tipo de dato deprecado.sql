@@ -2,7 +2,7 @@
    SCRIPT:
    Propósito: Cambiar el tipo de dato a dbo.DeliveryBank.URL_logo por tipo de dato deprecado 
    Autor:     Brenda Echeverria
-   Historia:  FDAPI-5799
+   Historia:  FDAPI-5859
    Fecha:     2026-03-13
    =========================================== */
 /* === CHANGELOG =============================
