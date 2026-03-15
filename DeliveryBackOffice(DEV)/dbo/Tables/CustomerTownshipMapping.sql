@@ -2,6 +2,7 @@ CREATE TABLE [dbo].[CustomerTownshipMapping] (
     [IdCustomerTownshipMapping] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [TownshipId]                INT           NOT NULL,
     [CodeOfReference]           INT           NOT NULL,
+    [CountryId]                 NVARCHAR(5)   NOT NULL,
     [ExternalTownshipId]        NVARCHAR(200) NULL, -- Puede ser NULL si el cliente solo manda el nombre
     [ExternalTownshipName]      NVARCHAR(200) NULL, -- Puede ser NULL si el cliente solo manda el ID
     [RowStatus]                 BIT           NOT NULL DEFAULT 1,
@@ -11,10 +12,15 @@ CREATE TABLE [dbo].[CustomerTownshipMapping] (
     [DateUpdated]               DATETIME      NULL,
     CONSTRAINT [PK_CustomerTownshipMapping] PRIMARY KEY CLUSTERED ([IdCustomerTownshipMapping] ASC),
     CONSTRAINT [FK_CustomerTownshipMapping_Township] FOREIGN KEY ([TownshipId]) REFERENCES [dbo].[Township] ([IdTownship]),
-    CONSTRAINT [UQ_CustomerTownshipMapping_Duplicate] UNIQUE ([TownshipId], [CodeOfReference]),
+
     -- Restricción para asegurar que al menos uno de los dos datos externos (ID o Nombre) exista
     CONSTRAINT [CHK_CustomerTownshipMapping_ExternalData] CHECK ([ExternalTownshipId] IS NOT NULL OR [ExternalTownshipName] IS NOT NULL)
 );
+GO
+
+CREATE UNIQUE NONCLUSTERED INDEX [UX_CustomerTownshipMapping_ExternalId]
+ON [dbo].[CustomerTownshipMapping] ([CodeOfReference], [ExternalTownshipId])
+WHERE [ExternalTownshipId] IS NOT NULL;
 GO
 
 -- --------------------------------------------------
@@ -47,6 +53,8 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Llave foránea del municipio interno de Forza', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerTownshipMapping', @level2type = N'COLUMN', @level2name = N'TownshipId';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Codigo de referencia del punto de visita, tabla VisitPointClient', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerTownshipMapping', @level2type = N'COLUMN', @level2name = N'CodeOfReference';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código de país ISO', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerTownshipMapping', @level2type = N'COLUMN', @level2name = N'CountryId';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID o código que utiliza el cliente externo para este municipio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerTownshipMapping', @level2type = N'COLUMN', @level2name = N'ExternalTownshipId';
 GO
