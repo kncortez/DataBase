@@ -6,13 +6,12 @@
    Fecha:     2026-03-13
 ============================================
 === CHANGELOG ================================
-
 =========================================== */
-
 CREATE PROCEDURE [dbo].[spws_get_township_by_external_mapping]
-    @pIdCustomer INT,
+    @pCodeOfReference INT,
     @pExternalId NVARCHAR(200) = NULL,
-    @pExternalName NVARCHAR(200) = NULL
+    @pExternalName NVARCHAR(200) = NULL,
+    @CountryId NVARCHAR(2) = 'GT'
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -33,9 +32,11 @@ BEGIN
         FROM [dbo].[CustomerTownshipMapping] ctm WITH (NOLOCK)
         INNER JOIN [dbo].[Township] t WITH (NOLOCK)
             ON t.IdTownship = ctm.IdTownship
-        WHERE ctm.IdCustomer = @pIdCustomer
-          AND ctm.ExternalTownshipId = @pExternalId
-          AND ctm.RowStatus = 1;
+        WHERE ctm.CodeOfReference = @pCodeOfReference
+            AND ctm.CountryId = @CountryId
+            AND ctm.ExternalTownshipId = @pExternalId
+            AND ctm.RowStatus = 1
+            AND t.TownshipStatus = 1;
     END
     -- Bloque 2: Búsqueda por Nombre Externo (Uso de índice IX_CustomerTownshipMapping_Customer_ExternalName)
     ELSE IF @pExternalName IS NOT NULL
@@ -47,9 +48,11 @@ BEGIN
         FROM [dbo].[CustomerTownshipMapping] ctm WITH (NOLOCK)
         INNER JOIN [dbo].[Township] t WITH (NOLOCK)
             ON t.IdTownship = ctm.IdTownship
-        WHERE ctm.IdCustomer = @pIdCustomer
-          AND ctm.ExternalTownshipName = @pExternalName
-          AND ctm.RowStatus = 1;
+        WHERE ctm.CodeOfReference = @pCodeOfReference
+            AND ctm.CountryId = @CountryId
+            AND ctm.ExternalTownshipName = @pExternalName
+            AND ctm.RowStatus = 1
+            AND t.TownshipStatus = 1;
     END
 END
 GO
