@@ -21,10 +21,15 @@
 -- Modified: <2025-06-19>
 -- Description:	<Se realiza reestructuración del SP para mejora de rendimiento.>
 -- =============================================
+-- Author:	 <Bilkar Morataya>
+-- Modified: <2026-03-02>
+-- Description:	<Se agregan incidencias del portal EXC/CNC (SystemOrigin = 5) para Control de Calidad.>
+-- Description:	<Optimización de SP, se bajó de un tiempo de 10 minutos, a 1.5 segundos>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie											NVARCHAR(2) = ''
-  , @GuideNumber										INT
-  , @TblHubLogistic				TblHubLogistic			READONLY
+  , @GuideNumber										INT = NULL  -- NULL = sin filtro por guía específica
+  , @TblHubLogistic			TblHubLogistic			READONLY
   , @TblCustomerType			TblCustomerType			READONLY
   , @TblCustomer				TblCustomer				READONLY
   , @TblVisitPointClient		TblVisitPointClient		READONLY
@@ -41,7 +46,8 @@ BEGIN
 		--VARIABLES: contadores en ruta y entregadas
         DECLARE @Pending_Counter	INT = 0,
                 @Delivered_Counter	INT = 0,
-				@DateToday			DATE = GETDATE(); 
+				@DateToday			DATE = GETDATE(),
+				@DateTomorrow		DATE = DATEADD(DAY, 1, GETDATE()); 
 
 		--======================================================================================================
 		--======================================= TABLAS TEMPORALES ============================================
@@ -150,7 +156,7 @@ BEGIN
 				AND ( NOT EXISTS (SELECT 1 FROM @TblHubLogistic) OR HBL.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic))
 			) HUbs
 		WHERE 
-			CAST(dsd.datecreated AS DATE) = CAST(@DateToday AS DATE)
+			DSD.DateCreated >= @DateToday AND DSD.DateCreated < @DateTomorrow
             AND DO.StatusOrderId NOT IN (45,50)
             AND DSD.RowStatus = 1
 			AND ISNULL(DSD.Guide_Settlement,0) = 0
@@ -160,67 +166,108 @@ BEGIN
 		--============================= INSERT TodaysCheckpointsDetail =========================================
 		--======================================================================================================
 
-		INSERT INTO #TodaysCheckpointsDetail
-        SELECT GDD.guide_serie,
-               GDD.guide_number,
-               GDD.datecreated,
-               GDD.DateCreatedInSystem,
-               GDD.statusorderid,
-               GDD.SystemOrigin,
-               GDD.DeliveryAttemptId,
-               GDD.UserCreated,
-               DS.ID SettlementID,
-               DS.ID_Courier,
-               DS.CatRouteId,
-               DS.Date_Received
-		FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]				DSD		WITH (NOLOCK)
-            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]	DS		WITH (NOLOCK)
-                ON DSD.ID_DeliveryORderBYSettlement = DS.ID
-            OUTER APPLY
-			(
-				SELECT TOP 1
-					DOD.guide_serie,
-					DOD.guide_number,
-					DOD.datecreated,
-					DOD.DateCreatedInSystem,
-					DOD.statusorderid,
-					DOD.SystemOrigin,
-					DOD.DeliveryAttemptId,
-					DOD.UserCreated,
-					DO.SenderCountryId
-				FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]		DOD		WITH (NOLOCK)
-					INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]	DO		WITH(NOLOCK)
-						ON DOD.Guide_Serie = DO.Guide_Serie AND DOD.Guide_Number = DO.Guide_Number 
-				WHERE DSD.Guide_serie = DOD.Guide_serie AND DSD.Guide_Number = DOD.Guide_number
-				ORDER BY DateCreated DESC
-			) GDD
-		WHERE CAST(DSD.DateCreated AS DATE) = @DateToday
-            AND DSD.rowstatus = 1
-			AND GDD.statusorderid IN ( 45, 50 ) --solo incidencias confirmadas y pendientes para el detalle
-			AND 
-				((@GuideNumber = 0 AND ISNULL(GDD.SenderCountryId, 'GT') = @IdCountry) 
-				OR 
-				(GDD.Guide_Serie = @GuideSerie AND GDD.guide_number = @GuideNumber));
-
-
+		-- Primer INSERT: Guías en liquidaciones del día con incidencias (optimizado con CTE)
+		;WITH FilteredSettlements AS (
+			-- Paso 1: Filtrar DeliverySettlementDetail PRIMERO
+			SELECT 
+				DSD.Guide_Serie,
+				DSD.Guide_Number,
+				DS.ID AS SettlementID,
+				DS.ID_Courier,
+				DS.CatRouteId,
+				DS.Date_Received
+			FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DS WITH (NOLOCK)
+				ON DSD.ID_DeliveryORderBYSettlement = DS.ID
+			WHERE DSD.DateCreated >= @DateToday AND DSD.DateCreated < @DateTomorrow
+				AND DSD.rowstatus = 1
+				-- OR para filtro opcional: NULL = todas las guías, valor = guía específica. OPTION (RECOMPILE) optimiza el plan.
+				AND (@GuideNumber IS NULL OR (DSD.Guide_Serie = @GuideSerie AND DSD.Guide_Number = @GuideNumber))
+		)
+		-- Paso 2: OUTER APPLY solo sobre liquidaciones filtradas
 		INSERT INTO #TodaysCheckpointsDetail
         SELECT 
-			DOD.guide_serie,
-			DOD.guide_number,
-			DOD.datecreated,
-			DOD.DateCreatedInSystem,
-			DOD.statusorderid,
-			DOD.SystemOrigin,
-			DOD.DeliveryAttemptId,
-			DOD.UserCreated,
+			GDD.guide_serie,
+			GDD.guide_number,
+			GDD.datecreated,
+			GDD.DateCreatedInSystem,
+			GDD.statusorderid,
+			GDD.SystemOrigin,
+			GDD.DeliveryAttemptId,
+			GDD.UserCreated,
+			FS.SettlementID,
+			FS.ID_Courier,
+			FS.CatRouteId,
+			FS.Date_Received
+		FROM FilteredSettlements FS
+		OUTER APPLY
+		(
+			SELECT TOP 1
+				DOD.guide_serie,
+				DOD.guide_number,
+				DOD.datecreated,
+				DOD.DateCreatedInSystem,
+				DOD.statusorderid,
+				DOD.SystemOrigin,
+				DOD.DeliveryAttemptId,
+				DOD.UserCreated,
+				DO.SenderCountryId
+			FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				ON DOD.Guide_Serie = DO.Guide_Serie AND DOD.Guide_Number = DO.Guide_Number 
+			WHERE FS.Guide_Serie = DOD.Guide_Serie AND FS.Guide_Number = DOD.Guide_Number
+			ORDER BY DateCreated DESC
+		) GDD
+		WHERE GDD.statusorderid IN ( 45, 50 ) --solo incidencias confirmadas y pendientes para el detalle
+			-- OR: sin guía específica filtra por país; con guía específica ignora país (permite buscar guía de cualquier país)
+			AND 
+				((@GuideNumber IS NULL AND ISNULL(GDD.SenderCountryId, 'GT') = @IdCountry) 
+				OR 
+				(GDD.Guide_Serie = @GuideSerie AND GDD.guide_number = @GuideNumber))
+		OPTION (RECOMPILE);
+
+
+		;WITH FilteredGuides AS (
+			-- Paso 1: Filtrar guías PRIMERO para optimizar rendimiento
+			SELECT 
+				DOD.guide_serie,
+				DOD.guide_number,
+				DOD.datecreated,
+				DOD.DateCreatedInSystem,
+				DOD.statusorderid,
+				DOD.SystemOrigin,
+				DOD.DeliveryAttemptId,
+				DOD.UserCreated
+			FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+				ON DO.Guide_Serie = DOD.Guide_Serie AND DO.Guide_Number = DOD.Guide_Number
+				AND DO.StatusOrderId = DOD.StatusOrderId
+			WHERE 
+				DOD.DateCreated >= @DateToday AND DOD.DateCreated < @DateTomorrow
+				AND DOD.StatusOrderId IN (45, 50)
+				AND DOD.SystemOrigin IN (2, 5)
+				-- OR: sin guía específica filtra por país; con guía específica ignora país (permite buscar guía de cualquier país)
+				AND 
+					((@GuideNumber IS NULL AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry) 
+					OR 
+					(DOD.Guide_Serie = @GuideSerie AND DOD.Guide_Number = @GuideNumber))
+		)
+		-- Paso 2: OUTER APPLY solo sobre guías filtradas
+		INSERT INTO #TodaysCheckpointsDetail
+        SELECT 
+			FG.guide_serie,
+			FG.guide_number,
+			FG.datecreated,
+			FG.DateCreatedInSystem,
+			FG.statusorderid,
+			FG.SystemOrigin,
+			FG.DeliveryAttemptId,
+			FG.UserCreated,
 			AP.ID,
 			AP.ID_Courier,
 			AP.CatRouteId,
 			AP.Date_Received
-		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
-		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
-			ON DO.Guide_Serie = DOD.Guide_Serie AND DO.Guide_Number = DOD.Guide_Number
-			AND DO.StatusOrderId = DOD.StatusOrderId
+		FROM FilteredGuides FG
 		OUTER APPLY (
 			SELECT TOP 1 
 				DS.ID,
@@ -231,17 +278,14 @@ BEGIN
 			LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DS WITH (NOLOCK)
 				ON DSD.ID_DeliveryORderBYSettlement = DS.ID
 			WHERE 
-				DSD.Guide_Serie = DOD.Guide_Serie 
-				AND DSD.Guide_Number = DOD.Guide_Number
-				AND (DSD.ID IS NULL OR CAST(DSD.DateCreated AS DATE) < @DateToday)
+				DSD.Guide_Serie = FG.Guide_Serie 
+				AND DSD.Guide_Number = FG.Guide_Number
+				-- OR: incluye liquidaciones de días anteriores o registros sin liquidación asociada
+				AND (DSD.ID IS NULL OR DSD.DateCreated < @DateToday)
 				AND DSD.RowStatus = 1
-			ORDER BY DOD.DateCreated DESC, DSD.DateCreated DESC
+			ORDER BY FG.DateCreated DESC, DSD.DateCreated DESC
 		) AS AP
-		WHERE 
-			CAST(DOD.DateCreated AS DATE) = @DateToday
-			AND DOD.StatusOrderId IN (45, 50)
-			AND DOD.SystemOrigin = 2
-			AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry;
+		OPTION (RECOMPILE);
 
 		--======================================================================================================
 		--============================= INSERT DetailGetQualityControlData =====================================
@@ -336,13 +380,17 @@ BEGIN
 			UnConfirmationIncidents = IIF(
 				COI.IsConfirmed = 0 AND (
 					(DA.ID IS NOT NULL AND TCD.SystemOrigin = 3)
-					OR (DO.StatusOrderId = 45 AND TCD.SystemOrigin = 2)
+					OR (DO.StatusOrderId = 45 AND TCD.SystemOrigin IN (2, 5))
 				), 1, 0),
 			Id_Incident = DA.ID_Incident,
-			IdUser = IIF(TCD.SystemOrigin = 2, tk2.SSN_IdUser, NULL),
-			Username = IIF(TCD.SystemOrigin = 2, tk2.SSN_Username, NULL),
-			RouteDescription = IIF(TCD.SystemOrigin = 2, 'Usuario Desktop', 'Vendedor Rutero'),
-			[User] = IIF(TCD.SystemOrigin = 2, NULL, CONCAT(ISNULL(SR.First_Name, ''), ' ', ISNULL(SR.Last_Name, ''))),
+			IdUser = IIF(TCD.SystemOrigin IN (2, 5), tk2.SSN_IdUser, NULL),
+			Username = IIF(TCD.SystemOrigin IN (2, 5), ISNULL(tk2.SSN_Username, 'EXC/CNC'), ''),
+			RouteDescription = CASE 
+				WHEN TCD.SystemOrigin = 2 THEN 'Usuario Desktop'
+				WHEN TCD.SystemOrigin = 5 THEN 'Usuario Portal'
+				ELSE 'Vendedor Rutero'
+			END,
+			[User] = IIF(TCD.SystemOrigin IN (2, 5), ISNULL(tk2.SSN_Username, ''), CONCAT(ISNULL(SR.First_Name, ''), ' ', ISNULL(SR.Last_Name, ''))),
 			TypeOfIncident = ISNULL(CIC.IncidenceTypeName, ''),
 			Incident = CTI.NameIncidence,
 			EventDate = TCD.DateCheckpoint,
@@ -401,7 +449,7 @@ BEGIN
 		FROM #DetailGetQualityControlData
 
 
-		SELECT TOP 100
+		SELECT TOP 200
             Pending ,
             [Delivered] ,
             [ConfirmationIncidents] ,
@@ -441,57 +489,10 @@ BEGIN
 			[ShippmentCurrencySymbol],
 			[CODCurrencySymbol]
 		FROM #DetailGetQualityControlData
-		WHERE UnConfirmationIncidents=1
-		UNION ALL
-		SELECT TOP 100
-            Pending ,
-            [Delivered] ,
-            [ConfirmationIncidents] ,
-            [UnConfirmationIncidents] ,
-            [ID] ,
-            [ID_Courier] ,
-            [Date_Received] ,
-            [IdRoute] ,
-            [ID_Incident] ,
-            [IdUser] ,
-            [Username] ,
-            [RouteDescription] ,
-            [User] ,
-            [GuideSerie] ,
-            [GuideNumber],
-			[Ticket_Number],
-            [SenderName] ,
-            [ReceiverName],
-            [SenderPhone] ,
-            [ReceiverPhone] ,
-            [ReceiverAddress],
-            [TypeOfIncident] ,
-            [Incident] ,
-            [EventDate],
-            [Attempts] ,
-            [PriceShippment] ,
-            [CollectOnDelivery],
-            [OrderDescription] ,
-            [StatusOfIncident] ,
-            [IdHubLogistic] ,
-            [Pendiente] ,
-            [CourierPhone] ,
-            [Customer] ,
-            [CodeOfReference] ,
-            [CustomerType] ,
-            [IdIncidenceType] ,
-			[ShippmentCurrencySymbol],
-			[CODCurrencySymbol]
-		FROM #DetailGetQualityControlData
-		WHERE ConfirmationIncidents=1
-		ORDER BY ConfirmationIncidents asc ,EventDate asc;
+		-- Se lee como "tiene al menos una incidencia"
+		WHERE (UnConfirmationIncidents + ConfirmationIncidents) >= 1
+		ORDER BY ConfirmationIncidents ASC, EventDate ASC;
 
-		--Tabla temporal guías a procesar?
-        IF OBJECT_ID('tempdb.dbo.#TodaysCheckpointsDetail', 'U') IS NOT NULL
-            DROP TABLE #TodaysCheckpointsDetail;
-		--Tabla temporal para mostrar los datos
-        IF OBJECT_ID('tempdb.dbo.#DetailGetQualityControlData ', 'U') IS NOT NULL
-            DROP TABLE #DetailGetQualityControlData;
 
 	END TRY
     BEGIN CATCH
