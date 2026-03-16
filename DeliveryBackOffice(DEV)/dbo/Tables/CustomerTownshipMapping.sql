@@ -5,6 +5,8 @@ CREATE TABLE [dbo].[CustomerTownshipMapping] (
     [CountryId]                 NVARCHAR(5)   NOT NULL,
     [ExternalTownshipId]        NVARCHAR(200) NULL, -- Puede ser NULL si el cliente solo manda el nombre
     [ExternalTownshipName]      NVARCHAR(200) NULL, -- Puede ser NULL si el cliente solo manda el ID
+    [ExternalProvinceId]        NVARCHAR(200) NULL, -- Puede ser NULL si el cliente solo manda el nombre
+    [ExternalProvinceName]      NVARCHAR(200) NULL, -- Puede ser NULL si el cliente solo manda el ID
     [RowStatus]                 BIT           NOT NULL DEFAULT 1,
     [TokenCreated]              NVARCHAR (50) NOT NULL,
     [DateCreated]               DATETIME      NOT NULL DEFAULT GETDATE(),
@@ -30,19 +32,19 @@ GO
 -- 1. Índice para cuando se busca por Cliente + ID Externo
 CREATE NONCLUSTERED INDEX [IX_CustomerTownshipMapping_Customer_ExternalId]
 ON [dbo].[CustomerTownshipMapping] ([CodeOfReference], [ExternalTownshipId])
-INCLUDE ([TownshipId], [RowStatus]);
+INCLUDE ([TownshipId], [CountryId], [RowStatus]);
 GO
 
--- 2. Índice para cuando se busca por Cliente + Nombre Externo
-CREATE NONCLUSTERED INDEX [IX_CustomerTownshipMapping_Customer_ExternalName]
-ON [dbo].[CustomerTownshipMapping] ([CodeOfReference], [ExternalTownshipName])
-INCLUDE ([TownshipId], [RowStatus]);
+-- 2. Índice para búsqueda por Nombre de Municipio + Nombre de Provincia
+CREATE NONCLUSTERED INDEX [IX_CustomerTownshipMapping_Customer_ExternalNames]
+ON [dbo].[CustomerTownshipMapping] ([CodeOfReference], [ExternalTownshipName], [ExternalProvinceName])
+INCLUDE ([TownshipId], [CountryId], [RowStatus]);
 GO
 
 -- 3. Índice para búsquedas inversas (que clientes cubren un municipio interno)
 CREATE NONCLUSTERED INDEX [IX_CustomerTownshipMapping_IdTownship]
 ON [dbo].[CustomerTownshipMapping] ([TownshipId], [RowStatus])
-INCLUDE ([CodeOfReference], [ExternalTownshipId], [ExternalTownshipName]);
+INCLUDE ([CodeOfReference], [CountryId], [ExternalTownshipId], [ExternalTownshipName], [ExternalProvinceName]);
 GO
 
 -- --------------------------------------------------
@@ -59,6 +61,10 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID o código que utiliza el cliente externo para este municipio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerTownshipMapping', @level2type = N'COLUMN', @level2name = N'ExternalTownshipId';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre externo que utiliza el cliente para este municipio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerTownshipMapping', @level2type = N'COLUMN', @level2name = N'ExternalTownshipName';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID o código que utiliza el cliente externo para este departamento', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerTownshipMapping', @level2type = N'COLUMN', @level2name = N'ExternalProvinceId';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre externo que utiliza el cliente para este departamento', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerTownshipMapping', @level2type = N'COLUMN', @level2name = N'ExternalProvinceName';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del registro (1 activo, 0 inactivo)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerTownshipMapping', @level2type = N'COLUMN', @level2name = N'RowStatus';
 GO

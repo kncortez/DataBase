@@ -9,51 +9,69 @@
 =========================================== */
 CREATE PROCEDURE [dbo].[spws_get_township_by_external_mapping]
     @pCodeOfReference INT,
-    @pExternalId NVARCHAR(200) = NULL,
-    @pExternalName NVARCHAR(200) = NULL,
-    @CountryId NVARCHAR(2) = 'GT'
+    @pExternalTownship NVARCHAR(200), -- Recibe ID o Nombre del municipio
+    @pExternalProvince NVARCHAR(200) = NULL, -- Recibe ID o Nombre del departamento
+    @CountryId NVARCHAR(5) = 'GT'
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF @pExternalId IS NULL AND @pExternalName IS NULL
+    -- Validación inicial estricta
+    IF @pExternalTownship IS NULL OR LTRIM(RTRIM(@pExternalTownship)) = ''
     BEGIN
-        RAISERROR('Debe proporcionar al menos un ID externo o un Nombre externo.', 16, 1);
+        RAISERROR('El dato del municipio (headerCodeTownship) es obligatorio.', 16, 1);
         RETURN;
     END
 
-    -- Bloque 1: Búsqueda por ID Externo (Uso de índice IX_CustomerTownshipMapping_Customer_ExternalId)
-    IF @pExternalId IS NOT NULL
+    -- BLOQUE 1: INTENTO DE MATCH DIRECTO COMO ID (Prioridad alta, ignora provincia)
+    -- Buscamos si el dato coincide directamente con la columna ExternalTownshipId
+    IF EXISTS (
+        SELECT 1 FROM [dbo].[CustomerTownshipMapping] WITH(NOLOCK)
+        WHERE CodeOfReference = @pCodeOfReference
+          AND ExternalTownshipId = @pExternalTownship
+          AND CountryId = @CountryId
+          AND RowStatus = 1
+    )
     BEGIN
-        SELECT
+        SELECT TOP 1
             t.HeaderCode,
             CONVERT(VARCHAR, t.IdTownship) AS 'IdTownship',
             dbo.fnt_String_Escape(ISNULL(t.TownshipName, ''), 'json') AS 'TownshipName'
         FROM [dbo].[CustomerTownshipMapping] ctm WITH (NOLOCK)
-        INNER JOIN [dbo].[Township] t WITH (NOLOCK)
-            ON t.IdTownship = ctm.IdTownship
+        INNER JOIN [dbo].[Township] t WITH (NOLOCK) ON t.IdTownship = ctm.TownshipId
         WHERE ctm.CodeOfReference = @pCodeOfReference
-            AND ctm.CountryId = @CountryId
-            AND ctm.ExternalTownshipId = @pExternalId
-            AND ctm.RowStatus = 1
-            AND t.TownshipStatus = 1;
+          AND ctm.CountryId = @CountryId
+          AND ctm.ExternalTownshipId = @pExternalTownship
+          AND ctm.RowStatus = 1
+          AND t.TownshipStatus = 1
+        ORDER BY t.IdTownship ASC;
+
+        RETURN;
     END
-    -- Bloque 2: Búsqueda por Nombre Externo (Uso de índice IX_CustomerTownshipMapping_Customer_ExternalName)
-    ELSE IF @pExternalName IS NOT NULL
+
+    -- BLOQUE 2: SI LLEGÓ AQUÍ, ASUMIMOS QUE ES NOMBRE.
+    IF @pExternalProvince IS NULL OR LTRIM(RTRIM(@pExternalProvince)) = ''
     BEGIN
-        SELECT
-            t.HeaderCode,
-            CONVERT(VARCHAR, t.IdTownship) AS 'IdTownship',
-            dbo.fnt_String_Escape(ISNULL(t.TownshipName, ''), 'json') AS 'TownshipName'
-        FROM [dbo].[CustomerTownshipMapping] ctm WITH (NOLOCK)
-        INNER JOIN [dbo].[Township] t WITH (NOLOCK)
-            ON t.IdTownship = ctm.IdTownship
-        WHERE ctm.CodeOfReference = @pCodeOfReference
-            AND ctm.CountryId = @CountryId
-            AND ctm.ExternalTownshipName = @pExternalName
-            AND ctm.RowStatus = 1
-            AND t.TownshipStatus = 1;
+        RAISERROR('Desambiguación requerida: Al buscar por nombre de municipio, el departamento (clientProvince) es obligatorio.', 16, 1);
+        RETURN;
     END
+
+    -- Match por Nombre de Municipio + (ID o Nombre de Provincia)
+    SELECT TOP 1
+        t.HeaderCode,
+        CONVERT(VARCHAR, t.IdTownship) AS 'IdTownship',
+        dbo.fnt_String_Escape(ISNULL(t.TownshipName, ''), 'json') AS 'TownshipName'
+    FROM [dbo].[CustomerTownshipMapping] ctm WITH (NOLOCK)
+    INNER JOIN [dbo].[Township] t WITH (NOLOCK) ON t.IdTownship = ctm.TownshipId
+    WHERE ctm.CodeOfReference = @pCodeOfReference
+      AND ctm.CountryId = @CountryId
+      AND ctm.ExternalTownshipName = @pExternalTownship
+      -- Validamos que el dato de la provincia haga match ya sea con el ID de la provincia o con su nombre
+      AND (ctm.ExternalProvinceId = @pExternalProvince OR ctm.ExternalProvinceName = @pExternalProvince)
+      AND ctm.RowStatus = 1
+      AND t.TownshipStatus = 1
+    ORDER BY t.IdTownship ASC;
+
 END
 GO
 
