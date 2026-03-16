@@ -40,8 +40,9 @@ BEGIN
          , [Invoice]
          , [Attempt]
          , [Overweight]
-         , [CountryId]
          , [Amount]
+         , [Symbol]
+         , [CountryId]
     FROM RetroActiveReconciliation
     WHERE CountryId = @IdCountry
       AND GuideDate >= @BeginDate

@@ -32,13 +32,18 @@
         , ISNULL(inv.invoice,'Pendiente')                                                     [Invoice]
         , ISNULL(doad.GuideDeliveryAttemptCount, 0) + ISNULL(doad.GuideReturnAttemptCount, 0) [Attempt]
         , ISNULL(bop.Amount,0)                                                                [Overweight]
-        , do.SenderCountryId                                                                  [CountryId]
         , (ISNULL(do.PriceShippment,0) + ISNULL(do.Collect_OnDelivery, 0))                    [Amount]
+        , ccc.Symbol                                                                          [Symbol]
+        , do.SenderCountryId                                                                  [CountryId]
     FROM DeliveryOrder do     WITH (NOLOCK)
     INNER JOIN @StatusOrderFinish so
         ON so.StatusOrderId = do.StatusOrderId
     LEFT JOIN CatSystem cas WITH (NOLOCK)
         ON cas.SysIdSystem = do.CatSystemId
+    INNER JOIN DeliveryCurrency dc WITH(NOLOCK)
+        ON dc.Currency_IdCountry = do.SenderCountryId
+    INNER JOIN CatCurrencyCOD ccc WITH(NOLOCK)
+        ON ccc.IdCatCurrencyCOD = dc.IdCurrencyCOD
     INNER JOIN dbo.Customer cs WITH(NOLOCK)
         ON cs.IdCustomer = do.IdCustomer
     LEFT JOIN CatTypeService cts WITH (NOLOCK)
@@ -59,23 +64,25 @@
               WHERE ID.dti_fk_orderSerie = do.Guide_Serie
                 AND ID.dti_fk_orderNumber = do.Guide_number
             ) inv
-        OUTER APPLY(
-            SELECT  MAX(co.IdCost)                                [IdCost]
-                  , ISNULL(MAX(cd.IdTypeOfMoney),0)               [PaymentMethodId]
-                  , ISNULL(MAX(tiomd.tio_pk_name),'NO Definido')  [PaymentMethod]
-            FROM dbo.cost co     WITH(NOLOCK)
-            INNER JOIN dbo.CostDetail cd WITH(NOLOCK)
-                ON co.IdCost = cd.IdCost
-            INNER JOIN dbo.ctgTypeOfInOutOfMoney tiomd WITH(NOLOCK)
-                ON cd.IdTypeOfMoney = tiomd.tio_pk_id
-            WHERE co.GuideSerie =  do.Guide_Serie
-              AND co.GuideNumber = do.Guide_Number
-            ) c
+    OUTER APPLY(
+                SELECT  MAX(co.IdCost)                                [IdCost]
+                      , ISNULL(MAX(cd.IdTypeOfMoney),0)               [PaymentMethodId]
+                      , ISNULL(MAX(tiomd.tio_pk_name),'NO Definido')  [PaymentMethod]
+                FROM dbo.cost co     WITH(NOLOCK)
+                INNER JOIN dbo.CostDetail cd WITH(NOLOCK)
+                    ON co.IdCost = cd.IdCost
+                INNER JOIN dbo.ctgTypeOfInOutOfMoney tiomd WITH(NOLOCK)
+                    ON cd.IdTypeOfMoney = tiomd.tio_pk_id
+                WHERE co.GuideSerie =  do.Guide_Serie
+                  AND co.GuideNumber = do.Guide_Number
+                ) c
     LEFT JOIN dbo.BreakdownOfPayment bop WITH(NOLOCK)
         ON bop.IdCost = c.IdCost
       AND bop.[Description] = 'Recargo por Peso'
     WHERE do.DateCreated >= '2024-10-01'
       AND do.DateCreated <=  '2024-12-31'
+      AND DC.Currency_Status = 1 
+      AND DC.DefaultPerCountry = 1
 
     END TRY
     BEGIN CATCH
