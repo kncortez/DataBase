@@ -14,6 +14,7 @@ CREATE TABLE [dbo].[CustomerTownshipMapping] (
     [DateUpdated]               DATETIME      NULL,
     CONSTRAINT [PK_CustomerTownshipMapping] PRIMARY KEY CLUSTERED ([IdCustomerTownshipMapping] ASC),
     CONSTRAINT [FK_CustomerTownshipMapping_Township] FOREIGN KEY ([TownshipId]) REFERENCES [dbo].[Township] ([IdTownship]),
+    CONSTRAINT [FK_CustomerTownshipMapping_VisitPointClient] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
 
     -- Restricción para asegurar que al menos uno de los dos datos externos (ID o Nombre) exista
     CONSTRAINT [CHK_CustomerTownshipMapping_ExternalData] CHECK ([ExternalTownshipId] IS NOT NULL OR [ExternalTownshipName] IS NOT NULL)
