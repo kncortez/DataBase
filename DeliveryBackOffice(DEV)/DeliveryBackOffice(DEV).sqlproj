@@ -68,7 +68,7 @@
     <Folder Include="dbo\Sequences\" />
     <Folder Include="Security\" />
   </ItemGroup>
-  <ItemGroup>  
+  <ItemGroup>
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
     <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
@@ -2097,6 +2097,7 @@
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_3.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_4.sql" />
     <Build Include="dbo\Stored Procedures\SupportLHroutes.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegisterInventoryAutomaticExc.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
