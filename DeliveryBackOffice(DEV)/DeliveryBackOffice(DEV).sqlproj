@@ -1746,6 +1746,7 @@
     <Build Include="dbo\Stored Procedures\GetArticlesSAP.sql" />
     <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
     <Build Include="dbo\Stored Procedures\GetAllWorkflows.sql" />
+    <Build Include="dbo\Stored Procedures\GetAllServiceIncidents.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertsOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_TEST.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_BNHL.sql" />
@@ -1819,6 +1820,7 @@
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByContainer.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTNConfirmation.sql" />
+    <Build Include="dbo\Stored Procedures\SaveServiceIncident.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -2097,6 +2099,7 @@
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_3.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_4.sql" />
     <Build Include="dbo\Stored Procedures\SupportLHroutes.sql" />
+    <Build Include="dbo\Stored Procedures\GetDeliveryOrderPieces.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_RegisterInventoryAutomaticExc.sql" />
   </ItemGroup>
   <ItemGroup>
