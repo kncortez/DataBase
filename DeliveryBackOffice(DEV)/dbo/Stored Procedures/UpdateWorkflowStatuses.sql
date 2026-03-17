@@ -44,7 +44,7 @@ BEGIN
 			GETDATE(),
 			@Token
 		INTO @LogBuffer (WorkflowId, StatusId, OperationType, DateCreated, TokenCreated)
-		FROM DeliveryBackOffice.dbo.WorkflowStatusMap WSM
+		FROM DeliveryBackOffice.dbo.WorkflowStatusMap WSM WITH (NOLOCK)
 		INNER JOIN @StatusIDs S
 			ON S.ID = WSM.StatusOrderId
 		WHERE WSM.WorkflowId = @WorkflowID
