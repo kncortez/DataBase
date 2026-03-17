@@ -52,6 +52,7 @@ CREATE PROCEDURE [dbo].[spws_revalue_guide]
   , @UseMembership BIT = 0
   , @CategoryProductId AS INT = 0
   , @ProductId AS INT = 0
+  , @AppOrigin nvarchar(4) = ''
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -556,36 +557,74 @@ BEGIN
 	--FIN FIx 20250603
 	------------------------------------------------------------------------------------------------------------------------------------
 
-    INSERT INTO @TempRate
-    EXECUTE [dbo].[spws_get_delivery_rate] @CodApp = @CodeApp
-                                         , @IdCustomerParams = @IdCustomer
-                                         , @HeaderCodeDestiny = @HeaderCodeDestiny
-                                         , @HeaderCodeSource = @HeaderCodeSource
-                                         , @Country = @ReceiverCountryId 
-                                         , @CountPiecesParams = @PiecesCount
-                                         , @IsFragile = 'false'
-                                         , @IsCollected = @IsCollect
-                                         , @IsInsurance = @IsInsurance
-                                         , @WeigthParcels = @Pesos
-                                         , @InsuranceAmount = @InsuranceAmount
-                                         , @IsCreditCardPayment = @IsCreditCard
-                                         , @ParcelCode = @Parcel
-                                         , @Zone = 0
-                                         , @AddressParse = @AddressParse
-                                         , @IdSettlementSource = @IdSettlement
-                                         , @IdSettlementDestiny = 0
-                                         , @CodeOfReferenceSource = @VisitPointClient
-                                         , @CodeOfReferenceDestiny = @VisitPointClientDestiny
-                                         , @IdSalePipeLine = @IdSalePipeLine
-                                         , @FormatResponse = 'DataTable'
-                                         , @CalculateTaxes = @CalculateTaxes
-                                         , @CalculateMembership = @UseMembership
-										 , @RevaluedGuide = @RevaluedGuide
-										 , @CategoryProductId = @CategoryProductId
-										 , @ProductId = @ProductId
-										 , @FetchActivePRoduct=0										 
+    IF(NOT(@AppOrigin = 'EXC' AND @SenderCountryId = 'GT'))
+    BEGIN
 
+        INSERT INTO @TempRate
+        EXECUTE [dbo].[spws_get_delivery_rate]
+                                               @CodApp = @CodeApp
+                                             , @IdCustomerParams = @IdCustomer
+                                             , @HeaderCodeDestiny = @HeaderCodeDestiny
+                                             , @HeaderCodeSource = @HeaderCodeSource
+                                             , @Country = @ReceiverCountryId 
+                                             , @CountPiecesParams = @PiecesCount
+                                             , @IsFragile = 'false'
+                                             , @IsCollected = @IsCollect
+                                             , @IsInsurance = @IsInsurance
+                                             , @WeigthParcels = @Pesos
+                                             , @InsuranceAmount = @InsuranceAmount
+                                             , @IsCreditCardPayment = @IsCreditCard
+                                             , @ParcelCode = @Parcel
+                                             , @Zone = 0
+                                             , @AddressParse = @AddressParse
+                                             , @IdSettlementSource = @IdSettlement
+                                             , @IdSettlementDestiny = 0
+                                             , @CodeOfReferenceSource = @VisitPointClient
+                                             , @CodeOfReferenceDestiny = @VisitPointClientDestiny
+                                             , @IdSalePipeLine = @IdSalePipeLine
+                                             , @FormatResponse = 'DataTable'
+                                             , @CalculateTaxes = @CalculateTaxes
+                                             , @CalculateMembership = @UseMembership
+                                             , @RevaluedGuide = @RevaluedGuide
+                                             , @CategoryProductId = @CategoryProductId
+                                             , @ProductId = @ProductId
+                                             , @FetchActivePRoduct=0
 
+    END
+    ELSE
+    BEGIN
+
+        INSERT INTO @TempRate
+        EXECUTE [dbo].[spws_get_delivery_rate_exc] 
+                                               @CodApp = @CodeApp
+                                             , @IdCustomerParams = @IdCustomer
+                                             , @HeaderCodeDestiny = @HeaderCodeDestiny
+                                             , @HeaderCodeSource = @HeaderCodeSource
+                                             , @Country = @ReceiverCountryId 
+                                             , @CountPiecesParams = @PiecesCount
+                                             , @IsFragile = 'false'
+                                             , @IsCollected = @IsCollect
+                                             , @IsInsurance = @IsInsurance
+                                             , @WeigthParcels = @Pesos
+                                             , @InsuranceAmount = @InsuranceAmount
+                                             , @IsCreditCardPayment = @IsCreditCard
+                                             , @ParcelCode = @Parcel
+                                             , @Zone = 0
+                                             , @AddressParse = @AddressParse
+                                             , @IdSettlementSource = @IdSettlement
+                                             , @IdSettlementDestiny = 0
+                                             , @CodeOfReferenceSource = @VisitPointClient
+                                             , @CodeOfReferenceDestiny = @VisitPointClientDestiny
+                                             , @IdSalePipeLine = @IdSalePipeLine
+                                             , @FormatResponse = 'DataTable'
+                                             , @CalculateTaxes = @CalculateTaxes
+                                             , @CalculateMembership = @UseMembership
+                                             , @RevaluedGuide = @RevaluedGuide
+                                             , @CategoryProductId = @CategoryProductId
+                                             , @ProductId = @ProductId
+                                             , @FetchActivePRoduct=0
+
+    END
 
      IF (@UseMembership = 1 AND @CategoryProductId >0 AND @ProductId >0 )
     BEGIN
@@ -1335,24 +1374,29 @@ BEGIN
         END;
         ELSE
         BEGIN
-			DECLARE @CurrencyReceiver INT,
-				    @ExchangeRateReceiver DECIMAL(12,6),
-					@CurrencySender INT,
-					@ExchangeSender DECIMAL(12,6)
-			/******************DATOS DE MONEDA ORIGEN*************************/
-			SELECT TOP 1 
-				   @CurrencySender = C.IdCatCurrencyCOD, 
-				   @ExchangeSender = CE.ExchangeRate
-			  FROM CurrencyExchangeRates CE WITH(NOLOCK)
-			       INNER JOIN CatCurrencyCOD C WITH(NOLOCK)
-                      ON C.IdCatCurrencyCOD = CE.SourceCurrency
-                   INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
-                      ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
-			 WHERE DC.Currency_IdCountry = @SenderCountryId
+
+            DECLARE @CurrencyReceiver INT,
+                    @ExchangeRateReceiver DECIMAL(12,6),
+                    @CurrencySender INT,
+                    @ExchangeSender DECIMAL(12,6)
+
+        /******************DATOS DE MONEDA ORIGEN*************************/
+            SELECT TOP 1 
+                  @CurrencySender = C.IdCatCurrencyCOD
+              FROM DeliveryCurrency DC WITH(NOLOCK)
+              INNER JOIN CatCurrencyCOD C WITH(NOLOCK)
+              ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
+              WHERE DC.Currency_IdCountry = @SenderCountryId
                AND DC.Currency_Status = 1 
                AND DC.DefaultPerCountry = 1
-			 ORDER BY CE.ExchangeDate DESC
-			
+
+              SELECT TOP 1 
+                  @ExchangeSender = CER.ExchangeRate
+              FROM DeliveryBackOffice.dbo.CurrencyExchangeRates CER WITH(NOLOCK)
+              WHERE CER.IdCountry = @SenderCountryId
+                AND cer.SourceCurrency = @CurrencySender
+              ORDER BY cer.ExchangeDate DESC
+              
             PRINT 'registro no existe , hay que crearlo';
 			IF @ServiceShortName = 'COD'
 			BEGIN
