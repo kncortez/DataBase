@@ -11,6 +11,7 @@
 2025-12-12 | Historia/épica: FDAPI-4733  | Autor: Cristian Suazo  | 
 2026-01-29 | Historia/épica: FDAPI-4801  | Autor: Brandon Pedroza | Se obtiene campo indicaciones adicionales en manifiesto de recolecciones
 2026-01-29 | Historia/épica: FDAPI-5313  | Autor: Brandon Pedroza | Se obtiene campo nombre paquete en manifiesto de recolecciones
+2026-03-17 | Historia/épica: FDAPI-5681  | Autor: Caleb Loarca    | Se agrega campo SubTypeServiceMangagement para identificar recolecciones manuales
 
 =========================================== */
 
@@ -1126,6 +1127,7 @@ BEGIN
             IF @@TRANCOUNT > 0
             BEGIN
                 DECLARE @BatchStatus INT = 0;
+                DECLARE @SubTypeServiceManagement INT = 0;
 
                 BEGIN TRY
 
@@ -1138,6 +1140,13 @@ BEGIN
                            FROM DeliveryBackOffice.dbo.CatServiceStatus WITH (NOLOCK)
                            WHERE IdServiceStatus = 3 -- 'Recolectado'
                        )
+
+                       Set @SubTypeServiceManagement = 
+					   (
+						   SELECT SubTypeServiceManagmentId
+                           FROM  DeliveryBackOffice.dbo.ServiceManagement WITH (NOLOCK)
+                           WHERE IdSchedulePickup = @IdPickup
+					   )
 
                        UPDATE DeliveryBackOffice.dbo.FinishPickUpHeader
                           SET ServiceStatusId = @BatchStatus,
@@ -1171,7 +1180,8 @@ BEGIN
                        SELECT 200 AS StatusCode,
                               'Se procesaron las guías con exito' AS [Message],
                               @Token AS Token,
-                              @PickUpEmail AS Email
+                              @PickUpEmail AS Email,
+                              @SubTypeServiceManagement AS SubTypeServiceManagement
 
 
                        -- CORREO A ENVIAR MANIFIESTO
