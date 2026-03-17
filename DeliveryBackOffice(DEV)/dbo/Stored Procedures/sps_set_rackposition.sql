@@ -6,6 +6,11 @@
    Fecha:     <2020-07-22>
    === CHANGELOG ============================
 2026-01-02 | Historia/épica: <FDAPI-4761> | Autor: Tito Garcia |
+2026-03-11 | Historia/épica: <FDAPI-4784> | Autor: Bilkar Morataya | Agregado @AutoDetectPrevious para búsqueda inteligente de registros previos,
+                                                                    @HubExc = Hub o EXC, @IdHubExc = identificador del Hub o EXC,
+																	@StatusOrderId = estado de la orden
+2026-03-17 | Historia/épica: <FDAPI-5590> | Autor: Bilkar Morataya | Agregado parámetro @StationId para radicación desde estación específica,
+                                                                    Se guarda StationId en tablas Warehouse y DeliveryOrderDetail
 =========================================== */
 CREATE PROCEDURE [dbo].[sps_set_rackposition]
 		@GuideSerie AS VARCHAR(2),
@@ -17,12 +22,16 @@ CREATE PROCEDURE [dbo].[sps_set_rackposition]
 		@UserCreated nvarchar(50),
 		@GuidePiece SMALLINT,
 		@IsReturn BIT = 0,
-		@StationId INT = NULL
+		@StationId INT = NULL,
+		@AutoDetectPrevious BIT = 0,
+		@HubExc NVARCHAR(10) = NULL,
+		@IdHubExc INT = NULL,
+		@StatusOrderId INT = NULL
 AS
 BEGIN
 	DECLARE @RModified INT
 	DECLARE @RInserted INT
-	DECLARE @StatusOrderId INT = 10; --[StatusOrder] -> 'En Inventario' 
+	DECLARE @OrderStatus INT = 10; --[StatusOrder] -> 'En Inventario' 
 	DECLARE @TerminalStatusGuide INT = 3; -- [CatCheckpointType] -> 'Checkpoint final'
 	DECLARE @ActualStatusGuide INT = NULL;
 	DECLARE @ActualStatusGuideName NVARCHAR(50) = '';
@@ -44,7 +53,69 @@ BEGIN
 	
 		BEGIN TRANSACTION
 		BEGIN TRY
-			IF (@Relocation = 1)
+			-- @AutoDetectPrevious = 1: Búsqueda inteligente. Si existe registro activo, reloca. Si no, crea nuevo.
+			IF (@AutoDetectPrevious = 1)
+			BEGIN
+				DECLARE @ExistingId BIGINT
+				
+				-- Buscar si ya existe registro activo
+				SET @ExistingId = (
+					SELECT TOP 1 Id 
+					FROM [DeliveryBackOffice].[dbo].[Warehouse] WITH(NOLOCK)
+					WHERE Guide_Serie = @GuideSerie 
+						AND Guide_Number = @GuideNumber 
+						AND Active = 1 
+						AND Dry = @PiecesDry 
+						AND Cold = @PiecesCold
+					ORDER BY DateCreated ASC)
+				
+				IF @ExistingId IS NOT NULL
+				BEGIN
+					-- Existe registro: desactivar TODOS los activos de esta guía y crear uno nuevo
+					UPDATE [DeliveryBackOffice].[dbo].[Warehouse] 
+					SET Active = 0, UserUpdated = @UserCreated, DateUpdated = GETDATE() 
+					WHERE Guide_Serie = @GuideSerie 
+						AND Guide_Number = @GuideNumber 
+						AND Active = 1
+					
+					-- Insertar nueva ubicación
+					INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] 
+						(Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn, HubExc, IdHubExc, StatusOrderId, StationId) 
+					VALUES (@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, @IdHubExc, @StatusOrderId, @StationId)
+					
+					SET @RInserted = @@ROWCOUNT
+				END
+				ELSE
+				BEGIN
+					-- No existe registro: crear uno nuevo Como primera ubicación
+					INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] 
+					(Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn, HubExc, IdHubExc, StatusOrderId, StationId) 
+					VALUES (@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, @IdHubExc, @StatusOrderId, @StationId)
+					IF @IsReturn = 1
+					BEGIN
+						SET @OrderStatus = 31
+					END
+
+					--Actualizar En Inventario estado de las piezas
+					UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
+					SET StatusOrderId = ISNULL(@StatusOrderId, @OrderStatus)
+					WHERE GuideSerie = @GuideSerie 
+						AND GuideNumber = @GuideNumber
+
+					-- Actualizar En Inventario al último estado de la guía
+					UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+					SET StatusOrderId = ISNULL(@StatusOrderId, @OrderStatus)
+					WHERE Guide_Serie = @GuideSerie 
+						AND Guide_Number = @GuideNumber
+				
+					-- Insertar En Inventario nuevo estado de guía en tabla histórica
+					INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem],[Observations],[StationId])
+					VALUES (@GuideSerie, @GuideNumber, ISNULL(@StatusOrderId, @OrderStatus), @UserCreated, GETDATE(), GETDATE(),'',@StationId) 
+					
+					SET @RInserted = @@ROWCOUNT
+				END
+		END
+			ELSE IF (@Relocation = 1)
 			BEGIN
 				DECLARE @Id BIGINT
 
@@ -84,41 +155,41 @@ BEGIN
 				IF (@RModified > 0)
 				BEGIN
 					-- registrar nueva ubicación
-					INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn) VALUES 
-					(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn)
+					INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn, HubExc, IdHubExc, StatusOrderId, StationId) VALUES 
+					(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, @IdHubExc, @StatusOrderId, @StationId)
 
 					SET @RInserted = @@ROWCOUNT
 				END
 			END
-			-- si el registro de la pieza se realiza por primera vez
-			ELSE
+			-- si el registro de la pieza se realiza por primera vez (@Relocation = 0)
+			ELSE IF (@Relocation = 0)
 			BEGIN
 			
 				-- registrar nueva ubicación
-				INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn) VALUES 
-				(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn)
+			INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn, HubExc, IdHubExc, StatusOrderId, StationId) VALUES 
+			(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, @IdHubExc, @StatusOrderId, @StationId)
 
 				--Si es una devolución, cambiar estado
 				IF @IsReturn = 1
 				BEGIN
-					SET @StatusOrderId = 31
-				END
+				SET @OrderStatus = 31
+			END
 
-				--Actualizar En Inventario estado de las piezas
+			--Actualizar En Inventario estado de las piezas
 				UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
-				SET StatusOrderId = @StatusOrderId
+				SET StatusOrderId = ISNULL(@StatusOrderId, @OrderStatus)
 				WHERE GuideSerie = @GuideSerie 
 					AND GuideNumber = @GuideNumber
 
 				-- Actualizar En Inventario al último estado de la guía
 				UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-				SET StatusOrderId = @StatusOrderId
+				SET StatusOrderId = ISNULL(@StatusOrderId, @OrderStatus)
 				WHERE Guide_Serie = @GuideSerie 
 					AND Guide_Number = @GuideNumber
 		
 				-- Insertar En Inventario nuevo estado de guía en tabla histórica
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem],[Observations],[StationId])
-				VALUES (@GuideSerie, @GuideNumber, @StatusOrderId, @UserCreated, GETDATE(), GETDATE(),'',@StationId) 
+				VALUES (@GuideSerie, @GuideNumber, ISNULL(@StatusOrderId, @OrderStatus), @UserCreated, GETDATE(), GETDATE(),'',@StationId) 
 				SET @RInserted = @@ROWCOUNT
 
 				-----------------WEBHOOK.INI-----------------------	
