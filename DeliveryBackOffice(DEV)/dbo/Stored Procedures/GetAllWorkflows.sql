@@ -1,0 +1,30 @@
+/* =================================================
+   SP:        GetAllWorkflows
+   Propósito: Se obtienen todos los flujos de trabajo activos
+   Autor:     Erick Hernandez
+   Historia:  FDAPI-5686
+   Fecha:     2026-03-05
+
+=== CHANGELOG ============================
+=========================================== */
+CREATE PROCEDURE [dbo].[GetAllWorkflows]
+AS
+BEGIN
+	SELECT 
+    W.WorkflowId,
+    W.Name AS Workflow,
+	ISNULL(
+		STUFF(
+			(
+				SELECT ', ' + SO.OrderDescription
+				FROM WorkflowStatusMap WSM
+				INNER JOIN StatusOrder SO
+					ON SO.StatusOrderId = WSM.StatusOrderId
+				WHERE WSM.WorkflowId = W.WorkflowId
+				AND WSM.RowStatus = 1
+				FOR XML PATH(''), TYPE
+			).value('.', 'NVARCHAR(MAX)')
+		,1,2,''), '') AS Statuses
+	FROM Workflow W
+	WHERE W.RowStatus = 1;
+END;

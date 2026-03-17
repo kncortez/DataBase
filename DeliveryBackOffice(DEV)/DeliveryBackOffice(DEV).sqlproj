@@ -68,7 +68,7 @@
     <Folder Include="dbo\Sequences\" />
     <Folder Include="Security\" />
   </ItemGroup>
-  <ItemGroup>  
+  <ItemGroup>
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
     <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
@@ -167,6 +167,8 @@
     <Build Include="dbo\Tables\WebhookEndpoint.sql" />
     <Build Include="dbo\Tables\WebhookCatTypeConnection.sql" />
     <Build Include="dbo\Tables\Warehouse.sql" />
+    <Build Include="dbo\Tables\Workflow.sql" />
+    <Build Include="dbo\Tables\WorkflowStatusMap.sql" />
     <Build Include="dbo\Tables\VisitPointItinerary_Copy.sql" />
     <Build Include="dbo\Tables\VisitPointItinerary.sql" />
     <Build Include="dbo\Tables\VisitPointFrequency.sql" />
@@ -1315,6 +1317,7 @@
     <Build Include="dbo\Stored Procedures\UpdateInvoiceHelperExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\UpdateExternalPlatformServicePendingAction.sql" />
     <Build Include="dbo\Stored Procedures\UpadateDeliverySettlementDetail.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateWorkflow.sql" />
     <Build Include="dbo\Stored Procedures\TrackRequestedGuides.sql" />
     <Build Include="dbo\Stored Procedures\TestTSE.sql" />
     <Build Include="dbo\Stored Procedures\SupportSetReversalStatus.sql" />
@@ -1742,6 +1745,7 @@
     <Build Include="dbo\Stored Procedures\GetBatchGuideRemissionByCountry.sql" />
     <Build Include="dbo\Stored Procedures\GetArticlesSAP.sql" />
     <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
+    <Build Include="dbo\Stored Procedures\GetAllWorkflows.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertsOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_TEST.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_BNHL.sql" />
@@ -1766,6 +1770,7 @@
     <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />
     <Build Include="dbo\Stored Procedures\CreateCredentialsIntegration.sql" />
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
+    <Build Include="dbo\Stored Procedures\CreateWorkflow.sql" />
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
     <Build Include="dbo\Stored Procedures\CompleteGuideGenerationExpressCenter.sql" />
     <Build Include="dbo\Stored Procedures\CollectRouteReport.sql" />
@@ -2092,6 +2097,7 @@
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_3.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_4.sql" />
     <Build Include="dbo\Stored Procedures\SupportLHroutes.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegisterInventoryAutomaticExc.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
