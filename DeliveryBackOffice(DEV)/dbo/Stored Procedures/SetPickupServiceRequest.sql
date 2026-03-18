@@ -37,7 +37,8 @@ BEGIN
               @ResultStartDate            AS DATETIME = NULL,  
               @ResultEndDate              AS DATETIME = NULL,  
               @ResultTypeVehiculeId       AS INT,  
-              @ResultQuantityRegularPackages AS INT = NULL;  
+              @ResultQuantityRegularPackages AS INT = NULL,
+              @StartDateDate DATE = CAST(@StartDate AS DATE);  
   
       BEGIN TRY  
            -- INICIAR TRANSACCIÓN  
@@ -52,9 +53,10 @@ BEGIN
                     @phoneSender AS VARCHAR(50),  
                     @idHub AS INT,  
                     @idTownship AS INT,  
-                    @idProvince AS INT;  
+                    @idProvince AS INT,
+                    @TodayTimeOnly TIME = CAST(@TodayTime AS TIME);  
   
-            IF(CAST(@StartDate AS DATE) >= @Today)  
+            IF(@StartDateDate >= @Today)
             BEGIN   
                  -- 1. Validar que no exista un servicio en el día ya solicitado  
                      SELECT @SchedulePickupFinded    =SP.SchedulePickupId,  
@@ -75,7 +77,8 @@ BEGIN
                                 OR sp.SchedulePickupStatus = 1   --RECOLECCIONES ACTIVAS  
                                )  
                            AND sp.RowStatus = 1  
-                           AND CONVERT(DATE, SP.StartDate) = CONVERT(DATE, @StartDate)  
+                           AND SP.StartDate >= @StartDateDate
+                           AND SP.StartDate < DATEADD(DAY, 1, @StartDateDate)
                            AND sp.SenderId=@CodeOfReference;  
   
                  IF @SchedulePickupFinded > 0  
@@ -117,7 +120,7 @@ BEGIN
                       END  
                  END  
             END  
-            ELSE IF(CAST(@StartDate AS DATE) < @Today)  
+            ELSE IF(@StartDateDate < @Today)
             BEGIN   
                  SELECT @IdResult = 409,  
                         @ErrorMessage = 'No es posible solicitar una recolección para un día anterior al día actual',  
@@ -165,8 +168,10 @@ BEGIN
                   FROM DeliveryBackOffice.dbo.DefaultValuesPerCountry dfv WITH(NOLOCK)  
                  WHERE dfv.IdCountry = @IdCountry  
   
-                IF (CONVERT(TIME, @TodayTime) <= @LimitHour) AND (CAST(@StartDate AS DATE) = @Today)  
-                   OR (CAST(@StartDate AS DATE) > @Today)  
+                IF (
+                      (@TodayTimeOnly <= @LimitHour AND @StartDateDate = @Today)
+                      OR (@StartDateDate > @Today)
+                   )
                 BEGIN   
   
                   IF LEN(@addressPickUp) > 0  
@@ -192,7 +197,7 @@ BEGIN
                         SELECT @InsdTypeVehicle  = IdTypeVehicle  
                           FROM DeliveryBackOffice.dbo.CatTypeVehicle WITH(NOLOCK)  
                          WHERE [Name] = @InsdDescTypeVehicle  
-                           AND ISNULL(IdCountry,'GT') = @IdCountry --Necesario el ISNULL debido a valores nulos en el catálogo  
+                           AND IdCountry = @IdCountry
   
                         INSERT INTO [DeliveryBackOffice].[dbo].[SchedulePickup]  
                         (  
