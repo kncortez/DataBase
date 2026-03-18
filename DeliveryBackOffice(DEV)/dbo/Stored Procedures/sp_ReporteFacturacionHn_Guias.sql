@@ -32,7 +32,7 @@ BEGIN
         A1.inv_cli_name AS [Facturado a nombre de],
         A1.inv_cli_nit AS [Nit para facturar],
         A1.inv_cli_email AS [Correo del Cliente Facturado],
-        COALESCE(ConditionOfPayment,'CONTADO')AS [Condición de Pago],
+        COALESCE(A5.ConditionOfPayment,'CONTADO')AS [Condición de Pago],
         A7.Description AS [Tipo Cliente Guía ],  
         IIF(A4.IdCustomerType = 2,A12.DescriptionOfClient,A4.Name) AS [Nombre Cliente Guía],               
         CASE 
@@ -42,12 +42,12 @@ BEGIN
         ,A8.Name AS [Tipo Factura]
 		,CASE 
 			WHEN A16.tio_pk_name = 'pago en efectivo'
-				 AND NULLIF(LTRIM(RTRIM(A18.Voucher)),'') IS NOT NULL
+				 AND NULLIF(LTRIM(RTRIM(A19.Voucher)),'') IS NOT NULL
 				 OR NULLIF(LTRIM(RTRIM(A9.io_ticket)),'') IS NOT NULL
 				THEN 'pago con tarjeta'
 			ELSE COALESCE(A16.tio_pk_name,'Sin registro de pago')
 		END AS [Método de pago]
-		,COALESCE(NULLIF(A18.Voucher,''),NULLIF(A9.io_ticket,''),'')  [Voucher]
+		,COALESCE(NULLIF(A19.Voucher,''),NULLIF(A9.io_ticket,''),'')  [Voucher]
         ,COALESCE(A11.SysNameSystem,'') [Sistema]    
     FROM DeliveryBackOffice.DBO.invoiceHeader A1 WITH(NOLOCK)
     INNER JOIN DeliveryBackOffice.dbo.invoiceDetail A2 WITH(NOLOCK)
@@ -85,15 +85,20 @@ BEGIN
             AND A15.GuideNumber = A3.Guide_Number    
     LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney A16 WITH(NOLOCK)
         ON A15.TypeofInOutMoneyId = A16.tio_pk_id
-	 LEFT JOIN DeliveryBackOffice.dbo.Cost A17 WITH(NOLOCK)
+	LEFT JOIN DeliveryBackOffice.dbo.Cost A17 WITH(NOLOCK)
 	 ON A17.GuideSerie = A3.Guide_Serie
 	 AND A17.GuideNumber = A3.Guide_Number 
-	 LEFT JOIN DeliveryBackOffice.dbo.CostDetail A18 WITH(NOLOCK)
-	 ON A18.IdCost = A17.IdCost
+	OUTER APPLY(
+        SELECT TOP 1 IdCost,Voucher,IdTypeOfMoney
+        FROM DeliveryBackOffice.dbo.CostDetail A18 WITH(NOLOCK)
+        WHERE A18.IdCost = A17.IdCost
+        ORDER BY A18.DateCreated DESC
+    ) A19
     WHERE CAST(A1.inv_date AS DATE) >= @FechaInicio
-      AND CAST(A1.inv_dateAS DATE) <= @FechaFin
+      AND CAST(A1.inv_date AS DATE) <= @FechaFin
       AND A3.SenderCountryId = @IdCountry
 	  AND A1.inv_status = 2
+      AND A1.inv_type = 1
     ORDER BY A1.inv_date;
 
 END
