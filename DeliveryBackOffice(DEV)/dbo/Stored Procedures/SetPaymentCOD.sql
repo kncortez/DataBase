@@ -1,144 +1,216 @@
-﻿-- =============================================
--- Author:		<César,Aquino>
--- Create date: <2020-11-17>
--- Description:	<Generación de manifiesto y pago para guias de trasporte>
--- =============================================
-CREATE PROCEDURE [dbo].[SetPaymentCOD]
-	-- Add the parameters for the stored procedure here
-		 @InGuides  varchar(100)= 'FD1001,FD1002'
-		,@TokenCreated varchar(100) = 'SYS.CAQUINO'
-		,@DocumentNumber varchar(50)= 'N/A'
-		,@DocumentType int= 0 --0 Depósito, 1 Autorización		
-		,@Manifest_Serie varchar(5) = 'PC'
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[SetPaymentCOD_bn]    Script Date: 17/03/2026 11:35:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+/* =================================================
+   SP:        [dbo].[SetPaymentCOD]
+   Propósito: Generación de manifiesto y pago para guias de trasporte
+   Autor:     César Aquino
+   Historia:  
+   Fecha:     2020-11-17
+============================================
+=== CHANGELOG ================================
+2026-03-13 | Historia/épica: FDAPI-5800 | Autor: Brenda Echeverria |
+-----
+=========================================== */
+
+ALTER PROCEDURE [dbo].[SetPaymentCOD]
+	 @InGuides			VARCHAR(100) = 'FD1001,FD1002'
+	,@TokenCreated		VARCHAR(100) = 'SYS.CAQUINO'
+	,@DocumentNumber	VARCHAR(50)	 = 'N/A'
+	,@DocumentType		INT			 = 0 --0 Depósito, 1 Autorización		
+	,@Manifest_Serie	VARCHAR(5)	 = 'PC'
 AS
 BEGIN
 	SET NOCOUNT ON;
-	BEGIN TRANSACTION
-		BEGIN TRY
-		select SUBSTRING(Item, 1,2) ItemSerie,SUBSTRING(Item,3,len(Item)) ItemNumber 
-				into #listGuides_cod
-				from DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides,',')
-
-			-- Insert MANIFEST HEADER
-			DECLARE @ID_M bigint 
-			DECLARE @ID_Manifest bigint
-			DECLARE @GuideCount int
-
-			Set @GuideCount = (select count(*) FROM #listGuides_cod guides
-				inner join [DeliveryBackOffice].[dbo].[DeliveryOrder] o  on o.Guide_Serie = guides.ItemSerie and o.Guide_Number = guides.ItemNumber
-			  left join DeliveryBackOffice.dbo.DeliveryOrderPaid p on p.Guide_Serie = o.Guide_Serie and p.Guide_Number = o.Guide_Number
-			  AND p.Guide_Number is null 
-			  left join [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det on Det.Guide_Serie = o.Guide_Serie and Det.Guide_Number = o.Guide_Number AND Det.RowStatus = 1		 
-			  where   
-					isnull(Det.Settlement_Collect_OnDelivery,0)>0)
 			
+	BEGIN TRANSACTION
+	BEGIN TRY
+		
+		SELECT 
+			SUBSTRING(Item,1,2) AS ItemSerie,
+			SUBSTRING(Item,3,len(Item)) AS ItemNumber 
+		INTO #listGuides_cod
+		FROM dbo.SplitUnlimited(@InGuides,',');
 
-			if (@GuideCount>0) begin
-			SET @ID_Manifest = (
-			 SELECT ISNULL(MAX([Manifest_Number]),999) +1  FROM [dbo].[DeliveryOrderPaidHeader]
+		-- Insert MANIFEST HEADER
+		DECLARE @ID_M bigint 
+		DECLARE @ID_Manifest bigint
+		DECLARE @GuideCount int
+
+		SELECT 
+			@GuideCount = COUNT(*) 
+		FROM #listGuides_cod guides
+			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+				ON DO.Guide_Serie = guides.ItemSerie 
+				AND DO.Guide_Number = guides.ItemNumber
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaid DOP WITH (NOLOCK)
+				ON DOP.Guide_Serie = DO.Guide_Serie 
+				AND DOP.Guide_Number = DO.Guide_Number
+				AND DOP.Guide_Number is null 
+			LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DET WITH (NOLOCK)
+				ON DET.Guide_Serie = DO.Guide_Serie 
+				AND DET.Guide_Number = DO.Guide_Number 
+				AND DET.RowStatus = 1		 
+		WHERE   
+			ISNULL(DET.Settlement_Collect_OnDelivery,0)>0;
+			
+		IF (@GuideCount>0) 
+		BEGIN
+			SELECT 
+				@ID_Manifest = ISNULL(MAX([Manifest_Number]),999) +1 
+			FROM [dbo].[DeliveryOrderPaidHeader] WITH (NOLOCK);
+			
+			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderPaidHeader] 
+			(
+				 [Manifest_Date]
+				,[Manifest_Serie]
+				,[Manifest_Number]
+				,[IdStatus]
+			)
+			VALUES
+			(
+				GETDATE()
+				,@Manifest_Serie
+				,@ID_Manifest
+				,1
+			) ;
+		
+			SET @ID_M=	(  select @@IDENTITY 'IDENTITY') ;
+						
+			--  INSERT MANIFEST DETAIL
+			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderPaid] 
+			(
+				 [Guide_Serie]
+				,[Guide_Number]
+				,[Deposit_Number]
+				,[IsVirtualDeposit]
+				,[IdStatus]
+				,[TokenCreated]
+				,[DateCreated]
+				,[TokenUpdate]
+				,[DateUpdate]
+				,[IdDeliveryOrderPaidHeader]
+				,[DocumentType]
+			)
+			SELECT  
+				 DO.Guide_Serie AS 'Guide_Serie'
+				,DO.Guide_Number AS 'Guide_Nuber'
+				,@DocumentNumber
+				,1
+				,1 
+				,@TokenCreated
+				,GETDATE()
+				,NULL
+				,NULL
+				,@ID_M
+				,@DocumentType
+			FROM 
+				#listGuides_cod GUIDES
+				INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH (NOLOCK)
+					ON DO.Guide_Serie = guides.ItemSerie 
+					AND DO.Guide_Number = guides.ItemNumber
+				LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaid DOP WITH (NOLOCK)
+					ON DOP.Guide_Serie = DO.Guide_Serie 
+					AND DOP.Guide_Number = DO.Guide_Number 
+					AND DOP.Guide_Number is null 
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
+					ON DSD.Guide_Serie = DO.Guide_Serie 
+					AND DSD.Guide_Number = DO.Guide_Number 
+					AND DSD.RowStatus = 1		
+			WHERE   
+				ISNULL(DSD.Settlement_Collect_OnDelivery,0)>0
+			
+			--Guardar número de depósito únicamente no número de autorización
+			--if (@DocumentType =0)
+			BEGIN
+				UPDATE DO
+					SET Deposit_Number = @DocumentNumber 				
+				FROM DeliveryBackOffice.dbo.DeliveryOrder AS DO WITH (NOLOCK)
+					INNER JOIN #listGuides_cod AS GUIDES
+						ON DO.Guide_Serie=GUIDES.ItemSerie
+						AND DO.Guide_Number=GUIDES.ItemNumber					
+			END			  
+		END 			
+	END TRY
+
+	BEGIN CATCH
+		SELECT 
+			'Transaccion no completada' AS 'msg', 
+			ERROR_MESSAGE() AS 'Description'
+		ROLLBACK TRANSACTION
+	END CATCH;
+
+	IF @@TRANCOUNT > 0 
+	BEGIN
+		COMMIT TRANSACTION;
+		
+		DECLARE @jsonDetail NVARCHAR(MAX)
+		DECLARE @jsonHeader NVARCHAR(MAX)
+
+		if (@ID_M>0) 
+		BEGIN
+			SET @jsonDetail = (
+			SELECT STUFF((
+			SELECT 
+				CONCAT(',{"Guide_Serie":"' , DOP.Guide_Serie , '",' ,'"Guide_Number":' , DOP.Guide_Number , '}')
+			FROM DeliveryBackOffice.dbo.DeliveryOrderPaidHeader DOPH WITH (NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaid DOP WITH (NOLOCK)
+				ON DOP.IdDeliveryOrderPaidHeader = DOPH.IdDeliveryOrderPaid 
+			WHERE DOPH.IdDeliveryOrderPaid= @ID_M
+			FOR XML PATH(''), TYPE
+			).value('.', 'varchar(max)'),1,1,''
+			) 
+			) ;
+
+			set @jsonHeader = 
+			(
+				SELECT STUFF
+				(
+					(
+						SELECT 
+							CONCAT
+							(
+								',{"Date":"' 
+								, CASE WHEN DOPH.Manifest_Date IS NULL THEN '' ELSE CONVERT(VARCHAR,DOPH.Manifest_Date,126) END 
+								, '",' 
+								,'"Serie":"' 
+								,DOPH.Manifest_Serie 
+								,'",' 
+								,'"Id_Manifest":' 
+								, convert(varchar,DOPH.Manifest_Number) 
+								, '}'
+							)
+						FROM DeliveryBackOffice.dbo.DeliveryOrderPaidHeader DOPH WITH (NOLOCK)
+						WHERE DOPH.IdDeliveryOrderPaid= @ID_M
+						FOR XML PATH(''), TYPE
+					).value('.', 'varchar(max)'),1,1,''
+				) 
+			) ;
+
+			SELECT replace( '['+ @jsonHeader + '"services":[' + @jsonDetail + ']}]','}"services',',"services') FormatJson ;
+		END
+		ELSE 
+		BEGIN
+			SET @jsonHeader = 
+			(
+				SELECT STUFF
+				(
+					(
+						SELECT 
+							CONCAT(',{"msg":"' , 'No hay guias aptas para pago' , '}')
+						FOR XML PATH(''), TYPE
+					).value('.', 'varchar(max)')
+					,1
+					,1
+					,''
+				)
 			)
 			
-			insert into [DeliveryBackOffice].[dbo].[DeliveryOrderPaidHeader] 
-			([Manifest_Date], [Manifest_Serie], [Manifest_Number], [IdStatus])
-			values(Getdate()
-			,@Manifest_Serie
-			,@ID_Manifest
-			,1)
-		
-		   SET @ID_M=	(  select @@IDENTITY 'IDENTITY')
-
-		   --  INSERT MANIFEST DETAIL
-		    insert into [DeliveryBackOffice].[dbo].[DeliveryOrderPaid] 
-			  (
-			  [Guide_Serie], [Guide_Number], [Deposit_Number], [IsVirtualDeposit], [IdStatus], [TokenCreated], [DateCreated], [TokenUpdate], [DateUpdate], [IdDeliveryOrderPaidHeader], [DocumentType]
-			  )
-			  SELECT  
-			  o.Guide_Serie as 'Guide_Serie'
-			  , o.Guide_Number as 'Guide_Nuber'
-			  ,@DocumentNumber
-			  ,1
-			  ,1 
-			  ,@TokenCreated
-			  ,GETDATE()
-			  ,null
-			  ,null
-			  ,@ID_M
-			  ,@DocumentType
-				FROM #listGuides_cod guides
-				inner join [DeliveryBackOffice].[dbo].[DeliveryOrder] o  on o.Guide_Serie = guides.ItemSerie and o.Guide_Number = guides.ItemNumber
-			  left join DeliveryBackOffice.dbo.DeliveryOrderPaid p on p.Guide_Serie = o.Guide_Serie and p.Guide_Number = o.Guide_Number and p.Guide_Number is null 
-			  left join [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det on Det.Guide_Serie = o.Guide_Serie and Det.Guide_Number = o.Guide_Number and Det.RowStatus = 1		
-			  where   
-					isnull(Det.Settlement_Collect_OnDelivery,0)>0
-			
-			  --Guardar número de depósito únicamente no número de autorización
-			  --if (@DocumentType =0)
-			  BEGIN
-				update DeliveryBackOffice.dbo.DeliveryOrder 
-			    set Deposit_Number = @DocumentNumber 				
-			    from DeliveryBackOffice.dbo.DeliveryOrder ,#listGuides_cod
-			    where Guide_Serie = ItemSerie and Guide_Number = ItemNumber
-			  END
-			  
-			  end 
-			
-		END TRY
-
-		BEGIN CATCH
-			SELECT 
-				'Transaccion no completada' AS 'msg', 
-				ERROR_MESSAGE() AS 'Description'
-			ROLLBACK TRANSACTION
-		END CATCH;
-
-		IF @@TRANCOUNT > 0 BEGIN
-			COMMIT TRANSACTION;
-			
-			 DECLARE @jsonDetail NVARCHAR(MAX)
-		   DECLARE @jsonHeader NVARCHAR(MAX)
-
-	if (@ID_M>0) begin
-		  set @jsonDetail = (
-		  SELECT STUFF((
-		  select 
-		  ',{"Guide_Serie":"' + d.Guide_Serie + '",' +
-		  '"Guide_Number":' + CONVERT(varchar,d.Guide_Number) + '}'
-		  from DeliveryBackOffice.dbo.DeliveryOrderPaidHeader h
-		  inner join DeliveryBackOffice.dbo.DeliveryOrderPaid d on d.IdDeliveryOrderPaidHeader = h.IdDeliveryOrderPaid 
-		  where h.IdDeliveryOrderPaid= @ID_M
-		   FOR XML PATH(''), TYPE
-			).value('.', 'varchar(max)'),1,1,''
-              ) 
-			  )
-
-			set @jsonHeader = (
-		  SELECT STUFF((
-		  select 
-		  ',{"Date":"' +
-		    CASE WHEN h.Manifest_Date IS NULL THEN '' ELSE CONVERT(VARCHAR,h.Manifest_Date,126) END + '",' +
-		  '"Serie":"' + h.Manifest_Serie + '",' +
-		  '"Id_Manifest":' + convert(varchar,h.Manifest_Number) + '}'
-		  from DeliveryBackOffice.dbo.DeliveryOrderPaidHeader h
-		  where h.IdDeliveryOrderPaid= @ID_M
-		   FOR XML PATH(''), TYPE
-			).value('.', 'varchar(max)'),1,1,''
-              ) 
-			  )
-
-
-			select replace( '['+ @jsonHeader + '"services":[' + @jsonDetail + ']}]','}"services',',"services') FormatJson
-		end
-		else begin
-		set @jsonHeader = (
-		SELECT STUFF((
-		  
-		SELECT 
-				',{"msg":"' + 'No hay guias aptas para pago' + '}'
-				FOR XML PATH(''), TYPE
-			).value('.', 'varchar(max)'),1,1,''
-              ) 
-			  )
-		end
 		END
-	
+	END	
+
 END
