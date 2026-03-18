@@ -1,45 +1,46 @@
-﻿
--- =============================================
--- Author:		<Carlos Cano>
--- Create date: <02/09/2020>
--- Description:	<Reporte de producto huérfano>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <13/06/2024>
--- Description:	<Se agrega el filtro por pais de origen>
--- =============================================
-CREATE PROCEDURE [dbo].[spg_report_orphan_product]
+﻿/* =================================================
+   SP:        [dbo].[spg_report_orphan_product]
+   Propósito: Reporte de productos huerfanos
+   Autor:     Carlos Cano
+   Historia:  
+   Fecha:     2020-09-02
+============================================
+=== CHANGELOG ================================
+2024-11-19 | Historia/épica: FDAPI-5802 | Autor: Brenda Echeverria |
+-----
+2024-06-13 | Historia/épica: FDAPI-2420 | Autor: Cristian Suazo |
+=========================================== */
+ALTER PROCEDURE [dbo].[spg_report_orphan_product]
 				 @IdCountry NVARCHAR(2) = 'GT'
-	-- Add the parameters for the stored procedure here
-	
 AS
 BEGIN
 
 	SET NOCOUNT ON;
 
-	select distinct
-	w.Guide_Serie + cast(w.guide_number as varchar) as guide,
-	isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') as receiver,
-	(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(w.Guide_Serie,w.Guide_Number)) as [Ubicacion_Bodega],
-	datediff(DAY, SUBQ.Date_Created, GETDATE()) as Days_Overdue
-	from DeliveryBackOffice.dbo.Warehouse w,
-	(
-	select 
-		dod.Guide_serie, 
-		dod.Guide_number,
-		max(dod.datecreated) as Date_Created
-	from DeliveryBackOffice.dbo.DeliveryOrderDetail dod with(nolock)
-	where StatusOrderId = 5
-	group by dod.Guide_Serie, dod.Guide_Number
-	) as SUBQ
-	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = subq.guide_serie and do.Guide_Number = subq.guide_number
-	where w.Active = 1
-	AND SUBQ.Date_Created <=  GETDATE() - 1
-	AND SUBQ.Guide_Serie = w.Guide_Serie and SUBQ.Guide_Number = w.Guide_Number
-	AND IIF(do.SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry
-	ORDER BY Days_Overdue
-
-
+	SELECT DISTINCT
+		CONCAT(WH.Guide_Serie , WH.Guide_Number) AS guide,
+		CONCAT(DO.Receiver_FirstName , ' ' , DO.Receiver_LastName) AS receiver,
+		DeliveryBackOffice.dbo.fn_get_rackposition(WH.Guide_Serie, WH.Guide_Number) AS [Ubicacion_Bodega],
+		DATEDIFF(DAY, GUIDES.Date_Created, GETDATE()) AS Days_Overdue
+	FROM DeliveryBackOffice.dbo.Warehouse WH  WITH (NOLOCK)
+	INNER JOIN (
+		SELECT 
+			DOD.Guide_Serie, 
+			DOD.Guide_Number,
+			MAX(dod.DateCreated) AS Date_Created
+		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
+		WHERE DOD.StatusOrderId = 5
+		GROUP BY DOD.Guide_Serie, DOD.Guide_Number
+	) AS GUIDES
+		ON GUIDES.Guide_Serie = WH.Guide_Serie 
+	   AND GUIDES.Guide_Number = WH.Guide_Number
+	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+		ON DO.Guide_Serie = GUIDES.Guide_Serie 
+	   AND DO.Guide_Number = GUIDES.Guide_Number
+	WHERE 
+		WH.Active = 1
+		AND GUIDES.Date_Created <= DATEADD(DAY, -1, GETDATE())
+		AND ISNULL(do.SenderCountryId , 'GT') = @IdCountry
+	ORDER BY Days_Overdue;
 
 END
