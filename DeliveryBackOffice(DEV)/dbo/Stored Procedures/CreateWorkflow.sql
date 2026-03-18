@@ -14,7 +14,7 @@ GO
 
 === CHANGELOG ============================
 =========================================== */
-ALTER PROCEDURE [dbo].[CreateWorkflow]
+CREATE PROCEDURE [dbo].[CreateWorkflow]
 	@Name NVARCHAR(50),
 	@Token NVARCHAR(50)
 AS

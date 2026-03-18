@@ -14,7 +14,7 @@ CREATE PROCEDURE [dbo].[sps_DeliveryOrderDetailIds]
 ,@Ticket_Number						varchar(300) = ''
 ,@IsInsuarance						bit = 0
 ,@CodApp							varchar(200)
-,@InsuranceAmount					decimal(12,2)=0
+,@InsuranceAmount					decimal(12,2) = 0
 ,@IdDeliveryOption					int = 0
 ,@ReceiverIdSettlement				bigint =0
 ,@IdSalePipeLine					int = 0
@@ -23,9 +23,10 @@ CREATE PROCEDURE [dbo].[sps_DeliveryOrderDetailIds]
 ,@IsReturn							bit = 0
 ,@IsCreditCardPayment				bit = 0
 ,@OrderUserCreated                  varchar(100) = ''
-,@UseMembership bit=0
-,@CategoryProductId int = 0
-,@ProductId int = 0
+,@UseMembership                     bit = 0
+,@CategoryProductId                 int = 0
+,@ProductId                         int = 0
+,@AppOrigin                         nvarchar(4) = ''
 AS 
 BEGIN
 
@@ -112,19 +113,20 @@ BEGIN
 	--IF @Price =0 AND @CouponApplied = 0 
 	--BEGIN
 		EXECUTE @RC = DeliveryBackOffice.dbo.spws_revalue_guide
-					@GuideSerie = @GuideSerie,
-					@GuideNumber = @GuideNumber,
-					@CodeApp = '',
-					@Format = 'Non',
-					@CalculateTaxes = 'true',
-					@IdModule = 33,
-					@SetUpdate = 'true',
-					@Token = 'sps_DeliveryOrderDetailIds',
-					@IsReturn = 'false',
-					@ParIsCreditCard = @IsCreditCardPayment,
-					@UseMembership = @UseMembership,
-					@CategoryProductId = @CategoryProductId,
-					@ProductId = @ProductId
+					 @GuideSerie = @GuideSerie
+					,@GuideNumber = @GuideNumber
+					,@CodeApp = ''
+					,@Format = 'Non'
+					,@CalculateTaxes = 'true'
+					,@IdModule = 33
+					,@SetUpdate = 'true'
+					,@Token = 'sps_DeliveryOrderDetailIds'
+					,@IsReturn = 'false'
+					,@ParIsCreditCard = @IsCreditCardPayment
+					,@UseMembership = @UseMembership
+					,@CategoryProductId = @CategoryProductId
+					,@ProductId = @ProductId
+					,@AppOrigin = @AppOrigin
 	--END
 
 	select 1,

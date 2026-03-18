@@ -17,14 +17,14 @@ BEGIN
 		STUFF(
 			(
 				SELECT ', ' + SO.OrderDescription
-				FROM WorkflowStatusMap WSM
-				INNER JOIN StatusOrder SO
+				FROM DeliveryBackOffice.dbo.WorkflowStatusMap WSM WITH (NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH (NOLOCK)
 					ON SO.StatusOrderId = WSM.StatusOrderId
 				WHERE WSM.WorkflowId = W.WorkflowId
 				AND WSM.RowStatus = 1
 				FOR XML PATH(''), TYPE
 			).value('.', 'NVARCHAR(MAX)')
-		,1,1,''), '') AS Statuses
+		,1,2,''), '') AS Statuses
 	FROM Workflow W
 	WHERE W.RowStatus = 1;
 END;
