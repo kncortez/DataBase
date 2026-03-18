@@ -11,6 +11,10 @@ CREATE PROCEDURE [dbo].[GetWorkflowStatuses]
 	@WorkflowID BIGINT
 AS
 BEGIN
+	SELECT ISNULL(W.Name, '') AS WorkflowName
+	FROM DeliveryBackOffice.dbo.Workflow W WITH (NOLOCK)
+	WHERE W.WorkflowId = @WorkflowID;
+	
 	SELECT
 		SO.StatusOrderId,
 		SO.OrderDescription AS StatusName,
