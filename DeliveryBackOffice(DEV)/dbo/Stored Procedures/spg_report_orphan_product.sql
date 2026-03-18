@@ -6,7 +6,7 @@
    Fecha:     2020-09-02
 ============================================
 === CHANGELOG ================================
-2024-11-19 | Historia/épica: FDAPI-5802 | Autor: Brenda Echeverria |
+2024-11-19 | Historia/épica: FDAPI-5802 | Autor: Brenda Echeverria | reemplazo de JOIN implicito por explicito, operador + por funcion CONCAT, aritmetica de fechas por DATEADD, IIF por ISNULL, uso de alias segun lineamientos
 -----
 2024-06-13 | Historia/épica: FDAPI-2420 | Autor: Cristian Suazo |
 =========================================== */
