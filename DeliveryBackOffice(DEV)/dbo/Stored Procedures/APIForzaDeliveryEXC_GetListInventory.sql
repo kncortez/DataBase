@@ -24,7 +24,7 @@ BEGIN
               WH.Rack_Position,
               WH.DateCreated
        FROM Warehouse WH WITH (NOLOCK)
-       INNER JOIN StatusOrder SO WITH (NOLOCK) ON WH.StatusOrderId = SO.StatusOrderId
+       INNER JOIN StatusOrder SO ON WH.StatusOrderId = SO.StatusOrderId
        INNER JOIN DeliveryOrder DO WITH (NOLOCK) ON WH.Guide_Serie = DO.Guide_Serie AND WH.Guide_Number = DO.Guide_Number
        WHERE WH.HubExc = @HubEXC
               AND WH.IdHubExc = @IdHubEXC
