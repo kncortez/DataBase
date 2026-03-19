@@ -81,10 +81,16 @@ BEGIN TRY
 
     PRINT N'SQL a ejecutar: ' + @Sql;
 
+    BEGIN TRANSACTION;
     EXEC sp_executesql @Sql;
-
+    COMMIT TRANSACTION;
+    
     PRINT N'ALTER TABLE aplicado correctamente sobre dbo.DeliveryBank.URL_logo.';
 END TRY
 BEGIN CATCH
+    IF XACT_STATE() <> 0
+        ROLLBACK TRANSACTION;
+
     PRINT N'ERROR: ' + ERROR_MESSAGE();
+    THROW;    
 END CATCH;
