@@ -16,6 +16,9 @@ AS
 BEGIN
 
 	SET NOCOUNT ON;
+	
+	DECLARE @Yesterday DATETIME;
+	SET  @Yesterday= DATEADD(DAY, -1, GETDATE());
 
 	SELECT DISTINCT
 		CONCAT(WH.Guide_Serie , WH.Guide_Number) AS guide,
@@ -39,8 +42,8 @@ BEGIN
 	   AND DO.Guide_Number = GUIDES.Guide_Number
 	WHERE 
 		WH.Active = 1
-		AND GUIDES.Date_Created <= DATEADD(DAY, -1, GETDATE())
-		AND ISNULL(do.SenderCountryId , 'GT') = @IdCountry
+		AND GUIDES.Date_Created <= @Yesterday
+		AND DO.SenderCountryId  = @IdCountry
 	ORDER BY Days_Overdue;
 
 END
