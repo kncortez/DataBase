@@ -30,7 +30,12 @@ BEGIN
             END
         ) AS [Descripción],
         A1.inv_cli_name AS [Facturado a nombre de],
-        A1.inv_cli_nit AS [Nit para facturar],
+        CASE 
+		   WHEN @IdCountry = 'GT' THEN 'NIT'
+		   WHEN @IdCountry = 'HN' THEN 'NRC'
+		   ELSE 'Identificación'
+		END AS [Tipo Documento],
+        A1.inv_cli_nit AS [Número Documento Factura],
         A1.inv_cli_email AS [Correo del Cliente Facturado],
         COALESCE(A5.ConditionOfPayment,'CONTADO')AS [Condición de Pago],
         A7.Description AS [Tipo Cliente Guía ],  

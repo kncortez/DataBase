@@ -24,7 +24,12 @@ BEGIN
         A2.dti_amount AS [Total Línea],
         A2.dti_description AS [Descripción],   
         A1.inv_cli_name AS [Cliente],
-        A1.inv_cli_nit [Nit para facturar],
+        CASE 
+		   WHEN @IdCountry = 'GT' THEN 'NIT'
+		   WHEN @IdCountry = 'HN' THEN 'NRC'
+		   ELSE 'Identificación'
+		END AS [Tipo Documento],
+        A1.inv_cli_nit [Número Documento Factura],
         A1.inv_cli_email [Correo del Cliente Facturado],
         A2.dti_category AS [Categoría], 
         A8.Name AS [Tipo Factura]
