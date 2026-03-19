@@ -1,11 +1,14 @@
-﻿
--- =============================================
--- Author:		<Cano, Carlos>
--- Create date: <2020-09-08>
--- Updated By:	<Alfredo, Monroy>
--- Updated At:	<2021-09-21>
--- Description:	<Registrar incidente de entrega en sitio>
--- =============================================
+﻿/* =================================================
+   SP:        [<dbo>].[sps_set_incidence_service]
+   Propósito: <Registrar incidente de entrega en sitio>
+   Autor:     <Cano, Carlos>
+   Historia:  <El Autor no dejó registro de la Epica usada para la creación>
+   Fecha:     2020-09-08
+   === CHANGELOG ================================
+2026-03-18 | Historia/épica: <FDAPI-5584> | Autor: <Bilkar Morataya> | Se agregó almacenar el comentario en la tabla de ConfirmationOfIncidence, además de registrar el usuario que creó el intento de entrega fallida.
+============================================
+*/
+
 CREATE PROCEDURE [dbo].[sps_set_incidence_service]
     @Token VARCHAR(200)
   , @IdIssue INT
@@ -95,6 +98,7 @@ BEGIN
           , IncidentfinalizedbySAC
           , IsDenied
           , LastStatusOrderId
+          , CommentOnIncident
         )
         VALUES
         (   @Token    -- ConfirmationOfIncidentToken - nvarchar(50)
@@ -115,6 +119,7 @@ BEGIN
           , NULL      -- IncidentfinalizedbySAC - bit
           , 0         -- IsDenied - bit
           , NULL      -- LastStatusOrderId - tinyint
+          , @Comment  -- CommentOnIncident
             );
 
         SET @IdConfirmationOfIncidence = SCOPE_IDENTITY();
