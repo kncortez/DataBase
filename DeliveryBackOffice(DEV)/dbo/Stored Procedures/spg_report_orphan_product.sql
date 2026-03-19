@@ -10,7 +10,7 @@
 -----
 2024-06-13 | Historia/épica: FDAPI-2420 | Autor: Cristian Suazo |
 =========================================== */
-ALTER PROCEDURE [dbo].[spg_report_orphan_product]
+CREATE PROCEDURE [dbo].[spg_report_orphan_product]
 				 @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
