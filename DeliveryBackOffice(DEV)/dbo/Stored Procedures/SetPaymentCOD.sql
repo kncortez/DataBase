@@ -1,11 +1,4 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[SetPaymentCOD_bn]    Script Date: 17/03/2026 11:35:06 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-/* =================================================
+﻿/* =================================================
    SP:        [dbo].[SetPaymentCOD]
    Propósito: Generación de manifiesto y pago para guias de trasporte
    Autor:     César Aquino
@@ -13,11 +6,11 @@ GO
    Fecha:     2020-11-17
 ============================================
 === CHANGELOG ================================
-2026-03-13 | Historia/épica: FDAPI-5800 | Autor: Brenda Echeverria |
+2026-03-13 | Historia/épica: FDAPI-5800 | Autor: Brenda Echeverria | reemplazo de sintaxis JOIN antiguo a JOIN explicita, operador + por CONCAT, uso de alias y otros aspectos de lienamientos de BD y versionamiento
 -----
 =========================================== */
 
-ALTER PROCEDURE [dbo].[SetPaymentCOD]
+CREATE PROCEDURE [dbo].[SetPaymentCOD]
 	 @InGuides			VARCHAR(100) = 'FD1001,FD1002'
 	,@TokenCreated		VARCHAR(100) = 'SYS.CAQUINO'
 	,@DocumentNumber	VARCHAR(50)	 = 'N/A'
