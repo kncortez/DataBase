@@ -11,7 +11,6 @@
 2025-12-12 | Historia/épica: FDAPI-4733  | Autor: Cristian Suazo  | 
 2026-01-29 | Historia/épica: FDAPI-4801  | Autor: Brandon Pedroza | Se obtiene campo indicaciones adicionales en manifiesto de recolecciones
 2026-01-29 | Historia/épica: FDAPI-5313  | Autor: Brandon Pedroza | Se obtiene campo nombre paquete en manifiesto de recolecciones
-2026-03-17 | Historia/épica: FDAPI-5681  | Autor: Caleb Loarca    | Se agrega campo SubTypeServiceMangagement para identificar recolecciones manuales
 
 =========================================== */
 
