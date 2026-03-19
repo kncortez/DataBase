@@ -11,6 +11,7 @@
 2025-12-12 | Historia/épica: FDAPI-4733  | Autor: Cristian Suazo  | 
 2026-01-29 | Historia/épica: FDAPI-4801  | Autor: Brandon Pedroza | Se obtiene campo indicaciones adicionales en manifiesto de recolecciones
 2026-01-29 | Historia/épica: FDAPI-5313  | Autor: Brandon Pedroza | Se obtiene campo nombre paquete en manifiesto de recolecciones
+2026-03-18 | Historia/épica: FDAPI-5697  | Autor: Brandon Pedroza | Se inactiva registro de inventario al hacer recoleccion
 
 =========================================== */
 
@@ -287,7 +288,21 @@ BEGIN
 								  Guide_Number
                                   
                               );
-
+                --desactivar inventario de piezas activas que hayan siendo escaneadas en recolecciones
+                  UPDATE WH
+                      SET WH.Active = 0,
+                      WH.UserUpdated = @Token,
+                      WH.DateUpdated = GETDATE()
+                  FROM DeliveryBackOffice.dbo.DeliveryOrder DO	WITH(NOLOCK)
+                  INNER JOIN DeliveryBackOffice.dbo.Warehouse WH WITH(NOLOCK)
+                      ON DO.Guide_Serie = WH.Guide_Serie
+                      AND DO.Guide_Number = WH.Guide_Number
+                  INNER JOIN #listGuides lg
+                      ON WH.Guide_Serie = lg.ItemSerie
+                      AND WH.Guide_Number = lg.ItemNumber
+                      AND WH.Guide_Piece = lg.ItemPiece
+                  WHERE WH.Active = 1
+                        AND DO.StatusOrderId = 10 -- En Inventario -> StatusOrder
                 ----------------------------------------------Inserta en la tabla DeliveryOrderPaymentDetail los datos de la tabla temporal ----------------------------------
                 INSERT INTO dbo.DeliveryOrderPaymentDetail
                 (
