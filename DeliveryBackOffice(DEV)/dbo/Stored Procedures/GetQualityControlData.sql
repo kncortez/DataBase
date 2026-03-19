@@ -160,7 +160,7 @@ BEGIN
             AND DO.StatusOrderId NOT IN (45,50)
             AND DSD.RowStatus = 1
 			AND ISNULL(DSD.Guide_Settlement,0) = 0
-			AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry;
+			AND DO.SenderCountryId = @IdCountry;
 
 		--======================================================================================================
 		--============================= INSERT TodaysCheckpointsDetail =========================================
@@ -221,7 +221,7 @@ BEGIN
 		WHERE GDD.statusorderid IN ( 45, 50 ) --solo incidencias confirmadas y pendientes para el detalle
 			-- OR: sin guía específica filtra por país; con guía específica ignora país (permite buscar guía de cualquier país)
 			AND 
-				((@GuideNumber IS NULL AND ISNULL(GDD.SenderCountryId, 'GT') = @IdCountry) 
+				((@GuideNumber IS NULL AND GDD.SenderCountryId = @IdCountry) 
 				OR 
 				(GDD.Guide_Serie = @GuideSerie AND GDD.guide_number = @GuideNumber))
 		OPTION (RECOMPILE);
@@ -248,7 +248,7 @@ BEGIN
 				AND DOD.SystemOrigin IN (2, 5)
 				-- OR: sin guía específica filtra por país; con guía específica ignora país (permite buscar guía de cualquier país)
 				AND 
-					((@GuideNumber IS NULL AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry) 
+					((@GuideNumber IS NULL AND DO.SenderCountryId = @IdCountry) 
 					OR 
 					(DOD.Guide_Serie = @GuideSerie AND DOD.Guide_Number = @GuideNumber))
 		)
