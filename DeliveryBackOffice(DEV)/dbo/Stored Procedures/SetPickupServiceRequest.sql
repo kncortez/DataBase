@@ -6,7 +6,7 @@
    Fecha:     2025-06-05
 ============================================
 === CHANGELOG ================================
-2026-03-16	|	Épica: FDAPI-5796	|	Autor: Erick	|
+2026-03-16	|	Épica: FDAPI-5796	|	Autor: Erick    |   Corrección en formateo de variables y formatos de fechas para evitar bugs en endpoint.
 =========================================== */
 
 CREATE PROCEDURE [dbo].[SetPickupServiceRequest]
