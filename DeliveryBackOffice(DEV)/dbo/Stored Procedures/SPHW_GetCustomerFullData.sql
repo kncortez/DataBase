@@ -3,6 +3,11 @@
 -- Create date: <2025-11-25>
 -- Description:	<Obtener data de cliente para forzaPay>
 -- =============================================
+-- =============================================
+-- Author:		<Marcelo Del Aguila>
+-- Create date: <2026-03-06>
+-- Description:	<Ajuste en nombre mostrado según tipo de cuenta>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_GetCustomerFullData]
     @IdCustomer INT
 AS
@@ -17,10 +22,20 @@ BEGIN
         p.PerBirthdate AS FechaNacimiento,
         p.PerGender AS Genero,
         p.PerNationality AS Nacionalidad,
-        c.Abbreviation AS SobreNombre,
+        CASE
+        WHEN a.AccIdTypeAccount = 1
+            THEN COALESCE(NULLIF(ru.UsrNickName, ''), c.Abbreviation, c.CommercialName)
+        ELSE
+            COALESCE(c.CommercialName, c.Abbreviation)
+        END AS SobreNombre,
 		ru.PrefixCallingCode AS PrefijoTelefono,
         ru.Phone AS Telefono,
-		c.CommercialName AS NombreComercial,
+		CASE
+        WHEN a.AccIdTypeAccount = 1
+            THEN COALESCE(NULLIF(ru.UsrNickName, ''), c.CommercialName)
+        ELSE
+            c.CommercialName
+    END AS NombreComercial,
 		ru.UsrEmail AS Correo
     FROM [DeliveryBackOffice].[dbo].[Customer] c WITH(NOLOCK)
     INNER JOIN [DeliveryBackOffice].[dbo].[Account] a WITH(NOLOCK) ON a.IdCustomer = c.IdCustomer
