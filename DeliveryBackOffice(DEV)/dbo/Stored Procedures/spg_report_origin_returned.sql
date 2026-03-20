@@ -1,9 +1,14 @@
 ﻿
--- =============================================
--- Author:		<Carlos Cano>
--- Create date: <02/09/2020>
--- Description:	<Reporte de producto retornado al origen>
--- =============================================
+/* =================================================
+   SP:        [dbo].[spg_report_origin_returned]
+   Propósito: Reporte de producto retornado al origen
+   Autor:     Carlos Cano
+   Historia:  
+   Fecha:     2020-09-02
+============================================
+=== CHANGELOG ================================
+2026-03-19 | Historia/épica: FDAPI-5801 | Autor: Brenda Echeverria | reemplazo de JOIN implicito por explicito, operador + por funcion CONCAT, aritmetica de fechas por DATEADD, uso de alias segun lineamientos
+=========================================== */
 CREATE PROCEDURE [dbo].[spg_report_origin_returned]
 	-- Add the parameters for the stored procedure here
 	
@@ -12,25 +17,36 @@ BEGIN
 
 	SET NOCOUNT ON;
 
-	select distinct
-	w.Guide_Serie + cast(w.guide_number as varchar) as guide,
-	isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') as receiver,
-	(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(w.Guide_Serie,w.Guide_Number)) as [Ubicacion_Bodega],
-	datediff(DAY, SUBQ.Date_Created, GETDATE()) as Days_Overdue
-	from DeliveryBackOffice.dbo.Warehouse w,
+	DECLARE @Yesterday DATETIME;
+	SET  @Yesterday= DATEADD(DAY, -1, GETDATE());
+
+    SELECT DISTINCT
+		CONCAT(WH.Guide_Serie , WH.Guide_Number) AS guide,
+		CONCAT(ORD.Receiver_FirstName, ' ' , ORD.Receiver_LastName) AS receiver,
+		(
+			SELECT DeliveryBackOffice.dbo.fn_get_rackposition(WH.Guide_Serie, WH.Guide_Number)
+		) AS [Ubicacion_Bodega],
+		DATEDIFF(DAY, det.Date_Created, GETDATE()) AS Days_Overdue
+	FROM DeliveryBackOffice.dbo.Warehouse AS WH
+	INNER JOIN
 	(
-		select 
-			dod.Guide_serie, 
-			dod.Guide_number,
-			max(dod.datecreated) as Date_Created
-		from DeliveryBackOffice.dbo.DeliveryOrderDetail dod with(nolock)
-		where StatusOrderId = 6
-		group by dod.Guide_Serie, dod.Guide_Number
-	) as SUBQ
-	JOIN DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = subq.guide_serie and do.Guide_Number = subq.guide_number
-	where w.Active = 1
-	AND SUBQ.Date_Created <=  GETDATE() - 1
-	AND SUBQ.Guide_Serie = w.Guide_Serie and SUBQ.Guide_Number = w.Guide_Number
-	ORDER BY Days_Overdue
+		SELECT
+			DOD.Guide_Serie,
+			DOD.Guide_Number,
+			MAX(DOD.DateCreated) AS Date_Created
+		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail AS DOD WITH (NOLOCK)
+		WHERE DOD.StatusOrderId = 6
+		GROUP BY
+			DOD.Guide_Serie,
+			DOD.Guide_Number
+	) AS DET
+		ON DET.Guide_Serie = WH.Guide_Serie
+	AND DET.Guide_Number = WH.Guide_Number
+	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder AS ORD WITH (NOLOCK)
+		ON ORD.Guide_Serie = DET.Guide_Serie
+	AND ORD.Guide_Number = DET.Guide_Number
+	WHERE WH.Active = 1
+	AND DET.Date_Created <= @Yesterday
+	ORDER BY Days_Overdue;
 
 END
