@@ -218,6 +218,47 @@ BEGIN
            AND Name IN ('Camión','Panel','Motocicleta')
            AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
     END;
+	    ELSE IF (@TypeMethod = 'GetSystem')
+    BEGIN
+        SELECT [SysIdSystem]    AS [Id]
+             , [SysNameSystem]  AS [Name]
+             , [SysDescription] AS [Description]
+          FROM CatSystem WITH(NOLOCK)
+         WHERE SysRowStatus = 1
+    END;
+    ELSE IF (@TypeMethod = 'GetFinalStatusOrder')
+    BEGIN
+        SELECT StatusOrderId     [Id]
+             , OrderDescription  [Name]
+             , StatusMessage     [Description]
+        FROM StatusOrder WITH (NOLOCK)
+        WHERE CatCheckpointTypeId = 3
+          AND RowStatus = 1;
+    END;
+	ELSE IF (@TypeMethod = 'GetConditionPayment')
+    BEGIN
+        SELECT IdConditionOfPayment           [Id]
+             , CASE 
+                   WHEN RIGHT(ConditionOfPaymenAbbreviation, 1) LIKE '[0-9]' 
+                   THEN LEFT(ConditionOfPaymenAbbreviation, LEN(ConditionOfPaymenAbbreviation) - 1)
+                   ELSE ConditionOfPaymenAbbreviation
+               END AS [Name]
+             , ConditionOfPayment            [Description]
+        FROM CatConditionOfPayment WITH (NOLOCK)
+        WHERE IdConditionOfPayment in (1,2)
+          AND RowStatus = 1;
+    END;
+	ELSE IF (@TypeMethod = 'GetCorporateCustomers')
+    BEGIN
+        SELECT CONVERT(NVARCHAR, ISNULL(IdCustomer, 0)) AS [Id]
+             , REPLACE(ISNULL([Name], 'N/A'), '"', '') AS [Name]
+             , ISNULL([CustomerPhone], '') AS [Phone]
+             , ISNULL([ContactEmail], '') AS [Email]
+        FROM Customer WITH (NOLOCK)
+        WHERE CountryID = @IdCountry
+          AND IdCustomerType = 1 
+          AND RowSatus = 1
+    END;
     ELSE 
     BEGIN
 
