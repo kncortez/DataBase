@@ -14,7 +14,8 @@
 CREATE PROCEDURE [dbo].[SpWsGetDataFromServiceTicket]
     @IdAccount INT = 37,
     @TrackingNumber VARCHAR(100) = 'FD138358',
-    @Token VARCHAR(100) = 'C6A98D3AB3A005C0023D634A6ECD1E5B'
+    @Token VARCHAR(100) = 'C6A98D3AB3A005C0023D634A6ECD1E5B',
+    @AppOrigin NVARCHAR(4) = '' 
 AS
 BEGIN
 
@@ -73,6 +74,7 @@ BEGIN
 
         IF (@COLLECT = 1)
         BEGIN
+
             EXEC [dbo].[spws_revalue_guide] @GuideSerie = @Serie,
                                             @GuideNumber = @NUMBER,
                                             @CodeApp = '',
@@ -80,7 +82,8 @@ BEGIN
                                             @CalculateTaxes = 'true', -- Dado a nuevas tarifas, no cálcular impuestos
                                             @IdModule = 1,
                                             @SetUpdate = 'true',      -- Actualizar registros
-                                            @Token = @Token;
+                                            @Token = @Token,
+                                            @AppOrigin = @AppOrigin;
 
 
             SELECT TOP 1
@@ -97,6 +100,7 @@ BEGIN
 
             IF (@IsCard = 1)
             BEGIN
+
                 EXEC [dbo].[spws_revalue_guide] @GuideSerie = @Serie,
                                                 @GuideNumber = @NUMBER,
                                                 @CodeApp = '',
@@ -105,7 +109,8 @@ BEGIN
                                                 @IdModule = 1,
                                                 @SetUpdate = 'true',      -- Actualizar registros
                                                 @Token = @Token,
-                                                @ParIsCreditCard = 1;
+                                                @ParIsCreditCard = 1,
+                                                @AppOrigin = @AppOrigin;
 
                 SELECT TOP 1
                        @IdCost = C.IdCost
@@ -116,6 +121,7 @@ BEGIN
             END;
             ELSE
             BEGIN
+
                 EXEC [dbo].[spws_revalue_guide] @GuideSerie = @Serie,
                                                 @GuideNumber = @NUMBER,
                                                 @CodeApp = '',
@@ -123,8 +129,8 @@ BEGIN
                                                 @CalculateTaxes = 'true', -- Dado a nuevas tarifas, no cálcular impuestos
                                                 @IdModule = 1,
                                                 @SetUpdate = 'true',      -- Actualizar registros
-                                                @Token = @Token;
-
+                                                @Token = @Token,
+                                                @AppOrigin = @AppOrigin;
 
                 SELECT TOP 1
                        @IdCost = C.IdCost
