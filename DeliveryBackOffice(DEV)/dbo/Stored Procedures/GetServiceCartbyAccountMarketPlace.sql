@@ -47,7 +47,7 @@ BEGIN
 				FROM [dbo].[MarketplaceCart]
 				WHERE ISNULL(AccountId,0) = @IdAccount
 				AND RowStatus = 1
-				AND ISNULL(IdCountry,'GT')=@IdCountry 
+				AND IdCountry = @IdCountry 
 				ORDER BY DateCreated DESC
 		END
 		  ELSE
@@ -58,7 +58,7 @@ BEGIN
 				FROM [dbo].[MarketplaceCart]
 				WHERE ISNULL(RegisterUserId,0) = @IdAccount
 				AND RowStatus = 1
-				AND ISNULL(IdCountry,'GT')=@IdCountry 
+				AND IdCountry = @IdCountry 
 				ORDER BY DateCreated DESC
 
 			  END
@@ -88,18 +88,18 @@ BEGIN
 					   cp.SubscriptionUsualPrice [CatProductUsualPrice],
 					   cp.StartDate,
 					   cp.EndDate
-				FROM [dbo].[MarketplaceCartDetail] mpcm
-				INNER JOIN [dbo].[MarketplaceCart] mpc
+				FROM [dbo].[MarketplaceCartDetail] mpcm WITH (NOLOCK)
+				INNER JOIN [dbo].[MarketplaceCart] mpc WITH (NOLOCK)
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
 				AND mpcm.TypeProduct <> 'Club Forza'
-				INNER JOIN dbo.CatSubscription cp with (nolock)
-				on mpcm.CatProductId = cp.IdCatSubscription
-				LEFT JOIN dbo.CatTypeSubscription cts with (nolock)
-				on cp.CatTypeSubscriptionId = cts.IdCatTypeSubscription
-				WHERE  ISNULL(mpc.AccountId,0) = @IdAccount
+				INNER JOIN dbo.CatSubscription cp WITH (NOLOCK)
+				ON mpcm.CatProductId = cp.IdCatSubscription
+				LEFT JOIN dbo.CatTypeSubscription cts WITH (NOLOCK)
+				ON cp.CatTypeSubscriptionId = cts.IdCatTypeSubscription
+				WHERE ISNULL(mpc.AccountId,0) = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
-				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
+				AND mpc.IdCountry = @IdCountry 
 				
 				UNION ALL
 				SELECT
@@ -116,16 +116,16 @@ BEGIN
 					   cp.MembershipUsualPrice [CatProductUsualPrice],
 					   cp.StartDate,
 					   cp.EndDate
-				FROM [dbo].[MarketplaceCartDetail] mpcm
-				INNER JOIN [dbo].[MarketplaceCart] mpc
+				FROM [dbo].[MarketplaceCartDetail] mpcm WITH (NOLOCK)
+				INNER JOIN [dbo].[MarketplaceCart] mpc WITH (NOLOCK)
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
-				INNER JOIN dbo.CatMembership cp with (nolock)
-				on mpcm.CatProductId = cp.IdCatMembership
-				 AND mpcm.TypeProduct = cp.MembershipName
-				WHERE  ISNULL(mpc.AccountId,0) = @IdAccount
+				INNER JOIN dbo.CatMembership cp WITH (NOLOCK)
+				ON mpcm.CatProductId = cp.IdCatMembership
+				AND mpcm.TypeProduct = cp.MembershipName
+				WHERE ISNULL(mpc.AccountId,0) = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
-				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
+				AND mpc.IdCountry = @IdCountry 
 			
 			
 			
@@ -152,8 +152,8 @@ BEGIN
 					   cp.SubscriptionUsualPrice [CatProductUsualPrice],
 					   cp.StartDate,
 					   cp.EndDate
-				FROM [dbo].[MarketplaceCartDetail] mpcm
-				INNER JOIN [dbo].[MarketplaceCart] mpc
+				FROM [dbo].[MarketplaceCartDetail] mpcm with (nolock)
+				INNER JOIN [dbo].[MarketplaceCart] mpc with (nolock)
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
 				AND mpcm.TypeProduct <> 'Club Forza'
 				INNER JOIN dbo.CatSubscription cp with (nolock)
@@ -163,7 +163,7 @@ BEGIN
 				WHERE  ISNULL(mpc.RegisterUserId,0) = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
-				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
+				AND mpc.IdCountry = @IdCountry 
 				
 				UNION ALL
 				SELECT
@@ -180,8 +180,8 @@ BEGIN
 					   cp.MembershipUsualPrice [CatProductUsualPrice],
 					   cp.StartDate,
 					   cp.EndDate
-				FROM [dbo].[MarketplaceCartDetail] mpcm
-				INNER JOIN [dbo].[MarketplaceCart] mpc
+				FROM [dbo].[MarketplaceCartDetail] mpcm with (nolock)
+				INNER JOIN [dbo].[MarketplaceCart] mpc with (nolock)
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
 				INNER JOIN dbo.CatMembership cp with (nolock)
 				on mpcm.CatProductId = cp.IdCatMembership
@@ -189,7 +189,7 @@ BEGIN
 				WHERE  ISNULL(mpc.RegisterUserId,0) = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
-				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
+				AND mpc.IdCountry = @IdCountry 
 
 			END	
 			

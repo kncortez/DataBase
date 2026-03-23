@@ -112,64 +112,6 @@ CREATE INDEX IDX_AuthLoginAttempts_AttemptedAt ON AuthLoginAttempts(AttemptedAt)
 -- Propósito: Registrar sesiones activas de usuarios
 -- Relación: Cada sesión pertenece a un usuario registrado
 
--- Tabla: AuthRefreshTokens
--- Propósito: Almacenar tokens de refresco para JWT
--- Relación: Cada token pertenece a un usuario registrado
-
-CREATE TABLE AuthRefreshTokens (
-    RefreshTokenId BIGINT PRIMARY KEY IDENTITY(1,1),
-    UserId BIGINT NOT NULL,
-    Token NVARCHAR(MAX) NOT NULL,
-    TokenHash NVARCHAR(255) NOT NULL UNIQUE,
-    ExpiresAt DATETIME2 NOT NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    RevokedAt DATETIME2 NULL,
-    IsRevoked BIT NOT NULL DEFAULT 0,
-    IpAddress NVARCHAR(45) NULL,
-    UserAgent NVARCHAR(500) NULL,
-
-    CONSTRAINT FK_AuthRefreshTokens_RegisterUser
-        FOREIGN KEY (UserId) REFERENCES RegisterUser(UsrIdUser) ON DELETE CASCADE,
-    CONSTRAINT CK_AuthRefreshTokens_ExpiresAt
-        CHECK (ExpiresAt > CreatedAt)
-);
-
--- Índices
-CREATE INDEX IDX_AuthRefreshTokens_UserId ON AuthRefreshTokens(UserId);
-CREATE INDEX IDX_AuthRefreshTokens_ExpiresAt ON AuthRefreshTokens(ExpiresAt);
-CREATE INDEX IDX_AuthRefreshTokens_TokenHash ON AuthRefreshTokens(TokenHash);
-
-
-
--- Tabla: AuthLoginAttempts
--- Propósito: Registrar intentos de login para prevenir ataques
--- Relación: Cada intento pertenece a un usuario o se identifica por email
-
-CREATE TABLE AuthLoginAttempts (
-    LoginAttemptId BIGINT PRIMARY KEY IDENTITY(1,1),
-    UserId BIGINT NULL,
-    Email NVARCHAR(255) NOT NULL,
-    IsSuccessful BIT NOT NULL,
-    FailureReason NVARCHAR(500) NULL,
-    IpAddress NVARCHAR(45) NOT NULL,
-    UserAgent NVARCHAR(500) NULL,
-    AttemptedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-
-    CONSTRAINT FK_AuthLoginAttempts_RegisterUser
-        FOREIGN KEY (UserId) REFERENCES RegisterUser(UsrIdUser) ON DELETE SET NULL
-);
-
--- Índices
-CREATE INDEX IDX_AuthLoginAttempts_UserId ON AuthLoginAttempts(UserId);
-CREATE INDEX IDX_AuthLoginAttempts_Email ON AuthLoginAttempts(Email);
-CREATE INDEX IDX_AuthLoginAttempts_IpAddress ON AuthLoginAttempts(IpAddress);
-CREATE INDEX IDX_AuthLoginAttempts_AttemptedAt ON AuthLoginAttempts(AttemptedAt);
-
-
--- Tabla: AuthActiveSessions
--- Propósito: Registrar sesiones activas de usuarios
--- Relación: Cada sesión pertenece a un usuario registrado
-
 CREATE TABLE AuthActiveSessions (
     SessionId BIGINT PRIMARY KEY IDENTITY(1,1),
     UserId BIGINT NOT NULL,
@@ -235,47 +177,6 @@ CREATE INDEX IDX_AuthAuditLog_Action ON AuthAuditLog(Action);
 CREATE INDEX IDX_AuthAuditLog_Timestamp ON AuthAuditLog(Timestamp);
 CREATE INDEX IDX_AuthAuditLog_IpAddress ON AuthAuditLog(IpAddress);
 CREATE INDEX IDX_AuthAuditLog_ActionType ON AuthAuditLog(ActionType);
-
-
-
-
-
-
-
--- Tabla: AuthAuditLog
--- Propósito: Registrar todas las acciones de autenticación para auditoría
--- Relación: Cada log puede estar asociado a un usuario registrado
-
-CREATE TABLE AuthAuditLog (
-    AuditLogId BIGINT PRIMARY KEY IDENTITY(1,1),
-    UserId BIGINT NULL,
-    Action NVARCHAR(100) NOT NULL,
-    ActionType NVARCHAR(50) NOT NULL,
-    Description NVARCHAR(500) NOT NULL,
-    IpAddress NVARCHAR(45) NOT NULL,
-    UserAgent NVARCHAR(500) NULL,
-    ResourceAffected NVARCHAR(255) NULL,
-    OldValue NVARCHAR(MAX) NULL,
-    NewValue NVARCHAR(MAX) NULL,
-    Timestamp DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    SessionId BIGINT NULL,
-
-    CONSTRAINT FK_AuthAuditLog_RegisterUser
-        FOREIGN KEY (UserId) REFERENCES RegisterUser(UsrIdUser) ON DELETE SET NULL,
-    CONSTRAINT FK_AuthAuditLog_Session
-        FOREIGN KEY (SessionId) REFERENCES AuthActiveSessions(SessionId) ON DELETE NO ACTION,
-    CONSTRAINT CK_AuthAuditLog_ActionType
-        CHECK (ActionType IN ('Success', 'Failure', 'Warning', 'Info'))
-);
-
--- Índices
-CREATE INDEX IDX_AuthAuditLog_UserId ON AuthAuditLog(UserId);
-CREATE INDEX IDX_AuthAuditLog_Action ON AuthAuditLog(Action);
-CREATE INDEX IDX_AuthAuditLog_Timestamp ON AuthAuditLog(Timestamp);
-CREATE INDEX IDX_AuthAuditLog_IpAddress ON AuthAuditLog(IpAddress);
-CREATE INDEX IDX_AuthAuditLog_ActionType ON AuthAuditLog(ActionType);
-
-
 
 
 
@@ -419,6 +320,13 @@ GO
 BEGIN TRY
     BEGIN TRANSACTION;
     
+    -- ACTUALIZACION DE IdCountry NULL A 'GT' EN MarketplaceCart
+    -- Necesario para quitar validaciones ISNULL(IdCountry,'GT') en SPs
+    UPDATE [dbo].[MarketplaceCart]
+    SET IdCountry = 'GT'
+    WHERE IdCountry IS NULL;
+    PRINT 'MarketplaceCart.IdCountry actualizado a GT donde era NULL. Registros afectados: ' + CAST(@@ROWCOUNT AS NVARCHAR(10));
+
     -- CREACION DEL NUEVO SISTEMA
     INSERT INTO DeliveryBackOffice.dbo.CatSystem (
         SysNameSystem, SysPlataform, SysDescription, SysRowStatus, 
