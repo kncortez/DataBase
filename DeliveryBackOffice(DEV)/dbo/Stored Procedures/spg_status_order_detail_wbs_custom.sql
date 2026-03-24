@@ -5,6 +5,7 @@
    Historia:  <FDAPI-5729>
    Fecha:     2026-03-04
 === CHANGELOG ================================
+
 =========================================== */
 ALTER PROCEDURE [dbo].[spg_status_order_detail_wbs_custom]
     @Guide_Serie NVARCHAR(2),
@@ -218,7 +219,7 @@ BEGIN
                '' AS Latitude,
                '' AS Longitude,
                CommentOnIncident,
-               'GTM-6' AS [Timezone],
+               'GMT-6' AS [Timezone],
                DOD.TownshipName AS [TownshipName],
                DOD.HeaderCode AS [TownshipHeaderCode]
         FROM @DeliveryOrderDetail DOD
