@@ -7,7 +7,7 @@
 === CHANGELOG ================================
 
 =========================================== */
-ALTER PROCEDURE [dbo].[spg_status_order_detail_wbs_custom]
+CREATE PROCEDURE [dbo].[spg_status_order_detail_wbs_custom]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number INT
 AS
