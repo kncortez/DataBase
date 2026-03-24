@@ -5,13 +5,17 @@ CREATE TABLE [dbo].[ServiceIncident] (
     [CourierId] INT NOT NULL,
     [IncidentTypeId] INT NOT NULL,
 	[IncidentId] INT NOT NULL,
-    [Observations] NVARCHAR(500) NULL,
+    [CourierNotes] NVARCHAR(500) NULL,
 	[CountryId] VARCHAR (2)   NULL,
 	[HubId] INT NOT NULL,
-    [AssignedAgentId] INT NULL,
+    [CurrentAgentId] BIGINT NULL,
     [IncidentStatusId] INT NOT NULL,
-    [DateAssigned] DATETIME NULL,
-    [DateResolved] DATETIME NULL,
+	[Latitude] NVARCHAR (40) NULL,
+	[Longitude] NVARCHAR (40) NULL,
+	[IncidentPicturePath] NVARCHAR (500) NULL,
+	[ReclassificationNotes] NVARCHAR(500) NULL,
+	[AssignedAt] DATETIME NULL,
+    [CompletedAt] DATETIME NULL,
 	[IncidentConfirmed] BIT NULL,
 	[ServiceStillRequired] BIT NULL,
 	[RescheduleCollectDate] DATETIME NULL,
@@ -24,7 +28,8 @@ CREATE TABLE [dbo].[ServiceIncident] (
 	CONSTRAINT FK_ServiceIncident_IncidentTypeId FOREIGN KEY (IncidentTypeId) REFERENCES dbo.CatServiceStatus(IdServiceStatus),
 	CONSTRAINT FK_ServiceIncident_IncidentId FOREIGN KEY (IncidentId) REFERENCES dbo.CatTypeIncidence(IdIncidenceType),
 	CONSTRAINT FK_ServiceIncident_CountryId FOREIGN KEY (CountryId) REFERENCES dbo.CatCountry(IdCountry),
-	CONSTRAINT FK_ServiceIncident_HubId FOREIGN KEY (HubId) REFERENCES dbo.HubLogistics(IdHubLogistics),
+	CONSTRAINT FK_ServiceIncident_HubId FOREIGN KEY (HubId) REFERENCES dbo.HubLogistics(IdHubLogistic),
+	CONSTRAINT FK_ServiceIncident_CurrentAgentId FOREIGN KEY (CurrentAgentId) REFERENCES dbo.RegisterUser(UsrIdUser),
 	CONSTRAINT FK_ServiceIncident_IncidentStatusId FOREIGN KEY (IncidentStatusId) REFERENCES dbo.IncidentStatus(IncidentStatusId)
 );
 
@@ -86,7 +91,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description',
 	@level1type = N'TABLE',
 	@level1name = N'ServiceIncident',
 	@level2type = N'COLUMN',
-	@level2name = N'Observations';
+	@level2name = N'CourierNotes';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description',
@@ -116,7 +121,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description',
 	@level1type = N'TABLE',
 	@level1name = N'ServiceIncident',
 	@level2type = N'COLUMN',
-	@level2name = N'AssignedAgentId';
+	@level2name = N'CurrentAgentId';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description',
@@ -130,13 +135,53 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description',
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description',
+	@value = N'Latitud del lugar donde se registro la incidencia',
+	@level0type = N'SCHEMA',
+	@level0name = N'dbo',
+	@level1type = N'TABLE',
+	@level1name = N'ServiceIncident',
+	@level2type = N'COLUMN',
+	@level2name = N'Latitude';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',
+	@value = N'Longitud del lugar donde se registro la incidencia',
+	@level0type = N'SCHEMA',
+	@level0name = N'dbo',
+	@level1type = N'TABLE',
+	@level1name = N'ServiceIncident',
+	@level2type = N'COLUMN',
+	@level2name = N'Longitude';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',
+	@value = N'URL de la ubicacion de la fotografia de la incidencia',
+	@level0type = N'SCHEMA',
+	@level0name = N'dbo',
+	@level1type = N'TABLE',
+	@level1name = N'ServiceIncident',
+	@level2type = N'COLUMN',
+	@level2name = N'IncidentPicturePath';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',
+	@value = N'Comentarios sobre el cambio de incidencia',
+	@level0type = N'SCHEMA',
+	@level0name = N'dbo',
+	@level1type = N'TABLE',
+	@level1name = N'ServiceIncident',
+	@level2type = N'COLUMN',
+	@level2name = N'ReclassificationNotes';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',
 	@value = N'Fecha en la que el agente se asigno el incidente',
 	@level0type = N'SCHEMA',
 	@level0name = N'dbo',
 	@level1type = N'TABLE',
 	@level1name = N'ServiceIncident',
 	@level2type = N'COLUMN',
-	@level2name = N'DateAssigned';
+	@level2name = N'AssignedAt';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description',
@@ -146,7 +191,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description',
 	@level1type = N'TABLE',
 	@level1name = N'ServiceIncident',
 	@level2type = N'COLUMN',
-	@level2name = N'DateResolved';
+	@level2name = N'CompletedAt';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description',
