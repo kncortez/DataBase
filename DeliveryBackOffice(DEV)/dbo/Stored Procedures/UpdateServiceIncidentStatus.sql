@@ -112,5 +112,5 @@ BEGIN
         SET @StatusCode = @@ROWCOUNT;
     END
 
-    SELECT @StatusCode AS IsSuccess;
+    RETURN @StatusCode;
 END

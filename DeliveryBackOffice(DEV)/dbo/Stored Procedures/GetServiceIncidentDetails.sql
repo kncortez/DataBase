@@ -15,6 +15,7 @@ BEGIN
 	--SI.ServiceIncidentId,
 	SI.ServiceId AS ServiceID,
 	CSS.Name AS IncidentType,
+	SI.IncidentId,
 	TI.NameIncidence AS Incident,
 	SI.DateCreated,
 	SI.Latitude,

@@ -14,6 +14,7 @@ CREATE TABLE [dbo].[ServiceIncident] (
 	[Longitude] NVARCHAR (40) NULL,
 	[IncidentPicturePath] NVARCHAR (500) NULL,
 	[ReclassificationNotes] NVARCHAR(500) NULL,
+	[ReclassifiedIncidentId] INT NOT NULL,
 	[AssignedAt] DATETIME NULL,
     [CompletedAt] DATETIME NULL,
 	[IncidentConfirmed] BIT NULL,
@@ -30,7 +31,8 @@ CREATE TABLE [dbo].[ServiceIncident] (
 	CONSTRAINT FK_ServiceIncident_CountryId FOREIGN KEY (CountryId) REFERENCES dbo.CatCountry(IdCountry),
 	CONSTRAINT FK_ServiceIncident_HubId FOREIGN KEY (HubId) REFERENCES dbo.HubLogistics(IdHubLogistic),
 	CONSTRAINT FK_ServiceIncident_CurrentAgentId FOREIGN KEY (CurrentAgentId) REFERENCES dbo.RegisterUser(UsrIdUser),
-	CONSTRAINT FK_ServiceIncident_IncidentStatusId FOREIGN KEY (IncidentStatusId) REFERENCES dbo.IncidentStatus(IncidentStatusId)
+	CONSTRAINT FK_ServiceIncident_IncidentStatusId FOREIGN KEY (IncidentStatusId) REFERENCES dbo.IncidentStatus(IncidentStatusId),
+	CONSTRAINT FK_ServiceIncident_ReclassifiedIncidentId FOREIGN KEY (IncidentId) REFERENCES dbo.CatTypeIncidence(IdIncidenceType)
 );
 
 GO
@@ -172,6 +174,16 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description',
 	@level1name = N'ServiceIncident',
 	@level2type = N'COLUMN',
 	@level2name = N'ReclassificationNotes';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',
+	@value = N'Si la incidencia fue re clasificada',
+	@level0type = N'SCHEMA',
+	@level0name = N'dbo',
+	@level1type = N'TABLE',
+	@level1name = N'ServiceIncident',
+	@level2type = N'COLUMN',
+	@level2name = N'ReclassifiedIncidentId';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description',
