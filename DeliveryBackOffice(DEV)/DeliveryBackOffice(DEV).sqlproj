@@ -1615,6 +1615,7 @@
     <Build Include="dbo\Stored Procedures\GetServiceExecutionSchedule.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccount.sql" />
+    <Build Include="dbo\Stored Procedures\GetServiceIncidentDetails.sql" />
     <Build Include="dbo\Stored Procedures\GetScheduleTimeList.sql" />
     <Build Include="dbo\Stored Procedures\GetSalePackageToRenew.sql" />
     <Build Include="dbo\Stored Procedures\GetSalePackageToDeactivate.sql" />
