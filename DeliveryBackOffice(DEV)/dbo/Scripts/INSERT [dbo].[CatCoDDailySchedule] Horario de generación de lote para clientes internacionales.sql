@@ -1,0 +1,1 @@
+INSERT [dbo].[CatCoDDailySchedule] ([IdCatCoDDailySchedule], [CoDProcessName], [DeliveryBankId], [ExecutionTime], [ProcessPriority], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [IsCodAnticipated]) VALUES (612, N'InternationalBatch', 31, CAST(N'20:45:00' AS Time), 1, 1, N'SYS-EVASQUEZ', CAST(N'2026-03-23T00:00:00.000' AS DateTime), NULL, NULL, NULL)
