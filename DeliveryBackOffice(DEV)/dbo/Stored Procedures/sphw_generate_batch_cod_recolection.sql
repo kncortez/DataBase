@@ -216,6 +216,7 @@ BEGIN
 							 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
 							 AND ISNULL(pg.IsAnticipatedCOD,0) = 0
 							 AND pg.IsCompleted = 1
+                             AND cus.IsInternationalCustomer = 0
                        FOR XML PATH('')
                    ),
                    1,
