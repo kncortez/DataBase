@@ -14,6 +14,7 @@
     [TokenUpdated]       NVARCHAR (50)  NULL,
     [DateUpdated]        DATETIME       NULL,
     [oldSettlement]      NVARCHAR (100) NULL,
+    [TypeSettlement]     INT            NOT NULL,
     CONSTRAINT [PK_Settlement] PRIMARY KEY CLUSTERED ([IdSettlement] ASC),
     CONSTRAINT [FK_Settlement_Province] FOREIGN KEY ([IdProvince]) REFERENCES [dbo].[Province] ([IdProvince]),
     CONSTRAINT [FK_Settlement_Township] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship])
@@ -157,6 +158,16 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'Settlement',
     @level2type = N'COLUMN',
     @level2name = N'DateUpdated'
+
+EXEC sp_addextendedproperty @name = N'MS_Description', 
+@value = N'Identificador de poblados públicos y privados', 
+@level0type = N'SCHEMA', 
+@level0name = N'dbo',
+@level1type = N'TABLE', 
+@level1name = N'Settlement', 
+@level2type = N'COLUMN', 
+@level2name = N'TypeSettlement'
+
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Datos de asentamientos ',
