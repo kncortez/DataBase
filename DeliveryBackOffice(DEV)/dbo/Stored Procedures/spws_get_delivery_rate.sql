@@ -1,44 +1,29 @@
-﻿-- =============================================
--- Author:		<César,Aquino>
--- Create date: <2021-04-28>
--- Description:	<Devuelve la opción y precio shipping según un punto de visita ó un cliente>
--- =============================================
--- =============================================
--- Author:		<Edelman,Vásquez>
--- Create date: <2022-06-15>
--- Description:	<Logíca para implementar nuevo tarifario y tarifario de descuento si destino es Ex C>
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-07-06>
--- Description:	< Corrección de cálculo de sobrepesos de nuevo esquema de tarifas >
--- =============================================
--- Author:		<Edelman,Vásquez>
--- Create date: <2022-12-26>
--- Description:	<Validar si se requiere uso de memrbesia y subscripción4>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-06-17>
--- Description:	<Devuelve el valor de la moneda segun tarifario configurado por el cliente>
--- =============================================
--- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-06-21>
--- Description:	<Se agrega configuracion para multipais y multimoneda en EXC>
--- Create date: <2025-04-10>
--- Description:	<Mejoras para multipais.>
--- =============================================
--- =============================================
--- Author:		<Brandon,Pedroza>
--- Create date: <2025-03-21>
--- Description:	<Cotizador - Se agrega configuracion para tarifas locales por medio de coberturas>
--- =============================================
--- =============================================
--- Author:		<Cristian Azurdia>
--- Create date: <2025-05-12>
--- Description:	<Id Segmen multipais, asi como funcion fnt_IVA_Calculator>
--- =============================================
+﻿/* =================================================
+   SP:        [[dbo].[spws_get_delivery_rate_repo]
+   Propósito: Devuelve la opción y precio shipping según un punto de visita ó un cliente
+   Autor:     César Aquino
+   Historia:  
+   Fecha:     2021-04-28
+============================================
+=== CHANGELOG ================================
+2026-03-24 | Historia/épica: FDAPI-5804  | Autor: Brenda Echeverria | reemplazo de sintaxis join antigua en consulta para calculo de tarifa por peso
+-----
+2025-05-12 | Historia/épica: FDAPI-3890  | Autor: Cristian Azurdia | Id Segmen multipais, asi como funcion fnt_IVA_Calculator
+-----
+2025-04-10 | Historia/épica: FDAPI-3613 | Autor: Walter Orozco | Mejoras para multipais.
+-----
+2025-03-21 | Historia/épica: | Autor: Brandon,Pedroza | Cotizador - Se agrega configuracion para tarifas locales por medio de coberturas
+-----
+2024-06-21 | Historia/épica: FDAPI-2392| Autor: Walter Orozco | Se agrega configuracion para multipais y multimoneda en EXC
+-----
+2024-06-17 | Historia/épica: FDAPI-2494 | Autor: Cristian Suazo | Devuelve el valor de la moneda segun tarifario configurado por el cliente
+-----
+2022-12-26 | Historia/épica: | Author: Edelman Vásquez | Validar si se requiere uso de memrbesia y subscripción4
+-----
+2022-07-06 | Historia/épica: | Autor: Andres Ruiz | Corrección de cálculo de sobrepesos de nuevo esquema de tarifas 
+-----
+2022-06-15 | Historia/épica: | Autor: Edelman Vásquez | Logíca para implementar nuevo tarifario y tarifario de descuento si destino es Ex C
+=========================================== */
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @CodApp AS NVARCHAR(50) = ''
   , @IdCustomerParams AS INT = 0
@@ -70,8 +55,6 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
 -- , @FetchActivePRoduct BIT = 1
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
     DECLARE @IdCustomer AS INT = 0;
@@ -1852,23 +1835,24 @@ BEGIN
 
         INSERT INTO @tblNotInRange
         SELECT pw.ID
-             , pw.Item
-             , cts.CtsId
+                , pw.Item
+                , cts.CtsId
         FROM #ParceWeigth pw
-           , CatTypeService cts
+        CROSS JOIN CatTypeService cts
         WHERE NOT EXISTS
         (
-            SELECT 1
-            FROM RateData
-            WHERE RateId = @IdRate
-                  AND TypeSegmentId = @IdSegment
-                  AND TypeServiceId = cts.CtsId
-                  AND RowStatus = 1
-                  AND pw.Item
-                  BETWEEN WeightFrom AND WeightTo
+           SELECT 1
+           FROM RateData RD
+           WHERE RD.RateId = @IdRate
+                 AND RD.TypeSegmentId = @IdSegment
+                 AND RD.TypeServiceId = cts.CtsId
+                 AND RD.RowStatus = 1
+                 AND pw.Item
+                 BETWEEN RD.WeightFrom AND RD.WeightTo
         )
               AND cts.CtsRowStatus = 1
               AND cts.RateGroup = @IdRateGroup;
+
 
         INSERT INTO @TempRate
         SELECT TypeRate
