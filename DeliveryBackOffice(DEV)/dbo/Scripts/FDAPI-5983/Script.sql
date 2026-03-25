@@ -52,6 +52,16 @@ BEGIN TRY
     BEGIN TRANSACTION;
 
     -- ========================================================================
+    -- SECCION 0: ASEGURAR DESACTIVAR ATRIBUTOS Y DESCRIPCIONES NO NECESARIAS (ID: 20, 10, 6, 7, 8, 11)
+    PRINT '>> Desactivando atributos y descripciones no necesarias...';
+    UPDATE DeliveryBackOffice.dbo.CatSubscriptionAtribute SET RowStatus = 0
+    WHERE CatSubscriptionId IN (20, 10, 6, 7, 8, 11);
+    UPDATE DeliveryBackOffice.dbo.CatSubscriptionDescription SET RowStatus = 0
+    WHERE CatSubscriptionId IN (20, 10, 6, 7, 8, 11);
+    PRINT '   [OK] Atributos y descripciones desactivadas correctamente';
+    -- ========================================================================
+
+    -- ========================================================================
     -- SECCION 1: PAQUETE MICRO (ID: 20)
     -- Precio: Q555.00 | Guías: 15 | Precio unitario: Q37.00
     -- ========================================================================
