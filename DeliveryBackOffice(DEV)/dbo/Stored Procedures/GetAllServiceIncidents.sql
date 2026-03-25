@@ -38,7 +38,7 @@ SELECT
 	SI.ServiceId AS ServiceID,
 	CSS.Name AS IncidentType,
 	TI.NameIncidence AS Incident,
-	SI.Observations
+	SI.CourierNotes AS Comments
 	--IST.Name AS IncidentStatus
 	FROM DeliveryBackOffice.dbo.ServiceIncident SI WITH (NOLOCK)
 	--INNER JOIN DeliveryBackOffice.dbo.ServiceManagement WITH (NOLOCK)
