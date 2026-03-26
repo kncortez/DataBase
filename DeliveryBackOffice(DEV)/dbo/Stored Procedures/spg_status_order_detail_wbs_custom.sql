@@ -56,9 +56,11 @@ BEGIN
         CommentOnIncident NVARCHAR(500)
     );
 
-    DECLARE @DelayTracking INT = (
+    DECLARE @DelayTrackingParam INT = (
 	    SELECT Value FROM ConfigParams WHERE Name = 'DelayTracking'
     );
+
+    DECLARE @DelayTracking DATETIME = DATEADD(MINUTE, -@DelayTrackingParam, GETDATE());
 
     INSERT INTO @DeliveryOrder
     SELECT do.Guide_Serie,
@@ -96,7 +98,7 @@ BEGIN
             ON cat.TownshipId = t.IdTownship
     WHERE dod.Guide_Serie = @Guide_Serie
           AND dod.Guide_Number = @Guide_Number
-          AND dod.DateCreated < DATEADD(MINUTE, -@DelayTracking, GETDATE());
+          AND dod.DateCreated < @DelayTracking;
 
     INSERT INTO @DeliveryAttempt
     SELECT TOP 1
