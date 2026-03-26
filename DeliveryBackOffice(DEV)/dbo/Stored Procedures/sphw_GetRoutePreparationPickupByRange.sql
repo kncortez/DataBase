@@ -1,13 +1,16 @@
-﻿
--- =============================================
--- Author:		<Alberto, Ixchop>
--- Create date: <2022-09-13>
--- Description:	<Devuelve todas las recolecciones de un usuario individual filtradas por un rango de fechas, siendo máximo 30 días atras>
--- =============================================
--- Author:		<Brandon Pedroza>
--- Modified:	<2024-08-20>
--- Description:	<Se agrega parametro para filtrar servicios de recoleccion por pais de hub asignado>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sphw_GetRoutePreparationPickupByRange]
+   Propósito: Devuelve todas las recolecciones de un usuario individual filtradas por un rango de fechas, siendo máximo 30 días atras.
+   Autor:     Alberto Ixchop
+   Historia:  
+   Fecha:     2022-09-13
+============================================
+=== CHANGELOG ================================
+2024-08-20	|	Épica: 	|	Autor: Brandon Pedroza    |   Se agrega parametro para filtrar servicios de recoleccion por pais de hub asignado.
+=========================================== 
+2026-03-26	|	Épica: FDAPI-5958	|	Autor: Erick Guerra    |   Se realizan ajustes en consultas para optimizar resultados.
+=========================================== */
+
 CREATE PROCEDURE [dbo].[sphw_GetRoutePreparationPickupByRange]
 	@startDate AS DATE = NULL, --Fecha inicio de filtro
 	@endDate AS DATE = NULL, --Fecha fin de filtro
@@ -52,10 +55,10 @@ BEGIN
 		--INSERT INTO @tbl
 		SELECT shp.ServiceRate 'Qualification',
 				srv.IdServiceManagement 'IdServiceManagement' , 
-			   CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 103),' ',CONVERT(VARCHAR(10), shp.StartDate, 108))  'datecreated',
-			   IIF(RA.IdCurrierMan IS NULL, '', CAST(RA.IdCurrierMan AS NVARCHAR))  'courier',
-			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = @ServicePickupStatus AND ES.RowStauts = 1 ORDER BY ES.DateCreated DESC), 103) 'datePickUp',
-			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = @ServicePickupStatus AND ES.RowStauts = 1 ORDER BY ES.DateCreated DESC), 108) 'hourPickUp',
+			   CONVERT(VARCHAR(10), shp.StartDate, 103) + ' ' + CONVERT(VARCHAR(10), shp.StartDate, 108) AS datecreated,
+			   ISNULL(CAST(RA.IdCurrierMan AS NVARCHAR), '') AS courier,
+			   CONVERT(VARCHAR(10), es.DateCreated, 103) AS datePickUp,
+			   CONVERT(VARCHAR(10), es.DateCreated, 108) AS hourPickUp,
 			   ISNULL(ctv.Name, '') 'ServiceVehicle',
 			   shp.IsScheduled 'IsScheduled',
 			   ISNULL(QuantityRegularPackages,0) 'QuantityRegularPackages',
@@ -65,9 +68,8 @@ BEGIN
 			   vpc.DescriptionOfClient 'OriginAddressName',		   
 			   vpc.Department 'OriginAddressProvince',
 			   vpc.Town 'OriginAddressTown',           
-			   CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) 'rangeHour',
+			   CONVERT(VARCHAR(8), shp.StartDate, 108) + '   ' + CONVERT(VARCHAR(10), shp.EndDate, 108) AS rangeHour,
 			   hl.HubAbbreviation 'Hub'
-           
 		FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
 				ON shp.SenderId = vpc.CodeOfReference
@@ -79,7 +81,7 @@ BEGIN
 				ON TwnSph.IdProvince = PrvTvpc.IdProvince 
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
 				ON shp.TypeVehicleId = ctv.IdTypeVehicle
-			LEFT JOIN dbo.ServiceManagement srv
+			LEFT JOIN dbo.ServiceManagement srv WITH (NOLOCK)
 				ON srv.IdSchedulePickup = shp.SchedulePickupId
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
 				ON css.IdServiceStatus = srv.ServiceStatusId
@@ -87,15 +89,22 @@ BEGIN
 			    ON shp.IdHubLogistics = hl.IdHubLogistic
 			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] as ra WITH (NOLOCK)
 				ON srv.IdPuRouteAssigment = ra.IdRouteAssigment
+			OUTER APPLY (
+				SELECT TOP 1 ES.DateCreated
+				FROM DeliveryBackOffice.dbo.EventService ES with(nolock)
+				WHERE ES.ServiceManagementId = srv.IdServiceManagement
+					AND ES.ServiceStatusId = @ServicePickupStatus
+					AND ES.RowStauts = 1
+				ORDER BY ES.DateCreated DESC
+			) es
 		WHERE
-			CONVERT(date, shp.DateCreated) >= @startDate
-			AND
-			CONVERT(date, shp.DateCreated) <= @endDate
+			shp.AccountId = @accountId
 			AND shp.RowStatus = 1
-			AND shp.AccountId = @accountId
+			AND shp.StartDate >= @startDate
+			AND shp.StartDate < DATEADD(DAY, 1, @endDate)
 			AND (ISNULL(hl.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
 		ORDER BY shp.DateCreated desc
-		
+		OPTION (RECOMPILE)
 	END
 	ELSE IF (@userId IS NOT NULL AND ISNULL(@accountId,0) = 0)
 	BEGIN
@@ -103,30 +112,31 @@ BEGIN
 		SELECT 2 'StatusCode', 
 				'Registros obtenidos'	'Description';
 		--INSERT INTO @tbl
-		SELECT shp.ServiceRate 'Qualification',
-				srv.IdServiceManagement 'IdServiceManagement' , 
-			   CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 103),' ',CONVERT(VARCHAR(10), shp.StartDate, 108))  'datecreated',
-			   hlf.HubAbbreviation 'hub',
-			   RTRIM(LTRIM(CONCAT(sr.First_Name,' ', sr.Last_Name))) 'courier',
-			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = @ServicePickupStatus AND ES.RowStauts = 1 ORDER BY ES.DateCreated DESC), 103) 'datePickUp',
-			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = @ServicePickupStatus AND ES.RowStauts = 1 ORDER BY ES.DateCreated DESC), 108) 'hourPickUp',
-			   ISNULL(ctv.Name, '') 'ServiceVehicle',
-			   shp.IsScheduled 'IsScheduled',
-			   ISNULL(QuantityRegularPackages,0) 'QuantityRegularPackages',
-			   ISNULL(QuantityOverDimensionedPackage,0)'QuantityOverDimensionedPackage',
-			   css.[Name] StatusName,
-			   ISNULL(vpc.Address, shp.AddressPickup) 'OriginAddress',
-			   vpc.DescriptionOfClient 'OriginAddressName',		   
-			   vpc.Department 'OriginAddressProvince',
-			   vpc.Town 'OriginAddressTown',           
-			   CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) 'rangeHour'           
-		FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
+		select 
+			shp.ServiceRate 'Qualification',
+			srv.IdServiceManagement 'IdServiceManagement' , 
+			CONVERT(VARCHAR(10), shp.StartDate, 103) + ' ' + CONVERT(VARCHAR(10), shp.StartDate, 108) AS datecreated,
+			ISNULL(CAST(RA.IdCurrierMan AS NVARCHAR), '') AS courier,
+			CONVERT(VARCHAR(10), es.DateCreated, 103) AS datePickUp,
+			CONVERT(VARCHAR(10), es.DateCreated, 108) AS hourPickUp,
+			ISNULL(ctv.Name, '') 'ServiceVehicle',
+			shp.IsScheduled 'IsScheduled',
+			ISNULL(QuantityRegularPackages,0) 'QuantityRegularPackages',
+			ISNULL(QuantityOverDimensionedPackage,0)'QuantityOverDimensionedPackage',
+			css.[Name] StatusName,
+			ISNULL(vpc.Address, shp.AddressPickup) 'OriginAddress',
+			vpc.DescriptionOfClient 'OriginAddressName',		   
+			vpc.Department 'OriginAddressProvince',
+			vpc.Town 'OriginAddressTown',           
+			CONVERT(VARCHAR(8), shp.StartDate, 108) + '   ' + CONVERT(VARCHAR(10), shp.EndDate, 108) AS rangeHour,
+			hl.HubAbbreviation 'Hub'
+			from SchedulePickup shp with(nolock)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
 				ON shp.SenderId = vpc.CodeOfReference
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TwnTvpc WITH (NOLOCK)
 				ON vpc.IdTownship = TwnTvpc.IdTownship
 			INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSph  WITH (NOLOCK) -----
-				ON TwnSph.IdTownship = shp.TownshipId -------
+				ON TwnSph.IdTownship = shp.TownshipId
 			INNER JOIN [DeliveryBackOffice].[dbo].[Province] PrvTvpc WITH (NOLOCK)
 				ON TwnSph.IdProvince = PrvTvpc.IdProvince 
 			LEFT JOIN (
@@ -134,7 +144,7 @@ BEGIN
 					DSC.HeaderCode,
 					MAX(DSC.Hub) 'hub'
 				FROM
-					[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC
+					[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH (NOLOCK)
 				WHERE
 					DSC.RowStatus = 1
 				GROUP BY
@@ -145,7 +155,7 @@ BEGIN
 				ON hl.HubAbbreviation = dsc.hub COLLATE Latin1_General_CI_AI
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
 				ON shp.TypeVehicleId = ctv.IdTypeVehicle
-			LEFT JOIN dbo.ServiceManagement srv
+			LEFT JOIN dbo.ServiceManagement srv with(nolock)
 				ON srv.IdSchedulePickup = shp.SchedulePickupId
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
 				ON css.IdServiceStatus = srv.ServiceStatusId
@@ -155,17 +165,22 @@ BEGIN
 				ON shp.IdHubLogistics = hlf.IdHubLogistic
 			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] as ra WITH (NOLOCK)
 				ON srv.IdPuRouteAssigment = ra.IdRouteAssigment
-			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] as sr WITH (NOLOCK)
-				ON ra.IdCurrierMan = sr.ID
-		WHERE
-			CONVERT(date, shp.StartDate) >= @startDate
-			AND
-			CONVERT(date, shp.StartDate) <= @endDate
-			AND shp.RowStatus = 1
-			AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
-			AND (ISNULL(hlf.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
-			AND hlbu.UserId = @userId
-		ORDER BY shp.DateCreated desc
+			OUTER APPLY (
+				SELECT TOP 1 ES.DateCreated
+				FROM DeliveryBackOffice.dbo.EventService ES with(nolock)
+				WHERE ES.ServiceManagementId = srv.IdServiceManagement
+					AND ES.ServiceStatusId = @ServicePickupStatus
+					AND ES.RowStauts = 1
+				ORDER BY ES.DateCreated DESC
+			) es
+			where hlbu.userId = @userId and 
+				shp.RowStatus = 1 and 
+				shp.StartDate >= @startDate and 
+				shp.StartDate < DATEADD(DAY, 1, @endDate)
+				AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
+				AND (ISNULL(hlf.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
+			ORDER BY shp.DateCreated desc
+			OPTION (RECOMPILE)
 
 	END
 	ELSE
