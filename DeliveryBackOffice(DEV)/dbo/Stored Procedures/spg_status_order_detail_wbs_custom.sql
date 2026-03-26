@@ -224,7 +224,7 @@ BEGIN
                '' AS Latitude,
                '' AS Longitude,
                CommentOnIncident,
-               'GTM-6' AS [Timezone],
+               'GMT-6' AS [Timezone],
                DOD.TownshipName AS [TownshipName],
                DOD.HeaderCode AS [TownshipHeaderCode]
         FROM @DeliveryOrderDetail DOD
