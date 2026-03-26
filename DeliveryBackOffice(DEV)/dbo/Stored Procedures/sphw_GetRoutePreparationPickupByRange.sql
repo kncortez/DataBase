@@ -27,11 +27,11 @@ BEGIN
 	--INICIO DE VALIDACIÓN DE FECHA PARA FILTRO DE BÚSQUEDA
 	DECLARE @DAYSAGO INT = 30; --NÚMERO MÁXIMO DE DÍAS A FILTRAR
 	DECLARE @DEFAULDAYSAGO INT = 7; --NÚMERO MAXIMO POR DEFECTO
-	DECLARE @MAXDAYTOFILTER DATE = (select DATEADD(dd, DATEDIFF(dd, 0, getdate()), - @DAYSAGO));--OBTENIENDO FECHA MÁXIMA HISTÓRICA DE CONSULTA		
+	DECLARE @MAXDAYTOFILTER DATE = (SELECT DATEADD(dd, DATEDIFF(dd, 0, getdate()), - @DAYSAGO));--OBTENIENDO FECHA MÁXIMA HISTÓRICA DE CONSULTA		
 	 
 	IF @startDate IS NULL --COMPRUEBA FECHA DE INICIO DE FILTRO Ó SI LA FECHA DE INICIO NO FUÉ ESPECIFICADO
 	BEGIN
-		SET @startDate = (select DATEADD(dd, DATEDIFF(dd, 0, getdate()), - @DEFAULDAYSAGO));
+		SET @startDate = (SELECT DATEADD(dd, DATEDIFF(dd, 0, getdate()), - @DEFAULDAYSAGO));
 	END
 	ELSE IF @startDate < @MAXDAYTOFILTER 
 	BEGIN
@@ -68,7 +68,7 @@ BEGIN
 			   vpc.DescriptionOfClient 'OriginAddressName',		   
 			   vpc.Department 'OriginAddressProvince',
 			   vpc.Town 'OriginAddressTown',           
-			   CONVERT(VARCHAR(8), shp.StartDate, 108) + '   ' + CONVERT(VARCHAR(10), shp.EndDate, 108) AS rangeHour,
+			   CONVERT(VARCHAR(10), shp.StartDate, 108) + '   ' + CONVERT(VARCHAR(10), shp.EndDate, 108) AS rangeHour,
 			   hl.HubAbbreviation 'Hub'
 		FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
@@ -103,7 +103,7 @@ BEGIN
 			AND shp.StartDate >= @startDate
 			AND shp.StartDate < DATEADD(DAY, 1, @endDate)
 			AND (ISNULL(hl.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
-		ORDER BY shp.DateCreated desc
+		ORDER BY shp.DateCreated DESC
 		OPTION (RECOMPILE)
 	END
 	ELSE IF (@userId IS NOT NULL AND ISNULL(@accountId,0) = 0)
@@ -112,7 +112,7 @@ BEGIN
 		SELECT 2 'StatusCode', 
 				'Registros obtenidos'	'Description';
 		--INSERT INTO @tbl
-		select 
+		SELECT
 			shp.ServiceRate 'Qualification',
 			srv.IdServiceManagement 'IdServiceManagement' , 
 			CONVERT(VARCHAR(10), shp.StartDate, 103) + ' ' + CONVERT(VARCHAR(10), shp.StartDate, 108) AS datecreated,
@@ -128,9 +128,9 @@ BEGIN
 			vpc.DescriptionOfClient 'OriginAddressName',		   
 			vpc.Department 'OriginAddressProvince',
 			vpc.Town 'OriginAddressTown',           
-			CONVERT(VARCHAR(8), shp.StartDate, 108) + '   ' + CONVERT(VARCHAR(10), shp.EndDate, 108) AS rangeHour,
+			CONVERT(VARCHAR(10), shp.StartDate, 108) + '   ' + CONVERT(VARCHAR(10), shp.EndDate, 108) AS rangeHour,
 			hl.HubAbbreviation 'Hub'
-			from SchedulePickup shp with(nolock)
+			FROM SchedulePickup shp WITH(NOLOCK)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
 				ON shp.SenderId = vpc.CodeOfReference
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TwnTvpc WITH (NOLOCK)
@@ -173,7 +173,7 @@ BEGIN
 					AND ES.RowStauts = 1
 				ORDER BY ES.DateCreated DESC
 			) es
-			where hlbu.userId = @userId and 
+			WHERE hlbu.userId = @userId and 
 				shp.RowStatus = 1 and 
 				shp.StartDate >= @startDate and 
 				shp.StartDate < DATEADD(DAY, 1, @endDate)
