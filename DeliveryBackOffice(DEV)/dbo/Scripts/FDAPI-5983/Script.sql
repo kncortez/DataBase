@@ -13,11 +13,13 @@
 *   4. PLUS    (ID: 7)  - 100 guías @ Q31.00 c/u = Q3,100.00
 *   5. GOLD    (ID: 8)  - 200 guías @ Q29.00 c/u = Q5,800.00
 *   6. PLATINO (ID: 11) - 400 guías @ Q25.00 c/u = Q10,000.00
+*   7. TARIFAS RateData - 80 registros (TypeServiceId 5 y 6)
 *
 * TABLAS AFECTADAS:
 *   - CatSubscription
 *   - CatSubscriptionAtribute
 *   - CatSubscriptionDescription
+*   - RateData
 *
 * INSTRUCCIONES PARA QA:
 *   - El script incluye transacción automática con ROLLBACK en caso de error
@@ -690,6 +692,134 @@ términos y condiciones.',
     WHERE IdCatSubscriptionDescription = 44;
 
     PRINT '   [OK] PAQUETE PLATINO actualizado correctamente';
+
+
+    -- ========================================================================
+    -- SECCION 7: ACTUALIZACION DE TARIFAS (RateData)
+    -- Tabla: RateData
+    -- TypeServiceId: 5 (Servicio Estándar), 6 (Servicio C.O.D.)
+    -- ========================================================================
+    PRINT '>> Procesando TARIFAS RateData...';
+
+    -- 7.1 TypeServiceId = 5
+    PRINT '   Actualizando TypeServiceId = Servicio Estándar';
+    
+    -- Segmento 23
+    UPDATE RateData SET RateValue=27.00 WHERE TypeServiceId=5 AND TypeSegmentId=23 AND ArticleId=531;
+    UPDATE RateData SET RateValue=37.00 WHERE TypeServiceId=5 AND TypeSegmentId=23 AND ArticleId=532;
+    UPDATE RateData SET RateValue=57.00 WHERE TypeServiceId=5 AND TypeSegmentId=23 AND ArticleId=533;
+    UPDATE RateData SET RateValue=67.00 WHERE TypeServiceId=5 AND TypeSegmentId=23 AND ArticleId=534;
+    UPDATE RateData SET RateValue=77.00 WHERE TypeServiceId=5 AND TypeSegmentId=23 AND ArticleId=535;
+    
+    -- Segmento 1
+    UPDATE RateData SET RateValue=32.00 WHERE TypeServiceId=5 AND TypeSegmentId=1 AND ArticleId=531;
+    UPDATE RateData SET RateValue=42.00 WHERE TypeServiceId=5 AND TypeSegmentId=1 AND ArticleId=532;
+    UPDATE RateData SET RateValue=62.00 WHERE TypeServiceId=5 AND TypeSegmentId=1 AND ArticleId=533;
+    UPDATE RateData SET RateValue=72.00 WHERE TypeServiceId=5 AND TypeSegmentId=1 AND ArticleId=534;
+    UPDATE RateData SET RateValue=82.00 WHERE TypeServiceId=5 AND TypeSegmentId=1 AND ArticleId=535;
+    
+    -- Segmento 3
+    UPDATE RateData SET RateValue=37.00 WHERE TypeServiceId=5 AND TypeSegmentId=3 AND ArticleId=531;
+    UPDATE RateData SET RateValue=47.00 WHERE TypeServiceId=5 AND TypeSegmentId=3 AND ArticleId=532;
+    UPDATE RateData SET RateValue=67.00 WHERE TypeServiceId=5 AND TypeSegmentId=3 AND ArticleId=533;
+    UPDATE RateData SET RateValue=77.00 WHERE TypeServiceId=5 AND TypeSegmentId=3 AND ArticleId=534;
+    UPDATE RateData SET RateValue=87.00 WHERE TypeServiceId=5 AND TypeSegmentId=3 AND ArticleId=535;
+    
+    -- Segmento 24
+    UPDATE RateData SET RateValue=42.00 WHERE TypeServiceId=5 AND TypeSegmentId=24 AND ArticleId=531;
+    UPDATE RateData SET RateValue=52.00 WHERE TypeServiceId=5 AND TypeSegmentId=24 AND ArticleId=532;
+    UPDATE RateData SET RateValue=72.00 WHERE TypeServiceId=5 AND TypeSegmentId=24 AND ArticleId=533;
+    UPDATE RateData SET RateValue=82.00 WHERE TypeServiceId=5 AND TypeSegmentId=24 AND ArticleId=534;
+    UPDATE RateData SET RateValue=92.00 WHERE TypeServiceId=5 AND TypeSegmentId=24 AND ArticleId=535;
+    
+    -- Segmento 22
+    UPDATE RateData SET RateValue=47.00 WHERE TypeServiceId=5 AND TypeSegmentId=22 AND ArticleId=531;
+    UPDATE RateData SET RateValue=57.00 WHERE TypeServiceId=5 AND TypeSegmentId=22 AND ArticleId=532;
+    UPDATE RateData SET RateValue=77.00 WHERE TypeServiceId=5 AND TypeSegmentId=22 AND ArticleId=533;
+    UPDATE RateData SET RateValue=87.00 WHERE TypeServiceId=5 AND TypeSegmentId=22 AND ArticleId=534;
+    UPDATE RateData SET RateValue=97.00 WHERE TypeServiceId=5 AND TypeSegmentId=22 AND ArticleId=535;
+    
+    -- Segmento 25
+    UPDATE RateData SET RateValue=52.00 WHERE TypeServiceId=5 AND TypeSegmentId=25 AND ArticleId=531;
+    UPDATE RateData SET RateValue=62.00 WHERE TypeServiceId=5 AND TypeSegmentId=25 AND ArticleId=532;
+    UPDATE RateData SET RateValue=82.00 WHERE TypeServiceId=5 AND TypeSegmentId=25 AND ArticleId=533;
+    UPDATE RateData SET RateValue=92.00 WHERE TypeServiceId=5 AND TypeSegmentId=25 AND ArticleId=534;
+    UPDATE RateData SET RateValue=102.00 WHERE TypeServiceId=5 AND TypeSegmentId=25 AND ArticleId=535;
+    
+    -- Segmento 4
+    UPDATE RateData SET RateValue=67.00 WHERE TypeServiceId=5 AND TypeSegmentId=4 AND ArticleId=531;
+    UPDATE RateData SET RateValue=77.00 WHERE TypeServiceId=5 AND TypeSegmentId=4 AND ArticleId=532;
+    UPDATE RateData SET RateValue=97.00 WHERE TypeServiceId=5 AND TypeSegmentId=4 AND ArticleId=533;
+    UPDATE RateData SET RateValue=107.00 WHERE TypeServiceId=5 AND TypeSegmentId=4 AND ArticleId=534;
+    UPDATE RateData SET RateValue=117.00 WHERE TypeServiceId=5 AND TypeSegmentId=4 AND ArticleId=535;
+    
+    -- Segmento 32
+    UPDATE RateData SET RateValue=37.00 WHERE TypeServiceId=5 AND TypeSegmentId=32 AND ArticleId=531;
+    UPDATE RateData SET RateValue=47.00 WHERE TypeServiceId=5 AND TypeSegmentId=32 AND ArticleId=532;
+    UPDATE RateData SET RateValue=67.00 WHERE TypeServiceId=5 AND TypeSegmentId=32 AND ArticleId=533;
+    UPDATE RateData SET RateValue=77.00 WHERE TypeServiceId=5 AND TypeSegmentId=32 AND ArticleId=534;
+    UPDATE RateData SET RateValue=87.00 WHERE TypeServiceId=5 AND TypeSegmentId=32 AND ArticleId=535;
+
+    -- 7.2 TypeServiceId = 6
+    PRINT '   Actualizando TypeServiceId = Servicio C.O.D.';
+    
+    -- Segmento 23
+    UPDATE RateData SET RateValue=26.00 WHERE TypeServiceId=6 AND TypeSegmentId=23 AND ArticleId=531;
+    UPDATE RateData SET RateValue=36.00 WHERE TypeServiceId=6 AND TypeSegmentId=23 AND ArticleId=532;
+    UPDATE RateData SET RateValue=56.00 WHERE TypeServiceId=6 AND TypeSegmentId=23 AND ArticleId=533;
+    UPDATE RateData SET RateValue=66.00 WHERE TypeServiceId=6 AND TypeSegmentId=23 AND ArticleId=534;
+    UPDATE RateData SET RateValue=76.00 WHERE TypeServiceId=6 AND TypeSegmentId=23 AND ArticleId=535;
+    
+    -- Segmento 1
+    UPDATE RateData SET RateValue=30.00 WHERE TypeServiceId=6 AND TypeSegmentId=1 AND ArticleId=531;
+    UPDATE RateData SET RateValue=40.00 WHERE TypeServiceId=6 AND TypeSegmentId=1 AND ArticleId=532;
+    UPDATE RateData SET RateValue=60.00 WHERE TypeServiceId=6 AND TypeSegmentId=1 AND ArticleId=533;
+    UPDATE RateData SET RateValue=70.00 WHERE TypeServiceId=6 AND TypeSegmentId=1 AND ArticleId=534;
+    UPDATE RateData SET RateValue=80.00 WHERE TypeServiceId=6 AND TypeSegmentId=1 AND ArticleId=535;
+    
+    -- Segmento 3
+    UPDATE RateData SET RateValue=36.00 WHERE TypeServiceId=6 AND TypeSegmentId=3 AND ArticleId=531;
+    UPDATE RateData SET RateValue=46.00 WHERE TypeServiceId=6 AND TypeSegmentId=3 AND ArticleId=532;
+    UPDATE RateData SET RateValue=66.00 WHERE TypeServiceId=6 AND TypeSegmentId=3 AND ArticleId=533;
+    UPDATE RateData SET RateValue=76.00 WHERE TypeServiceId=6 AND TypeSegmentId=3 AND ArticleId=534;
+    UPDATE RateData SET RateValue=86.00 WHERE TypeServiceId=6 AND TypeSegmentId=3 AND ArticleId=535;
+    
+    -- Segmento 24
+    UPDATE RateData SET RateValue=38.00 WHERE TypeServiceId=6 AND TypeSegmentId=24 AND ArticleId=531;
+    UPDATE RateData SET RateValue=48.00 WHERE TypeServiceId=6 AND TypeSegmentId=24 AND ArticleId=532;
+    UPDATE RateData SET RateValue=68.00 WHERE TypeServiceId=6 AND TypeSegmentId=24 AND ArticleId=533;
+    UPDATE RateData SET RateValue=78.00 WHERE TypeServiceId=6 AND TypeSegmentId=24 AND ArticleId=534;
+    UPDATE RateData SET RateValue=88.00 WHERE TypeServiceId=6 AND TypeSegmentId=24 AND ArticleId=535;
+    
+    -- Segmento 22
+    UPDATE RateData SET RateValue=40.00 WHERE TypeServiceId=6 AND TypeSegmentId=22 AND ArticleId=531;
+    UPDATE RateData SET RateValue=50.00 WHERE TypeServiceId=6 AND TypeSegmentId=22 AND ArticleId=532;
+    UPDATE RateData SET RateValue=70.00 WHERE TypeServiceId=6 AND TypeSegmentId=22 AND ArticleId=533;
+    UPDATE RateData SET RateValue=80.00 WHERE TypeServiceId=6 AND TypeSegmentId=22 AND ArticleId=534;
+    UPDATE RateData SET RateValue=90.00 WHERE TypeServiceId=6 AND TypeSegmentId=22 AND ArticleId=535;
+    
+    -- Segmento 25
+    UPDATE RateData SET RateValue=42.00 WHERE TypeServiceId=6 AND TypeSegmentId=25 AND ArticleId=531;
+    UPDATE RateData SET RateValue=52.00 WHERE TypeServiceId=6 AND TypeSegmentId=25 AND ArticleId=532;
+    UPDATE RateData SET RateValue=72.00 WHERE TypeServiceId=6 AND TypeSegmentId=25 AND ArticleId=533;
+    UPDATE RateData SET RateValue=82.00 WHERE TypeServiceId=6 AND TypeSegmentId=25 AND ArticleId=534;
+    UPDATE RateData SET RateValue=92.00 WHERE TypeServiceId=6 AND TypeSegmentId=25 AND ArticleId=535;
+    
+    -- Segmento 4
+    UPDATE RateData SET RateValue=50.00 WHERE TypeServiceId=6 AND TypeSegmentId=4 AND ArticleId=531;
+    UPDATE RateData SET RateValue=60.00 WHERE TypeServiceId=6 AND TypeSegmentId=4 AND ArticleId=532;
+    UPDATE RateData SET RateValue=80.00 WHERE TypeServiceId=6 AND TypeSegmentId=4 AND ArticleId=533;
+    UPDATE RateData SET RateValue=90.00 WHERE TypeServiceId=6 AND TypeSegmentId=4 AND ArticleId=534;
+    UPDATE RateData SET RateValue=100.00 WHERE TypeServiceId=6 AND TypeSegmentId=4 AND ArticleId=535;
+    
+    -- Segmento 32
+    UPDATE RateData SET RateValue=36.00 WHERE TypeServiceId=6 AND TypeSegmentId=32 AND ArticleId=531;
+    UPDATE RateData SET RateValue=46.00 WHERE TypeServiceId=6 AND TypeSegmentId=32 AND ArticleId=532;
+    UPDATE RateData SET RateValue=66.00 WHERE TypeServiceId=6 AND TypeSegmentId=32 AND ArticleId=533;
+    UPDATE RateData SET RateValue=76.00 WHERE TypeServiceId=6 AND TypeSegmentId=32 AND ArticleId=534;
+    UPDATE RateData SET RateValue=86.00 WHERE TypeServiceId=6 AND TypeSegmentId=32 AND ArticleId=535;
+
+    PRINT '   [OK] TARIFAS RateData actualizadas correctamente';
 
 
     -- ========================================================================
