@@ -54,8 +54,8 @@ BEGIN
 				'Registros obtenidos'	'Description';
 		--INSERT INTO @tbl
 		SELECT shp.ServiceRate 'Qualification',
-				srv.IdServiceManagement 'IdServiceManagement' , 
-			   CONVERT(VARCHAR(10), shp.StartDate, 103) + ' ' + CONVERT(VARCHAR(10), shp.StartDate, 108) AS datecreated,
+			   srv.IdServiceManagement 'IdServiceManagement' , 
+			   CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 103),' ',CONVERT(VARCHAR(10), shp.StartDate, 108)) AS datecreated,
 			   ISNULL(CAST(RA.IdCurrierMan AS NVARCHAR), '') AS courier,
 			   CONVERT(VARCHAR(10), es.DateCreated, 103) AS datePickUp,
 			   CONVERT(VARCHAR(10), es.DateCreated, 108) AS hourPickUp,
@@ -68,7 +68,7 @@ BEGIN
 			   vpc.DescriptionOfClient 'OriginAddressName',		   
 			   vpc.Department 'OriginAddressProvince',
 			   vpc.Town 'OriginAddressTown',           
-			   CONVERT(VARCHAR(10), shp.StartDate, 108) + '   ' + CONVERT(VARCHAR(10), shp.EndDate, 108) AS rangeHour,
+			   CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) AS rangeHour,
 			   hl.HubAbbreviation 'Hub'
 		FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
@@ -87,11 +87,11 @@ BEGIN
 				ON css.IdServiceStatus = srv.ServiceStatusId
 			LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] hl WITH (NOLOCK)
 			    ON shp.IdHubLogistics = hl.IdHubLogistic
-			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] as ra WITH (NOLOCK)
+			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] AS ra WITH (NOLOCK)
 				ON srv.IdPuRouteAssigment = ra.IdRouteAssigment
 			OUTER APPLY (
 				SELECT TOP 1 ES.DateCreated
-				FROM DeliveryBackOffice.dbo.EventService ES with(nolock)
+				FROM DeliveryBackOffice.dbo.EventService ES WITH(NOLOCK)
 				WHERE ES.ServiceManagementId = srv.IdServiceManagement
 					AND ES.ServiceStatusId = @ServicePickupStatus
 					AND ES.RowStauts = 1
@@ -115,7 +115,7 @@ BEGIN
 		SELECT
 			shp.ServiceRate 'Qualification',
 			srv.IdServiceManagement 'IdServiceManagement' , 
-			CONVERT(VARCHAR(10), shp.StartDate, 103) + ' ' + CONVERT(VARCHAR(10), shp.StartDate, 108) AS datecreated,
+			CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 103), ' ', CONVERT(VARCHAR(10), shp.StartDate, 108)) AS datecreated,
 			ISNULL(CAST(RA.IdCurrierMan AS NVARCHAR), '') AS courier,
 			CONVERT(VARCHAR(10), es.DateCreated, 103) AS datePickUp,
 			CONVERT(VARCHAR(10), es.DateCreated, 108) AS hourPickUp,
@@ -128,7 +128,7 @@ BEGIN
 			vpc.DescriptionOfClient 'OriginAddressName',		   
 			vpc.Department 'OriginAddressProvince',
 			vpc.Town 'OriginAddressTown',           
-			CONVERT(VARCHAR(10), shp.StartDate, 108) + '   ' + CONVERT(VARCHAR(10), shp.EndDate, 108) AS rangeHour,
+			CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) AS rangeHour,
 			hl.HubAbbreviation 'Hub'
 			FROM SchedulePickup shp WITH(NOLOCK)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
@@ -151,23 +151,23 @@ BEGIN
 					DSC.HeaderCode
 			) AS dsc
 				ON TwnTvpc.HeaderCode = dsc.HeaderCode
-			LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] as hl WITH (NOLOCK)
+			LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] AS hl WITH (NOLOCK)
 				ON hl.HubAbbreviation = dsc.hub COLLATE Latin1_General_CI_AI
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
 				ON shp.TypeVehicleId = ctv.IdTypeVehicle
-			LEFT JOIN dbo.ServiceManagement srv with(nolock)
+			LEFT JOIN dbo.ServiceManagement srv WITH(NOLOCK)
 				ON srv.IdSchedulePickup = shp.SchedulePickupId
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
 				ON css.IdServiceStatus = srv.ServiceStatusId
 			INNER JOIN [DeliveryBackOffice].[dbo].[HubLogisticByUser] AS hlbu WITH (NOLOCK)
 				ON ISNULL(shp.IdHubLogistics, hl.IdHubLogistic) = hlbu.HubLogisticId
-			INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics] as hlf WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics] AS hlf WITH (NOLOCK)
 				ON shp.IdHubLogistics = hlf.IdHubLogistic
-			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] as ra WITH (NOLOCK)
+			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] AS ra WITH (NOLOCK)
 				ON srv.IdPuRouteAssigment = ra.IdRouteAssigment
 			OUTER APPLY (
 				SELECT TOP 1 ES.DateCreated
-				FROM DeliveryBackOffice.dbo.EventService ES with(nolock)
+				FROM DeliveryBackOffice.dbo.EventService ES WITH(NOLOCK)
 				WHERE ES.ServiceManagementId = srv.IdServiceManagement
 					AND ES.ServiceStatusId = @ServicePickupStatus
 					AND ES.RowStauts = 1
