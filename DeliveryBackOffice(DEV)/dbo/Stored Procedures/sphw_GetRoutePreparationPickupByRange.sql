@@ -102,7 +102,7 @@ BEGIN
 			AND shp.RowStatus = 1
 			AND shp.StartDate >= @startDate
 			AND shp.StartDate < DATEADD(DAY, 1, @endDate)
-			AND (ISNULL(hl.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
+			AND (hl.IdCountry = @IdCountry OR PrvTvpc.IdCountry = @IdCountry)
 		ORDER BY shp.DateCreated DESC
 		OPTION (RECOMPILE)
 	END
@@ -135,7 +135,7 @@ BEGIN
 				ON shp.SenderId = vpc.CodeOfReference
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TwnTvpc WITH (NOLOCK)
 				ON vpc.IdTownship = TwnTvpc.IdTownship
-			INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSph  WITH (NOLOCK) -----
+			INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSph  WITH (NOLOCK)
 				ON TwnSph.IdTownship = shp.TownshipId
 			INNER JOIN [DeliveryBackOffice].[dbo].[Province] PrvTvpc WITH (NOLOCK)
 				ON TwnSph.IdProvince = PrvTvpc.IdProvince 
@@ -178,7 +178,7 @@ BEGIN
 				shp.StartDate >= @startDate and 
 				shp.StartDate < DATEADD(DAY, 1, @endDate)
 				AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
-				AND (ISNULL(hlf.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
+				AND (hlf.IdCountry = @IdCountry OR PrvTvpc.IdCountry = @IdCountry)
 			ORDER BY shp.DateCreated desc
 			OPTION (RECOMPILE)
 
