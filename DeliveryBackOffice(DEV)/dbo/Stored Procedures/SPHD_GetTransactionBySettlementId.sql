@@ -35,7 +35,8 @@ BEGIN
             PZ.ZigiTransactionId,
             ISNULL(DO.PriceShippment,0)      AS PriceShippment,
             ISNULL(DO.Collect_OnDelivery,0)  AS Collect_OnDelivery,
-            DSD.ID_DeliveryOrderBySettlement
+            DSD.ID_DeliveryOrderBySettlement,
+			DO.IsCollect
         FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
             ON C.GuideSerie = DSD.Guide_Serie 
@@ -52,7 +53,7 @@ BEGIN
            AND DO.Guide_Number = DSD.Guide_Number
         WHERE DSD.ID_DeliveryOrderBySettlement = @ID_DeliveryOrderBySettlement
         AND DO.IsLastMileReturn = 0
-        AND DO.IsCollect = 1
+		AND DSD.Guide_Returned = 0
     )
 
 -- BLOQUE 1: COD (TRANSFERENCIAS)
@@ -139,33 +140,23 @@ BEGIN
     -- BLOQUE 2: Tarjeta
     SELECT
         'Tarjeta',
-
+ 
         Voucher + ProductNumber,
-
+ 
         '',
-
-        CASE 
-            WHEN IdTypeOfMoneyCOD = 2 
-                 AND IdTypeOfMoneyCollect = 2
-                THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
-
-            WHEN IdTypeOfMoneyCOD = 2 
-                 AND IdTypeOfMoneyCollect <> 2
-                THEN ISNULL(Collect_OnDelivery,0)
-
-            WHEN IdTypeOfMoneyCollect = 2 
-                 AND IdTypeOfMoneyCOD <> 2
-                THEN ISNULL(PriceShippment,0)
-
-            WHEN IdTypeOfMoneyCOD IS NULL 
+ 
+        CASE
+ 
+            WHEN IdTypeOfMoneyCOD <> 2
                  AND IdTypeOfMoneyCollect = 2
                 THEN ISNULL(PriceShippment,0)
-			WHEN IdTypeOfMoneyCOD = 2
-                 AND IdTypeOfMoneyCollect IS NULL
+            WHEN IdTypeOfMoneyCOD IS NULL
+                 AND IdTypeOfMoneyCollect = 2  
                 THEN ISNULL(PriceShippment,0)
         END
-
+ 
     FROM BaseData
     WHERE IdTypeOfMoneyCollect = 2
+    AND IsCollect = 1
 
 END
