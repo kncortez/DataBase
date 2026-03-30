@@ -1748,6 +1748,7 @@
     <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
     <Build Include="dbo\Stored Procedures\GetAllWorkflows.sql" />
     <Build Include="dbo\Stored Procedures\GetAllServiceIncidents.sql" />
+    <Build Include="dbo\Stored Procedures\GetAllPickupIncidents.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertsOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_TEST.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_BNHL.sql" />
