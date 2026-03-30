@@ -18,7 +18,7 @@ BEGIN TRY
 
     -- Insertar el nuevo módulo (sin especificar ModIdModule para que lo asigne la BBDD)
     INSERT INTO DeliveryBackOffice.dbo.CatModule (ModName, ModIdModuleParent, ModPath, ModDescription, ModOrder, ModMetadata, ModVisible, ModRowStatus, ModTokenCreated, ModDateCreated, ModTokenUpdated, ModDateUpdated, ModGroup) 
-    VALUES (N'Mi inventario', null, N'/historico', N'Módulo de Inventario de EXC y CNC', 20, null, 1, 1, N'SYS-BILKAR', GETDATE(), null, null, 0);
+    VALUES (N'Mi inventario', null, N'/inventario', N'Módulo de Inventario de EXC y CNC', 20, null, 1, 1, N'SYS-BILKAR', GETDATE(), null, null, 0);
 
     -- Capturar el ID generado automáticamente
     SET @NewModuleId = SCOPE_IDENTITY();
