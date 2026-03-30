@@ -13,6 +13,8 @@ CREATE PROCEDURE [dbo].[SaveServiceIncidentDetails]
     @Notes NVARCHAR(500) = NULL,
     @IsConfirmed BIT = NULL,
     @IsStillRequired BIT = NULL,
+    @IsPhotoVerified BIT = NULL,
+    @IsLocationVerified BIT = NULL,
     @NewDate DATE = NULL,
     @QualityControlAgentId INT
 AS
@@ -51,6 +53,8 @@ BEGIN
         END,
         IncidentConfirmed = ISNULL(@IsConfirmed, IncidentConfirmed),
         ServiceStillRequired = ISNULL(@IsStillRequired, ServiceStillRequired),
+        IsPhotoVerified = ISNULL(@IsPhotoVerified, IsPhotoVerified),
+        IsLocationVerified = ISNULL(@IsLocationVerified, IsLocationVerified),
         RescheduleCollectDate = CASE 
             WHEN @IsStillRequired = 1 THEN ISNULL(@NewDate, RescheduleCollectDate)
             WHEN @IsStillRequired = 0 THEN NULL

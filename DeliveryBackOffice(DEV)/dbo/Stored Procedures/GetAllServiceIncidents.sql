@@ -18,7 +18,8 @@ BEGIN
 	DECLARE @Hubs TABLE (HubId INT);
 	DECLARE @IncidentTypes TABLE (IncidentTypeId INT);
 	DECLARE @PendingIncidentStatusID INT = 1;
-	
+	DECLARE @ResolvedIncidentStatusID INT = 3;
+
 	INSERT INTO @Countries
 	SELECT LTRIM(RTRIM(value))
 	FROM STRING_SPLIT(@CountryList, ',');
@@ -50,8 +51,10 @@ SELECT
 		ON TI.IdIncidenceType = SI.IncidentId
 	INNER JOIN DeliveryBackOffice.dbo.IncidentStatus IST WITH(NOLOCK)
 		ON IST.IncidentStatusId = SI.IncidentStatusId
-	WHERE IST.IncidentStatusId IN (@PendingIncidentStatusID)
+	WHERE IST.IncidentStatusId NOT IN (@ResolvedIncidentStatusID)
 	AND SI.RowStatus = 1
+	AND SI.DateCreated >= CAST(GETDATE() AS DATE)
+	AND SI.DateCreated < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
 	AND
 	(
 		--filter is applied

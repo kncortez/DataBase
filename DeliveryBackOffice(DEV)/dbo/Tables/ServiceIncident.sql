@@ -18,6 +18,8 @@ CREATE TABLE [dbo].[ServiceIncident] (
 	[AssignedAt] DATETIME NULL,
     [CompletedAt] DATETIME NULL,
 	[IncidentConfirmed] BIT NULL,
+	[IsPhotoVerified] BIT NULL,
+	[IsLocationVerified] BIT NULL,
 	[ServiceStillRequired] BIT NULL,
 	[RescheduleCollectDate] DATETIME NULL,
     [DateCreated] DATETIME NOT NULL,
@@ -204,6 +206,26 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description',
 	@level1name = N'ServiceIncident',
 	@level2type = N'COLUMN',
 	@level2name = N'CompletedAt';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',
+	@value = N'Indica si la foto como evidencia fue aceptada.',
+	@level0type = N'SCHEMA',
+	@level0name = N'dbo',
+	@level1type = N'TABLE',
+	@level1name = N'ServiceIncident',
+	@level2type = N'COLUMN',
+	@level2name = N'IsPhotoVerified';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',
+	@value = N'Indica si la ubicación de la visita fallida fue aceptada.',
+	@level0type = N'SCHEMA',
+	@level0name = N'dbo',
+	@level1type = N'TABLE',
+	@level1name = N'ServiceIncident',
+	@level2type = N'COLUMN',
+	@level2name = N'IsLocationVerified';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description',
