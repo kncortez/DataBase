@@ -14,6 +14,15 @@ BEGIN
     W.WorkflowId,
     W.Name AS Workflow,
 	ISNULL(
+		'(' + CAST(
+				(
+					SELECT COUNT(*)
+					FROM WorkflowStatusMap WSM WITH (NOLOCK)
+					WHERE WSM.WorkflowId = W.WorkflowId
+					AND WSM.RowStatus = 1
+				) AS NVARCHAR(10)
+			) + 
+		') ' +
 		STUFF(
 			(
 				SELECT ', ' + SO.OrderDescription
@@ -24,7 +33,8 @@ BEGIN
 				AND WSM.RowStatus = 1
 				FOR XML PATH(''), TYPE
 			).value('.', 'NVARCHAR(MAX)')
-		,1,2,''), '') AS Statuses
+		,1,2,''), '(0)') AS Statuses
 	FROM Workflow W
-	WHERE W.RowStatus = 1;
+	WHERE W.RowStatus = 1
+	ORDER BY ISNULL(W.DateUpdated, W.DateCreated) DESC;
 END;
