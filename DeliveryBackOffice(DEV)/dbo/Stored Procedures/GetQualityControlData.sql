@@ -25,6 +25,8 @@
 -- Modified: <2026-03-02>
 -- Description:	<Se agregan incidencias del portal EXC/CNC (SystemOrigin = 5) para Control de Calidad.>
 -- Description:	<Optimización de SP, se bajó de un tiempo de 10 minutos, a 1.5 segundos>
+-- Modified: <2026-03-27>
+-- Description:	<Se cambia LGN_LogByToken por TokenLog + RegisterUser + Person para mostrar nombre completo del usuario.>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie											NVARCHAR(2) = ''
@@ -383,14 +385,22 @@ BEGIN
 					OR (DO.StatusOrderId = 45 AND TCD.SystemOrigin IN (2, 5))
 				), 1, 0),
 			Id_Incident = DA.ID_Incident,
-			IdUser = IIF(TCD.SystemOrigin IN (2, 5), tk2.SSN_IdUser, NULL),
-			Username = IIF(TCD.SystemOrigin IN (2, 5), ISNULL(tk2.SSN_Username, 'EXC/CNC'), ''),
+			IdUser = IIF(TCD.SystemOrigin IN (2, 5), TKL.TknIdUser, NULL),
+			-- Si hay nombre completo (Person), Username = NULL; si no, usa UsrNickName como fallback
+			Username = IIF(TCD.SystemOrigin IN (2, 5), 
+				IIF(PER.PerFirstName IS NOT NULL OR PER.PerLastName IS NOT NULL, NULL, ISNULL(RUS.UsrNickName, 'EXC/CNC')), 
+				''),
 			RouteDescription = CASE 
 				WHEN TCD.SystemOrigin = 2 THEN 'Usuario Desktop'
-				WHEN TCD.SystemOrigin = 5 THEN 'Usuario Portal'
+				WHEN TCD.SystemOrigin = 5 THEN 'Usuario Portal EXC/CNC'
 				ELSE 'Vendedor Rutero'
 			END,
-			[User] = IIF(TCD.SystemOrigin IN (2, 5), ISNULL(tk2.SSN_Username, ''), CONCAT(ISNULL(SR.First_Name, ''), ' ', ISNULL(SR.Last_Name, ''))),
+			-- Si hay nombre completo (Person), usa [User]; si no, [User] = NULL y Username tiene el valor
+			[User] = IIF(TCD.SystemOrigin IN (2, 5), 
+				IIF(PER.PerFirstName IS NOT NULL OR PER.PerLastName IS NOT NULL, 
+					RTRIM(LTRIM(CONCAT(ISNULL(PER.PerFirstName, ''), ' ', ISNULL(PER.PerLastName, '')))), 
+					NULL), 
+				CONCAT(ISNULL(SR.First_Name, ''), ' ', ISNULL(SR.Last_Name, ''))),
 			TypeOfIncident = ISNULL(CIC.IncidenceTypeName, ''),
 			Incident = CTI.NameIncidence,
 			EventDate = TCD.DateCheckpoint,
@@ -423,8 +433,12 @@ BEGIN
 			ON DO.Guide_Serie = DQCD.GuideSerie AND DO.Guide_Number = DQCD.GuideNumber
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt DA WITH (NOLOCK)
 			ON DA.ID = TCD.DeliveryAttemptId
-		LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk2 WITH (NOLOCK)
-			ON tk2.SSN_IdToken = CONVERT(VARCHAR(50), DA.User_Created)
+		LEFT JOIN DeliveryBackOffice.dbo.TokenLog TKL WITH (NOLOCK)
+			ON TKL.TknIdToken = CONVERT(VARCHAR(50), DA.User_Created)
+		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser RUS WITH (NOLOCK)
+			ON RUS.UsrIdUser = TKL.TknIdUser
+		LEFT JOIN DeliveryBackOffice.dbo.Person PER WITH (NOLOCK)
+			ON PER.PerIdPerson = RUS.UsrIdPerson
 		LEFT JOIN DeliveryBackOffice.dbo.ConfirmationOfIncidence COI WITH (NOLOCK)
 			ON COI.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId AND COI.RowStatus = 1
 		LEFT JOIN DeliveryBackOffice.dbo.CatTypeIncidence CTI WITH (NOLOCK)
