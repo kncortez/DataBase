@@ -11,7 +11,7 @@
 2026-03-26	|	Épica: FDAPI-5958	|	Autor: Erick Guerra    |   Se realizan ajustes en consultas para optimizar resultados.
 =========================================== */
 
-CREATE PROCEDURE [dbo].[sphw_GetRoutePreparationPickupByRange]
+ALTER PROCEDURE [dbo].[sphw_GetRoutePreparationPickupByRange]
 	@startDate AS DATE = NULL, --Fecha inicio de filtro
 	@endDate AS DATE = NULL, --Fecha fin de filtro
 
@@ -45,7 +45,7 @@ BEGIN
 	--FIN
 	----------------------------------------------------------------------------
 	DECLARE @ServicePickupStatus INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.Name LIKE 'Recolectado' COLLATE Latin1_General_CI_AI)
-
+	DECLARE @realEndDate DATE = DATEADD(DAY, 1, @endDate)
 
 	IF (@accountId IS NOT NULL AND ISNULL(@userId,0) = 0)
 	BEGIN
@@ -101,7 +101,7 @@ BEGIN
 			shp.AccountId = @accountId
 			AND shp.RowStatus = 1
 			AND shp.StartDate >= @startDate
-			AND shp.StartDate < DATEADD(DAY, 1, @endDate)
+			AND shp.StartDate < @realEndDate
 			AND (hl.IdCountry = @IdCountry OR PrvTvpc.IdCountry = @IdCountry)
 		ORDER BY shp.DateCreated DESC
 		OPTION (RECOMPILE)
@@ -176,7 +176,7 @@ BEGIN
 			WHERE hlbu.userId = @userId and 
 				shp.RowStatus = 1 and 
 				shp.StartDate >= @startDate and 
-				shp.StartDate < DATEADD(DAY, 1, @endDate)
+				shp.StartDate < @realEndDate
 				AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
 				AND (hlf.IdCountry = @IdCountry OR PrvTvpc.IdCountry = @IdCountry)
 			ORDER BY shp.DateCreated desc
