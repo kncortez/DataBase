@@ -10,7 +10,7 @@
 =========================================== 
 2024-08-16	|	Épica: 	|	Autor: Brandon Pedroza    |   Added idcontry parameter
 =========================================== 
-2026-03-27	|	Épica: FDAPI-5985	|	Autor: Brandon Pedroza    |   Added idcontry parameter
+2026-03-30	|	Épica: FDAPI-5985	|	Autor: Erick Guerra    |   Optimización de consultas
 =========================================== */
 
 CREATE PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
@@ -22,83 +22,100 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @CatTMSalesPersonId INT = 0;
+	DECLARE @CatTMSalesPersonId INT;
 	DECLARE @VoidStatus         INT;
+	DECLARE @Today DATETIME = SYSDATETIME();
 
-	SELECT @CatTMSalesPersonId = [CTSP].[IdCatTMSalesPerson]
-		FROM	[dbo].[CatTMSalesPerson] CTSP WITH(NOLOCK)
-		WHERE	[CTSP].[RegisterUserId] = @RegisterUserId;
+	SET @CatTMSalesPersonId = (
+		SELECT [CTSP].[IdCatTMSalesPerson]
+			FROM	[dbo].[CatTMSalesPerson] CTSP WITH(NOLOCK)
+			WHERE	[CTSP].[RegisterUserId] = @RegisterUserId
+	);
 
 	IF @CatTMSalesPersonId IS NULL RETURN;
 
-	SELECT TOP 1 @VoidStatus = SO.StatusOrderId 
-		FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) 
-		WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI;
+	SET @VoidStatus = (
+		SELECT TOP 1 SO.StatusOrderId 
+			FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) 
+			WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI
+	);
 
-    SELECT	[P].[PerFirstName] [FirstName],
-			[P].[PerLastName] [LastName],
-			[RU].[UsrEmail] [Email],
-			ISNULL([RU].[PrefixCallingCode],'+502') [NirPhone],
-			[RU].[Phone] [Phone],				
-			[RU].[UsrDateCreated] [DateCreated],
-			[C].[CutOffDate] [CutOffDate],
-			[C].[CustomerGoalQuantity] [CustomerGoalQuantity],
-			ISNULL([GuideAmountBeforeCut].[TotalGuides], 0) [ActualServiceCount],
-			ISNULL([M].[IdMembership], 0) [MembershipId],
-			ISNULL([CM].[MembershipName], '') [MembershipName], 
-			ISNULL([CM].[MembershipCost], 0) [MembershipCost]
-		FROM [dbo].[Customer] C  WITH(NOLOCK) 
-			INNER JOIN	[dbo].[Account] A  WITH(NOLOCK) 
-				ON [C].[IdCustomer] = [A].[IdCustomer]
-			INNER JOIN	[dbo].[RolByUserByAccount] RUA  WITH(NOLOCK) 
-				ON [A].[AccIdAccount] = [RUA].[RuaIdAccount]
-			INNER JOIN [dbo].[RegisterUser] RU  WITH(NOLOCK) 
-				ON [RUA].[RuaIdUser] = [RU].[UsrIdUser]
-			INNER JOIN [dbo].[Person] P  WITH(NOLOCK) 
-				ON [RU].[UsrIdPerson] = [P].[PerIdPerson]
-			LEFT JOIN [dbo].[Membership] M  WITH(NOLOCK) 
-				ON [C].[IdCustomer] = [M].[CustomerId]
-				AND [M].[ExpirationDate] >= SYSDATETIME()
-			LEFT JOIN [dbo].[CatMembership] CM  WITH(NOLOCK) 
-				ON [M].[CatMembershipId] = [CM].[IdCatMembership]
-			OUTER APPLY (
-				SELECT COUNT(DISTINCT DO.Guide_Number) 'TotalGuides'
-					FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-					WHERE DO.IdCustomer = [C].[IdCustomer]
-						AND DO.StatusOrderId <> (@VoidStatus)
-						AND DO.DateCreated <= [C].[CutOffDate]
-				) GuideAmountBeforeCut
-		WHERE [C].[CatTMSalesPersonId] = @CatTMSalesPersonId
-			AND [C].[CutOffDate] >= SYSDATETIME()
-			AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry
+	-- CTE utilizado para evitar ejecución repetitiva por fila hacia DeliveryOrder
+	;WITH GuideAmountBeforeCut AS (
+        SELECT
+			C.IdCustomer,
+			COUNT(DISTINCT DO.Guide_Number) AS TotalGuides
+		FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+			INNER JOIN [dbo].[Customer] C WITH(NOLOCK)
+				ON DO.IdCustomer = C.IdCustomer
+		WHERE C.CatTMSalesPersonId = @CatTMSalesPersonId
+			AND C.CutOffDate >= @Today
+			AND DO.StatusOrderId  <> @VoidStatus
+			AND DO.DateCreated    <= C.CutOffDate
+		GROUP BY C.IdCustomer
+    )
+	SELECT
+		[P].[PerFirstName] [FirstName],
+		[P].[PerLastName] [LastName],
+		[RU].[UsrEmail] [Email],
+		ISNULL([RU].[PrefixCallingCode],'+502') [NirPhone],
+		[RU].[Phone] [Phone],				
+		[RU].[UsrDateCreated] [DateCreated],
+		[C].[CutOffDate] [CutOffDate],
+		[C].[CustomerGoalQuantity] [CustomerGoalQuantity],
+		ISNULL([GA].[TotalGuides], 0) [ActualServiceCount],
+		ISNULL([M].[IdMembership], 0) [MembershipId],
+		ISNULL([CM].[MembershipName], '') [MembershipName], 
+		ISNULL([CM].[MembershipCost], 0) [MembershipCost]
+    FROM [dbo].[Customer] C WITH(NOLOCK)
+        INNER JOIN [dbo].[Account] A WITH(NOLOCK)
+            ON [C].[IdCustomer] = [A].[IdCustomer]
+        INNER JOIN [dbo].[RolByUserByAccount] RUA WITH(NOLOCK)
+            ON [A].[AccIdAccount] = [RUA].[RuaIdAccount]
+        INNER JOIN [dbo].[RegisterUser] RU WITH(NOLOCK)
+            ON [RUA].[RuaIdUser] = [RU].[UsrIdUser]
+        INNER JOIN [dbo].[Person] P WITH(NOLOCK)
+            ON [RU].[UsrIdPerson] = [P].[PerIdPerson]
+        LEFT JOIN [dbo].[Membership] M WITH(NOLOCK)
+            ON  [C].[IdCustomer]     = [M].[CustomerId]
+            AND [M].[ExpirationDate] >= @Today
+        LEFT JOIN [dbo].[CatMembership] CM WITH(NOLOCK)
+            ON [M].[CatMembershipId] = [CM].[IdCatMembership]
+		LEFT JOIN GuideAmountBeforeCut GA
+			ON GA.IdCustomer = C.IdCustomer
+    WHERE
+        [C].[CatTMSalesPersonId] = @CatTMSalesPersonId
+        AND [C].[CutOffDate] >= @Today
+		AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry
 	UNION
-	SELECT	[P].[PerFirstName] [FirstName],
-			[P].[PerLastName] [LastName],
-			[RU].[UsrEmail] [Email],
-			ISNULL([RU].[PrefixCallingCode], '+502') [NirPhone],
-			[RU].[Phone] [Phone],
-			[RU].[UsrDateCreated] [DateCreated],
-			[RU].[UsrDateCreated] [CutOffDate],
-			0 [CustomerGoalQuantity],
-			0 [ActualServiceCount],
-			ISNULL([M].[IdMembership], 0) [MembershipId],
-			ISNULL([CM].[MembershipName], '') [MembershipName], 
-			ISNULL([CM].[MembershipCost], 0) [MembershipCost]
-		FROM [dbo].[Customer] C  WITH(NOLOCK) 
-			INNER JOIN [dbo].[Account] A  WITH(NOLOCK) 
-				ON [C].[IdCustomer] = [A].[IdCustomer]
-			INNER JOIN [dbo].[RolByUserByAccount] RUA  WITH(NOLOCK) 
-				ON [A].[AccIdAccount] = [RUA].[RuaIdAccount]
-			INNER JOIN [dbo].[RegisterUser] RU  WITH(NOLOCK) 
-				ON [RUA].[RuaIdUser] = [RU].[UsrIdUser]
-			INNER JOIN [dbo].[Person] P  WITH(NOLOCK) 
-				ON [RU].[UsrIdPerson] = [P].[PerIdPerson]
-			LEFT JOIN [dbo].[Membership] M  WITH(NOLOCK) 
-				ON [C].[IdCustomer] = [M].[CustomerId]
-				AND [M].[ExpirationDate] >= SYSDATETIME()
-			LEFT JOIN [dbo].[CatMembership] CM  WITH(NOLOCK) 
-				ON [M].[CatMembershipId] = [CM].[IdCatMembership]
-		WHERE [M].[CatTMSalesPersonId] = @CatTMSalesPersonId
-			AND [C].[CutOffDate] >= SYSDATETIME()
-			AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry;
+	SELECT
+		[P].[PerFirstName] [FirstName],
+		[P].[PerLastName] [LastName],
+		[RU].[UsrEmail] [Email],
+		ISNULL([RU].[PrefixCallingCode],'+502') [NirPhone],
+		[RU].[Phone] [Phone],				
+		[RU].[UsrDateCreated] [DateCreated],
+		[RU].[UsrDateCreated] [CutOffDate],
+		0 [CustomerGoalQuantity],
+		0 [ActualServiceCount],
+		ISNULL([IdMembership], 0) [MembershipId],
+		ISNULL([CM].[MembershipName], '') [MembershipName], 
+		ISNULL([CM].[MembershipCost], 0) [MembershipCost]
+    FROM [dbo].[Customer] C  WITH(NOLOCK) 
+		INNER JOIN [dbo].[Account] A  WITH(NOLOCK) 
+			ON [C].[IdCustomer] = [A].[IdCustomer]
+		INNER JOIN [dbo].[RolByUserByAccount] RUA  WITH(NOLOCK) 
+			ON [A].[AccIdAccount] = [RUA].[RuaIdAccount]
+		INNER JOIN [dbo].[RegisterUser] RU  WITH(NOLOCK) 
+			ON [RUA].[RuaIdUser] = [RU].[UsrIdUser]
+		INNER JOIN [dbo].[Person] P  WITH(NOLOCK) 
+			ON [RU].[UsrIdPerson] = [P].[PerIdPerson]
+		LEFT JOIN [dbo].[Membership] M  WITH(NOLOCK) 
+			ON [C].[IdCustomer] = [M].[CustomerId]
+			AND [M].[ExpirationDate] >= SYSDATETIME()
+		LEFT JOIN [dbo].[CatMembership] CM  WITH(NOLOCK) 
+			ON [M].[CatMembershipId] = [CM].[IdCatMembership]
+	WHERE [M].[CatTMSalesPersonId] = @CatTMSalesPersonId
+		AND [C].[CutOffDate] >= SYSDATETIME()
+		AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry;
 END
