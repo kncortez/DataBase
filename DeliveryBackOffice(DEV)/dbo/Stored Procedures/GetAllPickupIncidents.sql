@@ -8,10 +8,12 @@
 === CHANGELOG ============================
 =========================================== */
 CREATE PROCEDURE [dbo].[GetAllPickupIncidents]
+	@CountryId VARCHAR (2)
 AS
 BEGIN
 	SELECT IdIncidenceType AS IncidentID, NameIncidence AS Incident
 	FROM DeliveryBackOffice.dbo.CatTypeIncidence WITH(NOLOCK)
 	WHERE ServiceType = 'PICKUP'
+	AND CountryId = @CountryId
 	AND RowStatus = 1;
 END
