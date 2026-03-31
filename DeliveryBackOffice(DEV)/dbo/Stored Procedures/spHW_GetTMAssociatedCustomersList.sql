@@ -13,7 +13,7 @@
 2026-03-30	|	Épica: FDAPI-5985	|	Autor: Erick Guerra    |   Optimización de consultas
 =========================================== */
 
-CREATE PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
+ALTER PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
 	@RegisterUserId INT,
 	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
@@ -112,10 +112,10 @@ BEGIN
 			ON [RU].[UsrIdPerson] = [P].[PerIdPerson]
 		LEFT JOIN [dbo].[Membership] M  WITH(NOLOCK) 
 			ON [C].[IdCustomer] = [M].[CustomerId]
-			AND [M].[ExpirationDate] >= SYSDATETIME()
+			AND [M].[ExpirationDate] >= @Today
 		LEFT JOIN [dbo].[CatMembership] CM  WITH(NOLOCK) 
 			ON [M].[CatMembershipId] = [CM].[IdCatMembership]
 	WHERE [M].[CatTMSalesPersonId] = @CatTMSalesPersonId
-		AND [C].[CutOffDate] >= SYSDATETIME()
+		AND [C].[CutOffDate] >= @Today
 		AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry;
 END
