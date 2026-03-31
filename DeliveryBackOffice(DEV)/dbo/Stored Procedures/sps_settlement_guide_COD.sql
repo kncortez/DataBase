@@ -325,7 +325,7 @@ BEGIN
                Quantity
         FROM @Money
         WHERE Quantity IS NOT NULL
-              AND Quantity > 0;
+              AND Quantity >= 0;
 
 		IF COALESCE(@@rowcount, 0) > 0
 		BEGIN
