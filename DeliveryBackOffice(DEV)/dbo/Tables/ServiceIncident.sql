@@ -14,7 +14,7 @@ CREATE TABLE [dbo].[ServiceIncident] (
 	[Longitude] NVARCHAR (40) NULL,
 	[IncidentPicturePath] NVARCHAR (500) NULL,
 	[ReclassificationNotes] NVARCHAR(500) NULL,
-	[ReclassifiedIncidentId] INT NOT NULL,
+	[ReclassifiedIncidentId] INT NULL,
 	[AssignedAt] DATETIME NULL,
     [CompletedAt] DATETIME NULL,
 	[IncidentConfirmed] BIT NULL,
