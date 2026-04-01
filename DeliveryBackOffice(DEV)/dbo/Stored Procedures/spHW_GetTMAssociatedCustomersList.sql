@@ -13,7 +13,7 @@
 2026-03-30	|	Épica: FDAPI-5985	|	Autor: Erick Guerra    |   Optimización de consultas
 =========================================== */
 
-CREATE PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
+ALTER PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
 	@RegisterUserId INT,
 	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
@@ -63,7 +63,7 @@ BEGIN
 		ISNULL([RU].[PrefixCallingCode],'+502') [NirPhone],
 		[RU].[Phone] [Phone],				
 		[RU].[UsrDateCreated] [DateCreated],
-		[C].[CutOffDate] [CutOffDate],
+		[C].[CutOffDate] [CutOfDate],
 		[C].[CustomerGoalQuantity] [CustomerGoalQuantity],
 		ISNULL([GA].[TotalGuides], 0) [ActualServiceCount],
 		ISNULL([M].[IdMembership], 0) [MembershipId],
@@ -97,7 +97,7 @@ BEGIN
 		ISNULL([RU].[PrefixCallingCode],'+502') [NirPhone],
 		[RU].[Phone] [Phone],				
 		[RU].[UsrDateCreated] [DateCreated],
-		[RU].[UsrDateCreated] [CutOffDate],
+		[RU].[UsrDateCreated] [CutOfDate],
 		0 [CustomerGoalQuantity],
 		0 [ActualServiceCount],
 		ISNULL([IdMembership], 0) [MembershipId],
