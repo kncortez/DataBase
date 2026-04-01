@@ -13,7 +13,7 @@
 2026-03-30	|	Épica: FDAPI-5985	|	Autor: Erick Guerra    |   Optimización de consultas
 =========================================== */
 
-ALTER PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
+CREATE PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
 	@RegisterUserId INT,
 	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
@@ -25,11 +25,13 @@ BEGIN
 	DECLARE @CatTMSalesPersonId INT;
 	DECLARE @VoidStatus         INT;
 	DECLARE @Today DATETIME = SYSDATETIME();
+	DECLARE @UserId INT = @RegisterUserId;
+	DECLARE @Country AS NVARCHAR(2) = @IdCountry;
 
 	SET @CatTMSalesPersonId = (
 		SELECT [CTSP].[IdCatTMSalesPerson]
 			FROM	[dbo].[CatTMSalesPerson] CTSP WITH(NOLOCK)
-			WHERE	[CTSP].[RegisterUserId] = @RegisterUserId
+			WHERE	[CTSP].[RegisterUserId] = @UserId
 	);
 
 	IF @CatTMSalesPersonId IS NULL RETURN;
@@ -37,7 +39,7 @@ BEGIN
 	SET @VoidStatus = (
 		SELECT TOP 1 SO.StatusOrderId 
 			FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) 
-			WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI
+			WHERE SO.OrderDescription = 'Anulado'
 	);
 
 	-- CTE utilizado para evitar ejecución repetitiva por fila hacia DeliveryOrder
@@ -51,7 +53,7 @@ BEGIN
 		WHERE C.CatTMSalesPersonId = @CatTMSalesPersonId
 			AND C.CutOffDate >= @Today
 			AND DO.StatusOrderId  <> @VoidStatus
-			AND DO.DateCreated    <= C.CutOffDate
+			AND DO.DateCreated <= C.CutOffDate
 		GROUP BY C.IdCustomer
     )
 	SELECT
@@ -77,7 +79,7 @@ BEGIN
         INNER JOIN [dbo].[Person] P WITH(NOLOCK)
             ON [RU].[UsrIdPerson] = [P].[PerIdPerson]
         LEFT JOIN [dbo].[Membership] M WITH(NOLOCK)
-            ON  [C].[IdCustomer]     = [M].[CustomerId]
+            ON  [C].[IdCustomer] = [M].[CustomerId]
             AND [M].[ExpirationDate] >= @Today
         LEFT JOIN [dbo].[CatMembership] CM WITH(NOLOCK)
             ON [M].[CatMembershipId] = [CM].[IdCatMembership]
@@ -86,7 +88,7 @@ BEGIN
     WHERE
         [C].[CatTMSalesPersonId] = @CatTMSalesPersonId
         AND [C].[CutOffDate] >= @Today
-		AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry
+		AND [P].[PerCountryOrigin] = @Country
 	UNION
 	SELECT
 		[P].[PerFirstName] [FirstName],
@@ -117,5 +119,6 @@ BEGIN
 			ON [M].[CatMembershipId] = [CM].[IdCatMembership]
 	WHERE [M].[CatTMSalesPersonId] = @CatTMSalesPersonId
 		AND [C].[CutOffDate] >= @Today
-		AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry;
+		AND [P].[PerCountryOrigin] = @Country
+	OPTION (OPTIMIZE FOR UNKNOWN)
 END
