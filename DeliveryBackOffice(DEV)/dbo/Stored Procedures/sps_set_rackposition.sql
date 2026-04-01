@@ -163,9 +163,13 @@ BEGIN
 					WHERE Guide_Serie = @GuideSerie 
 						AND Guide_Number = @GuideNumber
 				
-					-- Insertar En Inventario nuevo estado de guía en tabla histórica
-					INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem],[Observations],[StationId])
-					VALUES (@GuideSerie, @GuideNumber, ISNULL(@StatusOrderId, @OrderStatus), @UserCreated, GETDATE(), GETDATE(),'',@StationId) 
+					--registrar cuando ingrese a inventario, y evitar duplicados
+					IF(@StatusOrderId = 10)
+					BEGIN
+						-- Insertar En Inventario nuevo estado de guía en tabla histórica
+						INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem],[Observations],[StationId])
+						VALUES (@GuideSerie, @GuideNumber, ISNULL(@StatusOrderId, @OrderStatus), @UserCreated, GETDATE(), GETDATE(),'',@StationId) 
+					END
 					
 					SET @RInserted = @@ROWCOUNT
 				END
