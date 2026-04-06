@@ -20,7 +20,7 @@ BEGIN
         @InProgressStatusID INT = 2,
         @ResolvedStatusID INT = 3;
 
-    DECLARE @RowsAffected INT = 0;
+    DECLARE @StatusCode INT = 0;
 
     IF @IncidentStatusId = @PendingStatusId
     BEGIN
@@ -30,12 +30,25 @@ BEGIN
             CurrentAgentId = NULL,
             AssignedAt = NULL
         WHERE ServiceIncidentId = @ServiceIncidentId
+        AND IncidentStatusId = @InProgressStatusID
         AND RowStatus = 1;
 
-        SET @RowsAffected = @@ROWCOUNT;
+        SET @StatusCode = @@ROWCOUNT;
     END
     ELSE IF @IncidentStatusId = @InProgressStatusID
     BEGIN
+        -- Check the current state of the incident BEFORE updating
+		DECLARE @CurrentStatusId   INT;
+		DECLARE @CurrentAgentId    INT;
+		DECLARE @CurrentRowStatus  TINYINT;
+
+		SELECT 
+			@CurrentStatusId  = IncidentStatusId,
+			@CurrentAgentId   = CurrentAgentId,
+			@CurrentRowStatus = RowStatus
+		FROM DeliveryBackOffice.dbo.ServiceIncident
+		WHERE ServiceIncidentId = @ServiceIncidentId;
+        
         UPDATE DeliveryBackOffice.dbo.ServiceIncident
         SET 
             IncidentStatusId = @InProgressStatusID,
@@ -57,7 +70,21 @@ BEGIN
                 )
             );
 
-        SET @RowsAffected = @@ROWCOUNT;
+        -- Diagnose why nothing was updated
+		IF @@ROWCOUNT = 0
+		BEGIN
+            IF @CurrentStatusId  = @InProgressStatusID 
+				 AND @CurrentAgentId <> @QualityControlAgentId
+				SET @StatusCode = -1;
+			ELSE IF @CurrentRowStatus <> 1
+                SET @StatusCode = -2;
+			ELSE 
+                SET @StatusCode = -3;
+		END
+		ELSE
+        BEGIN
+            SET @StatusCode = 1;
+        END
     END
     ELSE IF @IncidentStatusId = @ResolvedStatusID
     BEGIN
@@ -70,7 +97,7 @@ BEGIN
         AND IncidentStatusId = @InProgressStatusID
         AND CurrentAgentId = @QualityControlAgentId;
 
-        SET @RowsAffected = @@ROWCOUNT;
+        SET @StatusCode = @@ROWCOUNT;
     END
     ELSE
     BEGIN
@@ -82,8 +109,8 @@ BEGIN
         AND RowStatus = 1
 		AND IncidentStatusId = @InProgressStatusID;
 
-        SET @RowsAffected = @@ROWCOUNT;
+        SET @StatusCode = @@ROWCOUNT;
     END
 
-    SELECT @RowsAffected AS IsSuccess, '999' AS AgentID;
+    RETURN @StatusCode;
 END

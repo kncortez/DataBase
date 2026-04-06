@@ -1615,6 +1615,7 @@
     <Build Include="dbo\Stored Procedures\GetServiceExecutionSchedule.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccount.sql" />
+    <Build Include="dbo\Stored Procedures\GetServiceIncidentDetails.sql" />
     <Build Include="dbo\Stored Procedures\GetScheduleTimeList.sql" />
     <Build Include="dbo\Stored Procedures\GetSalePackageToRenew.sql" />
     <Build Include="dbo\Stored Procedures\GetSalePackageToDeactivate.sql" />
@@ -1747,6 +1748,7 @@
     <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
     <Build Include="dbo\Stored Procedures\GetAllWorkflows.sql" />
     <Build Include="dbo\Stored Procedures\GetAllServiceIncidents.sql" />
+    <Build Include="dbo\Stored Procedures\GetAllPickupIncidents.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertsOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_TEST.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_BNHL.sql" />

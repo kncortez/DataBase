@@ -10,6 +10,7 @@
 2024-06-06 | Historia/épica: ---         | Autor: Cristian Suazo   | Validar que el país destino sea el mismo que el país logueado
 2024-12-18 | Historia/épica: ---         | Autor: Tito Garcia      | Optimización del SP según recomendaciones del DBA
 2025-12-19 | Historia/épica: FDAPI-4744  | Autor: Brandon Pedroza  | agregar id estacion al confirmar entrega desktop
+2026-01-12 | Historia/épica: FDAPI-5416  | Autor: Brandon Pedroza  | agrega condicion para filtrar correctamente 
 
 =========================================== */
 
@@ -199,6 +200,7 @@ IF(@IsStatusTerminal = 0)
 											FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) 
 											WHERE WRBU.CustomerId = @WebhookCustomerId 
 												AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook
+												AND WRBU.StatusOrderId = @GuideCurrentStatus
 								) ) )
 							BEGIN
 								DECLARE @TypeConnect INT = 0;
@@ -327,8 +329,8 @@ IF(@IsStatusTerminal = 0)
 												@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@TokenId AS TokenCreated
 												FROM DeliveryOrderPiece dop WITH(NOLOCK)
 												INNER JOIN DeliveryOrder do WITH(NOLOCK)
-													ON dop.GuideNumber = do.Guide_Number
-                                                    AND dop.GuideSerie = do.Guide_Serie
+													ON dop.GuideSerie = do.Guide_Serie
+                                                    AND dop.GuideNumber = do.Guide_Number
 												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 												    ON do.IdCustomer = WHE.CustomerId
 												INNER JOIN @GuidePiecesTable gpt
