@@ -9,6 +9,7 @@
 2025-12-17 | Historia/épica: <FDAPI-5296> | Autor: <Tito Garcia> |
 2025-11-27 | Historia/épica: <FDAPI-4607> | Autor: <Tito Garcia> |
 2025-11-05 | Historia/épica: <FDAPI-4607> | Autor: <Cristian Suazo> |
+2026-03-25 | Historia/épica: <FDAPI-6009> | Autor: <Erick Hernandez> |
 =========================================== */
 CREATE PROCEDURE [dbo].[spHM_EndLinehaulRouteSettlement]
 	@LinehaulRouteSettlementId AS INT,
@@ -24,6 +25,7 @@ BEGIN
 	DECLARE @LIQUIDATED_STATUS_ID AS INT;			-- CatLinehaulStatus
 	DECLARE @IN_TRANSIT_STATUS_ID AS INT;			-- CatLinehaulStatus
 	DECLARE @Status INT
+	DECLARE @IN_TRANSIT_STATUS_ID_STATUSORDER AS INT = 19;	--StatusOrder
 
 	SELECT  
 		@LIQUIDATED_STATUS_ID = MAX(CASE WHEN StatusName = 'LIQUIDATED' THEN IdCatLinehaulStatus END),
@@ -92,6 +94,9 @@ BEGIN
 				GETDATE(),
 				1
 			FROM #GuidesTmp G
+			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+				ON DO.Guide_Serie = G.GuideSerie AND DO.Guide_Number = G.GuideNumber
+			WHERE ISNULL(DO.StatusOrderId, 0) = @IN_TRANSIT_STATUS_ID_STATUSORDER;
 			
 			-- Se actualiza estado en la DeliveryOrder
 			UPDATE DO
@@ -100,7 +105,8 @@ BEGIN
 			INNER JOIN #GuidesTmp T
 				ON DO.Guide_Serie = T.GuideSerie
 				AND DO.Guide_Number = T.GuideNumber
-			WHERE ISNULL(DO.StatusOrderId, 0) <> @Status;
+			--WHERE ISNULL(DO.StatusOrderId, 0) <> @Status;
+			WHERE ISNULL(DO.StatusOrderId, 0) = @IN_TRANSIT_STATUS_ID_STATUSORDER;
 		END
 
 		-- CLOSE DISPATCH CONTAINERS
