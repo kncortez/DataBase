@@ -61,15 +61,15 @@ BEGIN
 		,CONVERT(VARCHAR, dod.DateCreated, 103) AS Delivery_Date
 		,CONVERT(VARCHAR(5), dod.DateCreated, 108) as Delivery_Time
 		,CAST( CAST( SUBSTRING(dp.PathSignature, CHARINDEX('id=', dp.PathSignature) + 3, LEN(dp.PathSignature) - CHARINDEX('id=', dp.PathSignature) + 3 + 1) AS XML ).value('text()[1]','VARBINARY(MAX)') AS VARCHAR(MAX) ) AS SignatureFileName
+        ,dp.PathSignature AS URLIMG
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN [DeliveryBackOffice].[dbo].deliveryorderdetail dod WITH(NOLOCK) 
 			ON do.Guide_Serie = dod.Guide_Serie AND do.Guide_Number = dod.Guide_Number   
 		LEFT JOIN [DeliveryBackOffice].[dbo].DeliveryProof dp WITH(NOLOCK) 
 			ON do.Guide_Serie = dp.Guide_Serie AND do.Guide_Number = dp.Guide_Number AND dp.PathSignature IS NOT NULL
+		INNER JOIN #listGuides lg ON do.Guide_Serie = @_serie AND do.Guide_Number = lg.ItemNumber
 	WHERE dod.StatusOrderId IN (SELECT StatusOrderId FROM statusOrder WHERE OrderDescription IN('Entregado','Devuelto'))
 		AND dod.RowStatus = 1
-		AND do.Guide_Serie = @_serie
-		AND do.Guide_Number IN (SELECT ItemNumber FROM #listGuides)
 	ORDER BY dod.StatusOrderId ASC, do.Guide_Number DESC;
 
 	IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL

@@ -65,8 +65,8 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                 ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
             INNER JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
-                ON DOR.Guide_Number = dsd.Guide_Number
-                   AND DOR.Guide_Serie = dsd.Guide_Serie
+                ON DOR.Guide_Serie = dsd.Guide_Serie
+                   AND DOR.Guide_Number = dsd.Guide_Number
             LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH (NOLOCK)
                 ON dbs.ID = msi.ManifestNumber
             LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
@@ -106,8 +106,8 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                 ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
             INNER JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
-                ON DOR.Guide_Number = dsd.Guide_Number
-                   AND DOR.Guide_Serie = dsd.Guide_Serie
+                ON DOR.Guide_Serie = dsd.Guide_Serie
+                   AND DOR.Guide_Number = dsd.Guide_Number
             LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH (NOLOCK)
                 ON dbs.ID = msi.ManifestNumber
             LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
@@ -133,10 +133,10 @@ BEGIN
 	DELETE GF
 	FROM @GuidesFound GF
 	LEFT JOIN PaymentZigi PZ
-	ON PZ.GuideNumber = GF.Guide_Number
-		  AND PZ.GuideSerie = GF.Guide_Serie
-		WHERE PZ.GuideNumber = GF.Guide_Number
-		  AND PZ.GuideSerie = GF.Guide_Serie
+	ON PZ.GuideSerie = GF.Guide_Serie
+		  AND PZ.GuideNumber = GF.Guide_Number
+		WHERE PZ.GuideSerie = GF.Guide_Serie
+		  AND PZ.GuideNumber = GF.Guide_Number
 		  AND (PZ.ZigiLinkStatus = 'PAID'OR PZ.AuthorizationNumberByUser IS NOT NULL)
 
     SELECT DISTINCT
