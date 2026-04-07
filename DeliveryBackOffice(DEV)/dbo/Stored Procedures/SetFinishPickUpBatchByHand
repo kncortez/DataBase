@@ -10,7 +10,7 @@
 
 =========================================== */
 
-ALTER PROCEDURE [dbo].[SetFinishPickUpBatchByHand_FDAPI-5681]
+CREATE PROCEDURE [dbo].[SetFinishPickUpBatchByHand_FDAPI-5681]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX),
     @IdPickup INT,
