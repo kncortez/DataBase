@@ -9,7 +9,7 @@
 2026-03-30 | Historia/épica: FDAPI-5681  | Autor: Caleb Loarca | Se usa de base GetBatchPODByHand, Se obtienen todos los lotes que aun no han sido procesados para el servicio
 =========================================== */
 
-ALTER PROCEDURE [dbo].[GetBatchPODByHand]
+CREATE PROCEDURE [dbo].[GetBatchPODByHand]
     @IdCountry NVARCHAR(2)= 'GT'
 AS
 BEGIN
@@ -25,11 +25,13 @@ BEGIN
 		ON sp.SchedulePickupId = fph.SchedulePickupId
 	INNER JOIN DeliveryBackOffice.dbo.ServiceManagement sm WITH(NOLOCK) 
 		ON sm.IdSchedulePickup = sp.SchedulePickupId
+	INNER JOIN DeliveryBackOffice.dbo.CatStation cs WITH(NOLOCK) 
+		ON fph.StationId = cs.IdStation
 	
 	WHERE 
 	fph.ServiceStatusId =  @CreateStatus
-   --AND 
-	-- ISNULL(cr.CountryId,'GT') = @IdCountry
+   	AND 
+	ISNULL(cs.CountryId,'GT') = @IdCountry
     AND fph.DateCreated >= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0)
     AND fph.DateCreated <  DATEADD(day, DATEDIFF(day, 0, GETDATE()), 1)
 	AND fph.RowStatus = 1	

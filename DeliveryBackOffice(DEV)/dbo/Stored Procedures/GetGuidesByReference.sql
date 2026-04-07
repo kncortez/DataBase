@@ -9,7 +9,7 @@
 2026-03-30 | Historia/épica: FDAPI-5679  | Autor: Caleb Loarca | Se usa de base GetGuidesByContainerByReference, Se obtienen todos los lotes que aun no han sido procesados para el servicio
 =========================================== */
 
-ALTER PROCEDURE [dbo].[GetGuidesByContainerByReference_FDAPI-5679]
+CREATE PROCEDURE [dbo].[GetGuidesByContainerByReference_FDAPI-5679]
 	@Container TblContainerList READONLY,
 	@References TblReferencesList READONLY,
 	@IdCountry NVARCHAR(2) = 'GT'

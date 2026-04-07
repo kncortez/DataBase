@@ -10,7 +10,7 @@
 
 =========================================== */
 
-ALTER PROCEDURE [dbo].[GetProcessBatchPODByHand_FDAPI-5681] 
+CREATE PROCEDURE [dbo].[GetProcessBatchPODByHand_FDAPI-5681] 
 (
  @IdPickup INT
 )
