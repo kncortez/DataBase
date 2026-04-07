@@ -13,7 +13,7 @@
 2026-03-30	|	Épica: FDAPI-5985	|	Autor: Erick Guerra    |   Optimización de consultas
 =========================================== */
 
-ALTER PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
+CREATE PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
 	@RegisterUserId INT,
 	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
@@ -120,5 +120,4 @@ BEGIN
 	WHERE [M].[CatTMSalesPersonId] = @CatTMSalesPersonId
 		AND [C].[CutOffDate] >= @Today
 		AND [P].[PerCountryOrigin] = @Country
-	OPTION (OPTIMIZE FOR UNKNOWN)
 END
