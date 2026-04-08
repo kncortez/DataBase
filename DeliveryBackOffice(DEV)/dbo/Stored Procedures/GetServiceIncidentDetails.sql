@@ -12,7 +12,6 @@ CREATE PROCEDURE [dbo].[GetServiceIncidentDetails]
 AS
 BEGIN
 	SELECT
-	--SI.ServiceIncidentId,
 	SI.ServiceId AS ServiceID,
 	CSS.Name AS IncidentType,
 	SI.IncidentId,
@@ -30,26 +29,24 @@ BEGIN
 	WHERE SI.ServiceIncidentId = @ServiceIncidentId
 	AND SI.RowStatus = 1;
 
-	SELECT --SM.IdServiceManagement, SM.IdSchedulePickup, SP.SenderId, 
+	SELECT
 	SP.SenderName AS Name, SP.SenderPhone AS Phone, SP.AddressPickup AS Address, 
-	--T.IdTownship, 
 	T.TownshipName AS Township, 
-	--P.IdProvince, 
 	P.ProvinceName AS Province
-	--VPC.DescriptionOfClient, VPC.Department, VPC.Phone, VPC.Town, VPC.Address
 	FROM DeliveryBackOffice.dbo.ServiceManagement SM WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.SchedulePickup SP WITH(NOLOCK)
-		ON SP.SchedulePickupId = SM.IdSchedulePickup AND SP.RowStatus = 1
+		ON SP.SchedulePickupId = SM.IdSchedulePickup
 	INNER JOIN DeliveryBackOffice.dbo.Township T WITH(NOLOCK)
-		ON T.IdTownship = SP.TownshipId AND T.TownshipStatus = 1
+		ON T.IdTownship = SP.TownshipId
 	INNER JOIN DeliveryBackOffice.dbo.Province P WITH(NOLOCK)
-		ON P.IdProvince = T.IdProvince AND P.ProvinceStatus = 1
-	--INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
-	--	ON VPC.CodeOfReference = SP.SenderId AND VPC.StatusClient = 1
+		ON P.IdProvince = T.IdProvince
 	WHERE SM.IdServiceManagement = (
 		SELECT ServiceId
 		FROM DeliveryBackOffice.dbo.ServiceIncident WITH (NOLOCK)
 		WHERE ServiceIncidentId = @ServiceIncidentId
 	)
+	AND SP.RowStatus = 1
+	AND T.TownshipStatus = 1
+	AND P.ProvinceStatus = 1
 	AND SM.RowStatus = 1;
 END;
