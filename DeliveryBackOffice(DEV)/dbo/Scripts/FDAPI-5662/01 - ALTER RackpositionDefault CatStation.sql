@@ -17,5 +17,6 @@ END TRY
 BEGIN CATCH
 
     PRINT 'Error: ' + ERROR_MESSAGE();
+    THROW;
 
 END CATCH;
