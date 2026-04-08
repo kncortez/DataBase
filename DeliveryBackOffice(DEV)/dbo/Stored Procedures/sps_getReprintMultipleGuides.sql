@@ -17,6 +17,10 @@
 -- Create date: <2025-04-21>
 -- Description: <Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion>
 -- =============================================
+-- Modified:    <Mario, Herrarte>
+-- Create date: <2026-04-08>
+-- Description: <Se valida el estado Retenido para el campo priority>
+-- =============================================
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY,
@@ -376,7 +380,7 @@ BEGIN
          --COALESCE(@integrationCost, '') 'Integration',
          , COALESCE(
                        IIF(ISNULL([dev].[IsLastMileReturn], 0) = 1
-                        , 'D'
+                        , IIF([dev].[StatusOrderId] = 28, 'R', 'D') 
                         , IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B, 'B', 'E'))
                      , ''
                    )                                                                                'Priority'
