@@ -3,6 +3,10 @@
 -- Create date: <2024-11-19>  
 -- Description: <Obtenemos la informacion de guias o comisiones de COD para facturarlas>  
 -- =============================================  
+
+CHANGELOG:
+    - 2026-04-08 <Hanss Espinoza> FDAPI-5988: Se agrega la opcion para filtrar Envios COD Contado, Credito e Intentos de entrega
+
 CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailDeliveryCorp]  
 (  
  @LstVisitPointClient NVARCHAR(MAX) = '',  
@@ -27,10 +31,10 @@ BEGIN
                     AND RowStatus = 1  
                 );  
   
-        SELECT @TypeService = CASE  
-                                 WHEN @Option = 1 THEN 'STD'  
-                                 WHEN @Option = 3 THEN 'COD'  
-                                 ELSE 'STD'  
+        SELECT @TypeService = CASE
+                                 WHEN @Option = 1 THEN 'STD'
+                                 WHEN @Option IN (3, 4, 5) THEN 'COD'
+                                 ELSE 'STD'
                               END  
   
         -- Crear la tabla  
@@ -61,28 +65,39 @@ BEGIN
         SELECT vst.IdVisitPointClient,  
                do.Guide_Serie,  
                do.Guide_Number  
-          FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)  
-               INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vst WITH(NOLOCK)  
-                       ON do.Sender_ID = vst.CodeOfReference  
-               LEFT JOIN dbo.invoiceDetail id WITH(NOLOCK)   
-                      ON id.dti_fk_orderSerie = do.Guide_Serie   
-                     AND id.dti_fk_orderNumber = do.Guide_Number  
-               LEFT JOIN dbo.invoiceHeader ih WITH(NOLOCK)   
-                      ON ih.inv_pk_id = id.dti_fk_header  
-                     AND ih.CatInvoiceTypeId = @IdCatInvoiceType  
-         WHERE id.dti_fk_header IS NULL   
-           AND ih.inv_certificationFEL IS NULL  
-           AND ih.inv_creditNote IS NULL   
-           AND ih.inv_motiveCreditNote IS NULL  
-           AND ih.CatInvoiceTypeId IS NULL  
-           AND vst.IdVisitPointClient IN (  
-                                           SELECT v.value('.', 'NVARCHAR(MAX)') AS Valor  
-                                             FROM @XmlVisitPointClient.nodes('/LstVisitPointClient/PointClient') AS x(v)  
-                                          )  
-           AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)  
-           AND do.IsCollect = 0  
-           AND do.SenderCountryId = @IdCountry  
-           AND do.TypeService = @TypeService  
+          FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+               INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vst WITH(NOLOCK)
+                       ON do.Sender_ID = vst.CodeOfReference
+               INNER JOIN DeliveryBackOffice.dbo.Customer cus WITH(NOLOCK)
+                       ON vst.IdCustomer = cus.IdCustomer
+               LEFT JOIN dbo.invoiceDetail id WITH(NOLOCK)
+                      ON id.dti_fk_orderSerie = do.Guide_Serie
+                     AND id.dti_fk_orderNumber = do.Guide_Number
+               LEFT JOIN dbo.invoiceHeader ih WITH(NOLOCK)
+                      ON ih.inv_pk_id = id.dti_fk_header
+                     AND ih.CatInvoiceTypeId = @IdCatInvoiceType
+         WHERE id.dti_fk_header IS NULL
+           AND ih.inv_certificationFEL IS NULL
+           AND ih.inv_creditNote IS NULL
+           AND ih.inv_motiveCreditNote IS NULL
+           AND ih.CatInvoiceTypeId IS NULL
+           AND vst.IdVisitPointClient IN (
+                                           SELECT v.value('.', 'NVARCHAR(MAX)') AS Valor
+                                             FROM @XmlVisitPointClient.nodes('/LstVisitPointClient/PointClient') AS x(v)
+                                          )
+           AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)
+           AND do.IsCollect = 0
+           AND do.SenderCountryId = @IdCountry
+           AND do.TypeService = @TypeService
+           -- Filtros para sub-productos COD (opciones 3, 4, 5)
+           AND (
+               @Option NOT IN (3, 4, 5)
+               OR (
+                   (@Option = 3 AND ISNULL(ISNULL(vst.ExcludePriceShippingCOD, cus.ExcludePriceShippingCOD), 0) = 0 AND ISNULL(do.IsLastMileReturn, 0) = 0)  -- COD Contado (NULL se trata como Contado)
+                   OR (@Option = 4 AND ISNULL(ISNULL(vst.ExcludePriceShippingCOD, cus.ExcludePriceShippingCOD), 0) = 1 AND ISNULL(do.IsLastMileReturn, 0) = 0)  -- COD Crédito
+                   OR (@Option = 5 AND ISNULL(do.IsLastMileReturn, 0) = 1)                                                                          -- Intentos de entrega
+               )
+           )  
            AND EXISTS  
                      (  
                       SELECT TOP 1 1  
