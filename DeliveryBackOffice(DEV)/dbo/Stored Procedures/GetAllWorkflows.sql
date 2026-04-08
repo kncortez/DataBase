@@ -34,7 +34,7 @@ BEGIN
 				FOR XML PATH(''), TYPE
 			).value('.', 'NVARCHAR(MAX)')
 		,1,2,''), '(0)') AS Statuses
-	FROM Workflow W
+	FROM DeliveryBackOffice.dbo.Workflow W WITH(NOLOCK)
 	WHERE W.RowStatus = 1
 	ORDER BY ISNULL(W.DateUpdated, W.DateCreated) DESC;
 END;
