@@ -10,6 +10,7 @@
     [DateCreated]     DATETIME       NULL,
     [TokenUpdated]    NVARCHAR (50)  NULL,
     [DateUpdated]     DATETIME       NULL,
+    [RackPositionDefault] NVARCHAR(60) NULL, 
     CONSTRAINT [PK_CatStation] PRIMARY KEY CLUSTERED ([IdStation] ASC),
     CONSTRAINT [FK_CatStation_CatCountry] FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     CONSTRAINT [FK_CatStation_HubLogistics] FOREIGN KEY ([HubLogisticId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
@@ -66,3 +67,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario act
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatStation', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Posición de rack por defecto de la estación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatStation',
+    @level2type = N'COLUMN',
+    @level2name = N'RackPositionDefault'
