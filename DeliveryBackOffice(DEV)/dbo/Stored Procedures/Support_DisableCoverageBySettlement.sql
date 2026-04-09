@@ -4,17 +4,12 @@
    Autor:     IRVIN GONZALEZ
    Historia:  FDAPI-5240
    Fecha:     2025-12-04
-============================================
-=== CHANGELOG ============================
-2025-12-04 | Historia: FDAPI-5240 | Autor: IRVIN GONZALEZ |
------
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_DisableCoverageBySettlement
 (
     @IdSettlement INT,
-    @TokenUpdated NVARCHAR(100),
-    @DateUpdated  DATETIME
+    @TokenUpdated NVARCHAR(100)
 )
 AS
 BEGIN
@@ -58,7 +53,7 @@ BEGIN
         SET
             SettlementSatus = 0,
             TokenUpdated    = @TokenUpdated,
-            DateUpdated     = @DateUpdated
+            DateUpdated     = GETDATE()
         WHERE IdSettlement = @IdSettlement;
 
         -- PASO 4: Aplicar el bloqueo en DumpServiceCoverage
@@ -67,7 +62,7 @@ BEGIN
         SET
             RowStatus    = 0,
             TokenUpdated = @TokenUpdated,
-            DateUpdated  = @DateUpdated
+            DateUpdated  = GETDATE()
         WHERE IdSettlement = @IdSettlement;
 
         -- PASO 5: Mensaje final de éxito
@@ -92,14 +87,3 @@ BEGIN
     END CATCH
 END
 GO
-
-/*
-================================================================================
-EJEMPLO DE EJECUCIÓN
-================================================================================
-EXEC dbo.Support_DisableCoverageBySettlement
-     @IdSettlement = 1118,
-     @TokenUpdated = N'SYS-IGONZALEZ',
-     @DateUpdated  = GETDATE();
-================================================================================
-*/
