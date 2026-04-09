@@ -15,7 +15,7 @@ AS
 BEGIN
 	DECLARE @CreateStatus INT
 
-	SET @CreateStatus = (SELECT IdServiceStatus FROM CatServiceStatus WITH(NOLOCK) WHERE [Name] = 'Asignado a Ruta')
+	SET @CreateStatus = (SELECT IdServiceStatus FROM DeliveryBackOffice.dbo.CatServiceStatus WITH(NOLOCK) WHERE [Name] = 'Asignado a Ruta')
 
 	SELECT fph.SchedulePickupId,
 		   fph.DateCreated,
@@ -27,11 +27,9 @@ BEGIN
 		ON sm.IdSchedulePickup = sp.SchedulePickupId
 	INNER JOIN DeliveryBackOffice.dbo.CatStation cs WITH(NOLOCK) 
 		ON fph.StationId = cs.IdStation
-	
 	WHERE 
 	fph.ServiceStatusId =  @CreateStatus
-   	AND 
-	ISNULL(cs.CountryId,'GT') = @IdCountry
+   	AND cs.CountryId = @IdCountry
     AND fph.DateCreated >= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0)
     AND fph.DateCreated <  DATEADD(day, DATEDIFF(day, 0, GETDATE()), 1)
 	AND fph.RowStatus = 1	

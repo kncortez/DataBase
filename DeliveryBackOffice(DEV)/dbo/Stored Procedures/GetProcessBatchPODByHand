@@ -35,7 +35,7 @@ BEGIN
         IF EXISTS
         (
             SELECT TOP 1 1
-              FROM FinishPickUpHeader WITH (NOLOCK)
+              FROM DeliveryBackOffice.dbo.FinishPickUpHeader WITH (NOLOCK)
              WHERE SchedulePickupId = @IdPickup
                AND RowStatus = 1
         )
@@ -70,7 +70,6 @@ BEGIN
                     ON  B.Guide_Serie = C.GuideSerie AND
                       B.Guide_Number = C.GuideNumber
                     WHERE SchedulePickupId = @IdPickup
-
                     AND B.StatusOrderId <> 7 --Quitar guías anuladas
                     AND NOT EXISTS(
                      SELECT 1 FROM DeliveryBackOffice.dbo.DeliveryOrderDetail A1 WITH(NOLOCK)
