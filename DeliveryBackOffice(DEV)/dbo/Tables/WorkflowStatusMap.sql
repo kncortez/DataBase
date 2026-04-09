@@ -8,7 +8,7 @@ CREATE TABLE [dbo].[WorkflowStatusMap] (
     [DateUpdated]           DATETIME		NULL,
     [TokenUpdated]          NVARCHAR (50)	NULL,
 	[RowStatus]             BIT 			NOT NULL DEFAULT ((1)),
-	CONSTRAINT PK_WorkflowStatusMap PRIMARY KEY (WorkflowStatusMapId),
+	CONSTRAINT PK_WorkflowStatusMap PRIMARY KEY (WorkflowStatusMapId, WorkflowId, StatusOrderId),
 	CONSTRAINT FK_WorkflowStatusMap_Workflow FOREIGN KEY (WorkflowId) REFERENCES dbo.Workflow(WorkflowId),
 	CONSTRAINT FK_WorkflowStatusMap_StatusOrder FOREIGN KEY (StatusOrderId) REFERENCES dbo.StatusOrder(StatusOrderId)
 );

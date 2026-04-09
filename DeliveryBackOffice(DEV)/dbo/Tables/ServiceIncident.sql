@@ -24,6 +24,8 @@ CREATE TABLE [dbo].[ServiceIncident] (
 	[RescheduleCollectDate] DATETIME NULL,
     [DateCreated] DATETIME NOT NULL,
     [TokenCreated] NVARCHAR(50) NOT NULL,
+	[DateUpdated]   DATETIME		NULL,
+	[TokenUpdated]	NVARCHAR (50)	NULL,
     [RowStatus] BIT NOT NULL DEFAULT 1,
 	PRIMARY KEY CLUSTERED ([ServiceIncidentId] ASC),
 	CONSTRAINT FK_ServiceIncident_ServiceId FOREIGN KEY (ServiceId) REFERENCES dbo.ServiceManagement(IdServiceManagement),
@@ -276,6 +278,26 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description',
 	@level1name = N'ServiceIncident',
 	@level2type = N'COLUMN',
 	@level2name = N'TokenCreated';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',
+	@value = N'Fecha de actualización del registro.',
+	@level0type = N'SCHEMA',
+	@level0name = N'dbo',
+	@level1type = N'TABLE',
+	@level1name = N'ServiceIncident',
+	@level2type = N'COLUMN',
+	@level2name = N'DateUpdated';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description',
+	@value = N'Token de actualización del registro.',
+	@level0type = N'SCHEMA',
+	@level0name = N'dbo',
+	@level1type = N'TABLE',
+	@level1name = N'ServiceIncident',
+	@level2type = N'COLUMN',
+	@level2name = N'TokenUpdated';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description',
