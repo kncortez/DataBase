@@ -14,7 +14,7 @@ BEGIN
 	DECLARE @RackPosition NVARCHAR (60);
 	
 	SELECT @RackPosition = RackPositionDefault 
-		FROM CatStation WITH(NOLOCK)
+		FROM DeliveryBackOffice.dbo.CatStation WITH(NOLOCK)
 	WHERE IdStation = @StationId
 	AND RowStatus = 1;
 

@@ -79,5 +79,6 @@ SELECT
 		--If no incident types were passed = return all rows
 		SI.IncidentTypeId IN (SELECT IncidentTypeId FROM @IncidentTypes)
 		OR NOT EXISTS (SELECT 1 FROM @IncidentTypes)
-	);
+	)
+	ORDER BY SI.DateCreated DESC;
 END;
