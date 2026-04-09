@@ -11,6 +11,7 @@
 																	@StatusOrderId = estado de la orden
 2026-03-17 | Historia/épica: <FDAPI-5590> | Autor: Bilkar Morataya | Agregado parámetro @StationId para radicación desde estación específica,
                                                                     Se guarda StationId en tablas Warehouse y DeliveryOrderDetail
+2026-03-20 | Historia/épica: <FDAPI-5662> | Autor: Brandon Pedroza | Se registra todas las piezas en procesos de exc
 =========================================== */
 CREATE PROCEDURE [dbo].[sps_set_rackposition]
 		@GuideSerie AS VARCHAR(2),
@@ -78,10 +79,48 @@ BEGIN
 						AND Guide_Number = @GuideNumber 
 						AND Active = 1
 					
+                    --se asegura que el estado de guia y piezas sean correcto cuando entren a inventario
+					IF(@StatusOrderId = 10)
+					BEGIN
+						--Actualizar En Inventario estado de las piezas
+						UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
+						SET StatusOrderId = ISNULL(@StatusOrderId, @OrderStatus)
+						WHERE GuideSerie = @GuideSerie 
+							AND GuideNumber = @GuideNumber
+
+						-- Actualizar En Inventario al último estado de la guía
+						UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+						SET StatusOrderId = ISNULL(@StatusOrderId, @OrderStatus)
+						WHERE Guide_Serie = @GuideSerie 
+							AND Guide_Number = @GuideNumber
+				
+						-- Insertar En Inventario nuevo estado de guía en tabla histórica
+						INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem],[Observations],[StationId])
+						VALUES (@GuideSerie, @GuideNumber, ISNULL(@StatusOrderId, @OrderStatus), @UserCreated, GETDATE(), GETDATE(),'',@StationId) 
+
+					END
+
 					-- Insertar nueva ubicación
 					INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] 
 						(Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn, HubExc, IdHubExc, StatusOrderId, StationId) 
-					VALUES (@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, @IdHubExc, @StatusOrderId, @StationId)
+					SELECT @RackPosition,
+							@GuideSerie,
+							@GuideNumber,
+							@PiecesDry,
+							@PiecesCold,
+							1,
+							@UserCreated,
+							GETDATE(),
+							DOD.NoPiece,
+							@IsReturn,
+							@HubExc,
+							@IdHubExc,
+							@StatusOrderId,
+							@StationId
+					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOD WITH(NOLOCK)
+					WHERE DOD.GuideSerie = @GuideSerie
+					AND DOD.GuideNumber = @GuideNumber
+
 					
 					SET @RInserted = @@ROWCOUNT
 				END
@@ -90,7 +129,23 @@ BEGIN
 					-- No existe registro: crear uno nuevo Como primera ubicación
 					INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] 
 					(Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn, HubExc, IdHubExc, StatusOrderId, StationId) 
-					VALUES (@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, @IdHubExc, @StatusOrderId, @StationId)
+					SELECT @RackPosition,
+							@GuideSerie,
+							@GuideNumber,
+							@PiecesDry,
+							@PiecesCold,
+							1,
+							@UserCreated,
+							GETDATE(),
+							DOD.NoPiece,
+							@IsReturn,
+							@HubExc,
+							@IdHubExc,
+							@StatusOrderId,
+							@StationId
+					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOD WITH(NOLOCK)
+					WHERE DOD.GuideSerie = @GuideSerie
+					AND DOD.GuideNumber = @GuideNumber;
 					IF @IsReturn = 1
 					BEGIN
 						SET @OrderStatus = 31
@@ -108,9 +163,13 @@ BEGIN
 					WHERE Guide_Serie = @GuideSerie 
 						AND Guide_Number = @GuideNumber
 				
-					-- Insertar En Inventario nuevo estado de guía en tabla histórica
-					INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem],[Observations],[StationId])
-					VALUES (@GuideSerie, @GuideNumber, ISNULL(@StatusOrderId, @OrderStatus), @UserCreated, GETDATE(), GETDATE(),'',@StationId) 
+					--registrar cuando ingrese a inventario, y evitar duplicados
+					IF(@StatusOrderId = 10)
+					BEGIN
+						-- Insertar En Inventario nuevo estado de guía en tabla histórica
+						INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem],[Observations],[StationId])
+						VALUES (@GuideSerie, @GuideNumber, ISNULL(@StatusOrderId, @OrderStatus), @UserCreated, GETDATE(), GETDATE(),'',@StationId) 
+					END
 					
 					SET @RInserted = @@ROWCOUNT
 				END
