@@ -8,8 +8,7 @@
 
 CREATE PROCEDURE dbo.Support_CambioEstacionDespacho
     @ManifiestoId INT,              -- Id del manifiesto en DeliveryOrderBySettlement
-    @NuevaEstacionId INT,           -- Id de la nueva estación (para ambos campos)
-    @TokenUpdate VARCHAR(50)        -- Token del usuario que realiza el cambio
+    @NuevaEstacionId INT           -- Id de la nueva estación (para ambos campos)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -27,9 +26,26 @@ BEGIN
             RETURN;
         END
 
-        -- PASO 2: Capturar estado anterior
-        DECLARE @DispatchedStationIdAntes INT;
-        DECLARE @SettlementStationIdAntes INT;
+        -- PASO 2: Validar existencia de la nueva estación
+        IF NOT EXISTS (
+            SELECT 1
+            FROM DeliveryBackOffice.dbo.CatStation WITH (NOLOCK)
+            WHERE IdStation = @NuevaEstacionId
+        )
+        BEGIN
+            SELECT 
+                'Error' AS Estado,
+                'La estación no existe.' AS Mensaje,
+                @NuevaEstacionId AS NuevaEstacionId;
+            RETURN;
+        END
+
+        -- PASO 3: Obtener estaciones y países
+        DECLARE 
+            @DispatchedStationIdAntes INT,
+            @SettlementStationIdAntes INT,
+            @PaisActual INT,
+            @PaisNueva  INT;
 
         SELECT TOP 1
             @DispatchedStationIdAntes = DispatchedStationId,
@@ -37,7 +53,28 @@ BEGIN
         FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement WITH (NOLOCK)
         WHERE Id = @ManifiestoId;
 
-        -- PASO 2: Actualizar estación de despacho y liquidación
+        -- País de la estación actual
+        SELECT 
+            @PaisActual = CountryId
+        FROM DeliveryBackOffice.dbo.CatStation WITH (NOLOCK)
+        WHERE IdStation = @DispatchedStationIdAntes;
+
+        -- País de la nueva estación
+        SELECT 
+            @PaisNueva = CountryId
+        FROM DeliveryBackOffice.dbo.CatStation WITH (NOLOCK)
+        WHERE IdStation = @NuevaEstacionId;
+        IF @PaisActual <> @PaisNueva
+        BEGIN
+            SELECT 
+                'Error' AS Estado,
+                'No es permitido cambiar a un país distinto' AS Mensaje,
+                @PaisActual AS PaisActual,
+                @PaisNueva  AS PaisDestino;
+            RETURN;
+        END
+
+        -- PASO 4: Actualizar estación de despacho y liquidación
         
         UPDATE DeliveryBackOffice.dbo.DeliveryOrderBySettlement
         SET 
@@ -45,16 +82,15 @@ BEGIN
             SettlementStationId = @NuevaEstacionId
         WHERE Id = @ManifiestoId;
 
-        -- RESULTADO EXITOSO: Mostrar antes y después
         
         SELECT 
             'Éxito' AS Estado,
             'El cambio de estación fue aplicado con éxito.' AS Mensaje,
-            @ManifiestoId AS ManifiestoId,
+            @ManifiestoId             AS ManifiestoId,
             @DispatchedStationIdAntes AS DispatchedStationId_Antes,
-            @NuevaEstacionId AS DispatchedStationId_Despues,
+            @NuevaEstacionId          AS DispatchedStationId_Despues,
             @SettlementStationIdAntes AS SettlementStationId_Antes,
-            @NuevaEstacionId AS SettlementStationId_Despues;
+            @NuevaEstacionId          AS SettlementStationId_Despues;
 
     END TRY
 
@@ -62,9 +98,9 @@ BEGIN
     SELECT 
             'Error' AS Estado,
             'Ocurrió un error durante la ejecución del procedimiento.' AS Mensaje,
-            ERROR_NUMBER() AS ErrorNumero,
+            ERROR_NUMBER()  AS ErrorNumero,
             ERROR_MESSAGE() AS ErrorDescripcion,
-            ERROR_LINE() AS ErrorLinea;
+            ERROR_LINE()    AS ErrorLinea;
             
         THROW;
 
