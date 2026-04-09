@@ -1,16 +1,14 @@
 /* =================================================
-   SP:        GetProcessBatchPODByHand
-   Propósito: Se crea SP para Procesar lote de POD en recolecciones Manuales para el servicio en servicio PickupProcessingService
+   SP:        [dbo].[GetProcessBatchPODByHand]
+   Propósito: <Se procesa lote de POD para el servicio recolección Manual.>
    Autor:     Caleb Loarca
-   Historia:  ---
-   Fecha:     2026-03-30
-
-=== CHANGELOG ============================
-2026-03-30 | Historia/épica: FDAPI-5681  | Autor: Caleb Loarca | Se usa de base GetProcessBatchPOD, haciendo el consumo hacia el nuevo SP SetFinishPickUpBatchByHand_FDAPI-5681
-
+   Historia:  <FDAPI-5681>
+   Fecha:     <2026-03-30>
+   === CHANGELOG ============================
+2026-03-30 | Historia/épica: <FDAPI-5681> | Autor: Caleb Loarca | Se usa de base SP GetProcessBatchPOD, para modificar y consumir en recolecciones manuales
 =========================================== */
-
-CREATE PROCEDURE [dbo].[GetProcessBatchPODByHand_FDAPI-5681] 
+                       
+CREATE PROCEDURE [dbo].[GetProcessBatchPODByHand]
 (
  @IdPickup INT
 )
@@ -93,7 +91,7 @@ BEGIN
                    ) [Data]
 
 
-            EXEC [dbo].[SetFinishPickUpBatchByHand_FDAPI-5681] @InGuides = @Guides,
+            EXEC [dbo].[SetFinishPickUpBatchByHand] @InGuides = @Guides,
                                               @IdPickup = @IdPickup,
                                               @TypeofInOutMoneyId = @TypeofInOutMoneyId,
                                               @Token = @Token,
@@ -147,5 +145,7 @@ BEGIN
 			    GETDATE() -- DateCreated - datetime
 			    )
     END CATCH
+
+
 
 END

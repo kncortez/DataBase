@@ -9,12 +9,15 @@
 =========================================== */
 CREATE PROCEDURE [dbo].[SaveServiceIncident]
 	@ServiceManagementId INT,
-	@SenderReceiverId INT,
+	@CourierId INT,
 	@CatServiceStatusId INT,
 	@CatTypeIncidenceId INT,
 	@Comments NVARCHAR(500),
 	@CatCountryId VARCHAR (2),
 	@HubLogisticsId INT,
+	@Latitude NVARCHAR (40),
+	@Longitude NVARCHAR (40),
+	@IncidentPicturePath NVARCHAR (500),
 	@Token NVARCHAR(50)
 AS
 BEGIN
@@ -26,9 +29,12 @@ BEGIN
 			CourierId,
 			IncidentTypeId,
 			IncidentId,
-			Observations,
+			CourierNotes,
 			CountryId,
 			HubId,
+			Latitude,
+			Longitude,
+			IncidentPicturePath,
 			IncidentStatusId,
 			DateCreated,
 			TokenCreated,
@@ -36,12 +42,15 @@ BEGIN
 		)
 		VALUES(
 			@ServiceManagementId,
-			@SenderReceiverId,
+			@CourierId,
 			@CatServiceStatusId,
 			@CatTypeIncidenceId,
 			@Comments,
 			@CatCountryId,
 			@HubLogisticsId,
+			@Latitude,
+			@Longitude,
+			@IncidentPicturePath,
 			@PendingStatusId,
 			GETDATE(),
 			@Token,

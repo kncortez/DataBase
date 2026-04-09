@@ -37,7 +37,7 @@ BEGIN
             [KoVPB].[IdKindOfVPBusiness]
         FROM [DeliveryBackOffice].[dbo].[KindOfVPBusiness] KoVPB WITH (NOLOCK)
         WHERE [KoVPB].[KindOfVPNameBussiness] = 'Express Center'
-              AND ISNULL(KoVPB.IdCountry, 'GT') = @IdCountry
+              AND KoVPB.IdCountry = @IdCountry
     )
 
     SELECT TOP 1
