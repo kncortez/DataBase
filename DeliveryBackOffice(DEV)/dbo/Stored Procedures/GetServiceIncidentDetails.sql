@@ -23,11 +23,13 @@ BEGIN
 	SI.CourierNotes
 	FROM DeliveryBackOffice.dbo.ServiceIncident SI WITH (NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.CatServiceStatus CSS WITH (NOLOCK)
-		ON CSS.IdServiceStatus = SI.IncidentTypeId AND CSS.RowStatus = 1
+		ON CSS.IdServiceStatus = SI.IncidentTypeId
 	INNER JOIN DeliveryBackOffice.dbo.CatTypeIncidence TI WITH (NOLOCK)
-		ON TI.IdIncidenceType = SI.IncidentId AND TI.RowStatus = 1
+		ON TI.IdIncidenceType = SI.IncidentId
 	WHERE SI.ServiceIncidentId = @ServiceIncidentId
-	AND SI.RowStatus = 1;
+	AND SI.RowStatus = 1
+	AND CSS.RowStatus = 1
+	AND TI.RowStatus = 1;
 
 	SELECT
 	SP.SenderName AS Name, SP.SenderPhone AS Phone, SP.AddressPickup AS Address, 

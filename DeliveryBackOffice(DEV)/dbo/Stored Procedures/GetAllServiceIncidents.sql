@@ -19,6 +19,7 @@ BEGIN
 	DECLARE @IncidentTypes TABLE (IncidentTypeId INT);
 	DECLARE @PendingIncidentStatusID INT = 1;
 	DECLARE @ResolvedIncidentStatusID INT = 3;
+	DECLARE @Today DATE = CAST(GETDATE() AS DATE);
 
 	INSERT INTO @Countries
 	SELECT LTRIM(RTRIM(value))
@@ -40,9 +41,7 @@ SELECT
 	CSS.Name AS IncidentType,
 	TI.NameIncidence AS Incident,
 	SI.CourierNotes AS Comments
-	--IST.Name AS IncidentStatus
 	FROM DeliveryBackOffice.dbo.ServiceIncident SI WITH (NOLOCK)
-	--INNER JOIN DeliveryBackOffice.dbo.ServiceManagement WITH (NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.SenderReceiver SR WITH (NOLOCK)
 		ON SR.ID = SI.CourierId
 	INNER JOIN DeliveryBackOffice.dbo.CatServiceStatus CSS WITH (NOLOCK)
@@ -53,8 +52,8 @@ SELECT
 		ON IST.IncidentStatusId = SI.IncidentStatusId
 	WHERE IST.IncidentStatusId NOT IN (@ResolvedIncidentStatusID)
 	AND SI.RowStatus = 1
-	AND SI.DateCreated >= CAST(GETDATE() AS DATE)
-	AND SI.DateCreated < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
+	AND SI.DateCreated >= @Today
+	AND SI.DateCreated < DATEADD(DAY, 1, @Today)
 	AND
 	(
 		--filter is applied

@@ -79,7 +79,7 @@ BEGIN
 			WHERE NOT EXISTS
 			(
 				SELECT 1
-				FROM DeliveryBackOffice.dbo.WorkflowStatusMap WSM
+				FROM DeliveryBackOffice.dbo.WorkflowStatusMap WSM WITH (NOLOCK)
 				WHERE WSM.WorkflowId = @WorkflowID
 				AND WSM.StatusOrderId = S.ID
 			);

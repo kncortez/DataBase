@@ -22,7 +22,7 @@ BEGIN
 
 	SET @StatusContainerCreated = (
 			SELECT IdCatStatus
-			FROM CatShipContainerStatus WITH (NOLOCK)
+			FROM DeliveryBackOffice.dbo.CatShipContainerStatus WITH (NOLOCK)
 			WHERE [Name] = 'Creado'
 			);
 
@@ -37,8 +37,8 @@ BEGIN
 				                      ,DOP.GuideNumber DESC
 			                         ) AS RowNum
 		          ,DO.DateCreated
-	        FROM DeliveryOrder DO WITH (NOLOCK)
-	             INNER JOIN DeliveryOrderPiece DOP WITH(NOLOCK)
+	        FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+	             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
 				 ON DO.Guide_Serie = DOP.GuideSerie
 	                AND DO.Guide_Number = DOP.GuideNumber
 	       WHERE DO.Ticket_Number IN

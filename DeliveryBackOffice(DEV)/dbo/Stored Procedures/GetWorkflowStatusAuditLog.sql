@@ -24,11 +24,13 @@ BEGIN
 	INNER JOIN DeliveryBackOffice.dbo.Workflow W WITH (NOLOCK)
 		ON W.WorkflowId = L.WorkflowId
 	INNER JOIN DeliveryBackOffice.dbo.TokenLog TL WITH (NOLOCK)
-		ON TL.TknIdToken = L.TokenCreated --AND TL.TknRowStatus = 1
+		ON TL.TknIdToken = L.TokenCreated
 	INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH (NOLOCK)
-		ON RU.UsrIdUser = TL.TknIdUser AND RU.UsrRowStatus = 1
+		ON RU.UsrIdUser = TL.TknIdUser
 	INNER JOIN DeliveryBackOffice.dbo.InternalUser IU WITH (NOLOCK)
-		ON IU.RegisterUserID = RU.UsrIdUser AND IU.RowStatus = 1
+		ON IU.RegisterUserID = RU.UsrIdUser
 	WHERE W.WorkflowId = @WorkflowId
+	AND RU.UsrRowStatus = 1
+	AND IU.RowStatus = 1
 	ORDER BY L.DateCreated ASC;
 END;
