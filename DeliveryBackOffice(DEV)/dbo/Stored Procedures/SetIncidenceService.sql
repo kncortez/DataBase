@@ -97,9 +97,34 @@ BEGIN
 																	,null
 																	,null
 																	FROM @TblIncidenceLink li
+
+
+																	------- CODE SNIPPET ONLY FOR PICKUP INCIDENT MICROSERVICE
+																	DECLARE @CourierID INT;
+																	DECLARE @PATH NVARCHAR (500);
+																	DECLARE @HubID INT;
+																	DECLARE @CountryID VARCHAR (2);
+																	DECLARE @INCIDENT_SERVICE_STATUS_ID INT = 4;
+
+																	SELECT @PATH = PathIncidence FROM @TblIncidenceLink;
+
+																	SELECT TOP 1 @CourierID = idCourierman
+																	FROM DeliveryBackOffice.dbo.LogTokenPOD WITH(NOLOCK) 
+																	WHERE LogTokenPOD = @Token
+																	AND RowStatus = 1
+																	ORDER BY DateCreated desc
+
+																	SELECT @HubID = SP.IdHubLogistics, @CountryID = H.IdCountry
+																	FROM DeliveryBackOffice.dbo.ServiceManagement SM WITH(NOLOCK)
+																	INNER JOIN DeliveryBackOffice.dbo.SchedulePickup SP WITH(NOLOCK)
+																		ON SP.SchedulePickupId = SM.IdSchedulePickup
+																	INNER JOIN DeliveryBackOffice.dbo.HubLogistics H WITH(NOLOCK)
+																		ON H.IdHubLogistic = SP.IdHubLogistics
+																	WHERE SM.IdServiceManagement = @ServiceManagementId
+
+																	EXEC dbo.SaveServiceIncident @ServiceManagementId, @CourierID, @INCIDENT_SERVICE_STATUS_ID, @IncidenceTypeId, @DescriptionIncidence, @CountryID, @HubID, @Latitude, @Longitude, @PATH, @Token;
+																	-------
 																	
-				
-				
 				
 																	---------------------------------------------- Actualiza el Status del Pickup  -------------------------------------------------------------------------
 																

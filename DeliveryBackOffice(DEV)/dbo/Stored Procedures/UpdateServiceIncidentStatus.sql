@@ -68,6 +68,10 @@ BEGIN
                     IncidentStatusId = @InProgressStatusID 
                     AND CurrentAgentId = @QualityControlAgentId
                 )
+				OR (    --10 min window to work on that incident for any agent 
+                    IncidentStatusId = @InProgressStatusID 
+                    AND DATEADD(MINUTE, 10, AssignedAt) < GETDATE()
+                )
             );
 
         -- Diagnose why nothing was updated
@@ -91,11 +95,11 @@ BEGIN
         UPDATE DeliveryBackOffice.dbo.ServiceIncident
         SET 
             IncidentStatusId = @ResolvedStatusID,
+			CurrentAgentId = @QualityControlAgentId,
             CompletedAt = GETDATE()
         WHERE ServiceIncidentId = @ServiceIncidentId
         AND RowStatus = 1
-        AND IncidentStatusId = @InProgressStatusID
-        AND CurrentAgentId = @QualityControlAgentId;
+        AND IncidentStatusId = @InProgressStatusID;
 
         SET @StatusCode = @@ROWCOUNT;
     END
