@@ -26,7 +26,6 @@
         4 = Envíos COD Crédito  (ExcludePriceShippingCOD = 1, IsLastMileReturn = 0)
         5 = Intentos de entrega (IsLastMileReturn = 1)
 */
-
 CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailDeliveryCorp]
 (
  @LstVisitPointClient NVARCHAR(MAX) = '',
@@ -89,7 +88,7 @@ BEGIN
                INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vst WITH(NOLOCK)
                        ON do.Sender_ID = vst.CodeOfReference
                INNER JOIN DeliveryBackOffice.dbo.Customer cus WITH(NOLOCK)
-                       ON vst.IdCustomer = cus.IdCustomer
+                       ON vst.CustomerID = cus.IdCustomer
                LEFT JOIN dbo.invoiceDetail id WITH(NOLOCK)
                       ON id.dti_fk_orderSerie = do.Guide_Serie
                      AND id.dti_fk_orderNumber = do.Guide_Number
