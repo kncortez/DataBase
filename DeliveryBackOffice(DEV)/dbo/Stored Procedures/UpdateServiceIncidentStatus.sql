@@ -46,7 +46,7 @@ BEGIN
 			@CurrentStatusId  = IncidentStatusId,
 			@CurrentAgentId   = CurrentAgentId,
 			@CurrentRowStatus = RowStatus
-		FROM DeliveryBackOffice.dbo.ServiceIncident
+		FROM DeliveryBackOffice.dbo.ServiceIncident WITH (NOLOCK)
 		WHERE ServiceIncidentId = @ServiceIncidentId;
         
         UPDATE DeliveryBackOffice.dbo.ServiceIncident
