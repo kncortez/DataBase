@@ -5,10 +5,6 @@ PROPÓSITO: Cambio de contraseña para usuarios corporativos.
 AUTOR:     IRVIN GONZALEZ
 HISTORIA:  FDAPI-5272
 FECHA:     2026-01-09
-============================================
-=== CHANGELOG ============================
-2026-01-09 | Historia: FDAPI-5272 | Autor: IRVIN GONZALEZ |
-
 =========================================== */
 
 CREATE PROCEDURE dbo.Support_ChangePasswordCorporate
@@ -84,7 +80,7 @@ BEGIN
         SET 
             UsrLastPassword = @Newpassword,
             UsrTokenUpdated = @TokenUpdate,
-            DateUpdated     = GETDATE()
+            UsrDateUpdated  = GETDATE()
         WHERE UsrIdUser = @RegisterUserId;
 
         -- Resultado exitoso
@@ -108,13 +104,3 @@ BEGIN
 END
 GO
 
-/*
-================================================================================
-EJEMPLO DE EJECUCIÓN
-================================================================================
-EXEC dbo.Support_ChangePasswordCorporate 
-     @Newpassword     = N'IZwHWBhJG1G0I+VSazxyNw==',
-     @RegisterUserId  = 14932,
-     @TokenUpdate     = N'SYS-IGONZALEZ';
-================================================================================
-*/
