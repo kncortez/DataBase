@@ -29,8 +29,8 @@ BEGIN
 		);
 
 		INSERT INTO @StatusIDs (ID)
-		SELECT DISTINCT CAST(value AS INT)
-		FROM STRING_SPLIT(@StatusOrderIdList, ',');
+		SELECT DISTINCT CAST(Item AS INT)
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@StatusOrderIdList, ',');
 
 		UPDATE WSM
 		SET 
