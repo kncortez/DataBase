@@ -43,7 +43,7 @@ BEGIN
         IF EXISTS (
             SELECT P.IdSettlement
             FROM @Poblados P
-            LEFT JOIN [DeliveryBackOffice].[dbo].DumpServiceCoverage DSC
+            LEFT JOIN [DeliveryBackOffice].[dbo].DumpServiceCoverage DSC WITH (NOLOCK)
                    ON DSC.IdSettlement = P.IdSettlement
             WHERE DSC.IdSettlement IS NULL
         )
@@ -53,7 +53,7 @@ BEGIN
             SELECT @IdsInvalidos = STUFF((
                 SELECT ', ' + CAST(P.IdSettlement AS NVARCHAR)
                 FROM @Poblados P
-                LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage DSC
+                LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage DSC WITH (NOLOCK)
                     ON DSC.IdSettlement = P.IdSettlement
                 WHERE DSC.IdSettlement IS NULL
                 FOR XML PATH(''), TYPE
