@@ -22,16 +22,16 @@ BEGIN
 	DECLARE @Today DATE = CAST(GETDATE() AS DATE);
 
 	INSERT INTO @Countries
-	SELECT LTRIM(RTRIM(value))
-	FROM STRING_SPLIT(@CountryList, ',');
+	SELECT LTRIM(RTRIM(Item))
+	FROM DeliveryBackOffice.dbo.SplitUnlimited(@CountryList, ',');
 
 	INSERT INTO @Hubs
-	SELECT LTRIM(RTRIM(value))
-	FROM STRING_SPLIT(@HubList, ',');
-	
+	SELECT LTRIM(RTRIM(Item))
+	FROM DeliveryBackOffice.dbo.SplitUnlimited(@HubList, ',');
+
 	INSERT INTO @IncidentTypes
-	SELECT LTRIM(RTRIM(value))
-	FROM STRING_SPLIT(@IncidentTypeList, ',');
+	SELECT LTRIM(RTRIM(Item))
+	FROM DeliveryBackOffice.dbo.SplitUnlimited(@IncidentTypeList, ',');
 	
 SELECT
 	SI.ServiceIncidentId,
