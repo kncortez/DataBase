@@ -1,4 +1,11 @@
-﻿/* =================================================
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[spws_set_route_settlement_status]    Script Date: 10/04/2026 10:26:22 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+/* =================================================
    SP:        [dbo].[spws_set_route_settlement_status]
    Propósito: <Cambia de estado de recolectado a ingreso a instalaciones>
    Autor:     <Hugo, Gomez>
@@ -9,16 +16,17 @@
 
 --  2024-06-11 | Historia/épica: ---         | Autor: Daniel, Ramirez |
 --  2025-11-20 | Historia/épica: FDAPI-4736  | Autor: Cristian, Suazo |
+--  2026-04-10 | Historia/epica: FDAPI-5556  | Autor: Eduardo Gonzalez|
 
 =========================================== */
-CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
+ALTER PROCEDURE [dbo].[spws_set_route_settlement_status]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
     @GuidePiece SMALLINT,
     @Token NVARCHAR(100),
-    @Route VARCHAR(100),
+    @Route VARCHAR(100)=NULL,
     @CountryId VARCHAR(2) = 'GT',
-	@StationId INT = NULL
+    @StationId INT = NULL
 AS
 BEGIN
 
@@ -119,13 +127,25 @@ BEGIN
 
         DECLARE @idTransactionType INT = 1; -- TransactionType -> 'Liquidación de Recolección'
 
-        DECLARE @IdRoute INT =
-                (
-                    SELECT IdRoute
-                    FROM DeliveryBackOffice.dbo.CatRoute WITH (NOLOCK)
-                    WHERE CodeRoute = @Route
-                    AND RowStatus = 1
-                );
+        DECLARE @IdRoute INT = 0
+
+        IF @Route IS NULL BEGIN
+            SELECT TOP 1
+            @IdRoute = cr.IdRoute,
+            @Route = cr.CodeRoute
+            FROM dbo.DeliveryOrderPaymentDetail  AS dop WITH (NOLOCK)
+            INNER JOIN dbo.ServiceManagement AS sm WITH (NOLOCK) ON sm.IdSchedulePickup = dop.IdHeaderRecolection
+            INNER JOIN dbo.RouteAssigment AS rs WITH (NOLOCK) ON rs.IdRouteAssigment = sm.IdPuRouteAssigment
+            INNER JOIN dbo.CatRoute AS cr WITH (NOLOCK) ON cr.IdRoute = rs.IdRoute
+            WHERE dop.GuideSerie = @GuideSerie AND dop.GuideNumber = @GuideNumber
+        END
+        ELSE BEGIN
+            SELECT TOP 1 
+            @IdRoute = IdRoute
+            FROM DeliveryBackOffice.dbo.CatRoute WITH (NOLOCK)
+            WHERE CodeRoute = @Route
+            AND RowStatus = 1
+        END
    
 	 
         INSERT INTO DeliveryBackOffice.dbo.TransactionalBackbone
