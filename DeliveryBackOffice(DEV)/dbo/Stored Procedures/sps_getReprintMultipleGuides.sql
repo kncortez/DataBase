@@ -1,26 +1,18 @@
-﻿-- =============================================
--- Author:		<Alberto Ixchop>
--- Create date: <2022-10-27>
--- Description:	<Genera los datos necesarios para poder realizar una reimpresión de guía>
--- =============================================
--- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2022-12-20>
--- Description:	<Agregar Campos de Piezas Frías y piezas Secas>
--- =============================================
--- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2024-10-23>
--- Description:	<Integración nuevo formato 4X4>
--- =============================================
--- Modified:    <Oscar, Rodriguez>
--- Create date: <2025-04-21>
--- Description: <Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion>
--- =============================================
--- Modified:    <Mario, Herrarte>
--- Create date: <2026-04-08>
--- Description: <Se valida el estado Retenido para el campo priority>
--- =============================================
+﻿/* =================================================
+   SP:        sps_getReprintMultipleGuides
+   Propósito: Se Crea SP para generar los datos necesarios para poder realizar una reimpresión de guía
+   Autor:     Alberto Ixchop
+   Historia:  ---
+   Fecha:     2022-10-27
+
+=== CHANGELOG ============================
+
+2022-12-20 | Historia/épica: ---         | Autor: Edelman Vásquez | Agregar Campos de Piezas Frías y piezas Secas
+2024-10-23 | Historia/épica: ---         | Autor: Edelman Vásquez | Integración nuevo formato 4X4
+2025-04-21 | Historia/épica: ---         | Autor: Oscar Rodriguez | Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion
+2026-04-08 | Historia/épica: FDAPI-6026  | Autor: Mario Herrarte  | Se valida el estado Retenido para el campo priority
+
+=========================================== */
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY,
@@ -591,8 +583,8 @@ BEGIN
                 ON vpc.CodeOfReference = do.OriginSenderId
             LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc2 WITH (NOLOCK)
                 ON vpc2.CodeOfReference = do.OriginSenderId
-        WHERE Guide_Number = dev.Guide_Number
-              AND Guide_Serie = dev.Guide_Serie
+        WHERE Guide_Serie = dev.Guide_Serie
+              AND Guide_Number = dev.Guide_Number 
     ) AUX2
         OUTER APPLY
     (

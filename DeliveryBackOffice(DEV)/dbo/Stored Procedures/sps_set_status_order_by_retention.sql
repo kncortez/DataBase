@@ -26,13 +26,13 @@ BEGIN
     IF (EXISTS
     (
         SELECT 1
-        FROM dbo.DeliveryOrder WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH (NOLOCK)
         WHERE Guide_Serie = @Guide_Serie
               AND Guide_Number = @Guide_Number
     ))
     BEGIN
         SELECT @IsStatusTerminal = ISNULL(
-                                      (SELECT TOP 1 DO.StatusOrderId From [dbo].[DeliveryOrder] DO WITH(NOLOCK)       
+                                      (SELECT TOP 1 DO.StatusOrderId From [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)       
                                       INNER JOIN [dbo].[StatusOrder] SO  WITH(NOLOCK)
 							            ON DO.StatusOrderId = SO.StatusOrderId
 							          WHERE SO.CatCheckpointTypeId = 3 
@@ -41,13 +41,13 @@ BEGIN
 							            AND DO.Guide_Number =@Guide_Number 
 							       ),0);
 
-        SELECT @BelongCountry = CASE WHEN ReceiverCountryId = @IdCountry THEN 1 ELSE 0 END	
-	                            FROM DeliveryOrder WITH (NOLOCK)
+        SELECT @BelongCountry = CASE WHEN SenderCountryId = @IdCountry THEN 1 ELSE 0 END	
+	                            FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH (NOLOCK)
 	                            WHERE Guide_Serie = @Guide_Serie 
                                     AND Guide_Number = @Guide_Number;
         
        SELECT @IsLastMileReturn = ISNULL(
-                                      (SELECT TOP 1 DO.StatusOrderId From [dbo].[DeliveryOrder] DO WITH(NOLOCK)       
+                                      (SELECT TOP 1 DO.StatusOrderId From [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)       
 							          WHERE DO.Guide_Serie = @Guide_Serie 
 							            AND DO.Guide_Number = @Guide_Number 
                                         AND DO.IsLastMileReturn = 1
@@ -63,7 +63,7 @@ BEGIN
                     IF @IsLastMileReturn != 0
                     BEGIN
 
-                        UPDATE DeliveryOrder
+                        UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
                         SET StatusOrderId = 28
                         WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number;
 
@@ -71,7 +71,7 @@ BEGIN
 
                         IF @ValidateOperation > 0
                         BEGIN
-                            INSERT INTO DeliveryOrderDetail
+                            INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
                                 (
                                      Guide_Serie
                                     ,Guide_Number
