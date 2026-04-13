@@ -26,9 +26,8 @@ BEGIN
                        [KOVPC].[IdKindOfVPClient]
                 FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC WITH (NOLOCK)
                 WHERE
-                    --[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
                     [KOVPC].[KindOfVPName] = 'Concesionario' --COLLATE Latin1_General_CI_AI
-                    AND ISNULL(IdCountry, 'GT') = @CountryThatConsults
+                    AND IdCountry = @CountryThatConsults
             );
     DECLARE @ExpressVisitPointTypeId INT =
             (
@@ -36,9 +35,8 @@ BEGIN
                        [KOVPC].[IdKindOfVPClient]
                 FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC WITH (NOLOCK)
                 WHERE
-                    --[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
                     [KOVPC].[KindOfVPName] = 'Express Center' -- COLLATE Latin1_General_CI_AI 
-                    AND ISNULL(IdCountry, 'GT') = @CountryThatConsults
+                    AND IdCountry = @CountryThatConsults
             );
     DECLARE @IndividualWebSys INT =
             (
@@ -97,8 +95,8 @@ BEGIN
          , ISNULL(SUM(Amount), 0)
     FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
         INNER JOIN @GUIDESLIST                         GL
-            ON DOP.GuideNumber = GL.Guide_Number
-               AND DOP.GuideSerie = GL.Guide_Serie
+            ON DOP.GuideSerie = GL.Guide_Serie
+            AND DOP.GuideNumber = GL.Guide_Number
     GROUP BY GL.Guide_Serie
            , GL.Guide_Number;
 
@@ -119,7 +117,7 @@ BEGIN
                 SELECT IdBusinessSegment
                 FROM [DeliveryBackOffice].[dbo].[CatBusinessSegment]
                 WHERE BusinessSegmentName = 'B2B'
-                      AND ISNULL(IdCountry, 'GT') = @CountryThatConsults
+                      AND IdCountry = @CountryThatConsults
             );
 
 
@@ -158,7 +156,6 @@ BEGIN
         LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD     cc WITH (NOLOCK)
             ON cc.IdCatCurrencyCOD = ct.ShippingCurrency
         INNER JOIN @GUIDESLIST                              GL
-            -- ON ProductNumber=CONCAT(GL.Guide_Serie, GL.Guide_Number)
             ON ct.GuideSerie = GL.Guide_Serie
                AND ct.GuideNumber = GL.Guide_Number;
 
