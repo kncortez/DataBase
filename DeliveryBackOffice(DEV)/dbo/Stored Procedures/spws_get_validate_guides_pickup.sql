@@ -1,44 +1,26 @@
-﻿
--- =============================================
--- Author:		<César,Aquino>
--- Create date: <2021-02-15>
--- Description:	<Verifica si existen guias
---				 si estan en estado 15 (generado) o 1(solicitado)
---               Si no estan asignadas a otra recolección (IdPickup) >
--- =============================================
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2023-03-10>
--- Description:	<Al procesar guías en proceso de recolección desde la CourierApp, si durante el proceso de verificación de montos se detecta una guía en estado terminal, debe impedir el proceso indicando las guías y los estados de estas.>
--- =============================================
--- =============================================  
--- Mofified:    <Brandon, Pedroza>  
--- Create date: <2025-01-13>  
--- Description: <Contenerizacion guias - se agrega parametro para buscar guias de un contenedor asociado o referencia>  
--- =============================================  
+﻿/* =================================================
+   SP:        [dbo].[spws_get_validate_guides_pickup]
+   Propósito: <Verifica si existen guias si estan en estado 15 (generado) o 1(solicitado) Si no estan asignadas a otra recolección (IdPickup) >
+   Autor:     Cesar Aquino
+   Historia:  <>
+   Fecha:     <2021-02-15>
+   === CHANGELOG ============================
+2023-03-10 | Historia/épica: <> | Autor: Edelman Vasquez | <Al procesar guías en proceso de recolección desde la CourierApp, si durante el proceso de verificación de montos se detecta una guía en estado terminal, debe impedir el proceso indicando las guías y los estados de estas.>
+2025-01-13 | Historia/épica: <> | Autor: Brandon Pedroza | <Contenerizacion guias - se agrega parametro para buscar guias de un contenedor asociado o referencia>  
+2026-02-17 | Historia/épica: <FDAPI-5552> | Autor: Erick Hernandez | 
+=========================================== */
 CREATE PROCEDURE [dbo].[spws_get_validate_guides_pickup]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD138515,FD138513,FD13852,FD138514,FD138545,FD135539',
     @IdPickup BIGINT = 120,
     @Token NVARCHAR(50),
-    @ReferencesGuide TblReferencesList READONLY,  
-	@ContainerReferences TblContainerList READONLY,  
-	@IdCountry NVARCHAR(2)= 'GT' 
+    @ReferencesGuide TblReferencesList READONLY,
+    @ContainerReferences TblContainerList READONLY,
+    @IdCountry NVARCHAR(2) = 'GT'
+WITH RECOMPILE
 AS
 BEGIN
-
     SET NOCOUNT ON;
-	
-	--DECLARE @CountryFind TABLE (
-	--	IdCountry varchar(2)
-	--);
-	--INSERT INTO @CountryFind
-	--exec GetCountryOfPickupService @IdPickup,@Token
-	--DECLARE @IDCOUNTRYSERVICE varchar(2) =(SELECT IdCountry FROM @CountryFind)
-	
-	
-
-
     BEGIN TRY
 
         IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
@@ -46,89 +28,75 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#ErrorGuides', 'U') IS NOT NULL
             DROP TABLE #ErrorGuides;
 
-        DECLARE @StatusContainerPickUp INT;
-
-	    SET @StatusContainerPickUp = (SELECT IdCatStatus
-									    FROM CatShipContainerStatus WITH(NOLOCK)
-									    WHERE [Name]= 'Creado');
-
-			 CREATE TABLE #listGuides
-                (
-                    ItemSerie NVARCHAR(2),
-                    ItemNumber INT,
-                    ItemPiece INT,
-					charinde NVARCHAR(10),
-					Item INT
-                );
-            -- BUSCAR GUIAS POR REFERENCIA Y CONTENEDOR  
-        WITH CTE_Ranked AS (
-		        SELECT  DOP.GuideSerie, 
-			            DOP.GuideNumber, 
-			            DOP.NoPiece,
-			            DO.Ticket_Number,
-			            ROW_NUMBER() OVER (PARTITION BY DO.Ticket_Number ORDER BY DOP.GuideSerie DESC, DOP.GuideNumber DESC) AS RowNum,
-			            DO.DateCreated
-		        FROM DeliveryOrder DO WITH (NOLOCK)
-		        INNER JOIN DeliveryOrderPiece DOP WITH(NOLOCK)
-			        ON DO.Guide_Serie = DOP.GuideSerie
-			        AND DO.Guide_Number = DOP.GuideNumber
-		        WHERE DO.Ticket_Number IN (SELECT ReferenceGuide FROM @ReferencesGuide WHERE ReferenceGuide NOT IN ('','0'))
-			        AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry
-	    )
-		INSERT INTO #listGuides
-		(
-			ItemSerie,
-			ItemNumber,
-			ItemPiece,
-			charinde,
-			Item
-		)
-       SELECT   GuideSerie, 
-		        GuideNumber, 
-		        NoPiece,
-		        '',
-		        1
-	    FROM CTE_Ranked
-	    WHERE RowNum = 1
-	    UNION
-	    SELECT  DOP.GuideSerie, 
-			    DOP.GuideNumber, 
-			    DOP.NoPiece, 
-			    '',
-			    1
-	    FROM ShippingContainer CT WITH (NOLOCK)
-	    INNER JOIN ShippingContainerDetail CTD WITH (NOLOCK)
-		    ON CT.IdContainer = CTD.IdContainer
-	    INNER JOIN DeliveryOrderPiece DOP WITH (NOLOCK)
-		    ON CTD.GuideSerie = DOP.GuideSerie
-		    AND CTD.GuideNumber = DOP.GuideNumber
-	    WHERE CT.IdStatusContainer = @StatusContainerPickUp
-		    AND CTD.RowStatus = 1
-		    AND CT.ReferenceContainer IN (SELECT ContainerReference FROM  @ContainerReferences)
-	    UNION
+        CREATE TABLE #listGuides
+        (
+            ItemSerie NVARCHAR(2),
+            ItemNumber INT,
+            ItemPiece INT,
+            charinde NVARCHAR(10),
+            Item INT
+        );
+        -- BUSCAR GUIAS POR REFERENCIA Y CONTENEDOR  
+        WITH CTE_Ranked
+        AS (SELECT DO.Guide_Serie AS GuideSerie,
+                   DO.Guide_Number AS GuideNumber,
+                   DOP.NoPiece,
+                   DO.Ticket_Number,
+                   ROW_NUMBER() OVER (PARTITION BY DO.Ticket_Number ORDER BY DO.Guide_Number DESC) AS RowNum
+            FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+                JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH (NOLOCK)
+                    ON DO.Guide_Serie = DOP.GuideSerie
+                       AND DO.Guide_Number = DOP.GuideNumber
+            WHERE DO.Ticket_Number IN
+                  (
+                      SELECT ReferenceGuide FROM @ReferencesGuide
+                  )
+                  AND DO.SenderCountryId = @IdCountry)
+        INSERT INTO #listGuides
+        (
+            ItemSerie,
+            ItemNumber,
+            ItemPiece,
+            charinde,
+            Item
+        )
+        SELECT GuideSerie,
+               GuideNumber,
+               NoPiece,
+               '',
+               1
+        FROM CTE_Ranked
+        WHERE RowNum = 1       
+        UNION
         SELECT SUBSTRING(Item, 1, 2) ItemSerie,
                SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
                ISNULL(   (CASE
-										WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))) > 1 THEN
-											1
-										ELSE
-											SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))
-									END
-									),
-									0
-								) ItemPiece,
+                              WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))) > 1 THEN
+                                  1
+                              ELSE
+                                  SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))
+                          END
+                         ),
+                         0
+                     ) ItemPiece,
                CHARINDEX('-', Item) charinde,
                LEN(Item) len
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
 
-		CREATE NONCLUSTERED INDEX IX_listGuides_Pickup
-            ON #listGuides (ItemSerie, ItemNumber);
-
-	
-        -- select * from #listGuides
+        IF
+        (
+            SELECT COUNT(*)FROM #listGuides
+        ) > 2000 -- threshold recomendado por que  no se "amoritza" la creación del indice
+        BEGIN
+            CREATE NONCLUSTERED INDEX IX_listGuides_Pickup
+            ON #listGuides (
+                               ItemSerie,
+                               ItemNumber
+                           );
+        END;
 
         --Se inserta log de cambio de recolección a un servicio
-        INSERT INTO ServicePickupLog
+        INSERT INTO DeliveryBackOffice.dbo.ServicePickupLog
         (
             GuideSerie,
             GuideNumber,
@@ -151,83 +119,79 @@ BEGIN
                NULL,
                NULL
         FROM #listGuides g
-            INNER JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                 ON dopd.GuideSerie = g.ItemSerie
                    AND dopd.GuideNumber = g.ItemNumber
-            INNER JOIN DeliveryOrder do WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                 ON do.Guide_Serie = g.ItemSerie
                    AND do.Guide_Number = g.ItemNumber
         WHERE COALESCE(dopd.IdHeaderRecolection, 0) <> @IdPickup
-              AND do.StatusOrderId IN ( 16, 15, 1,21,20, 10 );
+              AND do.StatusOrderId IN ( 16, 15, 1, 21, 20, 10, 50);
 
         --Se asignan los servicios a la nueva recolección
         UPDATE dopd
         SET dopd.IdHeaderRecolection = @IdPickup
-        FROM DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
             INNER JOIN #listGuides g
                 ON g.ItemSerie = dopd.GuideSerie
                    AND g.ItemNumber = dopd.GuideNumber
-            INNER JOIN DeliveryOrder do WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                 ON do.Guide_Serie = g.ItemSerie
                    AND do.Guide_Number = g.ItemNumber
         WHERE COALESCE(dopd.IdHeaderRecolection, 0) <> @IdPickup
-              AND do.StatusOrderId IN ( 16, 15, 1,21,20, 10 );
+              AND do.StatusOrderId IN ( 16, 15, 1, 21, 20, 10, 50);
 
         SELECT DISTINCT
                lst.ItemSerie,
                lst.ItemNumber,
                ISNULL(dr.Guide_Number, 0) exist,
                IIF(ISNULL(pyt.IdHeaderRecolection, 0) = @IdPickup, 1, IIF(ISNULL(pyt.IdHeaderRecolection, 0) = 0, 1, 0)) pik,
-               IIF(dr.StatusOrderId IN ( 16, 15, 1,21,20, 10 ), 1, 0) status,
+               IIF(dr.StatusOrderId IN ( 16, 15, 1, 21, 20, 10, 50), 1, 0) status,
                st.OrderDescription,
-			   --IIF(DR.SenderCountryId=@IDCOUNTRYSERVICE,1,0) samecountry,
+               --IIF(DR.SenderCountryId=@IDCOUNTRYSERVICE,1,0) samecountry,
                1 samecountry,
-			   DR.SenderCountryId guidecountry
-			   
+               dr.SenderCountryId guidecountry
+
         --, pyt.IdHeaderRecolection
         INTO #ErrorGuides
         FROM #listGuides lst
-            LEFT JOIN dbo.DeliveryOrder dr WITH(NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder dr WITH (NOLOCK)
                 ON dr.Guide_Serie = lst.ItemSerie
                    AND dr.Guide_Number = lst.ItemNumber
-            LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH(NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail pyt WITH (NOLOCK)
                 ON pyt.GuideSerie = dr.Guide_Serie
                    AND pyt.GuideNumber = dr.Guide_Number
-            LEFT JOIN dbo.StatusOrder st WITH(NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.StatusOrder st WITH (NOLOCK)
                 ON st.StatusOrderId = dr.StatusOrderId
-				WHERE
-	      dr.StatusOrderId IN ( SELECT
-									SO.[StatusOrderId]
-								FROM
-									[dbo].[StatusOrder] SO  WITH(NOLOCK)
-								WHERE
-									[CatCheckpointTypeId] = 3 And SO.RowStatus =1
-							) 
-							--or DR.SenderCountryId <>@IDCOUNTRYSERVICE;
+            INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
+                ON so.StatusOrderId = dr.StatusOrderId
+        WHERE so.CatCheckpointTypeId = 3
+        AND so.RowStatus = 1;
+      
+        CREATE NONCLUSTERED INDEX IX_ErrorGuides_Exist ON #ErrorGuides (exist);
 
-		CREATE NONCLUSTERED INDEX IX_ErrorGuides_Exist
-            ON #ErrorGuides (exist);
-
-		CREATE NONCLUSTERED INDEX IX_ErrorGuides_status
-            ON #ErrorGuides (status);
-
-        --select * from #ErrorGuides
+        CREATE NONCLUSTERED INDEX IX_ErrorGuides_status ON #ErrorGuides (status);
 
         SELECT CONCAT(er.ItemSerie, er.ItemNumber) Guide,
-			(
-			CASE 
-				WHEN er.exist = 0 THEN
-					'Servicio no existe'
-				--WHEN er.samecountry = 0 THEN
-					--'El servicio de recolección pertenece al pais '+@IDCOUNTRYSERVICE+', no coincide con el país de origen de la guía ('+er.guidecountry+').'
-				ELSE
-					er.OrderDescription
-				END
-			) Mensaje
-               --IIF(er.exist = 0, 'Servicio no existe', CONCAT('Servicio ', er.OrderDescription)) Mensaje
+               (CASE
+                    WHEN er.exist = 0 THEN
+                        'Servicio no existe'
+                    ELSE
+                        er.OrderDescription
+                END
+               ) Mensaje
+
         FROM #ErrorGuides er
-        WHERE (er.exist = 0
-              OR er.status = 0 OR ER.samecountry=0); --  or er.pik =0  Se elimina esta validacione por la reasignación
+        WHERE (
+                  er.exist = 0
+                  OR er.status = 0
+                  OR er.samecountry = 0
+              ); --  or er.pik =0  Se elimina esta validacione por la reasignación
+
+        IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
+            DROP TABLE #listGuides;
+        IF OBJECT_ID('tempdb.dbo.#ErrorGuides', 'U') IS NOT NULL
+            DROP TABLE #ErrorGuides;
 
     END TRY
     BEGIN CATCH

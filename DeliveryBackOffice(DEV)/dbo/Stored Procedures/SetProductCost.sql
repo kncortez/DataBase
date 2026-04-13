@@ -73,6 +73,30 @@ BEGIN
 			,@GuideNumber = LG.ItemNumber
 	FROM
 		@ListGuides LG
+    
+    DECLARE  @CurrencySender INT,
+    @ExchangeSender DECIMAL(12,6),
+    @SenderCountryId NVARCHAR(4);
+
+    SELECT TOP 1 
+        @CurrencySender = C.IdCatCurrencyCOD
+        ,@SenderCountryId = od.SenderCountryId
+    FROM DeliveryOrder od WITH(NOLOCK)
+    INNER JOIN DeliveryCurrency DC WITH(NOLOCK)
+     ON dc.Currency_IdCountry = od.SenderCountryId
+    INNER JOIN CatCurrencyCOD C WITH(NOLOCK)
+    ON C.IdCatCurrencyCOD = DC.IdCurrencyCOD
+    WHERE od.Guide_Serie  = @GuideSerie
+     AND od.Guide_Number = @GuideNumber
+     AND DC.Currency_Status = 1 
+     AND DC.DefaultPerCountry = 1
+    
+    SELECT TOP 1 
+        @ExchangeSender = CER.ExchangeRate
+    FROM DeliveryBackOffice.dbo.CurrencyExchangeRates CER WITH(NOLOCK)
+    WHERE CER.IdCountry = @SenderCountryId
+      AND cer.SourceCurrency = @CurrencySender
+    ORDER BY cer.ExchangeDate DESC
 		
     DECLARE @jsonResult NVARCHAR(MAX);
     INSERT INTO @TblExists
@@ -279,6 +303,8 @@ BEGIN
                         TotalAmount,
                         PaymentDate,
                         IdModule,
+                        ShippingCurrency,
+                        ShippingExchangeRate,
                         RowStatus,
                         TokenCreated,
                         DateCreated,
@@ -290,6 +316,7 @@ BEGIN
                     )
                     VALUES
                     (   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
+                        @CurrencySender, @ExchangeSender,
                         1, -- guardar los registros como activos 
                         @Token, GETDATE(), NULL, NULL, @ReturnAmount, @GuideSerie, @GuideNumber);
 
@@ -598,6 +625,8 @@ BEGIN
                         TotalAmount,
                         PaymentDate,
                         IdModule,
+                        ShippingCurrency,
+                        ShippingExchangeRate,                       
                         RowStatus,
                         TokenCreated,
                         DateCreated,
@@ -608,6 +637,7 @@ BEGIN
                     )
                     VALUES
                     (   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
+                        @CurrencySender, @ExchangeSender,
                         1, -- guardar los registros como activos 
                         @Token, GETDATE(), NULL, NULL, @GuideSerie, @GuideNumber);
 
