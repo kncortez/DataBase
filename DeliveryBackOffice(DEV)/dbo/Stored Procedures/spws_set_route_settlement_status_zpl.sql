@@ -12,7 +12,6 @@ CREATE PROCEDURE [dbo].[spws_set_route_settlement_status_zpl]
     @TicketNumber NVARCHAR(80),
     @Token NVARCHAR(100),
     @Route VARCHAR(100)=NULL,
-    @CountryId VARCHAR(2) = 'GT',
 	@StationId INT = NULL
 AS
 BEGIN
@@ -25,10 +24,12 @@ BEGIN
     DECLARE @GuideSerie NVARCHAR(2),
             @GuideNumber INT;
     DECLARE @GuidePiece SMALLINT = 1;
+    DECLARE @CountryId VARCHAR(2);
 
     SELECT
         @GuideSerie = Guide_Serie,
-        @GuideNumber = Guide_Number
+        @GuideNumber = Guide_Number,
+        @CountryId = SenderCountryId 
         FROM dbo.DeliveryOrder with(nolock)
         WHERE Ticket_Number = @TicketNumber;
 
