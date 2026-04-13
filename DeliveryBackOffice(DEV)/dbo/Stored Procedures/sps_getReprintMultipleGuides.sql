@@ -14,7 +14,6 @@
 
 =========================================== */
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
-	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY,
 	@CountryThatConsults VARCHAR(2)= 'GT'
 AS
@@ -26,7 +25,7 @@ BEGIN
                        [KOVPC].[IdKindOfVPClient]
                 FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC WITH (NOLOCK)
                 WHERE
-                    [KOVPC].[KindOfVPName] = 'Concesionario' --COLLATE Latin1_General_CI_AI
+                    [KOVPC].[KindOfVPName] = 'Concesionario' 
                     AND IdCountry = @CountryThatConsults
             );
     DECLARE @ExpressVisitPointTypeId INT =
@@ -35,7 +34,7 @@ BEGIN
                        [KOVPC].[IdKindOfVPClient]
                 FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC WITH (NOLOCK)
                 WHERE
-                    [KOVPC].[KindOfVPName] = 'Express Center' -- COLLATE Latin1_General_CI_AI 
+                    [KOVPC].[KindOfVPName] = 'Express Center'  
                     AND IdCountry = @CountryThatConsults
             );
     DECLARE @IndividualWebSys INT =
@@ -44,8 +43,8 @@ BEGIN
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
                 WHERE
-                    --[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
-                    [CS].[SysNameSystem] = 'Hermes Web' -- COLLATE Latin1_General_CI_AI
+                    --[CS].[SysNameSystem] = 'Hermes Web'   
+                    [CS].[SysNameSystem] = 'Hermes Web' 
             );
     DECLARE @ExpressWebSys INT =
             (
@@ -53,8 +52,8 @@ BEGIN
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
                 WHERE
-                    --[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
-                    [CS].[SysNameSystem] = 'Hermes Web-ExpressCenter' --COLLATE Latin1_General_CI_AI 
+                    --[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'   
+                    [CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  
             );
     DECLARE @CorporateWebSys INT =
             (
@@ -62,8 +61,8 @@ BEGIN
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
                 WHERE
-                    --[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
-                    [CS].[SysNameSystem] = 'Hermes Web-Corporativo' -- COLLATE Latin1_General_CI_AI 
+                    --[CS].[SysNameSystem] = 'Hermes Web-Corporativo'   
+                    [CS].[SysNameSystem] = 'Hermes Web-Corporativo'  
             );
     DECLARE @ParserSys INT =
             (
@@ -71,8 +70,8 @@ BEGIN
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
                 WHERE
-                    --[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
-                    [CS].[SysNameSystem] = 'Parser' --COLLATE Latin1_General_CI_AI 
+                    --[CS].[SysNameSystem] = 'Parser'   
+                    [CS].[SysNameSystem] = 'Parser'  
             );
     DECLARE @TMPPICES TABLE
     (
@@ -688,8 +687,8 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[Township] Twn WITH (NOLOCK)
                 ON [Twn].[IdProvince] = [Prv].[IdProvince]
         WHERE
-            --[dev].[Sender_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
-            [dev].[Sender_Department] = [Prv].[ProvinceName] --COLLATE Latin1_General_CI_AI 
+            --[dev].[Sender_Department] = [Prv].[ProvinceName]   
+            [dev].[Sender_Department] = [Prv].[ProvinceName]  
             AND [Twn].[HeaderCode] = CONCAT([Prv].[LocalCode], '01')
     )                        AlterOrigin
         OUTER APPLY
@@ -700,8 +699,8 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[Township] Twn WITH (NOLOCK)
                 ON [Twn].[IdProvince] = [Prv].[IdProvince]
         WHERE
-            --[dev].[Receiver_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
-            [dev].[Receiver_Department] = [Prv].[ProvinceName] -- COLLATE Latin1_General_CI_AI 
+            --[dev].[Receiver_Department] = [Prv].[ProvinceName]   
+            [dev].[Receiver_Department] = [Prv].[ProvinceName]  
             AND [Twn].[HeaderCode] = CONCAT([Prv].[LocalCode], '01')
     ) AlterDestiny
         -- ADICIONES TSE
@@ -724,13 +723,4 @@ BEGIN
               AND [TSERPH].[RowStatus] = 1
     ) [TSEGuide];
 -- FIN ADICIONES
-
---WHERE dev.Guide_Number = @Guide_Number
-
-
-
-
-
-
-
 END;

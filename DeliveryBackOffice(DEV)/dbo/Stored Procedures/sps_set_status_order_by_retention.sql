@@ -33,7 +33,7 @@ BEGIN
     BEGIN
         SELECT @IsStatusTerminal = ISNULL(
                                       (SELECT TOP 1 DO.StatusOrderId From [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)       
-                                      INNER JOIN [dbo].[StatusOrder] SO  WITH(NOLOCK)
+                                      INNER JOIN [dbo].[StatusOrder] SO  
 							            ON DO.StatusOrderId = SO.StatusOrderId
 							          WHERE SO.CatCheckpointTypeId = 3 
                                         AND SO.RowStatus= 1 
