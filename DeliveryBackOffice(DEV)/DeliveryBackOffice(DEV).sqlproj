@@ -68,7 +68,7 @@
     <Folder Include="dbo\Sequences\" />
     <Folder Include="Security\" />
   </ItemGroup>
-  <ItemGroup>  
+  <ItemGroup>
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
     <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
@@ -1896,6 +1896,7 @@
     <Build Include="dbo\Stored Procedures\spg_get_RouteLastMile_1.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceRecolectCODAnticipated_1.sql" />
     <Build Include="dbo\Stored Procedures\GetVisitPointOfClient.sql" />
+    <Build Include="dbo\Stored Procedures\HermesDesktop_CorporateCustomer_Search_ByTermAndCountry.sql" />
     <Build Include="dbo\Stored Procedures\GetSettlementCODUnifiedRoute_1.sql" />
     <Build Include="dbo\Stored Procedures\GetResumeReportCODAnticipatedByCustomer_1.sql" />
     <Build Include="dbo\Stored Procedures\GetReportCODAnticipatedByCustomer_1.sql" />
