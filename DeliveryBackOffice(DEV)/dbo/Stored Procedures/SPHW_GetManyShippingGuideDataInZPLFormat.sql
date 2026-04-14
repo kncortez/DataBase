@@ -109,7 +109,7 @@ BEGIN
 				ELSE CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) 
 			 END 'WeightLB',
 
-			 CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
+			 CAST(ROUND(999,0) AS INT) AS 'WeightOf',
 
 			 DOP.Detail AS [Description],
 			 DO.IndicationsToSendDestination AS [Service_Ref1],
@@ -144,7 +144,8 @@ BEGIN
 			ELSE 'API' END [GuideOrigin],
 			CASE 
 				WHEN ISNULL(DO.IsLastMileReturn, 0) = 1 THEN ISNULL(DSC2.RouteCode,'') 
-					ELSE ISNULL(DSC.RouteCode,'') END AS 'Route_Code'
+					ELSE ISNULL(DSC.RouteCode,'')
+            END AS 'Route_Code'
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			INNER JOIN @Tickets T
 				ON DO.Ticket_Number = T.TicketNumber and DO.IdCustomer = T.IdCustomer
@@ -159,11 +160,11 @@ BEGIN
 			LEFT JOIN  [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK)
 			   ON RC.RbcIdRate= RH.RheId
 			INNER JOIN (
-				SELECT 
+				SELECT TOP 1
 					dop.GuideSerie,
 					dop.GuideNumber,
-					SUM(dop.PieceWeight) AS PieceWeight,
-					SUM(dop.PiecePhysicalWeight) AS PiecePhysicalWeight,
+					dop.PieceWeight AS PieceWeight,
+					dop.PiecePhysicalWeight AS PiecePhysicalWeight,
 					STRING_AGG(CAST(dop.Detail AS VARCHAR(MAX)), ', ') AS Detail
 				FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder dof WITH(NOLOCK)
@@ -174,7 +175,9 @@ BEGIN
 					AND dof.IdCustomer = t.IdCustomer
 				GROUP BY 
 					dop.GuideSerie,
-					dop.GuideNumber
+					dop.GuideNumber, 
+                    dop.PieceWeight,
+                    dop.PiecePhysicalWeight
 			) DOP
 			ON DO.Guide_Serie = DOP.GuideSerie
 			AND DO.Guide_Number = DOP.GuideNumber
