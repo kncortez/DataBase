@@ -1,9 +1,12 @@
-﻿
--- =============================================
--- Author:		<Sazo, Cesar>
--- Create date: <2021-12-28>
--- Description:	<Crea un registro en la tabla SchedulePickup y asigna una ruta a un servicio>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sphd_set_AssigmentRouteService]
+   Propósito: Crea un registro en la tabla SchedulePickup y asigna una ruta a un servicio
+   Autor:     Sazo, Cesar
+   Historia:  
+   Fecha:     2021-12-28
+   === CHANGELOG ============================
+2026-04-14 | Historia/épica: <FDAPI-6061> | Autor: Erick Hernandez | Se calcula HubID para tabla temporal #TblRouteData
+=========================================== */
 CREATE PROCEDURE [dbo].[sphd_set_AssigmentRouteService]
 	@token AS VARCHAR(50),
 	@idRoute AS INT,
@@ -30,12 +33,37 @@ BEGIN
 		
 		CREATE TABLE #TblRouteData (
 			rwNumber [INT],StartDate [DATETIME],EndDate [DATETIME],CodeOfReference [INT],nameSender [VARCHAR](200),
-			phoneSender [VARCHAR](50),addressPickUp [VARCHAR](500),idTownship [INT],OrderP [SMALLINT]
+			phoneSender [VARCHAR](50),addressPickUp [VARCHAR](500),idTownship [INT],OrderP [SMALLINT], HubID [INT] NULL
 		);
 
 		--Obtener solo registros validos para hacer la transaccion
 		INSERT INTO #TblRouteData
-		SELECT sp.rwNumber,sp.StartDate,sp.EndDate,sp.CodeOfReference,sp.nameSender,sp.phoneSender,sp.addressPickUp,sp.idTownship,sp.OrderP
+		SELECT sp.rwNumber,sp.StartDate,sp.EndDate,sp.CodeOfReference,sp.nameSender,sp.phoneSender,sp.addressPickUp,sp.idTownship,sp.OrderP,
+		------- FIND OUT THE HUB ID
+		COALESCE(
+			(SELECT HB.IdHubLogistic AS HubID
+				FROM dbo.VisitPointClient VP WITH(NOLOCK)
+					LEFT JOIN dbo.DumpServiceCoverage DMP WITH(NOLOCK) 
+						ON DMP.IdSettlement = VP.IdSettlement
+					LEFT JOIN dbo.HubLogistics HB WITH(NOLOCK) 
+						ON HB.HubAbbreviation = DMP.Hub
+				WHERE VP.CodeOfReference = sp.CodeOfReference
+				AND DMP.RowStatus = 1),
+			(
+				SELECT TOP 1 HB.IdHubLogistic AS HubID
+				FROM dbo.VisitPointClient VP WITH(NOLOCK)
+					LEFT JOIN dbo.Township TW WITH(NOLOCK) 
+						ON TW.IdTownship = VP.IdTownship
+					LEFT JOIN dbo.DumpServiceCoverage DMP WITH(NOLOCK) 
+						ON DMP.HeaderCode = TW.HeaderCode
+					LEFT JOIN dbo.HubLogistics HB WITH(NOLOCK) 
+						ON HB.HubAbbreviation = DMP.Hub
+				WHERE VP.CodeOfReference = sp.CodeOfReference
+				AND DMP.RowStatus = 1
+				ORDER BY DMP.IdSettlement
+			)
+		)
+		-------
 		FROM @TblRoutesPreparation sp
 		WHERE sp.CodeOfReference > 0;
 				
@@ -65,8 +93,8 @@ BEGIN
 
 			--Se agregan los registros en la tabla SchedulePickup
 			INSERT INTO [DeliveryBackOffice].[dbo].[SchedulePickup] (StartDate, EndDate, RowStatus, TokenCreated,
-						DateCreated, SenderId, SenderName, SenderPhone, IdSourcePlataform, AddressPickup, TownshipId, IsScheduled)
-			SELECT sp.StartDate, sp.EndDate, 1, @token, GETDATE(), sp.CodeOfReference, sp.nameSender, sp.phoneSender, 2, sp.addressPickUp, sp.idTownship, 1
+						DateCreated, SenderId, SenderName, SenderPhone, IdHubLogistics, IdSourcePlataform, AddressPickup, TownshipId, IsScheduled)
+			SELECT sp.StartDate, sp.EndDate, 1, @token, GETDATE(), sp.CodeOfReference, sp.nameSender, sp.phoneSender, sp.HubID, 2, sp.addressPickUp, sp.idTownship, 1
 			FROM #TblRouteData sp
 			WHERE sp.rwNumber = @indexData AND 
 			@FlagInsert = 0;

@@ -15,16 +15,19 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 	
-	DECLARE @GuideStatusOrderID TINYINT = 0;
+	DECLARE @GuideStatusOrderID INT = 0;
+	DECLARE @CurrentStatus NVARCHAR(50);
 	
-	SELECT @GuideStatusOrderID = DO.StatusOrderId
+	SELECT @GuideStatusOrderID = DO.StatusOrderId, @CurrentStatus = S.OrderDescription
 	FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.StatusOrder S WITH (NOLOCK)
+		ON S.StatusOrderId = DO.StatusOrderId
 	WHERE DO.Guide_Serie = @GuideSeries
 	AND DO.Guide_Number = @GuideNumber;
 	
 	IF @GuideStatusOrderID IS NULL
     BEGIN
-        SELECT -1 AS RESULT;
+        SELECT 0 AS IsAllowed, NULL AS CurrentStatus;
         RETURN;
     END
 	IF EXISTS
@@ -36,10 +39,10 @@ BEGIN
         AND RowStatus = 1
     )
     BEGIN
-        SELECT 1 AS RESULT;
+        SELECT 1 AS IsAllowed, @CurrentStatus AS CurrentStatus;
     END
     ELSE
     BEGIN
-        SELECT 0 AS RESULT;
+        SELECT 0 AS IsAllowed, @CurrentStatus AS CurrentStatus;
     END
 END;
