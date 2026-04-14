@@ -1,13 +1,12 @@
-﻿
-
-
-
--- =============================================
--- Author:		<Hugo,Gomez>
--- Create date: <2021-02-16>
--- Description:	<Recollection Incidence>
--- =============================================
-
+﻿/* =================================================
+   SP:        [dbo].[SetIncidenceService]
+   Propósito: Recollection Incidence
+   Autor:     Hugo, Gomez
+   Historia:  
+   Fecha:     2021-02-16
+   === CHANGELOG ============================
+2026-04-14 | Historia/épica: FDAPI-6061 | Autor: Erick Hernandez | Se agrega verificacion de hub y pais not null al insertar la incidencia
+=========================================== */
 CREATE PROCEDURE [dbo].[SetIncidenceService]
 	-- Add the parameters for the stored procedure here	
 	@TblIncidenceLink AS TblIncidenceLink READONLY,
@@ -120,11 +119,13 @@ BEGIN
 																		ON SP.SchedulePickupId = SM.IdSchedulePickup
 																	INNER JOIN DeliveryBackOffice.dbo.HubLogistics H WITH(NOLOCK)
 																		ON H.IdHubLogistic = SP.IdHubLogistics
-																	WHERE SM.IdServiceManagement = @ServiceManagementId
+																	WHERE SM.IdServiceManagement = @ServiceManagementId;
 
-																	EXEC dbo.SaveServiceIncident @ServiceManagementId, @CourierID, @INCIDENT_SERVICE_STATUS_ID, @IncidenceTypeId, @DescriptionIncidence, @CountryID, @HubID, @Latitude, @Longitude, @PATH, @Token;
+																	IF @HubID IS NOT NULL AND @CountryID IS NOT NULL
+																	BEGIN
+																		EXEC dbo.SaveServiceIncident @ServiceManagementId, @CourierID, @INCIDENT_SERVICE_STATUS_ID, @IncidenceTypeId, @DescriptionIncidence, @CountryID, @HubID, @Latitude, @Longitude, @PATH, @Token;
+																	END
 																	-------
-																	
 				
 																	---------------------------------------------- Actualiza el Status del Pickup  -------------------------------------------------------------------------
 																
