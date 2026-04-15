@@ -5,7 +5,7 @@
    Historia:  <FDAPI-5729>
    Fecha:     2026-03-04
 === CHANGELOG ================================
-
+2026-04-15 | Historia/épica: FDAPI-6054 | Autor: Mario Herrarte |
 =========================================== */
 CREATE PROCEDURE [dbo].[spg_status_order_detail_wbs_custom]
     @Guide_Serie NVARCHAR(2),
@@ -27,7 +27,8 @@ BEGIN
         Delivery_Max_Date DATETIME,
         NameOfReceiver NVARCHAR(400),
         Manifest_Serie NVARCHAR(50),
-        Manifest_Number INT
+        Manifest_Number INT,
+        IdCustomer INT
     );
 
     DECLARE @DeliveryOrderDetail TABLE
@@ -56,6 +57,15 @@ BEGIN
         CommentOnIncident NVARCHAR(500)
     );
 
+    DECLARE @StatusOrderForCustomer TABLE (
+        CustomerId    INT,
+        StatusOrderId TINYINT,
+        PublicStatus  BIT
+    );
+
+    DECLARE @IdCustomerExist INT;
+    DECLARE @StatusForCustomerExist BIT;
+
     INSERT INTO @DeliveryOrder
     SELECT do.Guide_Serie,
            do.Guide_Number,
@@ -68,30 +78,71 @@ BEGIN
            do.Delivery_Max_Date,
            do.NameOfReceiver,
            do.Manifest_Serie,
-           do.Manifest_Number
+           do.Manifest_Number,
+           do.IdCustomer
     FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
     WHERE do.Guide_Serie = @Guide_Serie
           AND do.Guide_Number = @Guide_Number;
 
-    INSERT INTO @DeliveryOrderDetail
-    SELECT dod.DateCreated,
-           dod.Guide_Serie,
-           dod.Guide_Number,
-           dod.StatusOrderId,
-           dod.DateCreated AS StageDate,
-           dod.Observations,
-           so.OrderDescription,
-           ISNULL(t.TownshipName,''),
-           ISNULL(t.HeaderCode,'')
-    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
-        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
-            ON so.StatusOrderId = dod.StatusOrderId
-        LEFT JOIN DeliveryBackOffice.dbo.CatStation cat WITH (NOLOCK)
-            ON dod.StationId = cat.IdStation
-        LEFT JOIN DeliveryBackOffice.dbo.Township t WITH (NOLOCK)
-            ON cat.TownshipId = t.IdTownship
-    WHERE dod.Guide_Serie = @Guide_Serie
-          AND dod.Guide_Number = @Guide_Number;
+    SET @IdCustomerExist = ISNULL((SELECT TOP 1 IdCustomer FROM @DeliveryOrder),0);
+
+    INSERT INTO @StatusOrderForCustomer
+		SELECT 
+			CustomerId,
+			StatusOrderId,
+			PublicStatus
+		FROM DeliveryBackOffice.dbo.StatusOrderForCustomer WITH(NOLOCK)
+		WHERE CustomerId = @IdCustomerExist 
+			AND PublicStatus = 1;
+
+	SET @StatusForCustomerExist = ISNULL((SELECT TOP 1 1 FROM @StatusOrderForCustomer),0);
+
+    IF (@IdCustomerExist > 0 AND @StatusForCustomerExist = 1)
+	BEGIN
+        INSERT INTO @DeliveryOrderDetail
+        SELECT dod.DateCreated,
+               dod.Guide_Serie,
+               dod.Guide_Number,
+               dod.StatusOrderId,
+               dod.DateCreated AS StageDate,
+               dod.Observations,
+               so.OrderDescription,
+               ISNULL(t.TownshipName,''),
+               ISNULL(t.HeaderCode,'')
+        FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
+                ON so.StatusOrderId = dod.StatusOrderId
+            LEFT JOIN DeliveryBackOffice.dbo.CatStation cat WITH (NOLOCK)
+                ON dod.StationId = cat.IdStation
+            LEFT JOIN DeliveryBackOffice.dbo.Township t WITH (NOLOCK)
+                ON cat.TownshipId = t.IdTownship
+            INNER JOIN @StatusOrderForCustomer SFC 
+			    ON SFC.StatusOrderId = dod.StatusOrderId 
+        WHERE dod.Guide_Serie = @Guide_Serie
+              AND dod.Guide_Number = @Guide_Number;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO @DeliveryOrderDetail
+        SELECT dod.DateCreated,
+               dod.Guide_Serie,
+               dod.Guide_Number,
+               dod.StatusOrderId,
+               dod.DateCreated AS StageDate,
+               dod.Observations,
+               so.OrderDescription,
+               ISNULL(t.TownshipName,''),
+               ISNULL(t.HeaderCode,'')
+        FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
+                ON so.StatusOrderId = dod.StatusOrderId
+            LEFT JOIN DeliveryBackOffice.dbo.CatStation cat WITH (NOLOCK)
+                ON dod.StationId = cat.IdStation
+            LEFT JOIN DeliveryBackOffice.dbo.Township t WITH (NOLOCK)
+                ON cat.TownshipId = t.IdTownship
+        WHERE dod.Guide_Serie = @Guide_Serie
+              AND dod.Guide_Number = @Guide_Number;
+    END
 
     INSERT INTO @DeliveryAttempt
     SELECT TOP 1
