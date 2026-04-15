@@ -1,5 +1,5 @@
 ﻿/* =================================================
-   SP:        [dbo].[spg_status_order_detail_wbs]
+   SP:        [dbo].[SPHW_GetNewDeliveryTracking]
    Propósito: <Delivery Tracking - Método para obtener información del seguimiento de la guía personalizado al nuevo tracking.>
               <Contenerización - Se agrega TicketNumber para código de referencia y busca relación con una guía asociada.>
    Autor:     <Walter Orozco>
@@ -25,12 +25,20 @@ BEGIN TRY
 
     -- Almacena el tracking de la guía ya filtrado por los estados publicos para el cliente
     DECLARE @DeliveryOrderDetail TABLE (
-	    DateCreated DATETIME,
 	    Guide_Serie NVARCHAR(2),
 	    Guide_Number INT,
 	    StatusOrderId TINYINT,
+        UserCreated NVARCHAR(50),
+	    DateCreated DATETIME,
+        DateCreatedInSystem DATETIME,
 	    Observations NVARCHAR(200),
-	    DeliveryAttemptId BIGINT
+        Temperature_Celsius DECIMAL(5, 2),
+        PieceId INT,
+        RowStatus bit,
+	    DeliveryAttemptId BIGINT,
+        SystemOrigin INT,
+        StationId INT,
+        RowID INT
     );
 
     DECLARE @StatusOrderForCustomer TABLE (
@@ -217,12 +225,20 @@ BEGIN TRY
 	    BEGIN
 		    INSERT INTO @DeliveryOrderDetail
 		    SELECT  
-		        dod.DateCreated,
-		        dod.Guide_Serie,
-		        dod.Guide_Number,
-		        dod.StatusOrderId,
-		        dod.Observations,
-		        dod.DeliveryAttemptId
+			    dod.Guide_Serie,
+			    dod.Guide_Number,
+			    dod.StatusOrderId,
+                dod.UserCreated,
+			    dod.DateCreated,
+                dod.DateCreatedInSystem,
+			    dod.Observations,
+                dod.Temperature_Celsius,
+                dod.PieceId,
+                dod.RowStatus,
+			    dod.DeliveryAttemptId,
+                dod.SystemOrigin,
+                dod.StationId,
+                dod.RowID
 		    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
 		    INNER JOIN @StatusOrderForCustomer SFC 
 		        ON SFC.StatusOrderId = dod.StatusOrderId 
@@ -233,12 +249,20 @@ BEGIN TRY
 	    BEGIN
 		    INSERT INTO @DeliveryOrderDetail
 		    SELECT  
-		        DOD.DateCreated,
-		        DOD.Guide_Serie,
-		        DOD.Guide_Number,
-		        DOD.StatusOrderId,
-		        DOD.Observations,
-		        DOD.DeliveryAttemptId
+			    dod.Guide_Serie,
+			    dod.Guide_Number,
+			    dod.StatusOrderId,
+                dod.UserCreated,
+			    dod.DateCreated,
+                dod.DateCreatedInSystem,
+			    dod.Observations,
+                dod.Temperature_Celsius,
+                dod.PieceId,
+                dod.RowStatus,
+			    dod.DeliveryAttemptId,
+                dod.SystemOrigin,
+                dod.StationId,
+                dod.RowID
 		    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
 		    WHERE dod.Guide_Serie = @GuideSerie 
 		      AND dod.Guide_Number = @GuideNumber;
