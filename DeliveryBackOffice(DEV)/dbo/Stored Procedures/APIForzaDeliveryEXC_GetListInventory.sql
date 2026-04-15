@@ -5,7 +5,7 @@
    Historia:  FDAPI-5590
    Fecha:     <2026-03-11>
    === CHANGELOG ============================
-YYYY-MM-DD | Historia/épica: <FDAPI-####> | Autor:
+2026-03-10 | Historia/épica: <FDAPI-5590> | Autor: Bilkar Morataya | Descripción: Asegurar discriminar Guías anuladas
 =========================================== */
 CREATE PROCEDURE dbo.APIForzaDeliveryEXC_GetListInventory
        @HubEXC NVARCHAR(MAX),
@@ -24,11 +24,16 @@ BEGIN
               WH.Rack_Position,
               WH.DateCreated
        FROM Warehouse WH WITH (NOLOCK)
-       INNER JOIN StatusOrder SO ON WH.StatusOrderId = SO.StatusOrderId
+       INNER JOIN StatusOrder SO WITH (NOLOCK) ON WH.StatusOrderId = SO.StatusOrderId
        INNER JOIN DeliveryOrder DO WITH (NOLOCK) ON WH.Guide_Serie = DO.Guide_Serie AND WH.Guide_Number = DO.Guide_Number
+       INNER JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON WH.Guide_Serie = DOD.Guide_Serie AND WH.Guide_Number = DOD.Guide_Number
+       INNER JOIN CatStation CS WITH (NOLOCK) ON WH.StationId = CS.IdStation
        WHERE WH.HubExc = @HubEXC
               AND WH.IdHubExc = @IdHubEXC
               AND WH.DateCreated BETWEEN @StartDate AND @EndDate
               AND WH.Active = 1
+              AND DOD.RowStatus = 1
+              AND DO.StatusOrderId != 7
+              AND DOD.StatusOrderId != 7
        ORDER BY WH.DateCreated DESC
 END
