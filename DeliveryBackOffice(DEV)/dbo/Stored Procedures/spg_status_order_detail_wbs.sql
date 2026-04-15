@@ -1,16 +1,18 @@
-﻿-- =============================================
--- Author:		<Edwin,Ramirez>
--- Create date: <01/11/2020>
--- Description:	<Detalle de rastreo en web services para el cliente>
--- =============================================
--- Author:		<Tito Garcia>
--- Create date: <24/07/2024>
--- Description:	<Se agrega CommentOnIncident para devolver el comentario que el piloto ingreso al momento de crear la incidencia>
--- =============================================
--- Author:		<Josue Villagrán>
--- Create date: <29/07/2025>
--- Description:	<Se hace reingeniería del SP para optimizar y modularizar , es más eficiente (+24%) y más escalable>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[spg_status_order_detail_wbs]
+   Propósito: <Detalle de rastreo en web services para el cliente>
+   Autor:     <Edwin Ramirez>
+   Historia:  <>
+   Fecha:     2020-11-01
+=== CHANGELOG ================================
+2024-07-24 | Historia/épica: <Se agrega CommentOnIncident para devolver el comentario que el piloto ingreso al momento de crear la incidencia> | Autor: Tito García |
+=========================================== 
+2025-07-29 | Historia/épica: <Se hace reingeniería del SP para optimizar y modularizar , es más eficiente (+24%) y más escalable> | Autor: Josue Villagrán> |
+=========================================== 
+2026-03-18 | Historia/épica: FDAPI-5953 | Autor: Mario Herrarte |
+=========================================== 
+2026-04-14 | Historia/épica: FDAPI-6053 | Autor: Mario Herrarte | Se filtra el tracking para clientes, mostrando solo los estados que se le registren como publicos |
+=========================================== */
 CREATE PROCEDURE [dbo].[spg_status_order_detail_wbs]
 	@Guide_Serie NVARCHAR(2),
 	@Guide_Number BIGINT
@@ -32,7 +34,8 @@ DECLARE @DeliveryOrder TABLE (
 	Delivery_Max_Date DATETIME,
 	NameOfReceiver NVARCHAR(400),
 	Manifest_Serie NVARCHAR(50),
-	Manifest_Number INT
+	Manifest_Number INT,
+	IdCustomer INT
 );
 
 DECLARE @DeliveryOrderDetail TABLE (
@@ -57,6 +60,14 @@ DECLARE @DeliveryAttempt TABLE (
 	CommentOnIncident NVARCHAR(500) 
 );
 
+DECLARE @StatusOrderForCustomer TABLE (
+	CustomerId    INT,
+    StatusOrderId TINYINT,
+    PublicStatus  BIT
+);
+
+	DECLARE @IdCustomerExist INT;
+	DECLARE @StatusForCustomerExist BIT;
 	
 	INSERT INTO @DeliveryOrder
 	SELECT 
@@ -71,27 +82,63 @@ DECLARE @DeliveryAttempt TABLE (
 		do.Delivery_Max_Date,
 		do.NameOfReceiver, 
 		do.Manifest_Serie,
-		do.Manifest_Number
+		do.Manifest_Number,
+		do.IdCustomer
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do  WITH(NOLOCK) 
 	WHERE do.Guide_Serie = @Guide_Serie 
 	  AND do.Guide_Number = @Guide_Number
 
-	INSERT INTO @DeliveryOrderDetail
-	SELECT  
-		DOD.DateCreated,
-		DOD.Guide_Serie,
-		DOD.Guide_Number,
-		DOD.StatusOrderId,
-		DOD.DateCreated AS StageDate,
-		DOD.Observations,
-		SO.OrderDescription
-	FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
-	INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK) 
-		ON so.StatusOrderId = dod.StatusOrderId
-	WHERE dod.Guide_Serie = @Guide_Serie 
-	  AND dod.Guide_Number = @Guide_Number;
+	SET @IdCustomerExist = ISNULL((SELECT TOP 1 IdCustomer FROM @DeliveryOrder),0);
 
-	  INSERT INTO @DeliveryAttempt
+	INSERT INTO @StatusOrderForCustomer
+		SELECT 
+			CustomerId,
+			StatusOrderId,
+			PublicStatus
+		FROM DeliveryBackOffice.dbo.StatusOrderForCustomer WITH(NOLOCK)
+		WHERE CustomerId = @IdCustomerExist 
+			AND PublicStatus = 1;
+
+	SET @StatusForCustomerExist = ISNULL((SELECT TOP 1 1 FROM @StatusOrderForCustomer),0);
+
+	IF (@IdCustomerExist > 0 AND @StatusForCustomerExist = 1)
+	BEGIN
+		INSERT INTO @DeliveryOrderDetail
+		SELECT  
+			DOD.DateCreated,
+			DOD.Guide_Serie,
+			DOD.Guide_Number,
+			DOD.StatusOrderId,
+			DOD.DateCreated AS StageDate,
+			DOD.Observations,
+			SO.OrderDescription
+		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder so 
+			ON so.StatusOrderId = dod.StatusOrderId
+		INNER JOIN @StatusOrderForCustomer SFC 
+			ON SFC.StatusOrderId = DOD.StatusOrderId 
+		WHERE dod.Guide_Serie = @Guide_Serie 
+		  AND dod.Guide_Number = @Guide_Number;
+	END
+	ELSE
+	BEGIN
+		INSERT INTO @DeliveryOrderDetail
+		SELECT  
+			DOD.DateCreated,
+			DOD.Guide_Serie,
+			DOD.Guide_Number,
+			DOD.StatusOrderId,
+			DOD.DateCreated AS StageDate,
+			DOD.Observations,
+			SO.OrderDescription
+		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder so 
+			ON so.StatusOrderId = dod.StatusOrderId
+		WHERE dod.Guide_Serie = @Guide_Serie 
+		  AND dod.Guide_Number = @Guide_Number;
+	END
+
+	INSERT INTO @DeliveryAttempt
 		SELECT TOP 1
 			DA.Guide_Serie,
 			DA.Guide_Number,
@@ -114,7 +161,6 @@ DECLARE @DeliveryAttempt TABLE (
 			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
 		WHERE DA.Guide_Serie = @Guide_Serie 
 			AND DA.Guide_Number = @Guide_Number
-
 
 
 	SELECT RES.[EventID],

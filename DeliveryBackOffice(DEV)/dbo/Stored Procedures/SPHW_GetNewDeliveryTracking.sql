@@ -1,16 +1,14 @@
 ﻿/* =================================================
-   SP:        SPHW_GetNewDeliveryTracking
-   Propósito: Delivery Tracking – Obtener información de seguimiento de guía personalizado al nuevo tracking.
-              Contenerización – Agrega TicketNumber como código de referencia y busca relación con guía asociada.
-   Autor:     Walter Orozco
-   Historia:  ---
+   SP:        [dbo].[spg_status_order_detail_wbs]
+   Propósito: <Delivery Tracking - Método para obtener información del seguimiento de la guía personalizado al nuevo tracking.>
+              <Contenerización - Se agrega TicketNumber para código de referencia y busca relación con una guía asociada.>
+   Autor:     <Walter Orozco>
+   Historia:  <>
    Fecha:     2024-10-11
-
-=== CHANGELOG ============================
-
-2025-02-14 | Historia/épica: ---         | Autor: Brandon Pedroza | Contenerización – Ajuste para obtener número de guía cuando no se envía referencia
-2026-01-17 | Historia/épica: FDAPI-5378  | Autor: Brandon Pedroza | Se obtienen checkpoint validos  de guías(rowstatus = 1)
-
+=== CHANGELOG ===============================
+2025-02-14 | Historia/épica:            | Autor: Brandon Pedroza | Contenerización - Se realiza ajuste para obtener numero de guia si no trae referencia |
+=========================================== 
+2026-04-14 | Historia/épica: FDAPI-6053 | Autor: Mario Herrarte  | Se filtra el tracking para clientes, mostrando solo los estados que se le registren como publicos |
 =========================================== */
 
 CREATE PROCEDURE [dbo].[SPHW_GetNewDeliveryTracking]
@@ -24,6 +22,25 @@ BEGIN
 BEGIN TRY
 	
 	DECLARE @GuideCount INT = 0;--Contador para duplicidad de guías por ticket number
+
+    -- Almacena el tracking de la guía ya filtrado por los estados publicos para el cliente
+    DECLARE @DeliveryOrderDetail TABLE (
+	    DateCreated DATETIME,
+	    Guide_Serie NVARCHAR(2),
+	    Guide_Number INT,
+	    StatusOrderId TINYINT,
+	    Observations NVARCHAR(200),
+	    DeliveryAttemptId BIGINT
+    );
+
+    DECLARE @StatusOrderForCustomer TABLE (
+	    CustomerId    INT,
+        StatusOrderId TINYINT,
+        PublicStatus  BIT
+    );
+
+    DECLARE @IdCustomerExist INT;
+	DECLARE @StatusForCustomerExist BIT;
 
 	IF(@TicketNumber != '' AND @GuideSerie = '' AND @GuideNumber < 1)
 	BEGIN
@@ -111,6 +128,7 @@ BEGIN TRY
 		  , Receiver_Phone NVARCHAR(100)
 		  , Price_Guide DECIMAL(14, 2)
 		  , Price_COD DECIMAL(14, 2)
+		  , IdCustomer INT
 		);
 
 		-- Variables de datos de entrega
@@ -161,6 +179,7 @@ BEGIN TRY
 		  , Receiver_Phone
 		  , Price_Guide
 		  , Price_COD
+		  , IdCustomer
 		)
 		SELECT
 			   DO.Guide_Serie
@@ -176,9 +195,54 @@ BEGIN TRY
 			 , RIGHT(LTRIM(RTRIM(DO.Receiver_Phone)), 8)
 			 , DO.PriceShippment
 			 , DO.Collect_OnDelivery
+			 , DO.IdCustomer
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 		WHERE DO.Guide_Serie = @GuideSerie
 			  AND DO.Guide_Number = @GuideNumber;
+
+        SET @IdCustomerExist = ISNULL((SELECT TOP 1 IdCustomer FROM @GuideOrderTemp),0);
+
+        INSERT INTO @StatusOrderForCustomer
+	        SELECT 
+		        CustomerId,
+		        StatusOrderId,
+		        PublicStatus
+	        FROM DeliveryBackOffice.dbo.StatusOrderForCustomer WITH(NOLOCK)
+	        WHERE CustomerId = @IdCustomerExist 
+		        AND PublicStatus = 1;
+
+        SET @StatusForCustomerExist = ISNULL((SELECT TOP 1 1 FROM @StatusOrderForCustomer),0);
+
+        IF (@IdCustomerExist > 0 AND @StatusForCustomerExist = 1)
+	    BEGIN
+		    INSERT INTO @DeliveryOrderDetail
+		    SELECT  
+		        dod.DateCreated,
+		        dod.Guide_Serie,
+		        dod.Guide_Number,
+		        dod.StatusOrderId,
+		        dod.Observations,
+		        dod.DeliveryAttemptId
+		    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
+		    INNER JOIN @StatusOrderForCustomer SFC 
+		        ON SFC.StatusOrderId = dod.StatusOrderId 
+		    WHERE dod.Guide_Serie = @GuideSerie 
+		      AND dod.Guide_Number = @GuideNumber;
+	    END
+	    ELSE
+	    BEGIN
+		    INSERT INTO @DeliveryOrderDetail
+		    SELECT  
+		        DOD.DateCreated,
+		        DOD.Guide_Serie,
+		        DOD.Guide_Number,
+		        DOD.StatusOrderId,
+		        DOD.Observations,
+		        DOD.DeliveryAttemptId
+		    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
+		    WHERE dod.Guide_Serie = @GuideSerie 
+		      AND dod.Guide_Number = @GuideNumber;
+	    END
 
 		--CONSULTA FINAL
 
@@ -480,7 +544,7 @@ BEGIN TRY
 					   AND dod.StatusOrderId = 50
 					 , IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId = 50, 1, 0)
 					 , IIF(COI.ValidPhotographicEvidence = 1 AND dod.StatusOrderId = 50, 1, 0))		AS [ValidPhotographicEvidence]
-			FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]		dod WITH (NOLOCK)
+			FROM @DeliveryOrderDetail		                            dod
 				INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]		so  WITH (NOLOCK)
 					ON [so].[StatusOrderId] = [dod].[StatusOrderId]
 				INNER JOIN [dbo].[CatCheckpointType]					CCT WITH (NOLOCK)
