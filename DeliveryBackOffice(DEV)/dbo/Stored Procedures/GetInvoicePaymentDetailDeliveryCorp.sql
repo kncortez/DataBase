@@ -45,7 +45,7 @@ BEGIN
                 (
                  SELECT TOP 1
                         IdCatInvoiceType
-                   FROM CatInvoiceType  WITH(NOLOCK)
+                   FROM DeliveryBackOffice.dbo.CatInvoiceType  WITH(NOLOCK)
                   WHERE [Name] = 'Envío'
                     AND RowStatus = 1
                 );
@@ -89,10 +89,10 @@ BEGIN
                        ON do.Sender_ID = vst.CodeOfReference
                INNER JOIN DeliveryBackOffice.dbo.Customer cus WITH(NOLOCK)
                        ON vst.CustomerID = cus.IdCustomer
-               LEFT JOIN dbo.invoiceDetail id WITH(NOLOCK)
+               LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail id WITH(NOLOCK)
                       ON id.dti_fk_orderSerie = do.Guide_Serie
                      AND id.dti_fk_orderNumber = do.Guide_Number
-               LEFT JOIN dbo.invoiceHeader ih WITH(NOLOCK)
+               LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader ih WITH(NOLOCK)
                       ON ih.inv_pk_id = id.dti_fk_header
                      AND ih.CatInvoiceTypeId = @IdCatInvoiceType
          WHERE id.dti_fk_header IS NULL

@@ -1,7 +1,7 @@
 /*
   Name    : HermesDesktop_CorporateCustomer_Search_ByTermAndCountry
   Summary : Busca socios de negocio corporativos por código Hermes, CardCode SAP o nombre.
-            Retorna máximo 15 coincidencias para el autocomplete del módulo de
+            Retorna máximo 50 coincidencias para el autocomplete del módulo de
             Emisión de Facturas Corporativas (settlement-dbo).
   Inputs  :
     @SearchTerm nvarchar(100) -obligatorio- término de búsqueda (mín. 4 chars desde el front)
@@ -23,24 +23,53 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    ;WITH CTE AS (
+
+        SELECT CS.IdCustomer,
+               ISNULL(CS.SAPCardCode, '') AS SAPCardCode,
+               CS.[Name],
+               0 AS SortOrder
+          FROM DeliveryBackOffice.dbo.Customer CS WITH(NOLOCK)
+         WHERE CS.IdCustomerType = 1
+           AND CS.RowSatus       = 1
+           AND CS.CountryID      = @IdCountry
+           AND ISNUMERIC(@SearchTerm) = 1
+           AND CAST(CS.IdCustomer AS NVARCHAR) LIKE @SearchTerm + '%'
+
+        UNION ALL
+
+        SELECT CS.IdCustomer,
+               ISNULL(CS.SAPCardCode, '') AS SAPCardCode,
+               CS.[Name],
+               1 AS SortOrder
+          FROM DeliveryBackOffice.dbo.Customer CS WITH(NOLOCK)
+         WHERE CS.IdCustomerType = 1
+           AND CS.RowSatus       = 1
+           AND CS.CountryID      = @IdCountry
+           AND CS.SAPCardCode LIKE @SearchTerm + '%'
+
+        UNION ALL
+
+        SELECT CS.IdCustomer,
+               ISNULL(CS.SAPCardCode, '') AS SAPCardCode,
+               CS.[Name],
+               2 AS SortOrder
+          FROM DeliveryBackOffice.dbo.Customer CS WITH(NOLOCK)
+         WHERE CS.IdCustomerType = 1
+           AND CS.RowSatus       = 1
+           AND CS.CountryID      = @IdCountry
+           AND CS.[Name] LIKE '%' + @SearchTerm + '%'
+    ),
+    Ranked AS (
+        SELECT *,
+               ROW_NUMBER() OVER (PARTITION BY IdCustomer ORDER BY SortOrder) AS rn
+          FROM CTE
+    )
     SELECT TOP 50
-        CS.IdCustomer,
-        ISNULL(CS.SAPCardCode, '') AS SAPCardCode,
-        CS.[Name]
-    FROM dbo.Customer CS WITH(NOLOCK)
-    WHERE CS.IdCustomerType = 1
-      AND CS.RowSatus     = 1
-      AND CS.CountryID    = @IdCountry
-      AND (
-            (ISNUMERIC(@SearchTerm) = 1 AND CAST(CS.IdCustomer AS NVARCHAR) LIKE @SearchTerm + '%')
-            OR CS.SAPCardCode LIKE @SearchTerm + '%'
-            OR CS.[Name]      LIKE '%' + @SearchTerm + '%'
-          )
-    ORDER BY
-        CASE
-            WHEN ISNUMERIC(@SearchTerm) = 1 AND CS.IdCustomer = TRY_CAST(@SearchTerm AS INT) THEN 0
-            WHEN CS.SAPCardCode LIKE @SearchTerm + '%'                                        THEN 1
-            ELSE 2
-        END,
-        CS.[Name] ASC;
+        IdCustomer,
+        SAPCardCode,
+        [Name]
+      FROM Ranked
+     WHERE rn = 1
+     ORDER BY SortOrder, [Name] ASC;
 END
