@@ -4,6 +4,8 @@
 -- Update date: <2024-04-09>
 -- Description:	<Detalle de manifiesto de despacho a ruta >
 -- =============================================
+-- 2026-04-16 | Historia/épica: FDAPI-6087 | Autor: Mario Herrarte | Se agrego el campo Ticket_Number al detalle del manifiesto de despacho a ruta
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHD_DispatchManifesttoDeliveryRoutesDetail]
 	@IdManifest INT
 AS
