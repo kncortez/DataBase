@@ -26,14 +26,20 @@ BEGIN
        FROM Warehouse WH WITH (NOLOCK)
        INNER JOIN StatusOrder SO WITH (NOLOCK) ON WH.StatusOrderId = SO.StatusOrderId
        INNER JOIN DeliveryOrder DO WITH (NOLOCK) ON WH.Guide_Serie = DO.Guide_Serie AND WH.Guide_Number = DO.Guide_Number
-       INNER JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON WH.Guide_Serie = DOD.Guide_Serie AND WH.Guide_Number = DOD.Guide_Number
        INNER JOIN CatStation CS WITH (NOLOCK) ON WH.StationId = CS.IdStation
        WHERE WH.HubExc = @HubEXC
               AND WH.IdHubExc = @IdHubEXC
               AND WH.DateCreated BETWEEN @StartDate AND @EndDate
               AND WH.Active = 1
-              AND DOD.RowStatus = 1
+              AND DO.RowStatus = 1
               AND DO.StatusOrderId != 7
-              AND DOD.StatusOrderId != 7
+              AND EXISTS (
+                     SELECT 1
+                     FROM DeliveryOrderDetail DOD WITH (NOLOCK)
+                     WHERE DOD.Guide_Serie = WH.Guide_Serie
+                            AND DOD.Guide_Number = WH.Guide_Number
+                            AND DOD.RowStatus = 1
+                            AND DOD.StatusOrderId != 7
+              )
        ORDER BY WH.DateCreated DESC
 END
