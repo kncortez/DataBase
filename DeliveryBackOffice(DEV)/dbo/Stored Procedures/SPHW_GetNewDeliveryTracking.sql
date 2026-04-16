@@ -91,7 +91,7 @@ BEGIN TRY
 				END AS 'AreaCode'
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			LEFT JOIN DeliveryBackOffice.dbo.ConfigParams C WITH(NOLOCK)
-				ON C.[Name] = 'AreaCode' AND ISNULL(DO.ReceiverCountryId,'GT') = C.IdCountry
+				ON C.[Name] = 'AreaCode' AND DO.ReceiverCountryId = C.IdCountry
 			WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 		);
 
