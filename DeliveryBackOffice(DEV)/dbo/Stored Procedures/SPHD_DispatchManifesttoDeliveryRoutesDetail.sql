@@ -149,7 +149,8 @@ BEGIN
 		Collect_on_Delivery decimal(16,2),
 		Total decimal(16,2),
 		ReceiverCountry NVARCHAR(2),
-		Symbol NVARCHAR(2)
+		Symbol NVARCHAR(2),
+		Ticket_Number NVARCHAR(150)
 
 	)
 
@@ -186,6 +187,7 @@ BEGIN
 		) AS  Total
 		,do.ReceiverCountryId AS ReceiverCountry
 		,CCU.Symbol
+		,do.Ticket_Number
 	from 
 		[DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 	INNER JOIN 
@@ -230,6 +232,7 @@ BEGIN
 		,Total
 		,ReceiverCountry
 		,Symbol
+		,Ticket_Number
 	FROM 
 		@temp tmp
 	ORDER BY 
