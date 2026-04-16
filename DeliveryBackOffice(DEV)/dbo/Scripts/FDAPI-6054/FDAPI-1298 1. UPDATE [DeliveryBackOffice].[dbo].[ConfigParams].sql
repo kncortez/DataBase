@@ -1,3 +1,16 @@
-UPDATE [DeliveryBackOffice].[dbo].[ConfigParams]
-SET IdCountry = 'GT'
-WHERE IdCountry is NULL; 
+BEGIN TRANSACTION
+BEGIN TRY
+    UPDATE [DeliveryBackOffice].[dbo].[ConfigParams]
+    SET IdCountry = 'GT'
+    WHERE IdCountry is NULL; 
+
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION
+        
+    SELECT ERROR_MESSAGE(),
+		ERROR_SEVERITY(),
+		ERROR_STATE();
+END CATCH
