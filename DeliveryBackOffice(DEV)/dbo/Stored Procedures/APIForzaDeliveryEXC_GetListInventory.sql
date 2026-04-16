@@ -31,7 +31,6 @@ BEGIN
               AND WH.IdHubExc = @IdHubEXC
               AND WH.DateCreated BETWEEN @StartDate AND @EndDate
               AND WH.Active = 1
-              AND DO.RowStatus = 1
               AND DO.StatusOrderId != 7
               AND EXISTS (
                      SELECT 1
