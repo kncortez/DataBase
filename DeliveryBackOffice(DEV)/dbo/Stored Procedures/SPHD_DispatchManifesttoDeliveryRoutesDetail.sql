@@ -38,9 +38,9 @@ BEGIN
 	INNER JOIN DeliverySettlementDetail dsd WITH(NOLOCK)
 		ON do.Guide_Serie = dsd.Guide_Serie 
 			AND do.Guide_Number = dsd.Guide_Number			
-			AND dsd.ID_DeliveryOrderBySettlement = @IdManifest 
 	WHERE do.[IsLastMileReturn] = 1
-		AND dsd.RowStatus = 1;
+		AND dsd.RowStatus = 1
+		AND dsd.ID_DeliveryOrderBySettlement = @IdManifest;
 
     DECLARE @ConcatReturnGuides NVARCHAR(MAX) = (
         SELECT STUFF
@@ -186,8 +186,7 @@ BEGIN
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 	INNER JOIN DeliverySettlementDetail dsd WITH(NOLOCK)
 		ON do.Guide_Serie = dsd.Guide_Serie 
-			AND do.Guide_Number = dsd.Guide_Number
-			AND dsd.ID_DeliveryOrderBySettlement = @IdManifest 
+			AND do.Guide_Number = dsd.Guide_Number 
 	INNER JOIN Cost CO WITH (NOLOCK)
 	    ON do.Guide_Serie = CO.GuideSerie 
 			AND do.Guide_Number = CO.GuideNumber
@@ -196,7 +195,8 @@ BEGIN
 	LEFT JOIN @TempReturnPrice TRP
 		ON TRP.[GuideSerie] = do.[Guide_Serie]
 			AND TRP.[GuideNumber] = do.[Guide_Number]
-	WHERE dsd.RowStatus = 1;
+	WHERE dsd.RowStatus = 1
+		AND dsd.ID_DeliveryOrderBySettlement = @IdManifest;
 
 	SELECT 
 		GuideOrder
