@@ -1,31 +1,12 @@
-/*
-  Name: DeliveryBackOffice.GetInvoicePaymentDetailDeliveryCorp
-  Summary: Obtiene el detalle de guías COD o STD pendientes de facturar para clientes corporativos.
-           Filtra por tipo de sub-producto según @Option:
-             1 = Envíos STD
-             3 = Envíos COD
-  Inputs:
-    @LstVisitPointClient NVARCHAR(MAX) -- Lista CSV de IdVisitPointClient
-    @CutOffDate          DATETIME      -- Fecha de corte
-    @IdCountry           NVARCHAR(2)   -- Código de país
-    @Option              TINYINT       -- Sub-producto a facturar
-  Outputs:
-    ResultSet1: StatusCode (int), StatusMessage (nvarchar)
-    ResultSet2: IdVisitPointClient, Guide_Serie, Guide_Number, CountryByGuide,
-                SAPCode, Name, Description, Price, Category, SendToInvoice
-  Notes:
-    - La precedencia de ExcludePriceShippingCOD es: VisitPointClient > Customer > 0
-    - Delega el cálculo de precios/descripciones a GetBillingGuideDetailForList
-    - Excluye guías ya facturadas (LEFT JOIN a invoiceDetail/invoiceHeader con IS NULL)
-  Author: Daniel Ramirez | Created: 2024-11-19 | Module: Billing
-  CHANGELOG:
-    - 2024-11-19 <Daniel Ramirez>  V1: Obtenemos la informacion de guias o comisiones de COD para facturarlas
-    - 2026-04-08 <Hanss Espinoza>  V2: FDAPI-5988 — Filtra por tipo de sub-producto según @Option:
-        1 = Envíos STD
-        3 = Envíos COD Contado  (ExcludePriceShippingCOD = 0, IsLastMileReturn = 0)
-        4 = Envíos COD Crédito  (ExcludePriceShippingCOD = 1, IsLastMileReturn = 0)
-        5 = Intentos de entrega (IsLastMileReturn = 1)
-*/
+/* =================================================
+   SP:        DeliveryBackOffice.GetInvoicePaymentDetailDeliveryCorp
+   Propósito: Obtenemos la informacion de guias o comisiones de COD para facturarlas
+   Autor:     Daniel Ramirez
+   Fecha:     2024-11-19
+============================================
+=== CHANGELOG ================================
+2026-04-08 | Historia/épica: FDAPI-5989 | Autor: Hanss Espinoza |
+=========================================== */
 CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailDeliveryCorp]
 (
  @LstVisitPointClient NVARCHAR(MAX) = '',
