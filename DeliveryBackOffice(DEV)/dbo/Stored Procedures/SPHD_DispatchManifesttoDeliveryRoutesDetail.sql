@@ -4,6 +4,8 @@
 -- Update date: <2024-04-09>
 -- Description:	<Detalle de manifiesto de despacho a ruta >
 -- =============================================
+-- 2026-04-16 | Historia/épica: FDAPI-6087 | Autor: Mario Herrarte | Se agrego el campo Ticket_Number al detalle del manifiesto de despacho a ruta
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHD_DispatchManifesttoDeliveryRoutesDetail]
 	@IdManifest INT
 AS
@@ -149,7 +151,8 @@ BEGIN
 		Collect_on_Delivery decimal(16,2),
 		Total decimal(16,2),
 		ReceiverCountry NVARCHAR(2),
-		Symbol NVARCHAR(2)
+		Symbol NVARCHAR(2),
+		Ticket_Number NVARCHAR(150)
 
 	)
 
@@ -186,6 +189,7 @@ BEGIN
 		) AS  Total
 		,do.ReceiverCountryId AS ReceiverCountry
 		,CCU.Symbol
+		,do.Ticket_Number
 	from 
 		[DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 	INNER JOIN 
@@ -230,6 +234,7 @@ BEGIN
 		,Total
 		,ReceiverCountry
 		,Symbol
+		,Ticket_Number
 	FROM 
 		@temp tmp
 	ORDER BY 
