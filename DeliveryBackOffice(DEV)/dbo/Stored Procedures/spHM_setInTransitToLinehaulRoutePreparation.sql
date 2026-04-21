@@ -1,8 +1,15 @@
-﻿-- =============================================
--- Author:		<Ochoa, Jerson>
--- Create date: <25-07-2022>
--- Description:	<Check and set driver, tag number and status -> 'IN TRANSIT' to an active Linehaul process>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[spHM_setInTransitToLinehaulRoutePreparation]
+   Propósito: <Check and set driver, tag number and status -> 'IN TRANSIT' to an active Linehaul process>
+   Autor:     <Ochoa, Jerson>
+   Historia:  <>  
+   Fecha:     <25-07-2022>
+
+=== CHANGELOG ================================
+
+--  2024-06-11 | Historia/épica: FDAPI-5925   | Autor: Brandon Pedroza | Inactivacion de inventario al despachar ruta
+
+=========================================== */
 CREATE PROCEDURE [dbo].[spHM_setInTransitToLinehaulRoutePreparation] 
 	@IdLinehaulRoutePreparation AS INT,
 	@SenderReceiverCUI AS NVARCHAR(50) = NULL,
@@ -350,13 +357,34 @@ BEGIN
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
-			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+			ON		[LRPC].[LinehaulRoutePreparationId] = [LRP].IdLinehaulRoutePreparation 
 		     WHERE    
 			      [LRPCD].[GuideNumber] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
 				  AND 
 		          [LRPCDP].[RowStatus] = 1
 				  AND		
-				  [LRPCD].[RowStatus] = 1;
+				  [LRPCD].[RowStatus] = 1
+				  AND 
+				  [LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation;
+
+		--SACAR DE INVENTARIO
+		UPDATE WH
+		SET WH.Active = 0,
+			WH.UserUpdated = @TknUser,
+			WH.DateUpdated = GETDATE()
+		FROM DeliveryBackOffice.[dbo].Warehouse WH WITH(NOLOCK)
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
+			ON		[WH].[Guide_Serie] = [LRPCD].[GuideSerie]
+			AND		[WH].[Guide_Number] = [LRPCD].[GuideNumber]
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
+			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
+		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
+			ON		[LRPC].[LinehaulRoutePreparationId] = [LRP].IdLinehaulRoutePreparation --[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+			  WHERE 
+			       [WH].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
+			  AND  [LRPCD].[RowStatus] = 1
+			  AND [LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation;
+
 	END
 		SELECT	[LRP].[IdLinehaulRoutePreparation],
 				[LRP].[StationDispatchedId],
