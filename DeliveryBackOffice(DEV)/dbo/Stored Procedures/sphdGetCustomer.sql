@@ -121,7 +121,7 @@ BEGIN
 			 , ISNULL(cst.[IsCOD],0) IsCOD
 			 , cst.[IsVoucherRequired]
              , ISNULL(cst.[RestrictionByArticle], 0)       AS RestrictionByArticle
-             , cts.[IsInternationalCustomer]
+             , cst.[IsInternationalCustomer]
         FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
@@ -226,7 +226,7 @@ BEGIN
 			 , ISNULL(cst.[IsCOD],0) IsCOD
 			 , cst.[IsVoucherRequired]
              , ISNULL(cst.[RestrictionByArticle], 0)       AS RestrictionByArticle
-             , cts.[IsInternationalCustomer]
+             , cst.[IsInternationalCustomer]
         FROM Customer cst WITH(NOLOCK)
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
