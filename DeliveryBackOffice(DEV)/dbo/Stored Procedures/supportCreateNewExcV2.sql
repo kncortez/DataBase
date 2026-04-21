@@ -28,6 +28,7 @@ CREATE PROCEDURE [dbo].[supportCreateNewExcV2]
     @SapCardCode NVARCHAR(50),
     @SapOcrCode NVARCHAR(50),
 	@SapOcrCode2 NVARCHAR(50),
+	@KindOfVPName NVARCHAR(100) = 'Express Center',
     @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
@@ -94,7 +95,7 @@ BEGIN
 
             SELECT @IdKindOfVPClient = IdKindOfVPClient
             FROM KindOfVPClient WITH(NOLOCK)
-            WHERE KindOfVPName = 'Express Center'
+            WHERE KindOfVPName = @KindOfVPName
                   AND IdCountry = @IdCountry
 
             SELECT @IdBusinessSegment = IdBusinessSegment
