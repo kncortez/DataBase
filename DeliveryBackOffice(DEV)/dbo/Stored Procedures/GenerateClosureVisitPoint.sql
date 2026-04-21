@@ -1,13 +1,18 @@
-﻿-- =============================================
--- Author:		<Alejandro Rodríguez>
--- Create date: <2022-03-28>
--- Description:	<SP para generar el cierre de los express center por punto de visita>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-11-04>
--- Description:	<Se agrega al cierre los elementos de pago mediante Zigi>
--- =============================================
-
+﻿/* =================================================
+   SP:        [dbo].[GenerateClosureVisitPoint]
+   Propósito: SP para generar el cierre de los express center por punto de visita
+   Autor:     Alejandro Rodríguez
+   Historia:  
+   Fecha:     2022-03-28
+============================================
+=== CHANGELOG ================================
+2026-04-20 | Historia/épica: <FDAPI-5784> | Autor: Keila Cortéz |
+-----
+2025-11-04 | Description: <Se agrega al cierre los elementos de pago mediante Zigi> | Autor: Bilkar Morataya |
+-----
+2022-03-28 | Description: <SP para generar el cierre de los express center por punto de visita> | Autor: Alejandro Rodríguez |
+-----
+============================================ */
 CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
     @VisitPointId INT = 4246,
     @UserId INT,
@@ -49,6 +54,28 @@ BEGIN
 	DECLARE @InvoiceAmountFacturaZigi INT;
 	-- FIN MODIFICACIÓN
 
+	--MODIFICACIÓN [13/04/2026] - Toma la última fecha de cierre general, no la del día.
+	DECLARE @LastWorkingDate DATE;
+	DECLARE @IsCNC BIT = 0;
+
+	SELECT @IsCNC = 1
+	FROM VisitPointClient WITH(NOLOCK)
+	WHERE CodeOfReference = @VisitPointId
+	  AND IdKindOfVPClient IN (3,14,25);
+
+	IF (@IsCNC = 1)
+	BEGIN
+		SELECT @LastWorkingDate = MIN(CAST(ACH.ClosureDate AS DATE))
+		FROM AccountingClosuresHeader ACH WITH(NOLOCK)
+		WHERE ACH.VisitPoint = @VisitPointId
+		  AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
+	END
+	ELSE
+	BEGIN
+		SET @LastWorkingDate = CAST(GETDATE() AS DATE);
+	END
+	--FIN MODIFICACIÓN
+
 	SET @UserId2 =
 		(
 			SELECT TOP 1
@@ -83,7 +110,8 @@ BEGIN
 		@InvoiceAmountFacturaZigi = ISNULL(SUM(InvoiceAmountFacturaZigi), 0)
 		-- FIN MODIFICACIÓN
 	FROM AccountingClosuresHeader ACH
-	WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+	  -- MODIFICACIÓN [13/04/2026] - usar @LastWorkingDate y no CAST(GETDATE() AS DATE). Se utiliza nuevo campo, no ACH.DateCreated
+	  WHERE CAST(ACH.ClosureDate AS DATE) = @LastWorkingDate
 		AND ACH.VisitPoint = @VisitPointId
 		AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
 
@@ -102,6 +130,8 @@ BEGIN
 				TotalAmountCredit, TotalAmountCreditDeclared,
 				VisitPoint, Voucher1, Bag1, Voucher2, Bag2, RowStatus,
 				TokenCreated, DateCreated,
+				--Modificación [2026-04-15] Almacena la fecha original de cierre
+				ClosureDate,
 				TokenUpdated, DateUpdated,
 				TotalAmountCODCash, TotalAmountCODCashDeclared,
 				TotalAmountFacturaCash, TotalAmountFacturaCashDeclared,
@@ -122,7 +152,9 @@ BEGIN
 				@TotalAmountCash, @TotalAmountCashDeclared, 
 				@TotalAmountCredit, @TotalAmountCreditDeclared,
 				@VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, 
-				@TokenCreated, GETDATE(),
+				@TokenCreated, GETDATE(), 
+				--Modificación [2026-04-15] - Almacena la fecha original de cierre
+				@LastWorkingDate,
 				NULL, NULL, 
 				@TotalAmountCODCash, @TotalAmountCODCashDeclared, 
 				@TotalAmountFacturaCash, @TotalAmountFacturaCashDeclared, 
@@ -144,7 +176,8 @@ BEGIN
 			-- Inserta el ID del cierre de VisitPoint en los cierres que se hicieron durante el día
 			UPDATE [dbo].[AccountingClosuresHeader]
 			SET AccountingClosuresHeaderVisitPointId = @IdClosure
-			WHERE CAST(DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+		    -- MODIFICACIÓN [13/04/2026] - usar @LastWorkingDate y no CAST(GETDATE() AS DATE). Se utiliza nuevo campo, no ACH.DateCreated
+			WHERE CAST(ClosureDate AS DATE) = @LastWorkingDate
 				AND VisitPoint = @VisitPointId
 				AND AccountingClosuresHeaderVisitPointId IS NULL;
 

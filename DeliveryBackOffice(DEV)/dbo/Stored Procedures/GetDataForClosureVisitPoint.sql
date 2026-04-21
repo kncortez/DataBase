@@ -1,17 +1,20 @@
--- =============================================
--- Author:		<Alejandro Rodríguez>
--- Create date: <2022-03-28>
--- Description:	<SP para obtener la lista de guías que se procesaron en un express center>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-07-04>
--- Description:	<Se agrega las cuentas y el simbolo de la moneda correspondiente>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-11-06>
--- Description:	<Se agrega la opción a mostrar que el pago fue con Zigi>
--- =============================================
+/* =================================================
+   SP:        [dbo].[GetDataForClosureVisitPoint]
+   Propósito: SP para obtener la lista de guías que se procesaron en un express center
+   Autor:     Alejandro Rodríguez
+   Historia:  
+   Fecha:     2022-03-28
+============================================
+=== CHANGELOG ================================
+2026-04-20 | Historia/épica: <FDAPI-5784> | Autor: Keila Cortéz |
+-----
+2025-11-06 | Description: <Se agrega la opción a mostrar que el pago fue con Zigi> | Autor: Bilkar Morataya |
+-----
+2024-07-04 | Description: <Se agrega las cuentas y el simbolo de la moneda correspondiente> | Autor: Cristian Suazo |
+-----
+2022-03-28 | Description: <SP para obtener la lista de guías que se procesaron en un express center> | Autor: Alejandro Rodríguez |
+-----
+============================================ */
 CREATE PROCEDURE [dbo].[GetDataForClosureVisitPoint]
 @VisitPointId int = 4246,
 @IdAccount int = 0
@@ -39,8 +42,30 @@ BEGIN
 	SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
 	FROM dbo.ClosureAccount
 	WHERE Description = 'Cuenta Zigi' AND IdCountry = @IdCountry
-	
 
+	-- MODIFICACIÓN [13/04/2026] - Para concesionarios toma el día más antiguo con cierres de operador
+    DECLARE @LastWorkingDate DATE;
+    DECLARE @IsCNC BIT = 0;
+ 
+    SELECT @IsCNC = 1
+    FROM VisitPointClient WITH(NOLOCK)
+    WHERE CodeOfReference = @VisitPointId
+      AND IdKindOfVPClient IN (3, 14, 25);
+ 
+    IF (@IsCNC = 1)
+    BEGIN
+        SELECT @LastWorkingDate = MIN(CAST(ACH.ClosureDate AS DATE))
+        FROM AccountingClosuresHeader ACH WITH(NOLOCK)
+        WHERE ACH.VisitPoint = @VisitPointId
+          AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
+          AND ACH.RowStatus = 1
+    END
+    ELSE
+    BEGIN
+        SET @LastWorkingDate = CAST(GETDATE() AS DATE);
+    END
+    -- FIN MODIFICACIÓN
+	
 	SELECT	UsrIdUser 'UserId', UsrNickName 'UserNickName', DateCreated, IdAccountingClosuresHeader 'IdCierre',
 		ISNULL(SUM(S1.TotalAmountCash), 0) 'TotalAmountCash',
 		ISNULL(SUM(S1.TotalAmountCashDeclared), 0) 'TotalAmountCashDeclared',
@@ -81,7 +106,10 @@ BEGIN
 				ISNULL(CODZigiCalc.TotalCODZigi, 0) AS TotalAmountCODZigi,
 				ACH.TotalAmountCODZigiDeclared,
 				-- FIN MODIFICACIÓN
-				RU.UsrNickName, RU.UsrIdUser, ACH.DateCreated, ACH.IdAccountingClosuresHeader,
+				RU.UsrNickName, RU.UsrIdUser, 
+				--MODIFICACIÓN [13/04/2026] - para que en la vista se observe la fecha teórica de cierre
+				ACH.ClosureDate AS DateCreated, 
+				ACH.IdAccountingClosuresHeader,
 				ISNULL(CCC.Symbol,'') AS 'CurrencySymbolDetail'
 		FROM AccountingClosuresHeader ACH
 		INNER JOIN RegisterUser RU
@@ -116,7 +144,8 @@ BEGIN
 			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-		WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+		-- MODIFICACIÓN [13/04/2026] - usar @LastWorkingDate y no CAST(GETDATE() AS DATE). Se utiliza nuevo campo, no ACH.DateCreated
+		WHERE CAST(ACH.ClosureDate AS DATE) = @LastWorkingDate
 			AND ACH.VisitPoint = @VisitPointId
 			AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
 			AND DC.DefaultPerCountry = 1
@@ -187,7 +216,8 @@ BEGIN
 			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-	WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+	-- MODIFICACIÓN [13/04/2026] - usar @LastWorkingDate y no CAST(GETDATE() AS DATE). Se utiliza nuevo campo, no ACH.DateCreated
+	WHERE CAST(ACH.ClosureDate AS DATE) = @LastWorkingDate
 		AND ACH.VisitPoint = @VisitPointId
 		AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
 		AND DC.DefaultPerCountry = 1

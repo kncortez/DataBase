@@ -1,13 +1,18 @@
-﻿-- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-06-03>
--- Description:	<Login - Nuevo método para login Express Center, soporta multipaís.>
--- =============================================
--- Author:		<Oscar Rodriguez>
--- Create date: <2024-11-19>
--- Description:	<Se agrego devolucion de informacion de poblado de origen para login de express center>
--- =============================================
-
+﻿/* =================================================
+   SP:        [dbo].[spGetLoginMC]
+   Propósito: Login - Nuevo método para login Express Center, soporta multipaís.
+   Autor:     Walter Orozco
+   Historia:  
+   Fecha:     2024-06-03
+============================================
+=== CHANGELOG ================================
+2026-04-15 | Historia/épica: <FDAPI-5784> | Autor: Keila Cortéz |
+-----
+2024-11-19 | Description: <Se agrego devolucion de informacion de poblado de origen para login de express center> | Autor: Oscar Rodriguez |
+-----
+2024-06-03 | Description: <Login - Nuevo método para login Express Center, soporta multipaís.> | Autor: Walter Orozco |
+-----
+============================================ */
 CREATE PROCEDURE [dbo].[spGetLoginMC]
     -- Add the parameters for the stored procedure here
     @Username VARCHAR(200)
@@ -553,7 +558,8 @@ BEGIN
 								ON TWS.IdTownship = STL.IdTownship
 							INNER JOIN DeliveryBackOffice.dbo.Province			PRV WITH(NOLOCK)
 								ON PRV.IdProvince = TWS.IdProvince
-							WHERE KOVPC.KindOfVPName = 'Express Center'
+							--MODIFICACIÓN[15-04-2026] - se agrega concesionario para permitir diferenciar ambos y que no haya afectación en la operación
+							WHERE KOVPC.KindOfVPName IN ('Express Center', 'Concesionario')
 								AND RC.RbcRowStatus = 1
 								AND RH.RheRowStatus = 1
 								AND CCC.RowStatus = 1

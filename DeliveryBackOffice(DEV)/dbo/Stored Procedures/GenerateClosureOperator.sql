@@ -1,14 +1,19 @@
-﻿-- =============================================
--- Author:		<Alejandro Rodríguez>
--- Create date: <2022-03-17>
--- Description:	<SP para generar el cierre de los express center>
--- Nota: Es una copia de GenerateClosure pero se agregaron validaciones
--- =============================================
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2022-11-06>
--- Description:	<Se agrega control de método de pago Zigi>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[GenerateClosureOperator]
+   Propósito: SP para generar el cierre de los express center
+   Nota: Es una copia de GenerateClosure pero se agregaron validaciones
+   Autor:     Alejandro Rodríguez
+   Historia:  
+   Fecha:     2022-03-17
+====================================================
+=== CHANGELOG ======================================
+2026-04-20 | Historia/épica: <FDAPI-5784> | Autor: Keila Cortéz |
+-----
+2022-11-06 | Description: <Se agrega control de método de pago Zigi> | Autor: Bilkar Morataya |
+-----
+2022-03-17 | Description: <SP para generar el cierre de los express center> | Autor: Alejandro Rodríguez |
+-----
+==================================================== */
 CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
     @UserId INT,
@@ -52,6 +57,34 @@ BEGIN
 	-- FIN MODIFICACIÓN
     DECLARE @UserId2 INT;
 
+    --MODIFICACIÓN [13/04/2025] - Calcular el último día trabajado para concesionarios
+    DECLARE @LastWorkingDate    DATE;
+    DECLARE @IsCNC              BIT = 0;
+ 
+    SELECT @IsCNC = 1
+    FROM VisitPointClient WITH (NOLOCK)
+    WHERE CodeOfReference       = @VisitPointId
+      AND IdKindOfVPClient IN (3, 14, 25);
+ 
+    IF (@IsCNC = 1)
+    BEGIN
+        SELECT @LastWorkingDate = MIN(CAST(DOPT.DateCreated AS DATE))
+        FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+        WHERE DOPT.AccountId        = @UserId
+          AND DOPT.ShipmentCompleted = 1
+          AND NOT EXISTS (
+              SELECT 1
+              FROM AccountingClosuresDetail ACD WITH (NOLOCK)
+              WHERE ACD.DopId     = DOPT.DopId
+                AND ACD.RowStatus = 1
+          );
+    END
+    ELSE
+    BEGIN
+        SET @LastWorkingDate = CAST(GETDATE() AS DATE);
+    END
+    -- FIN MODIFICACIÓN
+
     IF OBJECT_ID('tempdb.dbo.#TempClosureDetail', 'U') IS NOT NULL
         DROP TABLE #TempClosureDetail;
 
@@ -91,7 +124,8 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             ON IND.dti_fk_orderSerie = DOPT.GuideSerie
                AND IND.dti_fk_orderNumber = DOPT.GuideNumber
-    WHERE CAST(DOPT.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    -- MODIFICACIÓN [13/04/2025] - usar @LastWorkingDate en lugar de CAST(GETDATE() AS DATE)  
+    WHERE CAST(DOPT.DateCreated AS DATE) = @LastWorkingDate
     GROUP BY IND.dti_fk_orderSerie,
              IND.dti_fk_orderNumber;
 
@@ -121,7 +155,8 @@ BEGIN
                AND DOPD.guidenumber = DOR.Guide_Number
                AND DOPD.ShipmentCompleted = 1
 			   AND DOR.StatusOrderId != 7
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    -- MODIFICACIÓN [13/04/2025] - usar @LastWorkingDate en lugar de CAST(GETDATE() AS DATE)  
+    WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
           AND DOPD.AccountId = @UserId
 		  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
           AND NOT EXISTS
@@ -152,7 +187,8 @@ BEGIN
 		INNER JOIN invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
         
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    -- MODIFICACIÓN [13/04/2025] - usar @LastWorkingDate en lugar de CAST(GETDATE() AS DATE)      
+    WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
           AND DOPD.AccountId = @UserId
           AND DOPD.GuideSerie is null
 		  AND NOT EXISTS
@@ -193,7 +229,8 @@ BEGIN
             ON DOR.Guide_Number = dpd.GuideNumber
                AND DOR.Guide_Serie = dpd.GuideSerie
                AND dpd.CODAmountProcess > 0
-    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+     -- MODIFICACIÓN [13/04/2025] - usar @LastWorkingDate en lugar de CAST(GETDATE() AS DATE)  
+    WHERE CAST(dpd.DateCreated AS DATE) = @LastWorkingDate
             AND DOR.StatusOrderId != 7
           AND AccountId = @UserId
           AND NOT EXISTS
@@ -321,7 +358,8 @@ BEGIN
                    AND DOPD.guidenumber = DOR.Guide_Number
                    AND DOPD.ShipmentCompleted = 1
 				   AND DOR.StatusOrderId != 7
-        WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+        -- MODIFICACIÓN [13/04/2025] - usar @LastWorkingDate en lugar de CAST(GETDATE() AS DATE)  
+        WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
               AND DOPD.AccountId = @UserId
 			  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
               AND NOT EXISTS
@@ -385,7 +423,8 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
         
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    -- MODIFICACIÓN [13/04/2025] - usar @LastWorkingDate en lugar de CAST(GETDATE() AS DATE)      
+    WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
           AND DOPD.AccountId = @UserId
           AND DOPD.GuideSerie is null
 		  AND NOT EXISTS
@@ -454,7 +493,8 @@ BEGIN
 				   AND DOPD.guidenumber = DOR.Guide_Number
 				   AND DOPD.ShipmentCompleted = 1
 				   AND DOR.StatusOrderId != 7
-		WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+		-- MODIFICACIÓN [13/04/2025] - usar @LastWorkingDate en lugar de CAST(GETDATE() AS DATE)  
+		WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
 			  AND DOPD.AccountId = @UserId
 			  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
 			  AND NOT EXISTS
@@ -498,7 +538,8 @@ BEGIN
 			ON CTS.IdTypeService = DOPD.TypeServiceId
 		LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
 			ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+		-- MODIFICACIÓN [13/04/2025] - usar @LastWorkingDate en lugar de CAST(GETDATE() AS DATE)  
+		WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
 			  AND DOPD.AccountId = @UserId
 			  AND DOPD.GuideSerie is null
 			  AND NOT EXISTS
@@ -548,6 +589,8 @@ BEGIN
                 RowStatus,
                 TokenCreated,
                 DateCreated,
+                --Modificación [2026-04-15] Almacena la fecha original de cierre
+				ClosureDate,
                 TokenUpdated,
                 DateUpdated,
                 TotalAmountCODCash,
@@ -571,7 +614,9 @@ BEGIN
             )
             VALUES
             (@UserId2, @ClosurerPOS, @TotalCash, @TotalAmountCashDeclared, @TotalCard, @TotalAmountCreditDeclared,
-             @CountCash, @Countcard, @VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, @TokenCreated, GETDATE(),
+             @CountCash, @Countcard, @VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, @TokenCreated, GETDATE(), 
+             --Modificación [2026-04-15] Almacena la fecha original de cierre
+             @LastWorkingDate,
              NULL, NULL, @TotalAmountCODCash, @TotalAmountCODCashDeclared, 
 			 @TotalAmountFacturaCashDeclared, @TotalAmountFacturaCardDeclared,
 			 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD,
