@@ -10,10 +10,12 @@
 2025-11-27 | Historia/épica: <FDAPI-4607> | Autor: <Tito Garcia> |
 2025-11-05 | Historia/épica: <FDAPI-4607> | Autor: <Cristian Suazo> |
 2026-03-25 | Historia/épica: <FDAPI-6009> | Autor: <Erick Hernandez> |
+2026-03-25 | Historia/épica: <FDAPI-5925> | Autor: Brandon Pedroza   | Registro de inventario en liquidación
 =========================================== */
 CREATE PROCEDURE [dbo].[spHM_EndLinehaulRouteSettlement]
-	@LinehaulRouteSettlementId AS INT,
-	@TknUser AS NVARCHAR(50)
+    @LinehaulRouteSettlementId AS INT,
+    @TknUser AS NVARCHAR(50),
+    @StationId AS INT = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -40,7 +42,7 @@ BEGIN
 
 	SET @Status = 55; -- 'En Revision LH'
 
-	SELECT @PIECES_MISSING_IN_SETTLEMENT = COUNT(*)
+	SELECT @PIECES_MISSING_IN_SETTLEMENT = COUNT(1)
 		FROM [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP WITH (NOLOCK)
 	INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 		ON LRPCD.IdLinehaulRoutePreparationContainerDetail = LRPCDP.LinehaulRoutePreparationContainerDetailId
@@ -70,10 +72,11 @@ BEGIN
 		IF (@PIECES_MISSING_IN_SETTLEMENT > 0) -- PIECES MISSING IN SETTLEMENT
 		BEGIN				
 			-- SE PASAN A ESTADO EN REVISION LAS GUIAS MULTIPIEZAS NO ESCANEADAS
-			INSERT INTO #GuidesTmp (GuideSerie, GuideNumber)
+			INSERT INTO #GuidesTmp (GuideSerie, GuideNumber,PiecesNumber)
 			SELECT DISTINCT
 				LRPCD.GuideSerie,
-				LRPCD.GuideNumber
+				LRPCD.GuideNumber,
+                LRPCDP.PieceNumber
 			FROM [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 				ON LRPCDP.LinehaulRoutePreparationContainerDetailId = LRPCD.IdLinehaulRoutePreparationContainerDetail
@@ -85,14 +88,15 @@ BEGIN
 				AND LRPC.LinehaulRoutePreparationId = @LRP_ID;
 
 			--CREAMOS LOG DE CAMBIO DE ESTADO
-			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus)
-			SELECT G.GuideSerie,
+			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus,StationId)
+			SELECT DISTINCT G.GuideSerie,
 				G.GuideNumber,
 				@Status,
 				@TknUser,
 				GETDATE(),
 				GETDATE(),
-				1
+				1,
+                @StationId
 			FROM #GuidesTmp G
 			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 				ON DO.Guide_Serie = G.GuideSerie AND DO.Guide_Number = G.GuideNumber
@@ -105,9 +109,99 @@ BEGIN
 			INNER JOIN #GuidesTmp T
 				ON DO.Guide_Serie = T.GuideSerie
 				AND DO.Guide_Number = T.GuideNumber
-			--WHERE ISNULL(DO.StatusOrderId, 0) <> @Status;
 			WHERE ISNULL(DO.StatusOrderId, 0) = @IN_TRANSIT_STATUS_ID_STATUSORDER;
 		END
+		
+		--                              INICIO REGISTRO INVENTARIO
+        DECLARE @RackPosition NVARCHAR(60);
+        DECLARE @StatusInv INT = 10; -- En Inventario ->StatusOrder
+        SELECT @RackPosition = ISNULL(RackPositionDefault, '10#DEF000#PAL001')
+        FROM CatStation
+        WHERE IdStation = @StationId;
+
+        --CREAMOS LOG DE CAMBIO DE ESTADO
+        INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
+        (
+            Guide_Serie,
+            Guide_Number,
+            StatusOrderId,
+            UserCreated,
+            DateCreated,
+            DateCreatedInSystem,
+            RowStatus,
+            StationId
+        )
+        SELECT DISTINCT
+            G.GuideSerie,
+            G.GuideNumber,
+            @StatusInv,
+            @TknUser,
+            GETDATE(),
+            GETDATE(),
+            1,
+            @StationId
+        FROM #GuidesTmp G
+            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                ON DO.Guide_Serie = G.GuideSerie
+                   AND DO.Guide_Number = G.GuideNumber
+        WHERE DO.StatusOrderId = @Status
+
+        -- Se actualiza estado en la DeliveryOrder
+        UPDATE DO
+        SET DO.StatusOrderId = @StatusInv
+        FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+            INNER JOIN #GuidesTmp T
+                ON DO.Guide_Serie = T.GuideSerie
+                   AND DO.Guide_Number = T.GuideNumber
+        WHERE DO.StatusOrderId = @Status
+
+        -- Se actualiza estado en la DeliveryOrderPiece 
+        UPDATE DOP
+        SET DOP.StatusOrderId = @StatusInv,
+            DOP.PieceUpdated = @TknUser,
+            DOP.DateUpdated = GETDATE()
+        FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
+            INNER JOIN #GuidesTmp T
+                ON DOP.GuideSerie = T.GuideSerie
+                   AND DOP.GuideNumber = T.GuideNumber
+                   AND DOP.NoPiece = T.PiecesNumber
+
+        --ingreso a inventario
+        -- Insertar nueva ubicación
+        INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse]
+        (
+            Rack_Position,
+            Guide_Serie,
+            Guide_Number,
+            Dry,
+            Cold,
+            Active,
+            UserCreated,
+            DateCreated,
+            Guide_Piece,
+            IsReturn,
+            HubExc,
+            IdHubExc,
+            StatusOrderId,
+            StationId
+        )
+        SELECT @RackPosition,
+               T.GuideSerie,
+               T.GuideNumber,
+               1,
+               0,
+               1,
+               @TknUser,
+               GETDATE(),
+               T.PiecesNumber,
+               0,
+               'HUB',
+               NULL,
+               @StatusInv,
+               @StationId
+        FROM #GuidesTmp T
+
+        --                          FIN REGISTRO DE INVENTARIO
 
 		-- CLOSE DISPATCH CONTAINERS
 		UPDATE	[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer]
@@ -129,6 +223,24 @@ BEGIN
 				[TokenUpdated] = @TknUser,
 				[DateUpdated] = SYSDATETIME()
 		WHERE	[IdLinehaulRouteSettlement] = @LinehaulRouteSettlementId;
+
+		--PIECES
+		UPDATE LRPCDP 
+		SET LRPCDP.CatLinehaulStatusId = @LIQUIDATED_STATUS_ID,
+			LRPCDP.TokenUpdated = @TknUser,
+			LRPCDP.DateUpdated = GETDATE()
+		FROM [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP WITH(NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH(NOLOCK)
+			ON LRPCDP.LinehaulRoutePreparationContainerDetailId = LRPCD.IdLinehaulRoutePreparationContainerDetail
+		INNER JOIN [DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
+			ON LRPCD.LinehaulRoutePreparationContainerId = LRPC.IdLinehaulRoutePreparationContainer
+		INNER JOIN #GuidesTmp G
+			ON LRPCD.GuideSerie = G.GuideSerie
+			AND LRPCD.GuideNumber = G.GuideNumber
+			AND LRPCDP.PieceNumber = G.PiecesNumber
+			AND LRPCDP.PieceNumber = GT.PiecesNumber
+		WHERE LRPC.LinehaulRoutePreparationId = @LRP_ID
+		AND LRPCDP.CatLinehaulStatusId = @IN_TRANSIT_STATUS_ID;
 
 		IF(@@TRANCOUNT > 0)
 			COMMIT TRANSACTION
