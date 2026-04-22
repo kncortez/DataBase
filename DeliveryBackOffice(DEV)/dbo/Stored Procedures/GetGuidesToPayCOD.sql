@@ -247,7 +247,7 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 		--AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
 		AND do.SenderCountryId = @IdCountry
         AND BTD.isCompleted = 1
-​
+        ​AND cu.IsInternationalCustomer = 0
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,
 		   do.[IsLastMileReturn],
