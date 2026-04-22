@@ -1,0 +1,29 @@
+BEGIN TRY
+
+    IF COL_LENGTH('dbo.WorkflowStatusMapLog', 'CountryId') IS NULL
+    BEGIN
+        ALTER TABLE WorkflowStatusMapLog
+        ADD CountryId VARCHAR(2) NULL
+        CONSTRAINT FK_WorkflowStatusMapLog_Country 
+        FOREIGN KEY REFERENCES dbo.CatCountry(IdCountry);
+
+        EXECUTE sp_addextendedproperty 
+            @name = N'MS_Description',
+            @value = N'ID de CatCountry (pais).',
+            @level0type = N'SCHEMA',
+            @level0name = N'dbo',
+            @level1type = N'TABLE',
+            @level1name = N'WorkflowStatusMapLog',
+            @level2type = N'COLUMN',
+            @level2name = N'CountryId';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Ya existe la columna CountryId.'
+    END
+
+END TRY
+BEGIN CATCH
+    PRINT 'Error: ' + ERROR_MESSAGE();
+    THROW;
+END CATCH;
