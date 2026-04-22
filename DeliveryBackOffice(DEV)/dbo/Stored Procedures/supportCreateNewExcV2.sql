@@ -6,7 +6,8 @@
    Fecha:     2024-07-30
 
 === CHANGELOG ============================
-
+2026-04-21 | Historia/épica: FDAPI-5784 | Autor: Keila Cortéz |
+-----
 2025-10-29 | Historia/épica: FDAPI-4454 | Autor: Brandon Pedroza |
 
 =========================================== */
