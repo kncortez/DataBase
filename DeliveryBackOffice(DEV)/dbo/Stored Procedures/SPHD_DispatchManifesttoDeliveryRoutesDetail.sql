@@ -1,11 +1,15 @@
-﻿
--- =============================================
--- Author:		<Edelman>
--- Update date: <2024-04-09>
--- Description:	<Detalle de manifiesto de despacho a ruta >
--- =============================================
--- 2026-04-16 | Historia/épica: FDAPI-6087 | Autor: Mario Herrarte | Se agrego el campo Ticket_Number al detalle del manifiesto de despacho a ruta
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SPHD_DispatchManifesttoDeliveryRoutesDetail]
+   Propósito: <Detalle de manifiesto de despacho a ruta>
+   Autor:     <Edelman>
+   Historia:  <>  
+   Fecha:     <09-04-2024>
+
+=== CHANGELOG ================================
+
+--  2026-04-16 | Historia/épica: FDAPI-6087   | Autor: Mario Herrarte | Se agrego el campo Ticket_Number al detalle del manifiesto de despacho a ruta
+
+=========================================== */
 CREATE PROCEDURE [dbo].[SPHD_DispatchManifesttoDeliveryRoutesDetail]
 	@IdManifest INT
 AS
@@ -13,7 +17,7 @@ BEGIN
 	
 
 	SET NOCOUNT ON;
-    DECLARE @CurrencyGT INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Name = 'QUETZAL')
+    DECLARE @CurrencyGT INT = (SELECT IdCatCurrencyCOD FROM [DeliveryBackOffice].[dbo].CatCurrencyCOD WHERE Name = 'QUETZAL')
 	--Flujo nuevo devoluciones
     IF OBJECT_ID('tempdb.dbo.#GuideReturnService', 'U') IS NOT NULL
         DROP TABLE #GuideReturnService;
@@ -35,7 +39,7 @@ BEGIN
 			do.Guide_Serie,
 			do.Guide_Number
     FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
-	INNER JOIN DeliverySettlementDetail dsd WITH(NOLOCK)
+	INNER JOIN [DeliveryBackOffice].[dbo].DeliverySettlementDetail dsd WITH(NOLOCK)
 		ON do.Guide_Serie = dsd.Guide_Serie 
 			AND do.Guide_Number = dsd.Guide_Number			
 	WHERE do.[IsLastMileReturn] = 1
@@ -112,7 +116,7 @@ BEGIN
         CODAmount,
         ReturnRates
     )
-    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides,		-- Guías
+    EXEC [DeliveryBackOffice].[dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides,		-- Guías
                                                 @InTime = 3,							-- Entrega
                                                 @IsReturn = 1,							-- Devolución
                                                 @CodeApp = 'SIFDCECOM300720201459',		-- CodeApp
@@ -184,13 +188,13 @@ BEGIN
 		,CCU.Symbol
 		,do.Ticket_Number
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
-	INNER JOIN DeliverySettlementDetail dsd WITH(NOLOCK)
+	INNER JOIN [DeliveryBackOffice].[dbo].DeliverySettlementDetail dsd WITH(NOLOCK)
 		ON do.Guide_Serie = dsd.Guide_Serie 
 			AND do.Guide_Number = dsd.Guide_Number 
-	INNER JOIN Cost CO WITH (NOLOCK)
+	INNER JOIN [DeliveryBackOffice].[dbo].Cost CO WITH (NOLOCK)
 	    ON do.Guide_Serie = CO.GuideSerie 
 			AND do.Guide_Number = CO.GuideNumber
-	INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
+	INNER JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD CCU WITH (NOLOCK)
 	    ON ISNULL(CO.ShippingCurrency,@CurrencyGT)= CCU.IdCatCurrencyCOD
 	LEFT JOIN @TempReturnPrice TRP
 		ON TRP.[GuideSerie] = do.[Guide_Serie]
