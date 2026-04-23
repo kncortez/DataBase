@@ -22,6 +22,15 @@
 -- Create date: <2025-11-04>
 -- Description:	<Validar filtro de código de transacción para que se tome el mas reciente,ya que se esta duplicando el OrderNumber>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2026-04-21>
+-- Description:	<Se agregan guards de idempotencia en el bloque @Type = 2 antes de
+--               INSERT de Membresía y Suscripción. Previene doble inserción cuando
+--               este SP y SPHW_UpdateCustomerTransactionPWO se ejecutan en el mismo
+--               flujo 3DS para el mismo OrderNumber. Usa GOTO para saltar el bloque
+--               si ya existe un registro para la cuenta/orden del día.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
     @Type AS INT = -1
   , @System AS INT = 1
@@ -456,6 +465,21 @@ BEGIN
                 )
                    )
                 BEGIN
+                    -- Guard de idempotencia: verificar que no exista ya una Membresía activa
+                    -- para esta cuenta y orden. Previene doble inserción cuando este SP
+                    -- y SPHW_UpdateCustomerTransactionPWO se ejecutan en el mismo flujo 3DS.
+                    IF EXISTS (
+                        SELECT TOP 1 1
+                        FROM [DeliveryBackOffice].[dbo].[Membership] WITH (NOLOCK)
+                        WHERE AccountId = @IdAcount
+                          AND RowStatus = 1
+                          AND TaxIdNumber = @TaxId
+                          AND CAST(DateCreated AS DATE) = @DateCreated2
+                    )
+                    BEGIN
+                        PRINT 'SKIP INSERT MEMBRESIA - ya existe para esta cuenta y orden';
+                        GOTO SkipMembership;
+                    END
                     PRINT 'INSERT MEMBRESIA';
                     DECLARE @AuxNewMembership AS TABLE
                     (
@@ -730,6 +754,7 @@ BEGIN
                     END;
                 END;
 
+                SkipMembership:
                 IF (EXISTS
                 (
                     SELECT TOP 1
@@ -742,6 +767,18 @@ BEGIN
                 )
                    )
                 BEGIN
+                    -- Guard de idempotencia: verificar que no exista ya una Suscripción
+                    -- para esta cuenta y orden. Previene doble inserción en flujo 3DS.
+                    IF EXISTS (
+                        SELECT TOP 1 1
+                        FROM [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog] WITH (NOLOCK)
+                        WHERE [Authorization] = @OrderNumber
+                          AND RowStatus = 1
+                    )
+                    BEGIN
+                        PRINT 'SKIP INSERT SUSCRIPCION - ya existe log de pago para esta orden';
+                        GOTO SkipSubscription;
+                    END
 
                     DECLARE @AuxNewSubscriptions AS TABLE
                     (
@@ -823,8 +860,7 @@ BEGIN
                           AND ac.AccRowStatus = 1
                 )          THEN
                                    1
-                               WHEN @AccountId IS NOT NULL
-                                    AND
+                               WHEN
                                     (
                                         SELECT ISNULL(res.UstStatus, 'N/A')
                                         FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -992,6 +1028,7 @@ BEGIN
                     (1, @OrderNumber, 2, @ServiceAmmount, GETDATE(), @ModulId, 1, @Token, GETDATE(), NULL, NULL);
                 END;
             END;
+            SkipSubscription:
             COMMIT TRANSACTION LogTransactionTypeTwo;
 
         END TRY
