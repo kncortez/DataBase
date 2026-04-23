@@ -116,7 +116,7 @@ BEGIN
         DECLARE @RackPosition NVARCHAR(60);
         DECLARE @StatusInv INT = 10; -- En Inventario ->StatusOrder
         SELECT @RackPosition = ISNULL(RackPositionDefault, '10#DEF000#PAL001')
-        FROM CatStation
+        FROM [DeliveryBackOffice].[dbo].[CatStation] WITH(NOLOCK) 
         WHERE IdStation = @StationId;
 
         --CREAMOS LOG DE CAMBIO DE ESTADO
