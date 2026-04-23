@@ -9,7 +9,7 @@ BEGIN TRY
         ALTER TABLE DeliveryBackOffice.dbo.WorkflowStatusMap
         DROP COLUMN WorkflowStatusMapId;
 
-        -- Step 3: drop default country GT
+        -- Step 3: Drop default country GT
         ALTER TABLE DeliveryBackOffice.dbo.WorkflowStatusMap
         DROP CONSTRAINT DF_WorkflowStatusMap_CountryId;
 
@@ -17,6 +17,9 @@ BEGIN TRY
         ALTER TABLE DeliveryBackOffice.dbo.WorkflowStatusMap
         ADD CONSTRAINT PK_WorkflowStatusMap 
         PRIMARY KEY (WorkflowId, StatusOrderId, CountryId);
+
+        -- Step 5: Drop index on columns WorkflowId and StatusOrderId
+        DROP INDEX UQ_WorkflowStatusMap_Workflow_Status_Active ON DeliveryBackOffice.dbo.WorkflowStatusMap;
 
         PRINT 'Migración completada'
     END
