@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<Edelman,Vásquez>
 -- Create date: <2026-04-13>
 -- Description:	<Generar archivos de comisiones COD>
