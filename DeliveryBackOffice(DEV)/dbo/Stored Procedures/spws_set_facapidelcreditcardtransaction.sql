@@ -1215,7 +1215,7 @@ BEGIN
             ON [MSL].[MembershipId] = [M].[IdMembership]
     WHERE CCTBCD.OrderNumber = @OrderNumber;
 
-    IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR')
+    IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR' AND SUBSTRING(@OrderNumber, 1, 2) != 'SP')
     BEGIN
 
         IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
