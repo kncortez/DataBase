@@ -3,6 +3,15 @@
 -- Create date: <Create Date,12/08/2025>
 -- Description:	<Description,Actualizar y asociar  el estado de la transacción de pasarela de pago PayWayOne SV>
 -- =============================================
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2026-04-20>
+-- Description:	<Se agregan guards de idempotencia antes de INSERT de Membresía
+--               y Suscripción. Previene doble inserción cuando este SP
+--               y spws_set_facapidelcreditcardtransaction se ejecutan en el
+--               mismo flujo 3DS para el mismo OrderNumber. Usa GOTO para
+--               saltar el bloque si ya existe un registro para la cuenta/orden.>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_UpdateCustomerTransactionPWO] 
     @Type AS INT = -1
   , @System AS INT = 1
@@ -61,12 +70,6 @@ BEGIN
 		DECLARE @ActivationCode NVARCHAR(100) = N'';
         DECLARE @HasCredit BIT = 0;     
 		DECLARE @SubscriptionId INT = 0;
-		  SET @AccountId =
-            (
-                SELECT [A].[AccIdAccount]
-                FROM [dbo].[Account] A  WITH (NOLOCK)
-                WHERE [A].[IdCustomer] = @CustomerId
-            );
         DECLARE @AddedPointExpirationDate INT = 0;
 		DECLARE @ServiceAmmount DECIMAL = 0;
     -- Transacción para ingreso de proceso con tarjeta
@@ -76,12 +79,23 @@ BEGIN
 		IF(@OrderNumber IS NULL)
 		BEGIN
             -- Flujo normal de spws_set_facapidelcreditcardtransaction
-            SELECT @IdTransaction = ISNULL([IdTransaction], 0),
-			       @OrderNumber   = ISNULL(OrderNumber,'') 
-            FROM [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH (NOLOCK)
-            WHERE [CCTBC].[Signature] = @Signature
-         END
-		   ELSE
+            -- Si @Signature viene vacío (caso Using3dsSecureTransactionSV), buscar por @TransactionStain
+            IF (@Signature IS NOT NULL AND @Signature <> '')
+            BEGIN
+                SELECT @IdTransaction = ISNULL([IdTransaction], 0),
+                       @OrderNumber   = ISNULL(OrderNumber,'') 
+                FROM [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH (NOLOCK)
+                WHERE [CCTBC].[Signature] = @Signature
+            END
+            ELSE
+            BEGIN
+                SELECT @IdTransaction = ISNULL([IdTransaction], 0),
+                       @OrderNumber   = ISNULL(OrderNumber,'') 
+                FROM [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH (NOLOCK)
+                WHERE [CCTBC].[TransactionStain] = @TransactionStain
+            END
+		END
+		ELSE
 		      BEGIN
 
 			        SELECT @IdTransaction = ISNULL([IdTransaction], 0),
@@ -90,9 +104,11 @@ BEGIN
 					FROM [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH (NOLOCK)
 					WHERE [CCTBC].OrderNumber = @OrderNumber
 
+		      END;
 
-			  END;
+         PRINT '[DEBUG] Lookup por TransactionStain=' + ISNULL(@TransactionStain,'NULL') + ' | @IdTransaction=' + CAST(@IdTransaction AS VARCHAR) + ' | @OrderNumber=' + ISNULL(@OrderNumber,'NULL');
       
+             PRINT '[DEBUG] Entrando a IF @IdTransaction > 0: ' + CAST(@IdTransaction AS VARCHAR);
              IF (@IdTransaction > 0)
              BEGIN
 
@@ -127,7 +143,8 @@ BEGIN
 					   
 
 
-					    IF (@ReasonCode = '00')
+	                        PRINT '[DEBUG] Verificando @ReasonCode=' + ISNULL(@ReasonCode,'NULL');
+				    IF (@ReasonCode = '00')
 						BEGIN
 
 							SELECT @IdTransaction  = [IdTransaction]
@@ -153,6 +170,8 @@ BEGIN
 							FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK)
 							WHERE OrderNumber = @OrderNumber;
 
+					-- Sincronizar @AccountId con el AccountId real del registro de transacción
+					SET @AccountId = ISNULL(CAST(@IdAcount AS INT), 0);
 							
                 IF (EXISTS
                 (
@@ -165,6 +184,20 @@ BEGIN
                    )
                 BEGIN
 
+                    -- Guard de idempotencia: verificar que no exista ya una Membresía activa
+                    -- para esta cuenta y orden. Previene doble inserción cuando este SP
+                    -- y spws_set_facapidelcreditcardtransaction se ejecutan en el mismo flujo 3DS.
+                    IF EXISTS (
+                        SELECT TOP 1 1
+                        FROM [DeliveryBackOffice].[dbo].[Membership] WITH (NOLOCK)
+                        WHERE AccountId = @IdAcount
+                          AND RowStatus = 1
+                          AND CAST(DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+                    )
+                    BEGIN
+                        PRINT 'SKIP INSERT MEMBRESIA - ya existe para esta cuenta';
+                        GOTO SkipMembership;
+                    END
                     PRINT 'INSERT MEMBRESIA';
                     DECLARE @AuxNewMembership AS TABLE
                     (
@@ -448,6 +481,7 @@ BEGIN
                 END;
 
                        END;
+                   SkipMembership:
                    IF (EXISTS
                 (
                     SELECT TOP 1
@@ -459,6 +493,18 @@ BEGIN
                    )
                 BEGIN
 
+                    -- Guard de idempotencia: verificar que no exista ya una Suscripción
+                    -- para esta cuenta y orden. Previene doble inserción en flujo 3DS.
+                    IF EXISTS (
+                        SELECT TOP 1 1
+                        FROM [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog] WITH (NOLOCK)
+                        WHERE [Authorization] = @OrderNumber
+                          AND RowStatus = 1
+                    )
+                    BEGIN
+                        PRINT 'SKIP INSERT SUSCRIPCION - ya existe log de pago para esta orden';
+                        GOTO SkipSubscription;
+                    END
 
                     DECLARE @AuxNewSubscriptions AS TABLE
                     (
@@ -540,8 +586,7 @@ BEGIN
                           AND ac.AccRowStatus = 1
                 )          THEN
                                    1
-                               WHEN @AccountId IS NOT NULL
-                                    AND
+                               WHEN
                                     (
                                         SELECT ISNULL(res.UstStatus, 'N/A')
                                         FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -713,6 +758,8 @@ BEGIN
 
                 END;
                       
+                 SkipSubscription:
+                 PRINT '[DEBUG] Llegó a SkipSubscription / Success';
                  SET @Code = 1
 				 SET @Description = 'Success';
 
