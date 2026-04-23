@@ -1,5 +1,4 @@
-﻿​
-​
+﻿
 -- =============================================
 -- Author:		<Oscar,Morales>
 -- Create date: <2021-06-22>
@@ -10,7 +9,7 @@
 -- Create date: <2022-07-01>
 -- Description:	< No considerar comisiones con estado lógico inactivo >
 -- =============================================
-​
+
 CREATE PROCEDURE [dbo].[GetGuidesToPayCOD]
     -- Add the parameters for the stored procedure here
     @Date DATE
@@ -237,14 +236,11 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 		LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctiom WITH(NOLOCK)
 			ON ctiom.tio_pk_id = dopd.TypeofInOutMoneyId
     WHERE
-        --AND db.[Id_bank] IN ( 5, 33,31,2 ) --Banrural y BI
+        
         CONVERT(DATE, bt.[Date]) = @Date
 		AND btd.CatConceptCODId IN (2,3,4)
 		AND bt.RowStatus = 'TRUE'
-		--AND pg.RowStatus = 'TRUE'
 		AND BTD.RowStatus = 1 
-		--AND btc.RowStatus = 1 
-		--AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
 		AND do.SenderCountryId = @IdCountry
         AND BTD.isCompleted = 1
         ​AND cu.IsInternationalCustomer = 0
