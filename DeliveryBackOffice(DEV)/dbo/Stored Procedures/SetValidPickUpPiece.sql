@@ -1,25 +1,17 @@
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-10-15>
--- Description:	<Se validan las piezas que se van a procesar para la nueva APP de escaneo>
--- =============================================
--- Author:		<Brandon Pedroza>
--- Modified:	<2025-01-09>
--- Description:	<Contenerizar guias - Se agrega parametro que indica numero de referencia y numero de contenedor>
--- =============================================
--- Author:		<Brandon, Pedroza>  
--- Modifie:		<2025-02-04>  
--- Description: <Contenerizacion guias - aceptar paquete unicamente del cliente asignado a la recoleccion>  
--- =============================================   
--- Author:		<Brandon, Pedroza>  
--- Modifie:		<2025-02-27>  
--- Description: <Contenerizacion guias - se acepta cualquier paquete si se escanea por guia >  
--- ============================================= 
--- =============================================  
--- Author:  <Edelman> 
--- Update date: <2025-05-02>  
--- Description: <Validar si  contenedores y referencias ya fue aplicada la recolección POD con el servicio>  
--- =============================================  
+/* =================================================
+   SP:        [dbo].[SetValidPickUpPiece]
+   Propósito: Se validan las piezas que se van a procesar para la nueva APP de escaneo 
+   Autor:     Cristian Suazo
+   Historia:  <>
+   Fecha:     2024-10-15
+
+=== CHANGELOG ============================
+2025-01-09 | Historia/épica: <>          | Autor: Brandon Pedroza | Contenerizar guias - Se agrega parametro que indica numero de referencia y numero de contenedor
+2025-02-04 | Historia/épica: <>          | Autor: Brandon Pedroza | Contenerizacion guias - aceptar paquete unicamente del cliente asignado a la recoleccion
+2025-02-27 | Historia/épica: <>          | Autor: Brandon Pedroza | Contenerizacion guias - se acepta cualquier paquete si se escanea por guia
+2025-05-02 | Historia/épica: <>          | Autor: Edelman         | Validar si  contenedores y referencias ya fue aplicada la recolección POD con el servicio
+2026-04-23 | Historia/épica: FDAPI-6121  | Autor: Mario Herrarte  | Se retorna la cantidad de piezas de la guia.
+=========================================== */
 CREATE PROCEDURE [dbo].[SetValidPickUpPiece]
     @InGuides NVARCHAR(MAX) = 'FD9559566-1,FD9559566-2',
     @IdPickup INT = NULL,
@@ -40,7 +32,8 @@ BEGIN
                 @ValidCountry INT,
                 @GuideSerie NVARCHAR(2) = 'FD',
 				@InContainerGuides NVARCHAR(MAX) = '',
-				@IdCustomerPickup INT;
+				@IdCustomerPickup INT,
+                @PiecesDry INT;
 
         IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
             DROP TABLE #Temp;
@@ -245,6 +238,10 @@ BEGIN
                 SELECT @NoPieceEntered = COUNT(*)
                 FROM #listGuides
 
+                SELECT @PiecesDry = Pieces_Dry FROM DeliveryOrder DO WITH (NOLOCK)
+                                WHERE DO.Guide_Serie = @GuideSerie
+                                    AND DO.Guide_Number = @GuideNumber
+                                
                 SELECT @ValidCountry = MAX(   CASE
                                                   WHEN DO.SenderCountryId = @IdCountry THEN
                                                       1
@@ -271,25 +268,29 @@ BEGIN
                         IF @IspickupGuide = 0
                         BEGIN
                             SELECT 200 AS StatusCode,
-                                   'Piezas validas, listas para procesarlas' AS Message,
-								   @NoPiece AS NoPiece
+                                    'Piezas validas, listas para procesarlas' AS Message,
+								    @NoPiece AS NoPiece,
+                                    @PiecesDry AS TotalPiecesDry
 
                         END
                         ELSE
                         BEGIN
                             SELECT 0 AS StatusCode,
-                                   'Se encuentran piezas que ya fueron procesadas' AS Message
+                                    'Se encuentran piezas que ya fueron procesadas' AS Message,
+                                    @PiecesDry AS TotalPiecesDry
                         END
                     END
                     ELSE IF @NoPiece < @NoPieceEntered
                     BEGIN
                         SELECT 0 StatusCode,
-                               CONCAT('La guia tiene más piezas de las establecidas No. Piezas: ', @NoPiece) AS Message
+                                CONCAT('La guia tiene más piezas de las establecidas No. Piezas: ', @NoPiece) AS Message,
+                                @PiecesDry AS TotalPiecesDry
                     END
                     ELSE
                     BEGIN
                         SELECT 4 AS StatusCode,
-                               CONCAT('Faltan:', @NoPiece - @NoPieceEntered, ' piezas por escanear') AS Message
+                                CONCAT('Faltan:', @NoPiece - @NoPieceEntered, ' piezas por escanear') AS Message,
+                                @PiecesDry AS TotalPiecesDry
                     END
                 END
                 ELSE
