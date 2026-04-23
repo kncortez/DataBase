@@ -2235,16 +2235,11 @@ BEGIN
         VALUES
         (GETDATE(), 'ERROR TC', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
 
-        SELECT 'Error al procesar transacción'       AS message
-             , 'FALSE'                               blnResult
-             , CAST(-1 AS VARCHAR(5))                IdResult
-             , CAST(500 AS VARCHAR(5))               StatusResult
-             , CAST(ERROR_NUMBER() AS VARCHAR)       AS ErrorNumber
-             , CAST(ERROR_SEVERITY() AS VARCHAR)     AS ErrorSeverity
-             , CAST(ERROR_STATE() AS VARCHAR)        AS ErrorState
-             , CAST(ERROR_PROCEDURE() AS VARCHAR)    AS ErrorProcedure
-             , CAST(ERROR_LINE() AS VARCHAR)         AS ErrorLine
-             , CAST(ERROR_MESSAGE() AS VARCHAR(MAX)) AS ResultMessage;
+        SELECT 400  Code
+             , 'Failed - Error al procesar transacción' Description
+             , ''    coupSerie
+             , ''    coupDate
+             , ''    coupPromo;
 
     END CATCH;
 
