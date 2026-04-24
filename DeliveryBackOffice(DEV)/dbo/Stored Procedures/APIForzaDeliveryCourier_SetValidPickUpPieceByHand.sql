@@ -200,7 +200,8 @@ BEGIN
                                         SELECT 
                                             200 AS [StatusCode],
                                             'Contenedor válido, listo para procesar' AS [Message],
-                                            1 AS [NoPiece]
+                                            1 AS [NoPiece],
+                                            1 AS TotalPiecesDry
                                         RETURN
                                     END
 						ELSE
