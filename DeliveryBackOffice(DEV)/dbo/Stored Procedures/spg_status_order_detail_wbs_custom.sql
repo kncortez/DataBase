@@ -5,7 +5,7 @@
    Historia:  <FDAPI-5729>
    Fecha:     2026-03-04
 === CHANGELOG ================================
-
+2026-03-18 | Historia/épica: FDAPI-5953 | Autor: Mario Herrarte |
 =========================================== */
 CREATE PROCEDURE [dbo].[spg_status_order_detail_wbs_custom]
     @Guide_Serie NVARCHAR(2),
@@ -56,6 +56,12 @@ BEGIN
         CommentOnIncident NVARCHAR(500)
     );
 
+    DECLARE @DelayTrackingParam INT = (
+	    SELECT Value FROM ConfigParams WHERE Name = 'DelayTracking'
+    );
+
+    DECLARE @DelayTracking DATETIME = DATEADD(MINUTE, -@DelayTrackingParam, GETDATE());
+
     INSERT INTO @DeliveryOrder
     SELECT do.Guide_Serie,
            do.Guide_Number,
@@ -91,7 +97,8 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.Township t WITH (NOLOCK)
             ON cat.TownshipId = t.IdTownship
     WHERE dod.Guide_Serie = @Guide_Serie
-          AND dod.Guide_Number = @Guide_Number;
+          AND dod.Guide_Number = @Guide_Number
+          AND dod.DateCreated < @DelayTracking;
 
     INSERT INTO @DeliveryAttempt
     SELECT TOP 1
