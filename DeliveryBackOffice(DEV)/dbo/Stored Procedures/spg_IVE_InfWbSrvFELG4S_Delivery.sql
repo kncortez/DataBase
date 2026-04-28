@@ -77,7 +77,7 @@ BEGIN
 	FROM DeliveryBackOffice.dbo.del_ParametrosFactura dpf WITH(NOLOCK)
 		OUTER APPLY (
 			SELECT TOP 1 csc.OcrCode2
-			FROM DeliveryBackOffice.dbo.CatSAPCodeCentroCosto csc WITH(NOLOCK)
+			FROM DeliveryBackOffice.dbo.SAPCodeCostCenterMap csc WITH(NOLOCK)
 			WHERE csc.SAPCode   = dpf.dpf_SAParticulo
 			  AND csc.IdCountry = @country
 			  AND csc.RowStatus = 1
