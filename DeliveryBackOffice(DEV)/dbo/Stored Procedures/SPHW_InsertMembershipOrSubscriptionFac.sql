@@ -16,9 +16,14 @@
 -- Create date: <2025-11-04>
 -- Description:	<Validar filtro de código de transacción para que se tome el mas reciente,ya que se esta duplicando el OrderNumber>
 -- =============================================
+-- Author:		<Christian Azurdia>
+-- Create date: <2026-04-24>
+-- Description:	<Se agrega el parámetro del tipo de factura, y se colocan las validaciones correctas para el país>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionFac]
  @OrderNumber AS NVARCHAR(25),
- @IdCountry   AS NVARCHAR(2) = 'GT'
+ @IdCountry   AS NVARCHAR(2) = 'GT',
+ @Inv_Type AS INT = 1 -- 1 = factura electronica, 4 = comprobante de crédito fiscal
 AS
 BEGIN
     -- Datos cliente Cabecera de factura   
@@ -33,13 +38,14 @@ BEGIN
     DECLARE @FiscalAddress NVARCHAR(200) = 'Guatemala'
     DECLARE @TaxName NVARCHAR(100) = 'Consumidor Final'
     DECLARE @InvoiceEmail NVARCHAR(50) =''
-	  DECLARE @Vaucher NVARCHAR(50) =''
+    DECLARE @Vaucher NVARCHAR(50) =''
     DECLARE @Iva DECIMAL(12,6) = 1.12
     DECLARE @IdCurrency INT 
     DECLARE @DateCreated DATE = GETDATE();
-     SELECT @Iva = ISNULL([Value],1.12)
-      FROM [DeliveryBackOffice].[dbo].[ConfigParams]
-     WHERE [Name] = 'TaxPercentage'
+    
+    SELECT @Iva = ISNULL([Value],1.12)
+    FROM [DeliveryBackOffice].[dbo].[ConfigParams]
+    WHERE [Name] = 'TaxPercentage'
        AND IdCountry = @IdCountry
 
 	SELECT Top 1 
@@ -47,11 +53,11 @@ BEGIN
 	  , @IdSalePackage = IdSalePackage             
 	  , @IdAccount = AccountId              
 	  , @Vaucher =Vaucher           
-	  , @Token = TokenCreated
+	  , @Token = isnull(TokenCreated,'')
 	  , @TaxId = TaxId
-	  , @FiscalAddress =AddressTax
+	  , @FiscalAddress = Isnull(AddressTax, '')
 	  , @TaxName =  NameTax
-	  , @InvoiceEmail  = InvoiceEmail
+	  , @InvoiceEmail  = isnull(InvoiceEmail,'')
   FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK)
   Where OrderNumber= @OrderNumber
   ORDER BY IdRegistrationofTransactionProcessStates DESC
@@ -102,9 +108,9 @@ BEGIN
     ------------------------------------------------------------------------------------
     SELECT TOP 1
            @inv_cli_name   = InvoiceName
-         , @inv_cli_nit    = TaxIdNumber
+         , @inv_cli_nit    = isnull(TaxIdNumber,'')
          , @inv_cli_email  = InvoiceEmail
-         , @inv_cli_adress = FiscalAddress
+         , @inv_cli_adress = isnull(FiscalAddress, '')
     FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
     WHERE [M].[AccountId] = @IdAccountCart
           AND [M].[RowStatus] = 1
@@ -124,7 +130,7 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA'                
                   AND 
-                          ISNULL(IdCountry,'GT') = @IdCountry
+                          IdCountry = @IdCountry
                           
             );
     DECLARE @dti_IVA MONEY;
@@ -138,7 +144,7 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA'
                    AND 
-                          ISNULL(IdCountry,'GT') = @IdCountry
+                          IdCountry = @IdCountry
                          
             );
     DECLARE @SendToInvoice BIT = 1;
@@ -169,7 +175,7 @@ BEGIN
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL A'
                                    AND 
-                                        ISNULL(IdCountry,'GT') = @IdCountry
+                                        IdCountry = @IdCountry
                                        
                               );
     ELSE IF (
@@ -182,7 +188,7 @@ BEGIN
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL B'
                                    AND 
-                                          ISNULL(IdCountry,'GT') = @IdCountry
+                                          IdCountry = @IdCountry
                                          
                              );
     ELSE IF (
@@ -195,7 +201,7 @@ BEGIN
                                   FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL C'
                                    AND 
-                                        ISNULL(IdCountry,'GT') = @IdCountry
+                                        IdCountry = @IdCountry
                                         
                               );
     ELSE IF (
@@ -208,7 +214,7 @@ BEGIN
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL D'
                                    AND 
-                                          ISNULL(IdCountry,'GT') = @IdCountry
+                                          IdCountry = @IdCountry
                                        
                               );
     ELSE IF (
@@ -220,7 +226,7 @@ BEGIN
                                       [Description]
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'MEMBRESIA DIAMANTE'
-                                   AND ISNULL(IdCountry,'GT') = @IdCountry
+                                   AND IdCountry = @IdCountry
                               );
     IF (@InvoiceEmail = '')
     BEGIN
@@ -243,8 +249,8 @@ BEGIN
         BEGIN
             SELECT TOP 1
                    @inv_amount            = M.MembershipCost
-                 , @inv_cli_email         = M.InvoiceEmail
-                 , @inv_cli_adress        = M.FiscalAddress
+                 , @inv_cli_email         = isnull(M.InvoiceEmail,'')
+                 , @inv_cli_adress        = isnull(M.FiscalAddress, '')
                  , @inv_cli_nit           = REPLACE(M.TaxIdNumber, '-', '')
                  , @inv_cli_name          = M.InvoiceName
                  , @inv_IVA               = M.MembershipCost - (M.MembershipCost / @Iva)
@@ -256,8 +262,7 @@ BEGIN
                     ON M.CatMembershipId = CM.IdCatMembership
                 INNER JOIN [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTP WITH (NOLOCK)
                     ON M.CatMembershipId = RTP.IdSalePackage
-                WHERE-- M.AccountId = @IdAccount
-                     -- AND M.RowStatus = 1
+                WHERE
 				          RTP.OrderNumber = @OrderNumber 
                 ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
@@ -287,8 +292,7 @@ BEGIN
                         ON S.CatSubscriptionId = CS.IdCatSubscription
 					          INNER JOIN [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTP WITH (NOLOCK)
 					              ON CS.IdCatSubscription = RTP.IdSalePackage
-                WHERE --S.AccountId = @IdAccount
-                      --AND S.RowStatus = 1
+                WHERE 
                        RTP.OrderNumber = @OrderNumber 
                  ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
@@ -352,8 +356,10 @@ BEGIN
           , CatInvoiceTypeId
         )
         VALUES
-        (@inv_vpCodeOfReferences, @inv_cmp_nit, ISNULL(@inv_cli_name,'CF'), @inv_cli_adress, @inv_cli_nit, @inv_cli_email, @inv_date
-       , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1, @systemOrigen, @idType);
+        (@inv_vpCodeOfReferences, @inv_cmp_nit, ISNULL(@inv_cli_name,'CF'),
+         ISNULL(@inv_cli_adress,''),
+         isnull(@inv_cli_nit,''), isnull(@inv_cli_email,''), @inv_date
+       , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, isnull(@inv_tokenRegister,''), @Inv_Type, @systemOrigen, @idType);
 
         SET @dti_fk_header = SCOPE_IDENTITY();
 
@@ -469,7 +475,7 @@ BEGIN
           , [io_registryDate]
         )
         VALUES
-        (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token
+        (2, @inv_vpCodeOfReferences, @Authorizacion, isnull(@inv_amount,0), @inv_status, @dti_fk_header, isnull(@Token,'')
        , GETDATE());
 
 	     DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from [DeliveryBackOffice].[dbo].[MarketplaceCart] where AccountId = @IdAccountCart ORDER BY DateCreated DESC)
