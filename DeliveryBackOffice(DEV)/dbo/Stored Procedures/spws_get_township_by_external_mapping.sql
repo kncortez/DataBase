@@ -6,6 +6,7 @@
    Fecha:     2026-03-13
 ============================================
 === CHANGELOG ================================
+2026-03-13 | Historia/épica: <FDAPI-6190> | Autor: <Hanss Espinoza> |
 =========================================== */
 CREATE PROCEDURE [dbo].[spws_get_township_by_external_mapping]
     @pCodeOfReference INT,
@@ -65,9 +66,11 @@ BEGIN
     INNER JOIN [dbo].[Township] t WITH (NOLOCK) ON t.IdTownship = ctm.TownshipId
     WHERE ctm.CodeOfReference = @pCodeOfReference
       AND ctm.CountryId = @CountryId
-      AND ctm.ExternalTownshipName = @pExternalTownship
-      -- Validamos que el dato de la provincia haga match ya sea con el ID de la provincia o con su nombre
-      AND (ctm.ExternalProvinceId = @pExternalProvince OR ctm.ExternalProvinceName = @pExternalProvince)
+      AND ctm.ExternalTownshipName COLLATE Latin1_General_CI_AI = @pExternalTownship COLLATE Latin1_General_CI_AI
+            AND (
+                ctm.ExternalProvinceId = @pExternalProvince OR
+                ctm.ExternalProvinceName COLLATE Latin1_General_CI_AI = @pExternalProvince COLLATE Latin1_General_CI_AI
+            )
       AND ctm.RowStatus = 1
       AND t.TownshipStatus = 1
     ORDER BY t.IdTownship ASC;
