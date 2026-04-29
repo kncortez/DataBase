@@ -1,10 +1,12 @@
-    --USE DeliveryBackOffice
-    -- =============================================
-    -- Author:      Cristian Azurdia
-    -- Create date: <2024-12-30>
-    -- Description: Generación de libro de ventas GT, HN
-    -- =============================================
-    CREATE  PROCEDURE [dbo].[GetSalesBook]
+/* =================================================
+   SP:        [dbo].[GetSalesBook]
+   Propósito: Generación de libro de ventas GT, HN y SV.
+   Autor:     Cristian Azurdia
+   Fecha:     <2024-12-30>
+===== CHANGELOG ============================
+2026-04-28 | Historia/épica: FDAPI-6107 | Autor: Hanss Espinoza |
+=========================================== */
+CREATE PROCEDURE [dbo].[GetSalesBook]
 	-- Add the parameters for the stored procedure here
 	@BeginDate DATETIME,
 	@EndDate   DATETIME,
@@ -22,20 +24,21 @@ BEGIN
             ,MAX(ih.inv_date)       [date]
             ,MAX(ih.inv_cli_nit)   [id_client]
             ,MAX(ih.inv_cli_name)  [client_name]
-            ,CASE WHEN @IdCountry = 'GT' THEN ih.inv_serieFEL 
-                WHEN @IdCountry = 'HN' THEN ih.inv_certificationFEL ELSE '0' 
+            ,CASE
+                WHEN @IdCountry = 'GT' THEN ih.inv_serieFEL
+                ELSE ih.inv_certificationFEL  -- HN, SV
              END  [document_serie]
             ,MAX(ih.inv_numberFEL) [document_correlative]
-            ,CASE WHEN MAX(ih.inv_type) = 1 THEN 'FACTURA' 
-                WHEN MAX(ih.inv_type) = 2 THEN 'NOTA DE CREDITO' 
+            ,CASE WHEN MAX(ih.inv_type) = 1 THEN 'FACTURA'
+                WHEN MAX(ih.inv_type) = 2 THEN 'NOTA DE CREDITO'
                 ELSE 'NO DEFINIDO'
             END [document_type]
             ,0 [exportation]
             ,0 [sales]
-            ,CASE WHEN MAX(IND.dti_category) = 'BIEN'  THEN ih.inv_amount  
+            ,CASE WHEN MAX(IND.dti_category) = 'BIEN'  THEN ih.inv_amount
                 ELSE 0
             END [sales_goods]
-            ,CASE WHEN MAX(IND.dti_category) = 'SERVICIO'  THEN ih.inv_amount  
+            ,CASE WHEN MAX(IND.dti_category) = 'SERVICIO'  THEN ih.inv_amount
             ELSE 0
             END [sales_services]
             ,0 [discount]
@@ -62,7 +65,7 @@ BEGIN
                     ,Cs.SAPCardCode    [SAPCardCode]
                     ,CTS.CtsName       [CtsName]
             FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
-            INNER JOIN dbo.Customer cs WITH(NOLOCK) 
+            INNER JOIN dbo.Customer cs WITH(NOLOCK)
                 ON cs.IdCustomer = DO.IdCustomer
             LEFT JOIN CatTypeService cts WITH (NOLOCK)
                 ON DO.TypeService = cts.CtsShortName
@@ -82,3 +85,4 @@ BEGIN
     ORDER BY [row_number] asc
 
 END
+go
