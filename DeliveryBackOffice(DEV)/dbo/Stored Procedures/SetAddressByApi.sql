@@ -6,6 +6,7 @@
    Fecha:     2025-05-01
  ================ CHANGELOG ======================
 2025-11-20 | Historia: FDAPI-4831 | Autor: Walter Orozco |
+2026-04-28 | Historia: FDAPI-6138 | Autor: Oscar Rodriguez |
 ================================================= */
 
 CREATE PROCEDURE [dbo].[SetAddressByApi]
@@ -49,7 +50,9 @@ BEGIN
            ,@IdResult           INT = 0
            ,@ErrorMessage       NVARCHAR(500) = 'Operación exitosa'
            ,@IsSuccess          BIT = 1
-           ,@Date               DATETIME = GETDATE();
+           ,@Date               DATETIME = GETDATE()
+		   ,@SaleChannel		INT
+		   ,@IsBoxful		    INT = 0;
 
       BEGIN TRY
                 -- INICIAR TRANSACCIÓN
@@ -293,11 +296,17 @@ BEGIN
 						END;
 					END;
 
+					-- Verificar cliente boxfull para asignacion de canal de ventas (B2C Agregadores)
+					SET @IsBoxful = IIF(@IdCustomer IN (88813,83195),1,0)
+					SET @SaleChannel = IIF(@IsBoxful = 1, (SELECT IdSalesChannel FROM DeliveryBackOffice.dbo.CatSalesChannel WITH(NOLOCK) WHERE Description = 'B2C Agregadores'), 0)
+
                     -- Verificar si ya contiene el guion
                     IF CHARINDEX('-', @Phone) = 0 AND LEN(@Phone) = 8
                     BEGIN
                         SET @Phone = STUFF(@Phone, 5, 0, '-');
                     END
+
+
 
                     INSERT INTO dbo.VisitPointClient
                     (
@@ -326,7 +335,8 @@ BEGIN
                         Longitude,
                         [IsOriginVisitPoint],
                         LogLatitude,
-                        LogLongitude
+                        LogLongitude,
+						SaleChannelId
                     )
                     VALUES
                     (
@@ -355,7 +365,8 @@ BEGIN
                       @Longitude,                                  -- Longitude - varchar(50)
                       @IsOriginVisitPoint,                         -- [IsOriginVisitPoint]
                       @Latitude,                                   -- LogLatitude
-                      @Longitude                                   -- LogLongitude
+                      @Longitude,                                  -- LogLongitude
+					  IIF(@IsBoxful = 1,@SaleChannel,NULL)		   -- SaleChannelId - Por defecto NULL
                     )
 
                     -- COMMIT de la transacción
