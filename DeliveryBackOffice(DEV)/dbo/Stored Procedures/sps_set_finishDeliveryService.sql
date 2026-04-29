@@ -7,6 +7,7 @@
 ============================================
 === CHANGELOG ================================
 -- 2025-12-14 | Historia/épica: FDAPI-4785 | Autor: Tito Garcia |
+-- 2026-04-29 | Historia/épica: FDAPI-5361 | Autor: Edelman Vásquez |
 =========================================== */
 CREATE PROCEDURE [dbo].[sps_set_finishDeliveryService]
     @IdModuleP INT
@@ -18,6 +19,7 @@ CREATE PROCEDURE [dbo].[sps_set_finishDeliveryService]
   , @TblPayment AS TblPayment READONLY
   , @TblExclusions AS TblExclusions READONLY
   , @StationId INT = NULL
+  , @TransferImagePath  NVARCHAR(300) = NULL
 AS
 BEGIN
 	SET ARITHABORT ON;
@@ -542,6 +544,9 @@ BEGIN
 						, [TokenCreated]
 						, [DateCreated]
 						, [Responsible]
+						, [VoucherPath]
+				        , [IdTypeOfMoneyCOD]
+				        , [IdTypeOfMoneyCollect]
 					)
 					SELECT 
 						ct.IdCost,
@@ -551,11 +556,17 @@ BEGIN
 						1 AS IsActive,
 						@TokenP AS Token,
 						GETDATE() AS DateCreated,
-						@Responsible AS Responsible
+						@Responsible AS Responsible,
+						@TransferImagePath,
+						IIF(tg.CODAmount > 0 ,@IdTypeOfMoney,NULL),
+						IIF(tg.AmountToPay > 0 ,@IdTypeOfMoney,NULL)
 					FROM Cost ct WITH (NOLOCK)
 					INNER JOIN @TblInclude ti
 						ON ct.GuideSerie = ti.Guide_Serie
 						AND ct.GuideNumber = ti.Guide_Number -- ← corregido
+					INNER JOIN @TblListGuides tg 
+					    ON  ct.GuideSerie = tg.Guide_Serie
+						AND ct.GuideNumber = tg.Guide_Number
 					WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0
 					AND NOT EXISTS (
 						SELECT 1
@@ -569,12 +580,18 @@ BEGIN
 						, CD.Voucher = IIF(@IdTypeOfMoney IN (6, 10), @Voucher, '')
 						, CD.TokenUpdated = @TokenP
 						, CD.DateUpdated = GETDATE()
+						, IdTypeOfMoneyCOD = IIF(IdTypeOfMoneyCOD IS NULL AND tg.CODAmount > 0,@IdTypeOfMoney,IdTypeOfMoneyCOD)
+						, IdTypeOfMoneyCollect = IIF(IdTypeOfMoneyCollect IS NULL AND tg.AmountToPay > 0
+						     AND tg.CODAmount = 0 ,@IdTypeOfMoney,IdTypeOfMoneyCollect)
 					FROM Cost                                              ct WITH(NOLOCK)
 						INNER JOIN @TblInclude                             ti
 							ON ct.GuideSerie = ti.Guide_Serie
 							AND ct.GuideNumber = ti.Guide_Number
 						INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
 							ON ct.IdCost = CD.IdCost
+						INNER JOIN @TblListGuides tg 
+					        ON  ct.GuideSerie = tg.Guide_Serie
+						    AND ct.GuideNumber = tg.Guide_Number
 					WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0;
 
 				END;
