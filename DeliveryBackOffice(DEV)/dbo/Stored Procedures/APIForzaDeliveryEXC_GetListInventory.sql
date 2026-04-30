@@ -18,7 +18,7 @@ BEGIN
 
        SELECT 
               WH.Guide_Serie,
-              WH.Guide_Number,
+              CONCAT(WH.Guide_Number,'-',WH.Guide_Piece) AS [Guide_Number],
               SO.OrderDescription AS Status,
               CONCAT(DO.Receiver_FirstName, ' ', DO.Receiver_LastName) AS Receiver,
               WH.Rack_Position,
