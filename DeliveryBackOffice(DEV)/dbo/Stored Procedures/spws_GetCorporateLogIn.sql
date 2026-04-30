@@ -543,8 +543,8 @@ BEGIN
                                                                    CONVERT(
                                                                               VARCHAR
                                                                             , ISNULL(
-                                                                                        vpconf.[CODAccountBankID]
-                                                                                      , cu.[CODAccountBankID]
+                                                                                        cu.[CODAccountBankID]
+                                                                                        , vpconf.[CODAccountBankID]
                                                                                     )
                                                                           )
                                                                  , ''
@@ -555,19 +555,19 @@ BEGIN
                                                                     NVARCHAR
                                                                   , ISNULL(ISNULL(dbkconf.[Acronym], dbk.[Acronym]), '')
                                                                 ) + '",' + '"NameAccount":"'
-                                                       + ISNULL(ISNULL(vpconf.CODAccountName, cu.[CODAccountName]), '')
+                                                       + ISNULL(ISNULL(cu.[CODAccountName], vpconf.CODAccountName), '')
                                                        + '",' + '"TypeAccount":"'
                                                        + CONVERT(
                                                                     NVARCHAR
                                                                   , ISNULL(
                                                                               ISNULL(
-                                                                                        cbaconf.[BankAccountType]
-                                                                                      , cba.[BankAccountType]
+                                                                                       cba.[BankAccountType]
+                                                                                       ,  cbaconf.[BankAccountType]
                                                                                     )
                                                                             , ''
                                                                           )
                                                                 ) + '",' + '"NumberAcc":"'
-                                                       + ISNULL(ISNULL(vpconf.CODAccountNumber, cu.[CODAccountNumber]), '')
+                                                       + ISNULL(ISNULL(cu.[CODAccountNumber], vpconf.CODAccountNumber), '')
                                                        + '",'
                                                      , +'"DPI":"' + ISNULL(cu.[LegalSponsorDPI], '') + '"' 
                                                      + '}]' + '}'
