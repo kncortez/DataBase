@@ -85,6 +85,10 @@ BEGIN
                       AND DOR.IsCollect = 1
                   )
               )
+			AND 
+			(
+				dor.IsCollect = 1 OR DOR.Collect_OnDelivery > 0
+			)
         UNION
         SELECT DISTINCT
                dsd.ID_DeliveryOrderBySettlement [id],
@@ -127,6 +131,10 @@ BEGIN
                       AND DOR.IsCollect = 1
                   )
               )
+				AND 
+				(
+					dor.IsCollect = 1 OR DOR.Collect_OnDelivery > 0
+				)
     ) AS s;
 
     SELECT DISTINCT

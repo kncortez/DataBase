@@ -18,6 +18,7 @@
     [WeightTo]          DECIMAL (12, 2) NULL,
     [PackagesFrom]      INT             NULL,
     [PackagesTo]        INT             NULL,
+    [RateIdUpdated]     INT             NULL,
     PRIMARY KEY CLUSTERED ([IdRateData] ASC),
     CONSTRAINT [FKRateArticuleId] FOREIGN KEY ([ArticleId]) REFERENCES [dbo].[ArticleByCustomer] ([AbcId]),
     CONSTRAINT [FKRateDetId] FOREIGN KEY ([RateId]) REFERENCES [dbo].[RateHeader] ([RheId]),
@@ -54,6 +55,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Paquetes ha
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Paquetes desde en tarifario por paquetes.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateData', @level2type = N'COLUMN', @level2name = N'PackagesFrom';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para identificar modificaciones en tarifarios por rango de peso.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateData', @level2type = N'COLUMN', @level2name = N'RateIdUpdated';
 
 
 GO
