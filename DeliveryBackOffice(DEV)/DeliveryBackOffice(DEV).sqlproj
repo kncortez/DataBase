@@ -2047,6 +2047,7 @@
     <Build Include="dbo\Stored Procedures\CreateIncidentRecord_BNHL_1.sql" />
     <Build Include="dbo\Stored Procedures\consumo_suscripcionesv6.sql" />
     <Build Include="dbo\Stored Procedures\Consolidado_en_suscripciones_v6.sql" />
+    <Build Include="dbo\Stored Procedures\CheckStatusForWorkflow.sql" />
     <Build Include="dbo\Stored Procedures\AssignPieceToRoutePreparation_BNHL_1.sql" />
     <Build Include="dbo\Stored Procedures\analisis_recolecciones.sql" />
     <Build Include="Security\ECS-DB-DENARIUS_deliveryreport_1.sql" />
