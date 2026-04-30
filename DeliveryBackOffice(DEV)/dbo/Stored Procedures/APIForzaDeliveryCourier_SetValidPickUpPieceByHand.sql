@@ -148,7 +148,8 @@ BEGIN
 						SELECT 
 							2 AS [StatusCode],
 							'La Guia no existe' AS [Message],
-							1 AS [NoPiece]
+							1 AS [NoPiece],
+                            null AS TotalPiecesDry
 						RETURN
 					END
 					ELSE
@@ -163,7 +164,8 @@ BEGIN
 								SELECT 
 									3 AS [StatusCode],
 									'La Guia no pertenece al cliente de la recoleccion' AS [Message],
-									1 AS [NoPiece]
+									1 AS [NoPiece],
+                                    null AS TotalPiecesDry
 								RETURN
 							END
 						END
@@ -180,7 +182,8 @@ BEGIN
 					BEGIN
 						SELECT 
 							2 AS [StatusCode],
-							'El contenedor no existe' AS [Message]
+							'El contenedor no existe' AS [Message],
+                            null AS TotalPiecesDry
 						RETURN
 					END
 					ELSE
@@ -192,7 +195,8 @@ BEGIN
 						      
                                     SELECT 
                                             2 AS [StatusCode],
-                                            'El contenedor ya esta recolectado' AS [Message]
+                                            'El contenedor ya esta recolectado' AS [Message],
+                                            null AS TotalPiecesDry
                                     RETURN
 
                                 END
@@ -208,7 +212,8 @@ BEGIN
 						BEGIN
 							SELECT 
 								3 AS [StatusCode],
-								'Contenedor no pertenece al cliente de la recoleccion' AS [Message]
+								'Contenedor no pertenece al cliente de la recoleccion' AS [Message],
+                                null AS TotalPiecesDry
 							RETURN
 						END
 						
@@ -287,13 +292,15 @@ BEGIN
                 ELSE
                 BEGIN
                     SELECT 0 AS StatusCode,
-                           'La guia pertenece a otro país' AS Message
+                           'La guia pertenece a otro país' AS Message,
+                           null AS TotalPiecesDry
                 END
             END
             ELSE
             BEGIN
                 SELECT 1 AS StatusCode,
-					  'Guias no validas' AS Message
+					  'Guias no validas' AS Message,
+                      null AS TotalPiecesDry
 
                 SELECT Message,
                        Guide
@@ -303,7 +310,8 @@ BEGIN
         ELSE
         BEGIN
             SELECT 0 AS StatusCode,
-                   'El Token no es valido' AS Message
+                   'El Token no es valido' AS Message,
+                   null AS TotalPiecesDry
         END
 
     END TRY
