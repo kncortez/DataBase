@@ -27,35 +27,33 @@ BEGIN
 	        @AccountZigi NVARCHAR(30);
 
 	SELECT @IdCountry = CountryId 
-	FROM VisitPointClient 
+	FROM DeliveryBackOffice.dbo.VisitPointClient 
 	WHERE CodeOfReference = @VisitPointId
 
 	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
+	FROM DeliveryBackOffice.dbo.ClosureAccount 
 	WHERE Description = 'Cuenta Express Center' AND IdCountry = @IdCountry
 	
 	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
+	FROM DeliveryBackOffice.dbo.ClosureAccount 
 	WHERE Description = 'Cuenta Área COD' AND IdCountry = @IdCountry
 
-	-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
 	SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
-	FROM dbo.ClosureAccount
+	FROM DeliveryBackOffice.dbo.ClosureAccount
 	WHERE Description = 'Cuenta Zigi' AND IdCountry = @IdCountry
 
-	-- MODIFICACIÓN [13/04/2026] - Para concesionarios toma el día más antiguo con cierres de operador
-    DECLARE @LastWorkingDate DATE;
+	DECLARE @LastWorkingDate DATE;
     DECLARE @IsCNC BIT = 0;
  
     SELECT @IsCNC = 1
-    FROM VisitPointClient WITH(NOLOCK)
+    FROM DeliveryBackOffice.dbo.VisitPointClient WITH(NOLOCK)
     WHERE CodeOfReference = @VisitPointId
       AND IdKindOfVPClient IN (3, 14, 25);
  
     IF (@IsCNC = 1)
     BEGIN
         SELECT @LastWorkingDate = MIN(CAST(ACH.ClosureDate AS DATE))
-        FROM AccountingClosuresHeader ACH WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
         WHERE ACH.VisitPoint = @VisitPointId
           AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
           AND ACH.RowStatus = 1
@@ -64,7 +62,6 @@ BEGIN
     BEGIN
         SET @LastWorkingDate = CAST(GETDATE() AS DATE);
     END
-    -- FIN MODIFICACIÓN
 	
 	SELECT	UsrIdUser 'UserId', UsrNickName 'UserNickName', DateCreated, IdAccountingClosuresHeader 'IdCierre',
 		ISNULL(SUM(S1.TotalAmountCash), 0) 'TotalAmountCash',
@@ -77,15 +74,12 @@ BEGIN
 		ISNULL(SUM(S1.TotalAmountFacturaCardDeclared), 0) 'TotalAmountFacturaCardDeclared',
 		ISNULL(SUM(S1.TotalAmountCODCash), 0) 'TotalAmountCODCash',
 		ISNULL(SUM(S1.TotalAmountCODCashDeclared), 0) 'TotalAmountCODCashDeclared',
-		-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
-		-- TotalAmountZigi debe ser la suma de Facturas + COD:
 		ISNULL(SUM(S1.TotalAmountFacturaZigi + S1.TotalAmountCODZigi), 0) 'TotalAmountZigi',
 		ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared + S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountZigiDeclared',
 		ISNULL(SUM(S1.TotalAmountFacturaZigi), 0) 'TotalAmountFacturaZigi',
 		ISNULL(SUM(S1.TotalAmountFacturaZigiDeclared), 0) 'TotalAmountFacturaZigiDeclared',
 		ISNULL(SUM(S1.TotalAmountCODZigi), 0) 'TotalAmountCODZigi',
 		ISNULL(SUM(S1.TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-		-- FIN MODIFICACIÓN
 		S1.CurrencySymbolDetail
 	FROM 
 	(
@@ -97,32 +91,27 @@ BEGIN
 				ISNULL(CODCashCalc.TotalCODCash, 0) AS TotalAmountCODCash,
 				ACH.TotalAmountCODCashDeclared,
 				ACH.InvoiceAmountCOD,
-				-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
 				ACH.TotalAmountFacturaZigi,
 				ACH.TotalAmountFacturaZigiDeclared,
 				ACH.InvoiceAmountZigi,
 				ACH.InvoiceAmountFacturaZigi,
-				-- COD Zigi desde subconsulta agrupada:
 				ISNULL(CODZigiCalc.TotalCODZigi, 0) AS TotalAmountCODZigi,
 				ACH.TotalAmountCODZigiDeclared,
-				-- FIN MODIFICACIÓN
 				RU.UsrNickName, RU.UsrIdUser, 
-				--MODIFICACIÓN [13/04/2026] - para que en la vista se observe la fecha teórica de cierre
 				ACH.ClosureDate AS DateCreated, 
 				ACH.IdAccountingClosuresHeader,
 				ISNULL(CCC.Symbol,'') AS 'CurrencySymbolDetail'
-		FROM AccountingClosuresHeader ACH
-		INNER JOIN RegisterUser RU
+		FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+		INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU
 			ON ACH.UserId = RU.UsrIdUser
-		INNER JOIN VisitPointClient VP WITH (NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VP WITH (NOLOCK)
 			ON ACH.VisitPoint = VP.CodeOfReference
-		-- AQUÍ ESTÁN LAS SUBCONSULTAS
 		-- Subconsulta para COD Cash (evitar duplicados):
 		LEFT JOIN (
 			SELECT ACD.AccountingClosuresHeaderId,
 				   SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
-			FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-			LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
 				ON DOPT.GuideSerie = ACD.GuideSerie
 				AND DOPT.GuideNumber = ACD.GuideNumber
 				AND DOPT.DopId = ACD.DopId
@@ -132,19 +121,17 @@ BEGIN
 		LEFT JOIN (
 			SELECT ACD.AccountingClosuresHeaderId,
 				   SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
-			FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-			LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
 				ON DOPT.GuideSerie = ACD.GuideSerie
 				AND DOPT.GuideNumber = ACD.GuideNumber
 				AND DOPT.DopId = ACD.DopId
 			GROUP BY ACD.AccountingClosuresHeaderId
 		) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-		-- AQUÍ TERMINAN LAS SUBCONSULTAS
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
+			ON VP.CountryId = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-		-- MODIFICACIÓN [13/04/2026] - usar @LastWorkingDate y no CAST(GETDATE() AS DATE). Se utiliza nuevo campo, no ACH.DateCreated
 		WHERE CAST(ACH.ClosureDate AS DATE) = @LastWorkingDate
 			AND ACH.VisitPoint = @VisitPointId
 			AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
@@ -166,7 +153,6 @@ BEGIN
 		-- COD Cash desde transacciones agrupadas:
 		ISNULL(SUM(CODCashCalc.TotalCODCash), 0) 'TotalAmountCODCash',
 		ISNULL(SUM(TotalAmountCODCashDeclared), 0) 'TotalAmountCODCashDeclared',
-		-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
 		@AccountZigi as 'AccountZigi',
 		-- TotalAmountZigi: Solo facturas (del header):
 		ISNULL(SUM(TotalAmountFacturaZigi), 0) 'TotalAmountZigi',
@@ -176,26 +162,23 @@ BEGIN
 		-- COD Zigi desde transacciones agrupadas:
 		ISNULL(SUM(CODZigiCalc.TotalCODZigi), 0) 'TotalAmountCODZigi',
 		ISNULL(SUM(TotalAmountCODZigiDeclared), 0) 'TotalAmountCODZigiDeclared',
-		-- FIN MODIFICACIÓN
 		ISNULL(SUM(InvoiceAmountCash), 0) 'InvoiceAmountCash',
 		ISNULL(SUM(InvoiceAmountCredit), 0) 'InvoiceAmountCredit',
 		ISNULL(SUM(InvoiceAmountFacturaCash), 0) 'InvoiceAmountFacturaCash',
 		ISNULL(SUM(InvoiceAmountFacturaCard), 0) 'InvoiceAmountFacturaCard',
 		ISNULL(SUM(InvoiceAmountCOD), 0) 'InvoiceAmountCOD',
-		-- MODIFICACIÓN [17/10/2025] - Campos para Zigi
 		ISNULL(SUM(InvoiceAmountZigi), 0) 'InvoiceAmountZigi',
 		ISNULL(SUM(InvoiceAmountFacturaZigi), 0) 'InvoiceAmountFacturaZigi',
-		-- FIN MODIFICACIÓN
 		ISNULL(CCC.Symbol,'') AS 'CurrencySymbol'
-	FROM AccountingClosuresHeader ACH
-	INNER JOIN VisitPointClient VP WITH (NOLOCK)
+	FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VP WITH (NOLOCK)
 		ON ACH.VisitPoint = VP.CodeofReference
 	-- Subconsulta para COD Cash (evitar duplicados):
 	LEFT JOIN (
 		SELECT ACD.AccountingClosuresHeaderId,
 			   SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
-		FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-		LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+		FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
 			ON DOPT.GuideSerie = ACD.GuideSerie
 			AND DOPT.GuideNumber = ACD.GuideNumber
 			AND DOPT.DopId = ACD.DopId
@@ -205,18 +188,17 @@ BEGIN
 	LEFT JOIN (
 		SELECT ACD.AccountingClosuresHeaderId,
 			   SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
-		FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-		LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+		FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
 			ON DOPT.GuideSerie = ACD.GuideSerie
 			AND DOPT.GuideNumber = ACD.GuideNumber
 			AND DOPT.DopId = ACD.DopId
 		GROUP BY ACD.AccountingClosuresHeaderId
 	) CODZigiCalc ON CODZigiCalc.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
 	LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-			ON ISNULL(VP.CountryId,'GT') = DC.Currency_IdCountry
+			ON VP.CountryId = DC.Currency_IdCountry
 		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-	-- MODIFICACIÓN [13/04/2026] - usar @LastWorkingDate y no CAST(GETDATE() AS DATE). Se utiliza nuevo campo, no ACH.DateCreated
 	WHERE CAST(ACH.ClosureDate AS DATE) = @LastWorkingDate
 		AND ACH.VisitPoint = @VisitPointId
 		AND ACH.AccountingClosuresHeaderVisitPointId IS NULL

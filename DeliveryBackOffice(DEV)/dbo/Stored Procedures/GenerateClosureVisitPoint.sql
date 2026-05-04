@@ -27,11 +27,9 @@ CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
 	@TotalAmountCODCashDeclared DECIMAL(18, 5),
 	@TotalAmountFacturaCashDeclared DECIMAL(18,5),
 	@TotalAmountFacturaCardDeclared DECIMAL(18,5),
-	-- MODIFICACIÓN [2025-11-04] - Parámetros declarados para Zigi
 	@TotalAmountZigiDeclared DECIMAL(18, 5) = 0,
 	@TotalAmountCODZigiDeclared DECIMAL(18, 5) = 0,
 	@TotalAmountFacturaZigiDeclared DECIMAL(18, 5) = 0
-	-- FIN MODIFICACIÓN
 AS
 BEGIN
 
@@ -46,27 +44,23 @@ BEGIN
 	DECLARE @InvoiceAmountFacturaCash INT;
 	DECLARE @InvoiceAmountFacturaCard INT;
 	DECLARE @InvoiceAmountCOD INT;
-	-- MODIFICACIÓN [2025-11-04] - Variables para Zigi
 	DECLARE @TotalAmountZigi DECIMAL(18, 5);
 	DECLARE @TotalAmountCODZigi DECIMAL(18, 5);
 	DECLARE @TotalAmountFacturaZigi DECIMAL(18, 5);
 	DECLARE @InvoiceAmountZigi INT;
 	DECLARE @InvoiceAmountFacturaZigi INT;
-	-- FIN MODIFICACIÓN
-
-	--MODIFICACIÓN [13/04/2026] - Toma la última fecha de cierre general, no la del día.
 	DECLARE @LastWorkingDate DATE;
 	DECLARE @IsCNC BIT = 0;
 
 	SELECT @IsCNC = 1
-	FROM VisitPointClient WITH(NOLOCK)
+	FROM DeliveryBackOffice.dbo.VisitPointClient WITH(NOLOCK)
 	WHERE CodeOfReference = @VisitPointId
 	  AND IdKindOfVPClient IN (3,14,25);
 
 	IF (@IsCNC = 1)
 	BEGIN
 		SELECT @LastWorkingDate = MIN(CAST(ACH.ClosureDate AS DATE))
-		FROM AccountingClosuresHeader ACH WITH(NOLOCK)
+		FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		WHERE ACH.VisitPoint = @VisitPointId
 		  AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
 	END
@@ -74,19 +68,18 @@ BEGIN
 	BEGIN
 		SET @LastWorkingDate = CAST(GETDATE() AS DATE);
 	END
-	--FIN MODIFICACIÓN
 
 	SET @UserId2 =
 		(
 			SELECT TOP 1
 				   vp.RegisterUserID
-			FROM [dbo].RegisterUser usr
-				LEFT JOIN [dbo].[RolByUserByAccount] rua
+			FROM DeliveryBackOffice.dbo.RegisterUser usr WITH(NOLOCK)
+				LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rua WITH(NOLOCK)
 					ON rua.RuaIdUser = usr.UsrIdUser
 					   AND rua.RuaRowStatus = 1
-				INNER JOIN [dbo].Account ac
+				INNER JOIN DeliveryBackOffice.dbo.Account ac WITH(NOLOCK)
 					ON ac.AccIdAccount = rua.RuaIdAccount
-				INNER JOIN VisitPointByUser vp
+				INNER JOIN DeliveryBackOffice.dbo.VisitPointByUser vp WITH(NOLOCK)
 					ON vp.RegisterUserID = usr.UsrIdUser
 			WHERE ac.AccIdAccount = @UserId
 					AND ac.AccRowStatus = 1
@@ -102,15 +95,12 @@ BEGIN
 		@InvoiceAmountFacturaCash = ISNULL(SUM(InvoiceAmountFacturaCash), 0),
 		@InvoiceAmountFacturaCard = ISNULL(SUM(InvoiceAmountFacturaCard), 0),
 		@InvoiceAmountCOD = ISNULL(SUM(InvoiceAmountCOD), 0),
-		-- MODIFICACIÓN [2025-11-04] - Totales para Zigi
 		@TotalAmountZigi = ISNULL(SUM(TotalAmountZigi), 0),
 		@TotalAmountCODZigi = ISNULL(SUM(TotalAmountCODZigi), 0),
 		@TotalAmountFacturaZigi = ISNULL(SUM(TotalAmountFacturaZigi), 0),
 		@InvoiceAmountZigi = ISNULL(SUM(InvoiceAmountZigi), 0),
 		@InvoiceAmountFacturaZigi = ISNULL(SUM(InvoiceAmountFacturaZigi), 0)
-		-- FIN MODIFICACIÓN
-	FROM AccountingClosuresHeader ACH
-	  -- MODIFICACIÓN [13/04/2026] - usar @LastWorkingDate y no CAST(GETDATE() AS DATE). Se utiliza nuevo campo, no ACH.DateCreated
+	FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 	  WHERE CAST(ACH.ClosureDate AS DATE) = @LastWorkingDate
 		AND ACH.VisitPoint = @VisitPointId
 		AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
@@ -130,7 +120,6 @@ BEGIN
 				TotalAmountCredit, TotalAmountCreditDeclared,
 				VisitPoint, Voucher1, Bag1, Voucher2, Bag2, RowStatus,
 				TokenCreated, DateCreated,
-				--Modificación [2026-04-15] Almacena la fecha original de cierre
 				ClosureDate,
 				TokenUpdated, DateUpdated,
 				TotalAmountCODCash, TotalAmountCODCashDeclared,
@@ -139,12 +128,10 @@ BEGIN
 				InvoiceAmountCash, InvoiceAmountCredit,
 				InvoiceAmountFacturaCash, InvoiceAmountFacturaCard,
 				InvoiceAmountCOD,
-				-- MODIFICACIÓN [2025-11-04] - Campos para Zigi
 				TotalAmountZigi, TotalAmountZigiDeclared,
 				TotalAmountCODZigi, TotalAmountCODZigiDeclared,
 				TotalAmountFacturaZigi, TotalAmountFacturaZigiDeclared,
 				InvoiceAmountZigi, InvoiceAmountFacturaZigi
-				-- FIN MODIFICACIÓN
 			)
 			VALUES
 			(
@@ -153,7 +140,6 @@ BEGIN
 				@TotalAmountCredit, @TotalAmountCreditDeclared,
 				@VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, 
 				@TokenCreated, GETDATE(), 
-				--Modificación [2026-04-15] - Almacena la fecha original de cierre
 				@LastWorkingDate,
 				NULL, NULL, 
 				@TotalAmountCODCash, @TotalAmountCODCashDeclared, 
@@ -162,21 +148,18 @@ BEGIN
 				@InvoiceAmountCash, @InvoiceAmountCredit,
 				@InvoiceAmountFacturaCash, @InvoiceAmountFacturaCard,
 				@InvoiceAmountCOD,
-				-- MODIFICACIÓN [2025-11-04] - Valores para Zigi
 				@TotalAmountZigi, @TotalAmountZigiDeclared,
 				@TotalAmountCODZigi, @TotalAmountCODZigiDeclared,
 				@TotalAmountFacturaZigi, @TotalAmountFacturaZigiDeclared,
 				@InvoiceAmountZigi, @InvoiceAmountFacturaZigi
-				-- FIN MODIFICACIÓN
 			);
 
 			-- Variable que obtiene el ID del cierre generado
 			SET @IdClosure =  SCOPE_IDENTITY();
 
 			-- Inserta el ID del cierre de VisitPoint en los cierres que se hicieron durante el día
-			UPDATE [dbo].[AccountingClosuresHeader]
+			UPDATE DeliveryBackOffice.dbo.AccountingClosuresHeader
 			SET AccountingClosuresHeaderVisitPointId = @IdClosure
-		    -- MODIFICACIÓN [13/04/2026] - usar @LastWorkingDate y no CAST(GETDATE() AS DATE). Se utiliza nuevo campo, no ACH.DateCreated
 			WHERE CAST(ClosureDate AS DATE) = @LastWorkingDate
 				AND VisitPoint = @VisitPointId
 				AND AccountingClosuresHeaderVisitPointId IS NULL;
@@ -185,7 +168,7 @@ BEGIN
 					   'Cierre generado exitosamente' Message,
 					   Value 'URL',
 					   @IdClosure 'IdCierre'
-			FROM ConfigParams
+			FROM DeliveryBackOffice.dbo.ConfigParams
 			WHERE Name = 'ClosureExpressCenter';
 		END
 		ELSE
