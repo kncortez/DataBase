@@ -1,4 +1,4 @@
-/* =================================================
+﻿/* =================================================
    SP: LoadProductCategory
    Propósito: Carga de categorías del sistema MarketPlace 
               con filtro por país.
