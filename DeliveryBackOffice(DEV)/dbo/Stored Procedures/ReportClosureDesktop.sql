@@ -20,6 +20,11 @@
 -- Create date: <2026-03-03>
 -- Description:	<Optimización: mejor manejo de rango de fechas, eliminación de OR en WHERE, OUTER APPLY sin OR para invoiceHeader>
 -- =============================================
+-- =============================================
+-- Author:		<Mario Herrarte>
+-- Create date: <2026-05-04>
+-- Description:	<Se soluciona inconveniente con envios internacionales y articulos.>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -59,15 +64,23 @@ BEGIN
         WHERE TRY_CAST(Item AS int) IS NOT NULL;
 
     IF @IdCierre = '-1'
-        INSERT INTO @tblIdCierre
-        SELECT DISTINCT ACD.AccountingClosuresHeaderId
-        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
-            ON ACD.GuideSerie = DOPD.GuideSerie
-            AND ACD.GuideNumber = DOPD.GuideNumber
-            AND ACD.DopId = DOPD.DopId
-        WHERE ACD.RowStatus = 1
-          AND DOPD.DateCreated >= @StartDateClean AND DOPD.DateCreated < @EndDateClean;
+    INSERT INTO @tblIdCierre
+    SELECT DISTINCT ACD.AccountingClosuresHeaderId
+    FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
+    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
+        ON ACD.DopId = DOPD.DopId
+        AND (
+                ACD.GuideSerie = DOPD.GuideSerie
+                OR (ACD.GuideSerie IS NULL AND DOPD.GuideSerie IS NULL)
+            )
+        AND (
+                ACD.GuideNumber = DOPD.GuideNumber
+                OR (ACD.GuideNumber IS NULL AND DOPD.GuideNumber IS NULL)
+            )
+        --ON ACD.GuideSerie = DOPD.GuideSerie
+        --AND ACD.GuideNumber = DOPD.GuideNumber
+    WHERE ACD.RowStatus = 1
+      AND DOPD.DateCreated >= @StartDateClean AND DOPD.DateCreated < @EndDateClean;
     ELSE IF @IdCierre IS NOT NULL
         INSERT INTO @tblIdCierre
         SELECT DISTINCT CAST(Item AS int)
@@ -173,17 +186,24 @@ BEGIN
         FROM DeliveryBackOffice.dbo.invoiceHeader WITH(NOLOCK)
         WHERE INH_Header.inv_pk_id IS NULL
           AND CHARINDEX('-', DOPD.Fel) > 0
-          AND inv_numberFEL = TRY_CAST(
-              SUBSTRING(DOPD.Fel, CHARINDEX('-', DOPD.Fel) + 1, LEN(DOPD.Fel)) 
-          AS INT)
+          AND inv_numberFEL = --TRY_CAST(SUBSTRING(DOPD.Fel, CHARINDEX('-', DOPD.Fel) + 1, LEN(DOPD.Fel)) AS BIGINT)
+            SUBSTRING(DOPD.Fel, CHARINDEX('-', DOPD.Fel) + 1, LEN(DOPD.Fel))
     ) INH_Fel
     LEFT JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
         ON STO.StatusOrderId = DOR.StatusOrderId
     -- JOINs principales
     INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
-        ON ACD.GuideSerie = DOPD.GuideSerie
-        AND ACD.GuideNumber = DOPD.GuideNumber
-        AND ACD.DopId = DOPD.DopId
+        --ON ACD.GuideSerie = DOPD.GuideSerie
+        --AND ACD.GuideNumber = DOPD.GuideNumber
+        ON ACD.DopId = DOPD.DopId
+        AND (
+                ACD.GuideSerie = DOPD.GuideSerie
+                OR (ACD.GuideSerie IS NULL AND DOPD.GuideSerie IS NULL)
+            )
+        AND (
+                ACD.GuideNumber = DOPD.GuideNumber
+                OR (ACD.GuideNumber IS NULL AND DOPD.GuideNumber IS NULL)
+            )
         AND ACD.RowStatus = 1
     INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
         ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
@@ -208,7 +228,7 @@ BEGIN
         ON REU1.UsrIdUser = ACHVP.UserId
     WHERE DOPD.DateCreated >= @StartDateClean AND DOPD.DateCreated < @EndDateClean
         AND DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount)
-        AND ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre)
+        AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
         AND COALESCE(DOPD.VisitPoint, ACH.VisitPoint) IN (SELECT CodeOfReference FROM @tblVisitPointId)
         AND DOPD.ShipmentCompleted = 1
         AND DOPD.AccountId > 0
