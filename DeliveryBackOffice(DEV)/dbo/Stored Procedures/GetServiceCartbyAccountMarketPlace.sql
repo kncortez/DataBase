@@ -71,10 +71,9 @@ BEGIN
                     IIF(cp.SubscriptionValidity = 1,
                         CONVERT(Varchar, cp.SubscriptionValidity)+' mes',
                         CONVERT(Varchar, cp.SubscriptionValidity)+' meses') [ExpirationProduct]
-                FROM [dbo].[MarketplaceCartDetail] mpcm
+                FROM [dbo].[MarketplaceCartDetail] mpcm WITH (NOLOCK)
                 INNER JOIN [dbo].[MarketplaceCart] mpc
                     ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
-                    AND mpcm.TypeProduct <> 'Club Forza'
                 INNER JOIN dbo.CatSubscription cp WITH (NOLOCK)
                     ON mpcm.CatProductId = cp.IdCatSubscription
                 LEFT JOIN DeliveryCurrency dc WITH(NOLOCK)
@@ -86,6 +85,7 @@ BEGIN
                 AND mpc.RowStatus = 1
                 AND mpcm.RowStatus=1
                 AND mpc.IdCountry = @IdCountry
+                AND mpcm.TypeProduct <> 'Club Forza'
 
                 UNION ALL
                 SELECT
@@ -133,10 +133,9 @@ BEGIN
                     IIF(cp.SubscriptionValidity = 1,
                         CONVERT(Varchar, cp.SubscriptionValidity)+' mes',
                         CONVERT(Varchar, cp.SubscriptionValidity)+' meses') [ExpirationProduct]
-                FROM [dbo].[MarketplaceCartDetail] mpcm
-                INNER JOIN [dbo].[MarketplaceCart] mpc
+                FROM [dbo].[MarketplaceCartDetail] mpcm WITH (NOLOCK)
+                INNER JOIN [dbo].[MarketplaceCart] mpc WITH (NOLOCK)
                     ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
-                    AND mpcm.TypeProduct <> 'Club Forza'
                 INNER JOIN dbo.CatSubscription cp WITH (NOLOCK)
                     ON mpcm.CatProductId = cp.IdCatSubscription
                 LEFT JOIN DeliveryCurrency dc WITH(NOLOCK) 
@@ -148,6 +147,7 @@ BEGIN
                 AND mpc.RowStatus = 1
                 AND mpcm.RowStatus=1
                 AND mpc.IdCountry = @IdCountry 
+                AND mpcm.TypeProduct <> 'Club Forza'
 
                 UNION ALL
                 SELECT

@@ -180,8 +180,8 @@ BEGIN
         CPD.Title               [CatProductDescriptionTitle],
         CPD.Position            [CatProductDescriptionOrder],
         CPD.CatSubscriptionId   [CatProductId]
-    From DeliveryBackOffice.[dbo].[CatSubscriptionDescription] CPD WITH (NOLOCK)
-    INNER JOIN DeliveryBackOffice.[dbo].[CatSubscription] CP WITH (NOLOCK)
+    From DeliveryBackOffice.[dbo].[CatSubscription] CP WITH (NOLOCK)
+    INNER JOIN DeliveryBackOffice.[dbo].[CatSubscriptionDescription] CPD WITH (NOLOCK)
         ON CPD.CatSubscriptionId = CP.IdCatSubscription
     Where CPD.RowStatus = 1 
     AND CP.IdCountry = @IdCountry 
@@ -191,8 +191,8 @@ BEGIN
         CPD.Title               [CatProductDescriptionTitle],
         CPD.Position            [CatProductDescriptionOrder],
         CPD.CatMembershipId     [CatProductId]
-    From DeliveryBackOffice.[dbo].[CatMembershipDescription] CPD WITH (NOLOCK)
-    INNER JOIN DeliveryBackOffice.[dbo].[CatMembership] CP WITH (NOLOCK)
+    From DeliveryBackOffice.[dbo].[CatMembership] CP WITH (NOLOCK)
+    INNER JOIN DeliveryBackOffice.[dbo].[CatMembershipDescription] CPD WITH (NOLOCK)
         ON CPD.CatMembershipId = CP.IdCatMembership
     Where CPD.RowStatus = 1 
     AND CP.IdCountry = @IdCountry  
@@ -206,8 +206,8 @@ BEGIN
         CPA.CatSubscriptionId                      [CatProductId],
         CPA.SubscriptionAttributePosition          [CatProductAtributeOrder],
         CS.Icon                                    [CatProductAttributeIcon]
-    From DeliveryBackOffice.[dbo].[CatSubscriptionAtribute] CPA WITH(NOLOCK)
-    INNER JOIN DeliveryBackOffice.[dbo].[CatSubscription] CS WITH(NOLOCK)
+    From DeliveryBackOffice.[dbo].[CatSubscription] CS WITH(NOLOCK)
+    INNER JOIN DeliveryBackOffice.[dbo].[CatSubscriptionAttribute]  CPA WITH(NOLOCK)
         ON CPA.CatSubscriptionId = CS.IdCatSubscription
     Where CPA.RowStatus = 1 
     AND CS.RowStatus = 1 

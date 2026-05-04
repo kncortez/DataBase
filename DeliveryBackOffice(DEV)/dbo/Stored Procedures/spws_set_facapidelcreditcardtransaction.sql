@@ -97,6 +97,7 @@ BEGIN
     DECLARE @UpdatedValue DECIMAL(14, 2) = 0;
     -- Variable para validación de fecha de la promoción
     DECLARE @DateCreatedAfter DATE = DATEADD(DAY, 1, @DateCreated);
+    DECLARE @ToDay DATE = GETDATE();  
     -- Datos del cliente para promo
     SELECT @CustomerId   = Cu.IdCustomer
          , @CustomerType = ISNULL(Cu.IdCustomerType, 0)
@@ -328,7 +329,7 @@ BEGIN
               , ErrorProcedure
             )
             VALUES
-            (GETDATE(), 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
+            (@ToDay, 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
 
         END CATCH;
 
@@ -350,7 +351,7 @@ BEGIN
             UPDATE [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer]
             SET ReasonCode = @ReasonCode
               , ReasonDescription = @ReasonDescription
-              , DateUpdated = GETDATE() ---@DateUpdated,
+              , DateUpdated = @ToDay ---@DateUpdated,
               , TokenUpdated = @TokenUpdated
               , ECIIndicator = @ECIIndicator
               , Authenticationresult = @Authenticationresult
@@ -533,7 +534,7 @@ BEGIN
                          , CM.MembershipFixedValue
                          , CM.MembershipMaxServiceFixedValue
                          , 0
-                         , DATEADD(MONTH, CM.MembershipValidity, GETDATE())
+                         , DATEADD(MONTH, CM.MembershipValidity, @ToDay)
                          , CASE
                                WHEN EXISTS
                 (
@@ -1289,21 +1290,11 @@ BEGIN
                 SELECT TOP 1
                        Co.IdCost
                 FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
-                WHERE (
-                          (
-                              Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
-                              AND Co.GuideNumber = AG.GuideNumber
-                          )
-                          OR
-                          (
-                              Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie, 'FD'), AG.GuideNumber)
-                              AND Co.GuideSerie IS NULL
-                              AND Co.GuideNumber IS NULL
-                          )
-                      )
-                      AND Co.RowStatus = 1
+                WHERE Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
+                    AND Co.GuideNumber = AG.GuideNumber
+                    AND Co.RowStatus = 1
                 ORDER BY Co.DateCreated DESC
-            )                    CoAux
+            )CoAux
             WHERE CoAux.IdCost IS NULL;
 
             UPDATE Co
@@ -1843,7 +1834,7 @@ BEGIN
                                                     FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
                                                     WHERE PC.RedeemedDate IS NULL
                                                           AND PC.PromoCouponSerie = @CouponSerie
-                                                          AND PC.FinalActiveDate >= GETDATE()
+                                                          AND PC.FinalActiveDate >= @ToDay
                                                           AND PC.RowStatus = 1
                                                 )
                                               , 0
@@ -1866,8 +1857,8 @@ BEGIN
                                                  , @OldPriceshipment
                                                  , (@OldPriceshipment - @UpdatedValue))
                           , FinalAmount = IIF(@UpdatedValue <= 0, 0, @UpdatedValue)
-                          , RedeemedDate = GETDATE()
-                          , DateUpdated = GETDATE()
+                          , RedeemedDate = @ToDay
+                          , DateUpdated = @ToDay
                           , TokenUpdated = @TokenCreated
                         WHERE PromoCouponSerie = @CouponSerie
                               AND RowStatus = 1;
@@ -1919,19 +1910,9 @@ BEGIN
                                   SELECT TOP 1
                                          Co.IdCost
                                   FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
-                                  WHERE (
-                                            (
-                                                Co.GuideSerie = ISNULL(@GuideSerie, 'FD')
-                                                AND Co.GuideNumber = @GuideNumber
-                                            )
-                                            OR
-                                            (
-                                                Co.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                                                AND Co.GuideSerie IS NULL
-                                                AND Co.GuideNumber IS NULL
-                                            )
-                                        )
-                                        AND Co.RowStatus = 1
+                                  WHERE  Co.GuideSerie = ISNULL(@GuideSerie, 'FD')
+                                     AND Co.GuideNumber = @GuideNumber
+                                     AND Co.RowStatus = 1
                                   ORDER BY Co.DateCreated DESC
                               )
                             , 0
