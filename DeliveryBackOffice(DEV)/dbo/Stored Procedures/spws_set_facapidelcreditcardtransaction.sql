@@ -1,36 +1,23 @@
 ﻿
--- =============================================
--- Author:		<Andres,Ruiz>
--- Updated date:<2022-05-26>
--- Description:	< Se adiciona generación y manejo de cupones posterior a la transaccion de una tarjeta de credito/debito >
--- =============================================
--- Author: <Jerson Ochoa>
--- Updated date: <2023-01-26>
--- Description: <Acumulación de puntos forza>
--- =============================================
--- =============================================
--- Author: <Edelman>
--- Updated date: <2024-01-08>
--- Description: <Integración de marketplace a estructura de BD de clubforza>
--- =============================================
--- Author: <Tito Garcia>
--- Updated date: <2025-05-26>
--- Description: <Se agrega validacion ya que @CustomerReference puede venir NULL y optimizaciones recomendadas por DBA>
--- =============================================
--- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2025-11-04>
--- Description:	<Validar filtro de código de transacción para que se tome el mas reciente,ya que se esta duplicando el OrderNumber>
--- =============================================
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2026-04-21>
--- Description:	<Se agregan guards de idempotencia en el bloque @Type = 2 antes de
---               INSERT de Membresía y Suscripción. Previene doble inserción cuando
---               este SP y SPHW_UpdateCustomerTransactionPWO se ejecutan en el mismo
---               flujo 3DS para el mismo OrderNumber. Usa GOTO para saltar el bloque
---               si ya existe un registro para la cuenta/orden del día.>
--- =============================================
+/* =================================================
+   SP: spws_set_facapidelcreditcardtransaction
+   Propósito: generación y manejo de membresias y suscripciones posterior a la transaccion de una tarjeta de credito/debit
+   Autor:     Andres,Ruiz
+   Historia:  PENDIENTE
+   Fecha:     2022-05-26
+================================================= */
+/* === CHANGELOG ============================
+2023-01-26 | Historia/épica: FDAPI-1297   | Autor: Jerson Ochoa    | Acumulación de puntos forza
+2024-07-17 | Historia/épica: (pendiente)  | Autor: Edelman Vasquez | Integración de marketplace a estructura de BD de clubforza
+2025-05-26 | Historia/épica: (pendiente)  | Autor: Tito Garcia     | Se agrega validacion ya que @CustomerReference puede venir NULL y optimizaciones recomendadas por DBA
+2025-11-04 | Historia/épica: FDAPI-4539   | Autor: Edelman Vásquez | Validar filtro de código de transacción para que se tome el mas reciente,ya que se esta duplicando el OrderNumber
+2026-04-21 | Historia/épica: FDAPI-5867   | Autor: Bilkar Morataya | Se agregan guards de idempotencia en el bloque @Type = 2 antes de
+--                                                                   INSERT de Membresía y Suscripción. Previene doble inserción cuando
+--                                                                   este SP y SPHW_UpdateCustomerTransactionPWO se ejecutan en el mismo
+--                                                                   flujo 3DS para el mismo OrderNumber. Usa GOTO para saltar el bloque
+--                                                                   si ya existe un registro para la cuenta/orden del día
+=========================================== */
+
 CREATE PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
     @Type AS INT = -1
   , @System AS INT = 1
@@ -108,6 +95,8 @@ BEGIN
     DECLARE @GuideNumber INT = 0;
     DECLARE @OldPriceshipment DECIMAL(14, 2) = 0;
     DECLARE @UpdatedValue DECIMAL(14, 2) = 0;
+    -- Variable para validación de fecha de la promoción
+    DECLARE @DateCreatedAfter DATE = DATEADD(DAY, 1, @DateCreated);
     -- Datos del cliente para promo
     SELECT @CustomerId   = Cu.IdCustomer
          , @CustomerType = ISNULL(Cu.IdCustomerType, 0)
@@ -196,6 +185,7 @@ BEGIN
     ORDER BY [CPP].[PointPromoWeight] DESC;
 
     DECLARE @DateCreated2 DATE = CAST(@DateCreated AS DATE); 
+    DECLARE @DateCreatedAfter2 DATE = DATEADD(DAY, 1, @DateCreated2);
 
     IF (@Type = 1)
     BEGIN
@@ -207,7 +197,7 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH (NOLOCK)
             WHERE [CCTBC].OrderNumber = @OrderNumber
                   AND DateCreated >= @DateCreated2
-                  AND DateCreated < DATEADD(DAY, 1, @DateCreated2);
+                  AND DateCreated < @DateCreatedAfter2;
 
             IF (@IdTransaction = 0)
             BEGIN
@@ -282,8 +272,7 @@ BEGIN
                       AND OrderNumber = @OrderNumber
                       AND StatusSend <> 1
                       AND DateCreated >= @DateCreated2
-                      AND DateCreated < DATEADD(DAY, 1, @DateCreated2);
-
+                      AND DateCreated < @DateCreatedAfter2;
 
             END;
 
@@ -461,7 +450,7 @@ BEGIN
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage = 'MEMBERSHIP'
                           AND DateCreated >= @DateCreated2
-                          AND DateCreated < DATEADD(DAY, 1, @DateCreated2)
+                          AND DateCreated < @DateCreatedAfter2
                 )
                    )
                 BEGIN
@@ -477,10 +466,10 @@ BEGIN
                           AND CAST(DateCreated AS DATE) = @DateCreated2
                     )
                     BEGIN
-                        PRINT 'SKIP INSERT MEMBRESIA - ya existe para esta cuenta y orden';
+                        -- SKIP INSERT MEMBRESIA - ya existe para esta cuenta y orden;
                         GOTO SkipMembership;
                     END
-                    PRINT 'INSERT MEMBRESIA';
+                        -- INSERT MEMBRESIA
                     DECLARE @AuxNewMembership AS TABLE
                     (
                         IdNewMembership INT
@@ -625,7 +614,7 @@ BEGIN
                     WHERE RTP.OrderNumber = @OrderNumber
                           AND RTP.TypeSalePackage = 'MEMBERSHIP'
                           AND RTP.DateCreated >= @DateCreated2
-                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated2)
+                          AND RTP.DateCreated < @DateCreatedAfter2
                     ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                     DECLARE @RandomLettersM CHAR(1);
@@ -698,7 +687,7 @@ BEGIN
                             CROSS JOIN @AuxNewMembership                                                 ANM
                         WHERE RT.OrderNumber = @OrderNumber
                         AND RT.DateCreated >= @DateCreated
-                        AND RT.DateCreated < DATEADD(DAY, 1, @DateCreated)
+                        AND RT.DateCreated < @DateCreatedAfter
                         ORDER BY RT.IdRegistrationofTransactionProcessStates DESC;
 
                         ---- Log de pago de membresia
@@ -763,7 +752,7 @@ BEGIN
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage != 'MEMBERSHIP'
                           AND DateCreated >= @DateCreated2
-                        AND DateCreated < DATEADD(DAY, 1, @DateCreated2)
+                        AND DateCreated < @DateCreatedAfter2
                 )
                    )
                 BEGIN
@@ -776,7 +765,7 @@ BEGIN
                           AND RowStatus = 1
                     )
                     BEGIN
-                        PRINT 'SKIP INSERT SUSCRIPCION - ya existe log de pago para esta orden';
+                        -- SKIP INSERT SUSCRIPCION - ya existe log de pago para esta orden
                         GOTO SkipSubscription;
                     END
 
@@ -909,7 +898,7 @@ BEGIN
                     WHERE RTP.OrderNumber = @OrderNumber
                           AND RTP.TypeSalePackage != 'MEMBERSHIP'
                           AND RTP.DateCreated >= @DateCreated2
-                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated2)
+                          AND RTP.DateCreated < @DateCreatedAfter2
                     ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                     DECLARE @RandomLetterS CHAR(1);
@@ -1007,7 +996,7 @@ BEGIN
                             ON ANS.IdNewSubscriptions = S.IdSubscription
                     WHERE RTS.OrderNumber = @OrderNumber
                     AND   RTS.DateCreated >= @DateCreated2
-                    AND   RTS.DateCreated < DATEADD(DAY, 1, @DateCreated2)
+                    AND   RTS.DateCreated < @DateCreatedAfter2
                     ORDER BY RTS.IdRegistrationofTransactionProcessStates DESC;
                     --- Insert tabla dbo.Cost
                     INSERT INTO [dbo].[Cost]
@@ -1104,7 +1093,7 @@ BEGIN
             FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH (NOLOCK)
             WHERE OrderNumber = @OrderNumber
                   AND DateCreated >= @DateCreated2
-                  AND DateCreated < DATEADD(DAY, 1, @DateCreated2);
+                  AND DateCreated < @DateCreatedAfter2;
 
 
             IF (@IdTransaction = 0)
@@ -1156,8 +1145,7 @@ BEGIN
                       AND OrderNumber = @OrderNumber
                       AND StatusSend <> 1
                       AND DateCreated >= @DateCreated2
-                      AND DateCreated < DATEADD(DAY, 1, @DateCreated2)
-
+                      AND DateCreated < @DateCreatedAfter2;
 
             END;
 
@@ -1342,19 +1330,9 @@ BEGIN
                 SELECT TOP 1
                        Co.IdCost
                 FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
-                WHERE (
-                          (
-                              Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
-                              AND Co.GuideNumber = AG.GuideNumber
-                          )
-                          OR
-                          (
-                              Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie, 'FD'), AG.GuideNumber)
-                              AND Co.GuideSerie IS NULL
-                              AND Co.GuideNumber IS NULL
-                          )
-                      )
-                      AND Co.RowStatus = 1
+                WHERE Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
+                  AND Co.GuideNumber = AG.GuideNumber
+                  AND Co.RowStatus = 1
                 ORDER BY Co.DateCreated DESC
             )                    CoAux
                 INNER JOIN DeliveryBackOffice.dbo.Cost Co WITH (NOLOCK)
@@ -2078,8 +2056,8 @@ BEGIN
                                 SELECT DopId
                                 FROM [DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do WITH (NOLOCK)
                                     INNER JOIN @TblDeliveryOrdersList                           tpo
-                                        ON do.GuideNumber = tpo.Guide_Number
-                                           AND do.GuideSerie = tpo.Guide_Serie
+                                        ON do.GuideSerie = tpo.Guide_Serie
+                                           AND do.GuideNumber = tpo.Guide_Number
                                            AND do.TypeServiceId = tpo.IdTypeService
                             );
 

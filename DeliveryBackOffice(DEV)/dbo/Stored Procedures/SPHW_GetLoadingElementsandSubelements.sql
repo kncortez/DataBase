@@ -22,14 +22,14 @@ BEGIN
     /***************************** DETERMINAR SI HAY CONTENIDO O NO **********************************/
     IF (EXISTS(
         Select Top 1 1
-        From [dbo].[CatSubscription] CP WITH (NOLOCK)
-        Left JOIN [dbo].[CatSubscriptionDescription] CPD WITH (NOLOCK)
+        From [DeliveryBackOffice].[dbo].[CatSubscription] CP WITH (NOLOCK)
+        Left JOIN [DeliveryBackOffice].[dbo].[CatSubscriptionDescription] CPD WITH (NOLOCK)
             ON CP.IdCatSubscription = CPD.CatSubscriptionId
-        Left JOIN [dbo].[CatSubscriptionAtribute] CPA WITH(NOLOCK)
+        Left JOIN [DeliveryBackOffice].[dbo].[CatSubscriptionAtribute] CPA WITH(NOLOCK)
             ON CPA.CatSubscriptionId = CPD.CatSubscriptionId
-        Left JOIN [dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
+        Left JOIN [DeliveryBackOffice].[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
             ON CP.IdCatSubscription = MTP.CatSubscriptionId
-        Left JOIN [dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
+        Left JOIN [DeliveryBackOffice].[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
             ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
         WHERE CP.RowStatus = 1
         AND CP.IdCountry = @IdCountry  
@@ -54,10 +54,10 @@ BEGIN
     AND IdCountry = @IdCountry 
     AND IdCatProductCategory IN (
         Select CP.[CatProductCategoryId]
-        From [dbo].[CatSubscription] CP WITH (NOLOCK)
-        INNER JOIN DeliveryBackOffice.[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
+        From [DeliveryBackOffice].[dbo].[CatSubscription] CP WITH (NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
             ON CP.IdCatSubscription = MTP.CatSubscriptionId
-        INNER JOIN DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
             ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
         WHERE CP.RowStatus = 1 
         AND CP.IdCountry = @IdCountry  
@@ -67,15 +67,15 @@ BEGIN
            [CatProductCategoryName],
            [CatProductCategoryDescription],
            [CatProductCategoryOrder]
-    FROM [dbo].[CatProductCategory] WITH (NOLOCK)
+    FROM [DeliveryBackOffice].[dbo].[CatProductCategory] WITH (NOLOCK)
     WHERE Rowstatus = 1
     AND IdCountry = @IdCountry 
     AND IdCatProductCategory IN (
         Select CP.[CatProductCategoryId]
-        From [dbo].[CatMembership] CP WITH (NOLOCK)
-        INNER JOIN DeliveryBackOffice.[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
+        From [DeliveryBackOffice].[dbo].[CatMembership] CP WITH (NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
             ON CP.IdCatMembership = MTP.CatMembershipId
-        INNER JOIN DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
             ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
         WHERE CP.RowStatus = 1 
         AND CP.IdCountry = @IdCountry 
@@ -129,15 +129,15 @@ BEGIN
         MPT.[MarketplaceProductTagsDescription],
         CP.[CatProductCategoryId],
         CP.Tag
-    FROM [dbo].[CatMembership] CP WITH (NOLOCK)
-    INNER JOIN DeliveryBackOffice.[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
+    FROM [DeliveryBackOffice].[dbo].[CatMembership] CP WITH (NOLOCK)
+    INNER JOIN [DeliveryBackOffice].[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
         ON CP.IdCatMembership = MTP.CatMembershipId
-    INNER JOIN DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
+    INNER JOIN [DeliveryBackOffice].[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
         ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
-    LEFT JOIN DeliveryCurrency dc WITH(NOLOCK) 
+    LEFT JOIN DeliveryBackOffice.[dbo].[DeliveryCurrency] dc WITH(NOLOCK) 
         ON dc.Currency_IdCountry = CP.IdCountry
         AND dc.DefaultPerCountry = 1
-    LEFT JOIN CatCurrencyCOD dc_ccc WITH(NOLOCK)
+    LEFT JOIN DeliveryBackOffice.[dbo].[CatCurrencyCOD] dc_ccc WITH(NOLOCK)
         ON dc_ccc.IdCatCurrencyCOD = dc.IdCurrencyCOD
     WHERE CP.RowStatus = 1 
     AND CP.IdCountry = @IdCountry  
@@ -154,7 +154,7 @@ BEGIN
         CPI.CatProductImageBigImageURL,
         CPI.[CatProductImageOrder]
     FROM DeliveryBackOffice.[dbo].[CatProductImage] CPI WITH (NOLOCK)
-    INNER JOIN CatSubscription CP WITH (NOLOCK)
+    INNER JOIN DeliveryBackOffice.[dbo].[CatSubscription] CP WITH (NOLOCK)
         ON CPI.CatSubscriptionId = CP.IdCatSubscription
     WHERE CPI.RowStatus = 1 
     AND CP.IdCountry = @IdCountry  
@@ -167,7 +167,7 @@ BEGIN
         CPI.CatProductImageBigImageURL,
         CPI.[CatProductImageOrder]
     FROM DeliveryBackOffice.[dbo].[CatProductImage] CPI WITH (NOLOCK)
-    INNER JOIN CatMembership CTS WITH (NOLOCK)
+    INNER JOIN DeliveryBackOffice.[dbo].[CatMembership] CTS WITH (NOLOCK)
         ON CPI.CatMembershipId = CTS.IdCatMembership
     WHERE CPI.RowStatus = 1 
     AND CTS.IdCountry = @IdCountry  
@@ -181,7 +181,7 @@ BEGIN
         CPD.Position            [CatProductDescriptionOrder],
         CPD.CatSubscriptionId   [CatProductId]
     From DeliveryBackOffice.[dbo].[CatSubscriptionDescription] CPD WITH (NOLOCK)
-    INNER JOIN DeliveryBackOffice.dbo.CatSubscription CP WITH (NOLOCK)
+    INNER JOIN DeliveryBackOffice.[dbo].[CatSubscription] CP WITH (NOLOCK)
         ON CPD.CatSubscriptionId = CP.IdCatSubscription
     Where CPD.RowStatus = 1 
     AND CP.IdCountry = @IdCountry 
@@ -192,7 +192,7 @@ BEGIN
         CPD.Position            [CatProductDescriptionOrder],
         CPD.CatMembershipId     [CatProductId]
     From DeliveryBackOffice.[dbo].[CatMembershipDescription] CPD WITH (NOLOCK)
-    INNER JOIN DeliveryBackOffice.dbo.CatMembership CP WITH (NOLOCK)
+    INNER JOIN DeliveryBackOffice.[dbo].[CatMembership] CP WITH (NOLOCK)
         ON CPD.CatMembershipId = CP.IdCatMembership
     Where CPD.RowStatus = 1 
     AND CP.IdCountry = @IdCountry  

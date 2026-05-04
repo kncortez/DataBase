@@ -4,6 +4,68 @@
 -- IDs resueltos dinámicamente desde CatSubscription
 -- ===============================================================
 
+-- ---------------------------------------------------------------
+-- [0/6] INSERT banner carousel SV
+-- ---------------------------------------------------------------
+PRINT '>>> [0/6] Iniciando INSERT en MarketplaceCarouselImage...'
+
+BEGIN TRANSACTION
+BEGIN TRY
+
+    INSERT INTO [DeliveryBackOffice].[dbo].[MarketplaceCarouselImage]
+    (
+        XXXLImageURL,
+        XXLImageURL,
+        XLImageURL,
+        MDImageURL,
+        XSImageURL,
+        ImageOrder,
+        RowStatus,
+        TokenCreated,
+        DateCreated,
+        HyperlinkURL,
+        IdCountry
+    )
+    VALUES
+    (
+        'https://www.forzadelivery.com/images/Tienda/SV/BANNER/slider01SV-2500-350.jpg',
+        'https://www.forzadelivery.com/images/Tienda/SV/BANNER/slider01SV-1950-300.jpg',
+        'https://www.forzadelivery.com/images/Tienda/SV/BANNER/slider01SV-1200-250.jpg',
+        'https://www.forzadelivery.com/images/Tienda/SV/BANNER/slider01SV-992-200.jpg',
+        'https://www.forzadelivery.com/images/Tienda/SV/BANNER/slider01SV-575-200.jpg',
+        2,              -- ImageOrder
+        1,              -- RowStatus
+        'SYS-PMACAJOL', -- TokenCreated
+        GETDATE(),      -- DateCreated
+        NULL,           -- HyperlinkURL
+        'SV'            -- IdCountry
+    );
+
+    COMMIT TRANSACTION
+    PRINT '    [OK] MarketplaceCarouselImage insertado correctamente. Filas: ' + CAST(@@ROWCOUNT AS VARCHAR)
+
+END TRY
+BEGIN CATCH
+    ROLLBACK TRANSACTION
+    PRINT '    [ERROR] Falló INSERT en MarketplaceCarouselImage.'
+    PRINT '    Mensaje : ' + ERROR_MESSAGE()
+    PRINT '    Línea   : ' + CAST(ERROR_LINE() AS VARCHAR)
+    PRINT '    Número  : ' + CAST(ERROR_NUMBER() AS VARCHAR)
+END CATCH
+
+-- Verificación
+SELECT
+    IdMarketplaceCarouselImage,
+    ImageOrder,
+    IdCountry,
+    XXXLImageURL,
+    RowStatus,
+    DateCreated
+FROM DeliveryBackOffice.dbo.MarketplaceCarouselImage
+WHERE IdCountry = 'SV'
+ORDER BY ImageOrder;
+GO
+
 
 -- ---------------------------------------------------------------
 -- [1/6] MICRO

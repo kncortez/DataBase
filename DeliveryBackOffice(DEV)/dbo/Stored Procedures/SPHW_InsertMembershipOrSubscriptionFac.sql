@@ -1,25 +1,19 @@
-﻿-- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2020-01-08>
--- Description:	<Integración de marketplace  a estrcutura club forza para facturación usuarios logueados y no logueados>
--- =============================================
--- Author:      <Daniel Ramirez>
--- Create date: <2024-08-20>
--- Description: <Se agrego filtro por pais, se filtra CodeOfReference para facturacion, calculo de IVA obtenido de configParams>
--- =============================================
--- Author:      <Daniel Ramirez>
--- Create date: <2024-08-26>
--- Description: < Ajustes por tienda virtual para Facturar>
--- =============================================
--- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2025-11-04>
--- Description:	<Validar filtro de código de transacción para que se tome el mas reciente,ya que se esta duplicando el OrderNumber>
--- =============================================
--- Author:		<Christian Azurdia>
--- Create date: <2026-04-24>
--- Description:	<Se agrega el parámetro del tipo de factura, y se colocan las validaciones correctas para el país>
--- =============================================
+﻿
+/* =================================================
+   SP: SPHW_InsertMembershipOrSubscriptionFac
+   Propósito: Integración de marketplace  a estrcutura club forza para facturación usuarios logueados y no logueados
+   Autor:     Edelman Vasquez
+   Historia:  PENDIENTE
+   Fecha:     2020-01-08
+================================================= */
+/* === CHANGELOG ============================
+2020-01-08 | Historia/épica: (pendiente)  | Autor: Edelman Vásquez  | Integración de marketplace  a estrcutura club forza para facturación usuarios logueados y no logueados
+2024-08-20 | Historia/épica: FDAPI-2934   | Autor: Daniel Ramirez   | Se agrego filtro por pais, se filtra CodeOfReference para facturacion, calculo de IVA obtenido de configParams
+2024-08-26 | Historia/épica: FDAPI-2943   | Autor: Daniel Ramirez   | Ajustes por tienda virtual para Facturar
+2025-11-04 | Historia/épica: FDAPI-4539   | Autor: Edelman Vásquez  | Validar filtro de código de transacción para que se tome el mas reciente,ya que se esta duplicando el OrderNumber
+2026-04-24 | Historia/épica: FDAPI-5807   | Autor: Cristian Azurdia | Se agrega el parámetro del tipo de factura, y se colocan las validaciones correctas para el país
+=========================================== */
+
 CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionFac]
  @OrderNumber AS NVARCHAR(25),
  @IdCountry   AS NVARCHAR(2) = 'GT',
@@ -42,6 +36,7 @@ BEGIN
     DECLARE @Iva DECIMAL(12,6) = 1.12
     DECLARE @IdCurrency INT 
     DECLARE @DateCreated DATE = GETDATE();
+    DECLARE @DateCreatedAfter DATE = DATEADD(DAY, 1, @DateCreated);
     
     SELECT @Iva = ISNULL([Value],1.12)
     FROM [DeliveryBackOffice].[dbo].[ConfigParams]
@@ -245,7 +240,7 @@ BEGIN
         IF (Exists(SELECT Top 1 1 FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK) Where OrderNumber = @OrderNumber 
                 AND TypeSalePackage = 'MEMBERSHIP'
                 AND DateCreated >= @DateCreated
-                AND DateCreated < DATEADD(DAY, 1, @DateCreated)))
+                AND DateCreated < @DateCreatedAfter))
         BEGIN
             SELECT TOP 1
                    @inv_amount            = M.MembershipCost
@@ -275,7 +270,7 @@ BEGIN
 	    IF (Exists(SELECT Top 1 1 FROM [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK) Where OrderNumber = @OrderNumber 
                 AND TypeSalePackage != 'MEMBERSHIP'
                 AND DateCreated >= @DateCreated
-                AND DateCreated < DATEADD(DAY, 1, @DateCreated)))
+                AND DateCreated < @DateCreatedAfter))
             BEGIN
                 SELECT TOP 1
                        @inv_amount            = S.SubscriptionCost
@@ -404,7 +399,7 @@ BEGIN
 					      ON  S.IdSubscription = SPL.SubscriptionId
 					  WHERE SPL.[Authorization] = @OrderNumber
                   AND SPL.DateCreated >= @DateCreated
-                  AND SPL.DateCreated < DATEADD(DAY, 1, @DateCreated)
+                  AND SPL.DateCreated < @DateCreatedAfter
         UNION ALL
 			SELECT 
           @dti_fk_header,
@@ -430,7 +425,7 @@ BEGIN
 					  ON S.IdMembership = SPL.MembershipId
      WHERE SPL.[Authorization] = @OrderNumber
            AND SPL.DateCreated >= @DateCreated
-           AND SPL.DateCreated < DATEADD(DAY, 1, @DateCreated)
+           AND SPL.DateCreated < @DateCreatedAfter
 
         SELECT @IdCountry = T.IdCountry,
                @IdCurrency = T.IdCatCurrencyCOD
@@ -444,7 +439,7 @@ BEGIN
                           ON  S.IdSubscription = SPL.SubscriptionId
                   WHERE SPL.[Authorization] = @OrderNumber
                         AND SPL.[DateCreated] >= @DateCreated
-                        AND SPL.[DateCreated] < DATEADD(DAY, 1, @DateCreated)
+                        AND SPL.[DateCreated] < @DateCreatedAfter
                   UNION
                  SELECT IdCountry,
                         IdCatCurrencyCOD
@@ -455,7 +450,7 @@ BEGIN
                            ON  S.IdMembership = SPL.MembershipId
                         WHERE SPL.[Authorization] = @OrderNumber
                               AND SPL.[DateCreated] >= @DateCreated
-                              AND SPL.[DateCreated] < DATEADD(DAY, 1, @DateCreated)
+                              AND SPL.[DateCreated] < @DateCreatedAfter
                ) AS T
 
         UPDATE [DeliveryBackOffice].[dbo].[invoiceHeader]

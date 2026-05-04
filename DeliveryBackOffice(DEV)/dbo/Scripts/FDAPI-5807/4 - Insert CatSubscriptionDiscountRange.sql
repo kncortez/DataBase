@@ -15,7 +15,7 @@ BEGIN TRY
         1,
         0.00,
         1,
-        CONVERT(NVARCHAR(50), NEWID()),
+        'SYS-BMORATAYA',
         @FechaEjecucion
     FROM CatSubscription cs
     WHERE cs.IdCountry = 'SV';

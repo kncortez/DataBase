@@ -1,17 +1,20 @@
--- =============================================
--- Author:		<Author,Edelman>
--- Create date: <Create Date,12/08/2025>
--- Description:	<Description,Actualizar y asociar  el estado de la transacción de pasarela de pago PayWayOne SV>
--- =============================================
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2026-04-20>
--- Description:	<Se agregan guards de idempotencia antes de INSERT de Membresía
---               y Suscripción. Previene doble inserción cuando este SP
---               y spws_set_facapidelcreditcardtransaction se ejecutan en el
---               mismo flujo 3DS para el mismo OrderNumber. Usa GOTO para
---               saltar el bloque si ya existe un registro para la cuenta/orden.>
--- =============================================
+
+/* =================================================
+   SP: SPHW_UpdateCustomerTransactionPWO
+   Propósito: Actualizar y asociar  el estado de la transacción de pasarela de pago PayWayOne SV
+   Autor:     Edelman Vázquez
+   Historia:  PENDIENTE
+   Fecha:     2025-08-12
+================================================= */
+/* === CHANGELOG ============================
+2025-08-12 | Historia/épica: PENDIENTE    | Autor: Edelman Vásquez | Actualizar y asociar  el estado de la transacción de pasarela de pago PayWayOne SV
+2026-04-20 | Historia/épica: FDAPI-5867   | Autor: Bilkar Morataya | Se agregan guards de idempotencia antes de INSERT de Membresía
+--                                                                   y Suscripción. Previene doble inserción cuando este SP
+--                                                                   y spws_set_facapidelcreditcardtransaction se ejecutan en el
+--                                                                   mismo flujo 3DS para el mismo OrderNumber. Usa GOTO para
+--                                                                   saltar el bloque si ya existe un registro para la cuenta/orden.
+=========================================== */
+
 CREATE PROCEDURE [dbo].[SPHW_UpdateCustomerTransactionPWO] 
     @Type AS INT = -1
   , @System AS INT = 1
@@ -31,8 +34,7 @@ BEGIN
         DECLARE @IdTransaction BIGINT = 0;
 		DECLARE @Code INT=0;
 		DECLARE @Description NVARCHAR(50)='ERROR';
-		
-
+		DECLARE @CurrentDate DATE = CAST(GETDATE() AS DATE)
 
 		  -- Variables para la asociación y activación de Membresías o suscripciones
 		DECLARE @IdTarjeta AS INT = NULL; -- puede ser null por ex c y por credito
@@ -106,9 +108,6 @@ BEGIN
 
 		      END;
 
-         PRINT '[DEBUG] Lookup por TransactionStain=' + ISNULL(@TransactionStain,'NULL') + ' | @IdTransaction=' + CAST(@IdTransaction AS VARCHAR) + ' | @OrderNumber=' + ISNULL(@OrderNumber,'NULL');
-      
-             PRINT '[DEBUG] Entrando a IF @IdTransaction > 0: ' + CAST(@IdTransaction AS VARCHAR);
              IF (@IdTransaction > 0)
              BEGIN
 
@@ -139,11 +138,7 @@ BEGIN
 							WHERE IdTransaction = @IdTransaction
 								 
 					   END
-
 					   
-
-
-	                        PRINT '[DEBUG] Verificando @ReasonCode=' + ISNULL(@ReasonCode,'NULL');
 				    IF (@ReasonCode = '00')
 						BEGIN
 
@@ -192,13 +187,13 @@ BEGIN
                         FROM [DeliveryBackOffice].[dbo].[Membership] WITH (NOLOCK)
                         WHERE AccountId = @IdAcount
                           AND RowStatus = 1
-                          AND CAST(DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+                          AND CAST(DateCreated AS DATE) = @CurrentDate
                     )
                     BEGIN
-                        PRINT 'SKIP INSERT MEMBRESIA - ya existe para esta cuenta';
+                       -- SKIP INSERT MEMBRESIA - ya existe para esta cuenta
                         GOTO SkipMembership;
                     END
-                    PRINT 'INSERT MEMBRESIA';
+                    -- INSERT MEMBRESIA
                     DECLARE @AuxNewMembership AS TABLE
                     (
                         IdNewMembership INT
@@ -502,7 +497,7 @@ BEGIN
                           AND RowStatus = 1
                     )
                     BEGIN
-                        PRINT 'SKIP INSERT SUSCRIPCION - ya existe log de pago para esta orden';
+                        -- SKIP INSERT SUSCRIPCION - ya existe log de pago para esta orden
                         GOTO SkipSubscription;
                     END
 
@@ -759,8 +754,7 @@ BEGIN
                 END;
                       
                  SkipSubscription:
-                 PRINT '[DEBUG] Llegó a SkipSubscription / Success';
-                 SET @Code = 1
+                 SET @Code = 1;
 				 SET @Description = 'Success';
 
             END
@@ -781,5 +775,3 @@ BEGIN
         END CATCH;
 
 END
-
-
