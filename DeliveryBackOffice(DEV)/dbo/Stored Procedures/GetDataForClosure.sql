@@ -13,6 +13,11 @@
 -- Create date: <2025-11-03>
 -- Description:	<Se agregan elementos para el método de pago de Zigi>
 -- =============================================
+-- =============================================
+-- Author:		<Mario Herrarte>
+-- Create date: <2026-05-04>
+-- Description:	<Se soluciona inconveniente con envios internacionales y articulos.>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDataForClosure]
     @VisitPointId INT = 4246,
     @IdAccount INT = 0,
@@ -28,6 +33,7 @@ BEGIN
     DECLARE @Devolucion INT;
     DECLARE @Traslado INT;
     DECLARE @Internacional INT;
+    DECLARE @Articulo INT;
 	DECLARE @AccountCOD NVARCHAR(30);
 	DECLARE @Account NVARCHAR(30);
     DECLARE @AccountZigi NVARCHAR(30);
@@ -77,6 +83,12 @@ BEGIN
         SELECT IdTypeService
         FROM CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Internacional'
+    );
+    SET @Articulo = 
+    (
+        SELECT IdTypeService
+        FROM CatTypeServiceClosure WITH (NOLOCK)
+        WHERE NameTypeService = 'Artículos'
     );
     -- FIN MODIFICACIÓN
 
@@ -332,7 +344,7 @@ BEGIN
                @AccountZigi AS 'AccountZigi',
                ISNULL(SUM(S1.TotalZigi), 0) 'TotalZigi',
                ISNULL(SUM(S1.CountZigi), 0) 'CountZigi',
-			   S1.CurrencySymbolExp,
+			   MAX(S1.CurrencySymbolExp) AS CurrencySymbolExp,
                ISNULL(SUM(S1.TotalCredit), 0) 'TotalCredit',
                ISNULL(SUM(S1.CountCredit), 0) 'CountCredit',
                -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
@@ -343,7 +355,7 @@ BEGIN
                ISNULL(SUM(S1.CountFacturaCard), 0) 'CountFacturaCard',
                ISNULL(SUM(S1.TotalFacturaZigi), 0) 'TotalFacturaZigi',
                ISNULL(SUM(S1.CountFacturaZigi), 0) 'CountFacturaZigi',
-			   S1.CurrencySymbolCOD,
+			   MAX(S1.CurrencySymbolCOD) AS CurrencySymbolCOD,
                -- FIN MODIFICACIÓN
                IdAccount
         FROM
@@ -552,7 +564,7 @@ BEGIN
             UNION ALL
             SELECT CASE
                        WHEN DOPD.TypeofInOutMoneyId = 1
-                            AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional ) THEN
+                            AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional, @Articulo ) THEN
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -562,7 +574,7 @@ BEGIN
                        (
                            DOPD.TypeofInOutMoneyId = 1
                            AND DOPD.amount != 0
-                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional )
+                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional, @Articulo )
                        ) THEN
                            COUNT(DOPD.TypeofInOutMoneyId)
                        ELSE
@@ -571,7 +583,7 @@ BEGIN
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 6
                             OR DOPD.TypeofInOutMoneyId = 2
-                               AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional ) THEN
+                               AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional, @Articulo ) THEN
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -584,7 +596,7 @@ BEGIN
                                OR DOPD.TypeofInOutMoneyId = 2
                            )
                            AND DOPD.amount != 0
-                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional )
+                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional, @Articulo )
                        ) THEN
                            COUNT(DOPD.TypeofInOutMoneyId)
                        ELSE
@@ -593,7 +605,7 @@ BEGIN
              -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
                 CASE
                        WHEN DOPD.TypeofInOutMoneyId = 10
-                            AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional ) THEN
+                            AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional, @Articulo ) THEN
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -603,7 +615,7 @@ BEGIN
                        (
                            DOPD.TypeofInOutMoneyId = 10
                            AND DOPD.amount != 0
-                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional )
+                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion)
                        ) THEN
                            COUNT(DOPD.TypeofInOutMoneyId)
                        ELSE
@@ -695,7 +707,7 @@ BEGIN
                     ON CTS.IdTypeService = DOPD.TypeServiceId
                 LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
                     ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-				INNER JOIN DeliveryOrder DOR WITH (NOLOCK)
+			    LEFT JOIN DeliveryOrder DOR WITH (NOLOCK)
 					ON DOR.Guide_Serie = DOPD.GuideSerie AND DOR.Guide_Number = DOPD.GuideNumber
 				LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
 					ON C.GuideSerie = DOR.Guide_Serie AND C.GuideNumber = DOR.Guide_Number
@@ -723,7 +735,7 @@ BEGIN
 					 CCC.Symbol
 
         ) S1
-        GROUP BY IdAccount, CurrencySymbolExp, CurrencySymbolCOD)
+        GROUP BY IdAccount) -- CurrencySymbolExp, CurrencySymbolCOD)
     SELECT *,
            @TOTALAMOUNTCOD 'TotalAmountCOD',
            @TOTALCOD 'TotalCOD',

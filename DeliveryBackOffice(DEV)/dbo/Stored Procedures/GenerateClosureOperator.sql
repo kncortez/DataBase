@@ -9,6 +9,11 @@
 -- Create date: <2022-11-06>
 -- Description:	<Se agrega control de método de pago Zigi>
 -- =============================================
+-- =============================================
+-- Author:		<Mario Herrarte>
+-- Create date: <2026-05-04>
+-- Description:	<Se soluciona inconveniente con envios internacionales y articulos.>
+-- =============================================
 CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
     @UserId INT,
@@ -170,6 +175,8 @@ BEGIN
 	DECLARE @Recepcion INT;
 	DECLARE @Devolucion INT;
 	DECLARE @Traslado INT;
+    DECLARE @Internacional INT;
+    DECLARE @Articulo INT;
 
 	SET @Estandar = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
 					WHERE NameTypeService = 'Estándar');
@@ -181,6 +188,10 @@ BEGIN
 						WHERE NameTypeService = 'Devolución')
 	SET @Traslado = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
 					WHERE NameTypeService = 'Traslado')
+    SET @Internacional = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+                    WHERE NameTypeService = 'Internacional');
+    SET @Articulo = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+                    WHERE NameTypeService = 'Artículos');
 	-- FIN MODIFICACIÓN
 
 	-- MODIFICACIÓN 06/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
@@ -345,7 +356,7 @@ BEGIN
 
 			SELECT CASE
                    WHEN DOPD.TypeofInOutMoneyId = 1 
-						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion, @Internacional, @Articulo) 
 					THEN
                        SUM(DOPD.amount)
                    ELSE
@@ -353,7 +364,7 @@ BEGIN
                END 'TotalCash',
                CASE
                    WHEN DOPD.TypeofInOutMoneyId = 1 
-						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion, @Internacional, @Articulo) 
 					THEN
                        COUNT(DOPD.TypeofInOutMoneyId)
                    ELSE
@@ -361,14 +372,14 @@ BEGIN
                END 'CountCash',
                CASE
                    WHEN (DOPD.TypeofInOutMoneyId = 6 OR DOPD.TypeofInOutMoneyId = 2)
-				   AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) THEN
+				   AND DOPD.TypeServiceId IN (@Estandar,@Devolucion, @Internacional, @Articulo) THEN
                        SUM(DOPD.amount)
                    ELSE
                        0
                END 'TotalCard',
                CASE
                    WHEN (DOPD.TypeofInOutMoneyId = 6 OR DOPD.TypeofInOutMoneyId = 2)
-				   AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+				   AND DOPD.TypeServiceId IN (@Estandar,@Devolucion, @Internacional, @Articulo) 
 				THEN
                        COUNT(DOPD.TypeofInOutMoneyId)
                    ELSE
