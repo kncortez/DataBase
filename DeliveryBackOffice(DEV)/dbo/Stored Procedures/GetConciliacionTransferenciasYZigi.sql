@@ -13,7 +13,7 @@ GO
 -- Description: Obtiene el reporte de conciliación de transferencias bancarias y ZiGi entre cobros POD y movimientos EC.
 -- =============================================
 
-CREATE PROCEDURE dbo.SP_ConciliacionTransferenciasYZigi
+CREATE OR ALTER PROCEDURE dbo.SP_ConciliacionTransferenciasYZigi
 (
     @FechaInicio DATE,
     @FechaFin DATE
@@ -22,26 +22,19 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    /*
-        @FechaInicio = fecha inicial incluida
-        @FechaFin    = fecha final incluida
-
-        Ejemplo:
-        EXEC dbo.SP_ConciliacionTransferenciasYZigi
-            @FechaInicio = '2026-04-26',
-            @FechaFin = '2026-04-28';
-    */
-
     DECLARE @FechaFinExclusiva DATE = DATEADD(DAY, 1, @FechaFin);
 
     WITH Entrega AS
     (
         SELECT
             od.Guide_Number,
+            od.Guide_Serie,
             FechaEntrega = MIN(od.DateCreated)
         FROM dbo.DeliveryOrderDetail od WITH (NOLOCK)
         WHERE od.StatusOrderId = 5
-        GROUP BY od.Guide_Number
+        GROUP BY 
+            od.Guide_Number,
+            od.Guide_Serie
     ),
     Settlement AS
     (
@@ -73,8 +66,6 @@ BEGIN
     DatosPOD AS
     (
         SELECT
-            'POD' AS [Origen],
-
             'FD' + CAST(o.Guide_Number AS VARCHAR(20)) AS [Guía],
 
             'Q ' + CONVERT(
@@ -99,22 +90,28 @@ BEGIN
                 ELSE ''
             END AS [Producto cobrado en transferencia],
 
-            vd.Voucher AS [ID Transferencia POD],
+            CAST(vd.Voucher AS VARCHAR(100)) AS [ID Transferencia POD],
+
+            CAST(NULL AS VARCHAR(100)) AS [ID transferencia EC],
 
             CONVERT(VARCHAR(16), vd.DateCreated, 103) + ' ' 
             + LEFT(CONVERT(VARCHAR(8), vd.DateCreated, 108), 5) 
             AS [Fecha hora cobro en POD],
 
-            CAST(NULL AS VARCHAR(100)) AS [ID transferencia en EC],
-            CAST(NULL AS DATE) AS [Fecha hora recepcion en EC],
+            CAST(NULL AS DATE) AS [Fecha Hora recepción en EC],
+
+            CAST('No conciliado' AS VARCHAR(50)) AS [Estado de Conciliación],
+
             CAST(NULL AS VARCHAR(100)) AS [No. Cuenta],
-            CAST(NULL AS VARCHAR(MAX)) AS [Descripcion de transferencia EC],
+
+            CAST(NULL AS VARCHAR(MAX)) AS [Descripción de transferencia EC],
 
             vd.DateCreated AS [FechaOrdenamiento]
 
         FROM dbo.DeliveryOrder o WITH (NOLOCK)
         INNER JOIN Entrega e
             ON e.Guide_Number = o.Guide_Number
+           AND e.Guide_Serie = o.Guide_Serie
         LEFT JOIN VoucherData vd
             ON vd.GuideNumber = o.Guide_Number
            AND vd.rn = 1
@@ -135,19 +132,28 @@ BEGIN
     DatosEC AS
     (
         SELECT
-            'EC' AS [Origen],
-
             CAST(NULL AS VARCHAR(30)) AS [Guía],
+
             CAST(NULL AS VARCHAR(50)) AS [Monto cobrado en transferencia],
+
             CAST(NULL AS VARCHAR(100)) AS [Ruta],
+
             CAST(NULL AS VARCHAR(200)) AS [Piloto],
+
             CAST(NULL AS VARCHAR(200)) AS [Hub],
+
             CAST(NULL AS VARCHAR(50)) AS [Producto cobrado en transferencia],
+
             CAST(NULL AS VARCHAR(100)) AS [ID Transferencia POD],
+
+            CAST(TransactionReference AS VARCHAR(100)) AS [ID transferencia EC],
+
             CAST(NULL AS VARCHAR(30)) AS [Fecha hora cobro en POD],
 
-            CAST(TransactionReference AS VARCHAR(100)) AS [ID transferencia en EC],
-            TransactionDate AS [Fecha hora recepcion en EC],
+            TransactionDate AS [Fecha Hora recepción en EC],
+
+            CAST('No conciliado' AS VARCHAR(50)) AS [Estado de Conciliación],
+
             Account AS [No. Cuenta],
 
             CASE
@@ -160,7 +166,7 @@ BEGIN
                         )
                     )
                 ELSE TransactionDescription
-            END AS [Descripcion de transferencia EC],
+            END AS [Descripción de transferencia EC],
 
             CAST(TransactionDate AS DATETIME) AS [FechaOrdenamiento]
 
@@ -171,7 +177,6 @@ BEGIN
     )
 
     SELECT
-        [Origen],
         [Guía],
         [Monto cobrado en transferencia],
         [Ruta],
@@ -179,15 +184,15 @@ BEGIN
         [Hub],
         [Producto cobrado en transferencia],
         [ID Transferencia POD],
+        [ID transferencia EC],
         [Fecha hora cobro en POD],
-        [ID transferencia en EC],
-        [Fecha hora recepcion en EC],
+        [Fecha Hora recepción en EC],
+        [Estado de Conciliación],
         [No. Cuenta],
-        [Descripcion de transferencia EC]
+        [Descripción de transferencia EC]
     FROM
     (
         SELECT
-            [Origen],
             [Guía],
             [Monto cobrado en transferencia],
             [Ruta],
@@ -195,18 +200,18 @@ BEGIN
             [Hub],
             [Producto cobrado en transferencia],
             [ID Transferencia POD],
+            [ID transferencia EC],
             [Fecha hora cobro en POD],
-            [ID transferencia en EC],
-            [Fecha hora recepcion en EC],
+            [Fecha Hora recepción en EC],
+            [Estado de Conciliación],
             [No. Cuenta],
-            [Descripcion de transferencia EC],
+            [Descripción de transferencia EC],
             [FechaOrdenamiento]
         FROM DatosPOD
 
         UNION ALL
 
         SELECT
-            [Origen],
             [Guía],
             [Monto cobrado en transferencia],
             [Ruta],
@@ -214,16 +219,16 @@ BEGIN
             [Hub],
             [Producto cobrado en transferencia],
             [ID Transferencia POD],
+            [ID transferencia EC],
             [Fecha hora cobro en POD],
-            [ID transferencia en EC],
-            [Fecha hora recepcion en EC],
+            [Fecha Hora recepción en EC],
+            [Estado de Conciliación],
             [No. Cuenta],
-            [Descripcion de transferencia EC],
+            [Descripción de transferencia EC],
             [FechaOrdenamiento]
         FROM DatosEC
     ) Resultado
     ORDER BY 
-        [Origen],
         [FechaOrdenamiento] DESC;
 
 END;
