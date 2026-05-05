@@ -7,6 +7,7 @@
 
 === CHANGELOG ============================
 2026-03-30 | Historia/épica: FDAPI-5679  | Autor: Caleb Loarca | Se usa de base SetValidPickUpPiece, para este nuevo SP.
+2026-04-23 | Historia/épica: FDAPI-6121  | Autor: Mario Herrarte | Se retorna la cantidad de piezas de la guia.
 =========================================== */
 
 ALTER PROCEDURE [dbo].[APIForzaDeliveryCourier_SetValidPickUpPieceByHand]
@@ -27,7 +28,8 @@ BEGIN
                 @Valid INT,
                 @ValidCountry INT,
                 @GuideSerie NVARCHAR(2) = 'FD',
-				@InContainerGuides NVARCHAR(MAX) = '';
+				@InContainerGuides NVARCHAR(MAX) = '',
+                @PiecesDry INT;
 			
 
 
@@ -146,7 +148,8 @@ BEGIN
 						SELECT 
 							2 AS [StatusCode],
 							'La Guia no existe' AS [Message],
-							1 AS [NoPiece]
+							1 AS [NoPiece],
+                            null AS TotalPiecesDry
 						RETURN
 					END
 					ELSE
@@ -161,7 +164,8 @@ BEGIN
 								SELECT 
 									3 AS [StatusCode],
 									'La Guia no pertenece al cliente de la recoleccion' AS [Message],
-									1 AS [NoPiece]
+									1 AS [NoPiece],
+                                    null AS TotalPiecesDry
 								RETURN
 							END
 						END
@@ -178,7 +182,8 @@ BEGIN
 					BEGIN
 						SELECT 
 							2 AS [StatusCode],
-							'El contenedor no existe' AS [Message]
+							'El contenedor no existe' AS [Message],
+                            null AS TotalPiecesDry
 						RETURN
 					END
 					ELSE
@@ -190,7 +195,8 @@ BEGIN
 						      
                                     SELECT 
                                             2 AS [StatusCode],
-                                            'El contenedor ya esta recolectado' AS [Message]
+                                            'El contenedor ya esta recolectado' AS [Message],
+                                            null AS TotalPiecesDry
                                     RETURN
 
                                 END
@@ -198,14 +204,16 @@ BEGIN
                                         SELECT 
                                             200 AS [StatusCode],
                                             'Contenedor válido, listo para procesar' AS [Message],
-                                            1 AS [NoPiece]
+                                            1 AS [NoPiece],
+                                            1 AS TotalPiecesDry
                                         RETURN
                                     END
 						ELSE
 						BEGIN
 							SELECT 
 								3 AS [StatusCode],
-								'Contenedor no pertenece al cliente de la recoleccion' AS [Message]
+								'Contenedor no pertenece al cliente de la recoleccion' AS [Message],
+                                null AS TotalPiecesDry
 							RETURN
 						END
 						
@@ -220,11 +228,15 @@ BEGIN
 
                 SELECT @NoPiece = COUNT(NoPiece)
                 FROM DeliveryBackOffice.dbo.DeliveryOrderPiece WITH (NOLOCK)
-                WHERE GuideNumber = @GuideNumber
-                      AND GuideSerie = @GuideSerie
-
+                WHERE GuideSerie = @GuideSerie 
+				AND	GuideNumber = @GuideNumber
+                
                 SELECT @NoPieceEntered = COUNT(*)
                 FROM #listGuides
+
+                SELECT @PiecesDry = Pieces_Dry FROM DeliveryOrder DO WITH (NOLOCK)
+                                WHERE DO.Guide_Serie = @GuideSerie
+                                    AND DO.Guide_Number = @GuideNumber
 
                 SELECT @ValidCountry = MAX(   CASE
                                                   WHEN DO.SenderCountryId = @IdCountry THEN
@@ -253,36 +265,42 @@ BEGIN
                         BEGIN
                             SELECT 200 AS StatusCode,
                                    'Piezas validas, listas para procesarlas' AS Message,
-								   @NoPiece AS NoPiece
+								   @NoPiece AS NoPiece,
+                                   @PiecesDry AS TotalPiecesDry
 
                         END
                         ELSE
                         BEGIN
                             SELECT 0 AS StatusCode,
-                                   'Se encuentran piezas que ya fueron procesadas' AS Message
+                                   'Se encuentran piezas que ya fueron procesadas' AS Message,
+                                   @PiecesDry AS TotalPiecesDry
                         END
                     END
                     ELSE IF @NoPiece < @NoPieceEntered
                     BEGIN
                         SELECT 0 StatusCode,
-                               CONCAT('La guia tiene más piezas de las establecidas No. Piezas: ', @NoPiece) AS Message
+                               CONCAT('La guia tiene más piezas de las establecidas No. Piezas: ', @NoPiece) AS Message,
+                               @PiecesDry AS TotalPiecesDry
                     END
                     ELSE
                     BEGIN
                         SELECT 4 AS StatusCode,
-                               CONCAT('Faltan:', @NoPiece - @NoPieceEntered, ' piezas por escanear') AS Message
+                               CONCAT('Faltan:', @NoPiece - @NoPieceEntered, ' piezas por escanear') AS Message,
+                               @PiecesDry AS TotalPiecesDry
                     END
                 END
                 ELSE
                 BEGIN
                     SELECT 0 AS StatusCode,
-                           'La guia pertenece a otro país' AS Message
+                           'La guia pertenece a otro país' AS Message,
+                           null AS TotalPiecesDry
                 END
             END
             ELSE
             BEGIN
                 SELECT 1 AS StatusCode,
-					  'Guias no validas' AS Message
+					  'Guias no validas' AS Message,
+                      null AS TotalPiecesDry
 
                 SELECT Message,
                        Guide
@@ -292,7 +310,8 @@ BEGIN
         ELSE
         BEGIN
             SELECT 0 AS StatusCode,
-                   'El Token no es valido' AS Message
+                   'El Token no es valido' AS Message,
+                   null AS TotalPiecesDry
         END
 
     END TRY
