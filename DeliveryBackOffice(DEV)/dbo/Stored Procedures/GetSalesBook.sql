@@ -49,7 +49,7 @@ BEGIN
             ,IIF(ISNULL(MAX(DOR.ConditionOfPaymentID), 1) =1 , 'CONTADO', 'CREDITO') [payment_method]
             ,CASE WHEN DOR.IsCollect = 1 THEN 'SI' ELSE 'NO' END                [IsCollect]
             ,MAX(DOR.SAPCardCode)                       [SAPCardCode]
-    from invoiceHeader IH          WITH (NOLOCK)
+    from DeliveryBackOffice.dbo.invoiceHeader IH          WITH (NOLOCK)
         CROSS APPLY (
             SELECT TOP 1 dti_category, dti_description, dti_fk_orderSerie, dti_fk_orderNumber
             FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
@@ -65,9 +65,9 @@ BEGIN
                     ,Cs.SAPCardCode    [SAPCardCode]
                     ,CTS.CtsName       [CtsName]
             FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
-            INNER JOIN dbo.Customer cs WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.Customer cs WITH(NOLOCK)
                 ON cs.IdCustomer = DO.IdCustomer
-            LEFT JOIN CatTypeService cts WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.CatTypeService cts WITH (NOLOCK)
                 ON DO.TypeService = cts.CtsShortName
         ) DOR
             ON DOR.Guide_Serie   = IND.dti_fk_orderSerie
