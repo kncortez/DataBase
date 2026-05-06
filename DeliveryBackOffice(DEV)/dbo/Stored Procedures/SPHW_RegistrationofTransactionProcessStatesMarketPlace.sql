@@ -1,13 +1,21 @@
-﻿-- =============================================
--- Author:		<Author,Edelman>
--- Create date: <Create Date, 2024-01-08>
--- Description:	<Description,Insertar registro que indica inicio del  proceso de una transacción de compra carrito marketplace>
--- =============================================
--- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2025-06-09>
--- Description:	<Se modifica el tipo de entrada de CardId (GetCardsCredit) de varchar a int.>
--- =============================================
+﻿
+/* =================================================
+   SP: SPHW_RegistrationofTransactionProcessStatesMarketPlace
+   Propósito: Insertar registro que indica inicio del  proceso de una transacción de compra carrito marketplace
+   Autor:     Edelman Vasquez
+   Historia:  PENDIENTE
+   Fecha:     2024-01-08
+================================================= */
+/* === CHANGELOG ============================
+2024-01-08 | Historia/épica: (pendiente)  | Autor: Edelman Vasquez | Insertar registro que indica inicio del  proceso de una transacción de compra carrito marketplace
+2025-06-09 | Historia/épica: FDAPI-2085   | Autor: Walter Orozco   | Se modifica el tipo de entrada de CardId (GetCardsCredit) de varchar a int.
+2026-04-20 | Historia/épica: FDAPI-5877   | Autor: Bilkar Morataya | Se agrega guard de idempotencia: si el OrderNumber ya existe en
+--                                                                   RegistrationofTransactionProcessStates, se omite el INSERT y se
+--                                                                   retorna ResultCode = 1 para no bloquear el flujo del llamador.
+--                                                                   Esto previene duplicación de membresías/suscripciones en reintentos
+--                                                                   de pago o doble envío desde el cliente.
+=========================================== */
+
 CREATE PROCEDURE [dbo].[SPHW_RegistrationofTransactionProcessStatesMarketPlace] 
 @AccountId AS INT,
 @CustomerId AS INT,
@@ -37,6 +45,20 @@ BEGIN
 	
 	DECLARE  @isSuscription AS BIT 
 
+	-- Guard de idempotencia: si el OrderNumber ya fue registrado, no insertar de nuevo.
+	-- Esto protege contra reintentos del cliente, doble clic o errores de red que
+	-- provoquen una segunda llamada con el mismo OrderNumber, lo que causaría
+	-- duplicación en cascada de Membresías y Suscripciones.
+	IF EXISTS (
+		SELECT TOP 1 1
+		FROM [dbo].[RegistrationofTransactionProcessStates] WITH (NOLOCK)
+		WHERE OrderNumber = @OrderNumber
+	)
+	BEGIN
+		COMMIT TRAN
+		SELECT 1 AS 'ResultCode'
+		RETURN
+	END
 
 	INSERT INTO [dbo].[RegistrationofTransactionProcessStates]
 	(
@@ -94,10 +116,51 @@ BEGIN
 														WHERE usr.UsrEmail = ISNULL(T.ProductGiftShippingEmail,'N/D')
 														AND rus.RusIdSystem = 1 
 														AND ac.AccRowStatus = 1 AND res.UstStatus  ='ACTIVE')
-				
-							ELSE  @AccountId
 
-							END,
+				-- Resolver AccountId desde InvoiceEmail para usuarios no logueados (@AccountId = 0)
+				WHEN @AccountId = 0
+					AND @InvoiceEmail IS NOT NULL
+					AND @InvoiceEmail <> ''
+					AND EXISTS (
+						SELECT TOP 1 1
+						FROM [dbo].[RegisterUser]               usr WITH (NOLOCK)
+							INNER JOIN [dbo].[RolByUserBySystem]    rus WITH (NOLOCK)
+								ON rus.RusIdUser = usr.UsrIdUser
+							LEFT JOIN [dbo].[UserSystemRestriction] res WITH (NOLOCK)
+								ON res.UstIdUser = rus.RusIdUser
+								   AND res.UstIdSystem = rus.RusIdSystem
+							LEFT JOIN [dbo].[RolByUserByAccount]    rua WITH (NOLOCK)
+								ON rua.RuaIdUser = usr.UsrIdUser
+								   AND rua.RuaRowStatus = 1
+							INNER JOIN [dbo].[Account]              ac  WITH (NOLOCK)
+								ON ac.AccIdAccount = rua.RuaIdAccount
+						WHERE usr.UsrEmail = @InvoiceEmail
+							AND rus.RusIdSystem = 1
+							AND ac.AccRowStatus = 1
+							AND res.UstStatus = 'ACTIVE'
+					)
+				THEN (
+					SELECT TOP 1 ac.AccIdAccount
+					FROM [dbo].[RegisterUser]               usr WITH (NOLOCK)
+						INNER JOIN [dbo].[RolByUserBySystem]    rus WITH (NOLOCK)
+							ON rus.RusIdUser = usr.UsrIdUser
+						LEFT JOIN [dbo].[UserSystemRestriction] res WITH (NOLOCK)
+							ON res.UstIdUser = rus.RusIdUser
+							   AND res.UstIdSystem = rus.RusIdSystem
+						LEFT JOIN [dbo].[RolByUserByAccount]    rua WITH (NOLOCK)
+							ON rua.RuaIdUser = usr.UsrIdUser
+							   AND rua.RuaRowStatus = 1
+						INNER JOIN [dbo].[Account]              ac  WITH (NOLOCK)
+							ON ac.AccIdAccount = rua.RuaIdAccount
+						WHERE usr.UsrEmail = @InvoiceEmail
+							AND rus.RusIdSystem = 1
+							AND ac.AccRowStatus = 1
+							AND res.UstStatus = 'ACTIVE'
+				)
+
+					ELSE  @AccountId
+
+					END,
                 CASE
 						  WHEN  EXISTS(SELECT  TOP 1 1
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -133,16 +196,57 @@ BEGIN
 														WHERE usr.UsrEmail = ISNULL(T.ProductGiftShippingEmail,'N/D')
 														AND rus.RusIdSystem = 1
 														AND ac.AccRowStatus = 1 AND res.UstStatus  ='ACTIVE')
-				
-							ELSE  @CustomerId
 
-							END,
+				-- Resolver CustomerId desde InvoiceEmail para usuarios no logueados (@AccountId = 0)
+				WHEN @AccountId = 0
+					AND @InvoiceEmail IS NOT NULL
+					AND @InvoiceEmail <> ''
+					AND EXISTS (
+						SELECT TOP 1 1
+						FROM [dbo].[RegisterUser]              usr WITH (NOLOCK)
+							INNER JOIN [dbo].[RolByUserBySystem]   rus WITH (NOLOCK)
+								ON rus.RusIdUser = usr.UsrIdUser
+							LEFT JOIN [dbo].[UserSystemRestriction] res WITH (NOLOCK)
+								ON res.UstIdUser = rus.RusIdUser
+								   AND res.UstIdSystem = rus.RusIdSystem
+							LEFT JOIN [dbo].[RolByUserByAccount]   rua WITH (NOLOCK)
+								ON rua.RuaIdUser = usr.UsrIdUser
+								   AND rua.RuaRowStatus = 1
+							INNER JOIN [dbo].[Account]             ac WITH (NOLOCK)
+								ON ac.AccIdAccount = rua.RuaIdAccount
+						WHERE usr.UsrEmail = @InvoiceEmail
+							AND rus.RusIdSystem = 1
+							AND ac.AccRowStatus = 1
+							AND res.UstStatus = 'ACTIVE'
+					)
+				THEN (
+					SELECT TOP 1 ac.IdCustomer
+					FROM [dbo].[RegisterUser]              usr WITH (NOLOCK)
+						INNER JOIN [dbo].[RolByUserBySystem]   rus WITH (NOLOCK)
+							ON rus.RusIdUser = usr.UsrIdUser
+						LEFT JOIN [dbo].[UserSystemRestriction] res WITH (NOLOCK)
+							ON res.UstIdUser = rus.RusIdUser
+							   AND res.UstIdSystem = rus.RusIdSystem
+						LEFT JOIN [dbo].[RolByUserByAccount]   rua WITH (NOLOCK)
+							ON rua.RuaIdUser = usr.UsrIdUser
+							   AND rua.RuaRowStatus = 1
+						INNER JOIN [dbo].[Account]             ac WITH (NOLOCK)
+							ON ac.AccIdAccount = rua.RuaIdAccount
+						WHERE usr.UsrEmail = @InvoiceEmail
+							AND rus.RusIdSystem = 1
+							AND ac.AccRowStatus = 1
+							AND res.UstStatus = 'ACTIVE'
+				)
+
+					ELSE  @CustomerId
+
+					END,
 
         @OrderNumber,
         @NameTax,
         @FiscalAddress,
         @TaxId,
-		(Select Case WHEN  T.TypeSalePackage ='Suscripción mensual' THEN 1 ELSE 0 END ),
+		(SELECT CASE WHEN T.TypeSalePackage = 'Suscripción mensual' THEN 1 ELSE 0 END),
         @IsAutoRenewable,
         @CardId,
         @Token,
@@ -151,20 +255,17 @@ BEGIN
         @Vaucher,
         T.IdCatProduct,
         T.TypeSalePackage,
-		CASE WHEN 
-		              T.ProductGiftShippingEmail = 'NULL'
-					  THEN NULL
-					  ELSE T.ProductGiftShippingEmail
-					  END,
+		CASE WHEN T.ProductGiftShippingEmail = 'NULL'
+			 THEN NULL
+			 ELSE T.ProductGiftShippingEmail
+			 END,
 		@ImageURL,
 		@PhoneNumber
     FROM @TblSalePackageMarketPlace AS T;
 
 
 	COMMIT TRAN
-	SELECT 1 AS 'ResultCode' 
-
-
+	SELECT 1 AS 'ResultCode'
 
 
 END TRY
