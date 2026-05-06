@@ -1,19 +1,15 @@
-USE [DeliveryBackOffice]
-GO
+    /* =============================================
+    SP:          [dbo].[GetConciliacionTransferenciasYZigi]
+    Propósito:   Obtener el reporte de conciliación de transferencias bancarias y ZiGi entre cobros POD y movimientos EC.
+    Autor:       Marcelo del Aguila
+    Historia:    FDAPI-5972
+    Fecha:       2026-04-05
 
-SET ANSI_NULLS ON
-GO
+    === CHANGELOG ===================================
+    2026-04-05 | Historia/épica: FDAPI-5972 | Autor: Marcelo del Aguila |
 
-SET QUOTED_IDENTIFIER ON
-GO
-
--- =============================================
--- Author:      Marcelo del Aguila
--- Create date: 2026-04-05
--- Description: Obtiene el reporte de conciliación de transferencias bancarias y ZiGi entre cobros POD y movimientos EC.
--- =============================================
-
-CREATE OR ALTER PROCEDURE dbo.SP_ConciliacionTransferenciasYZigi
+    ============================================== */
+CREATE PROCEDURE dbo.GetConciliacionTransferenciasYZigi
 (
     @FechaInicio DATE,
     @FechaFin DATE
@@ -35,14 +31,6 @@ BEGIN
         GROUP BY 
             od.Guide_Serie,
             od.Guide_Number 
-    ),
-    Settlement AS
-    (
-        SELECT
-            s.ID,
-            s.User_Dispatched,
-            s.Date_Dispatched
-        FROM dbo.DeliveryOrderBySettlement s WITH (NOLOCK)
     ),
     VoucherData AS
     (
@@ -121,9 +109,11 @@ BEGIN
         (
             SELECT TOP (1)
                 s.ID
-            FROM Settlement s
+            FROM dbo.DeliveryOrderBySettlement s WITH (NOLOCK)
             WHERE s.User_Dispatched = o.TokenUpdated
-              AND CAST(s.Date_Dispatched AS DATE) = CAST(o.Dispatched_Date AS DATE)
+            AND s.Date_Dispatched >= @FechaInicio
+            AND s.Date_Dispatched <  @FechaFinExclusiva
+            AND CAST(s.Date_Dispatched AS DATE) = CAST(o.Dispatched_Date AS DATE)
             ORDER BY s.Date_Dispatched DESC, s.ID DESC
         ) sbs
         WHERE vd.VoucherPath IS NOT NULL
