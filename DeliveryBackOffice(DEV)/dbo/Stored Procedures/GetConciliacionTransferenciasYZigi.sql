@@ -27,14 +27,14 @@ BEGIN
     WITH Entrega AS
     (
         SELECT
-            od.Guide_Number,
             od.Guide_Serie,
+            od.Guide_Number,
             FechaEntrega = MIN(od.DateCreated)
         FROM dbo.DeliveryOrderDetail od WITH (NOLOCK)
         WHERE od.StatusOrderId = 5
         GROUP BY 
-            od.Guide_Number,
-            od.Guide_Serie
+            od.Guide_Serie,
+            od.Guide_Number 
     ),
     Settlement AS
     (
@@ -110,8 +110,8 @@ BEGIN
 
         FROM dbo.DeliveryOrder o WITH (NOLOCK)
         INNER JOIN Entrega e
-            ON e.Guide_Number = o.Guide_Number
-           AND e.Guide_Serie = o.Guide_Serie
+            ON e.Guide_Serie = o.Guide_Serie
+           AND e.Guide_Number = o.Guide_Number
         LEFT JOIN VoucherData vd
             ON vd.GuideNumber = o.Guide_Number
            AND vd.rn = 1
