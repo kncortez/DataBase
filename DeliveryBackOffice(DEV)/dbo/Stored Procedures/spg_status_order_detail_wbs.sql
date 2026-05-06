@@ -1,16 +1,16 @@
-﻿-- =============================================
--- Author:		<Edwin,Ramirez>
--- Create date: <01/11/2020>
--- Description:	<Detalle de rastreo en web services para el cliente>
--- =============================================
--- Author:		<Tito Garcia>
--- Create date: <24/07/2024>
--- Description:	<Se agrega CommentOnIncident para devolver el comentario que el piloto ingreso al momento de crear la incidencia>
--- =============================================
--- Author:		<Josue Villagrán>
--- Create date: <29/07/2025>
--- Description:	<Se hace reingeniería del SP para optimizar y modularizar , es más eficiente (+24%) y más escalable>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[spg_status_order_detail_wbs]
+   Propósito: <Detalle de rastreo en web services para el cliente>
+   Autor:     <Edwin Ramirez>
+   Historia:  <>
+   Fecha:     2020-11-01
+=== CHANGELOG ================================
+2024-07-24 | Historia/épica: <Se agrega CommentOnIncident para devolver el comentario que el piloto ingreso al momento de crear la incidencia> | Autor: Tito García |
+=========================================== 
+2025-07-29 | Historia/épica: <Se hace reingeniería del SP para optimizar y modularizar , es más eficiente (+24%) y más escalable> | Autor: Josue Villagrán> |
+=========================================== 
+2026-03-18 | Historia/épica: FDAPI-5953 | Autor: Mario Herrarte |
+=========================================== */
 CREATE PROCEDURE [dbo].[spg_status_order_detail_wbs]
 	@Guide_Serie NVARCHAR(2),
 	@Guide_Number BIGINT
@@ -57,6 +57,11 @@ DECLARE @DeliveryAttempt TABLE (
 	CommentOnIncident NVARCHAR(500) 
 );
 
+DECLARE @DelayTrackingParam INT = (
+    SELECT Value FROM ConfigParams WHERE Name = 'DelayTracking'
+);
+
+DECLARE @DelayTracking DATETIME = DATEADD(MINUTE, -@DelayTrackingParam, GETDATE());
 	
 	INSERT INTO @DeliveryOrder
 	SELECT 
@@ -89,7 +94,8 @@ DECLARE @DeliveryAttempt TABLE (
 	INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK) 
 		ON so.StatusOrderId = dod.StatusOrderId
 	WHERE dod.Guide_Serie = @Guide_Serie 
-	  AND dod.Guide_Number = @Guide_Number;
+	  AND dod.Guide_Number = @Guide_Number
+	  AND dod.DateCreated < @DelayTracking;
 
 	  INSERT INTO @DeliveryAttempt
 		SELECT TOP 1
