@@ -14,7 +14,6 @@
 -- Update date: <2025-04-23>
 -- Description:	<Configuracion de parametros de Bancos COD Multipais>
 -- =============================================
-
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_recolection]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
@@ -78,7 +77,7 @@ BEGIN
     END;
 
     BEGIN TRY
-        --DECLARE @IdBankParam INT = 5;
+        
         DECLARE @UpdateLast INT;
         DECLARE @ProductNumber VARCHAR(MAX);
         DECLARE @Reference INT;
@@ -120,53 +119,7 @@ BEGIN
                     WHERE Name = 'Inmediata'
                 );
 
-        --IF (@IdBankParam IN
-        --    (
-        --        SELECT PayingBank
-        --        FROM DeliveryBackOffice.dbo.DeliveryBank
-        --        WHERE Id_country = @IdCountry
-        --              AND Id_status = 1
-        --              AND PayingBank <> @BankBAC
-        --        GROUP BY PayingBank
-        --    )
-        --   )
-        --BEGIN
-        --    SELECT @ProductNumber
-        --        =
-        --    (
-        --        SELECT STUFF(
-        --               (
-        --                   SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
-        --                   FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-        --                       JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-        --                           ON do.Guide_Serie = pg.GuideSerie
-        --                              AND do.Guide_Number = pg.GuideNumber
-        --                       LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
-        --                           ON dcba.DCBA_Id = do.DCBA_ID
-        --                              AND dcba.DCBA_Id_estado = 1
-        --                       LEFT JOIN dbo.VisitPointClient vpc
-        --                           ON vpc.CodeOfReference = do.Sender_ID
-        --                       LEFT JOIN dbo.Customer cus
-        --                           ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-        --                   WHERE pg.BatchCODId IS NULL
-        --                         AND pg.BatchCODIdCommission IS NULL
-        --                         AND pg.RowStatus = 1
-        --                         AND ISNULL(dcba.DCBA_Bank_Id, cus.CODAccountBankID) = @IdBankParam
-        --                         AND pg.Date > '2021-11-08 01:00:00.000'
-        --                         AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
-        --                         --AND ( cus.IdCustomerType IN(2,3)
-        --                         --	  OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))
-        --                         AND do.StatusOrderId != 7
-        --                   FOR XML PATH('')
-        --               ),
-        --               1,
-        --               1,
-        --               ''
-        --                    )
-        --    );
-        --END;
-        --ELSE
-        --BEGIN
+        
         SELECT @ProductNumber
             =
         (
@@ -207,15 +160,14 @@ BEGIN
         )
                                  OR ISNULL(dcba.DCBA_Bank_Id, cus.CODAccountBankID) IS NULL
                              )
-                             --AND ( cus.IdCustomerType IN(2,3)
-                             --OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))						
-
+                             
                              AND pg.Date > '2024-09-30 0:00:00.000'
                              --AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                              AND do.StatusOrderId != 7
 							 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
 							 AND ISNULL(pg.IsAnticipatedCOD,0) = 0
 							 AND pg.IsCompleted = 1
+                             AND cus.IsInternationalCustomer = 0
                        FOR XML PATH('')
                    ),
                    1,
@@ -223,7 +175,7 @@ BEGIN
                    ''
                         )
         );
-        -- END;
+        
 
         -- Insert statements for procedure here
         IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
@@ -413,7 +365,7 @@ BEGIN
                    ISNULL(dc.DCBA_Identification, '') DCBA_Identification,
                    op.Deposit_Number,
 
-                   --, iif(op.Deposit_Number is null,( ord.Collect_OnDelivery - tp.Commission - ord.PriceShippment   ), 0) as CODtoPay
+                   
                    IIF(op.Deposit_Number IS NULL,
                        ord.Collect_OnDelivery
                        -- comi
@@ -456,9 +408,7 @@ BEGIN
                             0,
                             IIF(pyt.TimePlaId = 2, 0, IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
                    ) Price
-            --,
-            --            ISNULL(csg.CrsId, @IdSegmentDefault)
-
+            
             INTO #TableAmountCOD
             FROM #listGuides lst
                 INNER JOIN dbo.DeliveryOrder ord WITH (NOLOCK)
@@ -492,10 +442,6 @@ BEGIN
                 LEFT JOIN dbo.CatRateSegment csg WITH (NOLOCK)
                     ON csg.CrsShortName = dbo.fn_get_segment(ord.Guide_Serie, ord.Guide_Number)
                        AND csg.CrsRowStatus = 'true'
-                --LEFT JOIN dbo.VisitPointCoverage cv
-                --	ON cv.VisitPointId = ord.Sender_ID
-                --	   AND cv.HubLogisticId  = hbl.IdHubLogistic
-                --	   AND cv.RowStatus = 'true'
                 LEFT JOIN dbo.RateCOD rco WITH (NOLOCK)
                     ON rco.RateId = rc.RbcIdRate
                        AND rco.TypeServiceId = csv.CtsId
@@ -519,9 +465,6 @@ BEGIN
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ISNULL(ord.Collect_OnDelivery, 0) = 0
 					AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender
-            --AND ISNULL(ord.IsCollect,'false') = 'false'
-            --AND 
-            --pyt.TimePlaId = 2
             ORDER BY cus.IdCustomer,
                      ord.Guide_Serie,
                      ord.Guide_Number;
@@ -581,18 +524,6 @@ BEGIN
             -- ASIGNACION DEL ROWSTATUS CERO 
             -- PARA LAS GUIAS QUE NO TIENE CODTOPAY EN LA TABLA PROCESSGUIDE
             -- PARA CONOCER QUE GUIAS NO SE TIENEN QUE REPROCESAR
-            --UPDATE pgc
-            --SET pgc.RowStatus = 0
-            --FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc
-            --    INNER JOIN #TableAmountCODTemp tact
-            --        ON pgc.GuideSerie = tact.Guide_Serie
-            --           AND pgc.GuideNumber = tact.Guide_Number
-            --           AND tact.CODtoPay <= 0
-            --WHERE pgc.BatchCODId IS NULL
-            --      AND pgc.BatchCODIdCommission IS NULL
-            --      AND pgc.RowStatus = 1;
-            --HW-66
-
             -- OBTENCION DEL NUMERO DE REFERENCIA (CORRELATIVO) PARA BAC
             SELECT @Reference = Last
             FROM DeliveryBackOffice.dbo.CatCorrelativeCOD WITH (NOLOCK)
@@ -818,21 +749,12 @@ BEGIN
 					  AND ISNULL(pgc.IsAnticipatedCOD,0) = 0;
             END;
 
-            --IF ((@NewIdBatchCODCustomer IS NOT NULL) AND (@NewIdBatchCODCustomer > 0))
-            --BEGIN
+            
             --    -- ASIGNACION DEL ID DE LOTE
             --    -- EN LAS COLUMNAS BATCHCODID Y BATCHCODIDCOMMISION EN LA TABLA PROCESSGUIDE
             --    -- PARA CONOCER QUE GUIA PARTICIPA EN QUE LOTES
             --    -- ESTAS GUIAS CREAN SOLO EL REGISTRO DE PAGO A CLIENTE
-            --    UPDATE pgc
-            --    SET pgc.BatchCODId = @NewIdBatchCODCustomer
-            --    FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pgc
-            --        INNER JOIN #TableCustomerPaymentTemp tcpt
-            --            ON pgc.GuideSerie = tcpt.GuideSerie
-            --               AND pgc.GuideNumber = tcpt.GuideNumber
-            --    WHERE pgc.BatchCODId IS NULL
-            --          AND pgc.RowStatus = 1;
-            --END;
+            
 
             IF ((@NewIdBatchCODForza IS NOT NULL) AND (@NewIdBatchCODForza > 0))
             BEGIN
@@ -879,8 +801,7 @@ BEGIN
                    'TRUE' AS blnResult,
                    'NO HAY GUIAS PARA PROCESAR' Comment;
 
-            --IF @TranCounter = 0 
-            --BEGIN
+            
             -- @TranCounter = 0 means no transaction was  
             -- started before the procedure was called.  
             -- The procedure must commit the transaction  
@@ -895,7 +816,7 @@ BEGIN
                     AND bdc.GuideNumber = gpc.GuideNumber
 					AND bdc.IdBatchDetailCOD = gpc.IdBatchDetailCOD;
 
-        --END
+        
         END;
     END TRY
     BEGIN CATCH
@@ -961,10 +882,7 @@ BEGIN
 
     IF @@trancount > 0
     BEGIN
-        --SELECT * FROM #TableAmountCODTemp;
-        --SELECT * FROM #TableCustomerPaymentTemp;
-        --SELECT * FROM #TableForzaPaymentTemp;
-
+        
         -- Micro transacción para indicar inicio de proceso de CoD ejecutado
         BEGIN TRANSACTION Completed_CoD_Execution_Process;
         BEGIN TRY
@@ -1000,14 +918,7 @@ BEGIN
                    'TRUE' AS blnResult,
                    'SE GENERO LOTE DE PAGOS EN RECOLECCIÓN' Comment;
         END;
-        --ELSE IF (@NewIdBatchCODForza IS NULL)
-        --BEGIN
-        --    SELECT @IdBankParam PayingBank,
-        --           @NewIdBatchCODCustomer IdBatchCOD,
-        --           @NewIdBatchCODCustomer AS BATCHNUMBER,
-        --           'TRUE' AS blnResult,
-        --           'SOLO SE GENERO LOTE DE PAGO A CLIENTES' Comment;
-        --END;
+        
         ELSE
         BEGIN
 
@@ -1018,12 +929,7 @@ BEGIN
                    'LOTE DE PAGOS EN RECOLECCIÓN' Comment;
         END;
 
-        --IF @TranCounter = 0  
-        --BEGIN
-        -- @TranCounter = 0 means no transaction was  
-        -- started before the procedure was called.  
-        -- The procedure must commit the transaction  
-        -- it started.
+        
         COMMIT TRANSACTION;
 
 		UPDATE bdc
@@ -1037,6 +943,6 @@ BEGIN
 		IF OBJECT_ID('tempdb.dbo.#GuidesProcessCOD', 'U') IS NOT NULL
 		DROP TABLE #GuidesProcessCOD;
 
-    --END
+    
     END;
 END;
