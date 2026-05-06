@@ -170,8 +170,21 @@ BEGIN
            (CASE WHEN ord.[IsLastMileReturn] = 1 THEN CONCAT(ord.Receiver_FirstName, ' ', ord.Receiver_LastName) ELSE CONCAT(ord.[Sender_FirstName], ' ', ord.[Sender_LastName]) END) 'Remitente',
            (CASE WHEN ord.[IsLastMileReturn] = 1 THEN CONCAT(ord.[Sender_FirstName], ' ', ord.[Sender_LastName]) ELSE CONCAT(ord.Receiver_FirstName, ' ', ord.Receiver_LastName) END) 'Destinatario',
            CONCAT(sdr.First_Name, ' ', sdr.Last_Name) 'Piloto',
-           --IIF(ord.IsCollect = 1, ord.PriceShippment, 0)
-		   ISNULL(ord.PriceShippment, 0)'Collect',
+		    CASE 
+				WHEN Cus.IdCustomerType = 1 THEN 
+					IIF(ccp.IdConditionOfPayment = 1 ,
+						ISNULL(ord.PriceShippment, 0),
+						IIF(ord.IsCollect = 1,
+							ISNULL(ord.PriceShippment, 0)
+							,0
+						)
+					)
+				ELSE 
+					IIF(ord.IsCollect = 1,
+						ISNULL(ord.PriceShippment, 0)
+						,0
+					)
+			END 'Collect',
            (CASE WHEN [ord].[IsLastMileReturn] = 1 THEN 0 ELSE ord.Collect_OnDelivery END) 'COD',
 		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
 		   CASE 
@@ -216,12 +229,20 @@ BEGIN
             AND c.GuideNumber = ord.guide_number
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD] dc WITH (NOLOCK)
             ON dc.IdCatCurrencyCOD = ISNULL(c.ShippingCurrency,1)
-        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] cd WITH (NOLOCK)
-            ON c.IdCost = cd.IdCost
+		OUTER APPLY (
+			SELECT MAX(IdTypeOfMoneyCollect) AS IdTypeOfMoneyCollect, MAX(Voucher) AS Voucher, MAX(IdTypeOfMoneyCOD) AS IdTypeOfMoneyCOD
+			FROM DeliveryBackOffice.dbo.CostDetail costd WITH(NOLOCK)
+			WHERE costd.IdCost = c.IdCost
+			GROUP BY costd.IdCost
+		) CD
 		LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigi] PZ WITH (NOLOCK)
-        ON  PZ.GuideSerie  = dsd.Guide_Serie AND PZ.GuideNumber = dsd.Guide_Number
-       LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigiMulti] PZM WITH (NOLOCK)
-        ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
+			ON  PZ.GuideSerie  = dsd.Guide_Serie AND PZ.GuideNumber = dsd.Guide_Number
+		LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigiMulti] PZM WITH (NOLOCK)
+			ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
+		LEFT JOIN [DeliveryBackOffice].[dbo].Customer Cus WITH (NOLOCK)
+			ON  cus.IdCustomer = ord.IdCustomer
+		LEFT JOIN [DeliveryBackOffice].[dbo].CatConditionOfPayment ccp WITH (NOLOCK)
+			ON  ccp.IdConditionOfPayment = cus.ConditionOfPaymentID
     WHERE CONVERT(DATE, dst.Date_Received)
           BETWEEN @fromDate AND @toDate
           AND dst.SettlementStationId IN

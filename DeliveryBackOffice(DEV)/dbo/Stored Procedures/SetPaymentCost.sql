@@ -147,7 +147,8 @@ BEGIN
 						    [IdTypeOfMoney] = @IdTypeOfMoney,
                             [IdTypeOfMoneyCOD] = IIF(@CODPayment > 0 AND IdTypeOfMoneyCOD IS NULL,@IdTypeOfMoney,IdTypeOfMoneyCOD),
 							[IdTypeOfMoneyCollect] = IIF(@Amount > 0 AND IdTypeOfMoneyCollect IS NULL,@IdTypeOfMoney,IdTypeOfMoneyCollect),
-							[Amount] = IIF([Amount] > 0,[Amount],@Amount)
+							[Amount] = IIF([Amount] > 0,[Amount],@Amount),
+							VoucherPath = IIF(@IdTypeOfMoney in (11), IIF(@TransferImagePath = '',VoucherPath,@TransferImagePath), '')
 					WHERE [IdCost] = @IdCost;
 		END;
 END;

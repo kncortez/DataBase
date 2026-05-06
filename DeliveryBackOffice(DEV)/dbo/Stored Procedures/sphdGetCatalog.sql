@@ -28,6 +28,11 @@
 -- Update date: <2025-08-14>
 -- Description:	<Facturacion SV - Se quita validacion isnull al consultar catalogos>
 -- =============================================
+-- =============================================
+-- Modified:	<Mario, Herrarte>
+-- Update date: <2026-03-19>
+-- Description:	<Se concateno el Id del Tarifario al nombre, para identificar tarifarios con mismo nombre>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCatalog]
     -- Add the parameters for the stored procedure here
     @IdCorrelative INT = -1,
@@ -261,7 +266,7 @@ BEGIN
         IF (@NameOfCatalog = 'RateCatalog')
         BEGIN
             SELECT RheId [IdValue],
-                   UPPER(RheName) [NameValue],
+                   (cast(RheId as varchar) + ' - ' + UPPER(RheName)) [NameValue],
                    hr.RateTypeId [IdFilter],
 				   hr.CatBusinessSegmentId [CatBusinessSegmentId],
                    'RateCatalog' [Catalog]

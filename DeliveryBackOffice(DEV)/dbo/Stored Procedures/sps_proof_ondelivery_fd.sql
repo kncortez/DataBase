@@ -53,7 +53,14 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
 
 AS
 BEGIN
-	
+
+SET ARITHABORT ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+
+	DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+    DECLARE @CourierId INT = NULL;
+
 	IF @GuideNumber IS NULL OR @GuideNumber = 0 OR @GuideSerie IS NULL OR @GuideSerie = ''
 	BEGIN
 		SELECT @GuideNumber = Guide_Number,
@@ -308,22 +315,40 @@ BEGIN
         SET @ModName = N'Courier App';
 
         -- buscar registros de tabla de entregas
-        INSERT INTO @Table
-        SELECT Top 1 da.ID
-        FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-            INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
-                ON sr.ID = da.ID_Courier
-			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiverLoginToken] SRLT  WITH(NOLOCK) 
-				ON [SRLT].[SenderReceiverId] = [sr].[ID]
-        WHERE (sr.Phone LIKE @PhoneNumber + '%'
-				OR
-			  [sr].[UniqueCode] = @PhoneNumber
-			  OR
-			  [SRLT].[LoginToken] = @PhoneNumber)
-              AND da.Guide_Serie = @GuideSerie
-              AND da.Guide_Number = @GuideNumber
-              AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
-               ORDER BY da.Date_Created desc;
+
+         -- 1) LoginToken (más exacto)
+         SELECT TOP 1 @CourierId = sr.ID
+         FROM DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
+         JOIN DeliveryBackOffice.dbo.SenderReceiverLoginToken SRLT WITH (NOLOCK)
+           ON SRLT.SenderReceiverId = sr.ID
+         WHERE SRLT.LoginToken = @PhoneNumber;
+
+         -- 2) UniqueCode
+         IF @CourierId IS NULL
+         BEGIN
+           SELECT TOP 1 @CourierId = sr.ID
+           FROM DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
+           WHERE sr.UniqueCode = @PhoneNumber;
+         END
+ 
+         -- 3) Phone prefijo
+         IF @CourierId IS NULL
+         BEGIN
+           SELECT TOP 1 @CourierId = sr.ID
+           FROM DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
+           WHERE sr.Phone LIKE @PhoneNumber + '%';
+         END
+ 
+          -- Ahora: query simple, sin OR
+         INSERT INTO @Table
+         SELECT TOP 1 da.ID
+         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+         WHERE da.ID_Courier = @CourierId
+           AND da.Guide_Serie = @GuideSerie
+           AND da.Guide_Number = @GuideNumber
+           AND da.Date_Created >= @Today
+           AND da.Date_Created < DATEADD(DAY, 1, @Today)
+         ORDER BY da.Date_Created DESC;
 
         -- insertar foto y guardar ID para actualizar tabla de entregas
         INSERT INTO DeliveryBackOffice.dbo.DeliveryProof
