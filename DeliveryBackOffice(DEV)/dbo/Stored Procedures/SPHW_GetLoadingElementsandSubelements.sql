@@ -207,7 +207,7 @@ BEGIN
         CPA.SubscriptionAttributePosition          [CatProductAtributeOrder],
         CS.Icon                                    [CatProductAttributeIcon]
     From DeliveryBackOffice.[dbo].[CatSubscription] CS WITH(NOLOCK)
-    INNER JOIN DeliveryBackOffice.[dbo].[CatSubscriptionAttribute]  CPA WITH(NOLOCK)
+    INNER JOIN DeliveryBackOffice.[dbo].[CatSubscriptionAtribute]  CPA WITH(NOLOCK)
         ON CPA.CatSubscriptionId = CS.IdCatSubscription
     Where CPA.RowStatus = 1 
     AND CS.RowStatus = 1 
