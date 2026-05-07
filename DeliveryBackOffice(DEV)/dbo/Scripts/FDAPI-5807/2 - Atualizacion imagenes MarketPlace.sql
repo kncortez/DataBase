@@ -55,7 +55,7 @@ END CATCH
 
 -- Verificación
 SELECT
-    IdMarketplaceCarouselImage,
+    IdCarouselImage,
     ImageOrder,
     IdCountry,
     XXXLImageURL,
