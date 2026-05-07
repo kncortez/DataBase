@@ -11,16 +11,15 @@ BEGIN TRY
         SubscriptionName, SubscriptionDescription, SubscriptionCost, SubscriptionFixedValue,
         SubscriptionMaxServiceFixedValue, SubscriptionValidity, SubscriptionWeight, RowStatus,
         TokenCreated, DateCreated, Icon, NextSalesPackageBanner, CatTypeSubscriptionId,
-        CatProductCategoryId, Position, IdCountry, IdCatCurrencyCOD, Draft,
-        StartDate, EndDate, SubscriptionUsualPrice, PermanentlyDisabled
+        CatProductCategoryId, Position, IdCountry, IdCatCurrencyCOD
     )
     VALUES
-    ('Paquete MICRO',   '15 guías a $3.60 c/u.',  1.00,    0, 15,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planMicroIcon',   'bannerSubsPlan4.png', 2, 12, 1, 'SV', 2, 0, '2026-04-01 00:00:00', '2026-10-01 23:59:59',  1.00,    0),
-    ('Paquete Petit',   '25 guías a $3.40 c/u.',  85.00,   0, 25,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planPetitIcon',   'bannerSubsPlan1.png', 2, 12, 1, 'SV', 2, 0, '2026-04-01 00:00:00', '2026-10-01 23:59:59', 85.00,   0),
-    ('Paquete Básicos', '50 guías a $3.20 c/u.',  160.00,  0, 50,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planBasicoIcon',  'bannerSubsPlan2.png', 2, 12, 1, 'SV', 2, 0, '2026-04-01 00:00:00', '2026-10-01 23:59:59', 160.00,  0),
-    ('Paquete Plus',    '100 guías a $2.80 c/u.', 280.00,  0, 100, 6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planPlusIcon',    'bannerSubsPlan3.png', 2, 12, 1, 'SV', 2, 0, '2026-04-01 00:00:00', '2026-10-01 23:59:59', 280.00,  0),
-    ('Paquete Gold',    '200 guías a $2.60 c/u.', 520.00,  0, 200, 6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planGoldIcon',    'bannerSubsPlan5.png', 2, 12, 2, 'SV', 2, 0, '2026-04-01 00:00:00', '2026-10-01 23:59:59', 520.00,  0),
-    ('Paquete Platino', '400 guías a $2.50 c/u.', 1000.00, 0, 400, 6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planPlatinoIcon', 'bannerSubsPlan6.png', 2, 12, 3, 'SV', 2, 0, '2026-04-01 00:00:00', '2026-10-01 23:59:59', 1000.00, 0);
+    ('Paquete MICRO',   '15 guías a $3.60 c/u.',  1.00,    0, 15,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planMicroIcon',   'bannerSubsPlan4.png', 2, 12, 1, 'SV', 2),
+    ('Paquete Petit',   '25 guías a $3.40 c/u.',  85.00,   0, 25,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planPetitIcon',   'bannerSubsPlan1.png', 2, 12, 1, 'SV', 2),
+    ('Paquete Básicos', '50 guías a $3.20 c/u.',  160.00,  0, 50,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planBasicoIcon',  'bannerSubsPlan2.png', 2, 12, 1, 'SV', 2),
+    ('Paquete Plus',    '100 guías a $2.80 c/u.', 280.00,  0, 100, 6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planPlusIcon',    'bannerSubsPlan3.png', 2, 12, 1, 'SV', 2),
+    ('Paquete Gold',    '200 guías a $2.60 c/u.', 520.00,  0, 200, 6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planGoldIcon',    'bannerSubsPlan5.png', 2, 12, 2, 'SV', 2),
+    ('Paquete Platino', '400 guías a $2.50 c/u.', 1000.00, 0, 400, 6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planPlatinoIcon', 'bannerSubsPlan6.png', 2, 12, 3, 'SV', 2);
 
     COMMIT TRANSACTION
     PRINT '    [OK] CatSubscription insertado correctamente. Filas: ' + CAST(@@ROWCOUNT AS VARCHAR)
