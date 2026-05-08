@@ -676,7 +676,7 @@ BEGIN
 					SELECT 
 						CASE WHEN CS.StationType = 2 
 								THEN CS.CodeOfReference 
-								ELSE NULL
+								ELSE 0
 						END AS IdHubExc,
 						CASE WHEN CS.StationType = 2 
 								THEN 'EXC' 

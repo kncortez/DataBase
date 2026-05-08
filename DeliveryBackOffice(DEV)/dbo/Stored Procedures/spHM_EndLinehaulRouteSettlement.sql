@@ -203,7 +203,7 @@ BEGIN
 				T.PiecesNumber,
 				0,
 				'HUB',
-				NULL,
+				0,
 				@StatusInv,
 				@StationId
 		FROM #GuidesTmpLiq T
