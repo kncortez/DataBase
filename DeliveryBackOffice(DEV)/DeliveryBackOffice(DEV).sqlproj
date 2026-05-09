@@ -2105,6 +2105,7 @@
     <Build Include="dbo\Stored Procedures\GetDeliveryOrderPieces.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_RegisterInventoryAutomaticExc.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetRackPositionPerStation.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetSummaryRoutePreparationAutomatic.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
