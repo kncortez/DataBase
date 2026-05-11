@@ -1,19 +1,13 @@
-﻿-- =============================================
--- Author:		<Alejandro Rodríguez>
--- Create date: <2022-03-17>
--- Description:	<SP para generar el cierre de los express center>
--- Nota: Es una copia de GenerateClosure pero se agregaron validaciones
--- =============================================
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2022-11-06>
--- Description:	<Se agrega control de método de pago Zigi>
--- =============================================
--- =============================================
--- Author:		<Mario Herrarte>
--- Create date: <2026-05-04>
--- Description:	<Se soluciona inconveniente con envios internacionales y articulos.>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[GenerateClosureOperator]
+   Propósito: Generar el cierre de los express center, Nota: Es una copia de GenerateClosure pero se agregaron validaciones
+   Autor:     Alejandro Rodríguez
+   Historia:  <>
+   Fecha:     2022-03-17
+=== CHANGELOG ================================
+2026-05-04 | Historia/épica: FDAPI-6137 | Mario Herrarte: Se soluciona inconveniente con envios internacionales y articulos.
+2022-11-06 | Historia/épica: <>         | Bilkar Morataya: Se agrega control de método de pago Zigi
+=========================================== */
 CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
     @UserId INT,
@@ -64,13 +58,13 @@ BEGIN
     (
         SELECT TOP 1
                vp.RegisterUserID
-        FROM [dbo].RegisterUser usr WITH (NOLOCK)
-            LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].RegisterUser usr WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                 ON rua.RuaIdUser = usr.UsrIdUser
                    AND rua.RuaRowStatus = 1
-            INNER JOIN [dbo].Account ac WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].Account ac WITH (NOLOCK)
                 ON ac.AccIdAccount = rua.RuaIdAccount
-            INNER JOIN VisitPointByUser vp WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].VisitPointByUser vp WITH (NOLOCK)
                 ON vp.RegisterUserID = usr.UsrIdUser
         WHERE ac.AccIdAccount = @UserId AND ac.AccRowStatus = 1
     );
@@ -111,7 +105,7 @@ BEGIN
 		   -- FIN MODIFICACIÓN
 
     INTO #TempClosureDetail
-    FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+    FROM [DeliveryBackOffice].[dbo].DeliveryOrder DOR WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
             ON DOR.Sender_ID = VPC.CodeOfReference
         LEFT JOIN @TEMPLATEDETAIL IND
@@ -150,11 +144,11 @@ BEGIN
 
     FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
          
-        INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		INNER JOIN invoiceHeader INH WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
         
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
@@ -178,19 +172,19 @@ BEGIN
     DECLARE @Internacional INT;
     DECLARE @Articulo INT;
 
-	SET @Estandar = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Estandar = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 					WHERE NameTypeService = 'Estándar');
-	SET @Entrega = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Entrega = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 					WHERE NameTypeService = 'Entrega');
-	SET @Recepcion = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Recepcion = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 						WHERE NameTypeService = 'Recepción');
-	SET @Devolucion = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Devolucion = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 						WHERE NameTypeService = 'Devolución')
-	SET @Traslado = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Traslado = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 					WHERE NameTypeService = 'Traslado')
-    SET @Internacional = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+    SET @Internacional = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
                     WHERE NameTypeService = 'Internacional');
-    SET @Articulo = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+    SET @Articulo = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
                     WHERE NameTypeService = 'Artículos');
 	-- FIN MODIFICACIÓN
 
@@ -201,12 +195,12 @@ BEGIN
            @TotalCOD = COUNT(dpd.CODAmountProcess)
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-            ON DOR.Guide_Number = dpd.GuideNumber
-               AND DOR.Guide_Serie = dpd.GuideSerie
-               AND dpd.CODAmountProcess > 0
+            ON DOR.Guide_Serie = dpd.GuideSerie
+               AND DOR.Guide_Number = dpd.GuideNumber
     WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
             AND DOR.StatusOrderId != 7
           AND AccountId = @UserId
+          AND dpd.CODAmountProcess > 0
           AND NOT EXISTS
     (
         SELECT 1
@@ -317,7 +311,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard'
-        FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].DeliveryOrder DOR WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON DOR.Sender_ID = VPC.CodeOfReference
             LEFT JOIN @TEMPLATEDETAIL IND
@@ -391,7 +385,7 @@ BEGIN
 			   0 'CountFacturaCard'
 			FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
          
-        INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
@@ -450,7 +444,7 @@ BEGIN
 					THEN COUNT(DOPD.TypeofInOutMoneyId)
 				   ELSE 0
 			   END 'CountFacturaZigi'
-		FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+		FROM [DeliveryBackOffice].[dbo].DeliveryOrder DOR WITH (NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
 				ON DOR.Sender_ID = VPC.CodeOfReference
 			LEFT JOIN @TEMPLATEDETAIL IND
@@ -505,7 +499,7 @@ BEGIN
 			   0 'TotalFacturaZigi',
 			   0 'CountFacturaZigi'
 		FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
-		INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].CatTypeServiceClosure CTS WITH (NOLOCK)
 			ON CTS.IdTypeService = DOPD.TypeServiceId
 		LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
 			ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
@@ -630,7 +624,7 @@ BEGIN
                    'Cierre generado exitosamente' Message,
                    Value 'URL',
                    @HeaderClosures 'IdCierre'
-            FROM ConfigParams WITH (NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].ConfigParams WITH (NOLOCK)
             WHERE Name = 'ClosureExpressCenter';
 
 			select * from #TempClosureDetail;
