@@ -50,6 +50,7 @@ BEGIN
 	DECLARE @CountFacturaZigi INT;
 	-- FIN MODIFICACIÓN
     DECLARE @UserId2 INT;
+    DECLARE @CurrentDate DATE = CAST(GETDATE() AS DATE);
 
     IF OBJECT_ID('tempdb.dbo.#TempClosureDetail', 'U') IS NOT NULL
         DROP TABLE #TempClosureDetail;
@@ -90,7 +91,7 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             ON IND.dti_fk_orderSerie = DOPT.GuideSerie
                AND IND.dti_fk_orderNumber = DOPT.GuideNumber
-    WHERE CAST(DOPT.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPT.DateCreated AS DATE) = @CurrentDate
     GROUP BY IND.dti_fk_orderSerie,
              IND.dti_fk_orderNumber;
 
@@ -113,14 +114,14 @@ BEGIN
                AND IND.guidenumber = DOR.Guide_Number
         LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
             ON INH.inv_pk_id = IND.header
-        JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
             ON STO.StatusOrderId = DOR.StatusOrderId
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
             ON DOPD.guideserie = DOR.Guide_Serie
                AND DOPD.guidenumber = DOR.Guide_Number
                AND DOPD.ShipmentCompleted = 1
 			   AND DOR.StatusOrderId != 7
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
           AND DOPD.AccountId = @UserId
 		  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
           AND NOT EXISTS
@@ -151,7 +152,7 @@ BEGIN
 		INNER JOIN [DeliveryBackOffice].[dbo].invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
         
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
           AND DOPD.AccountId = @UserId
           AND DOPD.GuideSerie is null
 		  AND NOT EXISTS
@@ -197,7 +198,7 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Serie = dpd.GuideSerie
                AND DOR.Guide_Number = dpd.GuideNumber
-    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(dpd.DateCreated AS DATE) = @CurrentDate
             AND DOR.StatusOrderId != 7
           AND AccountId = @UserId
           AND dpd.CODAmountProcess > 0
@@ -263,13 +264,6 @@ BEGIN
                        WHEN DOPD.TypeofInOutMoneyId = 1
 							AND DOPD.TypeServiceId IN (@Entrega,@Recepcion,@Traslado) 
 						THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
 							SUM(DOPD.amount)
                        ELSE
                            0
@@ -289,13 +283,6 @@ BEGIN
                        WHEN (DOPD.TypeofInOutMoneyId = 6 OR DOPD.TypeofInOutMoneyId = 2)  
 							AND DOPD.TypeServiceId IN (@Entrega,@Recepcion)  
 						THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
 							SUM(DOPD.amount)
                        ELSE
                            0
@@ -326,7 +313,7 @@ BEGIN
                    AND DOPD.guidenumber = DOR.Guide_Number
                    AND DOPD.ShipmentCompleted = 1
 				   AND DOR.StatusOrderId != 7
-        WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+        WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
               AND DOPD.AccountId = @UserId
 			  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
               AND NOT EXISTS
@@ -390,7 +377,7 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
         
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
           AND DOPD.AccountId = @UserId
           AND DOPD.GuideSerie is null
 		  AND NOT EXISTS
@@ -452,14 +439,14 @@ BEGIN
 				   AND IND.guidenumber = DOR.Guide_Number
 			LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 				ON INH.inv_pk_id = IND.header
-			JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
 				ON STO.StatusOrderId = DOR.StatusOrderId
 			LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
 				ON DOPD.guideserie = DOR.Guide_Serie
 				   AND DOPD.guidenumber = DOR.Guide_Number
 				   AND DOPD.ShipmentCompleted = 1
 				   AND DOR.StatusOrderId != 7
-		WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+		WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
 			  AND DOPD.AccountId = @UserId
 			  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
 			  AND NOT EXISTS
@@ -503,7 +490,7 @@ BEGIN
 			ON CTS.IdTypeService = DOPD.TypeServiceId
 		LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
 			ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+		WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
 			  AND DOPD.AccountId = @UserId
 			  AND DOPD.GuideSerie is null
 			  AND NOT EXISTS

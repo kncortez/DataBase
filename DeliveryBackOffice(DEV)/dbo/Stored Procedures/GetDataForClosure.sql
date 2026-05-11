@@ -29,6 +29,7 @@ BEGIN
 	DECLARE @Account NVARCHAR(30);
     DECLARE @AccountZigi NVARCHAR(30);
 	DECLARE @CountryId NVARCHAR(2)
+    DECLARE @CurrentDate DATE = CAST(GETDATE() AS DATE);
 
 	SELECT @CountryId = CountryId
 	FROM [DeliveryBackOffice].[dbo].VisitPointClient WITH (NOLOCK)
@@ -105,7 +106,7 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             ON IND.dti_fk_orderSerie = DOPT.GuideSerie
                AND IND.dti_fk_orderNumber = DOPT.GuideNumber
-    WHERE CAST(DOPT.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPT.DateCreated AS DATE) = @CurrentDate
 	 AND DOPT.ShipmentCompleted = 1
                AND DOPT.AccountId = @IdAccount
                AND DOPT.AccountId > 0
@@ -158,7 +159,6 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
         LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
-           -- ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
 		   ON COST.GuideSerie = DOR.Guide_Serie AND COST.GuideNumber = DOR.Guide_Number
         OUTER APPLY (
 		  SELECT TOP 1 costd.IdCost,Voucher  FROM DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
@@ -168,7 +168,7 @@ BEGIN
 		)costd
         LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
 			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
 
 	AND DOR.StatusOrderId != 7
           AND DOPD.AccountId = @IdAccount
@@ -235,7 +235,7 @@ BEGIN
             (
                 SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
             )
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
           AND DOPD.AccountId = @IdAccount
 			 AND DOPD.[TypeofInOutMoneyId] != 8
           AND DOPD.GuideSerie IS NULL
@@ -263,7 +263,7 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Serie = dpd.GuideSerie
             AND DOR.Guide_Number = dpd.GuideNumber
-    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(dpd.DateCreated AS DATE) = @CurrentDate
           AND AccountId = @IdAccount
           AND NOT EXISTS
     (
@@ -287,7 +287,7 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Serie = dpd.GuideSerie
                 AND DOR.Guide_Number = dpd.GuideNumber
-    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(dpd.DateCreated AS DATE) = @CurrentDate
           AND AccountId = @IdAccount
           AND dpd.TypeofInOutMoneyId = 1
           AND NOT EXISTS
@@ -308,7 +308,7 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Serie = dpd.GuideSerie
                 AND DOR.Guide_Number = dpd.GuideNumber
-    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(dpd.DateCreated AS DATE) = @CurrentDate
           AND AccountId = @IdAccount
           AND dpd.TypeofInOutMoneyId = 10
           AND NOT EXISTS
@@ -523,7 +523,7 @@ BEGIN
 					ON C.GuideSerie = DOR.Guide_Serie AND C.GuideNumber = DOR.Guide_Number
 				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
-            WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+            WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
                   AND DOPD.AccountId = @IdAccount
                   AND
                   (
@@ -704,7 +704,7 @@ BEGIN
 					ON C.GuideSerie = DOR.Guide_Serie AND C.GuideNumber = DOR.Guide_Number
 				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
-            WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+            WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
                   AND DOPD.AccountId = @IdAccount
 			 AND DOPD.[TypeofInOutMoneyId] != 8
                   AND DOPD.GuideSerie IS NULL
