@@ -6,12 +6,13 @@
    Fecha:     2020-09-08
 ============================================
 === CHANGELOG ================================
--- 2025-12-11 | Historia/épica: FDAPI-4775 | Autor: Tito Garcia |
--- 2025-11-20 | Historia/épica: FDAPI-5030 | Autor: Tito Garcia |
--- 2024-07-23 | Historia/épica:  | Autor: Tito Garcia |
--- 2022-10-19 | Historia/épica:  | Autor: Edelman Vasquez  |
--- 2022-08-19 | Historia/épica:  | Autor: Edelman Vasquez  |
--- 2022-03-21 | Historia/épica:  | Autor: Andres Ruiz  |
+-- 2026-04-09 | Historia/épica: FDAPI-5867 | Autor: Mario Herrarte  |
+-- 2025-12-11 | Historia/épica: FDAPI-4775 | Autor: Tito Garcia     |
+-- 2025-11-20 | Historia/épica: FDAPI-5030 | Autor: Tito Garcia     |
+-- 2024-07-23 | Historia/épica:            | Autor: Tito Garcia     |
+-- 2022-10-19 | Historia/épica:            | Autor: Edelman Vasquez |
+-- 2022-08-19 | Historia/épica:            | Autor: Edelman Vasquez |
+-- 2022-03-21 | Historia/épica:            | Autor: Andres Ruiz     |
 =========================================== */
 CREATE PROCEDURE [dbo].[sps_proof_onincident]
     @GuideSerie NVARCHAR(2)
@@ -58,6 +59,7 @@ BEGIN
     DECLARE @EmailNotificationMedium INT = 3; -- [CatNotificationMedium] -> 'Correo SMTP'
     DECLARE @NotificationType BIGINT = 1 -- [CatNotificationType] -> 'DailyGuideIncidenceToOrigin';
     DECLARE @TokenLinkGeneration NVARCHAR(100) = N'';
+    DECLARE @factor DECIMAL(10,6)= CAST((2.00/24.00) AS DECIMAL(10,6));
     DECLARE @CurrentIncidentCount INT =
             (
                 SELECT TOP 1
@@ -725,6 +727,80 @@ BEGIN
                 WHERE GuideSerie = @GuideSerie
                       AND GuideNumber = @GuideNumber;
 
+                -- Registro de Arribo a instalaciones si este aun no existe --
+                INSERT INTO DeliveryOrderDetail
+                    (
+                     Guide_Serie,
+                     Guide_Number,
+                     StatusOrderId,
+                     UserCreated,
+                     DateCreated,
+                     DateCreatedInSystem,
+                     StationId
+                    )
+                SELECT 
+                    @GuideSerie,
+                    @GuideNumber,
+                    11,
+                    'sps_proof_onincident',
+                    CASE
+				        WHEN DODF.StatusOrderId IN (4,5,22) THEN
+					        CASE 
+					           WHEN CAST(DODF.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+							        THEN DATEADD(SECOND, -1, DODF.DateCreated)
+					           WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem)) AS INT) = 1
+						           THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+					           ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem))) - 1,20)
+					        END
+				        WHEN DODF.StatusOrderId IN (1,15) 
+					        AND CAST(DODF.DateCreated AS DATE) = CAST(GETDATE() AS DATE) 
+					        THEN 
+						        DATEADD(SECOND, 1, DODF.DateCreated)
+				        ELSE 
+					        CASE 
+					           WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(GETDATE())) AS INT) = 1
+						           THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+					           ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(GETDATE()))) - 1,20)
+					        END
+				    END,
+                    GETDATE(),
+                    @StationId
+                FROM (
+				    SELECT
+	    		        Guide_Serie,
+	    		        Guide_Number,
+	    		        CASE
+	    			        WHEN DATEPART(MILLISECOND, DateCreated) >= 500
+	    				        THEN DATEADD(SECOND, 1, DateCreated)
+	    			        ELSE DATEADD(MILLISECOND, -DATEPART(MILLISECOND, DateCreated), DateCreated)
+	    			        END DateCreated
+				        FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+				        WHERE Guide_Serie = @GuideSerie
+					        AND Guide_Number = @GuideNumber
+				) DO
+				OUTER APPLY (
+				    SELECT TOP 1
+				         D.DateCreatedInSystem
+				        ,D.StatusOrderId
+				        ,D.DateCreated
+				    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail D WITH(NOLOCK)
+				    WHERE D.Guide_Serie = @GuideSerie
+				      AND D.Guide_Number = @GuideNumber
+				    ORDER BY 
+				        CASE 
+					        WHEN D.StatusOrderId IN (4,5,22) THEN 0
+					        ELSE 1
+				        END,
+				        D.DateCreated ASC
+				) DODF
+				WHERE NOT EXISTS (
+				    SELECT 1
+				    FROM DeliveryOrderDetail DOD WITH(NOLOCK)
+				    WHERE DOD.Guide_Serie = @GuideSerie
+					    AND DOD.Guide_Number = @GuideNumber
+					    AND DOD.StatusOrderId = 11
+				);
+
                 -- registrar estado en tabla de checkpoints
                 INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
                 (
@@ -782,8 +858,8 @@ BEGIN
                         SELECT TOP 1
                                DO.StatusOrderId
                         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                        WHERE DO.Guide_Number = @GuideNumber
-                              AND DO.Guide_Serie = @GuideSerie
+                        WHERE DO.Guide_Serie = @GuideSerie
+                              AND DO.Guide_Number = @GuideNumber
                     );
 
                     -- Cliente tiene webhook configurado para el tipo especificado

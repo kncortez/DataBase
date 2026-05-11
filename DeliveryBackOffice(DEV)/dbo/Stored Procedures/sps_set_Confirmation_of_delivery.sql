@@ -11,6 +11,7 @@
 2024-12-18 | Historia/épica: ---         | Autor: Tito Garcia      | Optimización del SP según recomendaciones del DBA
 2025-12-19 | Historia/épica: FDAPI-4744  | Autor: Brandon Pedroza  | agregar id estacion al confirmar entrega desktop
 2026-01-12 | Historia/épica: FDAPI-5416  | Autor: Brandon Pedroza  | agrega condicion para filtrar correctamente 
+2026-03-26 | Historia/épica: FDAPI-5867  | Autor: Mario Herrarte   | Agregar estado de arribo a instalaciones si no existe.
 
 =========================================== */
 
@@ -34,6 +35,8 @@ BEGIN
     DECLARE @Datetime DATETIME; -- Fecha y hora del último checkpoint
 	DECLARE @BelongCountry NVARCHAR(2);
     DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+    
+    DECLARE @factor DECIMAL(10,6)= CAST((2.00/24.00) AS DECIMAL(10,6));
 
 		DECLARE @StatusDescription NVARCHAR(200)= ( Select SO.OrderDescription 
 												From [dbo].[DeliveryOrder] DO With(Nolock) 
@@ -133,6 +136,82 @@ IF(@IsStatusTerminal = 0)
                     WHERE Guide_Serie = @Guide_Serie
                         AND Guide_Number = @Guide_Number
                         AND CAST(Date_Created AS DATE) = @Today;
+
+
+                    -- Registro de Arribo a instalaciones si este aun no existe --
+                    INSERT INTO DeliveryOrderDetail
+                        (
+                         Guide_Serie,
+                         Guide_Number,
+                         StatusOrderId,
+                         UserCreated,
+                         DateCreated,
+                         DateCreatedInSystem,
+                         StationId
+                        )
+                    SELECT 
+                        @Guide_Serie,
+                        @Guide_Number,
+                        11,
+                        @TokenId,
+                        CASE
+					        WHEN DODF.StatusOrderId IN (4,5,22) THEN
+					            CASE 
+					                WHEN CAST(DODF.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+					            THEN DATEADD(SECOND, -1, DODF.DateCreated)
+					                WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem)) AS INT) = 1
+					                    THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+					                ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem))) - 1,20)
+					            END
+					        WHEN DODF.StatusOrderId IN (1,15) 
+					            AND CAST(DODF.DateCreated AS DATE) = CAST(GETDATE() AS DATE) 
+					            THEN 
+					                DATEADD(SECOND, 1, DODF.DateCreated)
+					        ELSE 
+							    CASE 
+							        WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(GETDATE())) AS INT) = 1
+							            THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+							        ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(GETDATE()))) - 1,20)
+							    END
+					    END,
+                        GETDATE(),
+                        @StationId
+                        FROM (
+						    SELECT
+	    				        Guide_Serie,
+	    				        Guide_Number,
+	    				        CASE
+	    					        WHEN DATEPART(MILLISECOND, DateCreated) >= 500
+	    						        THEN DATEADD(SECOND, 1, DateCreated)
+	    					        ELSE DATEADD(MILLISECOND, -DATEPART(MILLISECOND, DateCreated), DateCreated)
+	    					        END DateCreated
+						        FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+						        WHERE Guide_Serie = @Guide_Serie
+							        AND Guide_Number = @Guide_Number
+					    ) DO
+					    OUTER APPLY (
+					        SELECT TOP 1
+						         D.DateCreatedInSystem
+						        ,D.StatusOrderId
+						        ,D.DateCreated
+					        FROM DeliveryBackOffice.dbo.DeliveryOrderDetail D WITH(NOLOCK)
+					        WHERE D.Guide_Serie = @Guide_Serie
+					          AND D.Guide_Number = @Guide_Number
+					        ORDER BY 
+						        CASE 
+							        WHEN D.StatusOrderId IN (4,5,22) THEN 0
+							        ELSE 1
+						        END,
+						        D.DateCreated ASC
+					    ) DODF
+					    WHERE NOT EXISTS (
+						    SELECT 1
+						    FROM DeliveryOrderDetail DOD WITH(NOLOCK)
+						    WHERE DOD.Guide_Serie = @Guide_Serie
+							    AND DOD.Guide_Number = @Guide_Number
+							    AND DOD.StatusOrderId = 11
+						);
+
 
                     -- Insertar nuevo estado de guía en tabla histórica
                     INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
