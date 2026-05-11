@@ -114,8 +114,8 @@ BEGIN
 							DOD.NoPiece,
 							@IsReturn,
 							@HubExc,
-							@IdHubExc,
-							@StatusOrderId,
+							ISNULL(@IdHubExc,0),
+							ISNULL(@StatusOrderId, @OrderStatus),
 							@StationId
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOD WITH(NOLOCK)
 					WHERE DOD.GuideSerie = @GuideSerie
@@ -140,8 +140,8 @@ BEGIN
 							DOD.NoPiece,
 							@IsReturn,
 							@HubExc,
-							@IdHubExc,
-							@StatusOrderId,
+							ISNULL(@IdHubExc,0),
+							ISNULL(@StatusOrderId, @OrderStatus),
 							@StationId
 					FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOD WITH(NOLOCK)
 					WHERE DOD.GuideSerie = @GuideSerie
@@ -215,7 +215,7 @@ BEGIN
 				BEGIN
 					-- registrar nueva ubicación
 					INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn, HubExc, IdHubExc, StatusOrderId, StationId) VALUES 
-					(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, @IdHubExc, @StatusOrderId, @StationId)
+					(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, ISNULL(@IdHubExc,0), ISNULL(@StatusOrderId, @OrderStatus), @StationId)
 
 					SET @RInserted = @@ROWCOUNT
 				END
@@ -226,7 +226,7 @@ BEGIN
 			
 				-- registrar nueva ubicación
 			INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn, HubExc, IdHubExc, StatusOrderId, StationId) VALUES 
-			(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, @IdHubExc, @StatusOrderId, @StationId)
+			(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn, @HubExc, ISNULL(@IdHubExc,0), ISNULL(@StatusOrderId, @OrderStatus), @StationId)
 
 				--Si es una devolución, cambiar estado
 				IF @IsReturn = 1
