@@ -200,7 +200,8 @@ BEGIN
     LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
         ON REU.UsrIdUser = ACH.UserId
     LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH(NOLOCK)
-        ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
+        ON cost.GuideSerie = DOR.Guide_Serie
+        AND cost.GuideNumber = DOR.Guide_Number
     LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH(NOLOCK)
         ON costd.IdCost = cost.IdCost
         AND costd.Amount > 0
