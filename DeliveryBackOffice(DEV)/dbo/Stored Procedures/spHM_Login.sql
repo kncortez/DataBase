@@ -17,6 +17,7 @@ AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
 	SELECT IU.IdUser, IU.Username, IU.IdEmployee, IU.RegisterUserID, IU.RowStatus,
 		RU.UsrIdUser, RU.UsrIdPerson, RU.UsrNickName, RU.UsrEmail, RU.UsrLastPassword,
 		RUS.RusIdUser, RUS.RusIdRol, RUS.RusIdSystem, RUS.RusRowStatus, RUS.StationId,
