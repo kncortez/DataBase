@@ -171,7 +171,7 @@ BEGIN
         FROM DeliveryBackOffice.dbo.invoiceHeader WITH(NOLOCK)
         WHERE INH_Header.inv_pk_id IS NULL
           AND CHARINDEX('-', DOPD.Fel) > 0
-          AND inv_numberFEL = AND inv_numberFEL = TRY_CAST(SUBSTRING(DOPD.Fel, CHARINDEX('-', DOPD.Fel) + 1, LEN(DOPD.Fel)) AS VARCHAR(50))
+          AND inv_numberFEL = TRY_CAST(SUBSTRING(DOPD.Fel, CHARINDEX('-', DOPD.Fel) + 1, LEN(DOPD.Fel)) AS VARCHAR(50))
     ) INH_Fel
     LEFT JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
         ON STO.StatusOrderId = DOR.StatusOrderId
