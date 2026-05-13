@@ -1,47 +1,18 @@
-﻿/****************************************************************************************
-Nombre:        SPFP_GetCustomerAndCODCollectByGuide
-Autor:         Marcelo Del Aguila
-Fecha:         2026-05-11
-Descripción:   Obtiene el IdCustomer asociado a una guía y calcula los montos necesarios
-               para validar si aplica el pago con tarjeta de crédito en Forza Pay.
+﻿/* =============================================
+    SP:          [dbo].[SPFP_GetCustomerAndCODCollectByGuide]
+    Propósito:   Obtener la serie, número de guía, IdCustomer y montos COD/Collect asociados a una guía para validar si aplica pago con tarjeta en Forza Pay.
+    Autor:       Marcelo del Aguila
+    Historia:    FDAPI-6259
+    Fecha:       2026-05-11
 
-               El procedimiento recibe como parámetro el número de guía y retorna:
-               - GuideNumber
-               - IdCustomer
-               - Monto Collect
-               - Monto COD
-               - Monto total a pagar: Collect + COD
+    === CHANGELOG ===================================
+    2026-05-11 | Historia/épica: FDAPI-6259 | Autor: Marcelo del Aguila | Creación del procedimiento.
+    2026-05-13 | Historia/épica: FDAPI-6259 | Autor: Marcelo del Aguila | Se agrega GuideSerie como parámetro, resultado y filtro.
 
-               Esta información será utilizada por el API para consumir los métodos
-               correspondientes de Forza Pay/Nabenik y determinar si se debe habilitar
-               o no la opción de pago con tarjeta.
-
-Parámetros:
-               @GuideNumber VARCHAR(50)  Número de guía a consultar.
-
-Resultado:
-               GuideNumber      Número de guía consultada.
-               IdCustomer       Identificador del cliente asociado a la guía.
-               Collect          Monto correspondiente al flete/envío.
-               COD              Monto correspondiente al cobro contra entrega.
-               TotalAmount      Suma de Collect + COD.
-
-Criterios:
-               Si el cliente está activo y el monto a cobrar es menor al límite de saldo,
-               se podrá habilitar el pago con tarjeta.
-
-               Si no cumple uno de los criterios anteriores, no se habilita el pago
-               con tarjeta.
-
-Ejemplo de ejecución:
-               EXEC dbo.SPFP_GetCustomerAndCODCollectByGuide
-                    @GuideNumber = 'FD12334445';
-
-Historial:
-               2026-05-11  Marcelo Del Aguila  Creación del procedimiento.
-****************************************************************************************/
+    ============================================== */
 CREATE PROCEDURE [dbo].[SPFP_GetCustomerAndCODCollectByGuide]
 (
+    @GuideSerie VARCHAR(50),
     @GuideNumber VARCHAR(50)
 )
 AS
@@ -49,11 +20,13 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT
+        GuideSerie = do.Guide_Serie,
         GuideNumber = do.Guide_Number,
         do.IdCustomer,
         COD = ISNULL(do.Collect_OnDelivery, 0),
         Colect = ISNULL(do.PriceShippment, 0),
         MontoAPagar = ISNULL(do.Collect_OnDelivery, 0) + ISNULL(do.PriceShippment, 0)
     FROM dbo.DeliveryOrder do WITH (NOLOCK)
-    WHERE do.Guide_Number = @GuideNumber;
+    WHERE do.Guide_Serie = @GuideSerie
+      AND do.Guide_Number = @GuideNumber;
 END;
