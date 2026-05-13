@@ -158,5 +158,5 @@ BEGIN CATCH
 END CATCH
 
 -- Verificación
-SELECT * FROM dbo.del_ParametrosFactura  WHERE CodeOfReference = @NewCodeOfReference;
+SELECT * FROM dbo.del_ParametrosFactura  WHERE dpf_vpCodeOfReference = @NewCodeOfReference;
 GO
