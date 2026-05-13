@@ -14,9 +14,9 @@ BEGIN TRY
         CatProductCategoryId, Position, IdCountry, IdCatCurrencyCOD
     )
     VALUES
-    ('Paquete MICRO',   '15 guías a $3.60 c/u.',  1.00,    0, 15,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planMicroIcon',   'bannerSubsPlan4.png', 2, 12, 1, 'SV', 2),
+    ('Paquete MICRO',   '15 guías a $3.60 c/u.',  54.00,    0, 15,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planMicroIcon',   'bannerSubsPlan4.png', 2, 12, 1, 'SV', 2),
     ('Paquete Petit',   '25 guías a $3.40 c/u.',  85.00,   0, 25,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planPetitIcon',   'bannerSubsPlan1.png', 2, 12, 1, 'SV', 2),
-    ('Paquete Básicos', '50 guías a $3.20 c/u.',  160.00,  0, 50,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planBasicoIcon',  'bannerSubsPlan2.png', 2, 12, 1, 'SV', 2),
+    ('Paquete Básico', '50 guías a $3.20 c/u.',  160.00,  0, 50,  6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planBasicoIcon',  'bannerSubsPlan2.png', 2, 12, 1, 'SV', 2),
     ('Paquete Plus',    '100 guías a $2.80 c/u.', 280.00,  0, 100, 6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planPlusIcon',    'bannerSubsPlan3.png', 2, 12, 1, 'SV', 2),
     ('Paquete Gold',    '200 guías a $2.60 c/u.', 520.00,  0, 200, 6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planGoldIcon',    'bannerSubsPlan5.png', 2, 12, 2, 'SV', 2),
     ('Paquete Platino', '400 guías a $2.50 c/u.', 1000.00, 0, 400, 6, 5, 1, 'SYS-BHERRERA', '2026-03-19 11:44:35', 'hwa-planPlatinoIcon', 'bannerSubsPlan6.png', 2, 12, 3, 'SV', 2);
@@ -117,7 +117,7 @@ BEGIN TRY
 
     SELECT @MICRO   = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete MICRO'
     SELECT @PETIT   = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Petit'
-    SELECT @BASICO  = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Básicos'
+    SELECT @BASICO  = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Básico'
     SELECT @PLUS    = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Plus'
     SELECT @GOLD    = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Gold'
     SELECT @PLATINO = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Platino'
@@ -196,7 +196,7 @@ BEGIN TRY
 
     SELECT @MICRO   = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete MICRO'
     SELECT @PETIT   = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Petit'
-    SELECT @BASICO  = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Básicos'
+    SELECT @BASICO  = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Básico'
     SELECT @PLUS    = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Plus'
     SELECT @GOLD    = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Gold'
     SELECT @PLATINO = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Platino'
@@ -293,7 +293,7 @@ BEGIN TRY
 
     SELECT @MICRO   = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete MICRO'
     SELECT @PETIT   = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Petit'
-    SELECT @BASICO  = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Básicos'
+    SELECT @BASICO  = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Básico'
     SELECT @PLUS    = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Plus'
     SELECT @GOLD    = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Gold'
     SELECT @PLATINO = IdCatSubscription FROM CatSubscription WHERE IdCountry = 'SV' AND SubscriptionName = 'Paquete Platino'
@@ -338,8 +338,19 @@ BEGIN TRY
     (@PLATINO, '¿Cómo Funciona?',      'Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Platino y podrás obtener tus guías prepagadas de 400 envíos con tarifa única a todo el país a $2.50 c/u.', 2, 'PAQUETE PLATINO', 1, 'SYS-BHERRERA', GETDATE()),
     (@PLATINO, 'Aplican restricciones', 'En caso de que tu envío exceda el peso, de 0 a 10 libras, consulta los términos y condiciones.', 5, 'PAQUETE PLATINO', 1, 'SYS-BHERRERA', GETDATE())
 
+    
+    INSERT [dbo].[CatProductImage] ( [CatProductImageSmallImageURL], [CatProductImageLargeImageURL], [CatProductImageOrder], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [CatSubscriptionId], [CatMembershipId],[CatProductImageBigImageURL]) 
+    VALUES 
+        ( N'https://www.forzadelivery.com/images/Tienda/micro_v2-500-347.jpg', N'https://www.forzadelivery.com/images/Tienda/micro_v2-1200-722.jpg', 1, 1, N'SYS-BHERRERA', GETDATE(), NULL, NULL, @MICRO, NULL,'https://www.forzadelivery.com/images/Tienda/micro_v2-2103-521.jpg')  -- MICRO
+        ,( N'https://www.forzadelivery.com/images/Tienda/petit_v2-500-347.jpg', N'https://www.forzadelivery.com/images/Tienda/petit_v2-1200-722.jpg', 2, 1, N'SYS-BHERRERA', GETDATE(), NULL, NULL, @PETIT, NULL,'https://www.forzadelivery.com/images/Tienda/petit_v2-2103-521.jpg')  -- PETIT
+        ,( N'https://www.forzadelivery.com/images/Tienda/basico_v2-500-347.jpg', N'https://www.forzadelivery.com/images/Tienda/basico_v2-1200-722.jpg', 3, 1, N'SYS-BHERRERA', GETDATE(), NULL, NULL, @BASICO, NULL,'https://www.forzadelivery.com/images/Tienda/basico_v2-2103-521.jpg') -- BASICO
+        ,( N'https://www.forzadelivery.com/images/Tienda/plus_v2-500-347.jpg', N'https://www.forzadelivery.com/images/Tienda/plus_v2-1200-722.jpg', 4, 1, N'SYS-BHERRERA', GETDATE(), NULL, NULL, @PLUS, NULL,'https://www.forzadelivery.com/images/Tienda/plus_v2-2103-521.jpg') -- PLUS
+        ,( N'https://www.forzadelivery.com/images/Tienda/gold_v2-500-347.jpg', N'https://www.forzadelivery.com/images/Tienda/gold_v2-1200-722.jpg', 5, 1, N'SYS-BHERRERA', GETDATE(), NULL, NULL, @GOLD, NULL,'https://www.forzadelivery.com/images/Tienda/gold_v2-2103-521.jpg')  -- GOLD
+        ,( N'https://www.forzadelivery.com/images/Tienda/platino_v2-500-347.jpg', N'https://www.forzadelivery.com/images/Tienda/platino_v2-1200-722.jpg', 6, 1, N'SYS-BHERRERA', GETDATE(), NULL, NULL, @PLATINO, NULL,'https://www.forzadelivery.com/images/Tienda/platino_v2-2103-521.jpg')   --PLATINO
+
+    
     COMMIT TRANSACTION
-    PRINT '    [OK] CatSubscriptionDescription insertado correctamente. Filas: ' + CAST(@@ROWCOUNT AS VARCHAR)
+    PRINT '    [OK] CatSubscriptionDescription y CatProductImage insertado correctamente. Filas: ' + CAST(@@ROWCOUNT AS VARCHAR)
 
 END TRY
 BEGIN CATCH
