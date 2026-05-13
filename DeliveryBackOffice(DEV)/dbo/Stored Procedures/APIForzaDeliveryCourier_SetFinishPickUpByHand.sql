@@ -5,6 +5,7 @@
    Historia:  <FDAPI-5680>
    Fecha:     <2026-03-30>
    === CHANGELOG ============================
+2026-04-23 | Historia/épica: <FDAPI-6122> | Autor: Caleb Loarca | Se agrega declaración de variables de idcourier y idrouteassigment para insertar en servicemanagement.
 2026-03-30 | Historia/épica: <FDAPI-5680> | Autor: Caleb Loarca | Se usa de base SP , para modificar y consumir en recolecciones manuales
 =========================================== */
 
@@ -45,7 +46,25 @@ BEGIN
     IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
        DROP TABLE #Temp;
 
-    DECLARE @responsemessage AS TABLE
+    DECLARE @DateToDay DATE = CAST(GETDATE() AS DATE) ;
+
+	DECLARE @IdPodCourier INT = (
+						SELECT TOP 1 [IdCourierman]
+						FROM [DeliveryBackOffice].[dbo].[LogTokenPOD] WITH(NOLOCK)
+						WHERE	RowStatus = 1 
+								and LogTokenPOD = @Token 
+								AND cast(DateCreated AS DATE) = @DateToDay);
+
+	DECLARE @IdRouteAss INT = (SELECT TOP 1 RA.IdRouteAssigment	FROM RouteAssigment  RA WITH(NOLOCK)
+								INNER JOIN CatRoute CR WITH(NOLOCK)
+									ON RA.idroute = CR.idRoute
+								WHERE
+									RA.IdCurrierMan = @IdPodCourier
+									AND	CR.idTypeRoute = 1
+									AND cast(RA.DateCreated AS DATE) = @DateToDay
+									ORDER BY RA.DateCreated DESC);								
+
+	DECLARE @responsemessage AS TABLE
     (
       IdResult  INT,
       [Message] NVARCHAR(500),
@@ -118,6 +137,10 @@ BEGIN
 
 					INSERT INTO DeliveryBackOffice.dbo.ServiceManagement
 						(RowStatus
+						,IdPuCourrier
+						,IdPuRouteAssigment
+						,CiPuDate
+						,CoPuDate
 						,IdSchedulePickup
 						,TokenCreated
 						,DateCreated
@@ -126,6 +149,10 @@ BEGIN
 						,[Order] ) 
 						values
 						(1
+						,@IdPodCourier
+						,@IdRouteAss
+						,@StartDate
+						,@EndDate
 						,@IdPickup
 						,@Token
 						,GETDATE()
@@ -139,7 +166,8 @@ BEGIN
 						SELECT IdResult AS IdResult,  
 								ERROR_MESSAGE() AS [Message] 
 						FROM @responsemessage
-						WHERE Id = 'Invalid'
+						WHERE Id = 'Transac';
+						RETURN;
 				END CATCH
 
 				COMMIT TRANSACTION;				

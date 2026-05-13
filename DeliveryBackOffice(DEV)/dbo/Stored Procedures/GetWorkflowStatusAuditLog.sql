@@ -6,11 +6,15 @@
    Fecha:     2026-03-10
 
 === CHANGELOG ============================
+2026-04-24 | Historia/épica: FDAPI-6131 | Autor: Erick Hernandez | Se agrega parámetro de código del país
 =========================================== */
 CREATE PROCEDURE [dbo].[GetWorkflowStatusAuditLog]
-	@WorkflowID BIGINT
+	@WorkflowID BIGINT,
+	@CountryId VARCHAR(2)
 AS
 BEGIN
+	DECLARE @RowStatus_Active INT = 1;
+
 	SELECT 
 		ISNULL(IU.Username, '') AS UserName,
 		CONVERT(VARCHAR(16), L.DateCreated, 120) AS Date, W.Name AS Workflow, SO.OrderDescription AS StatusName, 
@@ -30,7 +34,8 @@ BEGIN
 	INNER JOIN DeliveryBackOffice.dbo.InternalUser IU WITH (NOLOCK)
 		ON IU.RegisterUserID = RU.UsrIdUser
 	WHERE W.WorkflowId = @WorkflowId
-	AND RU.UsrRowStatus = 1
-	AND IU.RowStatus = 1
+	AND L.CountryId = @CountryId
+	AND RU.UsrRowStatus = @RowStatus_Active
+	AND IU.RowStatus = @RowStatus_Active
 	ORDER BY L.DateCreated ASC;
 END;
