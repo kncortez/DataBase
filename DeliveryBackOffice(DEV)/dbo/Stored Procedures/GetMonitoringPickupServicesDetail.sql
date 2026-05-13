@@ -52,7 +52,7 @@ SET NOCOUNT ON;
 	LEFT JOIN Province p WITH(NOLOCK)
 		ON ts.IdProvince = p.IdProvince
 	WHERE sm.IdServiceManagement = @ServiceManagementId
-      AND IIF(vpc.CountryId IS NULL, 'GT',vpc.CountryId) = @IdCountry
+      AND vpc.CountryId = @IdCountry
 
 	--Table 1 Checkpoints Servicio
 	IF EXISTS

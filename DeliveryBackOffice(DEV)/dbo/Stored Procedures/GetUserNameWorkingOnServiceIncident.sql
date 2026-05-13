@@ -18,7 +18,7 @@ BEGIN
 	INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH (NOLOCK)
 		ON RU.UsrIdUser = IU.RegisterUserID AND RU.UsrRowStatus = 1
 	INNER JOIN DeliveryBackOffice.dbo.ServiceIncident SI WITH (NOLOCK)
-		ON SI.CurrentAgentId = RU.UsrIdUser --TL.TknIdUser --TL.TknIdToken
+		ON SI.CurrentAgentId = RU.UsrIdUser
 	WHERE IU.RowStatus = 1
 	AND SI.ServiceIncidentId = @ServiceIncidentId;
 
