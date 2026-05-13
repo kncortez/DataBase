@@ -88,9 +88,9 @@ BEGIN TRY
 
     UPDATE [DeliveryBackOffice].[dbo].[CatProductImage]
     SET
-        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/micro-500-347.jpg',
-        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/micro-1200-722.jpg',
-        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/micro-2103-521.jpg'
+        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/micro_v2-500-347.jpg',
+        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/micro_v2-1200-722.jpg',
+        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/micro_v2-2103-521.jpg'
     WHERE CatSubscriptionId IN (@SV_MICRO, @GT_MICRO, @HN_MICRO);
 
     IF @@ROWCOUNT = 0
@@ -131,9 +131,9 @@ BEGIN TRY
 
     UPDATE [DeliveryBackOffice].[dbo].[CatProductImage]
     SET
-        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/petit-500-347.jpg',
-        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/petit-1200-722.jpg',
-        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/petit-2103-521.jpg'
+        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/petit_v2-500-347.jpg',
+        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/petit_v2-1200-722.jpg',
+        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/petit_v2-2103-521.jpg'
     WHERE CatSubscriptionId IN (@SV_PETIT, @GT_PETIT, @HN_PETIT);
 
     IF @@ROWCOUNT = 0
@@ -174,9 +174,9 @@ BEGIN TRY
 
     UPDATE [DeliveryBackOffice].[dbo].[CatProductImage]
     SET
-        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/basico-500-347.jpg',
-        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/basico-1200-722.jpg',
-        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/basico-2103-521.jpg'
+        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/basico_v2-500-347.jpg',
+        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/basico_v2-1200-722.jpg',
+        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/basico_v2-2103-521.jpg'
     WHERE CatSubscriptionId IN (@SV_BASICO, @GT_BASICO, @HN_BASICO);
 
     IF @@ROWCOUNT = 0
@@ -217,9 +217,9 @@ BEGIN TRY
 
     UPDATE [DeliveryBackOffice].[dbo].[CatProductImage]
     SET
-        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/plus-500-347.jpg',
-        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/plus-1200-722.jpg',
-        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/plus-2103-521.jpg'
+        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/plus_v2-500-347.jpg',
+        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/plus_v2-1200-722.jpg',
+        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/plus_v2-2103-521.jpg'
     WHERE CatSubscriptionId IN (@SV_PLUS, @GT_PLUS, @HN_PLUS);
 
     IF @@ROWCOUNT = 0
@@ -260,9 +260,9 @@ BEGIN TRY
 
     UPDATE [DeliveryBackOffice].[dbo].[CatProductImage]
     SET
-        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/gold-500-347.jpg',
-        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/gold-1200-722.jpg',
-        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/gold-2103-521.jpg'
+        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/gold_v2-500-347.jpg',
+        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/gold_v2-1200-722.jpg',
+        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/gold_v2-2103-521.jpg'
     WHERE CatSubscriptionId IN (@SV_GOLD, @GT_GOLD, @HN_GOLD);
 
     IF @@ROWCOUNT = 0
@@ -303,9 +303,9 @@ BEGIN TRY
 
     UPDATE [DeliveryBackOffice].[dbo].[CatProductImage]
     SET
-        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/platino-500-347.jpg',
-        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/platino-1200-722.jpg',
-        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/platino-2103-521.jpg'
+        CatProductImageSmallImageURL = 'https://www.forzadelivery.com/images/Tienda/platino_v2-500-347.jpg',
+        CatProductImageLargeImageURL = 'https://www.forzadelivery.com/images/Tienda/platino_v2-1200-722.jpg',
+        CatProductImageBigImageURL   = 'https://www.forzadelivery.com/images/Tienda/platino_v2-2103-521.jpg'
     WHERE CatSubscriptionId IN (@SV_PLATINO, @GT_PLATINO, @HN_PLATINO);
 
     IF @@ROWCOUNT = 0
