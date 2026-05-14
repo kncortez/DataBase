@@ -2094,6 +2094,7 @@
     <Build Include="dbo\Stored Procedures\SupportLHroutes.sql" />
     <Build Include="dbo\Stored Procedures\GetDeliveryOrderPieces.sql" />
     <Build Include="dbo\Stored Procedures\SPFP_GetCustomerAndCODCollectByGuide.sql" />
+	<Build Include="dbo\Stored Procedures\SPHWGetLinkStatusByGuide.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
