@@ -214,47 +214,48 @@ BEGIN TRY
         SubscriptionAttributePosition,
         RowStatus,
         TokenCreated,
-        DateCreated
+        DateCreated,
+        CatSubscriptionAttributeIcon
     )
     VALUES
     -- MICRO
-    (@MICRO, 1, 1, '15 guías a $3.60 c/u.',               '15 guías a $3.60 c/u.',               1, 1, 'SYS-BHERRERA', GETDATE()),
-    (@MICRO, 1, 1, 'Tarifa única en todo el país.',        'Tarifa única en todo el país.',        2, 1, 'SYS-BHERRERA', GETDATE()),
-    (@MICRO, 1, 1, 'Costo único para todos tus clientes.', 'Costo único para todos tus clientes.', 3, 1, 'SYS-BHERRERA', GETDATE()),
-    (@MICRO, 1, 1, 'Hasta 10 Libras.',                    'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE()),
+    (@MICRO, 1, 1, '15 guías a $3.60 c/u.',               '15 guías a $3.60 c/u.',               1, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x'),
+    (@MICRO, 1, 1, 'Tarifa única en todo el país.',        'Tarifa única en todo el país.',        2, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@MICRO, 1, 1, 'Costo único para todos tus clientes.', 'Costo único para todos tus clientes.', 3, 1, 'SYS-BHERRERA', GETDATE(),'bi bi-cash fa-2x'),
+    (@MICRO, 1, 1, 'Hasta 10 Libras.',                    'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-archive fa-2x'),
     -- PETIT
-    (@PETIT, 1, 1, '25 guías a $3.40 c/u.',               '25 guías a $3.40 c/u.',               1, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PETIT, 1, 1, 'Tarifa única en todo el país.',        'Tarifa única en todo el país.',        2, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PETIT, 1, 1, 'Costo único para todos tus clientes.', 'Costo único para todos tus clientes.', 3, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PETIT, 1, 1, 'Hasta 10 Libras.',                    'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE()),
+    (@PETIT, 1, 1, '25 guías a $3.40 c/u.',               '25 guías a $3.40 c/u.',               1, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x'),
+    (@PETIT, 1, 1, 'Tarifa única en todo el país.',        'Tarifa única en todo el país.',        2, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@PETIT, 1, 1, 'Costo único para todos tus clientes.', 'Costo único para todos tus clientes.', 3, 1, 'SYS-BHERRERA', GETDATE(),'bi bi-cash fa-2x'),
+    (@PETIT, 1, 1, 'Hasta 10 Libras.',                    'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-archive fa-2x'),
     -- BASICO
-    (@BASICO, 1, 1, '50 guías a $3.20 c/u.',              '50 guías a $3.20 c/u.',               1, 1, 'SYS-BHERRERA', GETDATE()),
-    (@BASICO, 1, 1, 'Tarifa única en todo el país.',       'Tarifa única en todo el país.',        2, 1, 'SYS-BHERRERA', GETDATE()),
-    (@BASICO, 1, 1, 'Costo único para todos tus clientes.','Costo único para todos tus clientes.', 3, 1, 'SYS-BHERRERA', GETDATE()),
-    (@BASICO, 1, 1, 'Hasta 10 Libras.',                   'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE()),
-    (@BASICO, 1, 1, 'La tarifa más barata del mercado.',  'La tarifa más barata del mercado.',    5, 1, 'SYS-BHERRERA', GETDATE()),
-    (@BASICO, 1, 1, 'Vigencia de 6 meses.',               'Vigencia de 6 meses.',                 6, 1, 'SYS-BHERRERA', GETDATE()),
+    (@BASICO, 1, 1, '50 guías a $3.20 c/u.',              '50 guías a $3.20 c/u.',               1, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x'),
+    (@BASICO, 1, 1, 'Tarifa única en todo el país.',       'Tarifa única en todo el país.',        2, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@BASICO, 1, 1, 'Costo único para todos tus clientes.','Costo único para todos tus clientes.', 3, 1, 'SYS-BHERRERA', GETDATE(),'bi bi-cash fa-2x'),
+    (@BASICO, 1, 1, 'Hasta 10 Libras.',                   'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-archive fa-2x'),
+    (@BASICO, 1, 1, 'La tarifa más barata del mercado.',  'La tarifa más barata del mercado.',    5, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@BASICO, 1, 1, 'Vigencia de 6 meses.',               'Vigencia de 6 meses.',                 6, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x'),
     -- PLUS
-    (@PLUS, 1, 1, '100 guías a $2.80 c/u.',               '100 guías a $2.80 c/u.',              1, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLUS, 1, 1, 'Costo único para todos tus clientes.',  'Costo único para todos tus clientes.', 2, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLUS, 1, 1, 'Tarifa única en todo el país.',         'Tarifa única en todo el país.',        3, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLUS, 1, 1, 'Hasta 10 Libras.',                     'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLUS, 1, 1, 'La tarifa más barata del mercado.',    'La tarifa más barata del mercado.',    5, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLUS, 1, 1, 'Vigencia de 6 meses.',                 'Vigencia de 6 meses.',                 6, 1, 'SYS-BHERRERA', GETDATE()),
+    (@PLUS, 1, 1, '100 guías a $2.80 c/u.',               '100 guías a $2.80 c/u.',              1, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x'),
+    (@PLUS, 1, 1, 'Costo único para todos tus clientes.',  'Costo único para todos tus clientes.', 2, 1, 'SYS-BHERRERA', GETDATE(),'bi bi-cash fa-2x'),
+    (@PLUS, 1, 1, 'Tarifa única en todo el país.',         'Tarifa única en todo el país.',        3, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@PLUS, 1, 1, 'Hasta 10 Libras.',                     'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-archive fa-2x'),
+    (@PLUS, 1, 1, 'La tarifa más barata del mercado.',    'La tarifa más barata del mercado.',    5, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@PLUS, 1, 1, 'Vigencia de 6 meses.',                 'Vigencia de 6 meses.',                 6, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x'),
     -- GOLD
-    (@GOLD, 1, 1, '200 guías a $2.60 c/u.',               '200 guías a $2.60 c/u.',              1, 1, 'SYS-BHERRERA', GETDATE()),
-    (@GOLD, 1, 1, 'Costo único para todos tus clientes.',  'Costo único para todos tus clientes.', 2, 1, 'SYS-BHERRERA', GETDATE()),
-    (@GOLD, 1, 1, 'Tarifa única en todo el país.',         'Tarifa única en todo el país.',        3, 1, 'SYS-BHERRERA', GETDATE()),
-    (@GOLD, 1, 1, 'Hasta 10 Libras.',                     'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE()),
-    (@GOLD, 1, 1, 'La tarifa más barata del mercado.',    'La tarifa más barata del mercado.',    5, 1, 'SYS-BHERRERA', GETDATE()),
-    (@GOLD, 1, 1, 'Vigencia de 6 meses.',                 'Vigencia de 6 meses.',                 6, 1, 'SYS-BHERRERA', GETDATE()),
+    (@GOLD, 1, 1, '200 guías a $2.60 c/u.',               '200 guías a $2.60 c/u.',              1, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x'),
+    (@GOLD, 1, 1, 'Costo único para todos tus clientes.',  'Costo único para todos tus clientes.', 2, 1, 'SYS-BHERRERA', GETDATE(),'bi bi-cash fa-2x'),
+    (@GOLD, 1, 1, 'Tarifa única en todo el país.',         'Tarifa única en todo el país.',        3, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@GOLD, 1, 1, 'Hasta 10 Libras.',                     'Hasta 10 Libras.',                     4, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-archive fa-2x'),
+    (@GOLD, 1, 1, 'La tarifa más barata del mercado.',    'La tarifa más barata del mercado.',    5, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@GOLD, 1, 1, 'Vigencia de 6 meses.',                 'Vigencia de 6 meses.',                 6, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x'),
     -- PLATINO
-    (@PLATINO, 1, 1, '400 guías a $2.50 c/u.',              '400 guías a $2.50 c/u.',              1, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLATINO, 1, 1, 'Tarifa única en todo el país.',        'Tarifa única en todo el país.',       2, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLATINO, 1, 1, 'Costo único para todos tus clientes.', 'Costo único para todos tus clientes.',3, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLATINO, 1, 1, 'Hasta 10 Libras.',                    'Hasta 10 Libras.',                    4, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLATINO, 1, 1, 'La tarifa más barata del mercado.',   'La tarifa más barata del mercado.',   5, 1, 'SYS-BHERRERA', GETDATE()),
-    (@PLATINO, 1, 1, 'Vigencia de 6 meses.',                'Vigencia de 6 meses.',                6, 1, 'SYS-BHERRERA', GETDATE())
+    (@PLATINO, 1, 1, '400 guías a $2.50 c/u.',              '400 guías a $2.50 c/u.',              1, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x'),
+    (@PLATINO, 1, 1, 'Tarifa única en todo el país.',        'Tarifa única en todo el país.',       2, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@PLATINO, 1, 1, 'Costo único para todos tus clientes.', 'Costo único para todos tus clientes.',3, 1, 'SYS-BHERRERA', GETDATE(),'bi bi-cash fa-2x'),
+    (@PLATINO, 1, 1, 'Hasta 10 Libras.',                    'Hasta 10 Libras.',                    4, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-archive fa-2x'),
+    (@PLATINO, 1, 1, 'La tarifa más barata del mercado.',   'La tarifa más barata del mercado.',   5, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-map fa-2x'),
+    (@PLATINO, 1, 1, 'Vigencia de 6 meses.',                'Vigencia de 6 meses.',                6, 1, 'SYS-BHERRERA', GETDATE(),'fa fa-check-circle fa-2x')
 
     COMMIT TRANSACTION
     PRINT '    [OK] CatSubscriptionAtribute insertado correctamente. Filas: ' + CAST(@@ROWCOUNT AS VARCHAR)
