@@ -1,25 +1,15 @@
-﻿-- =============================================
--- Author:		<Oscar Morales>
--- Create date: <2022-04-08>
--- Description:	<Obtiene información para el detalle del Form Monitoreo de Servicios de Recolección>
--- =============================================
--- Author:		<Tito Garcia>
--- Update date: <2024-08-27>
--- Description:	<Se cambia la dirección del servicio de recolección en la tabla 0>
--- =============================================
--- Author:      <Daniel Ramirez>
--- Create date: <2024-06-06>
--- Description: <Se agrego filtro por pais, por defecto GT>
--- =============================================
--- Author:		<Tito Garcia>
--- Update date: <2024-08-27>
--- Description:	<Se cambia la dirección del servicio de recolección en la tabla 0>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Update date: <2025-05-07>
--- Description:	<Se agrega el estado cancelado para monitoreo de servicios de recoleccion>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[GetMonitoringPickupServicesDetail]
+   Propósito: <Obtiene información para el detalle del Form Monitoreo de Servicios de Recolección>
+   Autor:     <Oscar Morales>
+   Historia:  <>
+   Fecha:     <2022-04-08>
+   === CHANGELOG ============================
+2024-06-06 | Historia/épica: <> | Autor: Daniel Ramirez | Se agrego filtro por pais, por defecto GT
+2024-08-27 | Historia/épica: <> | Autor: Tito Garcia | Se cambia la dirección del servicio de recolección en la tabla 0
+2025-05-07 | Historia/épica: <> | Autor: Cristian Suazo | Se agrega el estado cancelado para monitoreo de servicios de recoleccion
+2026-04-09 | Historia/épica: 6035 | Autor: Erick Hernandez | Se agregan left joins para TokenLog y RegisterUser y se pueda mostrar el usuario.
+=========================================== */
 CREATE PROCEDURE [dbo].[GetMonitoringPickupServicesDetail]
 	-- Add the parameters for the stored procedure here
 	@ServiceManagementId INT,
@@ -75,7 +65,11 @@ SET NOCOUNT ON;
 	BEGIN
 		;WITH CTE
 		 AS (SELECT css.IdServiceStatus,
-					IIF(lbt.SSN_IdUser IS NULL, CONCAT(sr.First_Name, ' ', sr.Last_Name), lbt.SSN_Username) 'User',
+		 			CASE
+						WHEN lbt.SSN_IdUser IS NOT NULL THEN lbt.SSN_Username
+						WHEN sr.ID IS NOT NULL THEN CONCAT(sr.First_Name, ' ', sr.Last_Name)
+						ELSE RU.UsrNickName
+					END AS [User],
 					css.Name 'Status',
 					es.DateCreated 'Datetime',
 					es.Observations 'Incidence'
@@ -84,6 +78,10 @@ SET NOCOUNT ON;
 					 ON lbt.SSN_IdToken = es.TokenCreated
 				 LEFT JOIN LogTokenPOD ltp WITH (NOLOCK)
 					 ON ltp.LogTokenPOD = es.TokenCreated
+				 LEFT JOIN DeliveryBackOffice.dbo.TokenLog TL WITH (NOLOCK)
+					 ON TL.TknTokenCreated = es.TokenCreated
+				 LEFT JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH (NOLOCK)
+					 ON RU.UsrIdUser = TL.TknIdUser
 				 LEFT JOIN SenderReceiver sr WITH (NOLOCK)
 					 ON sr.ID = ltp.IdCourierman
 				 INNER JOIN CatServiceStatus css WITH (NOLOCK)
@@ -118,7 +116,11 @@ SET NOCOUNT ON;
 	END
 	ELSE
 	BEGIN
-		SELECT IIF(lbt.SSN_IdUser IS NULL, CONCAT(sr.First_Name, ' ', sr.Last_Name), lbt.SSN_Username) 'User',
+		SELECT CASE
+					WHEN lbt.SSN_IdUser IS NOT NULL THEN lbt.SSN_Username
+					WHEN sr.ID IS NOT NULL THEN CONCAT(sr.First_Name, ' ', sr.Last_Name)
+					ELSE RU.UsrNickName
+				END AS [User],
 			   css.Name 'Status',
 			   es.DateCreated 'Datetime',
 			   es.Observations 'Incidence'
@@ -127,6 +129,10 @@ SET NOCOUNT ON;
 				ON lbt.SSN_IdToken = es.TokenCreated
 			LEFT JOIN LogTokenPOD ltp WITH (NOLOCK)
 				ON ltp.LogTokenPOD = es.TokenCreated
+			LEFT JOIN DeliveryBackOffice.dbo.TokenLog TL WITH (NOLOCK)
+				ON TL.TknTokenCreated = es.TokenCreated
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH (NOLOCK)
+				ON RU.UsrIdUser = TL.TknIdUser
 			LEFT JOIN SenderReceiver sr WITH (NOLOCK)
 				ON sr.ID = ltp.IdCourierman
 			INNER JOIN CatServiceStatus css WITH (NOLOCK)
