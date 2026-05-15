@@ -1,25 +1,17 @@
-﻿-- =============================================
--- Author:		<Oscar Morales>
--- Create date: <2023-03-04>
--- Description:	<Sp para el detalle del reporte de cierres en desktop>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-07-08>
--- Description:	<Se agrega el simbolo de la moneda, segun pais de origen, para el detalle del reporte>
--- =============================================
--- Author:		<Walter Orozco>
--- Create date: <10/10/2025>
--- Description:	<Se agregan envios internacionales.>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-11-04>
--- Description:	<Se agrega método de paago Zigi>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2026-03-03>
--- Description:	<Optimización: mejor manejo de rango de fechas, eliminación de OR en WHERE, OUTER APPLY sin OR para invoiceHeader>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[ReportClosureDesktop]
+   Propósito: Sp para el detalle del reporte de cierres en desktop
+   Autor:     Oscar Morales
+   Historia:  <>
+   Fecha:     2023-03-04
+
+=== CHANGELOG ================================
+2026-05-04 | Mario Herrarte  | Se soluciona inconveniente con envios internacionales y articulos.
+2026-03-03 | Bilkar Morataya | Optimización: mejor manejo de rango de fechas, eliminación de OR en WHERE, OUTER APPLY sin OR para invoiceHeader
+2025-11-04 | Bilkar Morataya | Se agrega método de paago Zigi
+2025-10-10 | Walter Orozco   | Se agregan envios internacionales.
+2024-07-08 | Cristian Suazo  | Se agrega el simbolo de la moneda, segun pais de origen, para el detalle del reporte
+=========================================== */
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -59,15 +51,21 @@ BEGIN
         WHERE TRY_CAST(Item AS int) IS NOT NULL;
 
     IF @IdCierre = '-1'
-        INSERT INTO @tblIdCierre
-        SELECT DISTINCT ACD.AccountingClosuresHeaderId
-        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
-            ON ACD.GuideSerie = DOPD.GuideSerie
-            AND ACD.GuideNumber = DOPD.GuideNumber
-            AND ACD.DopId = DOPD.DopId
-        WHERE ACD.RowStatus = 1
-          AND DOPD.DateCreated >= @StartDateClean AND DOPD.DateCreated < @EndDateClean;
+    INSERT INTO @tblIdCierre
+    SELECT DISTINCT ACD.AccountingClosuresHeaderId
+    FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
+    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
+        ON ACD.DopId = DOPD.DopId
+        AND (
+                ACD.GuideSerie = DOPD.GuideSerie
+                OR (ACD.GuideSerie IS NULL AND DOPD.GuideSerie IS NULL)
+            )
+        AND (
+                ACD.GuideNumber = DOPD.GuideNumber
+                OR (ACD.GuideNumber IS NULL AND DOPD.GuideNumber IS NULL)
+            )
+    WHERE ACD.RowStatus = 1
+      AND DOPD.DateCreated >= @StartDateClean AND DOPD.DateCreated < @EndDateClean;
     ELSE IF @IdCierre IS NOT NULL
         INSERT INTO @tblIdCierre
         SELECT DISTINCT CAST(Item AS int)
@@ -150,7 +148,7 @@ BEGIN
         ISNULL(ACHVP.ClosurerPOS, '') AS CierrePOS
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
     -- LEFT JOINs para los casos donde no hay DeliveryOrder
-    LEFT JOIN dbo.DeliveryOrder DOR WITH(NOLOCK)
+    LEFT JOIN [DeliveryBackOffice].[dbo].DeliveryOrder DOR WITH(NOLOCK)
         ON DOR.Guide_Serie = DOPD.GuideSerie
         AND DOR.Guide_Number = DOPD.GuideNumber
         AND DOR.StatusOrderId <> 7
@@ -173,23 +171,27 @@ BEGIN
         FROM DeliveryBackOffice.dbo.invoiceHeader WITH(NOLOCK)
         WHERE INH_Header.inv_pk_id IS NULL
           AND CHARINDEX('-', DOPD.Fel) > 0
-          AND inv_numberFEL = TRY_CAST(
-              SUBSTRING(DOPD.Fel, CHARINDEX('-', DOPD.Fel) + 1, LEN(DOPD.Fel)) 
-          AS INT)
+          AND inv_numberFEL = TRY_CAST(SUBSTRING(DOPD.Fel, CHARINDEX('-', DOPD.Fel) + 1, LEN(DOPD.Fel)) AS VARCHAR(50))
     ) INH_Fel
     LEFT JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
         ON STO.StatusOrderId = DOR.StatusOrderId
     -- JOINs principales
     INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
-        ON ACD.GuideSerie = DOPD.GuideSerie
-        AND ACD.GuideNumber = DOPD.GuideNumber
-        AND ACD.DopId = DOPD.DopId
+        ON ACD.DopId = DOPD.DopId
+        AND (
+                ACD.GuideSerie = DOPD.GuideSerie
+                OR (ACD.GuideSerie IS NULL AND DOPD.GuideSerie IS NULL)
+            )
+        AND (
+                ACD.GuideNumber = DOPD.GuideNumber
+                OR (ACD.GuideNumber IS NULL AND DOPD.GuideNumber IS NULL)
+            )
         AND ACD.RowStatus = 1
     INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
         ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
     LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
         ON VPC.CodeOfReference = COALESCE(DOPD.VisitPoint, ACH.VisitPoint)
-    INNER JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
+    INNER JOIN [DeliveryBackOffice].[dbo].CatTypeServiceClosure CTS WITH(NOLOCK)
         ON CTS.IdTypeService = DOPD.TypeServiceId
         AND CTS.IdTypeService <> 23 -- Excluir tipo 23
     LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
@@ -197,18 +199,19 @@ BEGIN
     LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
         ON REU.UsrIdUser = ACH.UserId
     LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH(NOLOCK)
-        ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
+        ON cost.GuideSerie = DOR.Guide_Serie
+        AND cost.GuideNumber = DOR.Guide_Number
     LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH(NOLOCK)
         ON costd.IdCost = cost.IdCost
         AND costd.Amount > 0
         AND (DOPD.TypeofInOutMoneyId IN (6, 10) AND costd.Voucher != '')
-    LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH(NOLOCK)
+    LEFT JOIN [DeliveryBackOffice].[dbo].AccountingClosuresHeaderVisitPoint ACHVP WITH(NOLOCK)
         ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
     LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1 WITH(NOLOCK)
         ON REU1.UsrIdUser = ACHVP.UserId
     WHERE DOPD.DateCreated >= @StartDateClean AND DOPD.DateCreated < @EndDateClean
         AND DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount)
-        AND ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre)
+        AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
         AND COALESCE(DOPD.VisitPoint, ACH.VisitPoint) IN (SELECT CodeOfReference FROM @tblVisitPointId)
         AND DOPD.ShipmentCompleted = 1
         AND DOPD.AccountId > 0
