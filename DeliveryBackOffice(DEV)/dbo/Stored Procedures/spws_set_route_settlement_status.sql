@@ -9,7 +9,7 @@
 
 --  2024-06-11 | Historia/épica: ---         | Autor: Daniel, Ramirez |
 --  2025-11-20 | Historia/épica: FDAPI-4736  | Autor: Cristian, Suazo |
-
+--  2025-11-20 | Historia/épica: FDAPI-5925  | Autor: Brandon Pedroza | se hace registro en inventario al liquidar ruta de recoleccion
 =========================================== */
 CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
     @GuideSerie NVARCHAR(2),
@@ -108,6 +108,7 @@ BEGIN
 
 
         DECLARE @stattus INT = 11;
+        DECLARE @StatusOrderInventario INT = 10;
 
         /* Inserción en tabla TransactionalBackbone para guardar 
 			un registro de las piezas que se estan liquidando de una ruta										 
@@ -196,14 +197,14 @@ BEGIN
                     WHERE GuideSerie = @GuideSerie
                           AND GuideNumber = @GuideNumber
                 );
-        ---variable que cuenta cuantas piezas ya cambiaron de estado arribo a instalaciones (11).
+        ---variable que cuenta cuantas piezas ya cambiaron de estado arribo a instalaciones (11) o inventario.
         DECLARE @valu INT =
                 (
                     SELECT COUNT(1)
                     FROM DeliveryBackOffice.dbo.DeliveryOrderPiece WITH (NOLOCK)
                     WHERE GuideSerie = @GuideSerie
                           AND GuideNumber = @GuideNumber
-                          AND StatusOrderId = @stattus
+                          AND StatusOrderId in( @stattus,@StatusOrderInventario)
                 );
 
 
@@ -657,6 +658,372 @@ BEGIN
 
 
         END;
+
+		--Inserta checkpoint de inventario
+		--#
+			DECLARE @RackPositionDefault NVARCHAR(60);
+			DECLARE @IdHubExc INT;
+			DECLARE @HubExc NVARCHAR(20);
+
+			---variable que cuenta cuantas piezas ya cambiaron de estado en inventario (10).
+			DECLARE @valuInv INT = 0;
+
+			SELECT @RackPositionDefault = ISNULL(CS.RackPositionDefault,'10#DEF000#PAL001'),
+					@IdHubExc           = HUBEX.IdHubExc,
+					@HubExc             = HUBEX.hubExc 
+			FROM DeliveryBackOffice.dbo.CatStation CS
+				CROSS APPLY (
+					SELECT 
+						CASE WHEN CS.StationType = 2 
+								THEN CS.CodeOfReference 
+								ELSE 0
+						END AS IdHubExc,
+						CASE WHEN CS.StationType = 2 
+								THEN 'EXC' 
+								ELSE 'HUB' 
+						END AS hubExc
+				) HUBEX
+				WHERE CS.IdStation= @StationId
+			
+			--Desactiva inventario
+			UPDATE WH
+			SET WH.Active=0,
+				WH.UserUpdated = @Token,
+				WH.DateUpdated = GETDATE()
+			FROM DeliveryBackOffice.dbo.Warehouse WH WITH(NOLOCK)
+			WHERE Guide_Serie = @GuideSerie
+			AND Guide_Number = @GuideNumber
+			AND Guide_Piece = @GuidePiece
+			AND Active = 1
+
+			--activo nuevo inventario
+
+			--Actualizar En Inventario estado de las piezas
+			UPDATE DOP
+			SET StatusOrderId = @StatusOrderInventario,
+				PieceUpdated  = @Token,
+				DateUpdated = GETDATE()
+			FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+			WHERE GuideSerie = @GuideSerie
+				  AND GuideNumber = @GuideNumber
+				  AND NoPiece = @GuidePiece
+			
+			
+			SET @valuInv  =
+					(
+						SELECT COUNT(1)
+						FROM DeliveryBackOffice.dbo.DeliveryOrderPiece WITH (NOLOCK)
+						WHERE GuideSerie = @GuideSerie
+							  AND GuideNumber = @GuideNumber
+							  AND StatusOrderId = @StatusOrderInventario
+					);
+
+			print  CONCAT('@valuInv: ', @valuInv)
+			print  CONCAT('@val: ' ,@val )
+
+			-- registrar nueva ubicación
+			INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse]
+			(
+				Rack_Position,
+				Guide_Serie,
+				Guide_Number,
+				Dry,
+				Cold,
+				Active,
+				UserCreated,
+				DateCreated,
+				Guide_Piece,
+				IsReturn,
+				HubExc,
+				IdHubExc,
+				StatusOrderId,
+				StationId
+			)
+			VALUES
+			(@RackPositionDefault,
+			 @GuideSerie,
+			 @GuideNumber,
+			 1,
+			 0,
+			 1  ,
+			 @Token,
+			 GETDATE(),
+			 @GuidePiece,
+			 0,
+			 @HubExc,
+			 @IdHubExc,
+			 @StatusOrderInventario,
+			 @StationId
+			)
+
+
+
+			--valida si todas las piezas ya fueron ingresas a inventario
+			IF (@val = @valuInv)
+			BEGIN
+				-- Actualizar En Inventario al último estado de la guía
+				UPDATE DO
+				SET StatusOrderId = @StatusOrderInventario
+				FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+				WHERE Guide_Serie = @GuideSerie
+					  AND Guide_Number = @GuideNumber
+
+				-- Insertar En Inventario nuevo estado de guía en tabla histórica
+				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
+				(
+					[Guide_Serie],
+					[Guide_Number],
+					[StatusOrderId],
+					[UserCreated],
+					[DateCreated],
+					[DateCreatedInSystem],
+					[PieceId],
+					[Observations],
+					[StationId]
+				)
+				SELECT	DOD.GuideSerie,
+						DOD.GuideNumber,
+						@StatusOrderInventario, 
+						@Token, 
+						GETDATE(),
+						GETDATE(),
+						DOD.GuidePiece,
+						'',
+						@StationId 
+				FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOD WITH(NOLOCK)
+				WHERE DOD.GuideSerie = @GuideSerie
+					AND DOD.GuideNumber = @GuideNumber
+
+
+			
+				-----------------WEBHOOK.INI INVENTARIO-----------------------		
+				DECLARE @WebhookCustomerIdInv INT = -1;
+				DECLARE @CustomerEndpointIdInv INT = -1;
+				-- Debido a que se procesa únicamente 1 guía
+				DECLARE @GuideCurrentStatusInv INT = -1;
+
+				BEGIN TRY
+					DECLARE @GuideStatusChangeWebhookInv INT = 1; --'GuideStatusChange' -> WebhookType
+
+					SET @WebhookCustomerIdInv = ISNULL(
+											 (
+												 SELECT TOP 1
+													 DO.IdCustomer
+												 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+												 WHERE DO.Guide_Serie = @GuideSerie
+													   AND DO.Guide_Number = @GuideNumber
+											 ),
+											 -1
+												   );
+					SET @CustomerEndpointIdInv = ISNULL(
+											  (
+												  SELECT TOP 1
+													  WE.IdWebhookEndpoint
+												  FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
+												  WHERE WE.CustomerId = @WebhookCustomerIdInv
+														AND WE.WebhookTypeId = @GuideStatusChangeWebhookInv
+											  ),
+											  -1
+													);
+
+					SET @GuideCurrentStatusInv =
+					(
+						SELECT TOP 1
+							DO.StatusOrderId
+						FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+						WHERE DO.Guide_Serie = @GuideSerie
+							  AND DO.Guide_Number = @GuideNumber
+					);
+
+					-- Cliente tiene webhook configurado para el tipo especificado
+					-- Estado actual de la guía coincide dentro de las restricciónes por usuario
+					IF (
+						   @WebhookCustomerIdInv > 0
+						   AND @CustomerEndpointIdInv > 0
+						   AND @GuideCurrentStatusInv IN (
+														  SELECT WRBU.StatusOrderId
+														  FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH (NOLOCK)
+														  WHERE WRBU.CustomerId = @WebhookCustomerIdInv
+																AND WRBU.WebhookTypeId = @GuideStatusChangeWebhookInv
+													  )
+					   )
+					BEGIN
+
+						DECLARE @ResponseTableInv AS TABLE (InsertedId BIGINT);
+
+						DECLARE @TypeConnectInv INT = 0;
+
+						SET @TypeConnectInv =
+						(
+							SELECT top 1
+								TypeConnectionId
+							FROM DeliveryBackOffice.dbo.WebhookEndpoint wh
+								INNER JOIN DeliveryBackOffice.dbo.WebhookCatTypeConnection wc
+									ON wh.TypeConnectionId = wc.IdCatTypeConnection
+							WHERE wh.CustomerId = @WebhookCustomerIdInv
+						)
+
+						IF (@TypeConnectInv = 1)
+						BEGIN
+
+							INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+							(
+								[GuideSerie],
+								[GuideNumber],
+								[CustomerId],
+								[StatusOrderId],
+								[WebhookEndpointId],
+								[HasNotified],
+								[TokenCreated],
+								[DateCreated]
+							)
+							OUTPUT inserted.IdWebhookTrackingQueue
+							INTO @ResponseTableInv
+							(
+								InsertedId
+							)
+							VALUES
+							(@GuideSerie,
+							 @GuideNumber,
+							 @WebhookCustomerIdInv,
+							 @GuideCurrentStatusInv,
+							 @CustomerEndpointIdInv,
+							 0  ,
+							 @Token,
+							 GETDATE()
+							)
+						END
+						ELSE
+						BEGIN
+							-----------------------------------
+							DECLARE @GuidePiecesTableInv AS TABLE
+							(
+								CustomerId INT,
+								CustomerEndpointId BIGINT,
+								WebhookType INT,
+								GuideSerie NVARCHAR(2),
+								GuideNumber INT,
+								GuideStatusId TINYINT,
+								NumberPieces INT,
+								NumberRelatedPieces INT
+							);
+
+							INSERT INTO @GuidePiecesTableInv
+							(
+								CustomerId,
+								GuideSerie,
+								GuideNumber,
+								GuideStatusId,
+								NumberPieces
+							)
+							SELECT @WebhookCustomerIdInv,
+								   dop.GuideSerie,
+								   dop.GuideNumber,
+								   @GuideCurrentStatusInv,
+								   Count(dop.GuideNumber)
+							FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
+									ON do.Guide_Serie = dop.GuideSerie
+									   AND do.Guide_Number = dop.GuideNumber
+								INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH (NOLOCK)
+									ON do.IdCustomer = WHE.CustomerId
+							WHERE do.Guide_Serie = @GuideSerie
+								  AND do.Guide_Number = @GuideNumber
+								  AND WHE.TypeConnectionId = 2
+							GROUP BY dop.GuideSerie,
+									 dop.GuideNumber
+
+							DECLARE @PiecesGuideRelatedTableInv AS TABLE
+							(
+								CustomerId INT,
+								CustomerEndpointId BIGINT,
+								WebhookType INT,
+								GuideSerie NVARCHAR(2),
+								GuideNumber INT,
+								GuideStatusId TINYINT,
+								NumberRelatedPieces INT
+							);
+
+							INSERT INTO @PiecesGuideRelatedTableInv
+							(
+								CustomerId,
+								GuideSerie,
+								GuideNumber,
+								GuideStatusId,
+								NumberRelatedPieces
+							)
+							SELECT @WebhookCustomerIdInv,
+								   dop.GuideSerie,
+								   dop.GuideNumber,
+								   @GuideCurrentStatusInv,
+								   Count(dop.GuideNumber)
+							FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
+									ON dop.GuideSerie = do.Guide_Serie
+									   AND do.Guide_Number = dop.GuideNumber
+								INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH (NOLOCK)
+									ON do.IdCustomer = WHE.CustomerId
+							WHERE do.Guide_Serie = @GuideSerie
+								  AND do.Guide_Number = @GuideNumber
+								  AND dop.ExternalPieceId IS NOT NULL
+								  AND WHE.TypeConnectionId = 2
+							GROUP BY dop.GuideSerie,
+									 dop.GuideNumber
+
+							INSERT INTO DeliveryBackOffice.dbo.WebhookTrackingQueueDetailForSFTP
+							(
+								CustomerId,
+								GuideSerie,
+								GuideNumber,
+								GuidePiece,
+								ExternalNumber,
+								ExternalPieceId,
+								StatusOrderId,
+								RowStatus,
+								DateCreated,
+								TokenCreated
+							)
+							SELECT @WebhookCustomerIdInv,
+								   dop.GuideSerie,
+								   dop.GuideNumber,
+								   dop.GuidePiece,
+								   do.Ticket_Number,
+								   dop.ExternalPieceId,
+								   @GuideCurrentStatusInv,
+								   1 AS RowStatus,
+								   GETDATE() AS DateCreated,
+								   @Token AS TokenCreated
+							FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+									ON do.Guide_Serie = dop.GuideSerie
+									   AND dop.GuideNumber = do.Guide_Number
+								INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH (NOLOCK)
+									ON do.IdCustomer = WHE.CustomerId
+								INNER JOIN @GuidePiecesTableInv gpt
+									ON dop.GuideSerie = gpt.GuideSerie
+									   AND dop.GuideNumber = gpt.GuideNumber
+								INNER JOIN @PiecesGuideRelatedTableInv pgt
+									ON gpt.GuideSerie = pgt.GuideSerie
+									   AND gpt.GuideNumber = pgt.GuideNumber
+									   AND gpt.NumberPieces = pgt.NumberRelatedPieces
+							WHERE
+								WHE.TypeConnectionId = 2
+
+						END
+
+					END
+
+				END TRY
+				BEGIN CATCH
+
+				END CATCH
+				-------------------WEBHOOK.FIN INVENTARIO------------------------------
+		END
+
+
+
+		--#
+
 
         --Se marca como recolectado el servicio
         UPDATE sm

@@ -7,6 +7,7 @@
 ============================================
 === CHANGELOG ================================
 -- 2025-11-17 | Historia/épica: FDAPI-4976 | Autor: Cristian Suazo |
+-- 2026-04-14 | Historia/épica: FDAPI-5662 | Autor: Brandon Pedroza | Se obtiene bandera que indica si el piloto tiene algun servicio de recoleccion asignado
 =========================================== */
 
 
@@ -120,6 +121,27 @@ begin
                         from DeliveryBackOffice.dbo.ConfigParams cf
                         where cf.[ConfigParamsId] = 29 -- 'PickUpManifestEmailCAPP'
                     );
+			DECLARE @DateToday DATE = (convert(date, getdate()));
+			DECLARE @RecolectionAssigment NVARCHAR(20) ='';
+
+			IF EXISTS(select top 1 1
+                                    from DeliveryBackOffice.dbo.LogTokenPOD                 pod with (nolock)
+                                        inner join DeliveryBackOffice.dbo.SenderReceiver    sr with (nolock)
+                                            on (sr.ID = pod.IdCourierman)
+                                        left join DeliveryBackOffice.dbo.RouteAssigment ras with (nolock)
+                                            on ras.IdCurrierMan = sr.ID
+                                               and DateOfRoute = @DateToday
+                                        left join DeliveryBackOffice.dbo.CatRoute       cr with (nolock)
+                                            on cr.IdRoute = ras.IdRoute
+                                    where pod.LogTokenPOD = @Token
+									  AND pod.RowStatus = 1
+									  AND cr.IdTypeRoute = 1 --Recoleccion->CatTypeRoute
+									  )
+			BEGIN
+				SET @RecolectionAssigment='Recolección';
+			END
+
+
 
             set @jsonResult1 =
             (
@@ -142,13 +164,14 @@ begin
                                            + '",' + '"PickUpManifestEmail":"'
                                            + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
                                            + '"Token":"' + isnull(LogTokenPOD, '') + +'",'
-										   + '"StationId":'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'null') + '}'
+										   + '"StationId":'+ ISNULL(CONVERT(NVARCHAR(5), @StationId),'null') +','
+										   + '"RecolectionFlag":"' + @RecolectionAssigment +'"}'
                                     from DeliveryBackOffice.dbo.LogTokenPOD                 pod with (nolock)
                                         inner join DeliveryBackOffice.dbo.SenderReceiver    sr with (nolock)
                                             on (sr.ID = pod.IdCourierman)
                                         left join DeliveryBackOffice.dbo.RouteAssigment ras with (nolock)
                                             on ras.IdCurrierMan = sr.ID
-                                               and DateOfRoute = convert(date, getdate())
+                                               and DateOfRoute = @DateToday
                                         left join DeliveryBackOffice.dbo.CatVehicle     vh with (nolock)
                                             on vh.IdVehicle = ras.IdVehicle
                                         left join DeliveryBackOffice.dbo.CatRoute       cr with (nolock)
