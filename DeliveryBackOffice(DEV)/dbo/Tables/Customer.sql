@@ -339,6 +339,12 @@ CREATE NONCLUSTERED INDEX [idx_CatBatchFrequencyCODId]
 
 
 GO
+CREATE NONCLUSTERED INDEX [IDX_Customer_CatTMSalesPersonId_CutOffDate_INCLUDE]
+    ON [dbo].[Customer] (CatTMSalesPersonId, CutOffDate)
+    INCLUDE (CustomerGoalQuantity,IdCustomer)
+
+
+GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Bandera que indica si se utilizará tarifario por artículo',
     @level0type = N'SCHEMA',
@@ -347,3 +353,5 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'Customer',
     @level2type = N'COLUMN',
     @level2name = N'RestrictionByArticle'
+
+

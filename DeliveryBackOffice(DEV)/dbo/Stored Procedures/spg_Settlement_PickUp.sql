@@ -144,7 +144,7 @@ BEGIN
         WHERE cr.CodeRoute = @Route
               AND CAST(tbb.DateCreated AS DATE) = @tiempo
               AND tbb.RowStatus = 1
-              AND ISNULL(pr.IdCountry, @CountryFilter) = @CountryFilter
+              AND pr.IdCountry = @CountryFilter
     ) guides;
 
     /* TABLE 2 */
@@ -172,7 +172,7 @@ BEGIN
             ON pr.IdProvince = tw.IdProvince
     WHERE cr.CodeRoute = @Route
           AND ra.DateOfRoute = @tiempo
-          AND ISNULL(pr.IdCountry, @CountryFilter) = @CountryFilter;
+          AND pr.IdCountry = @CountryFilter;
 
 
 
@@ -187,7 +187,7 @@ BEGIN
             ON pr.IdProvince = tw.IdProvince
     WHERE ctr.CodeRoute = @Route
           AND CAST(rta.DateOfRoute AS DATE) = @tiempo
-          AND ISNULL(pr.IdCountry, @CountryFilter) = @CountryFilter;
+          AND pr.IdCountry = @CountryFilter;
 
 
     /* TABLE 4 */
@@ -205,7 +205,7 @@ BEGIN
             ON sr.ID = rta.IdCurrierMan
     WHERE ctr.CodeRoute = @Route
          AND CAST(rta.DateOfRoute AS DATE) = @tiempo
-         AND ISNULL(pr.IdCountry, @CountryFilter) = @CountryFilter;
+         AND pr.IdCountry = @CountryFilter;
 
     /* TABLE 5 - Guías liquidadas de una ruta en la fecha actual */
     SELECT tbb.GuideSerie,
@@ -230,7 +230,7 @@ BEGIN
     WHERE cr.CodeRoute = @Route
           AND CAST(tbb.DateCreated AS DATE) = @tiempo
           AND tbb.RowStatus = 1
-          AND ISNULL(pr.IdCountry, @CountryFilter) = @CountryFilter
+          AND pr.IdCountry = @CountryFilter
     ORDER BY tbb.DateCreated DESC;
 
     /* TABLE 6 - Último manifiesto liquidado */
@@ -248,7 +248,7 @@ BEGIN
                AND CAST(sbp.DatePrinted AS DATE) = @tiempo
     WHERE cr.CodeRoute = @Route
           AND CAST(ra.DateCreated AS DATE) = @tiempo
-          AND ISNULL(pr.IdCountry, @CountryFilter) = @CountryFilter
+          AND pr.IdCountry = @CountryFilter
     ORDER BY sbp.Id DESC;
 
 
@@ -272,7 +272,7 @@ BEGIN
                 ON do.Guide_Serie = tbb.GuideSerie
                    AND do.Guide_Number = tbb.GuideNumber
         WHERE cr.CodeRoute = @Route
-              AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
+              AND pr.IdCountry = @IdCountry
               AND CAST(tbb.DateCreated AS DATE) = @tiempo
               AND tbb.RowStatus = 1
         GROUP BY tbb.GuideNumber,
@@ -288,5 +288,5 @@ BEGIN
            INNER JOIN DeliveryBackOffice.dbo.Province pr WITH(NOLOCK)
                ON (pr.IdProvince = tw.IdProvince)
      WHERE cr.CodeRoute = @Route AND cr.rowstatus = 1
-       AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
+       AND pr.IdCountry = @IdCountry
 END;
