@@ -207,7 +207,7 @@ BEGIN TRANSACTION
 BEGIN TRY
 
     -- Recuperar el CodeOfReference recién insertado Y Autorización de Digifact
-    SELECT @CURRENTAUTHORIZATION = [Authorization] FROM invoiceAuthorizationHeader WHERE RowStatus = 1
+    SELECT @CURRENTAUTHORIZATION = [IdInvoiceAuthorizationHeader] FROM invoiceAuthorizationHeader WHERE RowStatus = 1
     SELECT @NewCodeOfReference = MAX(CodeOfReference) FROM dbo.VisitPointClient
 
     insert into invoiceAuthorizationRelationships (InvoiceAuthorizationHeaderId, CodeOfReference, RowStatus, DateCreated, TokenCreated) 
