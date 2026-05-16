@@ -1,7 +1,7 @@
 -- ===============================================================
--- [1/3] Insertar VisitPointClient
+-- [1/4] Insertar VisitPointClient
 -- ===============================================================
-PRINT '>>> [1/3] Iniciando INSERT en VisitPointClient...'
+PRINT '>>> [1/4] Iniciando INSERT en VisitPointClient...'
 
 DECLARE @NewCodeOfReference INT;
 DECLARE @IdCustomer         INT;
@@ -59,9 +59,9 @@ GO
 
 
 -- ===============================================================
--- [2/3] INSERT en AddInfoByCodeOfReference
+-- [2/4] INSERT en AddInfoByCodeOfReference
 -- ===============================================================
-PRINT '>>> [2/3] Iniciando INSERT en AddInfoByCodeOfReference...'
+PRINT '>>> [2/4] Iniciando INSERT en AddInfoByCodeOfReference...'
 
 DECLARE @NewCodeOfReference INT;
 
@@ -128,9 +128,9 @@ SELECT * FROM dbo.AddInfoByCodeOfReference WHERE CodeOfReference = @NewCodeOfRef
 GO
 
 -- ===============================================================
--- [3/3] INSERT en del_ParametrosFactura
+-- [3/4] INSERT en del_ParametrosFactura
 -- ===============================================================
-PRINT '>>> [3/3] Iniciando INSERT en del_ParametrosFactura ...'
+PRINT '>>> [3/4] Iniciando INSERT en del_ParametrosFactura ...'
 
 DECLARE @NewCodeOfReference INT;
 
@@ -159,4 +159,72 @@ END CATCH
 
 -- Verificación
 SELECT * FROM dbo.del_ParametrosFactura  WHERE dpf_vpCodeOfReference = @NewCodeOfReference;
+GO
+
+-- ===============================================================
+-- [3/4] INSERT en del_ParametrosFactura
+-- ===============================================================
+PRINT '>>> [3/4] Iniciando INSERT en del_ParametrosFactura ...'
+
+DECLARE @NewCodeOfReference INT;
+
+BEGIN TRANSACTION
+BEGIN TRY
+
+    -- Recuperar el CodeOfReference recién insertado
+    SELECT @NewCodeOfReference = MAX(CodeOfReference) FROM dbo.VisitPointClient
+
+    INSERT INTO dbo.del_ParametrosFactura 
+    (dpf_VpCodeOfReference, dpf_FELRequestor, dpf_FELTransaction, dpf_FELCountry, dpf_FELEntity, dpf_FELUser, dpf_FELUserName, dpf_FELData1, dpf_FELData3, dpf_FELCorreo, dpf_FELAsuntoCorreoFactura, dpf_FELAsuntoCorreoNotaCredito, dpf_FELEstablecimiento, dpf_FELCorreoCCO, dpf_SAPServidorLicencias, dpf_SAPCompania, dpf_SAPUsuario, dpf_SAPContrasenia, dpf_SAPServidor, dpf_SAPUsuarioBD, dpf_SAPContraseniaBD, dpf_SAPserieFactura, dpf_SAPserieNC, dpf_SAPseriePago, dpf_SAPcardCode, dpf_SAParticulo, dpf_SAPvendor, dpf_SAPcreditCard, dpf_OcrCode, dpf_OcrCode2, dpf_StatusFACE, dpf_WarehouseCode, inv_cmp_name, inv_cmp_nameComercial, KioskCode)
+    VALUES 
+    (@NewCodeOfReference, 'Digifact23*', '', 'SV', '06141501221044', 'SV.06141501221044.TESTUSER', 'TEST', '', '', 'bidcar.herrera@forzalatam.com', 'Forza Delivery Factura', 'Forza Delivery', '', 'bidcar.herrera@forzalatam.com', 'WIN-QF1OUTS7TLC', 'DELIVERY_FORZA', 'manager', '12345', '192.168.130.107', 'evo', 'JSViESlacc+ErkN1QPBwUA==', '', '', '', '', '', '1', '97', NULL, NULL, 'A', NULL, 'Delivery Express El Salvador S.A. De C.V.', 'DELIVERY EXPRESS SV', NULL);
+
+    COMMIT TRANSACTION
+    PRINT '    [OK] del_ParametrosFactura  insertado correctamente. Filas: ' + CAST(@@ROWCOUNT AS VARCHAR)
+
+END TRY
+BEGIN CATCH
+    ROLLBACK TRANSACTION
+    PRINT '    [ERROR] Falló INSERT en del_ParametrosFactura .'
+    PRINT '    Mensaje : ' + ERROR_MESSAGE()
+    PRINT '    Línea   : ' + CAST(ERROR_LINE() AS VARCHAR)
+    PRINT '    Número  : ' + CAST(ERROR_NUMBER() AS VARCHAR)
+END CATCH
+
+-- Verificación
+SELECT * FROM dbo.del_ParametrosFactura  WHERE dpf_vpCodeOfReference = @NewCodeOfReference;
+GO
+
+-- ===============================================================
+-- [4/4] INSERT en invoiceAuthorizationRelationships
+-- ===============================================================
+PRINT '>>> [4/4] Iniciando INSERT en invoiceAuthorizationRelationships ...'
+
+DECLARE @NewCodeOfReference INT;
+DECLARE @CURRENTAUTHORIZATION NVARCHAR(512);
+
+BEGIN TRANSACTION
+BEGIN TRY
+
+    -- Recuperar el CodeOfReference recién insertado Y Autorización de Digifact
+    SELECT @CURRENTAUTHORIZATION = [Authorization] FROM invoiceAuthorizationHeader WHERE RowStatus = 1
+    SELECT @NewCodeOfReference = MAX(CodeOfReference) FROM dbo.VisitPointClient
+
+    insert into invoiceAuthorizationRelationships (InvoiceAuthorizationHeaderId, CodeOfReference, RowStatus, DateCreated, TokenCreated) 
+    values (@CURRENTAUTHORIZATION, @NewCodeOfReference, 1, GETDATE(), 'SYS-CAZURDIA')
+
+    COMMIT TRANSACTION
+    PRINT '    [OK] invoiceAuthorizationRelationship  insertado correctamente. Filas: ' + CAST(@@ROWCOUNT AS VARCHAR)
+
+END TRY
+BEGIN CATCH
+    ROLLBACK TRANSACTION
+    PRINT '    [ERROR] Falló INSERT en invoiceAuthorizationRelationship.'
+    PRINT '    Mensaje : ' + ERROR_MESSAGE()
+    PRINT '    Línea   : ' + CAST(ERROR_LINE() AS VARCHAR)
+    PRINT '    Número  : ' + CAST(ERROR_NUMBER() AS VARCHAR)
+END CATCH
+
+-- Verificación
+SELECT * FROM invoiceAuthorizationRelationship  WHERE RowStatus = 1;
 GO
