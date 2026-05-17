@@ -214,17 +214,17 @@ BEGIN TRY
     values (@CURRENTAUTHORIZATION, @NewCodeOfReference, 1, GETDATE(), 'SYS-CAZURDIA')
 
     COMMIT TRANSACTION
-    PRINT '    [OK] invoiceAuthorizationRelationship  insertado correctamente. Filas: ' + CAST(@@ROWCOUNT AS VARCHAR)
+    PRINT '    [OK] invoiceAuthorizationRelationships  insertado correctamente. Filas: ' + CAST(@@ROWCOUNT AS VARCHAR)
 
 END TRY
 BEGIN CATCH
     ROLLBACK TRANSACTION
-    PRINT '    [ERROR] Falló INSERT en invoiceAuthorizationRelationship.'
+    PRINT '    [ERROR] Falló INSERT en invoiceAuthorizationRelationships.'
     PRINT '    Mensaje : ' + ERROR_MESSAGE()
     PRINT '    Línea   : ' + CAST(ERROR_LINE() AS VARCHAR)
     PRINT '    Número  : ' + CAST(ERROR_NUMBER() AS VARCHAR)
 END CATCH
 
 -- Verificación
-SELECT * FROM invoiceAuthorizationRelationship  WHERE RowStatus = 1;
+SELECT * FROM invoiceAuthorizationRelationships  WHERE RowStatus = 1;
 GO
