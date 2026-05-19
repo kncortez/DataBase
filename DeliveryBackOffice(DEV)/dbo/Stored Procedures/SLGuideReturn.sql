@@ -20,7 +20,7 @@ BEGIN
 	BEGIN TRY
 
 		-- Variables
-		DECLARE @Status INT = 0 , @IdCountry NVARCHAR(3) = NULL, @SenderIdTownship INT;
+		DECLARE @Status INT = 0 , @IdCountry NVARCHAR(3) = NULL, @SmartLockerTownshipId INT;
 
 		-- Referencia
 		IF (@TicketNumber IS NOT NULL AND @GuideNumber <= 0)
@@ -30,7 +30,7 @@ BEGIN
 				, @GuideNumber = Guide_Number
 				, @Status      = StatusOrderId
 				, @IdCountry   = ReceiverCountryId
-				, @SenderIdTownship  = SenderIdTownship
+				, @SmartLockerTownshipId  = ReceiverIdTownship
 			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
 			WHERE Ticket_Number = @TicketNumber
 		END;
@@ -48,7 +48,7 @@ BEGIN
 			SELECT
 				  @Status		= StatusOrderId
 				, @IdCountry    = ReceiverCountryId
-				, @SenderIdTownship   = SenderIdTownship
+				, @SmartLockerTownshipId   = ReceiverIdTownship
 			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) 
             WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 		END;
@@ -201,7 +201,7 @@ BEGIN
 				, @TypeVehicle
 				, 0
 				, 'URGENTE Smart Locker'
-				, @SenderIdTownship
+				, @SmartLockerTownshipId -- Municipio del Smart Locker que solicita la recolección
 			);
 
 		SET @idSchedulePickUp = SCOPE_IDENTITY();
