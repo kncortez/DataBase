@@ -95,9 +95,6 @@ BEGIN
     DECLARE @GuideNumber INT = 0;
     DECLARE @OldPriceshipment DECIMAL(14, 2) = 0;
     DECLARE @UpdatedValue DECIMAL(14, 2) = 0;
-    -- Variable para validación de fecha de la promoción
-    DECLARE @DateCreatedAfter DATE = DATEADD(DAY, 1, @DateCreated);
-    DECLARE @ToDay DATE = GETDATE();  
     -- Datos del cliente para promo
     SELECT @CustomerId   = Cu.IdCustomer
          , @CustomerType = ISNULL(Cu.IdCustomerType, 0)
@@ -186,7 +183,6 @@ BEGIN
     ORDER BY [CPP].[PointPromoWeight] DESC;
 
     DECLARE @DateCreated2 DATE = CAST(@DateCreated AS DATE); 
-    DECLARE @DateCreatedAfter2 DATE = DATEADD(DAY, 1, @DateCreated2);
 
     IF (@Type = 1)
     BEGIN
@@ -198,7 +194,7 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer] CCTBC WITH (NOLOCK)
             WHERE [CCTBC].OrderNumber = @OrderNumber
                   AND DateCreated >= @DateCreated2
-                  AND DateCreated < @DateCreatedAfter2;
+                  AND DateCreated < DATEADD(DAY, 1, @DateCreated2);
 
             IF (@IdTransaction = 0)
             BEGIN
@@ -273,7 +269,8 @@ BEGIN
                       AND OrderNumber = @OrderNumber
                       AND StatusSend <> 1
                       AND DateCreated >= @DateCreated2
-                      AND DateCreated < @DateCreatedAfter2;
+                      AND DateCreated < DATEADD(DAY, 1, @DateCreated2);
+
 
             END;
 
@@ -329,7 +326,7 @@ BEGIN
               , ErrorProcedure
             )
             VALUES
-            (@ToDay, 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
+            (GETDATE(), 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
 
         END CATCH;
 
@@ -351,7 +348,7 @@ BEGIN
             UPDATE [DeliveryBackOffice].[dbo].[CreditCardTransactionByCustomer]
             SET ReasonCode = @ReasonCode
               , ReasonDescription = @ReasonDescription
-              , DateUpdated = @ToDay ---@DateUpdated,
+              , DateUpdated = GETDATE() ---@DateUpdated,
               , TokenUpdated = @TokenUpdated
               , ECIIndicator = @ECIIndicator
               , Authenticationresult = @Authenticationresult
@@ -451,26 +448,11 @@ BEGIN
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage = 'MEMBERSHIP'
                           AND DateCreated >= @DateCreated2
-                          AND DateCreated < @DateCreatedAfter2
+                          AND DateCreated < DATEADD(DAY, 1, @DateCreated2)
                 )
                    )
                 BEGIN
-                    -- Guard de idempotencia: verificar que no exista ya una Membresía activa
-                    -- para esta cuenta y orden. Previene doble inserción cuando este SP
-                    -- y SPHW_UpdateCustomerTransactionPWO se ejecutan en el mismo flujo 3DS.
-                    IF EXISTS (
-                        SELECT TOP 1 1
-                        FROM [DeliveryBackOffice].[dbo].[Membership] WITH (NOLOCK)
-                        WHERE AccountId = @IdAcount
-                          AND RowStatus = 1
-                          AND TaxIdNumber = @TaxId
-                          AND CAST(DateCreated AS DATE) = @DateCreated2
-                    )
-                    BEGIN
-                        -- SKIP INSERT MEMBRESIA - ya existe para esta cuenta y orden;
-                        GOTO SkipMembership;
-                    END
-                        -- INSERT MEMBRESIA
+                    PRINT 'INSERT MEMBRESIA';
                     DECLARE @AuxNewMembership AS TABLE
                     (
                         IdNewMembership INT
@@ -534,7 +516,7 @@ BEGIN
                          , CM.MembershipFixedValue
                          , CM.MembershipMaxServiceFixedValue
                          , 0
-                         , DATEADD(MONTH, CM.MembershipValidity, @ToDay)
+                         , DATEADD(MONTH, CM.MembershipValidity, GETDATE())
                          , CASE
                                WHEN EXISTS
                 (
@@ -615,7 +597,7 @@ BEGIN
                     WHERE RTP.OrderNumber = @OrderNumber
                           AND RTP.TypeSalePackage = 'MEMBERSHIP'
                           AND RTP.DateCreated >= @DateCreated2
-                          AND RTP.DateCreated < @DateCreatedAfter2
+                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated2)
                     ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                     DECLARE @RandomLettersM CHAR(1);
@@ -688,7 +670,7 @@ BEGIN
                             CROSS JOIN @AuxNewMembership                                                 ANM
                         WHERE RT.OrderNumber = @OrderNumber
                         AND RT.DateCreated >= @DateCreated
-                        AND RT.DateCreated < @DateCreatedAfter
+                        AND RT.DateCreated < DATEADD(DAY, 1, @DateCreated)
                         ORDER BY RT.IdRegistrationofTransactionProcessStates DESC;
 
                         ---- Log de pago de membresia
@@ -744,7 +726,6 @@ BEGIN
                     END;
                 END;
 
-                SkipMembership:
                 IF (EXISTS
                 (
                     SELECT TOP 1
@@ -753,22 +734,10 @@ BEGIN
                     WHERE OrderNumber = @OrderNumber
                           AND TypeSalePackage != 'MEMBERSHIP'
                           AND DateCreated >= @DateCreated2
-                        AND DateCreated < @DateCreatedAfter2
+                        AND DateCreated < DATEADD(DAY, 1, @DateCreated2)
                 )
                    )
                 BEGIN
-                    -- Guard de idempotencia: verificar que no exista ya una Suscripción
-                    -- para esta cuenta y orden. Previene doble inserción en flujo 3DS.
-                    IF EXISTS (
-                        SELECT TOP 1 1
-                        FROM [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog] WITH (NOLOCK)
-                        WHERE [Authorization] = @OrderNumber
-                          AND RowStatus = 1
-                    )
-                    BEGIN
-                        -- SKIP INSERT SUSCRIPCION - ya existe log de pago para esta orden
-                        GOTO SkipSubscription;
-                    END
 
                     DECLARE @AuxNewSubscriptions AS TABLE
                     (
@@ -850,7 +819,8 @@ BEGIN
                           AND ac.AccRowStatus = 1
                 )          THEN
                                    1
-                               WHEN
+                               WHEN @AccountId IS NOT NULL
+                                    AND
                                     (
                                         SELECT ISNULL(res.UstStatus, 'N/A')
                                         FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -899,7 +869,7 @@ BEGIN
                     WHERE RTP.OrderNumber = @OrderNumber
                           AND RTP.TypeSalePackage != 'MEMBERSHIP'
                           AND RTP.DateCreated >= @DateCreated2
-                          AND RTP.DateCreated < @DateCreatedAfter2
+                          AND RTP.DateCreated < DATEADD(DAY, 1, @DateCreated2)
                     ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
                     DECLARE @RandomLetterS CHAR(1);
@@ -997,7 +967,7 @@ BEGIN
                             ON ANS.IdNewSubscriptions = S.IdSubscription
                     WHERE RTS.OrderNumber = @OrderNumber
                     AND   RTS.DateCreated >= @DateCreated2
-                    AND   RTS.DateCreated < @DateCreatedAfter2
+                    AND   RTS.DateCreated < DATEADD(DAY, 1, @DateCreated2)
                     ORDER BY RTS.IdRegistrationofTransactionProcessStates DESC;
                     --- Insert tabla dbo.Cost
                     INSERT INTO [dbo].[Cost]
@@ -1018,7 +988,6 @@ BEGIN
                     (1, @OrderNumber, 2, @ServiceAmmount, GETDATE(), @ModulId, 1, @Token, GETDATE(), NULL, NULL);
                 END;
             END;
-            SkipSubscription:
             COMMIT TRANSACTION LogTransactionTypeTwo;
 
         END TRY
@@ -1094,7 +1063,7 @@ BEGIN
             FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH (NOLOCK)
             WHERE OrderNumber = @OrderNumber
                   AND DateCreated >= @DateCreated2
-                  AND DateCreated < @DateCreatedAfter2;
+                  AND DateCreated < DATEADD(DAY, 1, @DateCreated2);
 
 
             IF (@IdTransaction = 0)
@@ -1146,7 +1115,8 @@ BEGIN
                       AND OrderNumber = @OrderNumber
                       AND StatusSend <> 1
                       AND DateCreated >= @DateCreated2
-                      AND DateCreated < @DateCreatedAfter2;
+                      AND DateCreated < DATEADD(DAY, 1, @DateCreated2)
+
 
             END;
 
@@ -1204,7 +1174,7 @@ BEGIN
             ON [MSL].[MembershipId] = [M].[IdMembership]
     WHERE CCTBCD.OrderNumber = @OrderNumber;
 
-    IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR' AND SUBSTRING(@OrderNumber, 1, 2) != 'SP')
+    IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR')
     BEGIN
 
         IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
@@ -1290,11 +1260,21 @@ BEGIN
                 SELECT TOP 1
                        Co.IdCost
                 FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
-                WHERE Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
-                    AND Co.GuideNumber = AG.GuideNumber
-                    AND Co.RowStatus = 1
+                WHERE (
+                          (
+                              Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
+                              AND Co.GuideNumber = AG.GuideNumber
+                          )
+                          OR
+                          (
+                              Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie, 'FD'), AG.GuideNumber)
+                              AND Co.GuideSerie IS NULL
+                              AND Co.GuideNumber IS NULL
+                          )
+                      )
+                      AND Co.RowStatus = 1
                 ORDER BY Co.DateCreated DESC
-            )CoAux
+            )                    CoAux
             WHERE CoAux.IdCost IS NULL;
 
             UPDATE Co
@@ -1321,9 +1301,19 @@ BEGIN
                 SELECT TOP 1
                        Co.IdCost
                 FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
-                WHERE Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
-                  AND Co.GuideNumber = AG.GuideNumber
-                  AND Co.RowStatus = 1
+                WHERE (
+                          (
+                              Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
+                              AND Co.GuideNumber = AG.GuideNumber
+                          )
+                          OR
+                          (
+                              Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie, 'FD'), AG.GuideNumber)
+                              AND Co.GuideSerie IS NULL
+                              AND Co.GuideNumber IS NULL
+                          )
+                      )
+                      AND Co.RowStatus = 1
                 ORDER BY Co.DateCreated DESC
             )                    CoAux
                 INNER JOIN DeliveryBackOffice.dbo.Cost Co WITH (NOLOCK)
@@ -1362,6 +1352,7 @@ BEGIN
               , Voucher = @OrderNumber
               , TokenUpdated = @TokenUpdated
               , DateUpdated = GETDATE()
+              , IdTypeOfMoneyCollect = 2
             FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
                 INNER JOIN @CostUpdated                  CU
                     ON CD.IdCost = CU.IdCost;
@@ -1834,7 +1825,7 @@ BEGIN
                                                     FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
                                                     WHERE PC.RedeemedDate IS NULL
                                                           AND PC.PromoCouponSerie = @CouponSerie
-                                                          AND PC.FinalActiveDate >= @ToDay
+                                                          AND PC.FinalActiveDate >= GETDATE()
                                                           AND PC.RowStatus = 1
                                                 )
                                               , 0
@@ -1857,8 +1848,8 @@ BEGIN
                                                  , @OldPriceshipment
                                                  , (@OldPriceshipment - @UpdatedValue))
                           , FinalAmount = IIF(@UpdatedValue <= 0, 0, @UpdatedValue)
-                          , RedeemedDate = @ToDay
-                          , DateUpdated = @ToDay
+                          , RedeemedDate = GETDATE()
+                          , DateUpdated = GETDATE()
                           , TokenUpdated = @TokenCreated
                         WHERE PromoCouponSerie = @CouponSerie
                               AND RowStatus = 1;
@@ -1910,9 +1901,19 @@ BEGIN
                                   SELECT TOP 1
                                          Co.IdCost
                                   FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
-                                  WHERE  Co.GuideSerie = ISNULL(@GuideSerie, 'FD')
-                                     AND Co.GuideNumber = @GuideNumber
-                                     AND Co.RowStatus = 1
+                                  WHERE (
+                                            (
+                                                Co.GuideSerie = ISNULL(@GuideSerie, 'FD')
+                                                AND Co.GuideNumber = @GuideNumber
+                                            )
+                                            OR
+                                            (
+                                                Co.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                                                AND Co.GuideSerie IS NULL
+                                                AND Co.GuideNumber IS NULL
+                                            )
+                                        )
+                                        AND Co.RowStatus = 1
                                   ORDER BY Co.DateCreated DESC
                               )
                             , 0
@@ -2037,8 +2038,8 @@ BEGIN
                                 SELECT DopId
                                 FROM [DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do WITH (NOLOCK)
                                     INNER JOIN @TblDeliveryOrdersList                           tpo
-                                        ON do.GuideSerie = tpo.Guide_Serie
-                                           AND do.GuideNumber = tpo.Guide_Number
+                                        ON do.GuideNumber = tpo.Guide_Number
+                                           AND do.GuideSerie = tpo.Guide_Serie
                                            AND do.TypeServiceId = tpo.IdTypeService
                             );
 
@@ -2194,11 +2195,16 @@ BEGIN
         VALUES
         (GETDATE(), 'ERROR TC', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
 
-        SELECT 400  Code
-             , 'Failed - Error al procesar transacción' Description
-             , ''    coupSerie
-             , ''    coupDate
-             , ''    coupPromo;
+        SELECT 'Error al procesar transacción'       AS message
+             , 'FALSE'                               blnResult
+             , CAST(-1 AS VARCHAR(5))                IdResult
+             , CAST(500 AS VARCHAR(5))               StatusResult
+             , CAST(ERROR_NUMBER() AS VARCHAR)       AS ErrorNumber
+             , CAST(ERROR_SEVERITY() AS VARCHAR)     AS ErrorSeverity
+             , CAST(ERROR_STATE() AS VARCHAR)        AS ErrorState
+             , CAST(ERROR_PROCEDURE() AS VARCHAR)    AS ErrorProcedure
+             , CAST(ERROR_LINE() AS VARCHAR)         AS ErrorLine
+             , CAST(ERROR_MESSAGE() AS VARCHAR(MAX)) AS ResultMessage;
 
     END CATCH;
 
