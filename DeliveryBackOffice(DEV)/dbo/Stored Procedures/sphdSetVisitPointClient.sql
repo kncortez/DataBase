@@ -1,22 +1,16 @@
-﻿-- =============================================
--- Author:		<Edwin Ramirez>
--- Create date: <2021-06-04>
--- Description:	<creación o modificación de valores>
--- =============================================
--- =============================================
--- Author:		<Edelman>
--- Create date: <2023-03-31>
--- Description:	<agragar campos para configuración de tiempo de facturación y volumen de facturación>
--- =============================================
--- =============================================
--- Modified:	<Brandon Pedroza>
--- Update date: <2025-08-14>
--- Description:	<Guias Rapidas - Se guarda nuevo campo RestrictionByArticle, indica si restringue uso a tarifario por articulo>
--- =============================================
--- Modified:	<Bilkar Morataya>
--- Update date: <2025-12-26>
--- Description:	<Parser - Se guarda combinación de posibles tipos de guías a crear por un VisitPoint>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sphdSetVisitPointClient]
+   Propósito: creación o modificación de valores
+   Autor:     Edwin Ramirez
+   Historia:  
+   Fecha:     2021-06-04
+
+=== CHANGELOG ============================
+2023-03-31 | Historia/épica: <>           | Autor: Edelman         | agragar campos para configuración de tiempo de facturación y volumen de facturación
+2025-08-14 | Historia/épica: <>           | Autor: Brandon Pedroza | Guias Rapidas - Se guarda nuevo campo RestrictionByArticle, indica si restringue uso a tarifario por articulo
+2025-12-26 | Historia/épica: <>           | Autor: Bilkar Morataya | Parser - Se guarda combinación de posibles tipos de guías a crear por un VisitPoint
+2026-05-19 | Historia/épica: FDAPI-6135   | Autor: Mario Herrarte  | Declaración de punto de visita como punto de devolución.
+=========================================== */
 CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     -- Add the parameters for the stored procedure here
     @IdVisitPoint AS INT,
@@ -63,7 +57,8 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
 	@CatBillingVolumeId INT = 0,
 	@BillingCut_offDate AS DATE=NULL,
 	@RestrictionByArticle AS BIT = 'FALSE',
-	@ParserGuideTypes AS NVARCHAR(500) = NULL
+	@ParserGuideTypes AS NVARCHAR(500) = NULL,
+    @isReturnWarehouse AS INT
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -87,6 +82,12 @@ BEGIN
         BEGIN TRY
 				PRINT 'Begin Transaction'
 				PRINT 'Begin Try'
+
+            IF(@isReturnWarehouse = 1)
+            BEGIN
+	            UPDATE VisitPointClient SET isReturnWarehouse = 0 WHERE CustomerID = @CustomerID AND isReturnWarehouse = 1;
+            END
+
 		    IF (@Option = 1)
             BEGIN
                 PRINT 'Insert visitpoint @Option 1'
@@ -132,7 +133,8 @@ BEGIN
 						CatBusinessSegmentId,
 						AllowScheduledPickups,
 						RestrictionByArticle,
-						ParserGuideTypes
+						ParserGuideTypes,
+                        isReturnWarehouse
                     )
                     VALUES
                     (   @CodeOfReference,        -- CodeOfReference - int
@@ -166,7 +168,8 @@ BEGIN
 						@CatBusinessSegmentId,
 						ISNULL(@AllowScheduledPickups, 1),
 						@RestrictionByArticle,
-					    ISNULL(NULLIF(@ParserGuideTypes, ''), 'Crédito')
+					    ISNULL(NULLIF(@ParserGuideTypes, ''), 'Crédito'),
+                        @isReturnWarehouse
                         )
 					DECLARE @IDVP AS INT = -1
                     SET @IDVP = SCOPE_IDENTITY()
@@ -415,7 +418,8 @@ BEGIN
 						[CatBusinessSegmentId] = @CatBusinessSegmentId,
 						[AllowScheduledPickups] = @AllowScheduledPickups,
 						[RestrictionByArticle] = @RestrictionByArticle,
-    					[ParserGuideTypes] = @ParserGuideTypes
+    					[ParserGuideTypes] = @ParserGuideTypes,
+                        [isReturnWarehouse] = @isReturnWarehouse
                     WHERE [CodeOfReference] = @IdVisitPoint;
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 1 Affected VisitPointClient Updated - @IdVisitPoint'

@@ -1,25 +1,17 @@
-﻿-- =============================================
--- Author:		<Edwin,,Ramirez>
--- Create date: <2021-05-13>
--- Description:	<Get VisitPoints Clients from Hermes by ID>
--- =============================================
--- =============================================
--- Author:		<Oscar,,Rodriguez>
--- Update date: <2024-05-26>
--- Description:	<Add Value isCOD from Customer Table for VisitPoints in Hermes>
--- =============================================
--- Modified:	<Brandon, Pedroza>
--- Update date: <2024-07-11>
--- Description:	<Default value IsCOD 0>
--- =============================================
--- Modified:	<Brandon Pedroza>
--- Update date: <2025-08-14>
--- Description:	<Guias Rapidas - Se obtiene campo RestrictionByArticle, indica si restringue uso a tarifario por articulo>
--- =============================================
--- Modified:	<Bilkar Morataya>
--- Update date: <2025-12-26>
--- Description:	<Parser - obtiene los tipo de guías que se pueden crear para el visitpoint electo>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sphd_GetVisitPointById]
+   Propósito: Get VisitPoints Clients from Hermes by ID
+   Autor:     Edwin Ramirez
+   Historia:  <>
+   Fecha:     2021-05-13
+
+=== CHANGELOG ============================
+2024-05-26 | Historia/épica: <>           | Autor: Oscar Rodriguez | Add Value isCOD from Customer Table for VisitPoints in Hermes
+2024-07-11 | Historia/épica: <>           | Autor: Brandon Pedroza | Default value IsCOD 0
+2025-08-14 | Historia/épica: <>           | Autor: Brandon Pedroza | Guias Rapidas - Se obtiene campo RestrictionByArticle, indica si restringue uso a tarifario por articulo
+2025-12-26 | Historia/épica: <>           | Autor: Bilkar Morataya | Parser - obtiene los tipo de guías que se pueden crear para el visitpoint electo
+2026-05-19 | Historia/épica: FDAPI-6135   | Autor: Mario Herrarte  | Declaración de punto de visita como punto de devolución.
+=========================================== */
 CREATE PROCEDURE [dbo].[sphd_GetVisitPointById]
     -- Add the parameters for the stored procedure here
     @IdVisitPoint AS INT = -1
@@ -77,7 +69,8 @@ BEGIN
 			vcf.[BillingCut_offDate] AS  BillingCut_offDate,
 			ISNULL(cs.IsCOD, 0) AS IsCOD,
 			ISNULL(vpc.RestrictionByArticle,0) AS RestrictionByArticle,
-			vpc.ParserGuideTypes as ParserGuideTypes 
+			vpc.ParserGuideTypes as ParserGuideTypes,
+            vpc.isReturnWarehouse
     FROM DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
 		INNER JOIN dbo.Customer cs WITH(NOLOCK)
 			ON vpc.CustomerID = cs.IdCustomer
