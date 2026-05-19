@@ -136,6 +136,54 @@ BEGIN
         WHERE TransactionDate >= @FechaInicio
           AND TransactionDate <  @FechaFinExclusiva
           AND TransactionType = 'C'
+    ),
+    DatosPODUnico AS
+    (
+        SELECT
+            [Guía],
+            [Monto cobrado en transferencia],
+            [Ruta],
+            [Piloto],
+            [Hub],
+            [Producto cobrado en transferencia],
+            [ID Transferencia POD],
+            [Fecha hora cobro en POD],
+            [FechaOrdenamiento]
+        FROM
+        (
+            SELECT
+                POD.*,
+                rnPOD = ROW_NUMBER() OVER
+                (
+                    PARTITION BY LTRIM(RTRIM(POD.[ID Transferencia POD]))
+                    ORDER BY POD.[FechaOrdenamiento] DESC
+                )
+            FROM DatosPOD POD
+        ) X
+        WHERE X.[ID Transferencia POD] IS NULL
+           OR X.rnPOD = 1
+    ),
+    DatosECUnico AS
+    (
+        SELECT
+            [ID transferencia EC],
+            [Fecha Hora recepción en EC],
+            [No. Cuenta],
+            [Descripción de transferencia EC],
+            [FechaOrdenamiento]
+        FROM
+        (
+            SELECT
+                EC.*,
+                rnEC = ROW_NUMBER() OVER
+                (
+                    PARTITION BY LTRIM(RTRIM(EC.[ID transferencia EC]))
+                    ORDER BY EC.[FechaOrdenamiento] DESC
+                )
+            FROM DatosEC EC
+        ) X
+        WHERE X.[ID transferencia EC] IS NULL
+           OR X.rnEC = 1
     )
 
     SELECT
@@ -170,8 +218,8 @@ BEGIN
 
         EC.[Descripción de transferencia EC]
 
-    FROM DatosPOD POD
-    FULL OUTER JOIN DatosEC EC
+    FROM DatosPODUnico POD
+    FULL OUTER JOIN DatosECUnico EC
         ON LTRIM(RTRIM(POD.[ID Transferencia POD])) = LTRIM(RTRIM(EC.[ID transferencia EC]))
 
     ORDER BY
