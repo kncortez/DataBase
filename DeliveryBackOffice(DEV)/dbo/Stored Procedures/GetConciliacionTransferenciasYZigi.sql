@@ -1,4 +1,4 @@
-    /* =============================================
+/* =============================================
     SP:          [dbo].[GetConciliacionTransferenciasYZigi]
     Propósito:   Obtener el reporte de conciliación de transferencias bancarias y ZiGi entre cobros POD y movimientos EC.
     Autor:       Marcelo del Aguila
@@ -7,8 +7,8 @@
 
     === CHANGELOG ===================================
     2026-04-05 | Historia/épica: FDAPI-5972 | Autor: Marcelo del Aguila |
-
     ============================================== */
+
 CREATE PROCEDURE dbo.GetConciliacionTransferenciasYZigi
 (
     @FechaInicio DATE,
@@ -80,19 +80,9 @@ BEGIN
 
             CAST(vd.Voucher AS VARCHAR(100)) AS [ID Transferencia POD],
 
-            CAST(NULL AS VARCHAR(100)) AS [ID transferencia EC],
-
             CONVERT(VARCHAR(16), vd.DateCreated, 103) + ' ' 
             + LEFT(CONVERT(VARCHAR(8), vd.DateCreated, 108), 5) 
             AS [Fecha hora cobro en POD],
-
-            CAST(NULL AS DATE) AS [Fecha Hora recepción en EC],
-
-            CAST('No conciliado' AS VARCHAR(50)) AS [Estado de Conciliación],
-
-            CAST(NULL AS VARCHAR(100)) AS [No. Cuenta],
-
-            CAST(NULL AS VARCHAR(MAX)) AS [Descripción de transferencia EC],
 
             vd.DateCreated AS [FechaOrdenamiento]
 
@@ -111,9 +101,9 @@ BEGIN
                 s.ID
             FROM dbo.DeliveryOrderBySettlement s WITH (NOLOCK)
             WHERE s.User_Dispatched = o.TokenUpdated
-            AND s.Date_Dispatched >= @FechaInicio
-            AND s.Date_Dispatched <  @FechaFinExclusiva
-            AND CAST(s.Date_Dispatched AS DATE) = CAST(o.Dispatched_Date AS DATE)
+              AND s.Date_Dispatched >= @FechaInicio
+              AND s.Date_Dispatched <  @FechaFinExclusiva
+              AND CAST(s.Date_Dispatched AS DATE) = CAST(o.Dispatched_Date AS DATE)
             ORDER BY s.Date_Dispatched DESC, s.ID DESC
         ) sbs
         WHERE vd.VoucherPath IS NOT NULL
@@ -122,27 +112,9 @@ BEGIN
     DatosEC AS
     (
         SELECT
-            CAST(NULL AS VARCHAR(30)) AS [Guía],
-
-            CAST(NULL AS VARCHAR(50)) AS [Monto cobrado en transferencia],
-
-            CAST(NULL AS VARCHAR(100)) AS [Ruta],
-
-            CAST(NULL AS VARCHAR(200)) AS [Piloto],
-
-            CAST(NULL AS VARCHAR(200)) AS [Hub],
-
-            CAST(NULL AS VARCHAR(50)) AS [Producto cobrado en transferencia],
-
-            CAST(NULL AS VARCHAR(100)) AS [ID Transferencia POD],
-
             CAST(TransactionReference AS VARCHAR(100)) AS [ID transferencia EC],
 
-            CAST(NULL AS VARCHAR(30)) AS [Fecha hora cobro en POD],
-
             TransactionDate AS [Fecha Hora recepción en EC],
-
-            CAST('No conciliado' AS VARCHAR(50)) AS [Estado de Conciliación],
 
             Account AS [No. Cuenta],
 
@@ -167,59 +139,43 @@ BEGIN
     )
 
     SELECT
-        [Guía],
-        [Monto cobrado en transferencia],
-        [Ruta],
-        [Piloto],
-        [Hub],
-        [Producto cobrado en transferencia],
-        [ID Transferencia POD],
-        [ID transferencia EC],
-        [Fecha hora cobro en POD],
-        [Fecha Hora recepción en EC],
-        [Estado de Conciliación],
-        [No. Cuenta],
-        [Descripción de transferencia EC]
-    FROM
-    (
-        SELECT
-            [Guía],
-            [Monto cobrado en transferencia],
-            [Ruta],
-            [Piloto],
-            [Hub],
-            [Producto cobrado en transferencia],
-            [ID Transferencia POD],
-            [ID transferencia EC],
-            [Fecha hora cobro en POD],
-            [Fecha Hora recepción en EC],
-            [Estado de Conciliación],
-            [No. Cuenta],
-            [Descripción de transferencia EC],
-            [FechaOrdenamiento]
-        FROM DatosPOD
+        POD.[Guía],
 
-        UNION ALL
+        POD.[Monto cobrado en transferencia],
 
-        SELECT
-            [Guía],
-            [Monto cobrado en transferencia],
-            [Ruta],
-            [Piloto],
-            [Hub],
-            [Producto cobrado en transferencia],
-            [ID Transferencia POD],
-            [ID transferencia EC],
-            [Fecha hora cobro en POD],
-            [Fecha Hora recepción en EC],
-            [Estado de Conciliación],
-            [No. Cuenta],
-            [Descripción de transferencia EC],
-            [FechaOrdenamiento]
-        FROM DatosEC
-    ) Resultado
-    ORDER BY 
-        [FechaOrdenamiento] DESC;
+        POD.[Ruta],
+
+        POD.[Piloto],
+
+        POD.[Hub],
+
+        POD.[Producto cobrado en transferencia],
+
+        POD.[ID Transferencia POD],
+
+        EC.[ID transferencia EC],
+
+        POD.[Fecha hora cobro en POD],
+
+        EC.[Fecha Hora recepción en EC],
+
+        CASE
+            WHEN POD.[ID Transferencia POD] IS NOT NULL
+             AND EC.[ID transferencia EC] IS NOT NULL
+                THEN 'Conciliado'
+            ELSE 'No conciliado'
+        END AS [Estado de Conciliación],
+
+        EC.[No. Cuenta],
+
+        EC.[Descripción de transferencia EC]
+
+    FROM DatosPOD POD
+    FULL OUTER JOIN DatosEC EC
+        ON LTRIM(RTRIM(POD.[ID Transferencia POD])) = LTRIM(RTRIM(EC.[ID transferencia EC]))
+
+    ORDER BY
+        COALESCE(POD.[FechaOrdenamiento], EC.[FechaOrdenamiento]) DESC;
 
 END;
 GO
