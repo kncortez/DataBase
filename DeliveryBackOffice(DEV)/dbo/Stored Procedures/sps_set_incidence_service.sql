@@ -11,7 +11,7 @@
    ============================================
 */
 
-ALTER PROCEDURE [dbo].[sps_set_incidence_service]
+CREATE PROCEDURE [dbo].[sps_set_incidence_service]
     @Token VARCHAR(200),
     @IdIssue INT,
     @Comment VARCHAR(500),
@@ -24,7 +24,7 @@ BEGIN
     IF NOT EXISTS
     (
         SELECT 1
-        FROM DeliveryBackOffice.dbo.TokenLog
+                FROM DeliveryBackOffice.dbo.TokenLog WITH(NOLOCK)
         WHERE TknRowStatus = 1
           AND TknIdToken = @Token
     )
@@ -51,20 +51,10 @@ BEGIN
     -- control de inserciones para transacción
     DECLARE @RInserted INT = 0;
 
-    -- estatus
-    DECLARE @IdEstatus AS INT;
-
-    SET @IdEstatus =
-    (
-        SELECT StatusOrderId
-        FROM [dbo].[StatusOrder]
-        WHERE OrderDescription = 'Incidencia en ruta'
-    );
-
     DECLARE @IdSystem INT =
     (
         SELECT SysIdSystem
-        FROM dbo.CatSystem
+        FROM DeliveryBackOffice.dbo.CatSystem WITH(NOLOCK)
         WHERE SysNameSystem = 'FDExpressCenter'
     );
 
@@ -83,7 +73,8 @@ BEGIN
         (
             Guide_Serie NVARCHAR(2),
             Guide_Number INT,
-            IdConfirmationOfIncidence INT
+            IdConfirmationOfIncidence INT,
+            PRIMARY KEY (Guide_Serie, Guide_Number)
         );
 
         DECLARE @InsertedAttempts TABLE
@@ -91,7 +82,8 @@ BEGIN
             Guide_Serie NVARCHAR(2),
             Guide_Number INT,
             IdAttempt INT,
-            IdConfirmationOfIncidence INT
+            IdConfirmationOfIncidence INT,
+            PRIMARY KEY (Guide_Serie, Guide_Number)
         );
 
         ;WITH GuidesCTE AS
@@ -119,7 +111,7 @@ BEGIN
                 GW.Guide_Serie,
                 GW.Guide_Number
             FROM @GuidesWork GW
-            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
                 ON DO.Guide_Serie = GW.Guide_Serie
                AND DO.Guide_Number = GW.Guide_Number
         ) AS SOURCE
@@ -153,7 +145,7 @@ BEGIN
                 1,         -- CatTypeConfirmationOfIncidenceId - int
                 0,         -- IsValid - bit
                 0,         -- IsConfirmed - bit
-                @IdEstatus,-- StatusOrderId - tinyint
+                45,        -- StatusOrderId - tinyint (45: Incidencia en ruta)
                 GETDATE(), -- DateStatusOrder - datetime
                 1,         -- RowStatus - bit
                 @Token,    -- TokenCreated - nvarchar(50)
@@ -188,7 +180,7 @@ BEGIN
                 DO.Guide_Serie,
                 DO.Guide_Number,
                 IC.IdConfirmationOfIncidence
-            FROM DeliveryBackOffice.dbo.DeliveryOrder DO
+            FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
             INNER JOIN @InsertedConfirmation IC
                 ON IC.Guide_Serie = DO.Guide_Serie
                AND IC.Guide_Number = DO.Guide_Number
@@ -249,7 +241,7 @@ BEGIN
         SELECT
             DO.Guide_Serie,
             DO.Guide_Number,
-            @IdEstatus,
+            45,   --(45: Incidencia en ruta)
             @Token,
             GETDATE(),
             GETDATE(),
@@ -257,7 +249,7 @@ BEGIN
             NULL,
             IA.IdAttempt,
             @IdSystem
-        FROM DeliveryBackOffice.dbo.DeliveryOrder DO
+        FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
         INNER JOIN @InsertedAttempts IA
             ON IA.Guide_Serie = DO.Guide_Serie
            AND IA.Guide_Number = DO.Guide_Number;
@@ -266,7 +258,7 @@ BEGIN
 
         -- Actualizar DeliveryOrder de esa guía.
         UPDATE DO
-        SET DO.StatusOrderId = @IdEstatus
+        SET DO.StatusOrderId = 45 --(45: Incidencia en ruta)
         FROM DeliveryBackOffice.dbo.DeliveryOrder DO
         INNER JOIN @GuidesWork GW
             ON GW.Guide_Serie = DO.Guide_Serie
