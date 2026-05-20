@@ -413,6 +413,7 @@
     <Build Include="dbo\Tables\DeliveryOrderAlertDetail.sql" />
     <Build Include="dbo\Tables\DeliveryOrderAlert.sql" />
     <Build Include="dbo\Tables\DeliveryOrder.sql" />
+    <Build Include="dbo\Tables\DeliveryManifestAssistantAssignment.sql" />
     <Build Include="dbo\Tables\DeliveryLinkStatus.sql" />
     <Build Include="dbo\Tables\DeliveryLinkProducts.sql" />
     <Build Include="dbo\Tables\DeliveryLink.sql" />
@@ -1823,6 +1824,7 @@
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTicketNumber.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTNConfirmation.sql" />
     <Build Include="dbo\Stored Procedures\SaveServiceIncident.sql" />
+    <Build Include="dbo\Stored Procedures\SaveDeliveryManifestAssistant.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
