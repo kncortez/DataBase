@@ -94,6 +94,45 @@ BEGIN
        OR IdTypeOfMoneyCollect IN (11)
 
   UNION ALL
+
+-- BLOQUE: Link de pago (ID 12)
+  SELECT
+        CASE 
+            WHEN IdTypeOfMoneyCOD = 12 THEN 'Forza Pay'
+            WHEN IdTypeOfMoneyCollect = 12 THEN 'Forza Pay'
+        END AS PaymentType,
+
+        Voucher + ProductNumber AS Transaccion,
+
+        CASE 
+            WHEN IdTypeOfMoneyCOD = 12 THEN Voucher
+            WHEN IdTypeOfMoneyCollect = 12 THEN Voucher
+            ELSE ''
+        END AS Voucher,
+
+        CASE
+            WHEN IdTypeOfMoneyCOD IN (12) 
+                 AND IdTypeOfMoneyCollect IN (12)
+                THEN ISNULL(PriceShippment,0) + ISNULL(Collect_OnDelivery,0)
+            WHEN IdTypeOfMoneyCOD IN (12) 
+                 AND IdTypeOfMoneyCollect IS NULL
+                THEN ISNULL(Collect_OnDelivery,0)
+            WHEN IdTypeOfMoneyCollect IN (12) 
+                 AND IdTypeOfMoneyCOD IS NULL
+                THEN ISNULL(PriceShippment,0) 
+            WHEN IdTypeOfMoneyCOD IN (12) 
+                 AND IdTypeOfMoneyCollect <> 12
+                THEN ISNULL(Collect_OnDelivery,0)
+            WHEN IdTypeOfMoneyCOD <> 12 
+                 AND IdTypeOfMoneyCollect = 12
+                THEN ISNULL(Collect_OnDelivery,0)
+        END AS TotalAmount
+
+    FROM BaseData
+    WHERE IdTypeOfMoneyCOD IN (12)
+       OR IdTypeOfMoneyCollect IN (12)
+
+  UNION ALL
     -- BLOQUE 1: COD ( Zigi)
     SELECT
         CASE 

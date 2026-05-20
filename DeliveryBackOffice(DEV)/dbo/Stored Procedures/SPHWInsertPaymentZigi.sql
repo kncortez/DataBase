@@ -11,8 +11,6 @@
 -- Create date: <2025-10-15>
 -- Description:	<ZIGI - Se agrega el campo GeneratedMethod para identificar el origen de la creación del link>
 -- =============================================
-
-
 CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @GuideNumber        INT,
     @GuideSerie         NVARCHAR(2),
@@ -27,7 +25,8 @@ CREATE PROCEDURE [dbo].[SPHWInsertPaymentZigi]
     @Token              NVARCHAR(50),
     @PhoneNumber        NVARCHAR(20) = NULL,
     @IsGroup            BIT = 0,
-    @GeneratedMethod    NVARCHAR(100) = 'Identificación pendiente'
+    @GeneratedMethod    NVARCHAR(100) = 'Identificación pendiente',
+    @PaymentGateway     NVARCHAR(50) = 'Zigi'
 AS
 BEGIN
     BEGIN TRY
@@ -73,7 +72,8 @@ BEGIN
             TokenCreated,
             PhoneNumber,
             IsGroup,
-            GeneratedMethod
+            GeneratedMethod,
+            PaymentGateway
         )
         VALUES
         (
@@ -91,7 +91,8 @@ BEGIN
             @Token,
             @PhoneNumber,
             @IsGroup,
-            @GeneratedMethod
+            @GeneratedMethod,
+            @PaymentGateway
         );
 
         -- Obtenemos el ID del registro recién insertado
