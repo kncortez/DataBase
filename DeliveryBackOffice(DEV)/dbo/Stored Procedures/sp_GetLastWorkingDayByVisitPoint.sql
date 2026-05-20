@@ -20,12 +20,12 @@ BEGIN
     (
         SELECT DISTINCT
             RUA.RuaIdAccount AS AccountId
-        FROM [dbo].[VisitPointClient] VPC
-        INNER JOIN [dbo].[VisitPointByUser] VPU
+        FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC
+        INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointByUser] VPU
             ON VPU.IdVisitPointClient = VPC.IdVisitPointClient
-        INNER JOIN [dbo].[RegisterUser] RU
+        INNER JOIN [DeliveryBackOffice].[dbo].[RegisterUser] RU
             ON RU.UsrIdUser = VPU.RegisterUserID
-        INNER JOIN [dbo].[RolByUserByAccount] RUA
+        INNER JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RUA
             ON RUA.RuaIdUser = RU.UsrIdUser
             AND RUA.RuaRowStatus = 1
         WHERE VPC.CodeOfReference = @visitPoint
@@ -37,14 +37,14 @@ BEGIN
             O.AccountId,
             MIN(CAST(DOPT.DateCreated AS DATE)) AS Fecha
         FROM Operadores O
-        INNER JOIN [dbo].[DeliveryOrderPaymentTransaction] DOPT
+        INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentTransaction] DOPT
             ON DOPT.AccountId = O.AccountId
         WHERE DOPT.VisitPoint = @visitPoint
           AND DOPT.ShipmentCompleted = 1
           AND NOT EXISTS
           (
               SELECT 1
-              FROM [dbo].[AccountingClosuresDetail] ACD
+              FROM [DeliveryBackOffice].[dbo].[AccountingClosuresDetail] ACD
               WHERE ACD.DopId = DOPT.DopId
                 AND ACD.RowStatus = 1
           )
@@ -60,8 +60,8 @@ BEGIN
         WHERE EXISTS
         (
             SELECT 1
-            FROM [dbo].[DeliveryOrderPaymentTransaction] DOPT
-            INNER JOIN [dbo].[DeliveryOrder] DOR
+            FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentTransaction] DOPT
+            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR
                 ON DOR.Guide_Serie = DOPT.GuideSerie
                 AND DOR.Guide_Number = DOPT.GuideNumber
             WHERE DOPT.AccountId = F.AccountId
@@ -77,7 +77,7 @@ BEGIN
               AND NOT EXISTS
               (
                   SELECT 1
-                  FROM [dbo].[AccountingClosuresDetail] ACD
+                  FROM [DeliveryBackOffice].[dbo].[AccountingClosuresDetail] ACD
                   WHERE ACD.DopId = DOPT.DopId
                     AND ACD.RowStatus = 1
               )
