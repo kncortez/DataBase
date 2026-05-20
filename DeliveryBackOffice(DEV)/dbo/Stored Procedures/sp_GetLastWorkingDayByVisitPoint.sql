@@ -1,0 +1,89 @@
+
+/* =================================================
+   SP:        [dbo].[GetLastWorkingDayByVisitPoint]
+   Propósito: Obtiene la fecha más antigua con actividad pendiente de cierre.
+   Autor:     Keila Cortéz
+   Historia:  FDAPI-5784
+   Fecha:     2026-05-19
+============================================
+=== CHANGELOG ================================
+2026-05-19 | Historia/épica: FDAPI-5784 | Autor: Keila Cortéz |
+=========================================== */
+
+CREATE PROCEDURE [dbo].[sp_GetLastWorkingDayByVisitPoint]
+    @visitPoint INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    WITH Operadores AS
+    (
+        SELECT DISTINCT
+            RUA.RuaIdAccount AS AccountId
+        FROM [dbo].[VisitPointClient] VPC
+        INNER JOIN [dbo].[VisitPointByUser] VPU
+            ON VPU.IdVisitPointClient = VPC.IdVisitPointClient
+        INNER JOIN [dbo].[RegisterUser] RU
+            ON RU.UsrIdUser = VPU.RegisterUserID
+        INNER JOIN [dbo].[RolByUserByAccount] RUA
+            ON RUA.RuaIdUser = RU.UsrIdUser
+            AND RUA.RuaRowStatus = 1
+        WHERE VPC.CodeOfReference = @visitPoint
+          AND VPU.RowStatus = 1
+    ),
+    FechasPorOperador AS
+    (
+        SELECT
+            O.AccountId,
+            MIN(CAST(DOPT.DateCreated AS DATE)) AS Fecha
+        FROM Operadores O
+        INNER JOIN [dbo].[DeliveryOrderPaymentTransaction] DOPT
+            ON DOPT.AccountId = O.AccountId
+        WHERE DOPT.VisitPoint = @visitPoint
+          AND DOPT.ShipmentCompleted = 1
+          AND NOT EXISTS
+          (
+              SELECT 1
+              FROM [dbo].[AccountingClosuresDetail] ACD
+              WHERE ACD.DopId = DOPT.DopId
+                AND ACD.RowStatus = 1
+          )
+        GROUP BY
+            O.AccountId
+    ),
+    FechasValidas AS
+    (
+        SELECT
+            F.AccountId,
+            F.Fecha
+        FROM FechasPorOperador F
+        WHERE EXISTS
+        (
+            SELECT 1
+            FROM [dbo].[DeliveryOrderPaymentTransaction] DOPT
+            INNER JOIN [dbo].[DeliveryOrder] DOR
+                ON DOR.Guide_Serie = DOPT.GuideSerie
+                AND DOR.Guide_Number = DOPT.GuideNumber
+            WHERE DOPT.AccountId = F.AccountId
+              AND CAST(DOPT.DateCreated AS DATE) = F.Fecha
+              AND DOPT.VisitPoint = @visitPoint
+              AND DOPT.ShipmentCompleted = 1
+              AND DOR.StatusOrderId != 7
+              AND (
+                    ISNULL(DOPT.Amount, 0) > 0
+                    OR ISNULL(DOPT.CODAmountProcess, 0) > 0
+                  )
+              AND DOPT.TypeofInOutMoneyId != 8
+              AND NOT EXISTS
+              (
+                  SELECT 1
+                  FROM [dbo].[AccountingClosuresDetail] ACD
+                  WHERE ACD.DopId = DOPT.DopId
+                    AND ACD.RowStatus = 1
+              )
+        )
+    )
+    SELECT
+        MIN(Fecha) AS Fecha
+    FROM FechasValidas;
+END
