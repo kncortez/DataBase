@@ -1,0 +1,28 @@
+﻿
+/* =================================================
+   SP:        [dbo].[GetBillingInvoiceDetail]
+   Propósito: Recupera información detallada de la factura a certificar
+   Autor:     Azurdia, Cristian
+   Historia:  FDAPI-5807
+   Fecha:     2026-04-15
+
+=== CHANGELOG ============================
+22026-04-15 | Historia/épica: FDAPI-5807    | Autor: Azurdia, Cristian   |
+=========================================== */
+CREATE PROCEDURE [dbo].[GetBillingInvoiceDetail]
+    @IdInvoice INT
+AS
+BEGIN
+    -- SET NOCOUNT ON added to prevent extra result sets from
+
+    SELECT  id.SAPCode 
+           ,id.dti_Description [description]
+           ,id.dti_amount      [Price]
+           ,id.dti_Category    [Category]
+           ,1                  [SendToInvoice]
+           ,2               [TypeMoneyPayment]
+    FROM invoiceDetail id WITH (NOLOCK)
+    WHERE dti_fk_header = @IdInvoice;
+
+
+END
