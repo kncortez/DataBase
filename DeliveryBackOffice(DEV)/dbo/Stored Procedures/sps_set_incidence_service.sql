@@ -54,7 +54,7 @@ BEGIN
     DECLARE @IdSystem INT =
     (
         SELECT SysIdSystem
-        FROM DeliveryBackOffice.dbo.CatSystem WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.CatSystem
         WHERE SysNameSystem = 'FDExpressCenter'
     );
 
@@ -73,8 +73,7 @@ BEGIN
         (
             Guide_Serie NVARCHAR(2),
             Guide_Number INT,
-            IdConfirmationOfIncidence INT,
-            PRIMARY KEY (Guide_Serie, Guide_Number)
+            IdConfirmationOfIncidence INT
         );
 
         DECLARE @InsertedAttempts TABLE
@@ -82,8 +81,7 @@ BEGIN
             Guide_Serie NVARCHAR(2),
             Guide_Number INT,
             IdAttempt INT,
-            IdConfirmationOfIncidence INT,
-            PRIMARY KEY (Guide_Serie, Guide_Number)
+            IdConfirmationOfIncidence INT
         );
 
         ;WITH GuidesCTE AS
