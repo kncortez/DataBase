@@ -2104,6 +2104,7 @@
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_4.sql" />
     <Build Include="dbo\Stored Procedures\SupportLHroutes.sql" />
     <Build Include="dbo\Stored Procedures\GetDeliveryOrderPieces.sql" />
+    <Build Include="dbo\Stored Procedures\GetConciliacionTransferenciasYZigi.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_RegisterInventoryAutomaticExc.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetRackPositionPerStation.sql" />
   </ItemGroup>
