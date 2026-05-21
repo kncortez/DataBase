@@ -527,7 +527,7 @@ BEGIN
                                       WHERE
 											c.RowStatus = 1 AND
 											c.ServiceType = 'DELIVERY' AND 
-                                            ISNULL(c.CountryID, 'GT') = @IdCountry
+                                            c.CountryID = @IdCountry
                                       ORDER BY c.OrderId
                                       FOR XML PATH(''), TYPE
                                   ).value('.', 'varchar(max)'),
