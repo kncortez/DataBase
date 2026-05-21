@@ -11,6 +11,7 @@
 2025-12-12 | Historia/épica: FDAPI-4733  | Autor: Cristian Suazo  | 
 2026-01-29 | Historia/épica: FDAPI-4801  | Autor: Brandon Pedroza | Se obtiene campo indicaciones adicionales en manifiesto de recolecciones
 2026-01-29 | Historia/épica: FDAPI-5313  | Autor: Brandon Pedroza | Se obtiene campo nombre paquete en manifiesto de recolecciones
+2026-03-18 | Historia/épica: FDAPI-5697  | Autor: Brandon Pedroza | Se inactiva registro de inventario al hacer recoleccion
 
 =========================================== */
 
@@ -287,7 +288,21 @@ BEGIN
 								  Guide_Number
                                   
                               );
-
+                --desactivar inventario de piezas activas que hayan siendo escaneadas en recolecciones
+                  UPDATE WH
+                      SET WH.Active = 0,
+                      WH.UserUpdated = @Token,
+                      WH.DateUpdated = GETDATE()
+                  FROM DeliveryBackOffice.dbo.DeliveryOrder DO	WITH(NOLOCK)
+                  INNER JOIN DeliveryBackOffice.dbo.Warehouse WH WITH(NOLOCK)
+                      ON DO.Guide_Serie = WH.Guide_Serie
+                      AND DO.Guide_Number = WH.Guide_Number
+                  INNER JOIN #listGuides lg
+                      ON WH.Guide_Serie = lg.ItemSerie
+                      AND WH.Guide_Number = lg.ItemNumber
+                      AND WH.Guide_Piece = lg.ItemPiece
+                  WHERE WH.Active = 1
+                        AND DO.StatusOrderId = 10 -- En Inventario -> StatusOrder
                 ----------------------------------------------Inserta en la tabla DeliveryOrderPaymentDetail los datos de la tabla temporal ----------------------------------
                 INSERT INTO dbo.DeliveryOrderPaymentDetail
                 (
@@ -780,7 +795,7 @@ BEGIN
                     FROM [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
                     WHERE SPSD.ServiceManagementId = @transac
                           AND SPSD.RowStatus = 1
-                          AND CAST(SPSD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+                          AND CAST(SPSD.DateCreated AS DATE) = @ConvertDate
                           AND SPSD.SettlementDate IS NULL;
 
                 END;
@@ -1126,6 +1141,7 @@ BEGIN
             IF @@TRANCOUNT > 0
             BEGIN
                 DECLARE @BatchStatus INT = 0;
+                DECLARE @SubTypeServiceManagement INT = 0;
 
                 BEGIN TRY
 
@@ -1138,6 +1154,13 @@ BEGIN
                            FROM DeliveryBackOffice.dbo.CatServiceStatus WITH (NOLOCK)
                            WHERE IdServiceStatus = 3 -- 'Recolectado'
                        )
+
+                       Set @SubTypeServiceManagement = 
+					   (
+						   SELECT SubTypeServiceManagmentId
+                           FROM  DeliveryBackOffice.dbo.ServiceManagement WITH (NOLOCK)
+                           WHERE IdSchedulePickup = @IdPickup
+					   )
 
                        UPDATE DeliveryBackOffice.dbo.FinishPickUpHeader
                           SET ServiceStatusId = @BatchStatus,
@@ -1171,7 +1194,8 @@ BEGIN
                        SELECT 200 AS StatusCode,
                               'Se procesaron las guías con exito' AS [Message],
                               @Token AS Token,
-                              @PickUpEmail AS Email
+                              @PickUpEmail AS Email,
+                              @SubTypeServiceManagement AS SubTypeServiceManagement
 
 
                        -- CORREO A ENVIAR MANIFIESTO

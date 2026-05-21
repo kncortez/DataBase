@@ -1067,3 +1067,9 @@ CREATE NONCLUSTERED INDEX [IDX_IdCustomer_DateCreated_IncludedODBS]
     ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC)
     INCLUDE([Ticket_Number], [Shipping_Date], [Sender_ID], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Address], [Receiver_Alternant_SocialSecurity_ID], [Manifest_Serie], [Manifest_Number], [StatusOrderId], [Receiver_CUI], [NameOfReceiver]);
 
+USE [DeliveryBackOffice]
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_DateCreated_INCLUDE]
+ON [dbo].[DeliveryOrder] ([StatusOrderId],[DateCreated])
+INCLUDE ([IdCustomer])
+GO
