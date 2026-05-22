@@ -19,6 +19,8 @@ BEGIN
     DECLARE @LRP_ID AS INT;
     DECLARE @STATUS_LIQUID AS INT = 3; -- Liquidado <- CatLinehaulStatus 
     DECLARE @RModified               INT = 0;
+    DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+    DECLARE @Tomorrow DATE = DATEADD(DAY, 1, @Today);
 
     SET @LRP_ID =
     (
@@ -68,7 +70,7 @@ BEGIN
           AND [LRPCDP].[RowStatus] = 1
           AND [LRP].[IdLinehaulRoutePreparation] = @LRP_ID
           AND [LRPCD].[RowStatus] = 1
-          AND     [LRPCDP].CatLinehaulStatusId   = @STATUS_LIQUID;
+          AND [LRPCDP].CatLinehaulStatusId       = @STATUS_LIQUID;
 
     INSERT INTO #GuidesTmpRoute
     (
@@ -163,7 +165,7 @@ BEGIN
         rp.PiecesCold = rp.PiecesCold + agg.ColdCount,
         rp.TokenUpdated = @Token,
         rp.DateUpdated = GETDATE()
-    FROM [DeliveryBackOffice].[dbo].[RoutePreparation] rp
+    FROM [DeliveryBackOffice].[dbo].[RoutePreparation] rp WITH (NOLOCK)
         INNER JOIN @RoutePreparationMap rpm
             ON rp.IdRoutePreparation = rpm.IdRoutePreparation
         INNER JOIN
@@ -176,8 +178,8 @@ BEGIN
             WHERE NOT EXISTS
             (
                 SELECT 1
-                FROM RoutePreparationDetail RPD
-                    INNER JOIN RoutePreparation RP
+                FROM RoutePreparationDetail RPD WITH (NOLOCK)
+                    INNER JOIN RoutePreparation RP WITH (NOLOCK)
                         ON RPD.RoutePreparationId = RP.IdRoutePreparation
                 WHERE RP.CatRouteId = GTR.IdRoute
                       AND RPD.Guide_Serie = GTR.GuideSerie
@@ -333,7 +335,7 @@ BEGIN
     SET rpdp.RowStatus = 0,
         rpdp.TokenUpdated = @Token,
         rpdp.DateUpdated = GETDATE()
-    FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] rpdp
+    FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] rpdp WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] rpd WITH (NOLOCK)
             ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
         INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] rp WITH (NOLOCK)
@@ -361,7 +363,7 @@ BEGIN
     SET rpd.RowStatus = 0,
         rpd.TokenUpdated = @Token,
         rpd.DateUpdated = GETDATE()
-    FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] rpd
+    FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] rpd WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] rp WITH (NOLOCK)
             ON rpd.RoutePreparationId = rp.IdRoutePreparation
         INNER JOIN
@@ -421,17 +423,20 @@ BEGIN
         WHERE rpd.RoutePreparationId = rpm.IdRoutePreparation
               AND rpd.Guide_Serie = gl.GuideSerie
               AND rpd.Guide_Number = gl.GuideNumber
-              AND CAST(rpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+              AND rpd.DateCreated >= @Today
+              AND rpd.DateCreated < @Tomorrow
     );
 
     UPDATE dop
     SET dop.StatusOrderId = 3
-    FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH (NOLOCK)
         INNER JOIN #GuidesTmpRoute gl
             ON dop.GuideSerie = gl.GuideSerie
                AND dop.GuideNumber = gl.GuideNumber
                AND dop.NoPiece = gl.GuidePiece;
 
+    IF COALESCE(@@ROWCOUNT, 0) > 0
+            SET @RModified = @RModified + 1;
     -- =========================================================================
     -- Warehouse: desactivar posición de inventario
     -- Intento 1 → a nivel de pieza
@@ -440,7 +445,7 @@ BEGIN
     SET w.Active = 0,
         w.UserUpdated = @Token,
         w.DateUpdated = GETDATE()
-    FROM [DeliveryBackOffice].[dbo].[Warehouse] w
+    FROM [DeliveryBackOffice].[dbo].[Warehouse] w WITH (NOLOCK)
         INNER JOIN #GuidesTmpRoute gl
             ON w.Guide_Serie = gl.GuideSerie
                AND w.Guide_Number = gl.GuideNumber
@@ -707,7 +712,6 @@ BEGIN
             ON rpd.RoutePreparationId = rpm.IdRoutePreparation
                AND rpd.Guide_Serie = gl.GuideSerie
                AND rpd.Guide_Number = gl.GuideNumber
-               AND rpd.RowStatus = 1
         INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH (NOLOCK)
             ON do.Guide_Serie = gl.GuideSerie
                AND do.Guide_Number = gl.GuideNumber
@@ -742,7 +746,8 @@ BEGIN
             ON twn_r.IdTownship = RT.GuideReceiverIdTownShip
         LEFT JOIN dbo.Township twn_s WITH (NOLOCK)
             ON twn_s.IdTownship = RT.GuideSenderIdTownship
-    WHERE rpd.ServiceManagementDetailId IS NULL;
+    WHERE rpd.ServiceManagementDetailId IS NULL
+          AND rpd.RowStatus = 1;
 
     --- Fallback: resolver ProvinceId desde Township si viene NULL
     UPDATE gsd
@@ -763,15 +768,15 @@ BEGIN
                AND SMD.ServiceAddress = gsd.ServiceAddress
                AND SMD.ServicePhone = gsd.ServicePhone
                AND SMD.SubTypeServiceManagmentId = gsd.SubTypeId
-               AND SMD.RowStatus = 1
         INNER JOIN dbo.RoutePreparationDetail RPD WITH (NOLOCK)
             ON SMD.IdServiceManagementDetail = RPD.ServiceManagementDetailId
-               AND RPD.RowStatus = 1
         INNER JOIN dbo.RoutePreparation RP WITH (NOLOCK)
             ON RPD.RoutePreparationId = RP.IdRoutePreparation
                AND RP.CatRouteId = gsd.IdRoute
-               AND RP.DateRoutePreparation = @Date
-               AND RP.RowStatus = 1;
+    WHERE SMD.RowStatus = 1
+          AND RPD.RowStatus = 1
+          AND RP.DateRoutePreparation = @Date
+          AND RP.RowStatus = 1;
 
     --- Paso 2: crear cadena RouteAssigment → ServiceManagement → ServiceManagementDetail
     ---         solo para guías que no tienen SMD resuelto aún
@@ -794,8 +799,8 @@ BEGIN
         FROM @GuideServiceData gsd
             INNER JOIN dbo.RouteAssigment ra WITH (NOLOCK)
                 ON ra.IdRoute = gsd.IdRoute
-                   AND ra.DateOfRoute = @Date
         WHERE gsd.ResolvedSmdId IS NULL
+              AND ra.DateOfRoute = @Date
         GROUP BY gsd.IdRoute;
 
         INSERT INTO [dbo].[RouteAssigment]
@@ -1043,13 +1048,14 @@ BEGIN
                    AND sot.ServicePhone = gsd.ServicePhone
         WHERE gsd.ResolvedSmdId IS NULL;
     END;
-	        IF COALESCE(@@ROWCOUNT, 0) > 0
-            SET @RModified = @RModified + 1;
+
+    IF COALESCE(@@ROWCOUNT, 0) > 0
+       SET @RModified = @RModified + 1;
 
     --- Vincular SMD resuelto al detalle de la preparación
     UPDATE rpd
     SET rpd.ServiceManagementDetailId = gsd.ResolvedSmdId
-    FROM [dbo].[RoutePreparationDetail] rpd
+    FROM [dbo].[RoutePreparationDetail] rpd WITH (NOLOCK)
         INNER JOIN @GuideServiceData gsd
             ON gsd.IdRPDetail = rpd.IdRoutePreparationDetail
     WHERE gsd.ResolvedSmdId IS NOT NULL;
@@ -1060,7 +1066,7 @@ BEGIN
         smd.ServiceExtraAmount = IIF(agg.IsReturn = 1, 0, smd.ServiceExtraAmount + agg.TotalCOD),
         smd.TokenUpdated = @Token,
         smd.DateUpdated = GETDATE()
-    FROM dbo.ServiceManagementDetail smd
+    FROM dbo.ServiceManagementDetail smd WITH (NOLOCK)
         INNER JOIN
         (
             SELECT ResolvedSmdId,
