@@ -1,20 +1,17 @@
 /* =================================================
-   SP:        [dbo].[SetValidPickUpPiece]
-   Propósito: Se validan las piezas que se van a procesar para la nueva APP de escaneo 
-   Autor:     Cristian Suazo
-   Historia:  <>
-   Fecha:     2024-10-15
+   SP:        [dbo].[APIForzaDeliveryCourier_SetValidPickUpPieceByHand]
+   Propósito: Se validan las piezas que se van a procesar para Recolección manual de escaneo 
+   Autor:     Caleb Loarca
+   Historia:  <FDAPI-5679>
+   Fecha:     2026-03-30
 
 === CHANGELOG ============================
-2025-01-09 | Historia/épica: <>          | Autor: Brandon Pedroza | Contenerizar guias - Se agrega parametro que indica numero de referencia y numero de contenedor
-2025-02-04 | Historia/épica: <>          | Autor: Brandon Pedroza | Contenerizacion guias - aceptar paquete unicamente del cliente asignado a la recoleccion
-2025-02-27 | Historia/épica: <>          | Autor: Brandon Pedroza | Contenerizacion guias - se acepta cualquier paquete si se escanea por guia
-2025-05-02 | Historia/épica: <>          | Autor: Edelman         | Validar si  contenedores y referencias ya fue aplicada la recolección POD con el servicio
-2026-04-23 | Historia/épica: FDAPI-6121  | Autor: Mario Herrarte  | Se retorna la cantidad de piezas de la guia.
+2026-03-30 | Historia/épica: FDAPI-5679  | Autor: Caleb Loarca | Se usa de base SetValidPickUpPiece, para este nuevo SP.
+2026-04-23 | Historia/épica: FDAPI-6121  | Autor: Mario Herrarte | Se retorna la cantidad de piezas de la guia.
 =========================================== */
-CREATE PROCEDURE [dbo].[SetValidPickUpPiece]
-    @InGuides NVARCHAR(MAX) = 'FD9559566-1,FD9559566-2',
-    @IdPickup INT = NULL,
+
+ALTER PROCEDURE [dbo].[APIForzaDeliveryCourier_SetValidPickUpPieceByHand]
+    @InGuides NVARCHAR(MAX) = 'FD9559566-1,FD9559566-2',   
     @Token NVARCHAR(200) = NULL,
     @IdCountry NVARCHAR(2) = 'GT',
 	@Container NVARCHAR(150) = NULL,
@@ -32,8 +29,9 @@ BEGIN
                 @ValidCountry INT,
                 @GuideSerie NVARCHAR(2) = 'FD',
 				@InContainerGuides NVARCHAR(MAX) = '',
-				@IdCustomerPickup INT,
                 @PiecesDry INT;
+			
+
 
         IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
             DROP TABLE #Temp;
@@ -44,19 +42,11 @@ BEGIN
 		IF OBJECT_ID('tempdb.dbo.#TempContainerGuides', 'U') IS NOT NULL
             DROP TABLE #TempContainerGuides;
 
-        SET @IdCustomerPickup =(
-			SELECT TOP 1 VPC.CustomerID
-				FROM SchedulePickup SP WITH(NOLOCK)
-							INNER JOIN VisitPointClient VPC WITH(NOLOCK)
-							ON SP.SenderId = VPC.CodeOfReference
-							WHERE SP.SchedulePickupStatus = 1
-							AND SP.SchedulePickupId =@IdPickup
-		)
 
-        ;WITH t AS (
-            SELECT TOP (1) RowStatus, DateCreated
+        WITH t AS (
+            SELECT TOP 1 RowStatus, DateCreated
               FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
-             WHERE LogTokenPOD = @Token
+             WHERE LogTokenPOD = @Token					 
              ORDER BY DateCreated DESC
         )
         SELECT @TokenAct  = t.RowStatus,
@@ -75,19 +65,19 @@ BEGIN
 				GuideSerie NVARCHAR(2),
 				GuideNumber INT,
 				NoPiece INT
-			);
-
-			CREATE NONCLUSTERED INDEX tempTemp ON #Temp (Guide);
-			CREATE NONCLUSTERED INDEX tempContainerGuide ON #TempContainerGuides (GuideSerie, GuideNumber);
-
+			);			
+			
 			--BUSCAR GUIAS POR REFERENCIA  Y POR CONTENEDOR
 			DECLARE @ListContainer TblContainerList; 
 			DECLARE @ListReferences TblReferencesList;
 			INSERT INTO @ListContainer VALUES (@Container); 
 			INSERT INTO @ListReferences VALUES (@Reference);
 
-			INSERT INTO #TempContainerGuides
-			EXEC GetGuidesByContainerByReference @ListContainer, @ListReferences, @IdCountry, @IdPickup;;
+			INSERT INTO #TempContainerGuides			
+			EXEC [dbo].[APIForzaDeliveryCourier_GetGuidesByContainerByReferenceByHand] @ListContainer, @ListReferences, @IdCountry;
+						
+			CREATE NONCLUSTERED INDEX tempContainerGuide ON #TempContainerGuides (GuideSerie, GuideNumber);
+
 
 			SET @InContainerGuides = (SELECT STRING_AGG(CONCAT(GuideSerie, GuideNumber, '-', NoPiece), ',')
 					FROM #TempContainerGuides);
@@ -104,20 +94,20 @@ BEGIN
                 Message
             )
             --Validacion de estado de la guia
-            EXEC [dbo].[spws_get_validate_guides_pickup] @InGuides = @InGuides,
-                                                         @IdPickup = @IdPickup,
+            EXEC [dbo].[spws_get_validate_guides_pickupByHand] @InGuides = @InGuides,                                                         
                                                          @Token = @Token,
 														 @ReferencesGuide =		@ListReferences,
 														 @ContainerReferences = @ListContainer,
 														 @IdCountry =			@IdCountry;
 
+			CREATE NONCLUSTERED INDEX tempTemp ON #Temp (Guide);
 
             SET @Valid =
             (
                 SELECT COUNT(*) FROM #Temp
             )
 
-            IF @Valid = 0
+            IF @Valid = 0 
             BEGIN
                 CREATE TABLE #listGuides
                 (
@@ -144,8 +134,9 @@ BEGIN
 						THEN CAST(SUBSTRING(Item, 3, LEN(Item)) AS INT)
 						ELSE CAST(SUBSTRING(Item, 3, CHARINDEX('-', Item) - 3) AS INT)
 					END AS ItemNumber
-				FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
-
+				FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ','); 
+							
+			
 				--validar si guia es del cliente
 				IF @Container IS NULL
 				BEGIN
@@ -165,11 +156,10 @@ BEGIN
 					BEGIN
 						IF @Reference IS NOT NULL
 						BEGIN
-							IF NOT EXISTS (SELECT 1 FROM DeliveryOrder DO WITH (NOLOCK)
+							IF NOT EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
 											INNER JOIN #listGuides LS
 											ON DO.Guide_Serie = LS.ItemSerie
-										AND DO.Guide_Number = LS.ItemNumber
-										AND DO.IdCustomer = @IdCustomerPickup)
+										AND DO.Guide_Number = LS.ItemNumber)										
 							BEGIN						
 								SELECT 
 									3 AS [StatusCode],
@@ -188,7 +178,7 @@ BEGIN
 				IF @Container IS NOT NULL
 				BEGIN
 
-					IF NOT EXISTS(SELECT 1 FROM ShippingContainer WITH(NOLOCK) WHERE ReferenceContainer =@Container)
+					IF NOT EXISTS(SELECT 1 FROM DeliveryBackOffice.dbo.ShippingContainer WITH(NOLOCK) WHERE ReferenceContainer =@Container)
 					BEGIN
 						SELECT 
 							2 AS [StatusCode],
@@ -200,7 +190,7 @@ BEGIN
 					BEGIN
 						IF EXISTS (SELECT 1 FROM #TempContainerGuides)
 							BEGIN						
-								IF(EXISTS(SELECT 1 FROM FinishPickUpContainerDetail WITH(NOLOCK) WHERE Container = @Container))
+								IF(EXISTS(SELECT 1 FROM DeliveryBackOffice.dbo.FinishPickUpContainerDetail WITH(NOLOCK) WHERE Container = @Container))
 						        BEGIN
 						      
                                     SELECT 
@@ -237,17 +227,17 @@ BEGIN
                 FROM #listGuides WITH (NOLOCK)
 
                 SELECT @NoPiece = COUNT(NoPiece)
-                FROM DeliveryOrderPiece WITH (NOLOCK)
-                WHERE GuideNumber = @GuideNumber
-                      AND GuideSerie = @GuideSerie
-
+                FROM DeliveryBackOffice.dbo.DeliveryOrderPiece WITH (NOLOCK)
+                WHERE GuideSerie = @GuideSerie 
+				AND	GuideNumber = @GuideNumber
+                
                 SELECT @NoPieceEntered = COUNT(*)
                 FROM #listGuides
 
                 SELECT @PiecesDry = Pieces_Dry FROM DeliveryOrder DO WITH (NOLOCK)
                                 WHERE DO.Guide_Serie = @GuideSerie
                                     AND DO.Guide_Number = @GuideNumber
-                                
+
                 SELECT @ValidCountry = MAX(   CASE
                                                   WHEN DO.SenderCountryId = @IdCountry THEN
                                                       1
@@ -255,7 +245,7 @@ BEGIN
                                                       0
                                               END
                                           )
-                FROM DeliveryOrder DO WITH (NOLOCK)
+                FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
                     INNER JOIN #listGuides LS
                         ON DO.Guide_Serie = LS.ItemSerie
                            AND DO.Guide_Number = LS.ItemNumber
@@ -267,36 +257,36 @@ BEGIN
                     IF @NoPiece = @NoPieceEntered
                     BEGIN
                         SELECT @IspickupGuide = MAX(CAST(ISNULL(DP.IsPickup, 0) AS INT))
-                        FROM DeliveryOrderPiece DP WITH (NOLOCK)
+                        FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DP WITH (NOLOCK)
                             INNER JOIN #listGuides LS
                                 ON DP.GuideSerie = LS.ItemSerie
                                    AND DP.GuideNumber = LS.ItemNumber
                         IF @IspickupGuide = 0
                         BEGIN
                             SELECT 200 AS StatusCode,
-                                    'Piezas validas, listas para procesarlas' AS Message,
-								    @NoPiece AS NoPiece,
-                                    @PiecesDry AS TotalPiecesDry
+                                   'Piezas validas, listas para procesarlas' AS Message,
+								   @NoPiece AS NoPiece,
+                                   @PiecesDry AS TotalPiecesDry
 
                         END
                         ELSE
                         BEGIN
                             SELECT 0 AS StatusCode,
-                                    'Se encuentran piezas que ya fueron procesadas' AS Message,
-                                    @PiecesDry AS TotalPiecesDry
+                                   'Se encuentran piezas que ya fueron procesadas' AS Message,
+                                   @PiecesDry AS TotalPiecesDry
                         END
                     END
                     ELSE IF @NoPiece < @NoPieceEntered
                     BEGIN
                         SELECT 0 StatusCode,
-                                CONCAT('La guia tiene más piezas de las establecidas No. Piezas: ', @NoPiece) AS Message,
-                                @PiecesDry AS TotalPiecesDry
+                               CONCAT('La guia tiene más piezas de las establecidas No. Piezas: ', @NoPiece) AS Message,
+                               @PiecesDry AS TotalPiecesDry
                     END
                     ELSE
                     BEGIN
                         SELECT 4 AS StatusCode,
-                                CONCAT('Faltan:', @NoPiece - @NoPieceEntered, ' piezas por escanear') AS Message,
-                                @PiecesDry AS TotalPiecesDry
+                               CONCAT('Faltan:', @NoPiece - @NoPieceEntered, ' piezas por escanear') AS Message,
+                               @PiecesDry AS TotalPiecesDry
                     END
                 END
                 ELSE
