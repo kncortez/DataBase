@@ -1,14 +1,13 @@
-﻿-- =============================================
--- Author:		<Alejandro Rodríguez>
--- Create date: <2022-03-17>
--- Description:	<SP para generar el cierre de los express center>
--- Nota: Es una copia de GenerateClosure pero se agregaron validaciones
--- =============================================
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2022-11-06>
--- Description:	<Se agrega control de método de pago Zigi>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[GenerateClosureOperator]
+   Propósito: Generar el cierre de los express center, Nota: Es una copia de GenerateClosure pero se agregaron validaciones
+   Autor:     Alejandro Rodríguez
+   Historia:  <>
+   Fecha:     2022-03-17
+=== CHANGELOG ================================
+2026-05-04 | Historia/épica: FDAPI-6137 | Mario Herrarte: Se soluciona inconveniente con envios internacionales y articulos.
+2022-11-06 | Historia/épica: <>         | Bilkar Morataya: Se agrega control de método de pago Zigi
+=========================================== */
 CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
     @UserId INT,
@@ -51,6 +50,7 @@ BEGIN
 	DECLARE @CountFacturaZigi INT;
 	-- FIN MODIFICACIÓN
     DECLARE @UserId2 INT;
+    DECLARE @CurrentDate DATE = CAST(GETDATE() AS DATE);
 
     IF OBJECT_ID('tempdb.dbo.#TempClosureDetail', 'U') IS NOT NULL
         DROP TABLE #TempClosureDetail;
@@ -59,13 +59,13 @@ BEGIN
     (
         SELECT TOP 1
                vp.RegisterUserID
-        FROM [dbo].RegisterUser usr WITH (NOLOCK)
-            LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].RegisterUser usr WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                 ON rua.RuaIdUser = usr.UsrIdUser
                    AND rua.RuaRowStatus = 1
-            INNER JOIN [dbo].Account ac WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].Account ac WITH (NOLOCK)
                 ON ac.AccIdAccount = rua.RuaIdAccount
-            INNER JOIN VisitPointByUser vp WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].VisitPointByUser vp WITH (NOLOCK)
                 ON vp.RegisterUserID = usr.UsrIdUser
         WHERE ac.AccIdAccount = @UserId AND ac.AccRowStatus = 1
     );
@@ -91,7 +91,7 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             ON IND.dti_fk_orderSerie = DOPT.GuideSerie
                AND IND.dti_fk_orderNumber = DOPT.GuideNumber
-    WHERE CAST(DOPT.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPT.DateCreated AS DATE) = @CurrentDate
     GROUP BY IND.dti_fk_orderSerie,
              IND.dti_fk_orderNumber;
 
@@ -106,7 +106,7 @@ BEGIN
 		   -- FIN MODIFICACIÓN
 
     INTO #TempClosureDetail
-    FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+    FROM [DeliveryBackOffice].[dbo].DeliveryOrder DOR WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
             ON DOR.Sender_ID = VPC.CodeOfReference
         LEFT JOIN @TEMPLATEDETAIL IND
@@ -114,14 +114,14 @@ BEGIN
                AND IND.guidenumber = DOR.Guide_Number
         LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
             ON INH.inv_pk_id = IND.header
-        JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
             ON STO.StatusOrderId = DOR.StatusOrderId
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
             ON DOPD.guideserie = DOR.Guide_Serie
                AND DOPD.guidenumber = DOR.Guide_Number
                AND DOPD.ShipmentCompleted = 1
 			   AND DOR.StatusOrderId != 7
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
           AND DOPD.AccountId = @UserId
 		  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
           AND NOT EXISTS
@@ -145,14 +145,14 @@ BEGIN
 
     FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
          
-        INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		INNER JOIN invoiceHeader INH WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
         
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
           AND DOPD.AccountId = @UserId
           AND DOPD.GuideSerie is null
 		  AND NOT EXISTS
@@ -170,17 +170,23 @@ BEGIN
 	DECLARE @Recepcion INT;
 	DECLARE @Devolucion INT;
 	DECLARE @Traslado INT;
+    DECLARE @Internacional INT;
+    DECLARE @Articulo INT;
 
-	SET @Estandar = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Estandar = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 					WHERE NameTypeService = 'Estándar');
-	SET @Entrega = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Entrega = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 					WHERE NameTypeService = 'Entrega');
-	SET @Recepcion = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Recepcion = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 						WHERE NameTypeService = 'Recepción');
-	SET @Devolucion = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Devolucion = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 						WHERE NameTypeService = 'Devolución')
-	SET @Traslado = (SELECT IdTypeService FROM CatTypeServiceClosure WITH (NOLOCK)
+	SET @Traslado = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
 					WHERE NameTypeService = 'Traslado')
+    SET @Internacional = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
+                    WHERE NameTypeService = 'Internacional');
+    SET @Articulo = (SELECT IdTypeService FROM [DeliveryBackOffice].[dbo].CatTypeServiceClosure WITH (NOLOCK)
+                    WHERE NameTypeService = 'Artículos');
 	-- FIN MODIFICACIÓN
 
 	-- MODIFICACIÓN 06/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
@@ -190,12 +196,12 @@ BEGIN
            @TotalCOD = COUNT(dpd.CODAmountProcess)
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-            ON DOR.Guide_Number = dpd.GuideNumber
-               AND DOR.Guide_Serie = dpd.GuideSerie
-               AND dpd.CODAmountProcess > 0
-    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+            ON DOR.Guide_Serie = dpd.GuideSerie
+               AND DOR.Guide_Number = dpd.GuideNumber
+    WHERE CAST(dpd.DateCreated AS DATE) = @CurrentDate
             AND DOR.StatusOrderId != 7
           AND AccountId = @UserId
+          AND dpd.CODAmountProcess > 0
           AND NOT EXISTS
     (
         SELECT 1
@@ -258,13 +264,6 @@ BEGIN
                        WHEN DOPD.TypeofInOutMoneyId = 1
 							AND DOPD.TypeServiceId IN (@Entrega,@Recepcion,@Traslado) 
 						THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
 							SUM(DOPD.amount)
                        ELSE
                            0
@@ -284,13 +283,6 @@ BEGIN
                        WHEN (DOPD.TypeofInOutMoneyId = 6 OR DOPD.TypeofInOutMoneyId = 2)  
 							AND DOPD.TypeServiceId IN (@Entrega,@Recepcion)  
 						THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
 							SUM(DOPD.amount)
                        ELSE
                            0
@@ -306,7 +298,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard'
-        FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].DeliveryOrder DOR WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON DOR.Sender_ID = VPC.CodeOfReference
             LEFT JOIN @TEMPLATEDETAIL IND
@@ -321,7 +313,7 @@ BEGIN
                    AND DOPD.guidenumber = DOR.Guide_Number
                    AND DOPD.ShipmentCompleted = 1
 				   AND DOR.StatusOrderId != 7
-        WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+        WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
               AND DOPD.AccountId = @UserId
 			  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
               AND NOT EXISTS
@@ -345,7 +337,7 @@ BEGIN
 
 			SELECT CASE
                    WHEN DOPD.TypeofInOutMoneyId = 1 
-						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion, @Internacional, @Articulo) 
 					THEN
                        SUM(DOPD.amount)
                    ELSE
@@ -353,7 +345,7 @@ BEGIN
                END 'TotalCash',
                CASE
                    WHEN DOPD.TypeofInOutMoneyId = 1 
-						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+						AND DOPD.TypeServiceId IN (@Estandar,@Devolucion, @Internacional, @Articulo) 
 					THEN
                        COUNT(DOPD.TypeofInOutMoneyId)
                    ELSE
@@ -361,14 +353,14 @@ BEGIN
                END 'CountCash',
                CASE
                    WHEN (DOPD.TypeofInOutMoneyId = 6 OR DOPD.TypeofInOutMoneyId = 2)
-				   AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) THEN
+				   AND DOPD.TypeServiceId IN (@Estandar,@Devolucion, @Internacional, @Articulo) THEN
                        SUM(DOPD.amount)
                    ELSE
                        0
                END 'TotalCard',
                CASE
                    WHEN (DOPD.TypeofInOutMoneyId = 6 OR DOPD.TypeofInOutMoneyId = 2)
-				   AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+				   AND DOPD.TypeServiceId IN (@Estandar,@Devolucion, @Internacional, @Articulo) 
 				THEN
                        COUNT(DOPD.TypeofInOutMoneyId)
                    ELSE
@@ -380,12 +372,12 @@ BEGIN
 			   0 'CountFacturaCard'
 			FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
          
-        INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
         
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
           AND DOPD.AccountId = @UserId
           AND DOPD.GuideSerie is null
 		  AND NOT EXISTS
@@ -439,7 +431,7 @@ BEGIN
 					THEN COUNT(DOPD.TypeofInOutMoneyId)
 				   ELSE 0
 			   END 'CountFacturaZigi'
-		FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+		FROM [DeliveryBackOffice].[dbo].DeliveryOrder DOR WITH (NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
 				ON DOR.Sender_ID = VPC.CodeOfReference
 			LEFT JOIN @TEMPLATEDETAIL IND
@@ -447,14 +439,14 @@ BEGIN
 				   AND IND.guidenumber = DOR.Guide_Number
 			LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 				ON INH.inv_pk_id = IND.header
-			JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH (NOLOCK)
 				ON STO.StatusOrderId = DOR.StatusOrderId
 			LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
 				ON DOPD.guideserie = DOR.Guide_Serie
 				   AND DOPD.guidenumber = DOR.Guide_Number
 				   AND DOPD.ShipmentCompleted = 1
 				   AND DOR.StatusOrderId != 7
-		WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+		WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
 			  AND DOPD.AccountId = @UserId
 			  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
 			  AND NOT EXISTS
@@ -494,11 +486,11 @@ BEGIN
 			   0 'TotalFacturaZigi',
 			   0 'CountFacturaZigi'
 		FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
-		INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].CatTypeServiceClosure CTS WITH (NOLOCK)
 			ON CTS.IdTypeService = DOPD.TypeServiceId
 		LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
 			ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+		WHERE CAST(DOPD.DateCreated AS DATE) = @CurrentDate
 			  AND DOPD.AccountId = @UserId
 			  AND DOPD.GuideSerie is null
 			  AND NOT EXISTS
@@ -619,7 +611,7 @@ BEGIN
                    'Cierre generado exitosamente' Message,
                    Value 'URL',
                    @HeaderClosures 'IdCierre'
-            FROM ConfigParams WITH (NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].ConfigParams WITH (NOLOCK)
             WHERE Name = 'ClosureExpressCenter';
 
 			select * from #TempClosureDetail;
