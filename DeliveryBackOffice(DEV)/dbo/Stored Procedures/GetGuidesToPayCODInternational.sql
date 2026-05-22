@@ -1,23 +1,13 @@
-﻿
--- =============================================
--- Author:		<Oscar,Morales>
--- Create date: <2021-06-22>
+​-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2026-02-13>
 -- Description:	<Guias por pagar COD>
 -- =============================================​
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-07-01>
--- Description:	< No considerar comisiones con estado lógico inactivo >
--- =============================================
-
-CREATE PROCEDURE [dbo].[GetGuidesToPayCOD]
-    -- Add the parameters for the stored procedure here
+CREATE PROCEDURE [dbo].[GetGuidesToPayCODInternational]
     @Date DATE
   , @IdCountry NVARCHAR(2)= 'GT'
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
 	SET ARITHABORT ON;
     SET NOCOUNT ON;
 
@@ -70,11 +60,8 @@ FROM dbo.BatchCOD                 BT WITH(NOLOCK)
 WHERE CONVERT(DATE, BT.Date) = @Date
       AND BTD.CatConceptCODId = 1
       AND BTd.RowStatus = 1
-      AND BTD.IdCountry = @IdCountry --NEW BNHL;
-
-
-
-
+      AND BTD.IdCountry = @IdCountry 
+OPTION (MAXDOP 1);
 
     SELECT bt.IdBatchCOD,
            bt.Name,
@@ -194,8 +181,6 @@ WHERE CONVERT(DATE, BT.Date) = @Date
         LEFT JOIN #TempBatchDetail btc WITH(NOLOCK)
             ON btc.GuideSerie = btd.GuideSerie
                AND btc.GuideNumber = btd.GuideNumber
-      --         AND btc.CatConceptCODId = 1
-			   --AND btc.RowStatus =1 --cambio BNHL 04/08/2023
 		LEFT JOIN [dbo].[KindOfVPClient] kovpc WITH(NOLOCK)
 			ON kovpc.IdKindOfVPClient = vp.IdKindOfVPClient
 		LEFT JOIN [dbo].[DeliveryOrderPaymentTransaction] dopt WITH(NOLOCK)
@@ -236,14 +221,13 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 		LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctiom WITH(NOLOCK)
 			ON ctiom.tio_pk_id = dopd.TypeofInOutMoneyId
     WHERE
-        
         CONVERT(DATE, bt.[Date]) = @Date
 		AND btd.CatConceptCODId IN (2,3,4)
 		AND bt.RowStatus = 'TRUE'
 		AND BTD.RowStatus = 1 
 		AND do.SenderCountryId = @IdCountry
         AND BTD.isCompleted = 1
-        ​AND cu.IsInternationalCustomer = 0
+		AND cu.IsInternationalCustomer =1​
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,
 		   do.[IsLastMileReturn],
@@ -298,11 +282,9 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 			do.IsCollect
     ORDER BY bt.IdBatchCOD,
              bt.Date, btd.AuthorizationNumber DESC
-			 --option (optimize for unknown);
+			 OPTION (MAXDOP 1);
 			 
+			 IF OBJECT_ID('tempdb.dbo.#TempBatchDetail', 'U') IS NOT NULL
+                 DROP TABLE #TempBatchDetail;
 
-			 	IF OBJECT_ID('tempdb.dbo.#TempBatchDetail', 'U') IS NOT NULL
-            DROP TABLE #TempBatchDetail;
-
-    --SET NOCOUNT OFF;
 END;
