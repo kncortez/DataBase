@@ -1,0 +1,21 @@
+/* =================================================
+   SP:        [dbo].[sp_GetLastClosureDateForGeneralAsync]
+   Propósito: Obtener la última fecha de cierre general para un VisitPoint.
+   Autor:     Keila Cortéz
+   Historia:  FDAPI-5784 bloqueocncexc
+   Fecha:     2026-05-21
+   === CHANGELOG ================================
+   2026-05-21 | Historia/épica: FDAPI-5784 bloqueocncexc | Autor: Keila Cortéz 
+   ============================================
+*/
+CREATE PROCEDURE sp_GetLastClosureDateForGeneralAsync
+    @CodeOfReference INT
+AS
+BEGIN
+    SELECT ACH.ClosureDate
+    FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
+    WHERE ACH.VisitPoint = @CodeOfReference
+      AND ACH.RowStatus = 1
+      AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
+    ORDER BY ACH.ClosureDate ASC
+END;
