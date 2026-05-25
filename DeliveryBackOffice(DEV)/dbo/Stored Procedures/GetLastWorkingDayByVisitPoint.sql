@@ -10,7 +10,7 @@
 2026-05-19 | Historia/épica: FDAPI-5784 | Autor: Keila Cortéz |
 =========================================== */
 
-CREATE PROCEDURE [dbo].[sp_GetLastWorkingDayByVisitPoint]
+CREATE PROCEDURE [dbo].[GetLastWorkingDayByVisitPoint]
     @visitPoint INT
 AS
 BEGIN

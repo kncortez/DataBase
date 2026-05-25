@@ -1,5 +1,5 @@
 /* =================================================
-   SP:        [dbo].[sp_GetOperatorsByStationAsync]
+   SP:        [dbo].[GetOperatorsByStation]
    Propósito: Obtener operadores asociados a una estación.
    Autor:     Keila Cortéz
    Historia:  FDAPI-5784 bloqueocncexc
@@ -8,7 +8,7 @@
    2026-05-21 | Historia/épica: FDAPI-5784 bloqueocncexc | Autor: Keila Cortéz 
    ============================================
 */
-CREATE PROCEDURE sp_GetOperatorsByStationAsync
+CREATE PROCEDURE GetOperatorsByStation
     @codeOfReference INT
 AS
 BEGIN

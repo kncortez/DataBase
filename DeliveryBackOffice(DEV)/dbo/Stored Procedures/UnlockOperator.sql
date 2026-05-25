@@ -1,5 +1,5 @@
 /* =================================================
-   SP:        [dbo].[sp_UnlockOperatorAsync]
+   SP:        [dbo].[UnlockOperator]
    Propósito: Desbloquear operador mediante actualización de contraseña y estado de cambio de contraseña.
    Autor:     Keila Cortéz
    Historia:  FDAPI-5784 bloqueocncexc
@@ -8,7 +8,7 @@
    2026-05-21 | Historia/épica: FDAPI-5784 bloqueocncexc | Autor: Keila Cortéz 
    ============================================
 */
-CREATE PROCEDURE sp_UnlockOperatorAsync
+CREATE PROCEDURE UnlockOperator
     @userId INT,
     @encryptedPassword NVARCHAR(100),
     @updatedBy INT

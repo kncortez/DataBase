@@ -1,5 +1,5 @@
 /* =================================================
-   SP:        [dbo].[sp_IsConcessionaireAsync]
+   SP:        [dbo].[IsConcessionaire]
    Propósito: Validar si el VisitPoint es un concesionario válido según país.
    Autor:     Keila Cortéz
    Historia:  FDAPI-5784 bloqueocncexc
@@ -8,7 +8,7 @@
    2026-05-21 | Historia/épica: FDAPI-5784 bloqueocncexc | Autor: Keila Cortéz 
    ============================================
 */
-CREATE PROCEDURE sp_IsConcessionaireAsync
+CREATE PROCEDURE IsConcessionaire
     @CodeOfReference INT,
     @IdCountry NVARCHAR(2)
 AS

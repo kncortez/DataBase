@@ -1,5 +1,5 @@
 /* =================================================
-   SP:        [dbo].[sp_GetOperatorsWithActivityAsync]
+   SP:        [dbo].[GetOperatorsWithActivity]
    Propósito: Obtener operadores con actividad en un rango de fecha específico.
    Autor:     Keila Cortéz
    Historia:  FDAPI-5784 bloqueocncexc
@@ -8,7 +8,7 @@
    2026-05-21 | Historia/épica: FDAPI-5784 bloqueocncexc | Autor: Keila Cortéz 
    ============================================
 */
-CREATE PROCEDURE sp_GetOperatorsWithActivityAsync
+CREATE PROCEDURE GetOperatorsWithActivity
     @CodeOfReference INT,
     @startDate DATETIME,
     @endDate DATETIME

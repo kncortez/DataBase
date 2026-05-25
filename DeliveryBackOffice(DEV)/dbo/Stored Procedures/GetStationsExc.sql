@@ -1,5 +1,5 @@
 /* =================================================
-   SP:        [dbo].[sp_GetStationsAsync]
+   SP:        [dbo].[GetStationsExc]
    Propósito: Obtener estaciones activas por país.
    Autor:     Keila Cortéz
    Historia:  FDAPI-5784 bloqueocncexc
@@ -8,7 +8,7 @@
    2026-05-21 | Historia/épica: FDAPI-5784 bloqueocncexc | Autor: Keila Cortéz
    ============================================
 */
-CREATE PROCEDURE sp_GetStationsAsync
+CREATE PROCEDURE GetStationsExc
     @idCountry NVARCHAR(2)
 AS
 BEGIN
