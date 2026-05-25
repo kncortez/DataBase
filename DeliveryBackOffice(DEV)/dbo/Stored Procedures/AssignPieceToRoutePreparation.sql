@@ -8,9 +8,10 @@
 
 === CHANGELOG ============================
 
-2024-10-01 | Historia/épica: ---          | Autor: Tito Garcia     | Permitir asociar varios manifiestos a una ruta para ser liquidados en un mismo proceso
-2025-01-17 | Historia/épica: ---          | Autor: Edelman Vásquez | Proceso de preparación cuando se agrega una referencia
+2026-05-25 | Historia/épica: FDAPI-6115   | Autor: Caleb Loarca    | Hacer actualización de estado de guía hasta validar que todas las piezas han sido escaneadas.
 2025-12-18 | Historia/épica: FDAPI-4740   | Autor: Brandon Pedroza | Guardar estación a pieza al prepara ruta
+2025-01-17 | Historia/épica: ---          | Autor: Edelman Vásquez | Proceso de preparación cuando se agrega una referencia
+2024-10-01 | Historia/épica: ---          | Autor: Tito Garcia     | Permitir asociar varios manifiestos a una ruta para ser liquidados en un mismo proceso
 
 =========================================== */
 CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
@@ -38,6 +39,8 @@ BEGIN
 
     --- Variables para manejo de piezas
     DECLARE @GuidePieceExists BIT;
+    DECLARE @CountPieceGuideAdd INT;
+	DECLARE @MaxPieceGuide INT
 
     --- Variables para despliegue de errores
     DECLARE @GuidePieceDoesntExist BIT = 0;
@@ -517,11 +520,34 @@ BEGIN
                               AND RP.DateRoutePreparation = @Date
                               AND RP.RowStatus = 1;
 
-                        --- Actualizar el estado de la guía
-                        UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
-                        SET StatusOrderId = 3 --- Programado para entrega
-                        WHERE Guide_Serie = @GuideSerie
-                              AND Guide_Number = @GuideNumber;
+                        --- Validar que todas las piezas de la guía hayan sido escaneadas antes de actualizar el estado
+                       
+                        SELECT  
+							@CountPieceGuideAdd = COUNT(*) 
+							FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
+									ON RPD.RoutePreparationId = RPDP.RoutePreparationDetailId
+								WHERE  
+								RPD.RowStatus = 1
+								AND RPD.RoutePreparationId = @IdRoutePreparation
+								AND RPD.Guide_Serie = @GuideSerie
+								AND RPD.Guide_Number =  @GuideNumber
+								
+
+						 SELECT 
+							@MaxPieceGuide = MAX(NoPiece) 	
+                            FROM dbo.DeliveryOrderPiece WITH (NOLOCK)
+                            WHERE GuideSerie = @GuideSerie
+                            AND GuideNumber =  @GuideNumber;
+
+						IF (@CountPieceGuideAdd = @MaxPieceGuide)
+                        BEGIN
+                            --- Actualizar el estado de la guía
+                            UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
+                            SET StatusOrderId = 3 --- Programado para entrega
+                            WHERE Guide_Serie = @GuideSerie
+                                  AND Guide_Number = @GuideNumber;
+                        END;
 
 
                         --- Insertar el nuevo estado a bitácora
