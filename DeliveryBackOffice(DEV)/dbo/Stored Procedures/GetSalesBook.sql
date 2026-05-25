@@ -26,10 +26,18 @@ BEGIN
             ,MAX(ih.inv_cli_name)  [client_name]
             ,CASE
                 WHEN @IdCountry = 'GT' THEN ih.inv_serieFEL
-                ELSE ih.inv_certificationFEL  -- HN, SV
+                WHEN @IdCountry = 'HN' THEN ih.inv_certificationFEL
+                WHEN @IdCountry = 'SV' THEN ih.inv_numberFEL
+                ELSE '0'
              END  [document_serie]
-            ,MAX(ih.inv_numberFEL) [document_correlative]
-            ,CASE WHEN MAX(ih.inv_type) = 1 THEN 'FACTURA'
+            ,CASE
+                WHEN @IdCountry = 'SV' THEN MAX(ih.inv_serieFEL)
+                ELSE MAX(ih.inv_numberFEL)
+             END [document_correlative]
+            ,CASE
+                WHEN @IdCountry = 'SV' AND MAX(ih.inv_type) = 1 THEN 'FACTURA - Factura'
+                WHEN @IdCountry = 'SV' AND MAX(ih.inv_type) = 4 THEN 'FACTURA - Crédito Fiscal'
+                WHEN MAX(ih.inv_type) IN (1, 4) THEN 'FACTURA'
                 WHEN MAX(ih.inv_type) = 2 THEN 'NOTA DE CREDITO'
                 ELSE 'NO DEFINIDO'
             END [document_type]
@@ -76,9 +84,10 @@ BEGIN
           AND IH.inv_date >= @BeginDate
           AND IH.inv_date <  @NewEndDate
           AND IH.inv_certificationFEL IS NOT NULL
-          AND IH.inv_type IN (1,2)
+          AND IH.inv_type IN (1, 2, 4)
     GROUP BY inv_serieFEL
             ,inv_certificationFEL
+            ,inv_numberFEL
             ,inv_amount
             ,inv_IVA
             ,DOR.IsCollect
