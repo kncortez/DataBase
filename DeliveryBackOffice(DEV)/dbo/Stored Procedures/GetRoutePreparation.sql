@@ -1,38 +1,21 @@
-﻿
--- =============================================
--- Author:		<Oscar, Morales>
--- Create date: <2021-12-27>
--- Description:	<Obtiene información de la preparación de entregas en base a una ruta y una fecha.>
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-01-04>
--- Description:	<Modificación para uso de id de vehiculo sobre id de ruta.>
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-01-19>
--- Description:	<Modificación para manejo a nivel de pieza.>
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-02-02>
--- Description:	< Cambio para uso de Ruta sobre Unidad .>
--- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-08-05>
--- Description:	< Cambio para uso de orden como decimal .>
--- =============================================
--- Author:		<Tito Garcia>
--- Update date: <2024-10-01>
--- Description:	<Se filtra para que tome en cuenta unicamente las guias que no han sido despachadas>
--- =============================================
--- =============================================
--- Author:		<Edelman,Vásquez>
--- Create date: <2025-01-17>
--- Description:	<devolución de campo Ticlet_Number como referencia>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[GetRoutePreparation]
+   Propósito: <Obtiene información de la preparación de entregas en base a una ruta y una fecha.>
+   Autor:     <Oscar Morales>
+   Historia:  <>  
+   Fecha:     <2021-12-27>
+
+=== CHANGELOG ================================
+
+--  2026-05-26 | Historia/épica: FDAPI-6304   | Autor: Mario Herrarte  | se toma en cuenta la bodega de devolución si esta configurada
+--  2025-01-17 | Historia/épica: <>           | Autor: Edelman Vásquez | devolución de campo Ticlet_Number como referencia
+--  2024-10-01 | Historia/épica: <>           | Autor: Tito Garcia     | Se filtra para que tome en cuenta unicamente las guias que no han sido despachadas
+--  2022-08-05 | Historia/épica: <>           | Autor: Andres Ruiz     | Cambio para uso de orden como decimal.
+--  2022-02-02 | Historia/épica: <>           | Autor: Andres Ruiz     | Cambio para uso de Ruta sobre Unidad.
+--  2022-01-19 | Historia/épica: <>           | Autor: Andres Ruiz     | Modificación para manejo a nivel de pieza.
+--  2022-01-04 | Historia/épica: <>           | Autor: Andres Ruiz     | Modificación para uso de id de vehiculo sobre id de ruta.
+
+=========================================== */
 CREATE PROCEDURE [dbo].[GetRoutePreparation]
 	@IdRoute INT,
 	@Date DATE
@@ -148,7 +131,7 @@ BEGIN
 	INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK)
 	ON rp.IdRoutePreparation = rpd.RoutePreparationId
 	INNER JOIN DeliveryOrder DO WITH(NOLOCK)
-	ON rpd.Guide_Number = DO.Guide_number 
+	ON rpd.Guide_Serie = do.Guide_Serie AND rpd.Guide_Number = DO.Guide_number 
 	INNER JOIN StatusOrder SO WITH(NOLOCK)
 	ON DO.StatusOrderId = SO.StatusOrderId AND SO.CatCheckpointTypeId!=3
 	LEFT JOIN DeliveryOrderBySettlement dobs WITH(NOLOCK)
@@ -165,9 +148,39 @@ BEGIN
 		, RPD.Guide_Number 'Guide_Number'
 		, RPDP.PieceNumber 'Guide_Piece'
 		, COALESCE(do.Pieces_Dry,0) + COALESCE(do.Pieces_Cold,0) 'Pieces'
-		, (CASE WHEN [do].[IsLastMileReturn] = 1 THEN do.[Sender_Department] ELSE do.[Receiver_Department] END) 'Department'
-		, (CASE WHEN [do].[IsLastMileReturn] = 1 THEN do.[Sender_Town] ELSE do.[Receiver_Town] END) 'Town'
-		, (CASE WHEN [do].[IsLastMileReturn] = 1 THEN do.[Sender_Address] ELSE do.[Receiver_Address] END) 'Address'
+		, (
+			CASE WHEN [do].[IsLastMileReturn] = 1 THEN 
+				CASE WHEN vpcReturn.CodeOfReference IS NOT NULL THEN 
+					ISNULL(vpcReturn.Department,'')
+				ELSE
+					do.[Sender_Department] 
+				END
+			ELSE 
+				do.[Receiver_Department] 
+			END
+		) 'Department'
+		, (
+			CASE WHEN [do].[IsLastMileReturn] = 1 THEN 
+				CASE WHEN vpcReturn.CodeOfReference IS NOT NULL THEN 
+					ISNULL(vpcReturn.Town,'')
+				ELSE
+					do.[Sender_Town] 
+				END
+			ELSE 
+				do.[Receiver_Town] 
+			END
+		) 'Town'
+		, (
+			CASE WHEN [do].[IsLastMileReturn] = 1 THEN
+				CASE WHEN vpcReturn.CodeOfReference IS NOT NULL THEN 
+					ISNULL(vpcReturn.Address,'')
+				ELSE
+					do.[Sender_Address] 
+				END
+			ELSE 
+				do.[Receiver_Address] 
+			END
+		) 'Address'
 		, do.Pieces_Dry 'Pieces_Dry'
 		, do.Pieces_Cold 'Pieces_Cold'
 		, do.Collect_OnDelivery 'COD'
@@ -203,7 +216,10 @@ BEGIN
 			AND
 			RPDP.PieceNumber = DOP.NoPiece
 	LEFT JOIN VisitPointClient vpc WITH(NOLOCK)
-		ON vpc.CodeOfReference = do.Sender_ID
+		ON vpc.CodeOfReference = do.Sender_ID	
+	LEFT JOIN VisitPointClient vpcReturn WITH(NOLOCK)
+		ON vpcReturn.CustomerID = do.IdCustomer
+		AND vpcReturn.isReturnWarehouse = 1
 	LEFT JOIN Customer cu WITH(NOLOCK)
 		ON cu.IdCustomer = COALESCE(do.IdCustomer, vpc.CustomerID)
 	WHERE rp.RowStatus = 1

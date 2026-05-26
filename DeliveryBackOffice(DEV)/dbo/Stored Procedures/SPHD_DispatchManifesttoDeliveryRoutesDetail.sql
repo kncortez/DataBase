@@ -1,11 +1,16 @@
-﻿
--- =============================================
--- Author:		<Edelman>
--- Update date: <2024-04-09>
--- Description:	<Detalle de manifiesto de despacho a ruta >
--- =============================================
--- 2026-04-16 | Historia/épica: FDAPI-6087 | Autor: Mario Herrarte | Se agrego el campo Ticket_Number al detalle del manifiesto de despacho a ruta
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SPHD_DispatchManifesttoDeliveryRoutesDetail]
+   Propósito: <Detalle de manifiesto de despacho a ruta>
+   Autor:     <Edelman>
+   Historia:  <>  
+   Fecha:     <09-04-2024>
+
+=== CHANGELOG ================================
+
+--  2026-05-26 | Historia/épica: FDAPI-6304   | Autor: Mario Herrarte  | se toma en cuenta la bodega de devolución si esta configurada 
+--  2026-04-16 | Historia/épica: FDAPI-6087   | Autor: Mario Herrarte  | Se agrego el campo Ticket_Number al detalle del manifiesto de despacho a ruta
+
+=========================================== */
 CREATE PROCEDURE [dbo].[SPHD_DispatchManifesttoDeliveryRoutesDetail]
 	@IdManifest INT
 AS
@@ -152,7 +157,8 @@ BEGIN
 		Total decimal(16,2),
 		ReceiverCountry NVARCHAR(2),
 		Symbol NVARCHAR(2),
-		Ticket_Number NVARCHAR(150)
+		Ticket_Number NVARCHAR(150),
+		IsLastMileReturn INT
 
 	)
 
@@ -167,12 +173,62 @@ BEGIN
 		,(
 			do.Pieces_Dry
 		) as Pieces_Dry
-		,(CASE WHEN [do].[IsLastMileReturn] = 1 THEN isnull(do.[Sender_FirstName],'') + ' ' + isnull(do.[Sender_LastName],'') ELSE isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') END) as Receiver_Fullname
-		,(CASE WHEN [do].[IsLastMileReturn] = 1 THEN do.[Sender_Address] ELSE do.Receiver_Address END) AS Receiver_Address
+		,(
+			CASE WHEN [do].[IsLastMileReturn] = 1 THEN 
+				CASE WHEN vpc.CodeOfReference IS NOT NULL THEN 
+					ISNULL(vpc.DescriptionOfClient,'')
+				ELSE
+					isnull(do.[Sender_FirstName],'') + ' ' + isnull(do.[Sender_LastName],'') 
+				END
+			ELSE 
+				isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') 
+			END
+		) as Receiver_Fullname
+		,(
+			CASE WHEN [do].[IsLastMileReturn] = 1 THEN 
+				CASE WHEN vpc.CodeOfReference IS NOT NULL THEN 
+					ISNULL(vpc.Address + ', ' + vpc.Town + ', ' + vpc.Department,'')
+				ELSE
+					do.[Sender_Address] 
+				END
+			ELSE 
+				do.Receiver_Address 
+			END
+		) AS Receiver_Address
 		--,CONVERT(INT, ISNULL(do.Receiver_Zone,0)) AS Receiver_Zone
-		,CONVERT(NVARCHAR,ISNULL(REPLACE(RTRIM((CASE WHEN [do].[IsLastMileReturn] = 1 THEN do.[Sender_Zone] ELSE do.Receiver_Zone END)),CHAR(160),''),0)) AS Receiver_Zone
-		,(CASE WHEN [do].[IsLastMileReturn] = 1 THEN do.[Sender_Town] ELSE do.Receiver_Town END) AS Receiver_Town
-		,(CASE WHEN [do].[IsLastMileReturn] = 1 THEN do.[Sender_Department] ELSE do.Receiver_Department END) AS  Receiver_Departament
+		,CONVERT(NVARCHAR,ISNULL(REPLACE(RTRIM((
+			CASE WHEN [do].[IsLastMileReturn] = 1 THEN 
+				CASE WHEN vpc.CodeOfReference IS NOT NULL THEN 
+					vpc.Zone
+				ELSE
+					do.[Sender_Zone] 
+				END
+			ELSE 
+				do.Receiver_Zone 
+			END)
+		),CHAR(160),''),0)) AS Receiver_Zone
+		,(
+			CASE WHEN [do].[IsLastMileReturn] = 1 THEN 
+				CASE WHEN vpc.CodeOfReference IS NOT NULL THEN 
+					vpc.Town
+				ELSE
+					do.[Sender_Town] 
+				END
+			ELSE 
+				do.Receiver_Town 
+			END
+		) AS Receiver_Town
+		,(
+			CASE WHEN [do].[IsLastMileReturn] = 1 THEN 
+				CASE WHEN vpc.CodeOfReference IS NOT NULL THEN 
+					vpc.Department
+				ELSE
+					do.[Sender_Department] 
+				END
+			ELSE 
+				do.Receiver_Department 
+			END
+		) AS  Receiver_Departament
 		,CONVERT(varchar, do.Preparation_Date, 103) + ' ' + CONVERT(varchar(5), do.Preparation_Date, 108) as Preparation_Date
 		,CONVERT(varchar, do.Shipping_Date, 103) as Shipping_Date
 		,isnull(CONVERT(varchar, do.Delivery_Max_Date, 103),'') as Max_Date
@@ -190,6 +246,7 @@ BEGIN
 		,do.ReceiverCountryId AS ReceiverCountry
 		,CCU.Symbol
 		,do.Ticket_Number
+		,do.IsLastMileReturn
 	from 
 		[DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 	INNER JOIN 
@@ -212,6 +269,9 @@ BEGIN
 			TRP.[GuideSerie] = do.[Guide_Serie]
 			AND
 			TRP.[GuideNumber] = do.[Guide_Number]
+	LEFT JOIN VisitPointClient vpc
+		ON vpc.CustomerID = do.IdCustomer
+		AND vpc.isReturnWarehouse = 1
 
 	SELECT 
 		GuideOrder
@@ -235,6 +295,7 @@ BEGIN
 		,ReceiverCountry
 		,Symbol
 		,Ticket_Number
+		,IsLastMileReturn
 	FROM 
 		@temp tmp
 	ORDER BY 
