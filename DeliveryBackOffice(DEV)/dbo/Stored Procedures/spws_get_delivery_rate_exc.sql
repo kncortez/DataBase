@@ -2079,7 +2079,7 @@ BEGIN
                  , IIF(@CustomerType IN (2, 3)
                      -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                      , CASE
-                         WHEN @InsuranceAmount >= 0.09 AND @InsuranceAmount < 5000
+                         WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount < 5000
                              THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
                          WHEN @InsuranceAmount >= 5000
                              THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
