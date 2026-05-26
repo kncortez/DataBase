@@ -86,7 +86,7 @@ BEGIN
                  SELECT DISTINCT
                  IIF(ISNULL(RH.CollectRate,0) > 0, 0,ISNULL(RH.InsuranceRate,0)) [InsuranceRate],
                  ISNULL(RH.InsuranceCharge,0)    [InsuranceCharge],
-                 ISNULL(RH.InsuranceExempt,0)    [InsuranceExempt],
+                 IIF(ISNULL(RH.InsuranceExempt,0) < @InsuranceExempt, 0.00, RH.InsuranceExempt) [InsuranceExempt],
                  ISNULL(RH.CollectRate,0)        [CollectRate]
                  FROM DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
                  INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
@@ -134,7 +134,7 @@ BEGIN
              SELECT DISTINCT
              IIF(ISNULL(RH.CollectRate,0) > 0, 0,ISNULL(RH.InsuranceRate,0))      [InsuranceRate],
              ISNULL(RH.InsuranceCharge,0)    [InsuranceCharge],
-             ISNULL(RH.InsuranceExempt,0)    [InsuranceExempt],
+             IIF(ISNULL(RH.InsuranceExempt,0) < @InsuranceExempt, 0.00, RH.InsuranceExempt) [InsuranceExempt],
              ISNULL(RH.CollectRate,0)        [CollectRate]
              FROM DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
              INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)

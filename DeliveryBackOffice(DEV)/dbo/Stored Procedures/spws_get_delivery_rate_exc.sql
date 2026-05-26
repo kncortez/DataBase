@@ -1134,11 +1134,8 @@ BEGIN
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
+                               WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount < 5000
+                                   THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
                                WHEN @InsuranceAmount >= 5000
                                    THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
                                ELSE 0
@@ -1211,11 +1208,8 @@ BEGIN
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
+                               WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount < 5000
+                                   THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
                                WHEN @InsuranceAmount >= 5000
                                    THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
                                ELSE 0
@@ -1290,15 +1284,12 @@ BEGIN
              , 0                                                                         AS Discount
              , ''                                                                        AS DiscountName  
              , ISNULL(sv.CtsDescription, '')                                             AS ServiceDescription                             
-             , IIF(@IsInsurance = 'true'
+                 , IIF(@IsInsurance = 'true'
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
+                               WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount < 5000
+                                   THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
                                WHEN @InsuranceAmount >= 5000
                                    THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
                                ELSE 0
@@ -1547,27 +1538,24 @@ BEGIN
                         , ''                                                                              AS DiscountName
                         , ISNULL(sv.CtsDescription, '')                                                   AS ServiceDescription
                         , IIF(@IsInsurance = 'true'
-                           , IIF(@CustomerType IN (2, 3)
-                                   -- Tipos 2 y 3: tres rangos según @InsuranceAmount
-                                   , CASE
-                                       WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                           THEN 0
-                                       WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                            AND @InsuranceAmount < 5000
-                                           THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                                       WHEN @InsuranceAmount >= 5000
-                                           THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                                       ELSE 0
-                                     END
-                                   -- Tipo 1: comportamiento original
-                                   , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
-                                       , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                                       , 0)
-                                 )
-                               , 
-                          0)                                                                           AS InsuranceRate
-                     , ISNULL(RH.InsuranceCharge,0)                                                    AS InsuranceCharge
-                     , ISNULL(RH.InsuranceExempt,0)                                                    AS InsuranceExempt
+                            , IIF(@CustomerType IN (2, 3)
+                                -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                                , CASE
+                                    WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount < 5000
+                                        THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                                    WHEN @InsuranceAmount >= 5000
+                                        THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                    ELSE 0
+                                    END
+                                -- Tipo 1: comportamiento original
+                                , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                                    , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                    , 0)
+                                )
+                            , 
+                            0)                                                                            AS InsuranceRate
+                        , ISNULL(RH.InsuranceCharge,0)                                                    AS InsuranceCharge
+                        , ISNULL(RH.InsuranceExempt,0)                                                    AS InsuranceExempt
                 FROM dbo.RateHeader                 rh   WITH (NOLOCK)
                     INNER JOIN dbo.RateData         rd   WITH (NOLOCK)
                         ON rd.RateId = rh.RheId  
@@ -1721,27 +1709,25 @@ BEGIN
                      , ''                                                                  AS DiscountName
                      , ISNULL(sv.CtsDescription, '')                                       AS ServiceDescription
                      , IIF(@IsInsurance = 'true'
-                       , IIF(@CustomerType IN (2, 3)
-                           -- Tipos 2 y 3: tres rangos según @InsuranceAmount
-                           , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                               WHEN @InsuranceAmount >= 5000
-                                   THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                               ELSE 0
-                             END
-                           -- Tipo 1: comportamiento original
-                           , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
-                               , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                               , 0)
-                         )
-                       , 
-                    0)                                                                                             AS InsuranceRate
-                 , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
-                 , ISNULL(RH.InsuranceExempt,0)                                                                    AS InsuranceExempt
+                     , IIF(@IsInsurance = 'true'
+                         , IIF(@CustomerType IN (2, 3)
+                             -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                             , CASE
+                                 WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount < 5000
+                                     THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                                 WHEN @InsuranceAmount >= 5000
+                                     THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                 ELSE 0
+                                 END
+                             -- Tipo 1: comportamiento original
+                             , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                                 , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                 , 0)
+                             )
+                         , 
+                         0)                                                                                             AS InsuranceRate
+                     , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
+                     , ISNULL(RH.InsuranceExempt,0)                                                                    AS InsuranceExempt
                 FROM #ParceCode                      ls
                     INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
@@ -1783,26 +1769,23 @@ BEGIN
                      , ''                                                                  AS DiscountName
                      , ISNULL(sv.CtsDescription, '')                                       AS ServiceDescription
                      , IIF(@IsInsurance = 'true'
-                           , IIF(@CustomerType IN (2, 3)
-                               -- Tipos 2 y 3: tres rangos según @InsuranceAmount
-                               , CASE
-                                   WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                       THEN 0
-                                   WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                        AND @InsuranceAmount < 5000
-                                       THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                                   WHEN @InsuranceAmount >= 5000
-                                       THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                                   ELSE 0
+                         , IIF(@CustomerType IN (2, 3)
+                             -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                             , CASE
+                                 WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount < 5000
+                                     THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                                 WHEN @InsuranceAmount >= 5000
+                                     THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                 ELSE 0
                                  END
-                               -- Tipo 1: comportamiento original
-                               , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
-                                   , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                                   , 0)
+                             -- Tipo 1: comportamiento original
+                             , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                                 , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                 , 0)
                              )
-                           , 
-                        0)                                                                                             AS InsuranceRate
-                     , ISNULL(rh.InsuranceCharge,0)                                                                    AS InsuranceCharge
+                         , 
+                         0)                                                                                             AS InsuranceRate
+                     , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
                      , ISNULL(rh.InsuranceExempt,0)                                                                    AS InsuranceExempt
                 FROM #ParceCode                      ls
                     INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
@@ -1892,44 +1875,61 @@ BEGIN
 
 
         INSERT INTO @TempRate  
-        SELECT TypeRate  
-             , Segment  
-             , Service  
-             , SUM(BaseRate)                                                                       BaseRate  
-             , DiscountName  
-             , DiscountValue  
-             , fragilRate  
-             , CollectedRate  
-             , InsuranceRate  
-             , CreditCardRate  
-             , (SUM(OverWeightRate) + IIF(@OverWeight > 0, @OverWeight, 0)) * AdditionalWeightRate OverWeightRate  
-             , IrregularParcelRate  
-             , CtsName  
-             , CtsDescription  
-             , ReturnRate  
+        SELECT 
+               SUM(BaseRate)                                                                       [BaseRate]
+             , ReturnRate                                                                          [ReturnRate]
+             , fragilRate                                                                          [fragilRate]
+             , CollectedRate                                                                       [CollectedRate]
+             , CreditCardRate                                                                      [CreditCardRate]
+             , (SUM(OverWeightRate) + IIF(@OverWeight > 0, @OverWeight, 0)) * AdditionalWeightRate [OverWeightRate]
+             , IrregularParcelRate                                                                 [IrregularParcelRate]
+             , TypeRate                                                                            [TypeRate]
+             , Segment                                                                             [Segment]
+             , Service                                                                             [Service]
+             , CtsName                                                                             [ServiceName]
+             , DiscountValue                                                                       [Discount]
+             , DiscountName                                                                        [DiscountName]
+             , CtsDescription                                                                      [ServicieDescription]
+             , InsuranceRate                                                                       [InsuranceRate]
+             , InsuranceCharge                                                                     [InsuranceCharge]
+             , InsuranceExempt                                                                     [InsuranceExempt]
         FROM  
         (  
-            SELECT ISNULL(ctr.Name, '')                                                TypeRate  
-                 , ISNULL(crs.CrsShortName, '')                                        Segment  
-                 , ISNULL(cts.CtsShortName, '')                                        Service  
-                 , ISNULL(rd.RateValue, 0)                                             BaseRate  
-                 , ''                                                                  DiscountName  
-                 , 0                                                                   DiscountValue  
-                 , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)               AS fragilRate  
-                 , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)            AS CollectedRate  
-                 , IIF(@IsInsurance = 'true'  
-                     , (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)  
-                          , CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))  
-                          , 0)  
-                       )  
-                     , 0)                                                              AS InsuranceRate  
-                 , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate  
-                 , 0                                                                   OverWeightRate  
-                 , ISNULL(@ParcelPrice, 0)                                             AS IrregularParcelRate  
-                 , ISNULL(cts.CtsName, '')                                             AS CtsName  
-                 , ISNULL(cts.CtsDescription, '')                                      AS CtsDescription  
-                 , ISNULL(rh.ReturnRate, 0)                                            AS ReturnRate  
-                 , ISNULL(rh.AdditionalWeightRate, 0)                                  AdditionalWeightRate  
+            SELECT 
+                   ISNULL(rd.RateValue, 0)                                             AS BaseRate
+                 , ISNULL(rh.ReturnRate, 0)                                            AS ReturnRate
+                 , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)               AS fragilRate
+                 , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)            AS CollectedRate
+                 , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate
+                 , 0                                                                   AS OverWeightRate
+                 , ISNULL(@ParcelPrice, 0)                                             AS IrregularParcelRate   
+                 , ISNULL(ctr.Name, '')                                                AS TypeRate  
+                 , ISNULL(crs.CrsShortName, '')                                        AS Segment 
+                 , ISNULL(cts.CtsShortName, '')                                        AS [Service]
+                 , ISNULL(cts.CtsName, '')                                             AS ServiceName
+                 , ''                                                                  AS DiscountName  
+                 , 0                                                                   AS DiscountValue  
+                , ISNULL(cts.CtsDescription, '')                                       AS ServiceDescription 
+                , IIF(@IsInsurance = 'true'
+                    , IIF(@CustomerType IN (2, 3)
+                        -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                        , CASE
+                            WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount < 5000
+                                THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                            WHEN @InsuranceAmount >= 5000
+                                THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                            ELSE 0
+                            END
+                        -- Tipo 1: comportamiento original
+                        , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                            , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                            , 0)
+                        )
+                    , 
+                0)                                                                     AS InsuranceRate
+                , ISNULL(RH.InsuranceCharge,0)                                         AS InsuranceCharge
+                , ISNULL(RH.InsuranceExempt,0)                                         AS InsuranceExempt 
+                , ISNULL(rh.AdditionalWeightRate, 0)                                   AS AdditionalWeightRate  
             FROM RateHeader              rh          WITH (NOLOCK)
                 INNER JOIN RateData      rd          WITH (NOLOCK)
                     ON rd.RateId = rh.RheId  
@@ -1965,29 +1965,43 @@ BEGIN
                                                                , CONVERT(DATETIME, '23:59:59', 108)  
                                                              )  
             UNION ALL  
-            SELECT ISNULL(ctr.Name, '')                                                  TypeRate  
-                 , ISNULL(crs.CrsShortName, '')                                          Segment  
-                 , ISNULL(cts.CtsShortName, '')                                          Service  
-                 , ISNULL(rd.RateValue, 0)                                               BaseRate  
-                 , ''                                                                    DiscountName  
-                 , 0                                                                     DiscountValue  
-                 , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)                 AS fragilRate  
-                 , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)              AS CollectedRate  
-                 , IIF(@IsInsurance = 'true'  
-                     , (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)  
-                          , CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))  
-                          , 0)  
-                       )  
-                     , 0)                                                                AS InsuranceRate  
-                 , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0)   AS CreditCardRate  
+            SELECT 
+                   ISNULL(rd.RateValue, 0)                                               AS BaseRate
+                 , ISNULL(rh.ReturnRate, 0)                                              AS ReturnRate
+                 , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)                 AS fragilRate
+                 , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)              AS CollectedRate
+                 , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0)   AS CreditCardRate
                  , IIF(pw.Weight <= @WeigthLimit  
                        , pw.Weight - rd.WeightTo  
-                       , IIF(@WeigthLimit > rd.WeightTo, @WeigthLimit - rd.WeightTo, 0)) OverWeightRate  
-                 , ISNULL(@ParcelPrice, 0)                                               AS IrregularParcelRate  
-                 , ISNULL(cts.CtsName, '')                                               AS CtsName  
-                 , ISNULL(cts.CtsDescription, '')                                        AS CtsDescription  
-                 , ISNULL(rh.ReturnRate, 0)                                              AS ReturnRate  
-                 , ISNULL(rh.AdditionalWeightRate, 0)                                    AdditionalWeightRate  
+                       , IIF(@WeigthLimit > rd.WeightTo, @WeigthLimit - rd.WeightTo, 0)) AS OverWeightRate
+                 , ISNULL(@ParcelPrice, 0)                                               AS IrregularParcelRate             
+                 , ISNULL(ctr.Name, '')                                                  AS TypeRate  
+                 , ISNULL(crs.CrsShortName, '')                                          AS Segment  
+                 , ISNULL(cts.CtsShortName, '')                                          AS Service  
+                 , ISNULL(cts.CtsName, '')                                               AS ServiceName
+                 , 0                                                                     AS DiscountValue
+                 , ''                                                                    AS DiscountName  
+                 , ISNULL(cts.CtsDescription, '')                                        AS ServiceDescription 
+                 , IIF(@IsInsurance = 'true'
+                     , IIF(@CustomerType IN (2, 3)
+                         -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                         , CASE
+                             WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount < 5000
+                                 THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                             WHEN @InsuranceAmount >= 5000
+                                 THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                             ELSE 0
+                             END
+                         -- Tipo 1: comportamiento original
+                         , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                             , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                             , 0)
+                         )
+                     , 
+                 0)                                                                     AS InsuranceRate
+                 , ISNULL(RH.InsuranceCharge,0)                                         AS InsuranceCharge
+                 , ISNULL(RH.InsuranceExempt,0)                                         AS InsuranceExempt 
+                 , ISNULL(rh.AdditionalWeightRate, 0)                                   AS AdditionalWeightRate  
             FROM RateHeader               rh        WITH (NOLOCK)
                 INNER JOIN RateData       rd        WITH (NOLOCK)
                     ON rd.RateId = rh.RheId  
@@ -2062,27 +2076,24 @@ BEGIN
              , ''                                                                        AS DiscountName  
              , ISNULL(sv.CtsDescription, '')                                             AS ServiceDescription             
              , IIF(@IsInsurance = 'true'
-                       , IIF(@CustomerType IN (2, 3)
-                           -- Tipos 2 y 3: tres rangos según @InsuranceAmount
-                           , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                               WHEN @InsuranceAmount >= 5000
-                                   THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                               ELSE 0
-                             END
-                           -- Tipo 1: comportamiento original
-                           , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
-                               , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                               , 0)
-                         )
-                       , 
-                    0)                                                                             AS InsuranceRate 
-                 , ISNULL(RH.InsuranceCharge,0)                                                    AS InsuranceCharge
-                 , ISNULL(RH.InsuranceExempt,0)                                                    AS InsuranceExempt
+                 , IIF(@CustomerType IN (2, 3)
+                     -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                     , CASE
+                         WHEN @InsuranceAmount >= 0.09 AND @InsuranceAmount < 5000
+                             THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                         WHEN @InsuranceAmount >= 5000
+                             THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                         ELSE 0
+                         END
+                     -- Tipo 1: comportamiento original
+                     , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                         , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                         , 0)
+                     )
+                 , 
+             0)                                                                          AS InsuranceRate
+             , ISNULL(RH.InsuranceCharge,0)                                              AS InsuranceCharge
+             , ISNULL(RH.InsuranceExempt,0)                                              AS InsuranceExempt
         FROM dbo.RateHeader              rh WITH (NOLOCK)  
             INNER JOIN dbo.RateData      rd WITH (NOLOCK)  
                 ON rd.RateId = rh.RheId  
