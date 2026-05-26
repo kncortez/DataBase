@@ -16,7 +16,7 @@ BEGIN
     SET NOCOUNT ON;
 
     DECLARE @CurrentIncidentCount INT = 0;
-    DECLARE @StartDate DATETIME = CONVERT(DATE, GETDATE());
+    DECLARE @StartDate DATETIME = CAST(GETDATE() AS DATE);
     DECLARE @EndDate DATETIME = DATEADD(DAY, 1, @StartDate);
 
     SELECT @CurrentIncidentCount = COUNT(DA.ID)
@@ -26,7 +26,8 @@ BEGIN
     WHERE DA.Guide_Serie = @GuideSerie
       AND DA.Guide_Number = @GuideNumber
       AND DA.Date_Created >= @StartDate
-      AND DA.Date_Created < @EndDate;
+      AND DA.Date_Created < @EndDate
+      AND COI.RowStatus = 1;
 
     IF (ISNULL(@CurrentIncidentCount, 0) > 0)
     BEGIN
