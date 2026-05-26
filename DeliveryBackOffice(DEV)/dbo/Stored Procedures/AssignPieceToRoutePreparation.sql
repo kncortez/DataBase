@@ -11,7 +11,7 @@
 2024-10-01 | Historia/épica: ---          | Autor: Tito Garcia     | Permitir asociar varios manifiestos a una ruta para ser liquidados en un mismo proceso
 2025-01-17 | Historia/épica: ---          | Autor: Edelman Vásquez | Proceso de preparación cuando se agrega una referencia
 2025-12-18 | Historia/épica: FDAPI-4740   | Autor: Brandon Pedroza | Guardar estación a pieza al prepara ruta
-
+2026-05-25 | Historia/épica: FDAPI-6153   | Autor: Mario Herrarte  | Se agrega agrupación por bodega de devolución.
 =========================================== */
 CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
     @IdRoute INT,
@@ -87,6 +87,16 @@ BEGIN
     DECLARE @ServiceManagementDetailId AS INT = NULL;
     DECLARE @FirstPieceEntered AS BIT = 1;
 
+    ------Variables para validar punto de devolución
+    DECLARE @existsReturnPoint AS INT = 0;
+    DECLARE @Department AS NVARCHAR(100);
+    DECLARE @Town AS NVARCHAR(100);
+    DECLARE @Address NVARCHAR(600);
+    DECLARE @Phone NVARCHAR(100);
+    DECLARE @IdTownship INT;
+    DECLARE @IdProvince INT;
+    DECLARE @NameService nvarchar(300);
+
     BEGIN TRANSACTION;
     BEGIN TRY
         -- FDD-1321  Se valida si la ruta ya tiene asignado un manifiesto para esta fecha
@@ -113,6 +123,32 @@ BEGIN
             SET @ForceNewRoutePreparation = 1;
         END;
         -- FDD-1321 FINALIZA
+
+        SELECT 
+             @existsReturnPoint = vpc.CodeOfReference
+        FROM DeliveryOrder dor WITH (NOLOCK)
+        INNER JOIN VisitPointClient vpc WITH (NOLOCK) 
+            ON vpc.CustomerID = dor.IdCustomer
+        WHERE dor.Guide_Serie = @GuideSerie
+          AND dor.Guide_Number = @GuideNumber
+          AND vpc.isReturnWarehouse = 1
+
+        IF (@existsReturnPoint > 0)
+        BEGIN 
+            SELECT @Department = Department,
+                   @Town = Town,
+                   @Address = Address,
+                   @IdTownship = IdTownship,
+                   @Phone = Phone,
+                   @NameService = DescriptionOfClient
+            FROM [DeliveryBackOffice].[dbo].[VisitPointClient]  WITH (NOLOCK)
+            WHERE CodeOfReference = @existsReturnPoint;
+
+            SELECT TOP 1
+                @IdProvince = Twn.IdProvince
+            FROM [DeliveryBackOffice].[dbo].[Township] Twn WITH (NOLOCK)
+            WHERE Twn.IdTownship = @IdTownship;
+        END
 
         ------------------------------------------------------------------------------------
         ------FDD-949--proceso de generación de datos de servicio marcados como devolución
@@ -367,35 +403,50 @@ BEGIN
                                ISNULL(DO.Pieces_Cold, 0),
                                (CASE
                                     WHEN DO.[IsLastMileReturn] = 1 THEN
-                                        DO.[Sender_Department]
+                                        CASE
+                                            WHEN @existsReturnPoint > 0 THEN @Department
+                                            ELSE DO.[Sender_Department]
+                                        END
                                     ELSE
                                         DO.Receiver_Department
                                 END
                                ),
                                (CASE
                                     WHEN DO.[IsLastMileReturn] = 1 THEN
-                                        DO.[Sender_Town]
+                                        CASE 
+                                            WHEN @existsReturnPoint > 0 THEN @Town
+                                            ELSE DO.[Sender_Town]
+                                        END
                                     ELSE
                                         DO.Receiver_Town
                                 END
                                ),
                                (CASE
                                     WHEN DO.[IsLastMileReturn] = 1 THEN
-                                        DO.[Sender_Address]
+                                        CASE 
+                                            WHEN @existsReturnPoint > 0 THEN @Address
+                                            ELSE DO.[Sender_Address]
+                                        END
                                     ELSE
                                         DO.Receiver_Address
                                 END
                                ),
                                (CASE
                                     WHEN DO.[IsLastMileReturn] = 1 THEN
-                                        DO.[SenderIdTownship]
+                                        CASE 
+                                            WHEN @existsReturnPoint > 0 THEN @IdTownship
+                                            ELSE DO.[SenderIdTownship]
+                                        END
                                     ELSE
                                         DO.ReceiverIdTownship
                                 END
                                ),
                                (CASE
                                     WHEN DO.[IsLastMileReturn] = 1 THEN
-                                        DO.[Sender_Phone]
+                                        CASE 
+                                            WHEN @existsReturnPoint > 0 THEN @Phone
+                                            ELSE DO.[Sender_Phone]
+                                        END
                                     ELSE
                                         DO.Receiver_Phone
                                 END
@@ -473,7 +524,10 @@ BEGIN
                                ),
                                (CASE
                                     WHEN DO.[IsLastMileReturn] = 1 THEN
-                                        DO.Sender_ID
+                                        CASE 
+                                            WHEN @existsReturnPoint > 0 THEN @existsReturnPoint
+                                            ELSE DO.Sender_ID
+                                        END
                                     ELSE
                                         DO.Receiver_ID
                                 END
@@ -702,15 +756,30 @@ BEGIN
                 DECLARE @FirstName NVARCHAR(100);
                 DECLARE @LastName NVARCHAR(100);
                 DECLARE @CodeOfReference INT;
-                SELECT @ProvinceId = IIF(@IsReturn = 1, PRV_Sender.IdProvince, PRV_Receiver.IdProvince),
-                       @TonwShipId = IIF(@IsReturn = 1, RT.GuideSenderIdTownship, RT.GuideReceiverIdTownShip),
-                       @ServiceAddress = IIF(@IsReturn = 1, GuideSenderAddress, RT.GuideReceiverAddress),
-                       @ServicePhone = IIF(@IsReturn = 1, RT.GuideSenderPhone, RT.GuideReceiverPhone),
+
+                SELECT @ProvinceId     = IIF(@IsReturn = 1,
+                                            IIF(@existsReturnPoint > 0, @IdProvince, PRV_Sender.IdProvince),
+                                                PRV_Receiver.IdProvince),
+                       @TonwShipId     = IIF(@IsReturn = 1, 
+                                            IIF(@existsReturnPoint > 0, @IdTownship, RT.GuideSenderIdTownship),
+                                                RT.GuideReceiverIdTownShip),
+                       @ServiceAddress = IIF(@IsReturn = 1,
+                                            IIF(@existsReturnPoint > 0, @Address, GuideSenderAddress),
+                                            RT.GuideReceiverAddress),
+                       @ServicePhone   = IIF(@IsReturn = 1,
+                                            IIF(@existsReturnPoint > 0, @Phone, RT.GuideSenderPhone),
+                                                RT.GuideReceiverPhone),
                        @PriceShippment = RT.GUidePriceShippment,
-                       @GuideCOD = RT.GuideCOD,
-                       @FirstName = IIF(@IsReturn = 1, RT.GuideSenderFirstName, RT.GuideReceiverFirstName),
-                       @LastName = IIF(@IsReturn = 1, RT.GuideSenderLastName, RT.GuideReceiverLastName),
-                       @CodeOfReference = IIF(@IsReturn = 1, RT.SenderId, RT.ReceiverId)
+                       @GuideCOD       = RT.GuideCOD,
+                       @FirstName      = IIF(@IsReturn = 1,
+                                            IIF(@existsReturnPoint > 0, @NameService, RT.GuideSenderFirstName),
+                                                RT.GuideReceiverFirstName),
+                       @LastName       = IIF(@IsReturn = 1, 
+                                            IIF(@existsReturnPoint > 0, '', RT.GuideSenderFirstName),
+                                                RT.GuideReceiverLastName),
+                       @CodeOfReference= IIF(@IsReturn = 1,
+                                            IIF(@existsReturnPoint > 0, @existsReturnPoint, RT.SenderId), 
+                                                RT.ReceiverId)
                 FROM @ResponseTable RT
                     LEFT JOIN dbo.Township PRV_Receiver WITH (NOLOCK)
                         ON RT.GuideReceiverIdTownShip = PRV_Receiver.IdTownship
