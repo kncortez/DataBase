@@ -8,6 +8,7 @@
 
 === CHANGELOG ============================
 
+2026-05-25 | Historia/épica: FDAPI-6153   | Autor: Mario Herrarte  | Se agrega agrupación por bodega de devolución.
 2026-05-25 | Historia/épica: FDAPI-6115   | Autor: Caleb Loarca    | Hacer actualización de estado de guía hasta validar que todas las piezas han sido escaneadas.
 2025-12-18 | Historia/épica: FDAPI-4740   | Autor: Brandon Pedroza | Guardar estación a pieza al prepara ruta
 2025-01-17 | Historia/épica: ---          | Autor: Edelman Vásquez | Proceso de preparación cuando se agrega una referencia
