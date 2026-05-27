@@ -1,15 +1,15 @@
 USE [DeliveryBackOffice]
 GO
 /* =================================================
-   SP:        [dbo].[GetPickupManifestInfo]
+   SP:        [dbo].[GetPickupManifestInfoByHand]
    Propósito: <Se obtiene la información de manifiesto de un IdPickup dado.>
    Autor:     Erick Guerra
    Historia:  <FDAPI-6324>
    Fecha:     <2026-05-21>
    === CHANGELOG ============================
    =========================================== */
-                       
-CREATE OR ALTER PROCEDURE [dbo].[GetPickupManifestInfo]
+
+CREATE OR ALTER PROCEDURE [dbo].[GetPickupManifestInfoByHand]
 (
  @IdPickup INT
 )
