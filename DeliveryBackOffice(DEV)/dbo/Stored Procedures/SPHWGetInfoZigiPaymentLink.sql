@@ -54,42 +54,59 @@ BEGIN
     -- =============================================
     -- 2. Seleccionar la información del link (único flujo)
     -- =============================================
-    SELECT  
-        CASE 
-            WHEN ZI.ZigiLinkStatus = 'PAID' THEN 201
-            ELSE 200
-        END AS IdResult,
-        CASE 
-            WHEN ZI.ZigiLinkStatus = 'PAID' THEN 'Guía ha sido pagada'
-            ELSE 'Guía tiene link asociado'
-        END AS [Message],
-        ZI.ZigiLink,
-        CASE WHEN @GuideSerie = 'MFD' THEN ZI.ZigiPaymentId ELSE ZI.GuideNumber END AS GuideNumber,
-        CASE WHEN @GuideSerie = 'MFD' THEN @GuideSerie ELSE ZI.GuideSerie END AS GuideSerie,
-        ZI.PaidAmount AS Amount,
-        IIF(DO.Receiver_FirstName = '', DO.Receiver_Alternant_FullName, DO.Receiver_FirstName) AS ReceiverName,
-        DO.Receiver_LastName AS ReceiverLastName,
-        ISNULL(ZI.PhoneNumber, DO.Receiver_Phone) AS Phone,
-        DO.ReceiverCountryId AS IdCountry,
-        CC.Symbol,
-        CASE WHEN ZI.ZigiLinkStatus = 'PAID' THEN 1 ELSE 0 END AS IsPay,
-        ZI.ZigiTransactionId,
-        ZI.ZigiReference,
-        ZI.IsGroup,
-        ZI.GeneratedMethod
-    FROM PaymentZigi ZI WITH(NOLOCK)
-    INNER JOIN DeliveryOrder DO WITH(NOLOCK)
-        ON ZI.GuideNumber = DO.Guide_Number
-       AND ZI.GuideSerie = DO.Guide_Serie
-    LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-        ON DO.ReceiverCountryId = DC.Currency_IdCountry
-    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
-        ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
-    WHERE (
-            (ZI.GuideSerie = @GuideSerie AND ZI.GuideNumber = @GuideNumber)
-            OR (@GuideSerie = 'MFD' AND ZI.ZigiPaymentId = @GuideNumber)
-          )
-      AND DC.DefaultPerCountry = 1
-      AND ZI.RowStatus = 1
-      AND ZI.ZigiLinkStatus IN ('CREATED', 'PAID');
+    IF( EXISTS(SELECT TOP 1 1 FROM PaymentZigi ZI WITH(NOLOCK)
+    WHERE ZI.GuideSerie = @GuideSerie AND
+          ZI.GuideNumber = @GuideNumber
+    ))
+    BEGIN
+            SELECT  
+                CASE 
+                    WHEN ZI.ZigiLinkStatus = 'PAID' THEN 201
+                    ELSE 200
+                END AS IdResult,
+                CASE 
+                    WHEN ZI.ZigiLinkStatus = 'PAID' THEN 'Guía ha sido pagada'
+                    ELSE 'Guía tiene link asociado'
+                END AS [Message],
+                ZI.ZigiLink,
+                CASE WHEN @GuideSerie = 'MFD' THEN ZI.ZigiPaymentId ELSE ZI.GuideNumber END AS GuideNumber,
+                CASE WHEN @GuideSerie = 'MFD' THEN @GuideSerie ELSE ZI.GuideSerie END AS GuideSerie,
+                ZI.PaidAmount AS Amount,
+                IIF(DO.Receiver_FirstName = '', DO.Receiver_Alternant_FullName, DO.Receiver_FirstName) AS ReceiverName,
+                DO.Receiver_LastName AS ReceiverLastName,
+                ISNULL(ZI.PhoneNumber, DO.Receiver_Phone) AS Phone,
+                DO.ReceiverCountryId AS IdCountry,
+                CC.Symbol,
+                CASE WHEN ZI.ZigiLinkStatus = 'PAID' THEN 1 ELSE 0 END AS IsPay,
+                ZI.ZigiTransactionId,
+                ZI.ZigiReference,
+                ZI.IsGroup,
+                ZI.GeneratedMethod
+            FROM PaymentZigi ZI WITH(NOLOCK)
+            LEFT JOIN DeliveryOrder DO WITH(NOLOCK)
+                ON ZI.GuideNumber = DO.Guide_Number
+               AND ZI.GuideSerie = DO.Guide_Serie
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+                ON DO.ReceiverCountryId = DC.Currency_IdCountry
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH(NOLOCK)
+                ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
+            WHERE (
+                    (ZI.GuideSerie = @GuideSerie AND ZI.GuideNumber = @GuideNumber)
+                    OR (@GuideSerie = 'MFD' AND ZI.ZigiPaymentId = @GuideNumber)
+                  )
+              AND DC.DefaultPerCountry = 1
+              AND ZI.RowStatus = 1
+              AND ZI.ZigiLinkStatus IN ('CREATED', 'PAID','PENDING');
+END
+  ELSE
+     BEGIN
+     
+        SELECT
+            0 AS 'IdResult',
+             DO.Receiver_Phone AS 'Phone'
+             FROM  DeliveryOrder DO WITH(NOLOCK)
+        WHERE DO.Guide_Serie = @GuideSerie AND
+              DO.Guide_Number = @GuideNumber
+     
+     END
 END;
