@@ -1,23 +1,24 @@
-﻿-- =============================================
--- Author:		<Edwin,Ramirez>
--- Create date: <2021-04-27>
--- Description:	<inserta o actualiza registros a clientes en base a flag @option 1 insert 2 update>
--- =============================================
--- =============================================
--- Author:		<Oscar,Rodriguez>
--- Create date: <2024-04-23>
--- Description:	<Se agrego modificacion para campo isCOD>
--- =============================================
--- Modified:	<Tito Garcia>
--- Update date: <2024-10-21>
--- Description:	<Se agrega nuevo campo IsVoucherRequired>
--- =============================================
--- Modified:	<Brandon Pedroza>
--- Update date: <2025-08-14>
--- Description:	<Guias Rapidas - Se guarda nuevo campo RestrictionByArticle, indica si restringue uso a tarifario por articulo>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sphdSetCustomer]
+   Propósito: inserta o actualiza registros a clientes en base a flag @option 1 insert 2 update
+   Autor:     Edwin Ramirez
+   Historia:  
+   Fecha:     2021-04-27
+   === CHANGELOG ================================
+    2026-06-10 | Historia/épica: FDAPI-6043 | Autor: Keila Cortez 
+    ------------------------
+    2025-08-14 | Historia/épica:  | Autor: Brandon Pedroza | Descripción: Guias Rapidas - Se guarda nuevo campo RestrictionByArticle, indica si restringue uso a tarifario por articulo
+    ------------------------
+    2024-10-21 | Historia/épica:  | Autor: Tito Garcia | Descripción: Se agrega nuevo campo IsVoucherRequired
+    ------------------------
+    2024-04-23 | Historia/épica:  | Autor: Oscar Rodriguez | Descripción: Se agrego modificacion para campo isCOD
+    ------------------------
+    2021-04-27 | Historia/épica:  | Autor: Edwin Ramirez
+   ============================================
+*/
+
+
 CREATE PROCEDURE [dbo].[sphdSetCustomer]
-    -- Add the parameters for the stored procedure here
     @IdCustomer INT
   , @NameCustomer NVARCHAR(100)
   , @Description NVARCHAR(100) = ''
@@ -77,9 +78,7 @@ CREATE PROCEDURE [dbo].[sphdSetCustomer]
   , @BillingTimeId INT = NULL
   , @BillingVolumeId INT = NULL
   , @BillingCut_offDate DATE = NULL
-                            -----------------------------------------------------
   , @CardCode NVARCHAR(50) = NULL
-                            -----------------------------------------------------
   , @NumImg INT = NULL
   , @isCOD INT = NULL
   , @IsVoucherRequired INT = 0
@@ -96,7 +95,7 @@ BEGIN
             SET @BillingTimeId =
         (
             SELECT IdCatBillingTime
-            FROM [dbo].[CatBillingTime] CBT
+            FROM [DeliveryBackOffice].[dbo].[CatBillingTime] CBT
             WHERE CBT.DescriptionBillingTime = 'Default(Cada domingo del mes y el día 2 del siguiente mes)'
         )   ;
 
@@ -104,14 +103,14 @@ BEGIN
             SET @BillingVolumeId =
         (
             SELECT IdCatBillingVolume
-            FROM [dbo].[CatBillingVolume] CBV
+            FROM [DeliveryBackOffice].[dbo].[CatBillingVolume] CBV
             WHERE CBV.DescriptionBillingVolume = 'Una guía por factura'
         )   ;
 
         DECLARE @msgerror NVARCHAR(MAX) = N'';
         SELECT @msgerror = STUFF((
                                      SELECT CHAR(10) + Name
-                                     FROM dbo.Customer C WITH (NOLOCK)
+                                     FROM [DeliveryBackOffice].[dbo].[Customer] C WITH (NOLOCK)
                                      WHERE C.TaxIdentificationNumber = @TaxIdentificationNumber
                                            AND LEN(TaxIdentificationNumber) > 0
                                            AND RowSatus = 1
@@ -136,17 +135,16 @@ BEGIN
                 = N'Los siguientes clientes ya estan registrados con el NIT ' + @TaxIdentificationNumber + N': '
                   + CHAR(10) + @msgerror;
             RAISERROR(@msgerror, 16, 1);
-        --END
         END;
 
-        -----------
+
         DECLARE @SAPCARDCODEUSEREXIST NVARCHAR(50);
         SELECT @SAPCARDCODEUSEREXIST = Name
-        FROM dbo.Customer WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].[Customer] WITH (NOLOCK)
         WHERE SAPCardCode = @CardCode
-              AND IdCustomer <> @IdCustomer;
+         AND CountryID = @CountryID
+         AND IdCustomer <> @IdCustomer;
         IF (@SAPCARDCODEUSEREXIST IS NOT NULL)
-        --BEGIN
         BEGIN
             SELECT 'FALSE'                                                                               [blnResult]
                  , '-1'                                                                                  [IdResult]
@@ -156,10 +154,8 @@ BEGIN
                  , ''                                                                                    AS [ErrorProcedure]
                  , ''                                                                                    AS [ErrorLine]
                  , CONCAT('El usuario ', @SAPCARDCODEUSEREXIST, '  ya posee el codigo SAP: ', @CardCode) AS [Message];
-        END;
-        --END		
+        END;		
         ELSE
-        -----------
 
 
         IF (@Option = 1)
@@ -168,7 +164,7 @@ BEGIN
             IF NOT EXISTS
             (
                 SELECT cli.IdCustomer
-                FROM Customer cli WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[Customer] cli WITH (NOLOCK)
                 WHERE cli.Name = @NameCustomer AND cli.RowSatus = 1
             )
             BEGIN
@@ -252,11 +248,8 @@ BEGIN
                   , @ConditionOfPaymentID, @InvoiceContactName, @InvoiceContactPhone, @InvoiceContactEmail
                   , @CODAccountBankID, @CODAccountNumber, @CODAccountName, @CODAccountTypeID, @CODCurrencyID
                   , @CODContactName, @CODContactPhone, @CODContactEmail, @RowSatus --'TRUE'
-                  , @Token, GETDATE(), NULL, NULL
-                                                                                   -------------------------
-                                                                                   --,NULL				   
+                  , @Token, GETDATE(), NULL, NULL			   
                   , @CardCode
-                                                                                   -------------------------
                   , @ExcludePriceShippingCOD, @ExcludeCommissionCOD, @CatBatchTypeCODId, @CatBatchFrequencyCODId
                   , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg, @isCOD,@IsVoucherRequired, @RestrictionByArticle);
 
@@ -289,12 +282,6 @@ BEGIN
             UPDATE [DeliveryBackOffice].[dbo].[Customer]
             SET [Name] = @NameCustomer
               , [Description] = @Description
-              --,[Domain] = <Domain, nvarchar(50),>
-              --,[RegexSubject] = <RegexSubject, nvarchar(100),>
-              --,[RegexEmail] = <RegexEmail, nvarchar(100),>
-              --,[RegexFilename] = <RegexFilename, nvarchar(100),>
-              --,[Abbreviation] = <Abbreviation, nvarchar(25),>
-              --,[IdCustomerType] = <IdCustomerType, int,>
               , [CountryID] = @CountryID
               , [CommercialName] = @CommercialName
               , [CustomerPhone] = @CustomerPhone
@@ -343,9 +330,7 @@ BEGIN
               , [ExcludeCommissionCOD] = @ExcludeCommissionCOD
               , [CatBatchTypeCODId] = @CatBatchTypeCODId
               , [CatBatchFrequencyCODId] = @CatBatchFrequencyCODId
-              -------------------------
               , [SAPCardCode] = @CardCode
-              -------------------------
               , [CatBillingTimeId] = @BillingTimeId
               , [CatBillingVolumeId] = @BillingVolumeId
               , [BillingCut_offDate] = @BillingCut_offDate
