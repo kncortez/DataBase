@@ -296,7 +296,7 @@ BEGIN
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rh.RheRowStatus = 1
               AND rh.RheDefault = 1
-              AND ISNULL(rh.CountryId, 'GT') = @Country;
+              AND rh.CountryId = @Country;
     END;
 
     IF (@CustomerType IN ( 2, 3 )) --Validación si Usuario es Individual o Express center
