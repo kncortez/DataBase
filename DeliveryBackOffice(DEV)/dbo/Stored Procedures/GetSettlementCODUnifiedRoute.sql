@@ -65,8 +65,8 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                 ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
             INNER JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
-                ON DOR.Guide_Number = dsd.Guide_Number
-                   AND DOR.Guide_Serie = dsd.Guide_Serie
+                ON DOR.Guide_Serie = dsd.Guide_Serie
+                   AND DOR.Guide_Number = dsd.Guide_Number
             LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH (NOLOCK)
                 ON dbs.ID = msi.ManifestNumber
             LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
@@ -106,8 +106,8 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                 ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
             INNER JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
-                ON DOR.Guide_Number = dsd.Guide_Number
-                   AND DOR.Guide_Serie = dsd.Guide_Serie
+                ON DOR.Guide_Serie = dsd.Guide_Serie
+                   AND DOR.Guide_Number = dsd.Guide_Number
             LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH (NOLOCK)
                 ON dbs.ID = msi.ManifestNumber
             LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
@@ -133,10 +133,10 @@ BEGIN
 	DELETE GF
 	FROM @GuidesFound GF
 	LEFT JOIN PaymentZigi PZ
-	ON PZ.GuideNumber = GF.Guide_Number
-		  AND PZ.GuideSerie = GF.Guide_Serie
-		WHERE PZ.GuideNumber = GF.Guide_Number
-		  AND PZ.GuideSerie = GF.Guide_Serie
+	ON PZ.GuideSerie = GF.Guide_Serie
+		  AND PZ.GuideNumber = GF.Guide_Number
+		WHERE PZ.GuideSerie = GF.Guide_Serie
+		  AND PZ.GuideNumber = GF.Guide_Number
 		  AND (PZ.ZigiLinkStatus = 'PAID'OR PZ.AuthorizationNumberByUser IS NOT NULL)
 
     SELECT DISTINCT
@@ -153,9 +153,6 @@ BEGIN
             ON gf.Id = dbs.ID
         INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
             ON sr.ID = dbs.ID_Courier;
-    --LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
-    --ON cs.IdStation = dbs.DispatchedStationId
-    --WHERE dbs.CATRouteId = @IdRoute;
 
     DECLARE @GuidesDetail TABLE
     (
@@ -387,35 +384,62 @@ BEGIN
 
     END;
 
-    SELECT SUM(Total) AS COD_Manifest
-    FROM @GuidesDetail;
+     SELECT SUM(Total) - ISNULL(rdm.TotalApplied,0) AS COD_Manifest
+    FROM @GuidesDetail gd
+	LEFT JOIN (
+			SELECT 
+				DeliveryOrderBySettlementId,
+				SUM(AmountApplied) AS TotalApplied
+			FROM [DeliveryBackOffice].[dbo].[RelDepositManifest] WITH (NOLOCK)
+			GROUP BY DeliveryOrderBySettlementId
+		) rdm ON gd.id = rdm.DeliveryOrderBySettlementId
+		GROUP BY rdm.TotalApplied;
 
-      SELECT 
-			gd.id,
-			gd.Guide,
-			gd.GuideSerie,
-			gd.GuideNumber,
-			gd.Delivered,
-			gd.Price,
-			gd.COD,
-			CASE 
-				WHEN gd.Total > ISNULL(rdm.TotalApplied, 0) 
-					THEN gd.Total - ISNULL(rdm.TotalApplied, 0)
-				ELSE gd.Total
-			END AS TOTAL,
-			gd.FEL,
-			gd.StatusOrderId,
-			gd.OrderDescription,
-			gd.StatusOrderValid,
-			gd.DescriptionStatusOrderValid
-		FROM @GuidesDetail gd
-            LEFT JOIN (
-                SELECT 
-                    DeliveryOrderBySettlementId,
-                    SUM(AmountApplied) AS TotalApplied
-                FROM [DeliveryBackOffice].[dbo].[RelDepositManifest] WITH (NOLOCK)
-                GROUP BY DeliveryOrderBySettlementId
-            ) rdm ON gd.id = rdm.DeliveryOrderBySettlementId
-		ORDER BY gd.id DESC;
+		WITH rdm AS (
+			SELECT 
+				DeliveryOrderBySettlementId,
+				SUM(AmountApplied) AS TotalApplied
+			FROM [DeliveryBackOffice].[dbo].[RelDepositManifest] WITH (NOLOCK)
+			GROUP BY DeliveryOrderBySettlementId
+		),
+		Applied AS
+		(
+			SELECT
+				gd.*,
+				ISNULL(r.TotalApplied, 0) AS TotalApplied,
+				SUM(gd.Total) OVER (
+					PARTITION BY COALESCE(r.DeliveryOrderBySettlementId, gd.id)
+					ORDER BY gd.id ASC
+					ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+				) AS RunningTotal,
+				SUM(gd.Total) OVER (
+					PARTITION BY COALESCE(r.DeliveryOrderBySettlementId, gd.id)
+					ORDER BY gd.id ASC
+					ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+				) AS RunningBefore
+			FROM @GuidesDetail gd
+			LEFT JOIN rdm r
+				ON gd.id = r.DeliveryOrderBySettlementId
+		)
+		SELECT
+			id,
+			Guide,
+			GuideSerie,
+			GuideNumber,
+			Delivered,
+			Price,
+			COD,
+			CASE
+				WHEN TotalApplied <= ISNULL(RunningBefore, 0) THEN Total
+				WHEN TotalApplied >= RunningTotal THEN 0
+				ELSE (RunningTotal - TotalApplied)
+			END AS Total,
+			FEL,
+			StatusOrderId,
+			OrderDescription,
+			StatusOrderValid,
+			DescriptionStatusOrderValid
+		FROM Applied
+		ORDER BY id ASC;
 
 END;

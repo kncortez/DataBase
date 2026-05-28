@@ -3,8 +3,12 @@
 -- Create date: <2024-07-05>
 -- Description:	<Se agrega la moneda correspondiente al express center>
 -- =============================================
-
-CREATE PROCEDURE [dbo].[GetClosureList] 
+-- =============================================
+-- Author:		<Bilkar Morataya>
+-- Create date: <2025-10-17>
+-- Description:	<Se agrega el método de pago Zigi en los totales>
+-- =============================================
+CREATE PROCEDURE [dbo].[GetClosureList]
     @VisitPointId INT,
     @StartDate DATETIME,
     @EndDate DATETIME
@@ -12,19 +16,26 @@ AS
 BEGIN
 	DECLARE @IdCountry NVARCHAR(2),
 		    @Account NVARCHAR(30),
-			@AccountCOD NVARCHAR(30);
+			@AccountCOD NVARCHAR(30),
+            @AccountZigi NVARCHAR(30);
 
-	SELECT @IdCountry = CountryId 
-	FROM VisitPointClient 
+	SELECT @IdCountry = CountryId
+	FROM VisitPointClient
 	WHERE CodeOfReference = @VisitPointId
 
-	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
-	
-	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
-	FROM dbo.ClosureAccount 
-	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
+	WHERE Description = 'Cuenta Express Center' AND IdCountry = @IdCountry
+
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
+	WHERE Description = 'Cuenta Área COD' AND IdCountry = @IdCountry
+
+    -- MODIFICACIÓN [17/10/2025] - Campos para Zigi
+	SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')'
+	FROM dbo.ClosureAccount
+	WHERE Description = 'Cuenta Zigi' AND IdCountry = @IdCountry
+
     SELECT ACH.IdAccountingClosuresHeader 'ClosureId',
            ACH.VisitPoint 'VisitPointId',
            VPC.DescriptionOfClient 'VisitPoinDescription',
@@ -39,24 +50,32 @@ BEGIN
            ACH.TotalAmountCashDeclared,
            ACH.TotalAmountCredit,
            ACH.TotalAmountCreditDeclared,
-           ACH.TotalAmountCODCash,
+           ISNULL(ACH.TotalAmountCODCash,0 ) - ISNULL(ACH.TotalAmountCODZigi,0) as TotalAmountCODCash,
            -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
            ACH.TotalAmountCODCashDeclared,
            ACH.TotalAmountFacturaCash,
            ACH.TotalAmountFacturaCashDeclared,
            ACH.TotalAmountFacturaCard,
            ACH.TotalAmountFacturaCardDeclared,
-		   ISNULL(CCC.Symbol,'') AS CurrencySymbol
+           -- MODIFICACIÓN 17/10/2025 Bilkar Morataya
+           ISNULL(ACH.TotalAmountFacturaZigi,0) + ISNULL(ACH.TotalAmountCODZigi,0) as 'TotalAmountZigi',
+           ISNULL(ACH.TotalAmountFacturaZigiDeclared,0) + ISNULL(ACH.TotalAmountCODZigiDeclared,0) as TotalAmountZigiDeclared,
+           ACH.TotalAmountCODZigi,
+           ACH.TotalAmountCODZigiDeclared,
+           ACH.TotalAmountFacturaZigi,
+           ACH.TotalAmountFacturaZigiDeclared,
+           -- FIN MODIFICACIÓN
+           ISNULL(CCC.Symbol,'') AS CurrencySymbol
     -- FIN MODIFICACIÓN
     FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
         INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
             ON ACH.VisitPoint = VPC.CodeOfReference
         INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU
             ON REU.UsrIdUser = ACH.UserId
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-			ON VPC.CountryId = DC.Currency_IdCountry
-		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
-			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH (NOLOCK)
+            ON VPC.CountryId = DC.Currency_IdCountry
+        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
+            ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
     WHERE CAST(ACH.DateCreated AS DATE)
           BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)
           AND DC.DefaultPerCountry = 1
@@ -68,6 +87,7 @@ BEGIN
 
     SELECT @Account AS AccounExp,
 		   @AccountCOD AS AccountCOD,
+		   @AccountZigi AS AccountZigi,
 		  Value 'URL'
     FROM ConfigParams
     WHERE Name = 'ClosureExpressCenter';

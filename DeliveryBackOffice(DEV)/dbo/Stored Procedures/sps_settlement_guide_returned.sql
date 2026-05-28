@@ -1,13 +1,21 @@
-﻿-- =============================================
--- Author:		<Cano, Carlos>
--- Create date: <2020-11-22>
--- Description:	<Registrar transacción de liquidación para material devuelto>
--- =============================================
+﻿/* =================================================
+   SP:        sps_settlement_guide_returned
+   Propósito: Registrar transacción de liquidación para material devuelto
+   Autor:     Carlos Cano
+   Historia:  ---
+   Fecha:     2020-11-22
+
+=== CHANGELOG ============================
+
+2025-12-23 | Historia/épica: FDAPI-4748   | Autor: Brandon Pedroza | Se almacena idStation en liquidación para material devuelto
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_settlement_guide_returned]
     @GuideSerie AS VARCHAR(2)
   , @GuideNumber AS INT
   , @Token NVARCHAR(50)
   , @IdManifest INT
+  , @StationId INT = NULL
 AS
 BEGIN
     DECLARE @RModified INT;
@@ -52,10 +60,11 @@ BEGIN
           , [DateCreatedInSystem]
           , [Observations]
           , [Temperature_Celsius]
+          , [StationId]
         )
         VALUES
         (   @GuideSerie, @GuideNumber, 8 -- retornado a Forza
-          , @Token, GETDATE(), GETDATE(), NULL, NULL);
+          , @Token, GETDATE(), GETDATE(), NULL, NULL,@StationId);
 
         -- registrar último checkpoint de devolución
         UPDATE DeliveryBackOffice.dbo.DeliveryOrder
@@ -126,9 +135,10 @@ BEGIN
               , [DateCreatedInSystem]
               , [Observations]
               , [Temperature_Celsius]
+              , [StationId]
             )
             VALUES
-            (@GuideSerie, @GuideNumber, @StatusReturn, @Token, GETDATE(), GETDATE(), NULL, NULL);
+            (@GuideSerie, @GuideNumber, @StatusReturn, @Token, GETDATE(), GETDATE(), NULL, NULL,@StationId);
 
             -- registrar último checkpoint de devolución
             UPDATE DeliveryOrder
@@ -218,13 +228,13 @@ BEGIN
                 INNER JOIN DeliveryAttempt        da WITH (NOLOCK)
                     ON do.Guide_Serie = da.Guide_Serie
                        AND do.Guide_Number = da.Guide_Number
-                       AND da.ID_DeliveryOrderBySettlement = @IdManifest
                 LEFT JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
                     ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
                 LEFT JOIN StatusOrder             so
                     ON coi.StatusOrderId = so.StatusOrderId
             WHERE do.Guide_Serie = @GuideSerie
                   AND do.Guide_Number = @GuideNumber
+                  AND da.ID_DeliveryOrderBySettlement = @IdManifest
             ORDER BY rbc.RbcCodeOfReference DESC;
         END;
         ELSE
@@ -258,17 +268,17 @@ BEGIN
                 INNER JOIN DeliveryAttempt         da WITH (NOLOCK)
                     ON doad.GuideSerie = da.Guide_Serie
                        AND doad.GuideNumber = da.Guide_Number
-                       AND da.ID_DeliveryOrderBySettlement = @IdManifest
                 INNER JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
                     ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
-                       AND coi.IsDenied = 0 --no esté denegada
                 INNER JOIN StatusOrder             so
                     ON coi.StatusOrderId = so.StatusOrderId
                  INNER JOIN dbo.CatTypeIncidence cti WITH (NOLOCK)
 				    ON da.ID_Incident = cti.IdIncidenceType
-				       AND ISNULL(cti.IncidenceClasificationId,0)=1
             WHERE doad.GuideSerie = @GuideSerie
                   AND doad.GuideNumber = @GuideNumber
+                  AND da.ID_DeliveryOrderBySettlement = @IdManifest
+                  AND ISNULL(cti.IncidenceClasificationId,0)=1
+                  AND coi.IsDenied = 0 --no esté denegada
                   AND
                   (
                       so.OrderDescription = 'Incidencia Validada'
@@ -336,14 +346,14 @@ BEGIN
                 INNER JOIN DeliveryOrderAttemptData       doad WITH (NOLOCK)
                     ON doad.GuideSerie = DOR.Guide_Serie
                        AND doad.GuideNumber = DOR.Guide_Number
-                       AND doad.RowStatus = 1
                 LEFT JOIN [dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
                     ON DOR.Guide_Serie = DA.Guide_Serie
                        AND DOR.Guide_Number = DA.Guide_Number
                 LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                     ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
             WHERE DOR.Guide_Serie = @GuideSerie
-                  AND DOR.Guide_Number = @GuideNumber;
+                  AND DOR.Guide_Number = @GuideNumber
+                  AND doad.RowStatus = 1;
 
 
 

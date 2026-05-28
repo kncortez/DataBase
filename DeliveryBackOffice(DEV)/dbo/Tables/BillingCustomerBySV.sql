@@ -14,7 +14,10 @@ CREATE TABLE [dbo].[BillingCustomerBySV]
     TokenUpdated VARCHAR(50) NULL,
     DateUpdated DATETIME NULL,
 	IdProvince INT NULL, 
-    IdTownship INT NULL, 
+    IdTownship INT NULL,
+	TypeIdentificationDocumentCode NVARCHAR(100) NULL,
+	IdDocument NVARCHAR(100) NULL,
+	Inv_type INT NULL, 
     CONSTRAINT PK_BillingCustomerBySV PRIMARY KEY (Id),
     CONSTRAINT FK_BillingCustomerBySV_District 
         FOREIGN KEY (DistrictId) 
@@ -34,6 +37,10 @@ CREATE TABLE [dbo].[BillingCustomerBySV]
 	CONSTRAINT FK_BillingCustomerBySV_Township
 		FOREIGN KEY (IdTownship) 
 		REFERENCES dbo.Township(IdTownship)
+	CONSTRAINT [FK_BillingCustomerBySV_CatTypeDocument]  
+	    FOREIGN KEY([Inv_type])
+        REFERENCES [CatTypeDocument] ([IdRegister])
+GO
 );
 
 GO
@@ -190,19 +197,50 @@ EXEC sp_addextendedproperty
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Id de departemento asociado a cliente(Customer) para El Salvador',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'BillingCustomerBySV',
-    @level2type = N'COLUMN',
-    @level2name = N'IdProvince'
+   						@value = N'Id de departemento asociado a cliente(Customer) para El Salvador',
+    					@level0type = N'SCHEMA',
+    					@level0name = N'dbo',
+    					@level1type = N'TABLE',
+    					@level1name = N'BillingCustomerBySV',
+    					@level2type = N'COLUMN',
+    					@level2name = N'IdProvince'
+
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Id de township relacionado a cliente para El Salvador',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'BillingCustomerBySV',
-    @level2type = N'COLUMN',
-    @level2name = N'IdTownship'
+    					@value = N'Id de township relacionado a cliente para El Salvador',
+    					@level0type = N'SCHEMA',
+    					@level0name = N'dbo',
+    					@level1type = N'TABLE',
+    					@level1name = N'BillingCustomerBySV',
+    					@level2type = N'COLUMN',
+    					@level2name = N'IdTownship'
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description', 
+						@value = N'Tipo de documento de identificación del comprador', 
+						@level2type = N'COLUMN', 
+						@level2name = 'TypeIdentificationDocumentCode', 
+						@level0type = N'SCHEMA', 
+						@level0name = 'dbo', 
+						@level1type = N'TABLE',  
+						@level1name = 'BillingCustomerBySV';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description', 
+						@value = N'Número de identificación', 
+						@level2type = N'COLUMN', 
+						@level2name = 'IdDocument', 
+						@level0type = N'SCHEMA', 
+						@level0name = 'dbo', 
+						@level1type = N'TABLE',  
+						@level1name = 'BillingCustomerBySV';
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    					@value = N'tipo de documento que se emite, referencia a tabla CatTypeDocument',
+    					@level0type = N'SCHEMA',
+    					@level0name = N'dbo',
+    					@level1type = N'TABLE',
+    					@level1name = N'BillingCustomerBySV',
+    					@level2type = N'COLUMN',
+    					@level2name = N'Inv_type'

@@ -1,9 +1,14 @@
-﻿
--- =============================================
--- Author:      <Juan, Ramirez>
--- Create date: <2025-05-01>
--- Description: <Se agregan puntos de visita por medio de metodo de integración en API core>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[SetAddressByApi]
+   Propósito: Se agregan puntos de visita por medio de metodo de integración en API core.
+   Autor:     Juan Ramirez
+   Historia:  Desconocido
+   Fecha:     2025-05-01
+ ================ CHANGELOG ======================
+2025-11-20 | Historia: FDAPI-4831 | Autor: Walter Orozco |
+2026-04-28 | Historia: FDAPI-6138 | Autor: Oscar Rodriguez |
+================================================= */
+
 CREATE PROCEDURE [dbo].[SetAddressByApi]
 (
    @CodeApp                NVARCHAR(60),
@@ -17,7 +22,8 @@ CREATE PROCEDURE [dbo].[SetAddressByApi]
    @Latitude               NVARCHAR(50)  = NULL,
    @Longitude              NVARCHAR(50)  = NULL,
    @Zone                   SMALLINT      = NULL,
-   @Email                  NVARCHAR(200) = NULL
+   @Email                  NVARCHAR(200) = NULL,
+   @KindOfVPClient		   NVARCHAR(100) = NULL
 )
 AS
 BEGIN
@@ -44,7 +50,9 @@ BEGIN
            ,@IdResult           INT = 0
            ,@ErrorMessage       NVARCHAR(500) = 'Operación exitosa'
            ,@IsSuccess          BIT = 1
-           ,@Date               DATETIME = GETDATE();
+           ,@Date               DATETIME = GETDATE()
+		   ,@SaleChannel		INT
+		   ,@IsBoxful		    INT = 0;
 
       BEGIN TRY
                 -- INICIAR TRANSACCIÓN
@@ -273,11 +281,32 @@ BEGIN
                                                FROM dbo.VisitPointClient vpc3 WITH(NOLOCK)
                                               ORDER BY vpc3.CodeOfReference DESC)
 
+					-- Se agrega tipo de punto de visita del cliente si lo trae, de lo contrario NULL
+					DECLARE @IdKindOfVPClient INT = NULL;
+
+					IF(@KindOfVPClient IS NOT NULL AND @KindOfVPClient <> '')
+					BEGIN
+						IF EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.KindOfVPClient WITH(NOLOCK) 
+							WHERE KindOfVPName = @KindOfVPClient AND IdCountry = @IdCountry AND KindOfVPStatus = 1)
+						BEGIN
+							SELECT 
+								@IdKindOfVPClient = IdKindOfVPClient
+							FROM DeliveryBackOffice.dbo.KindOfVPClient WITH(NOLOCK) 
+							WHERE KindOfVPName = @KindOfVPClient AND IdCountry = @IdCountry AND KindOfVPStatus = 1;
+						END;
+					END;
+
+					-- Verificar cliente boxfull para asignacion de canal de ventas (B2C Agregadores)
+					SET @IsBoxful = IIF(@IdCustomer IN (88813,83195),1,0)
+					SET @SaleChannel = IIF(@IsBoxful = 1, (SELECT IdSalesChannel FROM DeliveryBackOffice.dbo.CatSalesChannel WITH(NOLOCK) WHERE Description = 'B2C Agregadores'), 0)
+
                     -- Verificar si ya contiene el guion
                     IF CHARINDEX('-', @Phone) = 0 AND LEN(@Phone) = 8
                     BEGIN
                         SET @Phone = STUFF(@Phone, 5, 0, '-');
                     END
+
+
 
                     INSERT INTO dbo.VisitPointClient
                     (
@@ -306,7 +335,8 @@ BEGIN
                         Longitude,
                         [IsOriginVisitPoint],
                         LogLatitude,
-                        LogLongitude
+                        LogLongitude,
+						SaleChannelId
                     )
                     VALUES
                     (
@@ -326,7 +356,7 @@ BEGIN
                       @ProvinceName,                               -- Department - nvarchar(100)
                       CONCAT('(',@NirPhone,') ',@Phone),           -- Phone - nvarchar(50)
                       '',                                          -- ContactName - nvarchar(200)
-                      NULL,                                        -- IdKindOfVPClient,
+                      @IdKindOfVPClient,                           -- IdKindOfVPClient - int
                       NULL,                                        -- IdKindOfVPBusiness - int
                       IIF(@IdSettlement = 0, NULL,@IdSettlement),  -- IdSettlement - bigint
                       '',                                          -- Email - nvarchar(200)
@@ -335,7 +365,8 @@ BEGIN
                       @Longitude,                                  -- Longitude - varchar(50)
                       @IsOriginVisitPoint,                         -- [IsOriginVisitPoint]
                       @Latitude,                                   -- LogLatitude
-                      @Longitude                                   -- LogLongitude
+                      @Longitude,                                  -- LogLongitude
+					  IIF(@IsBoxful = 1,@SaleChannel,NULL)		   -- SaleChannelId - Por defecto NULL
                     )
 
                     -- COMMIT de la transacción

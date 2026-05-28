@@ -1,7 +1,4 @@
-﻿
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Carlos, Cano>
 -- Create date: <2020-12-08>
 -- Description:	<Recupera detalle para generar manifiesto de liquidación (COD)>

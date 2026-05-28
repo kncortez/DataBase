@@ -164,6 +164,7 @@ BEGIN
 								 AND do.SenderCountryId = @IdCountrySender
 								 AND ISNULL(pg.IsAnticipatedCOD,0) = 0
 								 AND pg.IsCompleted = 1
+                                 AND cus.IsInternationalCustomer=1
                            FOR XML PATH('')
                        ),
                        1,
@@ -219,6 +220,7 @@ BEGIN
 								 AND do.SenderCountryId = @IdCountrySender
 								 AND ISNULL(pg.IsAnticipatedCOD,0) = 0
 								 AND pg.IsCompleted = 1
+                                 AND cus.IsInternationalCustomer=1
                            FOR XML PATH('')
                        ),
                        1,
