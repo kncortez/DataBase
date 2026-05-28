@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [dbo].[sps_set_cancelGuide]
+CREATE PROCEDURE [dbo].[sps_set_cancelGuide]
     @TblListGuides AS TblGuidesCancel READONLY,
     @IdClient INT,
 	@Token NVARCHAR(100)
@@ -11,6 +11,8 @@ BEGIN
             DROP TABLE #listGuidesEnabled;
         IF OBJECT_ID('tempdb.dbo.#listGuidesDisabled', 'U') IS NOT NULL
 		 DROP TABLE #listGuidesDisabled;
+	 IF OBJECT_ID('tempdb.dbo.#listGuidesNotFound', 'U') IS NOT NULL
+		 DROP TABLE #listGuidesNotFound;
 
 	--Variabes Membresías y suscripciones
 	DECLARE @MembershipId INT
@@ -21,15 +23,16 @@ BEGIN
 		Id INT IDENTITY(1,1),
 		GuideSerie NVARCHAR(2),
 		GuideNumber INT,
-		UNIQUE NONCLUSTERED (Id) 
+		UNIQUE NONCLUSTERED (Id)
 	)
 	DECLARE @GuideSerieMembership NVARCHAR(2)
-	DECLARE @GuideNumberMembership INT 
+	DECLARE @GuideNumberMembership INT
 	-------------------------------------
 
 	SELECT *
     INTO #TblListGuides
     FROM @TblListGuides;
+
 --Guias que cumplen con estado para anular-------------------
 	SELECT lg.Guide_Serie,
            lg.Guide_Number
@@ -39,10 +42,9 @@ BEGIN
             ON lg.Guide_Serie = do.Guide_Serie
             AND lg.Guide_Number = do.Guide_Number
 		    AND do.IdCustomer = @IdClient
-            WHERE do.StatusOrderId IN (1 )
+            WHERE do.StatusOrderId IN (1)
 
-
---Guias aue no cumplen estado para anular----------------------
+--Guias que no cumplen estado para anular (existen pero no son cancelables)-------------------
 	SELECT lg.Guide_Serie,
            lg.Guide_Number
     INTO #listGuidesDisabled
@@ -50,16 +52,78 @@ BEGIN
            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
             ON lg.Guide_Serie = do.Guide_Serie
             AND lg.Guide_Number = do.Guide_Number
-            WHERE do.StatusOrderId NOT IN (1 )
+            WHERE do.StatusOrderId NOT IN (1)
 			OR do.IdCustomer <> @IdClient
 
-		
-		--select count(*) from #listGuidesEnabled
-		--select count(*) from #listGuidesDisabled
+--Guias que no existen en DeliveryOrder (inexistentes)-------------------
+	SELECT lg.Guide_Serie,
+           lg.Guide_Number
+    INTO #listGuidesNotFound
+    FROM #TblListGuides lg
+           LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+            ON lg.Guide_Serie = do.Guide_Serie
+            AND lg.Guide_Number = do.Guide_Number
+    WHERE do.Guide_Number IS NULL
 
-IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
+IF ((SELECT COUNT(1) FROM #listGuidesNotFound) > 0)
+	BEGIN
+		  SET @Output
+                            = '[ { ' + '"Rejects": [ '
+                              +
+                              (
+                                  SELECT STUFF(
+                                         (
+                                             SELECT ' {"DescriptionResult": "La guía '
+                                                    + lnf.Guide_Serie
+                                                    + CAST(lnf.Guide_Number AS VARCHAR(8))
+                                                    + ' no existe en el sistema." }, '
+                                             FROM #listGuidesNotFound lnf
+                                             FOR XML PATH('')
+                                         ),
+                                         1,
+                                         1,
+                                         ''
+                                              )
+                              ) + '] } ]';
+
+                        SET @Output
+                            = SUBSTRING(@Output, 1, (LEN(@Output) - 7))
+                              + SUBSTRING(@Output, (LEN(@Output) - 5), LEN(@Output));
+
+                        SELECT @Output FormatJson, 404 StatusResult;
+	END
+ELSE IF ((SELECT COUNT(1) FROM #listGuidesDisabled) > 0)
+	BEGIN
+		  SET @Output
+                            = '[ { ' + '"Rejects": [ '
+                              +
+                              (
+                                  SELECT STUFF(
+                                         (
+                                             SELECT ' {"DescriptionResult": "'
+                                                    + ('No se pudo realizar la operacion debido a que las guìas no cumplen las condiciones.')
+                                                    + '" }, '
+                                             FOR XML PATH('')
+                                         ),
+                                         1,
+                                         1,
+                                         ''
+                                              )
+                              ) + '] } ]';
+
+                        SET @Output
+                            = SUBSTRING(@Output, 1, (LEN(@Output) - 7))
+                              + SUBSTRING(@Output, (LEN(@Output) - 5), LEN(@Output));
+
+                        SELECT @Output FormatJson, 409 StatusResult;
+	END
+ELSE IF ((SELECT COUNT(1) FROM #listGuidesEnabled) = 0)
+	BEGIN
+		SELECT '[ { "Rejects": [ { "DescriptionResult": "No se encontraron guías para anular." } ] } ]' FormatJson, 409 StatusResult;
+	END
+ELSE
 	BEGIN --COMIENZA
-		
+
 
         BEGIN TRANSACTION;
 			BEGIN TRY
@@ -86,7 +150,7 @@ IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
                                        @Token UserCreated,
                                        GETDATE()
                                 FROM #listGuidesEnabled lge
-			
+
 			--Membresías y suscripciones
 			--Oscar Morales 25/07/2022
 
@@ -118,7 +182,7 @@ IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
 					@MembershipSubscriptionLogId = IdMembershipSubscriptionLog
 					,@MembershipId = MembershipId
 					,@SubscriptionId = SubscriptionId
-				FROM MembershipSubscriptionLog 
+				FROM MembershipSubscriptionLog
 				WHERE LogGuideSerie = @GuideSerieMembership
 				AND LogGuideNumber = @GuideNumberMembership
 				AND RowStatus = 1
@@ -126,7 +190,7 @@ IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
 				IF @MembershipSubscriptionLogId IS NOT NULL
 				BEGIN
 
-					UPDATE MembershipSubscriptionLog 
+					UPDATE MembershipSubscriptionLog
 					SET RowStatus = 0
 						,TokenUpdated = @Token
 						,DateUpdated = GETDATE()
@@ -134,8 +198,8 @@ IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
 
 					IF @SubscriptionId IS NULL
 					BEGIN
-					
-						UPDATE Membership 
+
+						UPDATE Membership
 						SET ActualServiceCount = ActualServiceCount - 1
 							,TokenUpdated = @Token
 							,DateUpdated = GETDATE()
@@ -143,7 +207,7 @@ IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
 					END
 					ELSE
 					BEGIN
-					
+
 						UPDATE Subscription
 						SET ActualServiceCount = ActualServiceCount - 1
 							,TokenUpdated = @Token
@@ -154,10 +218,10 @@ IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
 				END
 			END
 			--Termina Membresías y suscripciones
-                                   
+
 			END TRY
 			BEGIN CATCH
-		
+
 				SELECT 'ERROR' AS message,
 					   'FALSE' blnResult,
 					   CAST(500 AS VARCHAR(5)) StatusResult,
@@ -183,9 +247,11 @@ IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
                               (
                                   SELECT STUFF(
                                          (
-                                             SELECT ' {"DescriptionResult": "'
-                                                    + ('La anulaciòn de guías fue realizada exitosamente.')
-                                                    + '" }, '
+                                             SELECT ' {"DescriptionResult": "La anulaciòn de la guía '
+                                                    + lge.Guide_Serie
+                                                    + CAST(lge.Guide_Number AS VARCHAR(8))
+                                                    + ' fue realizada exitosamente." }, '
+                                             FROM #listGuidesEnabled lge
                                              FOR XML PATH('')
                                          ),
                                          1,
@@ -198,37 +264,11 @@ IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
                             = SUBSTRING(@Output, 1, (LEN(@Output) - 7))
                               + SUBSTRING(@Output, (LEN(@Output) - 5), LEN(@Output));
 
-                        SELECT @Output FormatJson;
-	
+                        SELECT @Output FormatJson, 200 StatusResult;
+
 		    END;
 
-	END --TERMINA
-ELSE
-	BEGIN
-		  SET @Output
-                            = '[ { ' + '"Rejects": [ '
-                              +
-                              (
-                                  SELECT STUFF(
-                                         (
-                                             SELECT ' {"DescriptionResult": "'
-                                                    + ('No se pudo realizar la operacion debido a que las guìas no cumplen las condiciones.')
-                                                    + '" }, '
-                                             FOR XML PATH('')
-                                         ),
-                                         1,
-                                         1,
-                                         ''
-                                              )
-                              ) + '] } ]';
-
-                        SET @Output
-                            = SUBSTRING(@Output, 1, (LEN(@Output) - 7))
-                              + SUBSTRING(@Output, (LEN(@Output) - 5), LEN(@Output));
-
-                        SELECT @Output FormatJson;
-	END
-
+    END --TERMINA
 
 
 END
