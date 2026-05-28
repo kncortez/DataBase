@@ -1,4 +1,4 @@
-﻿/* =================================================
+/* =================================================
    SP: GetServiceCartbyAccountMarketPlace
    Propósito: Obtiene información del carrito de compras MarketPlace
               con manejo de moneda multipais
