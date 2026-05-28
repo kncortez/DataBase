@@ -1,3 +1,13 @@
+/* =================================================
+   SP:        [dbo].[sps_set_cancelGuide]
+   Propósito: Anula guías de entrega actualizando su estado a 7 y registrando
+              el historial en DeliveryOrderDetail; gestiona membresías y
+              suscripciones asociadas a cada guía anulada.
+   Fecha:     2022-07-25
+============================================
+=== CHANGELOG ================================
+-- 2026-05-27 | Historia/épica: FDAPI-6366 | Autor: Hanss Espinoza |
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_set_cancelGuide]
     @TblListGuides AS TblGuidesCancel READONLY,
     @IdClient INT,
