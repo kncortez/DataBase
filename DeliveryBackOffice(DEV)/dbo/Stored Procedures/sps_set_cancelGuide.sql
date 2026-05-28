@@ -55,7 +55,7 @@ BEGIN
            lg.Guide_Number
     INTO #listGuidesEnabled
     FROM #TblListGuides lg
-           INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+           INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
             AND lg.Guide_Number = do.Guide_Number
 		    AND do.IdCustomer = @IdClient
@@ -66,7 +66,7 @@ BEGIN
            lg.Guide_Number
     INTO #listGuidesDisabled
     FROM #TblListGuides lg
-           INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+           INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
             AND lg.Guide_Number = do.Guide_Number
             WHERE do.StatusOrderId NOT IN (1)
@@ -77,7 +77,7 @@ BEGIN
            lg.Guide_Number
     INTO #listGuidesNotFound
     FROM #TblListGuides lg
-           LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+           LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
             AND lg.Guide_Number = do.Guide_Number
     WHERE do.Guide_Number IS NULL
@@ -146,7 +146,7 @@ ELSE
 
 			 UPDATE do
                 SET do.StatusOrderId = 7
-                FROM DeliveryOrder do
+                FROM DeliveryBackOffice.dbo.DeliveryOrder do
                      INNER JOIN #listGuidesEnabled lge
                      ON lge.Guide_Number = do.Guide_Number
                      AND lge.Guide_Serie = do.Guide_Serie;
@@ -198,7 +198,7 @@ ELSE
 					@MembershipSubscriptionLogId = IdMembershipSubscriptionLog
 					,@MembershipId = MembershipId
 					,@SubscriptionId = SubscriptionId
-				FROM MembershipSubscriptionLog
+				FROM DeliveryBackOffice.dbo.MembershipSubscriptionLog WITH (NOLOCK)
 				WHERE LogGuideSerie = @GuideSerieMembership
 				AND LogGuideNumber = @GuideNumberMembership
 				AND RowStatus = 1
@@ -206,7 +206,7 @@ ELSE
 				IF @MembershipSubscriptionLogId IS NOT NULL
 				BEGIN
 
-					UPDATE MembershipSubscriptionLog
+					UPDATE DeliveryBackOffice.dbo.MembershipSubscriptionLog
 					SET RowStatus = 0
 						,TokenUpdated = @Token
 						,DateUpdated = GETDATE()
@@ -215,7 +215,7 @@ ELSE
 					IF @SubscriptionId IS NULL
 					BEGIN
 
-						UPDATE Membership
+						UPDATE DeliveryBackOffice.dbo.Membership
 						SET ActualServiceCount = ActualServiceCount - 1
 							,TokenUpdated = @Token
 							,DateUpdated = GETDATE()
@@ -224,7 +224,7 @@ ELSE
 					ELSE
 					BEGIN
 
-						UPDATE Subscription
+						UPDATE DeliveryBackOffice.dbo.Subscription
 						SET ActualServiceCount = ActualServiceCount - 1
 							,TokenUpdated = @Token
 							,DateUpdated = GETDATE()
