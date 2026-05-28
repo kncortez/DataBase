@@ -522,16 +522,17 @@ BEGIN
 
                         --- Validar que todas las piezas de la guía hayan sido escaneadas antes de actualizar el estado
                        
-                        SELECT  
+                         SELECT  
 							@CountPieceGuideAdd = COUNT(*) 
-							FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
-									ON RPD.RoutePreparationId = RPDP.RoutePreparationDetailId
-								WHERE  
-								RPD.RowStatus = 1
-								AND RPD.RoutePreparationId = @IdRoutePreparation
-								AND RPD.Guide_Serie = @GuideSerie
-								AND RPD.Guide_Number =  @GuideNumber
+						FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
+                            INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+                                ON RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
+                        WHERE RPD.Guide_Serie = @GuideSerie
+                              AND RPD.Guide_Number = @GuideNumber
+                              AND RPD.RoutePreparationId = @IdRoutePreparation
+                              AND RPDP.RowStatus = 1
+                              AND RPD.RowStatus = 1;
+								
 								
 
 						 SELECT 
@@ -568,7 +569,7 @@ BEGIN
                                GETDATE(),
                                GETDATE(),
                                @StationId
-                        WHERE NOT EXISTS
+                        WHERE EXISTS
                         (
                             SELECT 1
                             FROM RoutePreparationDetail WITH (NOLOCK)
