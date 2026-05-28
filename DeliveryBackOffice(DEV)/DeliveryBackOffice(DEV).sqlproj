@@ -1905,6 +1905,7 @@
     <Build Include="dbo\Stored Procedures\spg_get_RouteLastMile_1.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceRecolectCODAnticipated_1.sql" />
     <Build Include="dbo\Stored Procedures\GetVisitPointOfClient.sql" />
+    <Build Include="dbo\Stored Procedures\HermesDesktop_CorporateCustomer_Search_ByTermAndCountry.sql" />
     <Build Include="dbo\Stored Procedures\GetSettlementCODUnifiedRoute_1.sql" />
     <Build Include="dbo\Stored Procedures\GetResumeReportCODAnticipatedByCustomer_1.sql" />
     <Build Include="dbo\Stored Procedures\GetReportCODAnticipatedByCustomer_1.sql" />
@@ -2103,6 +2104,7 @@
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueueByCpx_4.sql" />
     <Build Include="dbo\Stored Procedures\SupportLHroutes.sql" />
     <Build Include="dbo\Stored Procedures\GetDeliveryOrderPieces.sql" />
+    <Build Include="dbo\Stored Procedures\GetConciliacionTransferenciasYZigi.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_RegisterInventoryAutomaticExc.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetRackPositionPerStation.sql" />
   </ItemGroup>
