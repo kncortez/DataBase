@@ -143,15 +143,7 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].CatProductCategory  WITH (NOLOCK)
             WHERE TechnicalDescription = @TechnicalDescription  
                   AND RowStatus = 1  
-                  AND  
-                  (  
-                      IdCountry = @Country  
-                      OR  
-                      (  
-                          IdCountry IS NULL  
-                          AND @Country = 'GT'  
-                      )  
-                  )  
+                  AND IdCountry = @Country  
         );  
 
         IF (@NewProductId IS NULL)  
@@ -231,7 +223,7 @@ BEGIN
                rbc.RbcIdRate
         FROM [DeliveryBackOffice].[dbo].RatebyCustomer rbc WITH (NOLOCK)
         WHERE rbc.RbcIdCustomer = @CustomerId
-              AND rbc.RbcRowStatus = 'TRUE'
+              AND rbc.RbcRowStatus = 1
               AND rbc.RbcCodeOfReference = @CodeOfReferenceSource
     )
     BEGIN
@@ -245,11 +237,11 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].RatebyCustomer          rc WITH (NOLOCK)
             LEFT JOIN [DeliveryBackOffice].[dbo].RateHeader     rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
-                AND rh.RheRowStatus = 'true'
+                AND rh.RheRowStatus = 1
             LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD dc WITH (NOLOCK)
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rc.RbcIdCustomer = @CustomerId
-              AND rc.RbcRowStatus = 'true'
+              AND rc.RbcRowStatus = 1
               AND rc.RbcCodeOfReference = @CodeOfReferenceSource;
     END;
     ELSE
@@ -264,11 +256,11 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].RatebyCustomer          rc WITH (NOLOCK)
             LEFT JOIN [DeliveryBackOffice].[dbo].RateHeader     rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
-                AND rh.RheRowStatus = 'true'
+                AND rh.RheRowStatus = 1
             LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD dc WITH (NOLOCK)
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rc.RbcIdCustomer = @CustomerId
-              AND rc.RbcRowStatus = 'true'
+              AND rc.RbcRowStatus = 1
               AND rc.RbcCodeOfReference IS NULL;
     END;
 
@@ -283,10 +275,10 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].RateBySalePipeLine      sp WITH (NOLOCK)  
             LEFT JOIN [DeliveryBackOffice].[dbo].RateHeader     rh WITH (NOLOCK)  
                 ON rh.RheId = sp.RateId  
-                AND rh.RheRowStatus = 'true'  
+                AND rh.RheRowStatus = 1 
             LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD dc WITH (NOLOCK)  
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency  
-        WHERE sp.RowStatus = 'true'  
+        WHERE sp.RowStatus = 1
               AND sp.SalePipeLineId = @IdSalePipeLine;  
   
     END;
@@ -302,8 +294,8 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].RateHeader              rh WITH (NOLOCK)
             LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD dc WITH (NOLOCK)
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
-        WHERE rh.RheRowStatus = 'true'
-              AND rh.RheDefault = 'true'
+        WHERE rh.RheRowStatus = 1
+              AND rh.RheDefault = 1
               AND ISNULL(rh.CountryId, 'GT') = @Country;
     END;
 
@@ -944,15 +936,7 @@ BEGIN
             SELECT ArtId  
             FROM DeliveryBackOffice.dbo.CatArticle WITH (NOLOCK)  
             WHERE ArtName = 'Paquete pequeño'  
-                  AND  
-                  (  
-                      IdCountry = @Country  
-                      OR  
-                      (  
-                          IdCountry IS NULL  
-                          AND @Country = 'GT'  
-                      )  
-                  )  
+            AND IdCountry = @Country  
         );  
   
         SET @ParcelCode2 = @ParcelCode;  
@@ -1081,15 +1065,7 @@ BEGIN
                                     WHERE ArtName IN ( 'Paquete pequeño', 'Paquete mediano', 'Paquete grande'  
                                                      , 'Paquete extra grande', 'Paquete sobredimensionado'  
                                                      )  
-                                          AND  
-                                          (  
-                                              IdCountry = @Country  
-                                              OR  
-                                              (  
-                                                  IdCountry IS NULL  
-                                                  AND @Country = 'GT'  
-                                              )  
-                                          )  
+                                          AND IdCountry = @Country  
                                 )  
                       )  
                   AND pc.Item IS NOT NULL  
@@ -1160,8 +1136,8 @@ BEGIN
                     ON sv.CtsId = rd.TypeServiceId  
                 LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate    cr WITH (NOLOCK)  
                     ON cr.IdTypeRate = rh.RateTypeId  
-            WHERE rh.RheRowStatus = 'true'  
-                  AND rd.RowStatus = 'true'  
+            WHERE rh.RheRowStatus = 1  
+                  AND rd.RowStatus = 1 
                   AND rh.RheId = @RateId  
                   AND rd.ArticleId IS NULL  
                   AND (rd.TypeServiceId IN  
@@ -1234,8 +1210,8 @@ BEGIN
                     ON sv.CtsId = rd.TypeServiceId  
                 LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate    cr WITH (NOLOCK)  
                     ON cr.IdTypeRate = rh.RateTypeId  
-            WHERE rh.RheRowStatus = 'true'  
-                  AND rd.RowStatus = 'true'  
+            WHERE rh.RheRowStatus = 1  
+                  AND rd.RowStatus = 1
                   AND rh.RheId = @RateId  
                   AND rd.ArticleId IS NULL  
                   AND (rd.TypeServiceId IN  
@@ -1315,7 +1291,7 @@ BEGIN
             LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate    cr WITH (NOLOCK)  
                 ON cr.IdTypeRate = rh.RateTypeId  
         WHERE rh.RheId = @RateId
-              AND rd.RowStatus = 'true'  
+              AND rd.RowStatus = 1  
               AND rd.ArticleId IS NULL  
               AND rd.TypeSegmentId = @IdSegment  
               AND (rd.TypeServiceId IN  
@@ -1466,7 +1442,7 @@ BEGIN
                         INNER JOIN #ListCode             LC  WITH (NOLOCK)
                             ON abc.Code = LC.Item  
                     WHERE rh.RheId = @RateId
-                          AND rd.RowStatus = 'true'  
+                          AND rd.RowStatus = 1
                           AND rd.TypeSegmentId = @IdSegment  
                     GROUP BY rd.TypeSegmentId  
                            , rd.TypeServiceId  
@@ -1571,7 +1547,7 @@ BEGIN
                     LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate       cr   WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId  
                 WHERE rh.RheId = @RateId  
-                      AND rd.RowStatus = 'true' 
+                      AND rd.RowStatus = 1
                       AND rd.TypeSegmentId = @IdSegment  
                       AND (rd.TypeServiceId IN  
                            (  
@@ -1744,7 +1720,7 @@ BEGIN
                     LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate        cr WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId
                 WHERE rd.TypeSegmentId = @IdSegment
-                      AND rd.RowStatus = 'true'
+                      AND rd.RowStatus = 1
                       AND (rd.TypeServiceId IN
                            (
                                SELECT CtsId
@@ -1796,11 +1772,11 @@ BEGIN
                     LEFT JOIN [DeliveryBackOffice].[dbo].RateData           rdignore WITH (NOLOCK) -- Ignorar artículos sin codigo dentro de tarifario
                         ON rdignore.ArticleId = ar.AbcId
                         AND rdignore.RateId = rh.RheId
-                        AND rdignore.RowStatus = 'true'
+                        AND rdignore.RowStatus = 1
                     LEFT JOIN [DeliveryBackOffice].[dbo].RateData           rd WITH (NOLOCK)
                         ON rd.ArticleId IS NULL
                         AND rd.RateId = rh.RheId
-                        AND rd.RowStatus = 'true'
+                        AND rd.RowStatus = 1
                     LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment     sg WITH (NOLOCK)
                         ON sg.CrsId = rd.TypeSegmentId
                     LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService     sv WITH (NOLOCK)
@@ -2105,7 +2081,7 @@ BEGIN
             LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate    cr WITH (NOLOCK)  
                 ON cr.IdTypeRate = rh.RateTypeId  
         WHERE rh.RheId = @RateId
-              AND rd.RowStatus = 'true'  
+              AND rd.RowStatus = 1 
               AND rd.ArticleId IS NULL  
               AND rd.TypeSegmentId = @IdSegment  
               AND (rd.TypeServiceId IN  
