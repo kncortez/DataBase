@@ -1,8 +1,15 @@
--- =============================================  
--- Author:      <Daniel Ramirez>  
--- Create date: <2024-11-23>  
--- Description: <Obtiene el detalle de las guías a facturar por comisión >
--- =============================================  
+/* =================================================
+   SP:        [dbo].[GetInvoicePaymentDetailCommissionCODCorp]
+   Propósito: Obtiene el detalle de las guías a facturar por comisión.
+   Autor:     Daniel Ramirez
+   Historia:  FDAPI-XXXX
+   Fecha:     
+===== CHANGELOG ============================
+    Fecha       Historia        Descripción                                                                                 Autor   
+    ----------  --------------  ---------------------------------------------------------------------------------       ----------
+    2024-11-23  FDAPI-XXXX      Creación del SP                                                                         Daniel Ramirez
+    2026-05-28  FDCF-18         Ajuste en la fecha de INICIO para incluir guías a partir del 1 de mayo de 2026.         Pedro Macajol
+=========================================== */
 CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailCommissionCODCorp]
 (
  @LstVisitPointClient NVARCHAR(MAX),
@@ -130,6 +137,7 @@ BEGIN
            AND bdCOD.AuthorizationNumber IS NOT NULL
            AND bdCOD.Commission > 0
            AND bdCOD.idCountry = @IdCountry
+           AND bdCOD.CreditDate >= '20260501'   
            AND CAST(bdCOD.CreditDate AS DATE) <= CAST(@CutOffDate AS DATE)
            AND vpc.IdVisitPointClient IN (SELECT Item FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@LstVisitPointClient, ','))
          GROUP BY bdCOD.GuideSerie,
