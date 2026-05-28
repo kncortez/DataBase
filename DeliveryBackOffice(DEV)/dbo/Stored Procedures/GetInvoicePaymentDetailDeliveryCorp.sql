@@ -6,6 +6,7 @@
 ============================================
 === CHANGELOG ================================
 2026-04-08 | Historia/épica: FDAPI-5989 | Autor: Hanss Espinoza |
+2026-05-28 | Historia/épica: FDCF-18    | Autor: Pedro Macajol  | Ajuste en la fecha de INICIO para incluir guías a partir del 1 de mayo de 2026.
 =========================================== */
 CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailDeliveryCorp]
 (
@@ -85,6 +86,7 @@ BEGIN
                                            SELECT v.value('.', 'NVARCHAR(MAX)') AS Valor
                                              FROM @XmlVisitPointClient.nodes('/LstVisitPointClient/PointClient') AS x(v)
                                           )
+              AND do.Preparation_Date >= '20260501'                                       
            AND CAST(do.Preparation_Date AS DATE) <= CAST(@CutOffDate AS DATE)
            AND do.IsCollect = 0
            AND do.SenderCountryId = @IdCountry
@@ -94,7 +96,7 @@ BEGIN
                @Option NOT IN (3, 4, 5)
                OR (
                    (@Option = 3 AND ISNULL(ISNULL(vst.ExcludePriceShippingCOD, cus.ExcludePriceShippingCOD), 0) = 0 AND ISNULL(do.IsLastMileReturn, 0) = 0)  -- COD Contado (NULL se trata como Contado)
-                   OR (@Option = 4 AND ISNULL(ISNULL(vst.ExcludePriceShippingCOD, cus.ExcludePriceShippingCOD), 0) = 1 AND ISNULL(do.IsLastMileReturn, 0) = 0)  -- COD Crédito
+		      OR(@Option = 4 AND ISNULL(ISNULL(vst.ExcludePriceShippingCOD, cus.ExcludePriceShippingCOD), 0) = 1) -- COD Crédito 
                    OR (@Option = 5 AND ISNULL(do.IsLastMileReturn, 0) = 1)                                                                          -- Intentos de entrega
                )
            )
@@ -155,3 +157,4 @@ BEGIN
     END CATCH
 
 END;
+GO
