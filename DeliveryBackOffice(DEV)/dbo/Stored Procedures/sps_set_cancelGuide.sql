@@ -7,12 +7,15 @@ CREATE PROCEDURE [dbo].[sps_set_cancelGuide]
 BEGIN
 
     DECLARE @Output VARCHAR(MAX);
-	 IF OBJECT_ID('tempdb.dbo.#listGuidesEnabled', 'U') IS NOT NULL
-            DROP TABLE #listGuidesEnabled;
-        IF OBJECT_ID('tempdb.dbo.#listGuidesDisabled', 'U') IS NOT NULL
-		 DROP TABLE #listGuidesDisabled;
-	 IF OBJECT_ID('tempdb.dbo.#listGuidesNotFound', 'U') IS NOT NULL
-		 DROP TABLE #listGuidesNotFound;
+
+	IF OBJECT_ID('tempdb.dbo.#TblListGuides', 'U') IS NOT NULL
+		DROP TABLE #TblListGuides;
+	IF OBJECT_ID('tempdb.dbo.#listGuidesEnabled', 'U') IS NOT NULL
+		DROP TABLE #listGuidesEnabled;
+	IF OBJECT_ID('tempdb.dbo.#listGuidesDisabled', 'U') IS NOT NULL
+		DROP TABLE #listGuidesDisabled;
+	IF OBJECT_ID('tempdb.dbo.#listGuidesNotFound', 'U') IS NOT NULL
+		DROP TABLE #listGuidesNotFound;
 
 	--Variabes Membresías y suscripciones
 	DECLARE @MembershipId INT
@@ -29,9 +32,13 @@ BEGIN
 	DECLARE @GuideNumberMembership INT
 	-------------------------------------
 
-	SELECT *
-    INTO #TblListGuides
-    FROM @TblListGuides;
+	-- Crear temp table con tipos explícitos para que el IDE resuelva las columnas correctamente
+	CREATE TABLE #TblListGuides (
+		Guide_Serie  VARCHAR(2) NULL,
+		Guide_Number INT        NULL
+	);
+	INSERT INTO #TblListGuides (Guide_Serie, Guide_Number)
+	SELECT Guide_Serie, Guide_Number FROM @TblListGuides;
 
 --Guias que cumplen con estado para anular-------------------
 	SELECT lg.Guide_Serie,
@@ -123,7 +130,6 @@ ELSE IF ((SELECT COUNT(1) FROM #listGuidesEnabled) = 0)
 	END
 ELSE
 	BEGIN --COMIENZA
-
 
         BEGIN TRANSACTION;
 			BEGIN TRY
