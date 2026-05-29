@@ -35,8 +35,8 @@ BEGIN
         --Into #RevalueGuides
           FROM #listGuides lst
                INNER JOIN dbo.DeliveryOrder ord 
-                  ON ord.Guide_Number = lst.ItemNumber
-                 AND ord.Guide_Serie = lst.ItemSerie
+                  ON ord.Guide_Serie = lst.ItemSerie
+                 AND ord.Guide_Number = lst.ItemNumber
 
 		DECLARE @CODRateDefault decimal(12,2) = (select CONVERT(decimal(12,2), isnull(cf.Value,'0')) val from dbo.ConfigParams cf where cf.Name ='CODRateDef' and Status =1 AND ISNULL(IdCountry,'GT') = @IdCountry)
 
@@ -47,7 +47,7 @@ BEGIN
 			select ord.Guide_Serie , ord.Guide_Number
 			Into #RevalueGuides
 			from #listGuides lst
-				INNER JOIN dbo.DeliveryOrder ord on ord.Guide_Number = lst.ItemNumber and ord.Guide_Serie = lst.ItemSerie
+				INNER JOIN dbo.DeliveryOrder ord on ord.Guide_Serie = lst.ItemSerie and ord.Guide_Number = lst.ItemNumber
 				LEFT JOIN
 					[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 					ON lst.ItemSerie = PC.GuideSerieDestination

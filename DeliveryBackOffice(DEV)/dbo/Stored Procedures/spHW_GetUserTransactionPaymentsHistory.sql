@@ -60,7 +60,7 @@ BEGIN
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
 	LEFT JOIN   [dbo].[DeliveryCurrency] DC WITH(NOLOCK)
-		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry] OR ([DO].[SenderCountryId] IS NULL AND [DC].[Currency_IdCountry] ='GT'))
+		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry])
 		AND		[DC].[DefaultPerCountry] = 1 
 	LEFT JOIN	[dbo].CatCurrencyCOD CCC WITH(NOLOCK)
 		ON		[DC].[IdCurrencyCOD] = [CCC].[IdCatCurrencyCOD]
@@ -101,7 +101,7 @@ BEGIN
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
 	LEFT JOIN   [dbo].[DeliveryCurrency] DC WITH(NOLOCK)
-		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry] OR ([DO].[SenderCountryId] IS NULL AND [DC].[Currency_IdCountry] ='GT'))
+		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry])
 		AND		[DC].[DefaultPerCountry] = 1 
 	LEFT JOIN	[dbo].CatCurrencyCOD CCC WITH(NOLOCK)
 		ON		[DC].[IdCurrencyCOD] = [CCC].[IdCatCurrencyCOD]
@@ -111,7 +111,7 @@ BEGIN
 
 	-- Membresías
 	SELECT		[IH].inv_pk_id,
-				ISNULL(IH.IdCountry,'GT') IdCountry,
+				IH.IdCountry IdCountry,
 				[M].[IdMembership] [TrxService],
 				[M].[MembershipCost] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],
@@ -143,14 +143,12 @@ BEGIN
 				  WHERE [OrderNumber] = [MPL].[Authorization]
 				    AND [AccountId] = @AccountId
 				) RTPS
-	--LEFT JOIN   [dbo].[RegistrationofTransactionProcessStates] RTPS WITH(NOLOCK)
-		--ON      [MPL].[Authorization]  = [RTPS].[OrderNumber]
 	WHERE		[M].[AccountId] = @AccountId
 		AND		[M].[DateCreated] BETWEEN @DateStart AND @DateEnd
 		AND		[M].[RowStatus] = 1;
 
 	-- Suscripciones
-	SELECT		ISNULL(IH.IdCountry,'GT') IdCountry,
+	SELECT		IH.IdCountry IdCountry,
 				[S].[IdSubscription] [TrxService],
 				[S].[SubscriptionCost] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],

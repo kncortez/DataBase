@@ -89,13 +89,13 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
                     WHERE cm.ModName = @ModuleName
                 );
-        DECLARE @BankName NVARCHAR(50) = (SELECT [Name] FROM ConfigurationCODByCountry ccc INNER JOIN DeliveryBank db ON ccc.BankId = db.Id_Bank WHERE ccc.CountryId = @IdCountrySender)
-        DECLARE @InAccount NVARCHAR(50) = (SELECT [InAccount] FROM ConfigurationCODByCountry ccc WHERE ccc.CountryId = @IdCountrySender);
-        DECLARE @OutAccount NVARCHAR(50) = (SELECT [OutAccount] FROM ConfigurationCODByCountry ccc WHERE ccc.CountryId = @IdCountrySender);
-        DECLARE @AccountType NVARCHAR(50) = (SELECT [BankAccountType] FROM ConfigurationCODByCountry ccc INNER JOIN CatBankAccountType cbat ON ccc.CatBankAccountTypeId = cbat.IdBankAccountType WHERE ccc.CountryId = @IdCountrySender);
-        DECLARE @ConceptCustomer NVARCHAR(50) = (SELECT [ConceptCustomer] FROM ConfigurationCODByCountry ccc WHERE ccc.CountryId = @IdCountrySender);
-        DECLARE @CreditAccount NVARCHAR(50) = (SELECT [DCBA_Nom_account] FROM ConfigurationCODByCountry ccc INNER JOIN DeliveryCustomerBankAccount dcba ON ccc.DCBAId = dcba.DCBA_id where ccc.CountryId = @IdCountrySender);
-        DECLARE @ConceptForza NVARCHAR(50) = (SELECT [ConceptForza] FROM ConfigurationCODByCountry ccc WHERE ccc.CountryId = @IdCountrySender);
+        DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
+        DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
+        DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
+        DECLARE @AccountType NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'MONETARIA', IIF(@IdCountrySender = 'SV', N'CORRIENTE', N'CHEQUES'));
+        DECLARE @ConceptCustomer NVARCHAR(50) = N'PAGO';
+        DECLARE @CreditAccount NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'903666261', IIF(@IdCountrySender = 'SV', N'903666263', N'730512881'));
+        DECLARE @ConceptForza NVARCHAR(50) = N'RECOLECCION';
         DECLARE @BankBAC INT =
                 (
                     SELECT db.Id_bank
@@ -265,8 +265,8 @@ BEGIN
                    ord.Guide_Number
             FROM #listGuides lst
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-                    ON ord.Guide_Number = lst.Guide_Number
-                       AND ord.Guide_Serie = lst.Guide_Serie
+                    ON ord.Guide_Serie = lst.Guide_Serie
+                       AND ord.Guide_Number = lst.Guide_Number
                 LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
                     ON PC.GuideSerieDestination = ord.Guide_Serie
                        AND PC.GuideNumberDestination = ord.Guide_Number
@@ -436,6 +436,7 @@ BEGIN
                     ON hbl.HubAbbreviation = hub.Hub
                 LEFT JOIN dbo.VisitPointConfiguration VPO WITH (NOLOCK)
                     ON VPO.VisitPointID = vpc.CodeOfReference
+					AND vpo.RowStatus = 1
                 LEFT JOIN dbo.CatTypeService csv WITH (NOLOCK)
                     ON csv.CtsShortName = IIF(ord.TypeService = 'EXP', 'NDD', ISNULL(ord.TypeService, 'NDD'))
                        AND csv.CtsRowStatus = 'true'

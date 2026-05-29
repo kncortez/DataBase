@@ -15,18 +15,20 @@
     [TokenUpdated]            NVARCHAR (50)  NULL,
     [DateUpdated]             DATETIME       NULL,
     [Holder]                  NVARCHAR (50)  NULL,
-    [FirstName] [nvarchar](50) NULL,
-	[LastName] [nvarchar](50) NULL,
-	[Nirphone] [nvarchar](5) NULL,
-	[Address] [nvarchar](150) NULL,
-	[Phone] [nvarchar](15) NULL,
-	[IsoCode] [nvarchar](3) NULL,
-	[PaymentGateway] [nvarchar](25) NULL,
+    [FirstName]               NVARCHAR (50)  NULL,
+    [LastName]                NVARCHAR (50)  NULL,
+    [Nirphone]                NVARCHAR (5)   NULL,
+    [Address]                 NVARCHAR (150) NULL,
+    [Phone]                   NVARCHAR (15)  NULL,
+    [IsoCode]                 NVARCHAR (3)   NULL,
+    [PaymentGateway]          NVARCHAR (25)  NULL,
     CONSTRAINT [PK_CustomerPaymentValue] PRIMARY KEY CLUSTERED ([IdCustomerPaymentValue] ASC),
     CONSTRAINT [FK_CustomerPaymentValue_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_CustomerPaymentValue_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_CustomerPaymentValue_VisitPointClient] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
@@ -97,19 +99,27 @@ GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Apellido de tarjeta para pasarela de pago PayWayOne' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'LastName'
 
 GO
-EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Area de teléfono  ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'Nirphone'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Área de teléfono', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'Nirphone';
+
+
 
 GO
-EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Dirección para campo obligatorio de pasarela de pago ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'Address'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Dirección para campo obligatorio de pasarela de pago', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'Address';
+
+
 
 GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Teléfono de tarjeta de crédito' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'Phone'
 
 GO
-EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'código de país ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'IsoCode'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código de país', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'IsoCode';
+
+
 
 GO
-EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Pasarela de pago que se útiliza ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue', @level2type=N'COLUMN',@level2name=N'PaymentGateway'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Pasarela de pago que se utiliza', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'PaymentGateway';
+
+
 
 GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla para almacenar datos de TC de clientes' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerPaymentValue'

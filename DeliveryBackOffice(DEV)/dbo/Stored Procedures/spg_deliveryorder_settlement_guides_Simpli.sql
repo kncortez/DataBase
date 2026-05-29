@@ -65,8 +65,9 @@ BEGIN
 	end
 	) AS  Collect_OnDelivery
 	,IIF(ISNULL(DSD.GuideOrder,0) > 0, DSD.GuideOrder, 999)
-	from [DeliveryBackOffice].[dbo].DeliveryOrder do
-	left join DeliveryBackOffice.dbo.DeliverySettlementDetail dsd on do.Guide_Serie = dsd.Guide_Serie and do.Guide_Number = dsd.Guide_Number and dsd.ID_DeliveryOrderBySettlement = @IdManifest and dsd.RowStatus = 1
+	from [DeliveryBackOffice].[dbo].DeliveryOrder do with (nolock) 
+	left join DeliveryBackOffice.dbo.DeliverySettlementDetail dsd with (nolock)  
+	on do.Guide_Serie = dsd.Guide_Serie and do.Guide_Number = dsd.Guide_Number and dsd.ID_DeliveryOrderBySettlement = @IdManifest and dsd.RowStatus = 1
 	where do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
 	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest and RowStatus = 1)
 

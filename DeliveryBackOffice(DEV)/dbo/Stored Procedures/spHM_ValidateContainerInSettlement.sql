@@ -29,7 +29,7 @@ BEGIN
 	SET @CONTAINER_ID = (SELECT	[C].[IdContainer]
 						FROM	[DBO].[Container] C
 						WHERE	[C].[CatTypeContainerId] = @CONTAINER_SERIE_ID
-							AND [C].[ContainerNumber] = @ContainerNumber);
+							AND [C].[ContainerNumber] = @ContainerNumber AND C.RowStatus =1);
 
 	PRINT @CONTAINER_ID
 

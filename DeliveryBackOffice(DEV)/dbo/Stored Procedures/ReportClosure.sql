@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Freddy Monterroso>
 -- Create date: <19/01/2022>
 -- Description:	<SP para consulta de cierres en reporte de reporting services>
@@ -281,7 +281,7 @@ begin
 		FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 				ON DOPD.VisitPoint = VPC.CodeOfReference
 			-- FIN MODIFICACIÓN
 
@@ -353,7 +353,7 @@ begin
 			 AND DOPD.[TypeofInOutMoneyId] != 8
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 			ON DOPD.VisitPoint = VPC.CodeOfReference
 		-- FIN MODIFICACIÓN
 
@@ -428,7 +428,7 @@ begin
 				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 
 			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+				INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 				ON DOPD.VisitPoint = VPC.CodeOfReference
 			-- FIN MODIFICACIÓN
 

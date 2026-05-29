@@ -1,5 +1,5 @@
 ﻿-- Detalle de Consumo Consolidado en suscripciones v6 (Julio 2024)
-create procedure [dbo].[Consolidado_en_suscripciones_v6]
+CREATE procedure [dbo].[Consolidado_en_suscripciones_v6]
 as
 begin
 	SELECT
@@ -19,13 +19,23 @@ begin
 		COUNT(SUBQ.Fecha_Generacion) [VecesConsumido],
 		SUBQ.Telefono,
 		SUBQ.[STATUS]
+		,SUBQ.IdCountry
 	FROM 
 	(
 	SELECT ISNULL(SL.SubscriptionId, 0) [ID_Paquete],
 		   'S' + CAST(S.IdSubscription AS NVARCHAR) [IdClubForza],
 		   CS.SubscriptionName [NombrePaquete],
 		   'Suscripción' [Tipo],
-		   S.SubscriptionCost [Costo],
+		   
+		   CAST(S.SubscriptionCost 
+	/CASE cs.IdCountry
+            WHEN 'GT' THEN 1.12   -- Guatemala 12%
+            WHEN 'SV' THEN 1.13   -- El Salvador 13%
+            WHEN 'HN' THEN 1.15   -- Honduras 15%
+            ELSE 1                -- Por seguridad
+        END
+		AS DECIMAL(14,2))
+		   [Costo],
 		   S.DateCreated [FechaAdquisicion],
 		   FORMAT(S.DateCreated,'yyyy-MM') [AnioMesAdquisicion],
 		   S.ExpirationDate [FechaExpiracion],
@@ -41,6 +51,7 @@ begin
 		   ISNULL(FORMAT(SL.DateUpdated,'yyyy-MM'), FORMAT(SL.DateCreated,'yyyy-MM')) [AnioMesConsumo],
 		   CM.Phone [Telefono],
 		   IIF(CAST(S.ExpirationDate AS DATE)<CAST(GETDATE() AS DATE),'Expirado','Vigente') [STATUS]
+		   ,CS.IdCountry
 	FROM DeliveryBackOffice.dbo.Subscription S WITH (NOLOCK)
 		LEFT JOIN dbo.MembershipSubscriptionLog SL WITH (NOLOCK)
 			ON S.IdSubscription = SL.SubscriptionId -- 3,189 suscripciones al 31 de mayo 2024
@@ -89,5 +100,6 @@ begin
 			 SUBQ.AnioMesConsumo,
 			 SUBQ.Telefono,
 			 SUBQ.[STATUS]
+			 ,SUBQ.IdCountry
 	--ORDER BY SUBQ.ID_Paquete
 end

@@ -124,18 +124,18 @@ BEGIN
 						,ni.NoPiece
 							from @TblGuidesReturns ni
 
-				update DeliveryOrder set StatusOrderId = 14
+				update do set StatusOrderId = 14
 				, LastCollectOnDelivery = Collect_OnDelivery
 				,Collect_OnDelivery =0
-				from DeliveryOrder
-				where Guide_Number in (select NumberGuide from @TblGuidesReturns) and Guide_Serie in (select Serie from @TblGuidesReturns)
+				from DeliveryOrder do
+				INNER JOIN @TblGuidesReturns tgr ON tgr.Serie = do.Guide_Serie AND tgr.NumberGuide = do.Guide_Number
 
 ---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
 						select * from StatusOrder 
 						
-						update DeliveryOrderPiece set StatusOrderId = 14
-						from DeliveryOrderPiece
-						where GuideNumber in (select NumberGuide from @TblGuidesReturns) and GuideSerie in (select Serie from @TblGuidesReturns) and NoPiece in (select NoPiece	 from @TblGuidesReturns)
+						update dop set StatusOrderId = 14
+						from DeliveryOrderPiece dop
+						INNER JOIN @TblGuidesReturns tgr ON tgr.Serie = dop.GuideSerie AND tgr.NumberGuide = dop.GuideNumber AND tgr.NoPiece = dop.NoPiece
 						
 		---------------------------------------------- Actualiza el Status del Servicio  -------------------------------------------------------------------------
 				
@@ -218,9 +218,9 @@ BEGIN
 						
 		---------------------------------Obtner los datos a actualizar del encabezado del lote de guias -------------------------------------
 
-						update DeliveryOrder set StatusOrderId = 14
-						from DeliveryOrder
-						where Guide_Number in (select NumberGuide from @TblGuidesReturns) and Guide_Serie in (select Serie from @TblGuidesReturns)
+						update do set StatusOrderId = 14
+						from DeliveryOrder do
+						INNER JOIN @TblGuidesReturns tgr ON tgr.Serie = do.Guide_Serie AND tgr.NumberGuide = do.Guide_Number
 
 						-------------------WEBHOOK.INI-----------------------			
 	--		IF ( SELECT ISNULL(WebhookEndpointId,0) 
@@ -254,13 +254,14 @@ BEGIN
 		----------------------------------Bitacora de detalle de manifiesto-----------------------------------------------------------------------
 								;WITH LatestID AS (
 									SELECT 
-										Guide_Number,
+										dsd.Guide_Serie,
+										dsd.Guide_Number,
 										MAX(ID) AS LastID
 									FROM 
-										[dbo].[DeliverySettlementDetail] WITH (NOLOCK)
-									WHERE Guide_Number in (SELECT NumberGuide FROM @TblGuidesReturns)
-									GROUP BY 
-										Guide_Number
+										[dbo].[DeliverySettlementDetail] dsd WITH (NOLOCK)
+									INNER JOIN @TblGuidesReturns tgr ON tgr.Serie = dsd.Guide_Serie AND tgr.NumberGuide = dsd.Guide_Number
+									GROUP BY dsd.Guide_Serie,
+										dsd.Guide_Number
 								)
 								UPDATE ds
 								SET 
@@ -268,16 +269,16 @@ BEGIN
 								FROM 
 									[dbo].[DeliverySettlementDetail] ds
 								INNER JOIN 
-									LatestID li ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
+									LatestID li ON ds.Guide_Serie = li.Guide_Serie AND ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
 								INNER JOIN 
-									@TblGuidesReturns tg ON ds.Guide_Number = tg.NumberGuide;
+									@TblGuidesReturns tg ON ds.Guide_Serie = tg.Serie AND ds.Guide_Number = tg.NumberGuide;
 						
 		---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
 						
 						
-						update DeliveryOrderPiece set StatusOrderId = 14
-						from DeliveryOrderPiece
-						where GuideNumber in (select NumberGuide from @TblGuidesReturns) and GuideSerie in (select Serie from @TblGuidesReturns) and NoPiece in (select NoPiece	 from @TblGuidesReturns)
+						update dop set StatusOrderId = 14
+						from DeliveryOrderPiece dop
+						INNER JOIN @TblGuidesReturns tgr ON tgr.Serie = dop.GuideSerie AND tgr.NumberGuide = dop.GuideNumber AND tgr.NoPiece = dop.NoPiece
 						
 		---------------------------------------------- Actualiza el Status del Servicio  -------------------------------------------------------------------------
 						
@@ -421,4 +422,3 @@ BEGIN
 				
 
 END
-

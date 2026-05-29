@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[UserSystemRestriction] (
+CREATE TABLE [dbo].[UserSystemRestriction] (
     [UstIdRestriction] BIGINT       IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UstIdUser]        BIGINT       NOT NULL,
     [UstIdSystem]      INT          NOT NULL,
@@ -13,6 +13,8 @@
     CONSTRAINT [FKSystemRestriction] FOREIGN KEY ([UstIdSystem]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     CONSTRAINT [FKUserRestriction] FOREIGN KEY ([UstIdUser]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
+
+
 
 
 
@@ -124,12 +126,11 @@ CREATE NONCLUSTERED INDEX [idx_UstIdSystem_Include]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_UstIdUser_UstIdSystem_INCLUDE]
-    ON [dbo].[UserSystemRestriction]([UstIdUser] ASC, [UstIdSystem] ASC)
-    INCLUDE([UstStatus]);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_UstIdUser_UstIdSystem]
-    ON [dbo].[UserSystemRestriction]([UstIdUser] ASC, [UstIdSystem] ASC);
+CREATE NONCLUSTERED INDEX [idx_UstIdUser_UstIdSystem_Consolidate]
+    ON [dbo].[UserSystemRestriction]([UstIdUser] ASC, [UstIdSystem] ASC)
+    INCLUDE([UstStatus]);
 

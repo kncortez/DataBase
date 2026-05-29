@@ -51,7 +51,7 @@ BEGIN
 		from [DeliveryBackOffice].[dbo].[ServiceManagement]sm
 		INNER JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] as spu WITH(NOLOCK) on spu.SchedulePickupId = IdSchedulePickup 
 		left join [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] as dop WITH(NOLOCK) ON sm.IdSchedulePickup=dop.IdHeaderRecolection
-		left join[DeliveryBackOffice].[dbo].[DeliveryOrder] AS dor WITH(NOLOCK) ON dor.Guide_Number = dop.GuideNumber AND dor.Guide_Serie = dop.GuideSerie
+		left join[DeliveryBackOffice].[dbo].[DeliveryOrder] AS dor WITH(NOLOCK) ON dor.Guide_Serie = dop.GuideSerie AND dor.Guide_Number = dop.GuideNumber
 		group by sm.Amount,IdServiceManagement,IdSchedulePickup,IdPuRouteAssigment
 	)smt on smt.IdPuRouteAssigment = rat.IdRouteAssigment
 	left join [DeliveryBackOffice].[dbo].[SenderReceiver] as snr WITH(NOLOCK) on rat.IdCurrierMan = snr.ID

@@ -124,7 +124,7 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA'                
                   AND 
-                          ISNULL(IdCountry,'GT') = @IdCountry
+                          IdCountry = @IdCountry
                           
             );
     DECLARE @dti_IVA MONEY;
@@ -138,7 +138,7 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA'
                    AND 
-                          ISNULL(IdCountry,'GT') = @IdCountry
+                          IdCountry = @IdCountry
                          
             );
     DECLARE @SendToInvoice BIT = 1;
@@ -169,7 +169,7 @@ BEGIN
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL A'
                                    AND 
-                                        ISNULL(IdCountry,'GT') = @IdCountry
+                                        IdCountry = @IdCountry
                                        
                               );
     ELSE IF (
@@ -182,7 +182,7 @@ BEGIN
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL B'
                                    AND 
-                                          ISNULL(IdCountry,'GT') = @IdCountry
+                                          IdCountry = @IdCountry
                                          
                              );
     ELSE IF (
@@ -195,7 +195,7 @@ BEGIN
                                   FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL C'
                                    AND 
-                                        ISNULL(IdCountry,'GT') = @IdCountry
+                                        IdCountry = @IdCountry
                                         
                               );
     ELSE IF (
@@ -208,7 +208,7 @@ BEGIN
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'SUSCRIPCION MENSUAL D'
                                    AND 
-                                          ISNULL(IdCountry,'GT') = @IdCountry
+                                          IdCountry = @IdCountry
                                        
                               );
     ELSE IF (
@@ -220,7 +220,7 @@ BEGIN
                                       [Description]
                                 FROM [DeliveryBackOffice].[dbo].[CatArticleSAP] WITH (NOLOCK)
                                 WHERE [Name] = 'MEMBRESIA DIAMANTE'
-                                   AND ISNULL(IdCountry,'GT') = @IdCountry
+                                   AND IdCountry = @IdCountry
                               );
     IF (@InvoiceEmail = '')
     BEGIN
@@ -256,8 +256,7 @@ BEGIN
                     ON M.CatMembershipId = CM.IdCatMembership
                 INNER JOIN [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTP WITH (NOLOCK)
                     ON M.CatMembershipId = RTP.IdSalePackage
-                WHERE-- M.AccountId = @IdAccount
-                     -- AND M.RowStatus = 1
+                WHERE
 				          RTP.OrderNumber = @OrderNumber 
                 ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
@@ -287,8 +286,7 @@ BEGIN
                         ON S.CatSubscriptionId = CS.IdCatSubscription
 					          INNER JOIN [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTP WITH (NOLOCK)
 					              ON CS.IdCatSubscription = RTP.IdSalePackage
-                WHERE --S.AccountId = @IdAccount
-                      --AND S.RowStatus = 1
+                WHERE 
                        RTP.OrderNumber = @OrderNumber 
                  ORDER BY RTP.IdRegistrationofTransactionProcessStates DESC;
 
@@ -537,7 +535,7 @@ BEGIN
           , ERROR_LINE()                           -- ErrorLine - int
           , NULL                                   -- GuideSerie - nvarchar(2)
           , NULL                                   -- GuideNumber - int
-          , ''                                     -- TokenCreated - varchar(50)
+          , @OrderNumber                                     -- TokenCreated - varchar(50)
           , GETDATE()                              -- DateCreated - datetime
             );
     END CATCH;

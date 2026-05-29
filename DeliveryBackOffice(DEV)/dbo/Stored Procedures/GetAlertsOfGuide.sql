@@ -1,4 +1,5 @@
-﻿-- =============================================
+﻿
+-- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2021-12-01>
 -- Description:	< Retorna las alertas de una guía >
@@ -21,9 +22,9 @@ BEGIN
 	ON
 	DOA.AlertTypeId = CTA.IdCatTypeAlert
 	WHERE
-	DOA.GuideNumber = @GuideNumber
-	AND
 	DOA.GuideSerie = @GuideSerie
+	AND
+	DOA.GuideNumber = @GuideNumber
 	AND
 	DOA.ServiceTypeId = @ServiceType
 	AND

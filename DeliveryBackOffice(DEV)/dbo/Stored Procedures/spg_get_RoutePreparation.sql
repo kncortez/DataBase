@@ -1,7 +1,6 @@
 ﻿
 
 
-
 -- =============================================
 -- Author:		<Bidcar, Herrera>
 -- Create date: <2020-05-27>
@@ -11,6 +10,8 @@
 -- Create date: <2024-06-18>
 -- Description:	<Se agrega parametro para filtrar guias por pais de origen>
 -- =============================================
+
+
 CREATE PROCEDURE [dbo].[spg_get_RoutePreparation]
     @Token AS VARCHAR(50) = 'ad1a2328ed27ea99622f68deae5d9976'
   , @Rol AS BIGINT = 1
@@ -107,7 +108,7 @@ BEGIN
              , serv.Contact_Instructions
              , ISNULL(serv.Receiver_CUI, '')                                                  AS CUI
              , ISNULL(serv.Receiver_SocialSecurity_ID, '')                                    AS SocialSecurityID
-             , ISNULL(serv.SenderCountryId, 'GT')                                             AS IdCountry
+             , serv.SenderCountryId                                           AS IdCountry
         FROM DeliveryBackOffice.dbo.DeliveryOrder         serv WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder sta WITH (NOLOCK)
                 ON sta.StatusOrderId = serv.StatusOrderId
@@ -169,7 +170,7 @@ BEGIN
              , serv.Contact_Instructions
              , ISNULL(serv.Receiver_CUI, '')                                                  AS CUI
              , ISNULL(serv.Receiver_SocialSecurity_ID, '')                                    AS SocialSecurityID
-             , ISNULL(serv.SenderCountryId, 'GT')                                             AS IdCountry
+             , serv.SenderCountryId                                           AS IdCountry
         FROM DeliveryBackOffice.dbo.DeliveryOrder         serv WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder sta WITH (NOLOCK)
                 ON sta.StatusOrderId = serv.StatusOrderId
@@ -234,7 +235,7 @@ BEGIN
              , serv.Contact_Instructions
              , ISNULL(serv.Receiver_CUI, '')                                                  AS CUI
              , ISNULL(serv.Receiver_SocialSecurity_ID, '')                                    AS SocialSecurityID
-             , ISNULL(serv.SenderCountryId, 'GT')                                             AS IdCountry
+             , serv.SenderCountryId                                            AS IdCountry
         FROM DeliveryBackOffice.dbo.DeliveryOrder         serv WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder sta WITH (NOLOCK)
                 ON sta.StatusOrderId = serv.StatusOrderId
@@ -300,7 +301,7 @@ BEGIN
              , serv.Contact_Instructions
              , ISNULL(serv.Receiver_CUI, '')                                                  AS CUI
              , ISNULL(serv.Receiver_SocialSecurity_ID, '')                                    AS SocialSecurityID
-             , ISNULL(serv.SenderCountryId, 'GT')                                             AS IdCountry
+             , serv.SenderCountryId                                            AS IdCountry
         FROM DeliveryBackOffice.dbo.DeliveryOrder         serv WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder sta WITH (NOLOCK)
                 ON sta.StatusOrderId = serv.StatusOrderId
@@ -362,7 +363,7 @@ BEGIN
              , serv.Contact_Instructions
              , ISNULL(serv.Receiver_CUI, '')                                                  AS CUI
              , ISNULL(serv.Receiver_SocialSecurity_ID, '')                                    AS SocialSecurityID
-             , ISNULL(serv.SenderCountryId, 'GT')                                             AS IdCountry
+             , serv.SenderCountryId                                             AS IdCountry
         FROM DeliveryBackOffice.dbo.DeliveryOrder         serv WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder sta WITH (NOLOCK)
                 ON sta.StatusOrderId = serv.StatusOrderId

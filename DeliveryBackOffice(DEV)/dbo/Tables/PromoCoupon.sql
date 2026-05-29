@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[PromoCoupon] (
+CREATE TABLE [dbo].[PromoCoupon] (
     [IdPromoCoupon]                        INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [CatPromoId]                           INT             NOT NULL,
     [PromoCouponSerie]                     NVARCHAR (20)   NOT NULL,
@@ -55,14 +55,14 @@
 
 
 
-GO
-CREATE NONCLUSTERED INDEX [IX_PromoCoupon_GuideSerieOrigin]
-    ON [dbo].[PromoCoupon]([GuideSerieOrigin] ASC, [GuideNumberOrigin] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_PromoCoupon_GuideSerieDestination]
-    ON [dbo].[PromoCoupon]([GuideSerieDestination] ASC, [GuideNumberDestination] ASC);
+
+
+
+GO
+
 
 
 GO
@@ -199,6 +199,11 @@ CREATE NONCLUSTERED INDEX [idx_PromoCouponSerie_RedeemedDate_RowStatus_FinalActi
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_GuideNumberOrigin_GuideSerieOrigin]
-    ON [dbo].[PromoCoupon]([GuideNumberOrigin] ASC, [GuideSerieOrigin] ASC);
+CREATE NONCLUSTERED INDEX [idx_GuideOrigin_Consolidated]
+    ON [dbo].[PromoCoupon]([GuideSerieOrigin] ASC, [GuideNumberOrigin] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideDestination_Consolidated]
+    ON [dbo].[PromoCoupon]([GuideSerieDestination] ASC, [GuideNumberDestination] ASC);
 

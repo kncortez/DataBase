@@ -138,13 +138,13 @@ BEGIN
 						SELECT 1
 						FROM [dbo].[DeliveryOrder] [DDO] WITH (NOLOCK)
 						INNER JOIN [dbo].[DeliveryOrderPiece] [DOP] WITH (NOLOCK)
-							ON [DDO].[Guide_Number] = [DOP].[GuideNumber]
-                            AND [DDO].[Guide_Serie] = [DOP].[GuideSerie]
+							ON [DDO].[Guide_Serie] = [DOP].[GuideSerie]
+                            AND [DDO].[Guide_Number] = [DOP].[GuideNumber]
 						WHERE 
 							[DDO].[Guide_Serie] = @GuideSerie 
 							AND [DDO].[Guide_Number] = @GuideNumber 
 							AND (ISNULL([DDO].GuideType,'DOM')='INT'
-								OR (ISNULL([DDO].SenderCountryId,'GT')=@IdCountry AND ISNULL([DDO].GuideType,'DOM')='DOM')
+								OR ([DDO].SenderCountryId = @IdCountry AND ISNULL([DDO].GuideType,'DOM')='DOM')
 								)
 					) THEN 1
 					ELSE 0
@@ -217,7 +217,7 @@ BEGIN
 						    WHERE 
 							    [DDO].[Guide_Serie] = @GuideSerie 
 							    AND [DDO].[Guide_Number] = @GuideNumber 
-							    AND ISNULL([DDO].SenderCountryId,'GT') <> @IdCountry AND ISNULL([DDO].GuideType,'DOM')='DOM'
+							    AND [DDO].SenderCountryId  <> @IdCountry AND ISNULL([DDO].GuideType,'DOM')='DOM'
 					    ) THEN 1
 					    ELSE 0
 				    END;

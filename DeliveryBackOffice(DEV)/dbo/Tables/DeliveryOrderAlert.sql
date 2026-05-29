@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[DeliveryOrderAlert] (
+CREATE TABLE [dbo].[DeliveryOrderAlert] (
     [IdDeliveryOrderAlert] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideSerie]           VARCHAR (2)    NULL,
     [GuideNumber]          INT            NULL,
@@ -16,6 +16,8 @@
     CONSTRAINT [FK_DeliveryOrderAlert_TypeAlertId] FOREIGN KEY ([AlertTypeId]) REFERENCES [dbo].[CatTypeAlert] ([IdCatTypeAlert]),
     CONSTRAINT [FK_DOA_ServiceManagement] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement])
 );
+
+
 
 
 
@@ -76,8 +78,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de ser
 
 
 GO
-CREATE NONCLUSTERED INDEX [NonClusteredIndex-20220329-144352]
-    ON [dbo].[DeliveryOrderAlert]([GuideSerie] ASC, [GuideNumber] ASC, [AlertTypeId] ASC);
+
 
 
 GO
@@ -86,8 +87,7 @@ CREATE NONCLUSTERED INDEX [IDX_GuideNumber_RowStatus_ServiceTypeId]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_ServiceTypeId]
-    ON [dbo].[DeliveryOrderAlert]([ServiceTypeId] ASC);
+
 
 
 GO
@@ -96,18 +96,15 @@ CREATE NONCLUSTERED INDEX [idx_ServiceManagementId_RowStatus]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_serie_number_rowstatus]
-    ON [dbo].[DeliveryOrderAlert]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
 
-
-GO
-CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_IdDeliveryOrderAlert]
-    ON [dbo].[DeliveryOrderAlert]([IdDeliveryOrderAlert] ASC, [GuideSerie] ASC, [GuideNumber] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_guideserie_guidenumber]
-    ON [dbo].[DeliveryOrderAlert]([GuideSerie] ASC, [GuideNumber] ASC);
+
+
+
+GO
+
 
 
 GO
@@ -121,13 +118,11 @@ CREATE NONCLUSTERED INDEX [idx_RowStatus_ServiceTypeId_DateCreated]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_RowStatus_ServiceTypeId_ServiceManagementId_DateCreated_include]
-    ON [dbo].[DeliveryOrderAlert]([RowStatus] ASC, [ServiceTypeId] ASC, [ServiceManagementId] ASC, [DateCreated] ASC)
-    INCLUDE([GuideSerie], [GuideNumber]);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_RowStatus_ServiceManagementId_DateCreated_ServiceTypeId_include]
+CREATE NONCLUSTERED INDEX [idx_RowStatus_ServiceManagementId_DateCreated_ServiceTypeId_Consolidated]
     ON [dbo].[DeliveryOrderAlert]([RowStatus] ASC, [ServiceManagementId] ASC, [DateCreated] ASC, [ServiceTypeId] ASC)
-    INCLUDE([GuideNumber], [AlertDescription], [AlertTypeId]);
+    INCLUDE([GuideNumber], [AlertDescription], [AlertTypeId], [GuideSerie]);
 

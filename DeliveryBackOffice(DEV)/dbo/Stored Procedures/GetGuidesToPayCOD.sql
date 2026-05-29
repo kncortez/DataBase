@@ -71,7 +71,7 @@ WHERE CONVERT(DATE, BT.Date) = @Date
       AND BTD.CatConceptCODId = 1
       AND BTd.RowStatus = 1
       AND BTD.IdCountry = @IdCountry --NEW BNHL;
-
+OPTION (MAXDOP 1);
 
 
 
@@ -298,7 +298,7 @@ WHERE CONVERT(DATE, BT.Date) = @Date
 			do.IsCollect
     ORDER BY bt.IdBatchCOD,
              bt.Date, btd.AuthorizationNumber DESC
-			 --option (optimize for unknown);
+			 OPTION (MAXDOP 1);
 			 
 
 			 	IF OBJECT_ID('tempdb.dbo.#TempBatchDetail', 'U') IS NOT NULL

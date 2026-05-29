@@ -57,7 +57,7 @@ BEGIN
 			'}'
 			FROM DeliveryBackOffice.dbo.DeliveryOrder do with(nolock)
 			LEFT JOIN DeliveryBackOffice.dbo.CorporateManifestDetail cmd
-			ON cmd.GuideNumber= do.Guide_Number AND cmd.GuideSerie= do.Guide_Serie
+			ON cmd.GuideSerie= do.Guide_Serie AND cmd.GuideNumber= do.Guide_Number
 			AND cmd.RowStatus = 1
 			WHERE do.StatusOrderId = 1 
 			AND do.Sender_ID = @CodeOfReference 

@@ -41,8 +41,8 @@ BEGIN
 	SELECT
 	dsd.GuideOrder
 	, do.Guide_Serie + isnull(convert(nvarchar,do.Guide_Number),'') as Guide_Code
-	,(SELECT SUM(CAST([Cold] AS INT)) FROM DeliveryBackOffice.dbo.DeliveryAttempt where Guide_Serie = do.Guide_Serie AND Guide_Number = do.Guide_Number AND ID_DeliveryOrderBySettlement = @IdManifest GROUP BY Guide_Serie, Guide_Number, ID_DeliveryOrderBySettlement) AS Pieces_Cold
-	,(SELECT SUM(CAST([Dry] AS INT)) FROM DeliveryBackOffice.dbo.DeliveryAttempt where Guide_Serie = do.Guide_Serie AND Guide_Number = do.Guide_Number AND ID_DeliveryOrderBySettlement = @IdManifest GROUP BY Guide_Serie, Guide_Number, ID_DeliveryOrderBySettlement) as Pieces_Dry
+	,(SELECT SUM(CAST([Cold] AS INT)) FROM DeliveryBackOffice.dbo.DeliveryAttempt with (nolock)  where Guide_Serie = do.Guide_Serie AND Guide_Number = do.Guide_Number AND ID_DeliveryOrderBySettlement = @IdManifest GROUP BY Guide_Serie, Guide_Number, ID_DeliveryOrderBySettlement) AS Pieces_Cold
+	,(SELECT SUM(CAST([Dry] AS INT)) FROM DeliveryBackOffice.dbo.DeliveryAttempt  with (nolock)  where Guide_Serie = do.Guide_Serie AND Guide_Number = do.Guide_Number AND ID_DeliveryOrderBySettlement = @IdManifest GROUP BY Guide_Serie, Guide_Number, ID_DeliveryOrderBySettlement) as Pieces_Dry
 	,isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') as Receiver_Fullname
 	,do.Receiver_Address AS Receiver_Address
 	--,CONVERT(INT, ISNULL(do.Receiver_Zone,0)) AS Receiver_Zone
@@ -63,10 +63,10 @@ BEGIN
 	ISNULL(do.Collect_OnDelivery, 0)
 	END
 	) AS  Total
-	from [DeliveryBackOffice].[dbo].DeliveryOrder do
-	JOIN DeliverySettlementDetail dsd
+	from [DeliveryBackOffice].[dbo].DeliveryOrder do with (nolock) 
+	INNER JOIN DeliverySettlementDetail dsd with (nolock) 
 		ON do.Guide_Serie = dsd.Guide_Serie AND do.Guide_Number = dsd.Guide_Number
-		AND dsd.ID_DeliveryOrderBySettlement = @IdManifest AND dsd.RowStatus = 1
+	WHERE dsd.ID_DeliveryOrderBySettlement = @IdManifest AND dsd.RowStatus = 1
 	--where do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
 	--and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest  AND RowStatus = 1)
 

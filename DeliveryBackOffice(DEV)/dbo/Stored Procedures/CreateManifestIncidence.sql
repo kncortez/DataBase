@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Tito Garcia>
 -- Update date: <2024-09-20>
 -- Description: <Guarda la incidencia en el proceso de liquidación de rutas asociandolo a un manifiesto>
@@ -92,8 +92,8 @@ BEGIN
 			   SET dsd.Guide_Settlement = 1, dsd.Guide_Returned = 0, dsd.Guide_Delivered = 0, dsd.StatusOrderId = do.StatusOrderId
 			   FROM [dbo].[DeliverySettlementDetail] dsd
 					INNER JOIN [dbo].[DeliveryOrder] do
-						ON dsd.Guide_Number = do.Guide_Number
-						AND dsd.Guide_Serie = do.Guide_Serie
+						ON dsd.Guide_Serie = do.Guide_Serie
+						AND dsd.Guide_Number = do.Guide_Number
 					INNER JOIN @ListOfGuides t 
 						ON do.Guide_Serie = t.GuideSerie 
 						AND do.Guide_Number = t.GuideNumber

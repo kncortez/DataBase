@@ -5,25 +5,25 @@
 -- =============================================
 
 -- Crear tabla AddInfoByCodeOfReference
-CREATE TABLE AddInfoByCodeOfReference (
-    IdAddInfoByCodeOfReference INT IDENTITY(1,1),      -- Identificador único del registro
-    CodeOfReference            INT NOT NULL,           -- Código de referencia del documento/entidad asociada
-    [Node]                     VARCHAR(150) NOT NULL,  -- Nombre del nodo o campo de información (NRC, RUC, etc.)
-    [Name]                     VARCHAR(150) NOT NULL,  -- Nombre del nodo o campo de información (NRC, RUC, etc.)
-    [Data]                     VARCHAR(500) NULL,      -- Dato asociado al nodo, puede ser NULL
-    [Value]                    VARCHAR(500) NULL,      -- Valor asociado al nodo, puede ser NULL
-    EntityTypeByBillingSVId    INT NOT NULL,           -- Identificador del tipo de entidad (FK a EntityType)
-    RowStatus                  BIT NOT NULL DEFAULT 1,
-    DateCreated                DATETIME NOT NULL,
-    TokenCreated               NVARCHAR(50) NOT NULL,
-    DateUpdated                DATETIME NULL,
-    TokenUpdated               NVARCHAR(50) NULL,
+CREATE TABLE [dbo].[AddInfoByCodeOfReference] (
+    [IdAddInfoByCodeOfReference] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [CodeOfReference]            INT           NOT NULL,
+    [Node]                       VARCHAR (150) NOT NULL,
+    [Name]                       VARCHAR (150) NOT NULL,
+    [Data]                       VARCHAR (500) NULL,
+    [Value]                      VARCHAR (500) NULL,
+    [EntityTypeByBillingSVId]    INT           NOT NULL,
+    [RowStatus]                  BIT           DEFAULT ((1)) NOT NULL,
+    [DateCreated]                DATETIME      NOT NULL,
+    [TokenCreated]               NVARCHAR (50) NOT NULL,
+    [DateUpdated]                DATETIME      NULL,
+    [TokenUpdated]               NVARCHAR (50) NULL,
     CONSTRAINT [PK_AddInfoByCodeOfReference] PRIMARY KEY CLUSTERED ([IdAddInfoByCodeOfReference] ASC),
-    CONSTRAINT [FK_AddInfoByCodeOfReference_EntityTypeByBillingSV] FOREIGN KEY (EntityTypeByBillingSVId)
-               REFERENCES [dbo].[EntityTypeByBillingSV] (IdEntityTypeByBillingSV),
-    CONSTRAINT [FK_AddInfoByCodeOfReference_VisitPointClient] FOREIGN KEY (CodeOfReference)
-               REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
+    CONSTRAINT [FK_AddInfoByCodeOfReference_EntityTypeByBillingSV] FOREIGN KEY ([EntityTypeByBillingSVId]) REFERENCES [dbo].[EntityTypeByBillingSV] ([IdEntityTypeByBillingSV]),
+    CONSTRAINT [FK_AddInfoByCodeOfReference_VisitPointClient] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
     GO
 -- Documentación de la tabla AddInfoByCodeOfReference
 EXEC sys.sp_addextendedproperty 
@@ -157,3 +157,9 @@ EXEC sys.sp_addextendedproperty
     @level1type = N'TABLE', @level1name = N'AddInfoByCodeOfReference',
     @level2type = N'CONSTRAINT', @level2name = N'FK_AddInfoByCodeOfReference_VisitPointClient';
     GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del nodo de información adicional (ej: NRC, RUC, DUI, Teléfono, Email, Dirección, etc.)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AddInfoByCodeOfReference', @level2type = N'COLUMN', @level2name = N'Node';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del campo del nodo de información adicional (ej: NRC,CodigoActividad,DescActividad,NombreComercial,TipoEstablecimiento,CodEstablecimientoMH, etc.)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AddInfoByCodeOfReference', @level2type = N'COLUMN', @level2name = N'Name';
+

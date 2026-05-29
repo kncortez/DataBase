@@ -1,11 +1,4 @@
-﻿
--- =============================================
--- Author:		<Andres, Ruiz>
--- Create date: <2021-12-29>
--- Description:	< Obtención de vehículo al que pertenece una guía asignada en un manifiesto, con el cambio de estado a asignado >
--- =============================================
-
-CREATE PROCEDURE [dbo].[GetPickToRouteGuide]
+﻿CREATE PROCEDURE [dbo].[GetPickToRouteGuide]
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT,
 	@GuidePiece INT = 1,
@@ -186,12 +179,12 @@ BEGIN
 						WHERE NOT EXISTS (
 							SELECT 1
 							FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] WITH(NOLOCK)
-							WHERE 
-								StatusOrderId = 3
-								AND
+							WHERE
 								Guide_Serie = @GuideSerie 
 								AND
 								Guide_Number = @GuideNumber
+							    AND
+							    StatusOrderId = 3
 								AND
 								CAST(DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 						)

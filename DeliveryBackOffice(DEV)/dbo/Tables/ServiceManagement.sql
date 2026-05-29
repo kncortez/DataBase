@@ -24,7 +24,7 @@
     [Amount]                    DECIMAL (16, 2) NULL,
     [CatPaymentTimeId]          INT             NULL,
     [IsActiveService]           BIT             NULL,
-    [EmailDispatch]         NVARCHAR(200)       NULL,
+    [EmailDispatch]             NVARCHAR (200)  NULL,
     PRIMARY KEY CLUSTERED ([IdServiceManagement] ASC),
     CONSTRAINT [FK_ServiceManagement_CatPaymentTimeId] FOREIGN KEY ([CatPaymentTimeId]) REFERENCES [dbo].[CatPaymentTime] ([TimePlaId]),
     CONSTRAINT [fk_ServiceStatus] FOREIGN KEY ([ServiceStatusId]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus]),
@@ -35,6 +35,8 @@
     CONSTRAINT [FKService_RouteIn] FOREIGN KEY ([IdPuRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment]),
     CONSTRAINT [FKService_RoutOut] FOREIGN KEY ([IdDlRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment])
 );
+
+
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Monto total de un servicio.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagement', @level2type = N'COLUMN', @level2name = N'Amount';
@@ -55,8 +57,7 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para ordenar el reporte de preparación de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagement', @level2type = N'COLUMN', @level2name = N'Order';
 
 GO
-CREATE NONCLUSTERED INDEX [idx_IdSchedulePickup]
-    ON [dbo].[ServiceManagement]([IdSchedulePickup] ASC);
+
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si el servicio esta siendo realizado por el courier asignado actualmente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagement', @level2type = N'COLUMN', @level2name = N'IsActiveService';
@@ -262,3 +263,8 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'ServiceManagement',
     @level2type = NULL,
     @level2name = NULL
+GO
+CREATE NONCLUSTERED INDEX [idx_IdSchedulePickup_Consolidate]
+    ON [dbo].[ServiceManagement]([IdSchedulePickup] ASC)
+    INCLUDE([ServiceStatusId]);
+

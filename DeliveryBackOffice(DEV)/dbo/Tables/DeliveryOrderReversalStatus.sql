@@ -9,10 +9,10 @@
     [TokenUpdated]     NVARCHAR (100) NULL,
     [DateUpdated]      DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdReversalStatus] ASC),
-    FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-    FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 
