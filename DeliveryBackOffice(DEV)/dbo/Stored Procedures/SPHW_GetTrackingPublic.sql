@@ -430,7 +430,7 @@ BEGIN
                 ON SO.CatStatusProcessId = ER.Id
         
             --------------------------------------------------------
-            -- JOINs para Facturación (invoiceDetail → invoiceHeader)
+            -- JOINs para Facturación (invoiceDetail ? invoiceHeader)
             --------------------------------------------------------
             LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail ID WITH (NOLOCK)
                 ON ID.dti_fk_orderSerie  = DO.Guide_Serie

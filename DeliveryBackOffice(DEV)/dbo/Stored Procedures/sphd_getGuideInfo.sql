@@ -98,7 +98,7 @@ BEGIN
 	  ---TABLA RESPUESTA
     SELECT 'La guía '+@Guide_Serie+CONVERT(VARCHAR, @Guide_Number)+' no pertene al paÍs.' AS [Description]
     FROM DeliveryOrder do WITH (NOLOCK)
-    WHERE do.Guide_Number=@Guide_Number and do.Guide_Serie = @Guide_Serie
+    WHERE do.Guide_Serie = @Guide_Serie and do.Guide_Number=@Guide_Number
     AND 		
     ISNULL(do.SenderCountryId,'GT')<>@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'
 END

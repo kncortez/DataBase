@@ -507,9 +507,9 @@ BEGIN
 							INNER JOIN 
 								@TblDeliveryOrdersList t 
 								ON 
-									t.Guide_Number = ord.Guide_Number 
+									t.Guide_Serie = ord.Guide_Serie 
 									AND 
-									t.Guide_Serie = ord.Guide_Serie
+									t.Guide_Number = ord.Guide_Number
 						
 
 						IF(@@ROWCOUNT > 0)
@@ -523,7 +523,7 @@ BEGIN
 						, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
 						from dbo.DeliveryOrderPaymentDetail pay
 								inner join @TblDeliveryOrdersList t 
-								on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+								on (t.Guide_Serie = pay.GuideSerie and t.Guide_Number = pay.GuideNumber) 
 
 						IF(@@ROWCOUNT > 0)
 						BEGIN
@@ -650,8 +650,8 @@ BEGIN
 						FROM 
 							[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
 							INNER JOIN @TblDeliveryOrdersList tpo
-								ON do.GuideNumber = tpo.Guide_Number
-									AND do.GuideSerie = tpo.Guide_Serie
+								ON do.GuideSerie = tpo.Guide_Serie
+									AND do.GuideNumber = tpo.Guide_Number
 									AND do.TypeServiceId = tpo.IdTypeService
 					)
 
@@ -672,9 +672,9 @@ BEGIN
 								inner join 
 									@TblDeliveryOrdersList t 
 									on 
-										t.Guide_Number = ord.Guide_Number 
+										t.Guide_Serie = ord.Guide_Serie 
 										and 
-										t.Guide_Serie = ord.Guide_Serie
+										t.Guide_Number = ord.Guide_Number
 
 							END
 
@@ -686,7 +686,7 @@ BEGIN
 								, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
 								from dbo.DeliveryOrderPaymentDetail pay
 									 inner join @TblDeliveryOrdersList t 
-									 on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+									 on (t.Guide_Serie = pay.GuideSerie and t.Guide_Number = pay.GuideNumber) 
 
 							END
 
@@ -835,9 +835,9 @@ BEGIN
 						INNER JOIN
 							DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 							ON
-								CCTBCD.ProductNumber = DO.Guide_Number
-								AND
 								CCTBCD.SerieNumber = DO.Guide_Serie
+								AND
+								CCTBCD.ProductNumber = DO.Guide_Number
 					WHERE
 						CCTBCD.OrderNumber = @OrderNumber
 

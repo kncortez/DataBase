@@ -195,10 +195,6 @@ BEGIN
         DECLARE @AmountInvoice DECIMAL(18, 2) = 0;
         DECLARE @AmountNotesCredits DECIMAL(18, 2) = 0;
 
-        ----Variables para la generacion de la nota de credito
-        --DECLARE @idNotaCredito AS INT = NULL;
-        --DECLARE @vpCodeOfReferences NVARCHAR(10);
-
         BEGIN TRANSACTION;
         BEGIN TRY
 
@@ -225,15 +221,16 @@ BEGIN
             BEGIN
 
                 --CALCULOS DE MONTOS APLICADOS A GUIAS POR MEDIO DE NOTAS DE CREDITO
-                DECLARE @GuideNoteCredit TABLE
+                IF OBJECT_ID('tempdb..#GuideNoteCredit') IS NOT NULL DROP TABLE #GuideNoteCredit;
+                CREATE TABLE #GuideNoteCredit
                 (
                     dti_fk_orderSerie NVARCHAR(2),
                     dti_fk_orderNumber INT,
                     dti_amount DECIMAL(18, 2),
-                    RemainingAmount DECIMAL(18, 2)
+                    INDEX IX_GNC (dti_fk_orderSerie, dti_fk_orderNumber)
                 );
 
-                INSERT INTO @GuideNoteCredit
+                INSERT INTO #GuideNoteCredit
                 (
                     dti_fk_orderSerie,
                     dti_fk_orderNumber,
@@ -245,12 +242,14 @@ BEGIN
                 FROM invoiceHeader ih WITH (NOLOCK)
                     INNER JOIN invoiceDetail id WITH (NOLOCK)
                         ON ih.inv_pk_id = id.dti_fk_header
-                WHERE inv_invoiceOfCreditNote = @idInvoice
+                WHERE ih.inv_type = 2 
+                    AND inv_invoiceOfCreditNote = @idInvoice
                 GROUP BY id.dti_fk_orderSerie,
                          id.dti_fk_orderNumber;
 
                 -- Declaración de tabla temporal para almacenar los detalles procesados
-                DECLARE @InvoiceDetailProcess TABLE
+                IF OBJECT_ID('tempdb..#InvoiceDetailProcess') IS NOT NULL DROP TABLE #InvoiceDetailProcess;
+                CREATE TABLE #InvoiceDetailProcess
                 (
                     dti_pk_id INT,
                     dti_fk_header INT,
@@ -270,11 +269,13 @@ BEGIN
                 );
 
                 -- Crear una tabla temporal para manejar el estado de las líneas procesadas
-                DECLARE @TempInvoiceDetail TABLE
+                IF OBJECT_ID('tempdb..#TempInvoiceDetail') IS NOT NULL DROP TABLE #TempInvoiceDetail;
+                CREATE TABLE #TempInvoiceDetail
                 (
+                    RowOrder      INT IDENTITY(1,1) PRIMARY KEY,
                     dti_fk_header INT,
                     dti_fk_orderSerie NVARCHAR(50),
-                    dti_fk_orderNumber NVARCHAR(50),
+                    dti_fk_orderNumber INT,
                     dti_identification NVARCHAR(50),
                     dti_category NVARCHAR(50),
                     dti_quantity DECIMAL(18, 5),
@@ -284,14 +285,15 @@ BEGIN
                     dti_IVA DECIMAL(18, 5),
                     dti_amount DECIMAL(18, 5),
                     SAPCode NVARCHAR(50),
-                    RemainingAmount DECIMAL(18, 5),
                     GuideCreditNote DECIMAL(18, 5),
-                    IsProcessed BIT
-                        DEFAULT 0
+                    AvailableAmount DECIMAL(18, 5)
                 );
 
                 -- Insertar datos iniciales desde invoiceDetail en la tabla temporal
-                INSERT INTO @TempInvoiceDetail
+                INSERT INTO #TempInvoiceDetail
+                    (dti_fk_header, dti_fk_orderSerie, dti_fk_orderNumber, dti_identification,
+                     dti_category, dti_quantity, dti_measurement, dti_priceUnit, dti_description,
+                     dti_IVA, dti_amount, SAPCode, GuideCreditNote, AvailableAmount)
                 SELECT id.dti_fk_header,
                        id.dti_fk_orderSerie,
                        id.dti_fk_orderNumber,
@@ -304,15 +306,12 @@ BEGIN
                        id.dti_IVA,
                        id.dti_amount,
                        id.SAPCode,
-                       id.dti_amount AS RemainingAmount,
-                       (
-                           SELECT ISNULL(dti_amount, 0.00)
-                           FROM @GuideNoteCredit
-                           WHERE dti_fk_orderSerie = id.dti_fk_orderSerie
-                                 AND dti_fk_orderNumber = id.dti_fk_orderNumber
-                       ) discount,
-                       0 AS IsProcessed
+                       ISNULL(gnc.dti_amount, 0)                 AS GuideCreditNote,
+                       id.dti_amount - ISNULL(gnc.dti_amount, 0) AS AvailableAmount
                 FROM invoiceDetail id WITH (NOLOCK)
+                LEFT JOIN #GuideNoteCredit gnc
+                    ON gnc.dti_fk_orderSerie  = id.dti_fk_orderSerie
+                   AND gnc.dti_fk_orderNumber = id.dti_fk_orderNumber
                 WHERE id.dti_fk_header = @idInvoice;
 
                 -- Inserción de encabezado de la nota de crédito
@@ -495,11 +494,11 @@ BEGIN
                                    [inv_amount]
                            END inv_amount,
                            [inv_status],
-                           GETDATE(),
-                           @token,
-                           2,
-                           @idInvoice,
-                           @motivoNotaCredito,
+                           GETDATE()          DateCreated,
+                           @token             TokenCreated,
+                           2                  inv_Type,
+                           @idInvoice         inv_invoiceOfCreditNote,
+                           @motivoNotaCredito inv_motiveCreditNote,
                            inv_date,
                            inv_certificationFEL,
                            IdCurrency,
@@ -509,178 +508,60 @@ BEGIN
                 END
 
                 -- Obtener el ID de la nota de crédito recién creada
-                SET @idNotaCredito = @@IDENTITY;
+                SET @idNotaCredito = SCOPE_IDENTITY();
 
-                -- Declarar variables para iteración
-                DECLARE @RemainingAmount DECIMAL(18, 2) = @Amount;
-                DECLARE @LineSerie NVARCHAR(50);
-                DECLARE @LineNumber INT;
-                DECLARE @SAPCode NVARCHAR(50);
-                DECLARE @LineAmount DECIMAL(18, 2);
-                DECLARE @InsertAmount DECIMAL(18, 2);
-
-                -- Declarar tabla temporal para evitar duplicados
-                DECLARE @ProcessedLines TABLE
+                WITH CTE_detail as
                 (
-                    LineSerie NVARCHAR(50),
-                    LineNumber INT,
-                    SAPCode NVARCHAR(50)
-                );
-
-                -- Iterar sobre las líneas de detalle
-                WHILE EXISTS
-            (
-                SELECT 1
-                FROM @TempInvoiceDetail
-                WHERE RemainingAmount > 0
-                      AND IsProcessed = 0
-                      AND @RemainingAmount > 0
-            )
-                BEGIN
-                    -- Seleccionar la siguiente línea con monto pendiente
-                    SELECT TOP 1
-                           @LineSerie = dti_fk_orderSerie,
-                           @LineNumber = dti_fk_orderNumber,
-                           @SAPCode = SAPCode,
-                           @LineAmount = ISNULL(RemainingAmount, 0.00) - ISNULL(GuideCreditNote, 0.00)
-                    FROM @TempInvoiceDetail
-                    WHERE IsProcessed = 0
-                          AND NOT EXISTS
-                    (
-                        SELECT 1
-                        FROM @ProcessedLines pl
-                        WHERE pl.LineSerie = dti_fk_orderSerie
-                              AND pl.LineNumber = dti_fk_orderNumber
-                              AND pl.SAPCode = SAPCode
-                    )
-                    ORDER BY dti_fk_orderSerie,
-                             dti_fk_orderNumber,
-                             SAPCode;
-                    --PRINT CONVERT(NVARCHAR(25),@LineNumber);
-                    --PRINT CONVERT(NVARCHAR(25),@SAPCode)
-                    --PRINT CONVERT(NVARCHAR(25),@LineAmount);
-                    -- Validar si no hay más líneas por procesar
-                    IF @LineNumber IS NULL
-                       OR @LineAmount IS NULL
-                       OR @RemainingAmount <= 0
-                    BEGIN
-                        IF @SAPCode IS NULL
-                           OR @LineAmount IS NULL
-                           OR @RemainingAmount <= 0
-                        BEGIN
-                            BREAK;
-                        END;
-                    END;
-
-                    -- Calcular el monto a insertar
-                    SET @InsertAmount = CASE
-                                            WHEN @LineAmount <= @RemainingAmount THEN
-                                                @LineAmount
-                                            ELSE
-                                                @RemainingAmount
-                                        END;
-                    -- Insertar la línea procesada en @InvoiceDetail
-                    INSERT INTO @InvoiceDetailProcess
-                    (
-                        dti_fk_header,
-                        dti_fk_orderSerie,
-                        dti_fk_orderNumber,
-                        dti_identification,
-                        dti_category,
-                        dti_quantity,
-                        dti_measurement,
-                        dti_priceUnit,
-                        dti_description,
-                        dti_IVA,
-                        dti_amount,
-                        dti_dateRegister,
-                        dti_tokenRegister,
-                        SAPCode
-                    )
-                    SELECT @idNotaCredito,
-                           dti_fk_orderSerie,
-                           dti_fk_orderNumber,
-                           dti_identification,
-                           dti_category,
-                           1 dti_quantity,
-                           dti_measurement,
-                           CASE
-                               WHEN @Amount = 0 THEN
-                                   dti_priceUnit
-                               ELSE
-                                   @InsertAmount
-                           END dti_priceUnit,
-                           dti_description,
-                           CASE
-                               WHEN @Amount = 0 THEN
-                                   dti_IVA
-                               ELSE
-                                   @InsertAmount - (@InsertAmount / @IVA)
-                           END dti_IVA,
-                           CASE
-                               WHEN @Amount = 0 THEN
-                                   dti_amount
-                               ELSE
-                                   @InsertAmount
-                           END dti_amount,
-                           GETDATE(),
-                           @token,
-                           SAPCode
-                    FROM @TempInvoiceDetail
-                    WHERE (
-                              @LineSerie IS NOT NULL
-                              AND dti_fk_orderSerie = @LineSerie
-                          )
-                          AND
-                          (
-                              @LineNumber IS NOT NULL
-                              AND dti_fk_orderNumber = @LineNumber
-                          )
-                          AND SAPCode = @SAPCode
-                          AND @InsertAmount > 0
-                          OR (
-                                 @LineSerie IS NULL
-                                 OR @LineNumber IS NULL
-                             )
-                             AND SAPCode = @SAPCode
-                             AND @InsertAmount > 0;
-
-                    -- Reducir el monto restante de la línea procesada
-                    UPDATE @TempInvoiceDetail
-                    SET RemainingAmount = RemainingAmount - @InsertAmount,
-                        IsProcessed = CASE
-                                          WHEN RemainingAmount - @InsertAmount <= 0 THEN
-                                              1
-                                          ELSE
-                                              0
-                                      END
-                    WHERE dti_fk_orderSerie = @LineSerie
-                          AND dti_fk_orderNumber = @LineNumber
-                          AND SAPCode = @SAPCode;
-
-                    -- Registrar la línea procesada para evitar duplicados
-                    INSERT INTO @ProcessedLines
-                    (
-                        LineSerie,
-                        LineNumber,
-                        SAPCode
-                    )
-                    VALUES
-                    (@LineSerie, @LineNumber, @SAPCode);
-
-                    -- Actualizar el monto restante global
-                    SET @RemainingAmount = @RemainingAmount - @InsertAmount;
-
-                    -- Validación para evitar valores negativos
-                    IF @RemainingAmount < 0
-                        SET @RemainingAmount = 0;
-
-                    -- (Opcional) Imprimir valores de depuración
-                    PRINT 'Processed Line: ' + @LineSerie + ' - ' + CAST(@LineNumber AS NVARCHAR(50)) + ' --   '
-                          + CAST(@SAPCode AS NVARCHAR(50));
-                    PRINT 'InsertAmount: ' + CAST(@InsertAmount AS NVARCHAR(50));
-                    PRINT 'RemainingAmount: ' + CAST(@RemainingAmount AS NVARCHAR(50));
-                END;
+                    SELECT 
+                    dti_fk_orderSerie,
+                    dti_fk_orderNumber,
+                    dti_identification,
+                    dti_category,
+                    dti_measurement,
+                    dti_priceUnit,
+                    dti_description,
+                    dti_IVA,
+                    dti_amount,
+                    SAPCode,
+                    AvailableAmount,
+                    -- Suma acumulada hasta la línea ANTERIOR (sirve para repartir)
+                    ISNULL(SUM(AvailableAmount) OVER 
+                        (ORDER BY RowOrder ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0) AS PrevAccumulated
+                    FROM #TempInvoiceDetail
+                    WHERE AvailableAmount > 0
+                ),
+                Distribucion AS
+                (
+                    SELECT *,
+                        CASE 
+                            WHEN PrevAccumulated >= @Amount                       THEN 0
+                            WHEN PrevAccumulated + AvailableAmount <= @Amount     THEN AvailableAmount
+                            ELSE @Amount - PrevAccumulated
+                        END AS InsertAmount
+                    FROM CTE_detail
+                )
+                INSERT INTO #InvoiceDetailProcess
+                    (dti_fk_header, dti_fk_orderSerie, dti_fk_orderNumber, dti_identification,
+                        dti_category, dti_quantity, dti_measurement, dti_priceUnit, dti_description,
+                        dti_IVA, dti_amount, dti_dateRegister, dti_tokenRegister, SAPCode)
+                SELECT 
+                    @idNotaCredito,
+                    dti_fk_orderSerie,
+                    dti_fk_orderNumber,
+                    dti_identification,
+                    dti_category,
+                    1,
+                    dti_measurement,
+                    CASE WHEN @Amount = 0 THEN dti_priceUnit ELSE InsertAmount END,
+                    dti_description,
+                    CASE WHEN @Amount = 0 THEN dti_IVA       ELSE InsertAmount - (InsertAmount / @IVA) END,
+                    CASE WHEN @Amount = 0 THEN dti_amount    ELSE InsertAmount END,
+                    GETDATE(),
+                    @token,
+                    SAPCode
+                FROM Distribucion
+                WHERE InsertAmount > 0
+                OPTION (RECOMPILE);               
 
                 -- Insertar todas las líneas procesadas en la tabla final
                 INSERT INTO [dbo].[invoiceDetail]
@@ -714,7 +595,7 @@ BEGIN
                        dti_dateRegister,
                        dti_tokenRegister,
                        SAPCode
-                FROM @InvoiceDetailProcess;
+                FROM #InvoiceDetailProcess;
 
                 INSERT INTO [dbo].[InOutOfMoneyDetail]
                 (
@@ -761,6 +642,10 @@ BEGIN
                     WHERE inv_pk_id = @idInvoice;
                 END;
 
+                IF OBJECT_ID('tempdb..#TempInvoiceDetail')    IS NOT NULL DROP TABLE #TempInvoiceDetail;
+                IF OBJECT_ID('tempdb..#GuideNoteCredit')      IS NOT NULL DROP TABLE #GuideNoteCredit;
+                IF OBJECT_ID('tempdb..#InvoiceDetailProcess') IS NOT NULL DROP TABLE #InvoiceDetailProcess;
+
                 SELECT @idNotaCredito 'id',
                        @@ROWCOUNT 'Detalles',
                        @vpCodeOfReferences 'vpCodeOfReference',
@@ -784,6 +669,10 @@ BEGIN
 
         END TRY
         BEGIN CATCH
+
+            IF OBJECT_ID('tempdb..#TempInvoiceDetail')    IS NOT NULL DROP TABLE #TempInvoiceDetail;
+            IF OBJECT_ID('tempdb..#GuideNoteCredit')      IS NOT NULL DROP TABLE #GuideNoteCredit;
+            IF OBJECT_ID('tempdb..#InvoiceDetailProcess') IS NOT NULL DROP TABLE #InvoiceDetailProcess;
 
             SELECT 0 [blnResult],
                    ERROR_NUMBER() AS [ErrorNumber],

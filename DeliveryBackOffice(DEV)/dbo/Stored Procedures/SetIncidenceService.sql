@@ -35,20 +35,20 @@ BEGIN
 
 	DECLARE @jsonToken NVARCHAR(MAX)
 	declare @jsonService NVARCHAR(MAX)
-	 declare @TokenAct int  = (select top 1 RowStatus from LogTokenPOD WITH(NOLOCK) where LogTokenPOD LIKE '%' + @Token + '%' order by DateCreated desc)
-	declare @hourtoken int = (select top 1 DATEDIFF(HOUR, DateCreated, GETDATE() ) as horas from LogTokenPOD WITH(NOLOCK) where LogTokenPOD  LIKE '%' + @Token + '%' order by DateCreated desc)
+	-- declare @TokenAct int  = (select top 1 RowStatus from LogTokenPOD WITH(NOLOCK) where LogTokenPOD LIKE '%' + @Token + '%' order by DateCreated desc)
+	--declare @hourtoken int = (select top 1 DATEDIFF(HOUR, DateCreated, GETDATE() ) as horas from LogTokenPOD WITH(NOLOCK) where LogTokenPOD  LIKE '%' + @Token + '%' order by DateCreated desc)
 	declare @servicio int = (select COUNT(IdServiceManagement) from ServiceManagement WITH(NOLOCK) where IdServiceManagement = @ServiceManagementId)
 
-	print 'validando token'
-	if ( (@TokenAct = 1 and @hourtoken <= 8) OR 1 = 1 )
-		begin 
-				print 'token validado'
+	--print 'validando token'
+	--if ( (@TokenAct = 1 and @hourtoken <= 8) OR 1 = 1 )
+	--	begin 
+				--print 'token validado'
 	
 						
 					declare @validate int  = (select ServiceStatusId from ServiceManagement WITH(NOLOCK) where IdServiceManagement =  @ServiceManagementId)
 								
-				 print 'validando status'  
-				 print @validate
+				 --print 'validando status'  
+				 --print @validate
 				 
 							
 					if(@servicio > 0)
@@ -222,25 +222,25 @@ BEGIN
 																	 select '['+ @jsonService + ']' jsonService
 	
 																   return 
-													end 
-		end
+											        END 
+		--end
 
-		else if(@TokenAct = 0 or @TokenAct is null or @hourtoken > 8)
-		begin 
-				  print 'token inválido'
-					SET @jsonToken = (
-				   SELECT STUFF((
-		   			SELECT  
-					',{"IdResult":' + '403' + ',' +
-					'"DescriptionError":"' + 'Token inválido'  + '"' +	  	  
-					'}' 
-					FOR XML PATH(''), TYPE
-				   ).value('.', 'varchar(max)'),1,1,''
-		   					  ) 
-				   )
-					 select '['+ @jsonToken + ']' jsonToken
+		--else if(@TokenAct = 0 or @TokenAct is null or @hourtoken > 8)
+		--begin 
+		--		  print 'token inválido'
+		--			SET @jsonToken = (
+		--		   SELECT STUFF((
+		--   			SELECT  
+		--			',{"IdResult":' + '403' + ',' +
+		--			'"DescriptionError":"' + 'Token inválido'  + '"' +	  	  
+		--			'}' 
+		--			FOR XML PATH(''), TYPE
+		--		   ).value('.', 'varchar(max)'),1,1,''
+		--   					  ) 
+		--		   )
+		--			 select '['+ @jsonToken + ']' jsonToken
 	
-				   return
-	end
+		--		   return
+	 --   END
 
 END

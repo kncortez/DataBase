@@ -603,7 +603,7 @@ BEGIN
                           AND ISNULL(bd.CommissionNotified, 0) = 0
                           AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
                           AND bd.CollectId IS NULL
-						  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+						  AND do.SenderCountryID = @IdCountrySender
                   )
                   AND CollectId IS NULL;
         END;
@@ -628,7 +628,7 @@ BEGIN
                           AND ISNULL(bd.CommissionNotified, 0) = 0
                           AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
                           AND bd.RecolectionId IS NULL
-						  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+						  AND do.SenderCountryID  = @IdCountrySender
                   )
                   AND RecolectionId IS NULL;
         END;
@@ -854,7 +854,7 @@ BEGIN
               AND bd.CatConceptCODId = @CatConceptCODId
               AND ISNULL(bd.CommissionNotified, 0) = 0
               AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         ORDER BY bd.CreditDate DESC;
     END;
     --============================= FORMATO BAC ENVIOS COLLECT FIN =======================================
@@ -1003,7 +1003,7 @@ BEGIN
               AND bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODDeposit
               AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         UNION
         --------ACUMULADO
         SELECT REPLACE(
@@ -1152,7 +1152,7 @@ BEGIN
               AND bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODDeposit
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         GROUP BY pgd.CustomerId,
                  cda.AccountNumber,
                  bd.AccountNumber,
@@ -1261,7 +1261,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         UNION
         ------ACUMULADO
         SELECT MAX(btd.Reference) 'REFERENCIA',
@@ -1325,7 +1325,7 @@ BEGIN
                            SELECT TOP 1
                                   [IdTownship]
                            FROM [dbo].[Township] WITH (NOLOCK)
-                           WHERE UPPER(do.[Receiver_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                           WHERE UPPER(do.[Receiver_Town])= UPPER([TownshipName])
                        )
                        ELSE
                            do.[ReceiverIdTownship]
@@ -1337,7 +1337,7 @@ BEGIN
                            SELECT TOP 1
                                   [IdTownship]
                            FROM [dbo].[Township] WITH (NOLOCK)
-                           WHERE UPPER(do.[Sender_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                           WHERE UPPER(do.[Sender_Town]) = UPPER([TownshipName])
                        )
                        ELSE
                            do.[SenderIdTownship]
@@ -1356,7 +1356,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         GROUP BY pg.CustomerId,
                  btd.TypeAccountName,
                  btd.AccountName,
@@ -1459,7 +1459,7 @@ BEGIN
                            SELECT TOP 1
                                   [IdTownship]
                            FROM [dbo].[Township] WITH (NOLOCK)
-                           WHERE UPPER(do.[Receiver_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                           WHERE UPPER(do.[Receiver_Town])= UPPER([TownshipName])
                        )
                        ELSE
                            do.[ReceiverIdTownship]
@@ -1471,7 +1471,7 @@ BEGIN
                            SELECT TOP 1
                                   [IdTownship]
                            FROM [dbo].[Township] WITH (NOLOCK)
-                           WHERE UPPER(do.[Sender_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                           WHERE UPPER(do.[Sender_Town])= UPPER([TownshipName])
                        )
                        ELSE
                            do.[SenderIdTownship]
@@ -1496,7 +1496,7 @@ BEGIN
             AND btd.BatchCODId = @BatchCODId
             AND btd.Excluded = @Excluded
             AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         UNION
         ----------ACUMULADO
         SELECT btd.CatAccountTypeCODId 'TIPO DE CUENTA',
@@ -1592,7 +1592,7 @@ BEGIN
                            SELECT TOP 1
                                   [IdTownship]
                            FROM [dbo].[Township] WITH (NOLOCK)
-                           WHERE UPPER(do.[Receiver_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                           WHERE UPPER(do.[Receiver_Town])= UPPER([TownshipName])
                        )
                        ELSE
                            do.[ReceiverIdTownship]
@@ -1604,7 +1604,7 @@ BEGIN
                            SELECT TOP 1
                                   [IdTownship]
                            FROM [dbo].[Township] WITH (NOLOCK)
-                           WHERE UPPER(do.[Sender_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                           WHERE UPPER(do.[Sender_Town]) = UPPER([TownshipName])
                        )
                        ELSE
                            do.[SenderIdTownship]
@@ -1628,7 +1628,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         GROUP BY pg.CustomerId,
                  btd.CatAccountTypeCODId,
                  btd.AccountNumber,
@@ -1719,7 +1719,7 @@ BEGIN
               AND bd.BatchCODId = @BatchCODId
               AND bd.Excluded = @Excluded
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         GROUP BY pgd.CustomerId,
                  bd.CatAccountTypeCODId,
                  bd.AccountNumber,
@@ -1791,7 +1791,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         UNION
         ----------ACUMULADO
         SELECT RTRIM(LTRIM(REPLACE(
@@ -1854,7 +1854,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND cu.CatBatchTypeCODId = @BatchTypeCOD_AC
-			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+			  AND do.SenderCountryID = @IdCountrySender
         GROUP BY cu.IdCustomer,
                  btd.CatAccountTypeCODId,
                  cda.CatAccountTypeCODId,
@@ -1912,7 +1912,7 @@ BEGIN
 		AND btd.BatchCODId = @BatchCODId
 		AND btd.Excluded = @Excluded
 		AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
-		AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+		AND do.SenderCountryID = @IdCountrySender
 
 		UNION
 		----------ACUMULADO
@@ -1955,7 +1955,7 @@ BEGIN
 		AND BTD.BatchCODId = @BatchCODId
 		AND btd.Excluded = @Excluded
 		AND cu.CatBatchTypeCODId = @BatchTypeCOD_AC
-		AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
+		AND do.SenderCountryID = @IdCountrySender
 
 
 		GROUP BY cu.IdCustomer

@@ -46,6 +46,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -159,4 +161,16 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hor
 GO
 CREATE NONCLUSTERED INDEX [IDX_IdLinehaulRoutePreparation_CatLinehaulStatusId_RowStatus]
     ON [dbo].[LinehaulRoutePreparation]([IdLinehaulRoutePreparation] ASC, [CatLinehaulStatusId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_LinehaulRoutePreparation_CatRouteId_DateLinehaulRoutePreparation_RowStatus]
+    ON [dbo].[LinehaulRoutePreparation]([CatRouteId] ASC, [DateLinehaulRoutePreparation] ASC, [RowStatus] ASC)
+    INCLUDE([StationDispatchedId], [CatLinehaulStatusId], [SenderReceiverId], [CatVehicleId], [DriverCUI], [DriverName], [DriverPhone], [VehicleID], [VehicleDescription], [SecurityManName], [SecurityManPhone], [SecurityManCUI], [ContainerQuantity], [GuideQuantity], [DryPieceQuantity], [ColdPieceQuantity]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StationDispatchedId_CatRouteId_INCLUDE]
+    ON [dbo].[LinehaulRoutePreparation]([StationDispatchedId] ASC, [CatRouteId] ASC)
+    INCLUDE([DateLinehaulRoutePreparation]);
 

@@ -40,6 +40,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_product_number_cost]
     ON [dbo].[Cost]([IdProduct] ASC, [ProductNumber] ASC);
@@ -54,9 +56,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valor que s
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_RowStatus]
-    ON [dbo].[Cost]([RowStatus] ASC)
-    INCLUDE([ProductNumber], [TotalAmountPaid], [CODAmount]);
+
 
 
 GO
@@ -79,9 +79,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de l
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_RowStatus_Included]
-    ON [dbo].[Cost]([RowStatus] ASC)
-    INCLUDE([IdCost], [ProductNumber], [DateCreated], [GuideSerie], [GuideNumber]);
+
 
 
 GO
@@ -126,13 +124,17 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio del pago del COD ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CODPaymentExchangeRate';
 
 GO
-CREATE NONCLUSTERED INDEX [idx_RowStatus_include]
-    ON [dbo].[Cost]([RowStatus] ASC)
-    INCLUDE([ProductNumber], [DateCreated], [TotalAmountPaid], [GuideSerie], [GuideNumber]);
+
 
 
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_INCLUDE]
     ON [dbo].[Cost]([GuideSerie] ASC)
     INCLUDE([TotalAmountPaid]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_Consolidated]
+    ON [dbo].[Cost]([RowStatus] ASC)
+    INCLUDE([IdCost], [ProductNumber], [DateCreated], [TotalAmountPaid], [GuideSerie], [GuideNumber], [CODAmount]);
 

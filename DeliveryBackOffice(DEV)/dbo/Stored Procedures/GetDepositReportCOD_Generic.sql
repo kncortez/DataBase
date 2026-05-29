@@ -92,8 +92,11 @@ BEGIN
                      , CASE
                            WHEN ISNULL(do.SenderCountryId, 'GT') = 'GT' THEN
                                'Q.'
+							   WHEN	 do.SenderCountryId ='SV' THEN
+                               '$.'
                            ELSE
                                'L.'
+
                        END                                                                               AS CurrencySymbol
                 FROM [dbo].[BatchDetailCOD]              AS btd WITH (NOLOCK)
                     INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)

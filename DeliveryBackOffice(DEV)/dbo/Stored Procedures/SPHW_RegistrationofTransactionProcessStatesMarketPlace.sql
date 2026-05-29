@@ -1,13 +1,21 @@
-﻿-- =============================================
--- Author:		<Author,Edelman>
--- Create date: <Create Date, 2024-01-08>
--- Description:	<Description,Insertar registro que indica inicio del  proceso de una transacción de compra carrito marketplace>
--- =============================================
--- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2025-06-09>
--- Description:	<Se modifica el tipo de entrada de CardId (GetCardsCredit) de varchar a int.>
--- =============================================
+﻿
+/* =================================================
+   SP: SPHW_RegistrationofTransactionProcessStatesMarketPlace
+   Propósito: Insertar registro que indica inicio del  proceso de una transacción de compra carrito marketplace
+   Autor:     Edelman Vasquez
+   Historia:  PENDIENTE
+   Fecha:     2024-01-08
+================================================= */
+/* === CHANGELOG ============================
+2024-01-08 | Historia/épica: (pendiente)  | Autor: Edelman Vasquez | Insertar registro que indica inicio del  proceso de una transacción de compra carrito marketplace
+2025-06-09 | Historia/épica: FDAPI-2085   | Autor: Walter Orozco   | Se modifica el tipo de entrada de CardId (GetCardsCredit) de varchar a int.
+2026-04-20 | Historia/épica: FDAPI-5877   | Autor: Bilkar Morataya | Se agrega guard de idempotencia: si el OrderNumber ya existe en
+--                                                                   RegistrationofTransactionProcessStates, se omite el INSERT y se
+--                                                                   retorna ResultCode = 1 para no bloquear el flujo del llamador.
+--                                                                   Esto previene duplicación de membresías/suscripciones en reintentos
+--                                                                   de pago o doble envío desde el cliente.
+=========================================== */
+
 CREATE PROCEDURE [dbo].[SPHW_RegistrationofTransactionProcessStatesMarketPlace] 
 @AccountId AS INT,
 @CustomerId AS INT,

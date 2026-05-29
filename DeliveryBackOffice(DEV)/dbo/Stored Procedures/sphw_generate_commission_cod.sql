@@ -120,7 +120,7 @@ BEGIN
            cat.Description 'TIPO DE CUENTA OTRO BANCO',
            cco.Concept 'CONCEPTO',
            Password 'CONTRASEÑA'
-    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd with (nolock)
+    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda
             ON cda.IdCatDebitAccountCOD = bd.CatDebitAccountCODId
                AND cda.BankId = @IdBank
@@ -298,7 +298,7 @@ BEGIN
            ISNULL(invd.inv_serieFEL, '') 'SERIE FEL',
            ISNULL(invd.inv_numberFEL, '') 'NÚMERO FEL',
            ISNULL(invd.inv_certificationFEL, '') 'CERTIFIACDO FEL'
-    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd  with (nolock)
+    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda
             ON cda.IdCatDebitAccountCOD = bd.CatDebitAccountCODId
                AND cda.BankId = @IdBank
@@ -320,10 +320,12 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco
             ON cco.IdCatConceptCOD = bd.CatConceptCODId
                AND cco.RowStatus = @EnabledRow
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             ON bd.GuideSerie = do.Guide_Serie
                AND bd.GuideNumber = do.Guide_Number
-        LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD bdc  with (nolock)
+        LEFT JOIN [dbo].[Customer] cu WITH (NOLOCK)
+            ON do.[IdCustomer] = cu.[IdCustomer]
+        LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD bdc WITH (NOLOCK)
             ON bdc.GuideSerie = bd.GuideSerie
                AND bdc.GuideNumber = bd.GuideNumber
                AND bdc.BankId <> 31
@@ -335,8 +337,8 @@ BEGIN
                    MIN(fac.inv_certificationFEL) inv_certificationFEL,
                    invd.dti_fk_orderSerie dti_fk_orderSerie,
                    invd.dti_fk_orderNumber dti_fk_orderNumber
-            FROM DeliveryBackOffice.dbo.invoiceDetail invd with (nolock)
-               Inner JOIN DeliveryBackOffice.dbo.invoiceHeader fac  with (nolock)
+            FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
                     ON fac.inv_pk_id = invd.dti_fk_header
                        AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                        AND fac.inv_invoiceOfCreditNote IS NOT NULL
@@ -346,20 +348,10 @@ BEGIN
         ) invd
             ON invd.dti_fk_orderSerie = bd.GuideSerie
                AND invd.dti_fk_orderNumber = bd.GuideNumber
-
-    --LEFT JOIN 		
-    --DeliveryBackOffice.dbo.invoiceDetail invd
-    --	ON invd.dti_fk_orderSerie = bd.GuideSerie and invd.dti_fk_orderNumber = bd.GuideNumber
-    --LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invh
-    --	ON invh.inv_pk_id = invd.dti_fk_header
-    --	AND invh.inv_certificationFEL IS NOT NULL
-    --		AND invh.inv_descriptionFEL = 'PROCESO REALIZADO'
-    WHERE
-        --bd.BatchCODId = @BatchCODId
-        --AND 
-        bd.Excluded = @Excluded
-        AND bd.CatConceptCODId = 1 --Comisiones
-        AND bd.CommissionId = @CommissionId
+    WHERE bd.Excluded = @Excluded
+          AND bd.CatConceptCODId = 1
+          AND bd.CommissionId = @CommissionId
+          AND cu.IsInternationalCustomer = 0
     GROUP BY cda.AccountNumber,
              bd.AccountNumber,
              bd.AccountName,

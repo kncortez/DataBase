@@ -1,5 +1,4 @@
-﻿
-create procedure exec_transactions 
+﻿CREATE procedure exec_transactions 
 as
 begin
 	SELECT A1.Codigo
@@ -68,8 +67,8 @@ begin
 				ON vup.RegisterUserID = rg.UsrIdUser
 			INNER JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 				ON vp.IdVisitPointClient = vup.IdVisitPointClient
-		WHERE CONVERT(DATE, dt.DateCreated) >= '2023-01-01'
-			  AND dt.StatusOrderId = 21
+		WHERE dt.StatusOrderId = 21
+			  AND CONVERT(DATE, dt.DateCreated) >= '2023-01-01'
 		GROUP BY vp.CodeOfReference
 			   , vp.DescriptionOfClient
 			   , CONVERT(DATE, dt.DateCreated)
@@ -101,8 +100,8 @@ begin
 				ON vup.RegisterUserID = rg.UsrIdUser
 			INNER JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 				ON vp.IdVisitPointClient = vup.IdVisitPointClient
-		WHERE CONVERT(DATE, dt.DateCreated) >= '2023-01-01'
-			  AND dt.StatusOrderId = 22
+		WHERE dt.StatusOrderId = 22
+			  AND CONVERT(DATE, dt.DateCreated) >= '2023-01-01'
 		GROUP BY vp.CodeOfReference
 			   , vp.DescriptionOfClient
 			   , CONVERT(DATE, dt.DateCreated)
@@ -134,8 +133,8 @@ begin
 				ON vup.RegisterUserID = rg.UsrIdUser
 			INNER JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 				ON vp.IdVisitPointClient = vup.IdVisitPointClient
-		WHERE CONVERT(DATE, dt.DateCreated) >= '2023-01-01'
-			  AND dt.StatusOrderId = 23
+		WHERE dt.StatusOrderId = 23
+			  AND CONVERT(DATE, dt.DateCreated) >= '2023-01-01'
 		GROUP BY vp.CodeOfReference
 			   , vp.DescriptionOfClient
 			   , CONVERT(DATE, dt.DateCreated)

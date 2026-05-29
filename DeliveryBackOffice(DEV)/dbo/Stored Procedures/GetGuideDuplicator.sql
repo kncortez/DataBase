@@ -1,4 +1,4 @@
--- =============================================  
+﻿-- =============================================  
 -- Author:  <Cristian Suazo  
 -- Update date: <2025-02-10>  
 -- Description: <Valida si ticket number contiene mas de una guia>  
@@ -27,8 +27,8 @@ BEGIN
 		PRINT ' NO ENTRO'
 		SELECT @Valid = COUNT(Guide_Number)
 		FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
-		WHERE Guide_Number = @GuideNumber
-		AND Guide_Serie = @GuideSerie
+		WHERE Guide_Serie = @GuideSerie
+		AND Guide_Number = @GuideNumber
 	END
 
     IF @Valid > 1

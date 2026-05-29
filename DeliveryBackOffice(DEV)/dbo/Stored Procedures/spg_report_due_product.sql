@@ -31,7 +31,8 @@ BEGIN
 		w.Rack_Position
 	from DeliveryBackOffice.dbo.Warehouse w with(nolock)
 	inner join DeliveryBackOffice.dbo.DeliveryOrder do with(nolock)
-	on do.Guide_Number = w.Guide_Number and do.Guide_Serie = w.Guide_Serie
+	on do.Guide_Serie = w.Guide_Serie 
+    AND do.Guide_Number = w.Guide_Number 
 	where Active = 1
 	and iif(do.SenderCountryId is null, 'GT', do.SenderCountryId)=@IdCountry
 	) AS SUBQ

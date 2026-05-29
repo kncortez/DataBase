@@ -43,6 +43,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_ServiceManagement_RowStatus]
     ON [dbo].[ServiceManagementDetail]([ServiceManagement] ASC, [RowStatus] ASC);
@@ -158,4 +160,10 @@ CREATE NONCLUSTERED INDEX [idx_SubTypeServiceManagmentId_SubTypeServiceManagment
 GO
 CREATE NONCLUSTERED INDEX [idx_IdServiceManagementDetail_RowStatus]
     ON [dbo].[ServiceManagementDetail]([IdServiceManagementDetail] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_ServiceManagementDetail_TownshipId_ServicePhone_SubTypeServiceManagmentId_RowStatus_ServiceStartDate]
+    ON [dbo].[ServiceManagementDetail]([TownshipId] ASC, [ServicePhone] ASC, [SubTypeServiceManagmentId] ASC, [RowStatus] ASC, [ServiceStartDate] ASC)
+    INCLUDE([ProvinceId], [ServiceAddress]);
 
