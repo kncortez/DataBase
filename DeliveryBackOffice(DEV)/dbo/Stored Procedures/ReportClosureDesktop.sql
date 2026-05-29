@@ -20,12 +20,17 @@
 -- Create date: <2026-03-03>
 -- Description:	<Optimización: mejor manejo de rango de fechas, eliminación de OR en WHERE, OUTER APPLY sin OR para invoiceHeader>
 -- =============================================
+-- Author:		<Keneth Hoffens>
+-- Create date: <2026-05-28>
+-- Description:	<Se agrega parametro @IdCountry para filtrar cierres por el pais del usuario logeado, y se reemplaza el CurrencySymbol quemado (CASE GT/HNL) por lookup dinamico contra DeliveryCurrency + CatCurrencyCOD para soportar GT/HN/SV.>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
 @VisitPointId NVARCHAR(3000) = null,
 @IdCierre NVARCHAR(3000) = null,
-@IdAccount NVARCHAR(3000) = null
+@IdAccount NVARCHAR(3000) = null,
+@IdCountry NVARCHAR(2) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -131,10 +136,7 @@ BEGIN
             ELSE '----'
         END AS Guide,
         ISNULL(costd.Voucher, '') AS Voucher,
-        CASE 
-            WHEN ISNULL(DOR.SenderCountryId, 'GT') = 'GT' THEN 'GTQ' 
-            ELSE 'HNL' 
-        END AS CurrencySymbol,
+        ISNULL(CCC.CodeISO, 'GTQ') AS CurrencySymbol,
         ISNULL(DOPD.amount, 0) AS PriceShippment,
         ISNULL(DOPD.CODAmountProcess, 0) AS COD,
         CASE
@@ -206,12 +208,18 @@ BEGIN
         ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
     LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1 WITH(NOLOCK)
         ON REU1.UsrIdUser = ACHVP.UserId
+    LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+        ON ISNULL(VPC.CountryId, 'GT') = DC.Currency_IdCountry
+       AND DC.DefaultPerCountry = 1
+    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+        ON CCC.IdCatCurrencyCOD = DC.IdCurrencyCOD
     WHERE DOPD.DateCreated >= @StartDateClean AND DOPD.DateCreated < @EndDateClean
         AND DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount)
         AND ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre)
         AND COALESCE(DOPD.VisitPoint, ACH.VisitPoint) IN (SELECT CodeOfReference FROM @tblVisitPointId)
         AND DOPD.ShipmentCompleted = 1
         AND DOPD.AccountId > 0
+        AND IIF(VPC.CountryId IS NULL, 'GT', VPC.CountryId) = @IdCountry
     ORDER BY DOPD.DateCreated ASC
     OPTION (RECOMPILE);
 END
