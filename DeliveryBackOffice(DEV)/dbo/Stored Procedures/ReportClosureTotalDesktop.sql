@@ -15,18 +15,22 @@
 -- Create date: <2026-03-03>
 -- Description:	<Se corrige cálculo de COD usando subconsultas para evitar mezclar efectivo con Zigi>
 -- =============================================
-CREATE PROCEDURE  [dbo].[ReportClosureTotalDesktop] 
+-- Author:		<Keneth Hoffens>
+-- Create date: <2026-05-28>
+-- Description:	<Se agrega parametro @IdCountry para filtrar los totales por el pais del usuario logeado>
+-- =============================================
+CREATE PROCEDURE  [dbo].[ReportClosureTotalDesktop]
     @StartDate datetime = NULL,
     @EndDate datetime = NULL,
     @VisitPointId NVARCHAR(50) = NULL,
     @IdCierre NVARCHAR(50) = NULL,
-    @IdAccount NVARCHAR(50) = NULL
+    @IdAccount NVARCHAR(50) = NULL,
+    @IdCountry NVARCHAR(2) = NULL
 AS
 BEGIN
     DECLARE @AccountExp NVARCHAR(30),
             @AccountCOD NVARCHAR(30),
             @AccountZigi NVARCHAR(30);
-    DECLARE @IdCountry NVARCHAR(2) = (SELECT CountryId FROM VisitPointClient WITH (NOLOCK) WHERE CodeOfReference = @VisitPointId)
 
     SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')' 
     FROM ClosureAccount WITH (NOLOCK)
@@ -156,6 +160,7 @@ BEGIN
             AND (@VisitPointId IS NULL OR @VisitPointId = '-1' OR ACH.VisitPoint IN (SELECT CodeOfReference FROM @tblVisitPointId))
             AND (@IdCierre IS NULL OR @IdCierre = '-1' OR ACH.IdAccountingClosuresHeader IN (SELECT CierreId FROM @tblIdCierre))
             AND (@IdAccount IS NULL OR @IdAccount = '-1' OR DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount))
+            AND IIF(VPC.CountryId IS NULL, 'GT', VPC.CountryId) = @IdCountry
         GROUP BY ACH.IdAccountingClosuresHeader, VPC.CountryId, CCC.CodeISO) X
     GROUP BY CurrencySymbol
 END
