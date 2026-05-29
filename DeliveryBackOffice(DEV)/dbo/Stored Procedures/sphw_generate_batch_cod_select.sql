@@ -308,8 +308,8 @@ BEGIN
                  , ord.Guide_Number
             FROM #listGuides                                       lst
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder    ord WITH (NOLOCK)
-                    ON ord.Guide_Number = lst.Guide_Number
-                       AND ord.Guide_Serie = lst.Guide_Serie
+                    ON ord.Guide_Serie = lst.Guide_Serie
+                       AND ord.Guide_Number = lst.Guide_Number
                 LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
                     ON lst.Guide_Serie = PC.GuideSerieDestination
                        AND lst.Guide_Number = PC.GuideNumberDestination

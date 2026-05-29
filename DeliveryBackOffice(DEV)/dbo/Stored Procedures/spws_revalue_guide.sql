@@ -68,8 +68,8 @@ BEGIN
 			SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
 			INNER JOIN Subscription sb WITH (NOLOCK)
 			ON sbl.SubscriptionId = sb.IdSubscription
-			WHERE sbl.LogGuideNumber = @GuideNumber And 
-				  sbl.LogGuideSerie  = @GuideSerie And 
+			WHERE sbl.LogGuideSerie  = @GuideSerie And 
+				  sbl.LogGuideNumber = @GuideNumber And 
 				  sbl.RowStatus=1)
 
 			IF(@TypeSubsId IS NULL)
@@ -357,15 +357,9 @@ BEGIN
                     ON br.IdCost = cst.IdCost
             WHERE (
                       (
-                          cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
+                          cst.GuideSerie = @GuideSerie
                           AND cst.GuideNumber = @GuideNumber
                       )
-                      --OR
-                      --(
-                      --    cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                      --    AND cst.GuideSerie IS NULL
-                      --    AND cst.GuideNumber IS NULL
-                      --)
                   )
                   AND
                   (
@@ -476,8 +470,8 @@ BEGIN
         -- Corroborar si guía si utilizo una membresia al ser generada
         SELECT @UseMembership = 1
         FROM [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH (NOLOCK)
-        WHERE MSL.LogGuideNumber = @GuideNumber
-              AND MSL.LogGuideSerie = @GuideSerie
+        WHERE MSL.LogGuideSerie = @GuideSerie
+              AND MSL.LogGuideNumber = @GuideNumber
               AND MSL.RowStatus = 1;
         -- Se considera que no se usa membresia
         IF (ISNULL(@UseMembership, 0) = 0)
@@ -538,8 +532,8 @@ BEGIN
                     WHEN SubscriptionId IS NOT NULL THEN 2 
                 END)
         FROM dbo.MembershipSubscriptionLog WITH(NOLOCK)
-        WHERE LogGuideNumber=@GuideNumber
-            AND LogGuideSerie=@GuideSerie
+        WHERE LogGuideSerie=@GuideSerie
+            AND LogGuideNumber=@GuideNumber
         
         IF @ProductId >0 AND @CategoryProductId >0
         BEGIN 
@@ -1279,15 +1273,9 @@ BEGIN
             FROM dbo.Cost cst WITH (NOLOCK)
             WHERE (
                       (
-                          cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
+                          cst.GuideSerie = @GuideSerie
                           AND cst.GuideNumber = @GuideNumber
-                      )
-                      OR
-                      (
-                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                          AND cst.GuideSerie IS NULL
-                          AND cst.GuideNumber IS NULL
-                      )
+                      )                    
                   )
                   AND cst.RowStatus = 1
         )
@@ -1301,15 +1289,9 @@ BEGIN
             FROM dbo.Cost cst WITH (NOLOCK)
             WHERE (
                       (
-                          cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
+                          cst.GuideSerie = @GuideSerie
                           AND cst.GuideNumber = @GuideNumber
                       )
-                      --OR
-                      --(
-                      --    cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                      --    AND cst.GuideSerie IS NULL
-                      --    AND cst.GuideNumber IS NULL
-                      --)
                   )
                   AND cst.RowStatus = 1
             ORDER BY cst.DateCreated DESC;
@@ -1447,7 +1429,7 @@ BEGIN
 				VALUES
 				(   1, @ProdctNumber, 1     -- costo de envio
 				  , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
-				  , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber
+				  , @Token, GETDATE(), @GuideSerie, @GuideNumber
 				  , @CurrencySender, @ExchangeSender				
 				);
 			END
@@ -1710,3 +1692,8 @@ BEGIN
     IF OBJECT_ID('tempdb.dbo.#TempResult', 'U') IS NOT NULL
         DROP TABLE #TempResult;
 END;
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[spws_revalue_guide] TO [ebarrios]
+    AS [dbo];
+

@@ -483,6 +483,28 @@ BEGIN
                ERROR_MESSAGE() AS 'Description',
                CONVERT(BIGINT, 0) AS 'NumTransferID';
         ROLLBACK TRANSACTION;
+
+		INSERT INTO dbo.RoutePreparationLogError
+		(
+		    ErrorDescription,
+		    ErrorNumber,
+		    ErrorProcedure,
+		    ErrorLine,
+		    GuideSerie,
+		    GuideNumber,
+		    TokenCreated,
+		    DateCreated
+		)
+		VALUES
+		(   ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+		    ERROR_NUMBER(),     -- ErrorNumber - int
+		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+		    ERROR_LINE(),     -- ErrorLine - int
+		    @Guide_Serie,     -- GuideSerie - nvarchar(2)
+		    @Guide_Number,     -- GuideNumber - int
+		    '',       -- TokenCreated - varchar(50)
+		    GETDATE() -- DateCreated - datetime
+		    )
     END CATCH;
 
     IF @@TRANCOUNT > 0

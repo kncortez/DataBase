@@ -36,6 +36,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainerDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -111,4 +113,16 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera par
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_IsOpenProcess_RowStatus]
     ON [dbo].[LinehaulRoutePreparationContainerDetail]([GuideSerie] ASC, [GuideNumber] ASC, [IsOpenProcess] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_LinehaulRoutePreparationContainerId_IsOpenProcess_RowStatus_include]
+    ON [dbo].[LinehaulRoutePreparationContainerDetail]([LinehaulRoutePreparationContainerId] ASC, [IsOpenProcess] ASC, [RowStatus] ASC)
+    INCLUDE([DryPieceQuantity], [ColdPieceQuantity]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_LinehaulRoutePreparationContainerId_INCLUDE]
+    ON [dbo].[LinehaulRoutePreparationContainerDetail]([LinehaulRoutePreparationContainerId] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [GuideDryPieceTotal], [GuideColdPieceTotal], [DryPieceQuantity], [ColdPieceQuantity]);
 

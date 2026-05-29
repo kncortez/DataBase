@@ -109,7 +109,7 @@ BEGIN
 			);
 
 			DECLARE @WebhookTrackingQuequeLoteStationsforSFTP AS TABLE (
-					[idWebhookTrackingQuequeLoteDetailforSFTP] INT NOT NULL PRIMARY KEY,
+					[idWebhookTrackingQuequeLoteDetailforSFTP] INT NOT NULL,
 					[Station] NVARCHAR(64) NOT NULL);
 
 			INSERT INTO @WebhookTrackingQuequeLoteDetailforSFTP([idWebhookTrackingQuequeLoteDetailforSFTP],

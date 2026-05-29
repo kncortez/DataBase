@@ -84,7 +84,7 @@ BEGIN
 	,OriginSenderId = @OriginSenderId
 	,IsReturn = @IsReturn
 	,OrderUserCreated = @OrderUserCreated
-	where Guide_Number = @GuideNumber and Guide_Serie = @GuideSerie;
+	where Guide_Serie = @GuideSerie and Guide_Number = @GuideNumber;
 
 	DECLARE @Price DECIMAL(12,2)
 	DECLARE @CouponApplied BIT

@@ -21,24 +21,23 @@ BEGIN
 				   Guide_Serie,
 				   Guide_Number,
 				   ID_Courier
-			FROM dbo.DeliveryAttempt
+			FROM dbo.DeliveryAttempt WITH (NOLOCK)
 			WHERE CAST(Date_Created AS DATE) = CAST(@Date AS DATE)
 		) DAT
-			JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 				ON DAT.Guide_Serie = DOR.Guide_Serie
 				   AND DAT.Guide_Number = DOR.Guide_Number
-				   --AND DOR.StatusOrderId IN ( 4, 5, 12 )
-			JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail DSD
+			INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail DSD
 				ON DSD.Guide_Serie = DAT.Guide_Serie
 				   AND DSD.Guide_Number = DAT.Guide_Number
-				   AND DSD.RowStatus = 1
-			JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS
 				ON DOS.ID = DSD.ID_DeliveryOrderBySettlement
 				   AND DOS.ID_Courier = DAT.ID_Courier
-			LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+			LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
 				ON VPC.CodeOfReference = DOR.Sender_ID
-			--WHERE DOR.Courier_Route IN (SELECT * FROM (VALUES ('UGUA007'),('UGUA077') )AS RouteValue(routeName)) -- DOR.Courier_Route LIKE'%UGUA%'
+	
 		WHERE DOS.ID = @IdManifest--31202
+		AND DSD.RowStatus = 1
 		GROUP BY DAT.ID_Courier,
 				 DOR.Receiver_FirstName,
 				 DOR.Receiver_Address,

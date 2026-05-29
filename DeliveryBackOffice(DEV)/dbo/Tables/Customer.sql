@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[Customer] (
+﻿CREATE TABLE [dbo].[Customer] (
     [IdCustomer]              INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Name]                    NVARCHAR (100) NOT NULL,
     [Description]             NVARCHAR (100) NULL,
@@ -68,8 +68,9 @@ CREATE TABLE [dbo].[Customer] (
     [NumImgEvidence]          INT            NULL,
     [IsCOD]                   INT            NULL,
     [IsVoucherRequired]       INT            CONSTRAINT [DF_Customer_IsvoucherRequired] DEFAULT ((0)) NULL,
-    [CustomerUEId] [int] NULL,
-    [RestrictionByArticle] BIT NULL, 
+    [CustomerUEId]            INT            NULL,
+    [RestrictionByArticle]    BIT            NULL,
+    [IsInternationalCustomer] BIT            CONSTRAINT [DF_Customer_IsInternationalCustomer] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED ([IdCustomer] ASC),
     CONSTRAINT [FK_Customer_CatBankAccountType] FOREIGN KEY ([CODAccountTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
     CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),
@@ -94,6 +95,8 @@ CREATE TABLE [dbo].[Customer] (
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_IdCustomerType_RowSatus]
 ON [dbo].[Customer]([IdCustomerType] ASC, [RowSatus] ASC)
@@ -105,9 +108,7 @@ ON [dbo].[Customer]([CODContactEmail] ASC, [RegexEmail] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
-    ON [dbo].[Customer]([IdCustomerType] ASC)
-    INCLUDE([Name], [Abbreviation], [CountryID], [RowSatus], [SAPCardCode]);
+
 
 GO
 CREATE NONCLUSTERED INDEX [IDX_Customer_IVR_A]
@@ -354,4 +355,47 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2type = N'COLUMN',
     @level2name = N'RestrictionByArticle'
 
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_Customer_Id_Type_Include]
+    ON [dbo].[Customer]([IdCustomer] ASC, [IdCustomerType] ASC)
+    INCLUDE([Name], [CommercialName], [CustomerPhone]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_Customer_Id]
+    ON [dbo].[Customer]([IdCustomer] ASC)
+    INCLUDE([IdCustomerType], [Name], [CODContactEmail], [RegexEmail], [ConditionOfPaymentID]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_S_Customer_TaxIdentificationNumber_RowSatus]
+    ON [dbo].[Customer]([TaxIdentificationNumber] ASC, [RowSatus] ASC) WITH (FILLFACTOR = 90);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_S_Customer_SAPCardCode]
+    ON [dbo].[Customer]([SAPCardCode] ASC)
+    INCLUDE([IdCustomer]) WITH (FILLFACTOR = 90);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_S_Customer__RegexEmail]
+    ON [dbo].[Customer]([RegexEmail] ASC) WITH (FILLFACTOR = 90);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_idCustomer_Consolidated]
+    ON [dbo].[Customer]([IdCustomerType] ASC)
+    INCLUDE([Name], [Abbreviation], [CountryID], [SaleAdvisorID], [RowSatus], [SAPCardCode]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatBatchTypeCODId]
+    ON [dbo].[Customer]([CatBatchTypeCODId] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para identificar clientes internacionales', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'IsInternationalCustomer';
 

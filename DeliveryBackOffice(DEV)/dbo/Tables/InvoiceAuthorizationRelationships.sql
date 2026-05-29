@@ -1,15 +1,17 @@
-CREATE TABLE [dbo].[InvoiceAuthorizationRelationships](
-    [IdInvoiceAuthorizationRelationships]    [int] IDENTITY(1,1) NOT NULL,
-    [CodeOfReference]                        [int] NOT NULL,
-    [InvoiceAuthorizationHeaderId]           [int] NOT NULL,
-    [RowStatus]                              [bit] NOT NULL,
-    [TokenCreated]                           [nvarchar](100) NOT NULL,
-    [DateCreated]                            [datetime] NOT NULL,
-    [TokenUpdated]                           [nvarchar](100) NULL,
-    [DateUpdated]                            [datetime] NULL,
+﻿CREATE TABLE [dbo].[InvoiceAuthorizationRelationships] (
+    [IdInvoiceAuthorizationRelationships] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [CodeOfReference]                     INT            NOT NULL,
+    [InvoiceAuthorizationHeaderId]        INT            NOT NULL,
+    [RowStatus]                           BIT            NOT NULL,
+    [TokenCreated]                        NVARCHAR (100) NOT NULL,
+    [DateCreated]                         DATETIME       NOT NULL,
+    [TokenUpdated]                        NVARCHAR (100) NULL,
+    [DateUpdated]                         DATETIME       NULL,
     CONSTRAINT [PK_InvoiceAuthorizationRelationships] PRIMARY KEY CLUSTERED ([IdInvoiceAuthorizationRelationships] ASC),
-    CONSTRAINT [FK_InvoiceAuthorizationRelationships_InvoiceAuthorizationRelationships] FOREIGN KEY ([IdInvoiceAuthorizationRelationships]) REFERENCES [dbo].[InvoiceAuthorizationRelationships] ([IdInvoiceAuthorizationRelationships]),
+    CONSTRAINT [FK_InvoiceAuthorizationRelationships_InvoiceAuthorizationRelationships] FOREIGN KEY ([IdInvoiceAuthorizationRelationships]) REFERENCES [dbo].[InvoiceAuthorizationRelationships] ([IdInvoiceAuthorizationRelationships])
 );
+
+
 GO
 
 
@@ -42,7 +44,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que c
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceAuthorizationRelationships', @level2type = N'COLUMN', @level2name = N'DateCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creó la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceAuthorizationRelationships', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
 
 
 GO
@@ -52,4 +56,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que m
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceAuthorizationRelationships', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Codigo del punto de venta activo para generación de facturas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceAuthorizationRelationships', @level2type = N'COLUMN', @level2name = N'CodeOfReference';
 

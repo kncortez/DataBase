@@ -24,6 +24,8 @@
 );
 
 
+
+
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de la tabla WebhookTrackingQueueDetailForSFTP' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'IdWebhookTrackingQueueDetailForSFTP'
 GO
@@ -56,4 +58,9 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Si es un estado de incidencia registrar el detalle de incidencia' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'DeliveryAttemptId'
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nueva fecha de entrega, Incidencia (destino solicita cambio de fecha de entrega)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'NewDeliveryDate'
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_WebhookTrackingQueueForSFTPId_RowStatus]
+    ON [dbo].[WebhookTrackingQueueDetailForSFTP]([WebhookTrackingQueueForSFTPId] ASC, [RowStatus] ASC);
 

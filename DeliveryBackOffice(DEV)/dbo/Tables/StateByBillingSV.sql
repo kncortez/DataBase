@@ -1,14 +1,17 @@
-
+﻿
 CREATE TABLE [dbo].[StateByBillingSV] (
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-    Code NVARCHAR(10) ,
-    [Name] NVARCHAR(100),
-    RowStatus BIT NOT NULL,
-    TokenCreated VARCHAR(50) NOT NULL,
-    DateCreated DATETIME NOT NULL,
-    TokenUpdated VARCHAR(50) NULL,
-    DateUpdated DATETIME NULL
+    [Id]           INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [Code]         NVARCHAR (10)  NULL,
+    [Name]         NVARCHAR (100) NULL,
+    [RowStatus]    BIT            NOT NULL,
+    [TokenCreated] VARCHAR (50)   NOT NULL,
+    [DateCreated]  DATETIME       NOT NULL,
+    [TokenUpdated] VARCHAR (50)   NULL,
+    [DateUpdated]  DATETIME       NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC)
 );
+
+
 
 GO
 EXEC sp_addextendedproperty 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatLinehaul_18102021] (
-    [IdLinehaul]       INT            IDENTITY (1, 1) NOT NULL,
+    [IdLinehaul]       INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdRoute]          INT            NOT NULL,
     [IdHubOrigin]      INT            NOT NULL,
     [IdHubDestination] INT            NOT NULL,

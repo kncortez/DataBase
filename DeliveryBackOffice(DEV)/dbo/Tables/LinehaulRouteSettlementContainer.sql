@@ -24,6 +24,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlementContainer', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -79,4 +81,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hub destino
 GO
 CREATE NONCLUSTERED INDEX [idx_ContainerId_LinehaulRouteSettlementId]
     ON [dbo].[LinehaulRouteSettlementContainer]([ContainerId] ASC, [LinehaulRouteSettlementId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_LinehaulRouteSettlementId_RowStatus_ContainerId]
+    ON [dbo].[LinehaulRouteSettlementContainer]([LinehaulRouteSettlementId] ASC, [RowStatus] ASC, [ContainerId] ASC);
 

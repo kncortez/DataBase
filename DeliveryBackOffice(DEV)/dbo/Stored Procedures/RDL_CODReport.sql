@@ -182,7 +182,8 @@ SELECT DISTINCT -- TOP 10
                       --y sobre esa fecha buscar si hay un retornado a forza
                       ) tbl1
                           INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD3 WITH (NOLOCK)
-                              ON DOD3.Guide_Number = tbl1.Guide_Number
+                              ON DOD3.Guide_Serie = tbl1.Guide_Serie
+							  and DOD3.Guide_Number = tbl1.Guide_Number
                                  AND DOD3.StatusOrderId = 8 --retornado a forza
                                  AND DOD3.DateCreatedInSystem > tbl1.MaxDeliveryDate
                   )
@@ -210,8 +211,10 @@ SELECT DISTINCT -- TOP 10
               FROM DeliveryBackOffice.dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
                   INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS WITH (NOLOCK)
                       ON DSD.ID_DeliveryOrderBySettlement = DOS.ID
-              WHERE DOR.Guide_Number = DOR.Guide_Number
-                    AND DOR.Guide_Serie = DOR.Guide_Serie
+              WHERE 
+                     DOR.Guide_Serie = DOR.Guide_Serie
+					 AND
+					DOR.Guide_Number = DOR.Guide_Number
           )   = 1,
           'SI',
           'NO') 'Confirmación liquidación COD',
@@ -396,44 +399,16 @@ FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
         FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK) --22TEBNHL
             INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
                 ON IND.dti_fk_header = INH.inv_pk_id
-                   AND INH.inv_certificationFEL IS NOT NULL
+		WHERE  dti_fk_orderSerie = DOR.Guide_Serie
+           AND dti_fk_orderNumber = DOR.Guide_Number
+		   AND INH.inv_certificationFEL IS NOT NULL
                    AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
                    AND INH.inv_creditNote IS NULL
                    AND INH.inv_motiveCreditNote IS NULL
-		WHERE  dti_fk_orderSerie = DOR.Guide_Serie
-           AND dti_fk_orderNumber = DOR.Guide_Number
         GROUP BY IND.dti_fk_orderSerie,
                  IND.dti_fk_orderNumber
 	)INH
-	--LEFT JOIN
- --   (
- --       SELECT MIN(IND.dti_fk_header) dti_fk_header,
- --              IND.dti_fk_orderSerie dti_fk_orderSerie,
- --              IND.dti_fk_orderNumber dti_fk_orderNumber,
- --              --MAX(INH.inv_date) inv_date,
- --              MIN(INH.systemOperation) systemOperation,
- --              MIN(INH.inv_pk_id) inv_pk_id,
- --              MIN(INH.inv_cli_nit) inv_cli_nit,
- --              MIN(INH.inv_amount) inv_amount,
- --              MIN(INH.inv_descriptionFEL) inv_descriptionFEL,
- --              MIN(INH.inv_cli_name) inv_cli_name,
- --              MIN(INH.inv_numberFEL) inv_numberFEL,
- --              MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
- --              MIN(INH.inv_certificationFEL) inv_certificationFEL,
- --              MAX(IIF(INH.IsManualInvoice IS NULL, 0, IIF(INH.IsManualInvoice = 1, 1, 0))) IsManualInvoice
- --       FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK) --22TEBNHL
- --           INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
- --               ON IND.dti_fk_header = INH.inv_pk_id
- --                  AND INH.inv_certificationFEL IS NOT NULL
- --                  AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
- --                  AND INH.inv_creditNote IS NULL
- --                  AND INH.inv_motiveCreditNote IS NULL
- --       GROUP BY IND.dti_fk_orderSerie,
- --                IND.dti_fk_orderNumber
- --   ) INH
 
-        --ON INH.dti_fk_orderSerie = DOR.Guide_Serie
-        --   AND INH.dti_fk_orderNumber = DOR.Guide_Number
     LEFT JOIN DeliveryBackOffice.dbo.CatSystem CTS --22TEBNHL
         ON CTS.SysIdSystem = INH.systemOperation
     LEFT JOIN DeliveryBackOffice.dbo.InOutOfMoneyDetail InOut --22TEBNHL
@@ -453,17 +428,7 @@ FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 		    GROUP BY CST.GuideNumber,-- ProductNumber,
                  IdProduct    
 	)CST
-    --LEFT JOIN
-    --(
-    --    SELECT ProductNumber,
-    --           CST.IdProduct,
-    --           MIN(CST.IdCost) IdCost
-    --    FROM DeliveryBackOffice.dbo.Cost CST WITH (NOLOCK) --REGISTROS REPETIDOS
-    --    GROUP BY ProductNumber,
-    --             IdProduct
-    --) CST
-    --    ON CST.IdProduct = 1 --Pendiente cuando el pago se hizo en recolecciones 
-    --       AND CST.ProductNumber = DOR.Guide_Serie + CAST(DOR.Guide_Number AS CHAR)
+
     OUTER APPLY
 	(
 		
@@ -476,15 +441,7 @@ FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
          CST.IdCost = CSD.IdCost
 	GROUP BY CSD.IdCost
 	)CSD
-	----LEFT JOIN
- --   --(
- --   --    SELECT CSD.IdCost,
- --   --           MIN(CSD.IdTypeOfMoney) IdTypeOfMoney,
- --   --           MIN(CSD.IdCostDetail) IdCostDetail
- --   --    FROM DeliveryBackOffice.dbo.CostDetail CSD WITH (NOLOCK) --25TEBNHL
- --   --    GROUP BY CSD.IdCost
- --   --) CSD
- --   --    ON CST.IdCost = CSD.IdCost
+
     LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney CTO WITH (NOLOCK)
         ON CTO.tio_pk_id = CSD.IdTypeOfMoney
     LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
@@ -570,8 +527,6 @@ WHERE EXISTS
     WHERE DOD.Guide_Serie = DOR.Guide_Serie
           AND DOD.Guide_Number = DOR.Guide_Number
           AND DOD.StatusOrderId = 11		 
-		  --AND CAST(DOD.DateCreated AS DATE) >= CAST(@StartDate AS DATE)
-    --      AND CAST(DOD.DateCreated AS DATE) <= CAST(@EndDate AS DATE)
 		  AND CAST(DOD.DateCreated AS DATE) between cast(@StartDate AS DATE)
               AND  CAST(@EndDate AS DATE)
 );

@@ -1,21 +1,24 @@
--- =============================================
+﻿-- =============================================
 -- Author:      Juan Ramirez
 -- Create date: 2025/06/04
 -- Description: Tabla de tipos de entidades para clasificar registros (Seller, Buyer, etc.)
 -- =============================================
 
 -- Crear tabla EntityTypeByBillingSV
-CREATE TABLE [EntityTypeByBillingSV] (
-    IdEntityTypeByBillingSV INT IDENTITY(1,1),     -- Identificador único de la entidad
-    TypeName                VARCHAR(50) NOT NULL UNIQUE,       -- Nombre del tipo de entidad (Seller, Buyer, etc.)
-    [Description]           VARCHAR(200) NULL,                 -- Descripción detallada del tipo de entidad
-    RowStatus               BIT NOT NULL DEFAULT 1,            -- Indica si el tipo de entidad está activo (1=Activo, 0=Inactivo)    DateCreated   DATETIME NOT NULL,
-    DateCreated             DATETIME NOT NULL,
-    TokenCreated            NVARCHAR(50) NOT NULL,
-    DateUpdated             DATETIME NULL,
-    TokenUpdated            NVARCHAR(50) NULL,
-    CONSTRAINT [PK_EntityTypeByBillingSV] PRIMARY KEY CLUSTERED ([IdEntityTypeByBillingSV] ASC)
+CREATE TABLE [dbo].[EntityTypeByBillingSV] (
+    [IdEntityTypeByBillingSV] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [TypeName]                VARCHAR (50)  NOT NULL,
+    [Description]             VARCHAR (200) NULL,
+    [RowStatus]               BIT           DEFAULT ((1)) NOT NULL,
+    [DateCreated]             DATETIME      NOT NULL,
+    [TokenCreated]            NVARCHAR (50) NOT NULL,
+    [DateUpdated]             DATETIME      NULL,
+    [TokenUpdated]            NVARCHAR (50) NULL,
+    CONSTRAINT [PK_EntityTypeByBillingSV] PRIMARY KEY CLUSTERED ([IdEntityTypeByBillingSV] ASC),
+    UNIQUE NONCLUSTERED ([TypeName] ASC)
 );
+
+
 GO
 -- Documentación de la tabla EntityTypeByBillingSV
 EXECUTE sp_addextendedproperty

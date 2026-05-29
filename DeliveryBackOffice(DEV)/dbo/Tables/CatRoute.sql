@@ -21,6 +21,8 @@
 
 
 
+
+
 GO
 
 
@@ -63,4 +65,22 @@ GO
 GO
 CREATE NONCLUSTERED INDEX [IDX_CodeRoute]
     ON [dbo].[CatRoute]([CodeRoute] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_Consolidated]
+    ON [dbo].[CatRoute]([RowStatus] ASC)
+    INCLUDE([CodeRoute], [IdTownship], [IdTypeRoute], [CountryId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdTypeRoute_RowStatus_INCLUDE]
+    ON [dbo].[CatRoute]([IdTypeRoute] ASC, [RowStatus] ASC)
+    INCLUDE([CodeRoute], [CountryId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdTownship_RowStatus_Include]
+    ON [dbo].[CatRoute]([IdTownship] ASC, [RowStatus] ASC)
+    INCLUDE([CodeRoute], [IdTypeRoute]);
 

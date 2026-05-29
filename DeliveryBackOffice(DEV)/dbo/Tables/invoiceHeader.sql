@@ -77,6 +77,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si factura es manual TRUE', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'IsManualInvoice';
 
@@ -117,9 +119,7 @@ CREATE NONCLUSTERED INDEX [IDX_inv_numberFEL_inv_numberFEL]
     INCLUDE([inv_certificationFEL], [inv_serieFEL], [inv_UserName], [inv_SAPDocEntry]);
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_CatInvoiceTypeId_Retries]
-    ON [dbo].[invoiceHeader] ([CatInvoiceTypeId],[Retries])
-    INCLUDE ([inv_descriptionFEL])
+
 
 GO
 CREATE NONCLUSTERED INDEX [idx_inv_pk_id_CatInvoiceTypeId]
@@ -306,4 +306,26 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_inv_invoiceOfCreditNote_inv_creditNote_Include]
     ON [dbo].[invoiceHeader]([inv_invoiceOfCreditNote] ASC, [inv_creditNote] ASC)
     INCLUDE([inv_cli_name], [inv_certificationFEL], [inv_serieFEL], [inv_numberFEL], [IdCountry]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_NC_invoiceHeader_inv_pk_id_inv_numberFEL]
+    ON [dbo].[invoiceHeader]([inv_pk_id] ASC, [inv_numberFEL] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_inv_descriptionFEL_inv_motiveCreditNote_inv_creditNote_Inclue]
+    ON [dbo].[invoiceHeader]([inv_descriptionFEL] ASC, [inv_motiveCreditNote] ASC, [inv_creditNote] ASC)
+    INCLUDE([inv_certificationFEL]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_date]
+    ON [dbo].[invoiceHeader]([inv_date] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatInvoiceTypeId_inv_creditNoteinv_certificationFEL]
+    ON [dbo].[invoiceHeader]([CatInvoiceTypeId] ASC, [inv_creditNote] ASC)
+    INCLUDE([inv_certificationFEL]);
 

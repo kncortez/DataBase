@@ -27,6 +27,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Detalle de manifiesto de recolección asociado a cada courier.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SettlementPickupStationDetail';
 
@@ -91,4 +93,9 @@ CREATE NONCLUSTERED INDEX [IDX_SettlementSequence]
 GO
 CREATE NONCLUSTERED INDEX [IDX_SettlementPickupStationId_RowStatus]
     ON [dbo].[SettlementPickupStationDetail]([SettlementPickupStationId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_SettlementPickupStationDetail_ServiceManagementId_SettlementDate_RowStatus_DateCreated]
+    ON [dbo].[SettlementPickupStationDetail]([ServiceManagementId] ASC, [SettlementDate] ASC, [RowStatus] ASC, [DateCreated] ASC);
 

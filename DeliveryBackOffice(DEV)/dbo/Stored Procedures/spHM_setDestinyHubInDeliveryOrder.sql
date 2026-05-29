@@ -39,8 +39,9 @@ BEGIN
 						[DO].[Receiver_Town],
 						[DO].[Receiver_Department],
 						[DO].[Receiver_Address],
-						COALESCE([DO].[Receiver_Zone], 0) AS Receiver_Zone,
-						COALESCE([DO].[HubDestinationId], 0) AS HubDestinationId,
+						--COALESCE([DO].[Receiver_Zone], 0) AS Receiver_Zone,
+						COALESCE(TRY_CAST([DO].[Receiver_Zone] AS INT), 0) AS Receiver_Zone,
+						COALESCE(TRY_CAST([DO].[HubDestinationId] AS INT), 0) AS HubDestinationId,
 						[HL].[HubAbbreviation],
 						COALESCE([DO].[StatusOrderId], 0) AS StatusOrderId,
 						[SO].[OrderDescription]

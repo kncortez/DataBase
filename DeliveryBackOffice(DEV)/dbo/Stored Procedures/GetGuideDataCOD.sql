@@ -32,9 +32,9 @@ WHERE DOR.Guide_Serie = @GuideSerie
 (
     SELECT StatusOrderId
     FROM DeliveryOrderDetail WITH(NOLOCK)
-    WHERE StatusOrderId IN ( 5, 22 )
-          AND Guide_Serie = DORD.Guide_Serie
+    WHERE Guide_Serie = DORD.Guide_Serie
           AND Guide_Number = DORD.Guide_Number
+          AND StatusOrderId IN ( 5, 22 )
 ) --(Entregado,Entregado En Express Center)
 	  AND IIF(DOR.SenderCountryId IS NULL, 'GT', DOR.SenderCountryId) = @CountryId
 GROUP BY DOR.Guide_Serie,
