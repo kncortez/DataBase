@@ -36,8 +36,8 @@ BEGIN
 		,@isConfirmed = coi.IsConfirmed
 	FROM [dbo].[ConfirmationOfIncidence] coi WITH (NOLOCK)
 		INNER JOIN [dbo].[DeliveryAttempt] da WITH (NOLOCK) ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-	WHERE da.Guide_Number = @GuideNumber
-		AND da.Guide_Serie = @GuideSerie
+	WHERE da.Guide_Serie = @GuideSerie
+		AND da.Guide_Number = @GuideNumber
 
 	IF ((@TakenUserId IS NOT NULL AND @TakenUserId != @UserId AND @TakenDate > DATEADD(MINUTE, -10, GETDATE())) OR @isConfirmed = 1)
 	BEGIN
@@ -170,4 +170,3 @@ BEGIN
 		ORDER BY DP.Date_Photo DESC
 	END;
 END;
-

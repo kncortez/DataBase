@@ -36,8 +36,8 @@ BEGIN
 				[DO].[PriceShippment] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) [TrxDate],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxStringFEL],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_serieFEL])  ELSE ''   END [TrxString2FEL],
+				CASE WHEN IH.IdCountry = 'GT' THEN [IH].[inv_certificationFEL] ELSE [IH].[inv_numberFEL]  END [TrxStringFEL],
+				CASE WHEN IH.IdCountry = 'HN' THEN [IH].[inv_serieFEL]         ELSE ''  END [TrxString2FEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				ISNULL([MSL].[IdMembershipSubscriptionLog], 0) [TrxIsMembershipSubscription],
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
@@ -60,7 +60,7 @@ BEGIN
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
 	LEFT JOIN   [dbo].[DeliveryCurrency] DC WITH(NOLOCK)
-		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry] OR ([DO].[SenderCountryId] IS NULL AND [DC].[Currency_IdCountry] ='GT'))
+		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry])
 		AND		[DC].[DefaultPerCountry] = 1 
 	LEFT JOIN	[dbo].CatCurrencyCOD CCC WITH(NOLOCK)
 		ON		[DC].[IdCurrencyCOD] = [CCC].[IdCatCurrencyCOD]
@@ -74,8 +74,8 @@ BEGIN
 				[DO].[PriceShippment] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) [TrxDate],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxStringFEL],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_serieFEL])  ELSE ''   END [TrxString2FEL],
+				CASE WHEN IH.IdCountry = 'GT' THEN [IH].[inv_certificationFEL] ELSE [IH].[inv_numberFEL]  END [TrxStringFEL],
+				CASE WHEN IH.IdCountry = 'HN' THEN [IH].[inv_serieFEL]         ELSE ''  END [TrxString2FEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				ISNULL([MSL].[IdMembershipSubscriptionLog], 0) [TrxIsMembershipSubscription],
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
@@ -101,7 +101,7 @@ BEGIN
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
 	LEFT JOIN   [dbo].[DeliveryCurrency] DC WITH(NOLOCK)
-		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry] OR ([DO].[SenderCountryId] IS NULL AND [DC].[Currency_IdCountry] ='GT'))
+		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry])
 		AND		[DC].[DefaultPerCountry] = 1 
 	LEFT JOIN	[dbo].CatCurrencyCOD CCC WITH(NOLOCK)
 		ON		[DC].[IdCurrencyCOD] = [CCC].[IdCatCurrencyCOD]
@@ -111,13 +111,13 @@ BEGIN
 
 	-- Membresías
 	SELECT		[IH].inv_pk_id,
-				ISNULL(IH.IdCountry,'GT') IdCountry,
+				IH.IdCountry IdCountry,
 				[M].[IdMembership] [TrxService],
 				[M].[MembershipCost] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDate],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxStringFEL],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_serieFEL])  ELSE ''   END [TrxString2FEL],
+				CASE WHEN IH.IdCountry = 'GT' THEN [IH].[inv_certificationFEL] ELSE [IH].[inv_numberFEL]  END [TrxStringFEL],
+				CASE WHEN IH.IdCountry = 'HN' THEN [IH].[inv_serieFEL]         ELSE ''  END [TrxString2FEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				1 [TrxIsMembershipSubscription],
 				[M].[IdMembership] [TrxMembershipId],
@@ -143,20 +143,18 @@ BEGIN
 				  WHERE [OrderNumber] = [MPL].[Authorization]
 				    AND [AccountId] = @AccountId
 				) RTPS
-	--LEFT JOIN   [dbo].[RegistrationofTransactionProcessStates] RTPS WITH(NOLOCK)
-		--ON      [MPL].[Authorization]  = [RTPS].[OrderNumber]
 	WHERE		[M].[AccountId] = @AccountId
 		AND		[M].[DateCreated] BETWEEN @DateStart AND @DateEnd
 		AND		[M].[RowStatus] = 1;
 
 	-- Suscripciones
-	SELECT		ISNULL(IH.IdCountry,'GT') IdCountry,
+	SELECT		IH.IdCountry IdCountry,
 				[S].[IdSubscription] [TrxService],
 				[S].[SubscriptionCost] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDate],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxStringFEL],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_serieFEL])  ELSE ''   END [TrxString2FEL],
+				CASE WHEN IH.IdCountry = 'GT' THEN [IH].[inv_certificationFEL] ELSE [IH].[inv_numberFEL]  END [TrxStringFEL],
+				CASE WHEN IH.IdCountry = 'HN' THEN [IH].[inv_serieFEL]         ELSE ''  END [TrxString2FEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				1 [TrxIsMembershipSubscription],
 				0 [TrxMembershipId],

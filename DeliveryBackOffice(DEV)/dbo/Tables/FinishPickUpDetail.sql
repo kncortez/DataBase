@@ -15,9 +15,10 @@
 );
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IX_FinishPickUpDetail_Guide]
-    ON [dbo].[FinishPickUpDetail]([GuideSerie] ASC, [GuideNumber] ASC);
+
 
 
 GO
@@ -62,4 +63,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Detalle de tabla para guardar los registros del request para recolecciones SetFinishPickUp', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'FinishPickUpDetail';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_SchedulePickupId]
+    ON [dbo].[FinishPickUpDetail]([SchedulePickupId] ASC);
 

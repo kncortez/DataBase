@@ -118,7 +118,7 @@ SELECT 'Cuenta Bancaria'
      , dcb.DCBA_BankAccountType
      , bk.Name
 	 , dcb.DCBA_Identification
-FROM dbo.DeliveryOrder                         ord
+FROM dbo.DeliveryOrder                         ord with (nolock)
     INNER JOIN dbo.DeliveryCustomerBankAccount dcb  with (nolock)
         ON dcb.DCBA_Id = ord.DCBA_ID
     INNER JOIN dbo.DeliveryBank                bk  with (nolock)
@@ -135,7 +135,7 @@ select 'Información de COD'    as Descripcion
      , bcd.BatchNumber         'Lote'
      , bcd.BatchTimeRange      'Horario'
 	 
-from dbo.ProcessedGuideCOD        pr
+from dbo.ProcessedGuideCOD        pr with (nolock)
     inner join dbo.BatchDetailCOD btd with (nolock)
         on btd.GuideSerie = pr.GuideSerie
            and btd.GuideNumber = pr.GuideNumber

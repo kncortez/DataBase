@@ -24,7 +24,7 @@ BEGIN
             SELECT TOP 1
                    CR.RolIdRol
             FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH (NOLOCK)
-            WHERE CR.RolName = 'SAC web' COLLATE Latin1_General_CI_AI
+            WHERE CR.RolName = 'SAC web' 
                   AND CR.RolRowStatus = 1
         );
 DECLARE @OPWebRoleId INT =
@@ -32,7 +32,7 @@ DECLARE @OPWebRoleId INT =
             SELECT TOP 1
                    CR.RolIdRol
             FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH (NOLOCK)
-            WHERE CR.RolName = 'Operaciones web' COLLATE Latin1_General_CI_AI
+            WHERE CR.RolName = 'Operaciones web' 
                   AND CR.RolRowStatus = 1
         );
 
@@ -44,7 +44,7 @@ DECLARE @OPWebRoleId INT =
 		FROM 
 			[DeliveryBackOffice].[dbo].[CatCheckpointType] CCT  WITH(NOLOCK) 
 		WHERE
-			[CCT].[CheckpointTypeDescription] = 'Checkpoint final'  COLLATE Latin1_General_CI_AI 
+			[CCT].[CheckpointTypeDescription] = 'Checkpoint final' 
 	);
 
 	IF(@EndDate IS NULL)

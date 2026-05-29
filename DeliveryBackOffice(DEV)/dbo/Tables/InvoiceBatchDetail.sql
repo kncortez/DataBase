@@ -17,6 +17,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de factura generada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchDetail', @level2type = N'COLUMN', @level2name = N'inv_pk_id';
 
@@ -27,4 +29,14 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Factura ya 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Facturas Pendiente de envi� de correo a las cuales se les a asigando un lote previamente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchDetail';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_InvoiceBatchDetail_inv_pk_id_ProcessedCorrelative]
+    ON [dbo].[InvoiceBatchDetail]([inv_pk_id] ASC, [ProcessedCorrelative] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_inv_pk_id]
+    ON [dbo].[InvoiceBatchDetail]([inv_pk_id] ASC);
 

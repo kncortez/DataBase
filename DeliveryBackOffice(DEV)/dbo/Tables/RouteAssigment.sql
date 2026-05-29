@@ -22,6 +22,8 @@
 
 
 
+
+
 GO
 
 
@@ -37,9 +39,7 @@ CREATE NONCLUSTERED INDEX [IDX_IdRoute_DateOfRoute]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_DateOfRoute]
-    ON [dbo].[RouteAssigment]([DateOfRoute] ASC)
-    INCLUDE([IdCurrierMan], [DateCreated]);
+
 
 
 GO
@@ -141,3 +141,13 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'RouteAssigment',
     @level2type = N'COLUMN',
     @level2name = N'DateUpdated'
+GO
+CREATE NONCLUSTERED INDEX [IX_RouteAssigment_IdVehicle_DateOfRoute]
+    ON [dbo].[RouteAssigment]([IdVehicle] ASC, [DateOfRoute] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_RouteAssigment_DateOfRoute]
+    ON [dbo].[RouteAssigment]([DateOfRoute] ASC)
+    INCLUDE([IdRoute], [IdCurrierMan], [DateCreated]);
+

@@ -45,6 +45,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de recolección programada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SchedulePickup', @level2type = N'COLUMN', @level2name = N'SchedulePickupId';
 
@@ -114,8 +116,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica 
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_TransaccionFAC]
-    ON [dbo].[SchedulePickup]([TransaccionFAC] ASC);
+
 
 
 GO
@@ -243,4 +244,16 @@ CREATE NONCLUSTERED INDEX [idx_IdHubLogistics]
 GO
 CREATE NONCLUSTERED INDEX [IDX_AccountId_DateCreated]
     ON [dbo].[SchedulePickup]([AccountId] ASC, [DateCreated] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_StartDate_IdHubLogistics]
+    ON [dbo].[SchedulePickup]([StartDate] ASC, [IdHubLogistics] ASC)
+    INCLUDE([EndDate], [SenderName], [AddressPickup], [SenderPhone], [QuantityRegularPackages], [QuantityOverDimensionedPackage], [EstimatedWeight], [TownshipId], [TypeVehicleId], [SchedulePickupStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_SchedulePickup_Sender_StartDate]
+    ON [dbo].[SchedulePickup]([SenderId] ASC, [StartDate] ASC, [RowStatus] ASC)
+    INCLUDE([SchedulePickupId], [TypeVehicleId], [QuantityRegularPackages], [SchedulePickupStatus]);
 

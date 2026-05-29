@@ -210,7 +210,8 @@ BEGIN
         (
             SELECT 1
             FROM [dbo].[AccountServiceCartDetail] ASCD WITH (NOLOCK)
-            WHERE ASCD.GuideNumber IN
+            WHERE ASCD.GuideSerie = 'FD'
+			and ASCD.GuideNumber IN
                   (
                       SELECT LG.ItemNumber FROM #listGuides LG
                   )
@@ -336,7 +337,9 @@ BEGIN
                 SET [ShipmentCompleted] = 1
 				,[TokenUpdated] = @Token
 	            ,[DateUpdated] = GETDATE()
-                WHERE GuideNumber IN
+                WHERE 
+				GuideSerie = 'FD' 
+				and				GuideNumber IN
                       (
                           SELECT LG.ItemNumber FROM #listGuides LG
                       );
@@ -390,8 +393,8 @@ BEGIN
         FROM #listGuides
 		WHERE NOT EXISTS (	SELECT	1 
 							FROM	[dbo].[ProcessedGuideCOD] WITH (NOLOCK)
-							WHERE	[GuideNumber] = ItemNumber
-									AND GuideSerie = ItemSerie
+							WHERE	GuideSerie = ItemSerie
+									AND GuideNumber = ItemNumber
 						 );
 
 

@@ -34,7 +34,8 @@
     [DescriptionCC]           NVARCHAR (100) NULL,
     [CatBusinessSegmentId]    INT            NULL,
     [AllowScheduledPickups]   BIT            DEFAULT ((1)) NULL,
-    [RestrictionByArticle] BIT NULL, 
+    [RestrictionByArticle]    BIT            NULL,
+    [ParserGuideTypes]        NVARCHAR (100) DEFAULT ('Crédito') NULL,
     CONSTRAINT [PK_VisitPointClient_1] PRIMARY KEY CLUSTERED ([CodeOfReference] ASC),
     CONSTRAINT [FK_VisitPointClient_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_VisitPointClient_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer]),
@@ -44,6 +45,8 @@
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
 
 
 
@@ -189,9 +192,7 @@ CREATE NONCLUSTERED INDEX [IDX_StatusClient_IdSettlement_Included]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_StatusClient_CountryId_IdKindOfVPClient_iNCLUDE]
-    ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC, [IdKindOfVPClient] ASC)
-    INCLUDE([DescriptionOfClient], [Address], [Phone], [ContactName], [IdSettlement], [Email]);
+
 
 
 GO
@@ -200,8 +201,7 @@ CREATE NONCLUSTERED INDEX [idx_IdKindOfVPClient]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_CountryId_StatusClient]
-    ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC, [IdKindOfVPClient] ASC);
+
 
 
 GO
@@ -228,11 +228,51 @@ CREATE NONCLUSTERED INDEX [IDX_DescriptionOfClient_StatusClient_CountryId]
 
 
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Bandera que indica si se utilizará tarifario por artículo.',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'VisitPointClient',
-    @level2type = N'COLUMN',
-    @level2name = N'RestrictionByArticle'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera que indica si se utilizará tarifario por artículo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'RestrictionByArticle';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_VisitPointClient_Status_Country_Filter]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC, [CustomerID] ASC)
+    INCLUDE([IdVisitPointClient], [DescriptionOfClient], [Phone]) WHERE ([StatusClient]=(1));
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_VisitPointClient_Status_Country_Customer]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC, [CustomerID] ASC)
+    INCLUDE([IdVisitPointClient], [DescriptionOfClient], [Phone]) WHERE ([StatusClient]=(1));
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_VisitPointClient_Description]
+    ON [dbo].[VisitPointClient]([DescriptionOfClient] ASC)
+    INCLUDE([CustomerID], [IdVisitPointClient], [Phone], [CountryId]) WHERE ([StatusClient]=(1));
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_CountryId_IdKindOfVPClient_DescriptionOfClient_INCLUDE]
+    ON [dbo].[VisitPointClient]([CountryId] ASC, [IdKindOfVPClient] ASC, [DescriptionOfClient] ASC)
+    INCLUDE([StatusClient], [IdSettlement], [CodeOfReference], [Address], [ContactName], [Phone], [Email]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_VisitPointClient_CodeOfReference]
+    ON [dbo].[VisitPointClient]([CodeOfReference] ASC, [StatusClient] ASC)
+    INCLUDE([IdTownship], [Address], [Phone], [CustomerID]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusClient_CountryId_IdKindOfVPClient_Consolidate]
+    ON [dbo].[VisitPointClient]([StatusClient] ASC, [CountryId] ASC, [IdKindOfVPClient] ASC)
+    INCLUDE([DescriptionOfClient], [Address], [Phone], [ContactName], [IdSettlement], [Email]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CustomerID_Include]
+    ON [dbo].[VisitPointClient]([SaleChannelId] ASC)
+    INCLUDE([CustomerID]);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipos de guías permitidos que se puden crear desde Parsers', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'ParserGuideTypes';
+

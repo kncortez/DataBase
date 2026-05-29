@@ -1,20 +1,22 @@
-﻿CREATE TABLE [dbo].[RelDepositManifest]
-(
-	[IdRelDepositManifest]			BIGINT			IDENTITY PRIMARY KEY,
-	[IdDeposit]						BIGINT			NOT NULL,
-	[DeliveryOrderBySettlementId]	BIGINT			NOT NULL,
-	[AmountApplied]					DECIMAL(19,4)	NOT NULL,
-	[RowStatus]						BIT				NOT NULL,
-	[TokenCreated]					NVARCHAR(100)	NOT NULL,
-	[DateCreated]					DATETIME		NOT NULL,
-	[TokenUpdated]					NVARCHAR(100)	NULL,
-	[DateUpdated]					DATETIME		NULL,
-	CONSTRAINT [FK_Rel_Deposit] FOREIGN KEY ([IdDeposit]) REFERENCES [dbo].[Deposit]([IdDeposit]),
-	CONSTRAINT [FK_Rel_DOBSettlement] FOREIGN KEY ([DeliveryOrderBySettlementId]) REFERENCES [dbo].[DeliveryOrderBySettlement]([ID])
-)
+﻿CREATE TABLE [dbo].[RelDepositManifest] (
+    [IdRelDepositManifest]        BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [IdDeposit]                   BIGINT          NOT NULL,
+    [DeliveryOrderBySettlementId] BIGINT          NOT NULL,
+    [AmountApplied]               DECIMAL (19, 4) NOT NULL,
+    [RowStatus]                   BIT             NOT NULL,
+    [TokenCreated]                NVARCHAR (100)  NOT NULL,
+    [DateCreated]                 DATETIME        NOT NULL,
+    [TokenUpdated]                NVARCHAR (100)  NULL,
+    [DateUpdated]                 DATETIME        NULL,
+    PRIMARY KEY CLUSTERED ([IdRelDepositManifest] ASC),
+    CONSTRAINT [FK_Rel_Deposit] FOREIGN KEY ([IdDeposit]) REFERENCES [dbo].[Deposit] ([IdDeposit]),
+    CONSTRAINT [FK_Rel_DOBSettlement] FOREIGN KEY ([DeliveryOrderBySettlementId]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID])
+);
+
+
 
 GO
-CREATE INDEX IX_Rel_Settlement ON dbo.RelDepositManifest(DeliveryOrderBySettlementId);
+
     
 GO
 CREATE INDEX IX_Rel_Deposit_Settlement ON dbo.RelDepositManifest (IdDeposit, DeliveryOrderBySettlementId) INCLUDE (AmountApplied, RowStatus, DateCreated);

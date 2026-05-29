@@ -193,6 +193,7 @@ BEGIN
 																	AND st.SettlementSatus = 1
 																	AND twn.TownshipStatus = 1
 																	AND prv.ProvinceStatus = 1
+																	  AND vp.IsOriginVisitPoint =1
                                                              FOR XML PATH(''), TYPE
                                                          ).value('.', 'varchar(max)')
                                                        , 1

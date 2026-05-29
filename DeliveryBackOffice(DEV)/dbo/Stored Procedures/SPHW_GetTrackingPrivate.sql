@@ -1,15 +1,4 @@
-﻿-- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2024-10-10>
--- Description:	<Delivery Tracking - Método para obtener información privada para rastreo de parquete.>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-11-08>
--- Description:	<Se agrega la imagen  la longitud y latutud para el trakin>
--- =============================================
-
-CREATE PROCEDURE [dbo].[SPHW_GetTrackingPrivate]
+﻿CREATE PROCEDURE [dbo].[SPHW_GetTrackingPrivate]
 @GuideSerie NVARCHAR(4),
 @GuideNumber INT,
 @Phone NVARCHAR(200)
@@ -74,8 +63,8 @@ BEGIN TRY
          , @GuideDeliveryLongitude = DA.Longitude
     FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt]          DA WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryProof]  DP WITH (NOLOCK)
-            ON DA.Guide_Number = DP.Guide_Number
-               AND DA.Guide_Serie = DP.Guide_Serie
+            ON DA.Guide_Serie = DP.Guide_Serie
+               AND DA.Guide_Number = DP.Guide_Number
     WHERE DA.Guide_Serie = @GuideSerie
           AND DA.Guide_Number = @GuideNumber
           AND DA.Delivered = 1
@@ -236,8 +225,8 @@ BEGIN TRY
 				ON [so].[StatusOrderId] = [dod].[StatusOrderId]
 		WHERE dod.Guide_Serie = @GuideSerie
 			AND dod.Guide_Number = @GuideNumber
-			AND dod.rowstatus = 1
-			AND dod.StatusOrderId = 5;
+		    AND dod.StatusOrderId = 5
+			AND dod.rowstatus = 1;
 
 	END
 	ELSE

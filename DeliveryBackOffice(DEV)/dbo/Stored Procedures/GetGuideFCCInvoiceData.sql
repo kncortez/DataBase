@@ -15,7 +15,7 @@ BEGIN
 	SET NOCOUNT ON;
 	
 	DECLARE @IdCountry NVARCHAR(2)=(SELECT SenderCountryId FROM dbo.DeliveryOrder
-                                                               WHERE Guide_Number = @GuideNumber);
+                                                               WHERE @GuideSerie = @GuideSerie AND Guide_Number = @GuideNumber);
     DECLARE @PBX NVARCHAR(10)=(SELECT [Value] FROM dbo.configparams
 													WHERE [Name]='PBX' AND IdCountry='HN'
 													);
@@ -61,6 +61,8 @@ BEGIN
 						ON 
 							InH.inv_pk_id = InD.dti_fk_header
 		WHERE 
+			ind.dti_fk_orderSerie = @GuideSerie 
+			AND 
 			InD.dti_fk_orderNumber = @GuideNumber 
 			AND 
 			InH.inv_certificationFEL IS NOT NULL

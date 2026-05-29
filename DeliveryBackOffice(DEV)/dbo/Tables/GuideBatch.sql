@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[GuideBatch] (
+CREATE TABLE [dbo].[GuideBatch] (
     [IdRow]                         BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [IdBatch]                       BIGINT        NOT NULL,
     [IdUser]                        BIGINT        NOT NULL,
@@ -16,6 +16,8 @@
     CONSTRAINT [FKRegisterUserBatch] FOREIGN KEY ([IdUser]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser]),
     CONSTRAINT [FKUserAddressBatch] FOREIGN KEY ([IdAddress]) REFERENCES [dbo].[UserAddress] ([UadIdAddress])
 );
+
+
 
 
 
@@ -83,14 +85,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por 
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_IdVisitPointByClientPortfolio]
-    ON [dbo].[GuideBatch]([IdVisitPointByClientPortfolio] ASC);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_IdUser_RowStatus]
-    ON [dbo].[GuideBatch]([IdUser] ASC, [RowStatus] ASC)
-    INCLUDE([GuideNumber], [IdVisitPointByClientPortfolio]);
+
 
 
 GO
@@ -99,9 +98,7 @@ CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_IdUser_RowStatus_include]
-    ON [dbo].[GuideBatch]([IdUser] ASC, [RowStatus] ASC)
-    INCLUDE([IdBatch], [GuideNumber], [Status]);
+
 
 
 GO
@@ -116,7 +113,7 @@ CREATE NONCLUSTERED INDEX [IDX_GuideSeries_GuideNumber_RowStatus_include]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_GuideSeries_RowStatus_INCLUDE]
-    ON [dbo].[GuideBatch]([GuideSeries] ASC, [RowStatus] ASC)
-    INCLUDE([GuideNumber], [Status]);
+CREATE NONCLUSTERED INDEX [idx_IdUser_RowStatus_Consolidated]
+    ON [dbo].[GuideBatch]([IdUser] ASC, [RowStatus] ASC)
+    INCLUDE([GuideNumber], [IdVisitPointByClientPortfolio], [IdBatch], [Status]);
 

@@ -125,24 +125,29 @@ BEGIN
 
 	IF (@IsLastMileReturn = 1)
 	BEGIN
-		    
 		SELECT @DescriptionReturn = 
-			COALESCE(@DescriptionReturn, '') + 
-			IIF
-			(
-				[UD].[IdUndefinedDescriptions] = 1, 
-				REPLACE([Description],'+++',CONCAT(@GuideSerie,@GuideNumber,'. +++ ')),
-				IIF
-				(
-					[UD].[IdUndefinedDescriptions] = 2,
-					REPLACE([Description],'Q ##',CONCAT(@GuideSerie,@GuideNumber,'. Q ##')),
-					REPLACE([Description],'Q',CONCAT(@GuideSerie,@GuideNumber,'. Q'))
-				)
-			)
-			FROM 
-				[DeliveryBackOffice].[dbo].[UndefinedDescriptions] UD  WITH(NOLOCK) 
-	
-	END
+               COALESCE(@DescriptionReturn, '') + 
+               IIF
+               (
+                 T.[IdUndefinedDescriptions] = 1, 
+                 REPLACE(T.[Description],'+++',CONCAT(@GuideSerie,@GuideNumber,'. +++ ')),
+                 IIF
+                 (
+                  T.[IdUndefinedDescriptions] = 2,
+                  REPLACE(T.[Description],'Q ##',CONCAT(@GuideSerie,@GuideNumber,'. ',ccd.Symbol,' ##')),
+                  REPLACE(T.[Description],'Q',CONCAT(@GuideSerie,@GuideNumber,'. ',ccd.Symbol))
+                 )
+               )
+         FROM dbo.DeliveryCurrency dc WITH(NOLOCK)
+              INNER JOIN dbo.CatCurrencyCOD ccd WITH(NOLOCK) 
+                 ON dc.IdCurrencyCOD = ccd.IdCatCurrencyCOD
+              CROSS APPLY (
+                  SELECT [UD].[IdUndefinedDescriptions], [UD].[Description]
+                    FROM [DeliveryBackOffice].[dbo].[UndefinedDescriptions] UD  WITH(NOLOCK)
+              ) T
+        WHERE dc.Currency_IdCountry = @CountryByGuide
+          AND dc.DefaultPerCountry = 1 
+    END
 
     INSERT INTO @BreakdownOfPayment
     SELECT Description,
@@ -513,4 +518,4 @@ BEGIN
 	FROM @GuideDetail;
 
 	SET NOCOUNT OFF;
-END	
+END

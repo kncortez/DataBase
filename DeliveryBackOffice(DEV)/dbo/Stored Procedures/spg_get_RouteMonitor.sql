@@ -14,7 +14,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteMonitor]
 		@Token AS VARCHAR(50)    = 'ad1a2328ed27ea99622f68deae5d9976',
-		@Rol AS BIGINT 			 =  1,
+		@Rol AS INT 			 =  1,
 		@Zone AS VARCHAR(100) = '',
 		@Department AS VARCHAR(100) = '',
 		@Town AS VARCHAR(100) ='',
@@ -48,30 +48,20 @@ BEGIN
 			(SELECT p.Package_Name FROM Package p WHERE p.Package_Type = serv.Package_Type) as Package_Type,
 			(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(serv.Guide_Serie, serv.Guide_Number)) as Rack_Position
 		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-		--LEFT JOIN DenariusCorporate_Dev.dbo.LGT_Master_Service_Material mat WITH(NOLOCK) on mat.MSM_ValueRegistrationForm = @Manifest and mat.MSM_MaterialCode = Guide_Serie +  CAST(Guide_Number AS VARCHAR)
-		--JOIN DeliveryBackOffice.dbo.StatusOrder sta ON sta.StatusOrderId = serv.StatusOrderId
-		--LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement BySt WITH(nolock) ON serv.Guide_Serie = bySt.Guide_Serie and serv.Guide_Number = bySt.Guide_Number
 		WHERE 
 		CONVERT(DATE, serv.DateCreated) BETWEEN CONVERT(DATE, GETDATE()-30) AND CONVERT( DATE, GETDATE()) AND 
-		--serv.StatusOrderId <> 7 AND -- ocultar los servicios anulados
-		--serv.StatusOrderId <> 5 AND -- ocultar los servicios entregados
 		serv.Manifest_Number <> 999 AND -- ocultar primer servicio (semilla)
 		serv.StatusOrderId IN (3,4) AND -- mostrar solo servicios Solicitados, Retornados a Forza y En Inventario
-		--serv.Manifest_Number <> 1000 AND -- ocultar servicios en blanco de sosep
 		(@Zone = '' OR Receiver_Zone = @Zone)  AND
 		(@Department = '' OR Receiver_Department = @Department ) AND
 		(@Town = '' OR Receiver_Town = @Town) AND
-		
-		--(@Department = '' OR Receiver_Department LIKE '%' + @Department + '%') AND
-		--(@Town = '' OR Receiver_Town LIKE '%' + @Town + '%' ) AND
 		(
 		 @Manifest = '' OR 
 		  (
 		  Manifest_Serie +  CAST(Manifest_Number AS VARCHAR) = @Manifest		   
 		  )
 		 )  
-        AND IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry
-		--(@DateSettlement = NULL OR Receiver_Zone = @DateSettlement) AND PENDIENTE
+        AND ReceiverCountryId = @IdCountry
 	
 	
 
