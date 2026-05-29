@@ -9,10 +9,12 @@ CREATE PROCEDURE [dbo].[GetBillingGuideDetailForList]
 )
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- Validar si la tabla temporal existe y eliminarla
+    IF OBJECT_ID('tempdb..#BreakdownOfPayment') IS NOT NULL
+        DROP TABLE #BreakdownOfPayment;
+
     -- Valores si membresia o suscripción fue aplicado
-    DECLARE @BreakdownOfPayment AS TABLE
-    (
+    CREATE TABLE #BreakdownOfPayment (
         IdVisitPointClient INT,
         Guide_Serie        NVARCHAR(2),
         Guide_Number       INT,
@@ -59,23 +61,23 @@ BEGIN
         DiscountType         NVARCHAR(10) DEFAULT N''
     );
 
-    DECLARE @GuideDetail AS TABLE
-    (
+    -- Validar si la tabla temporal existe y eliminarla
+    IF OBJECT_ID('tempdb..#GuideDetail') IS NOT NULL
+        DROP TABLE #GuideDetail;
+
+    CREATE TABLE #GuideDetail (
         IdVisitPointClient INT,
         Guide_Serie        NVARCHAR(2),
         Guide_Number       INT,
-        SAPCode NVARCHAR(50) NULL,
-        Name NVARCHAR(100) NULL,
-        Description NVARCHAR(100) NULL,
-        Price DECIMAL(14, 2) NULL,
-        Category VARCHAR(50) NULL,
-        SendToInvoice BIT NULL
+        SAPCode            NVARCHAR(50) NULL,
+        [Name]             NVARCHAR(100) NULL,
+        [Description]      NVARCHAR(100) NULL,
+        Price              DECIMAL(14, 2) NULL,
+        Category           VARCHAR(50) NULL,
+        SendToInvoice      BIT NULL
     );
 
     -- Validar si la tabla temporal existe y eliminarla
-    IF OBJECT_ID('tempdb..#TempServiceDetails') IS NOT NULL
-        DROP TABLE #TempServiceDetails;
-
     IF OBJECT_ID('tempdb..#TempGuidesDetails') IS NOT NULL
         DROP TABLE #TempGuidesDetails;
 
@@ -154,8 +156,8 @@ BEGIN
                       SELECT TOP 1
                              Co.IdCost valueCost
                         FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
-                       WHERE co.GuideNumber = do.Guide_Number
-                         AND co.GuideSerie = do.Guide_Serie
+                       WHERE co.GuideSerie = do.Guide_Serie
+                         AND co.GuideNumber = do.Guide_Number
                        ORDER BY IdCost DESC
                      ) IdCost
          OUTER APPLY (
@@ -181,7 +183,7 @@ BEGIN
                           AND BOP.PromoCouponId IS NOT NULL
                      ) AS promoCupon
  
-    INSERT INTO @BreakdownOfPayment
+    INSERT INTO #BreakdownOfPayment
     SELECT tgd.IdVisitPointClient,
            tgd.Guide_Serie,
            tgd.Guide_Number,
@@ -194,7 +196,8 @@ BEGIN
            INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
                    ON bdp.IdCost = tgd.CostId
 
-   ---APLLID CUPON
+    -- Indices para #BreakdownOfPayment
+    CREATE CLUSTERED INDEX IX_BreakdownOfPayment_Guide ON #BreakdownOfPayment (Guide_Serie, Guide_Number);
 
     -- Busca membresía aplicada
     INSERT INTO #TempDetailsMembership
@@ -323,7 +326,7 @@ BEGIN
                             WHEN tgd.AppliedCoupon > 0 THEN PromoC.OriginalAmount
                             ELSE amountPrice.PriceShippment
                         END
-      FROM @BreakdownOfPayment dbop
+      FROM #BreakdownOfPayment dbop
            INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
                  ON tgd.Guide_Serie = dbop.Guide_Serie
                  AND tgd.Guide_Number = dbop.Guide_Number
@@ -358,7 +361,7 @@ BEGIN
                               WHEN tgd.AppliedCoupon > 0 THEN PromoC.CouponValue
                               ELSE tds.PromoValue
                            END
-      FROM @BreakdownOfPayment dbop
+      FROM #BreakdownOfPayment dbop
            INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
                  ON tgd.Guide_Serie = dbop.Guide_Serie
                  AND tgd.Guide_Number = dbop.Guide_Number
@@ -385,7 +388,7 @@ BEGIN
                             WHEN tgd.AppliedCoupon > 0 THEN PromoC.OriginalAmount
                             ELSE amountPrice.PriceShippment
                         END
-      FROM @BreakdownOfPayment dbop
+      FROM #BreakdownOfPayment dbop
            INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
                  ON tgd.Guide_Serie = dbop.Guide_Serie
                  AND tgd.Guide_Number = dbop.Guide_Number
@@ -420,7 +423,7 @@ BEGIN
                               WHEN tgd.AppliedCoupon > 0 THEN PromoC.CouponValue
                               ELSE tdm.PromoValue
                            END
-      FROM @BreakdownOfPayment dbop
+      FROM #BreakdownOfPayment dbop
            INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
                  ON tgd.Guide_Serie = dbop.Guide_Serie
                  AND tgd.Guide_Number = dbop.Guide_Number
@@ -445,27 +448,27 @@ BEGIN
     IF
     (
       SELECT COUNT(*)
-        FROM @BreakdownOfPayment
+        FROM #BreakdownOfPayment
     ) > 0
     BEGIN
 
         -- Pago collect
         UPDATE bdop
            SET bdop.AmountCollect = valAmount.Amount
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                OUTER APPLY (
                             SELECT TOP 1 Amount 
-                              FROM @BreakdownOfPayment bo
+                              FROM #BreakdownOfPayment bo
                              WHERE [Description] LIKE '%PAGO%DESTINO%'
                               AND bo.Guide_Serie = bdop.Guide_Serie
                               AND bo.Guide_Number = bdop.Guide_Number
-                              AND bo.[Description] = bdop.[Description]
+                              AND bo.[Description] = bdop.[Description] 
                            ) AS valAmount
 
         -- Pago collect
         UPDATE bdop
            SET bdop.amount = bdop.amount - bdop.AmountCollect
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
          WHERE bdop.AmountCollect IS NOT NULL
            AND bdop.AmountCollect > 0 
 
@@ -480,7 +483,7 @@ BEGIN
                                                   END)
                                         ELSE bdop.AmountCollect
                                     END
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                INNER JOIN #TempGuidesDetails tg WITH(NOLOCK)
                        ON bdop.Guide_Serie = tg.Guide_Serie
                        AND bdop.Guide_Number = tg.Guide_Number
@@ -502,7 +505,7 @@ BEGIN
                                                   END)
                                         ELSE bdop.AmountCollect
                                     END
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                INNER JOIN #TempGuidesDetails tg WITH(NOLOCK)
                        ON bdop.Guide_Serie = tg.Guide_Serie
                        AND bdop.Guide_Number = tg.Guide_Number
@@ -516,19 +519,19 @@ BEGIN
         -- Excendente de peso
         UPDATE bdop
            SET bdop.AmountWeight = valAmount.Amount
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                OUTER APPLY (
                             SELECT TOP 1 Amount 
-                              FROM @BreakdownOfPayment bo
+                              FROM #BreakdownOfPayment bo
                              WHERE [Description] LIKE '%PESO%'
                                AND bo.Guide_Serie = bdop.Guide_Serie
                                AND bo.Guide_Number = bdop.Guide_Number
-                               AND bo.[Description] = bdop.[Description]
+                               AND bo.[Description] = bdop.[Description]  
                            ) AS valAmount
 
         UPDATE bdop
            SET bdop.amount = bdop.amount - bdop.AmountWeight
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
          WHERE bdop.AmountWeight IS NOT NULL
            AND bdop.AmountWeight > 0
 
@@ -543,7 +546,7 @@ BEGIN
                                                   END)
                                         ELSE bdop.AmountWeight
                                     END
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                INNER JOIN #TempGuidesDetails tg WITH(NOLOCK)
                        ON bdop.Guide_Serie = tg.Guide_Serie
                        AND bdop.Guide_Number = tg.Guide_Number
@@ -565,7 +568,7 @@ BEGIN
                                                   END)
                                         ELSE bdop.AmountWeight
                                     END
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                INNER JOIN #TempGuidesDetails tg WITH(NOLOCK)
                        ON bdop.Guide_Serie = tg.Guide_Serie
                        AND bdop.Guide_Number = tg.Guide_Number
@@ -579,10 +582,10 @@ BEGIN
         -- Seguro
         UPDATE bdop
            SET bdop.AmountSecure = valAmount.Amount
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                OUTER APPLY (
                             SELECT TOP 1 Amount 
-                              FROM @BreakdownOfPayment bo
+                              FROM #BreakdownOfPayment bo
                              WHERE [Description] LIKE '%SEGURO%'
                                AND bo.Guide_Serie = bdop.Guide_Serie
                                AND bo.Guide_Number = bdop.Guide_Number
@@ -591,7 +594,7 @@ BEGIN
 
         UPDATE bdop
            SET bdop.amount = bdop.amount - bdop.AmountSecure
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
          WHERE bdop.AmountSecure IS NOT NULL 
            AND bdop.AmountSecure > 0
 
@@ -606,7 +609,7 @@ BEGIN
                                                   END)
                                         ELSE bdop.AmountSecure
                                     END
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                INNER JOIN #TempGuidesDetails tg WITH(NOLOCK)
                        ON bdop.Guide_Serie = tg.Guide_Serie
                        AND bdop.Guide_Number = tg.Guide_Number
@@ -628,7 +631,7 @@ BEGIN
                                                   END)
                                         ELSE bdop.AmountSecure
                                     END
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                INNER JOIN #TempGuidesDetails tg WITH(NOLOCK)
                        ON bdop.Guide_Serie = tg.Guide_Serie
                        AND bdop.Guide_Number = tg.Guide_Number
@@ -650,7 +653,7 @@ BEGIN
                                            END)
                                  ELSE bdop.Amount
                              END
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                INNER JOIN #TempGuidesDetails tg WITH(NOLOCK)
                        ON bdop.Guide_Serie = tg.Guide_Serie
                        AND bdop.Guide_Number = tg.Guide_Number
@@ -668,12 +671,12 @@ BEGIN
                                  WHEN ts.ValueType = 'Porcentaje'
                                      THEN (CASE
                                                WHEN ts.DiscountType = 'TOT'
-                                                   THEN bdop.Amount - ROUND(((bdop.Amount * ts.PromoValue) / 100), 1)
+                                                   THEN bdop.Amount - ROUND(((bdop.Amount  * ts.PromoValue) / 100), 1)
                                                ELSE bdop.Amount
                                            END)
                                  ELSE bdop.Amount
                              END
-          FROM @BreakdownOfPayment bdop
+          FROM #BreakdownOfPayment bdop
                INNER JOIN #TempGuidesDetails tg WITH(NOLOCK)
                        ON bdop.Guide_Serie = tg.Guide_Serie
                        AND bdop.Guide_Number = tg.Guide_Number
@@ -686,7 +689,7 @@ BEGIN
            AND ts.IsFixedValueDiscount = 0
 
            --Amount
-           INSERT INTO @GuideDetail
+           INSERT INTO #GuideDetail
            SELECT tgd.IdVisitPointClient, 
                   tgd.Guide_Serie,
                   tgd.Guide_Number,
@@ -700,14 +703,17 @@ BEGIN
                   INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
                           ON ca.[Name] = tgd.NameArticle
                          AND ISNULL(ca.IdCountry,'GT') = tgd.CountryByGuide
-                  INNER JOIN @BreakdownOfPayment bdop
+                  INNER JOIN #BreakdownOfPayment bdop
                          ON tgd.Guide_Serie = bdop.Guide_Serie
                         AND tgd.Guide_Number = bdop.Guide_Number
             WHERE bdop.Amount IS NOT NULL
               AND bdop.Amount > 0
 
+           -- Indice para #GuideDetail:
+           CREATE CLUSTERED INDEX IX_GuideDetail_Guide ON #GuideDetail (Guide_Serie, Guide_Number);
+
            --Amount
-           INSERT INTO @GuideDetail
+           INSERT INTO #GuideDetail
            SELECT tgd.IdVisitPointClient, 
                   tgd.Guide_Serie,
                   tgd.Guide_Number,
@@ -721,14 +727,14 @@ BEGIN
                   INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
                           ON ca.[Name] = tgd.NameArticleCollect
                          AND ISNULL(ca.IdCountry,'GT') = tgd.CountryByGuide
-                  INNER JOIN @BreakdownOfPayment bdop
+                  INNER JOIN #BreakdownOfPayment bdop
                          ON tgd.Guide_Serie = bdop.Guide_Serie
                         AND tgd.Guide_Number = bdop.Guide_Number
             WHERE bdop.AmountCollect IS NOT NULL
               AND bdop.AmountCollect > 0
 
            --AmountWeight
-           INSERT INTO @GuideDetail
+           INSERT INTO #GuideDetail
            SELECT tgd.IdVisitPointClient, 
                   tgd.Guide_Serie,
                   tgd.Guide_Number,
@@ -742,14 +748,14 @@ BEGIN
                   INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
                           ON ca.[Name] = tgd.NameArticleWeight
                          AND ISNULL(ca.IdCountry,'GT') = tgd.CountryByGuide
-                  INNER JOIN @BreakdownOfPayment bdop
+                  INNER JOIN #BreakdownOfPayment bdop
                          ON tgd.Guide_Serie = bdop.Guide_Serie
                         AND tgd.Guide_Number = bdop.Guide_Number
             WHERE bdop.AmountWeight IS NOT NULL
               AND bdop.AmountWeight > 0
 
            --AmountSecure
-           INSERT INTO @GuideDetail
+           INSERT INTO #GuideDetail
            SELECT tgd.IdVisitPointClient, 
                   tgd.Guide_Serie,
                   tgd.Guide_Number,
@@ -763,7 +769,7 @@ BEGIN
                   INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK)
                           ON ca.[Name] = tgd.NameArticleSecure
                          AND ISNULL(ca.IdCountry,'GT') = tgd.CountryByGuide
-                  INNER JOIN @BreakdownOfPayment bdop
+                  INNER JOIN #BreakdownOfPayment bdop
                          ON tgd.Guide_Serie = bdop.Guide_Serie
                         AND tgd.Guide_Number = bdop.Guide_Number
             WHERE bdop.AmountSecure IS NOT NULL
@@ -777,14 +783,13 @@ BEGIN
             gd.SAPCode,
             [Name],
             CASE
-               WHEN tgd.IsLastMileReturn = 1 
-                   THEN REPLACE(REPLACE ( tgd.DescriptionReturn, '##' , gd.Price ),'+++',+ CHAR(10))
+               WHEN tgd.IsLastMileReturn = 1 THEN REPLACE(REPLACE ( tgd.DescriptionReturn, '##' , gd.Price ),'+++',+ char(10))
                ELSE gd.[Description] 
             END [Description] ,
             gd.Price,
             gd.Category,
             gd.SendToInvoice
-       FROM @GuideDetail gd
+       FROM #GuideDetail gd
             INNER JOIN #TempGuidesDetails tgd WITH(NOLOCK) 
                     ON tgd.Guide_Serie = gd.Guide_Serie
                    AND tgd.Guide_Number = gd.Guide_Number

@@ -38,7 +38,7 @@ select do.Preparation_Date,
 into #HeaderDeliveryOrder
 from DeliveryBackOffice.dbo.DeliveryOrder do
 where CONVERT(VARCHAR, Preparation_Date, 23) = CONVERT(VARCHAR, @PreparationDate, 23)
-AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
+AND do.SenderCountryId = @IdCountry
 
 
 select det.Guide_Serie,det.Guide_Number,

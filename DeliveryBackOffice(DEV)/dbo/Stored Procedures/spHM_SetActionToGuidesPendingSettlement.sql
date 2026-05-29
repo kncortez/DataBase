@@ -7,6 +7,10 @@
 -- Updated date:<18-11-2024>
 -- Description:	<Se agrega nueva validación IsCompleted>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Updated date:<15-12-2025>
+-- Description:	<Se realizan mejoras de optimizacion>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_SetActionToGuidesPendingSettlement]
 	-- Add the parameters for the stored procedure here
 	@Action TINYINT, --1=entrega, 2=devuelto, 3=traslado, 4=incidencia, 5=extraviado
@@ -29,31 +33,24 @@ BEGIN
 	DECLARE @StatusOrderId INT
 	DECLARE @IsValidOperation BIT = 1
 	DECLARE @Register BIT = 0
-
 	DECLARE @CatModuleId INT
 	DECLARE @COD DECIMAL(14,2)
 	DECLARE @IdCustomer INT
 	DECLARE @COLLECT INT = 0
-
 	DECLARE @ErrorCode INT = 0
 	DECLARE @ErrorDescription NVARCHAR(100);
-
 	DECLARE @CanceledStatusId INT
 	DECLARE @IncidenceDescription VARCHAR(200)
-
 	--- Variables para manejo de piezas
 	DECLARE @GuideExists BIT;
-
 	--- Variables para manejo de ruta unificada
 	DECLARE @UserSettlement NVARCHAR(50);
 	DECLARE @IdUnifiedRouteSettlement INT;
 	DECLARE @IdUnifiedRouteSettlementDetail INT;
 	DECLARE @IdUnifiedRouteSettlementDetailPiece INT;
-
 	--- Variables para control de RouteAssignment
 	DECLARE @RouteAssignmentId INT
 	DECLARE @RouteAssignmentCourierId INT
-
 	--- Control de monto de servicio y COD
 	DECLARE @IsCollect BIT = 0
 	DECLARE @HasInsurance BIT = 0
@@ -61,7 +58,6 @@ BEGIN
 	DECLARE @ServiceAmount DECIMAL(14,2) = 0
 	DECLARE @CODAmount DECIMAL(14,2) = 0
 	DECLARE @InsuranceAmount DECIMAL(14,2) = 0
-
 	--- Control de piezas
 	DECLARE @GuidePiece INT
 	DECLARE @GuidePieceIsDry BIT
@@ -90,9 +86,9 @@ BEGIN
 			--- Verificar si la pieza existe
 			SELECT
 				@GuideExists = 1
-			FROM DeliveryOrderPiece dop WITH (NOLOCK)
+			FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
 			WHERE dop.GuideSerie = @GuideSerie
-			AND dop.GuideNumber = @GuideNumber
+				AND dop.GuideNumber = @GuideNumber
 
 			IF @GuideExists = 1
 			BEGIN
@@ -101,33 +97,33 @@ BEGIN
 				IF @Action = 1
 				BEGIN
 
-					SET @StatusOrderId = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Entregado')
+					SET @StatusOrderId = 5; -- Entregado
 
 					-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
 					SET @TimesDelivered = (SELECT
-							COUNT(1)
-						FROM DeliveryOrderDetail dod WITH (NOLOCK)
-						INNER JOIN StatusOrder so WITH (NOLOCK)
-							ON dod.StatusOrderId = so.StatusOrderId
-						WHERE dod.Guide_Serie = @GuideSerie
-						AND dod.Guide_Number = @GuideNumber
-						AND so.OrderDescription IN ('Entregado', 'Devuelto', 'Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center'))
+												COUNT(1)
+											FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+											INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
+												ON dod.StatusOrderId = so.StatusOrderId
+											WHERE dod.Guide_Serie = @GuideSerie
+												AND dod.Guide_Number = @GuideNumber
+												AND so.StatusOrderId IN (5,14,20,22,23)) --'Entregado', 'Devuelto', 'Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center'
 
 					IF @TimesDelivered = 0
 					BEGIN 
 				
 						-- Actualizar registro de pieza a último estado 
-						UPDATE DeliveryOrderPiece
+						UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
 						SET StatusOrderId = @StatusOrderId
 						WHERE GuideSerie = @GuideSerie
-						AND GuideNumber = @GuideNumber
+							AND GuideNumber = @GuideNumber
 
 						-- Actualizar registro de guía a último estado 
-						UPDATE DeliveryOrder
+						UPDATE DeliveryBackOffice.dbo.DeliveryOrder
 						SET StatusOrderId = @StatusOrderId
 						   ,NameOfReceiver = @ReceiverName
 						WHERE Guide_Serie = @GuideSerie
-						AND Guide_Number = @GuideNumber		
+							AND Guide_Number = @GuideNumber		
 
 						-- Insertar nuevo estado de guía en tabla histórica
 						INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem])
@@ -140,12 +136,12 @@ BEGIN
 						DECLARE @GuideCurrentStatus INT = -1;
 
 						BEGIN TRY
-							DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+							DECLARE @GuideStatusChangeWebhook INT = 1; --'GuideStatusChange'
 
-							SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
+							SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber),-1);
 							SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
 
-							SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie);
+							SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber);
 
 							-- Cliente tiene webhook configurado para el tipo especificado
 							-- Estado actual de la guía coincide dentro de las restricciónes por usuario
@@ -159,10 +155,10 @@ BEGIN
 								DECLARE @TypeConnect INT = 0;
 
 						SET @TypeConnect = (SELECT top 1 TypeConnectionId 
-								FROM WebhookEndpoint wh
-								INNER JOIN WebhookCatTypeConnection wc
-									ON wh.TypeConnectionId = wc.IdCatTypeConnection
-								WHERE wh.CustomerId = @WebhookCustomerId)
+											FROM DeliveryBackOffice.dbo.WebhookEndpoint wh WITH(NOLOCK)
+											INNER JOIN DeliveryBackOffice.dbo.WebhookCatTypeConnection wc WITH(NOLOCK)
+												ON wh.TypeConnectionId = wc.IdCatTypeConnection
+											WHERE wh.CustomerId = @WebhookCustomerId)
 
 						IF(@TypeConnect = 1)
 							 BEGIN
@@ -218,15 +214,17 @@ BEGIN
 											NumberPieces
 											)
 											SELECT @WebhookCustomerId,
-											dop.GuideSerie,dop.GuideNumber, 
-											@GuideCurrentStatus,
-											Count(dop.GuideNumber)
-											FROM DeliveryOrder do WITH(NOLOCK)
-											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-												ON do.Guide_Number = dop.GuideNumber
-												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-											    ON do.IdCustomer = WHE.CustomerId
-												WHERE do.Guide_Number = @GuideNumber
+												dop.GuideSerie,dop.GuideNumber, 
+												@GuideCurrentStatus,
+												Count(dop.GuideNumber)
+											FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+												INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
+													ON do.Guide_Serie = dop.GuideSerie
+														AND do.Guide_Number = dop.GuideNumber
+												INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
+											    	ON do.IdCustomer = WHE.CustomerId
+												WHERE do.Guide_Serie = @GuideSerie
+													AND do.Guide_Number = @GuideNumber
 													AND WHE.TypeConnectionId = 2
 												GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -254,17 +252,19 @@ BEGIN
 											dop.GuideSerie,dop.GuideNumber, 
 											@GuideCurrentStatus,
 											Count(dop.GuideNumber)
-											FROM DeliveryOrder do WITH(NOLOCK)
-											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-												ON do.Guide_Number = dop.GuideNumber
-												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-											    ON do.IdCustomer = WHE.CustomerId
-												WHERE do.Guide_Number = @GuideNumber
-												AND dop.ExternalPieceId IS NOT NULL
-												AND WHE.TypeConnectionId = 2
+											FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+												INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
+													ON do.Guide_Serie = dop.GuideSerie
+														AND do.Guide_Number = dop.GuideNumber
+												INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
+											    	ON do.IdCustomer = WHE.CustomerId
+												WHERE do.Guide_Serie = @GuideSerie
+													AND do.Guide_Number = @GuideNumber
+													AND dop.ExternalPieceId IS NOT NULL
+													AND WHE.TypeConnectionId = 2
 												GROUP BY dop.GuideSerie,dop.GuideNumber
 					  
-					  					INSERT INTO WebhookTrackingQueueDetailForSFTP 
+					  					INSERT INTO DeliveryBackOffice.dbo.WebhookTrackingQueueDetailForSFTP 
 											(CustomerId,
 											GuideSerie,
 											GuideNumber,
@@ -276,19 +276,22 @@ BEGIN
 											DateCreated,
 											TokenCreated)
 										SELECT @WebhookCustomerId,
-										dop.GuideSerie,dop.GuideNumber, dop.NoPiece, do.Ticket_Number,dop.ExternalPieceId, 
-										@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
-										FROM DeliveryOrderPiece dop WITH(NOLOCK)
-										INNER JOIN DeliveryOrder do WITH(NOLOCK)
-											ON dop.GuideNumber = do.Guide_Number
-										INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
-										    ON do.IdCustomer = WHE.CustomerId
-										INNER JOIN @GuidePiecesTable gpt
-										    ON dop.GuideNumber = gpt.GuideNumber
-										INNER JOIN @PiecesGuideRelatedTable pgt
-										    ON gpt.GuideNumber = pgt.GuideNumber
-											WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-												AND WHE.TypeConnectionId = 2
+											dop.GuideSerie,dop.GuideNumber, dop.NoPiece, do.Ticket_Number,dop.ExternalPieceId, 
+											@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
+										FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
+											INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+												ON do.Guide_Serie = dop.GuideSerie
+													AND do.Guide_Number = dop.GuideNumber
+											INNER JOIN DeliveryBackOffice.dbo.WebhookEndpoint WHE WITH(NOLOCK)
+												ON do.IdCustomer = WHE.CustomerId
+											INNER JOIN @GuidePiecesTable gpt
+												ON dop.GuideSerie = gpt.GuideSerie
+													AND dop.GuideNumber = gpt.GuideNumber
+											INNER JOIN @PiecesGuideRelatedTable pgt
+												ON gpt.GuideSerie = pgt.GuideSerie
+													AND gpt.GuideNumber = pgt.GuideNumber
+										WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
+											AND WHE.TypeConnectionId = 2
 
 							END
 
@@ -308,36 +311,32 @@ BEGIN
 					   ,@IdCustomer = cu.IdCustomer
 					   ,@COLLECT = IIF(do.IsCollect = 1 AND NOT EXISTS (SELECT
 								1
-							FROM Cost C WITH (NOLOCK)
-							INNER JOIN CostDetail CD WITH (NOLOCK)
+							FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
+							INNER JOIN DeliveryBackOffice.dbo.CostDetail CD WITH (NOLOCK)
 								ON CD.IdCost = C.IdCost
 								AND CD.IdTypeOfMoney IN (2, 6)
 							WHERE C.ProductNumber = CONCAT(do.Guide_Serie, CAST(do.Guide_Number AS VARCHAR(50))))
 						, 1, 0)
-					FROM DeliveryOrder do WITH (NOLOCK)
-					LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+					FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
 						ON vp.CodeOfReference = do.Sender_ID
-					LEFT JOIN Customer cu WITH (NOLOCK)
+					LEFT JOIN DeliveryBackOffice.dbo.Customer cu WITH (NOLOCK)
 						ON cu.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
 					WHERE do.Guide_Serie = @GuideSerie
-					AND do.Guide_Number = @GuideNumber
+						AND do.Guide_Number = @GuideNumber
 
 					-- se verifica que no exita en ProcessGuideCOD Y COD > 0
 					IF (@COD > 0
 						OR @COLLECT = 1)
 						AND NOT EXISTS (SELECT
-								1
-							FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH (NOLOCK)
-							WHERE GuideSerie = @GuideSerie
-							AND GuideNumber = @GuideNumber)
+											1
+										FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH (NOLOCK)
+										WHERE GuideSerie = @GuideSerie
+											AND GuideNumber = @GuideNumber)
 					BEGIN
 
 						--Buscar ID modulo liquidación COD
-						SET @CatModuleId = ISNULL((SELECT
-								ModIdModule
-							FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
-							WHERE ModName = 'Confirmación de Entrega')
-						, 0)
+						SET @CatModuleId = 34; --'Confirmación de Entrega'
 
 						INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD (GuideSerie
 						, GuideNumber
@@ -360,38 +359,34 @@ BEGIN
 					ELSE
 					IF EXISTS (SELECT
 								1
-							FROM DeliveryOrder ord WITH (NOLOCK)
-							INNER JOIN DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
-								ON ord.Guide_Serie = DOP.GuideSerie
-								AND ord.Guide_Number = DOP.GuideNumber
-							LEFT JOIN VisitPointClient vp WITH (NOLOCK)
-								ON vp.CodeOfReference = ord.Sender_ID
-							LEFT JOIN Customer cus WITH (NOLOCK)
-								ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
-							WHERE ord.Guide_Serie = @GuideSerie
-							AND ord.Guide_Number = @GuideNumber
-							AND ord.IsCollect = 'false'
-							AND DOP.TimePlaId = 2
-							AND NOT EXISTS (SELECT
-									1
-								FROM Cost C WITH (NOLOCK)
-								INNER JOIN CostDetail CD WITH (NOLOCK)
-									ON CD.IdCost = C.IdCost
-									AND CD.IdTypeOfMoney IN (2, 6)
-								WHERE C.ProductNumber = CONCAT(ord.Guide_Serie, CAST(ord.Guide_Number AS VARCHAR(50))))
-							AND NOT EXISTS (SELECT
-									1
-								FROM ProcessedGuideCOD WITH (NOLOCK)
-								WHERE GuideSerie = @GuideSerie
-								AND GuideNumber = @GuideNumber))
+								FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+									INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
+										ON ord.Guide_Serie = DOP.GuideSerie
+											AND ord.Guide_Number = DOP.GuideNumber
+									LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
+										ON vp.CodeOfReference = ord.Sender_ID
+									LEFT JOIN DeliveryBackOffice.dbo.Customer cus WITH (NOLOCK)
+										ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
+									WHERE ord.Guide_Serie = @GuideSerie
+										AND ord.Guide_Number = @GuideNumber
+										AND ord.IsCollect = 'false'
+										AND DOP.TimePlaId = 2
+										AND NOT EXISTS (SELECT
+												1
+											FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
+											INNER JOIN DeliveryBackOffice.dbo.CostDetail CD WITH (NOLOCK)
+												ON CD.IdCost = C.IdCost
+												AND CD.IdTypeOfMoney IN (2, 6)
+											WHERE C.ProductNumber = CONCAT(ord.Guide_Serie, CAST(ord.Guide_Number AS VARCHAR(50))))
+										AND NOT EXISTS (SELECT
+												1
+											FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH (NOLOCK)
+											WHERE GuideSerie = @GuideSerie
+											AND GuideNumber = @GuideNumber))
 
 					BEGIN
 						--Buscar ID modulo liquidación COD
-						SET @CatModuleId = ISNULL((SELECT
-								ModIdModule
-							FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
-							WHERE ModName = 'Confirmación de Entrega')
-						, 0)
+						SET @CatModuleId = 34; --'Confirmación de Entrega'
 
 						INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD (GuideSerie
 						, GuideNumber
@@ -418,33 +413,33 @@ BEGIN
 				ELSE IF @Action = 2 -- 
 				BEGIN
 				
-					SET @StatusOrderId = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Devuelto')
+					SET @StatusOrderId = 14;--'Devuelto'
 
 					-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
 					SET @TimesDelivered = (SELECT
 							COUNT(1)
-						FROM DeliveryOrderDetail dod WITH (NOLOCK)
-						INNER JOIN StatusOrder so WITH (NOLOCK)
+						FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+						INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
 							ON dod.StatusOrderId = so.StatusOrderId
 						WHERE dod.Guide_Serie = @GuideSerie
-						AND dod.Guide_Number = @GuideNumber
-						AND so.OrderDescription IN ('Entregado', 'Devuelto', 'Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center'))
+							AND dod.Guide_Number = @GuideNumber
+							AND so.StatusOrderId IN (5,14,20,22,23)) --'Entregado', 'Devuelto', 'Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center'
 
 					IF @TimesDelivered = 0
 					BEGIN 
 				
 						-- Actualizar registro de pieza a último estado 
-						UPDATE DeliveryOrderPiece
+						UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
 						SET StatusOrderId = @StatusOrderId
 						WHERE GuideSerie = @GuideSerie
-						AND GuideNumber = @GuideNumber
+							AND GuideNumber = @GuideNumber
 
 						-- Actualizar registro de guía a último estado 
-						UPDATE DeliveryOrder
+						UPDATE DeliveryBackOffice.dbo.DeliveryOrder
 						SET StatusOrderId = @StatusOrderId
 						   ,NameOfReceiver = @ReceiverName
 						WHERE Guide_Serie = @GuideSerie
-						AND Guide_Number = @GuideNumber		
+							AND Guide_Number = @GuideNumber		
 
 						-- Insertar nuevo estado de guía en tabla histórica
 						INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem])
@@ -456,35 +451,31 @@ BEGIN
 						@IdCustomer = cu.IdCustomer
 					   ,@COLLECT = IIF(do.IsCollect = 1 AND NOT EXISTS (SELECT
 								1
-							FROM Cost C WITH (NOLOCK)
-							INNER JOIN CostDetail CD WITH (NOLOCK)
+							FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
+							INNER JOIN DeliveryBackOffice.dbo.CostDetail CD WITH (NOLOCK)
 								ON CD.IdCost = C.IdCost
 								AND CD.IdTypeOfMoney IN (2, 6)
 							WHERE C.ProductNumber = CONCAT(do.Guide_Serie, CAST(do.Guide_Number AS VARCHAR(50))))
 						, 1, 0)
-					FROM DeliveryOrder do WITH (NOLOCK)
-					LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-						ON vp.CodeOfReference = do.Sender_ID
-					LEFT JOIN Customer cu WITH (NOLOCK)
-						ON cu.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
+					FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+						LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
+							ON vp.CodeOfReference = do.Sender_ID
+						LEFT JOIN DeliveryBackOffice.dbo.Customer cu WITH (NOLOCK)
+							ON cu.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
 					WHERE do.Guide_Serie = @GuideSerie
-					AND do.Guide_Number = @GuideNumber
+						AND do.Guide_Number = @GuideNumber
 
 					-- se verifica que no exita en ProcessGuideCOD Y COD > 0
 					IF (@COLLECT = 1)
 						AND NOT EXISTS (SELECT
-								1
-							FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH (NOLOCK)
-							WHERE GuideSerie = @GuideSerie
-							AND GuideNumber = @GuideNumber)
+											1
+										FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH (NOLOCK)
+										WHERE GuideSerie = @GuideSerie
+											AND GuideNumber = @GuideNumber)
 					BEGIN
 
 						--Buscar ID modulo liquidación COD
-						SET @CatModuleId = ISNULL((SELECT
-								ModIdModule
-							FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
-							WHERE ModName = 'Confirmación de Entrega')
-						, 0)
+						SET @CatModuleId = 34; --'Confirmación de Entrega'
 
 						INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD (GuideSerie
 						, GuideNumber
@@ -507,38 +498,34 @@ BEGIN
 					ELSE
 					IF EXISTS (SELECT
 								1
-							FROM DeliveryOrder ord WITH (NOLOCK)
-							INNER JOIN DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
-								ON ord.Guide_Serie = DOP.GuideSerie
-								AND ord.Guide_Number = DOP.GuideNumber
-							LEFT JOIN VisitPointClient vp WITH (NOLOCK)
-								ON vp.CodeOfReference = ord.Sender_ID
-							LEFT JOIN Customer cus WITH (NOLOCK)
-								ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
+							FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
+									ON ord.Guide_Serie = DOP.GuideSerie
+									AND ord.Guide_Number = DOP.GuideNumber
+								LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
+									ON vp.CodeOfReference = ord.Sender_ID
+								LEFT JOIN DeliveryBackOffice.dbo.Customer cus WITH (NOLOCK)
+									ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
 							WHERE ord.Guide_Serie = @GuideSerie
-							AND ord.Guide_Number = @GuideNumber
-							AND ord.IsCollect = 'false'
-							AND DOP.TimePlaId = 2
+								AND ord.Guide_Number = @GuideNumber
+								AND ord.IsCollect = 'false'
+								AND DOP.TimePlaId = 2
 							AND NOT EXISTS (SELECT
 									1
-								FROM Cost C WITH (NOLOCK)
-								INNER JOIN CostDetail CD WITH (NOLOCK)
+								FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.CostDetail CD WITH (NOLOCK)
 									ON CD.IdCost = C.IdCost
 									AND CD.IdTypeOfMoney IN (2, 6)
 								WHERE C.ProductNumber = CONCAT(ord.Guide_Serie, CAST(ord.Guide_Number AS VARCHAR(50))))
 							AND NOT EXISTS (SELECT
 									1
-								FROM ProcessedGuideCOD WITH (NOLOCK)
+								FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH (NOLOCK)
 								WHERE GuideSerie = @GuideSerie
 								AND GuideNumber = @GuideNumber))
 
 					BEGIN
 						--Buscar ID modulo liquidación COD
-						SET @CatModuleId = ISNULL((SELECT
-								ModIdModule
-							FROM DeliveryBackOffice.dbo.CatModule WITH (NOLOCK)
-							WHERE ModName = 'Confirmación de Entrega')
-						, 0)
+						SET @CatModuleId = 34; --'Confirmación de Entrega'
 
 						INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD (GuideSerie
 						, GuideNumber
@@ -568,17 +555,17 @@ BEGIN
 					-- Validar que la guía esté estado correcto
 					IF EXISTS (SELECT
 								1
-							FROM DeliveryOrder do WITH (NOLOCK)
-							INNER JOIN StatusOrder so WITH (NOLOCK)
+							FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+							INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
 								ON do.StatusOrderId = so.StatusOrderId
 							WHERE do.Guide_Serie = @GuideSerie
-							AND do.Guide_Number = @GuideNumber
-							AND so.OrderDescription IN ('Traslado a Express Center', 'Recibido En Express Center', 'Entregado En Express Center'))
+								AND do.Guide_Number = @GuideNumber
+								AND so.StatusOrderId IN (20,21,22)) --'Traslado a Express Center', 'Recibido En Express Center', 'Entregado En Express Center'
 					BEGIN
 						IF @CodeOfReference <> 0
 						BEGIN
 
-							INSERT INTO TransferLog (IdCourier, CourierName, DPI, IdIncidence, IncidenceName, Comentary, GuideSerie, GuideNumber, TokenCreated, DateCreated, TokenUpdate, DateUpdate, CodeOfReference)
+							INSERT INTO DeliveryBackOffice.dbo.TransferLog (IdCourier, CourierName, DPI, IdIncidence, IncidenceName, Comentary, GuideSerie, GuideNumber, TokenCreated, DateCreated, TokenUpdate, DateUpdate, CodeOfReference)
 								SELECT
 									@CourierId
 								   ,CONCAT(sr.First_Name, ' ', sr.Last_Name)
@@ -593,7 +580,7 @@ BEGIN
 								   ,NULL
 								   ,NULL
 								   ,@CodeOfReference
-								FROM SenderReceiver sr WITH (NOLOCK)
+								FROM DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
 								WHERE sr.ID = @CourierId
 						
 							SET @Register = 1
@@ -619,20 +606,20 @@ BEGIN
 					IF @IncidenceTypeId <> 0
 					BEGIN
 					
-						SET @StatusOrderId = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Intento de entrega fallida')
+						SET @StatusOrderId = 12; --'Intento de entrega fallida'
 
 						-- Actualizar registro de pieza a último estado 
-						UPDATE DeliveryOrderPiece
+						UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
 						SET StatusOrderId = @StatusOrderId
 						WHERE GuideSerie = @GuideSerie
-						AND GuideNumber = @GuideNumber
+							AND GuideNumber = @GuideNumber
 
 						-- Actualizar registro de guía a último estado 
-						UPDATE DeliveryOrder
+						UPDATE DeliveryBackOffice.dbo.DeliveryOrder
 						SET StatusOrderId = @StatusOrderId
 						   ,NameOfReceiver = @ReceiverName
 						WHERE Guide_Serie = @GuideSerie
-						AND Guide_Number = @GuideNumber		
+							AND Guide_Number = @GuideNumber		
 
 						-- Insertar nuevo estado de guía en tabla histórica
 						INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem])
@@ -654,20 +641,20 @@ BEGIN
 				ELSE IF @Action = 5
 				BEGIN
 				
-					SET @StatusOrderId = (SELECT so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Paquete Extraviado')
+					SET @StatusOrderId = 27; -- 'Paquete Extraviado'
 
 					-- Actualizar registro de pieza a último estado 
-						UPDATE DeliveryOrderPiece
-						SET StatusOrderId = @StatusOrderId
-						WHERE GuideSerie = @GuideSerie
+					UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
+					SET StatusOrderId = @StatusOrderId
+					WHERE GuideSerie = @GuideSerie
 						AND GuideNumber = @GuideNumber
 
 					-- Actualizar registro de guía a último estado 
-					UPDATE DeliveryOrder
+					UPDATE DeliveryBackOffice.dbo.DeliveryOrder
 					SET StatusOrderId = @StatusOrderId
 						,NameOfReceiver = @ReceiverName
 					WHERE Guide_Serie = @GuideSerie
-					AND Guide_Number = @GuideNumber		
+						AND Guide_Number = @GuideNumber		
 
 					-- Insertar nuevo estado de guía en tabla histórica
 					INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem],[Observations])
@@ -697,53 +684,44 @@ BEGIN
 				
 				SET @IncidenceDescription = (SELECT
 						cti.DescriptionIncidence
-					FROM CatTypeIncidence cti WITH (NOLOCK)
+					FROM DeliveryBackOffice.dbo.CatTypeIncidence cti WITH (NOLOCK)
 					WHERE cti.IdIncidenceType = @IncidenceTypeId)
 
-				INSERT INTO IncidenceServices (ServiceManagementId, IncidenceTypeId, DescriptionIncidence, Latitude, Longitude, Accuracy, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated, Guide, Observations)
+				INSERT INTO DeliveryBackOffice.dbo.IncidenceServices (ServiceManagementId, IncidenceTypeId, DescriptionIncidence, Latitude, Longitude, Accuracy, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated, Guide, Observations)
 					VALUES (@ServiceManagementId, @IncidenceTypeId, @IncidenceDescription, NULL, NULL, NULL, 1, @Token, GETDATE(), NULL, NULL, NULL, NULL)
 
-				SET @StatusOrderId = (SELECT
-						css.IdServiceStatus
-					FROM CatServiceStatus css WITH (NOLOCK)
-					WHERE [Name] = 'Incidencia')
+				SET @StatusOrderId = 4; --'Incidencia' 
 
-				SET @CanceledStatusId = (SELECT TOP 1
-						css.IdServiceStatus
-					FROM CatServiceStatus css WITH (NOLOCK)
-					WHERE css.[Name] = 'Cancelado');
+				SET @CanceledStatusId = 9; ---'Cancelado'
 
 				
-				UPDATE ServiceManagement
+				UPDATE DeliveryBackOffice.dbo.ServiceManagement
 				SET ServiceStatusId = @StatusOrderId
 				   ,DateUpdated = GETDATE()
 				   ,TokenUpdated = @Token
 				WHERE IdServiceManagement = @ServiceManagementId
 
-				INSERT INTO EventService (ServiceManagementId, ServiceStatusId, RowStauts, TokenCreated, DateCreated, Observations)
+				INSERT INTO DeliveryBackOffice.dbo.EventService (ServiceManagementId, ServiceStatusId, RowStauts, TokenCreated, DateCreated, Observations)
 					VALUES (@ServiceManagementId, @StatusOrderId, 1, @Token, GETDATE(), @IncidenceDescription)
 
-				IF (@IncidenceTypeId IN (SELECT
-							cti.IdIncidenceType
-						FROM CatTypeIncidence cti WITH (NOLOCK)
-						WHERE cti.NameIncidence IN ('Servicio duplicado', 'Cliente cancelo servicio', 'Recolectada en otra ruta'))
+				IF (@IncidenceTypeId IN (48,49,51,124,125,126,184,185,186) -- 'Servicio duplicado', 'Cliente cancelo servicio', 'Recolectada en otra ruta'
 					)
 				BEGIN
-					UPDATE ServiceManagement
+					UPDATE sm
 					SET ServiceStatusId = @CanceledStatusId
 					   ,DateUpdated = GETDATE()
 					   ,TokenUpdated = @Token
-					FROM ServiceManagement
+					FROM DeliveryBackOffice.dbo.ServiceManagement sm  WITH (NOLOCK)
 					WHERE IdServiceManagement = @ServiceManagementId
 
-					INSERT INTO EventService (ServiceManagementId, ServiceStatusId, RowStauts, TokenCreated, DateCreated, Observations)
+					INSERT INTO DeliveryBackOffice.dbo.EventService (ServiceManagementId, ServiceStatusId, RowStauts, TokenCreated, DateCreated, Observations)
 						VALUES (@ServiceManagementId, @CanceledStatusId, 1, @Token, GETDATE(), @IncidenceDescription)
 
 					--Se cancela la solicitud
 					UPDATE sp
 					SET sp.SchedulePickupStatus = 0
-					FROM SchedulePickup sp
-					INNER JOIN ServiceManagement sm
+					FROM DeliveryBackOffice.dbo.SchedulePickup sp WITH (NOLOCK)
+					INNER JOIN DeliveryBackOffice.dbo.ServiceManagement sm  WITH (NOLOCK)
 						ON sm.IdSchedulePickup = sp.SchedulePickupId
 					WHERE sm.IdServiceManagement = @ServiceManagementId
 				END
@@ -776,14 +754,14 @@ BEGIN
 			   ,@CODAmount = ISNULL(do.Collect_OnDelivery, 0)
 			   ,@IsLastMileReturn = ISNULL(do.IsLastMileReturn, 0)
 			   ,@InsuranceAmount = ISNULL(do.InsuranceAmount, 0)
-			FROM RouteAssigment ra WITH (NOLOCK)
-			INNER JOIN ServiceManagement sm WITH (NOLOCK)
+			FROM DeliveryBackOffice.dbo.RouteAssigment ra WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.ServiceManagement sm WITH (NOLOCK)
 				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment	
-			INNER JOIN ServiceManagementDetail smd WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.ServiceManagementDetail smd WITH (NOLOCK)
 				ON sm.IdServiceManagement = smd.ServiceManagement
-			INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.RoutePreparationDetail rpd WITH (NOLOCK)
 				ON smd.IdServiceManagementDetail = rpd.ServiceManagementDetailId		
-			INNER JOIN DeliveryOrder do WITH (NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
 				ON rpd.Guide_Serie = do.Guide_Serie
 					AND rpd.Guide_Number = do.Guide_Number
 			WHERE ra.DateOfRoute = CAST(GETDATE() AS DATE)
@@ -802,15 +780,15 @@ BEGIN
 				SELECT
 					@IdUnifiedRouteSettlement = urs.IdUnifiedRouteSettlement
 				   ,@UserSettlement = urs.UserSettlement
-				FROM UnifiedRouteSettlement urs WITH (NOLOCK)
+				FROM DeliveryBackOffice.dbo.UnifiedRouteSettlement urs WITH (NOLOCK)
 				WHERE urs.RouteAssignmentId = @RouteAssignmentId
-				AND urs.RowStatus = 1
+					AND urs.RowStatus = 1
 
 				IF @IdUnifiedRouteSettlement IS NULL 
 				BEGIN
 
 					--- No existe la ruta unificada debe ser generado
-					INSERT INTO UnifiedRouteSettlement (RouteAssignmentId, TotalGuidesSettled, TotalPiecesSettled, TotalPiecesMissing, UserSettlement, DateSettlement, SettlementStation, TotalCODGuidesSettled, UserCODSettlement, DateCODSettlement, CODSettlementStation, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+					INSERT INTO DeliveryBackOffice.dbo.UnifiedRouteSettlement (RouteAssignmentId, TotalGuidesSettled, TotalPiecesSettled, TotalPiecesMissing, UserSettlement, DateSettlement, SettlementStation, TotalCODGuidesSettled, UserCODSettlement, DateCODSettlement, CODSettlementStation, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
 						VALUES (@RouteAssignmentId, DEFAULT, DEFAULT, DEFAULT, NULL, NULL, NULL, DEFAULT, NULL, NULL, NULL, DEFAULT, @Token, GETDATE(), NULL, NULL);
 
 					SET @IdUnifiedRouteSettlement = SCOPE_IDENTITY()
@@ -825,7 +803,7 @@ BEGIN
 						-- Verificar si existe la guía en el detalle de la preparación de ruta
 						SELECT
 							@IdUnifiedRouteSettlementDetail = ursd.IdUnifiedRouteSettlementDetail
-						FROM UnifiedRouteSettlementDetail ursd
+						FROM DeliveryBackOffice.dbo.UnifiedRouteSettlementDetail ursd  WITH (NOLOCK)
 						WHERE ursd.UnifiedRouteSettlementId = @IdUnifiedRouteSettlement
 						AND ursd.GuideSerie = @GuideSerie
 						AND ursd.GuideNumber = @GuideNumber
@@ -873,14 +851,14 @@ BEGIN
 							SET @IdUnifiedRouteSettlementDetail = SCOPE_IDENTITY()
 
 							--- Actualizar contadores de guías si no es un proceso abierto 
-							UPDATE UnifiedRouteSettlement
+							UPDATE DeliveryBackOffice.dbo.UnifiedRouteSettlement
 							SET TotalGuidesSettled += 1
 							WHERE IdUnifiedRouteSettlement = @IdUnifiedRouteSettlement
 
 							IF(@Action = 5)
 							BEGIN
 							
-								SET @StatusOrderId = (SELECT TOP 1 so.StatusOrderId FROM StatusOrder so WITH (NOLOCK) WHERE so.OrderDescription = 'Paquete Extraviado')
+								SET @StatusOrderId = 27; --'Paquete Extraviado'
 								DECLARE @UpdatedGuide AS TABLE (
 									IdUpdated INT
 								)
@@ -891,7 +869,7 @@ BEGIN
 									DO.StatusOrderId = @StatusOrderId
 								OUTPUT inserted.Guide_Number INTO @UpdatedGuide(IdUpdated)
 								FROM
-									[DeliveryBackOffice].[dbo].[DeliveryOrder] DO 
+									[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH (NOLOCK)
 								WHERE
 									DO.Guide_Serie = @GuideSerie
 									AND
@@ -931,7 +909,7 @@ BEGIN
 							SELECT
 								dop.NoPiece,
 								dop.IsDry
-							FROM DeliveryOrderPiece dop WITH (NOLOCK)
+							FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
 							WHERE dop.GuideSerie = @GuideSerie
 							AND dop.GuideNumber = @GuideNumber
 							
@@ -946,8 +924,8 @@ BEGIN
 								--- Verificar si existe la pieza de la guía dentro del detalle de la ruta unificada
 								SELECT 
 									@IdUnifiedRouteSettlementDetailPiece = ursdp.IdUnifiedRouteSettlementDetailPiece
-								FROM UnifiedRouteSettlementDetailPiece ursdp
-								INNER JOIN UnifiedRouteSettlementDetail ursd
+								FROM DeliveryBackOffice.dbo.UnifiedRouteSettlementDetailPiece ursdp  WITH (NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.UnifiedRouteSettlementDetail ursd  WITH (NOLOCK)
 									ON ursdp.UnifiedRouteSettlementDetailId = ursd.IdUnifiedRouteSettlementDetail
 								WHERE ursdp.UnifiedRouteSettlementDetailId = @IdUnifiedRouteSettlementDetail
 								AND ursdp.PieceNumber = @GuidePiece
@@ -956,17 +934,17 @@ BEGIN
 								IF @IdUnifiedRouteSettlementDetailPiece IS NULL 
 								BEGIN 
 
-									INSERT INTO UnifiedRouteSettlementDetailPiece (UnifiedRouteSettlementDetailId, PieceNumber, IsDryPiece, RowStatus, TokenCreated, DateCreated)
+									INSERT INTO DeliveryBackOffice.dbo.UnifiedRouteSettlementDetailPiece (UnifiedRouteSettlementDetailId, PieceNumber, IsDryPiece, RowStatus, TokenCreated, DateCreated)
 										VALUES (@IdUnifiedRouteSettlementDetail, @GuidePiece, @GuidePieceIsDry, 1, @Token, GETDATE());
 
 									SET @IdUnifiedRouteSettlementDetailPiece = SCOPE_IDENTITY()
 
 									--- Actualizar contadores de piezas
-									UPDATE UnifiedRouteSettlement
+									UPDATE DeliveryBackOffice.dbo.UnifiedRouteSettlement
 									SET TotalPiecesSettled += 1
 									WHERE IdUnifiedRouteSettlement = @IdUnifiedRouteSettlement
 
-									UPDATE UnifiedRouteSettlementDetail
+									UPDATE DeliveryBackOffice.dbo.UnifiedRouteSettlementDetail
 									SET PiecesSettled += 1
 									WHERE IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
 								END

@@ -44,7 +44,7 @@ BEGIN
     INNER JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] as smt WITH(NOLOCK) on smt.IdPuRouteAssigment = rat.IdRouteAssigment
     INNER JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] as spu WITH(NOLOCK) on spu.SchedulePickupId = smt.IdSchedulePickup
 	left join [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] as dop WITH(NOLOCK) ON spu.SchedulePickupId=dop.IdHeaderRecolection
-	left join[DeliveryBackOffice].[dbo].[DeliveryOrder] AS dor WITH(NOLOCK) ON dor.Guide_Number = dop.GuideNumber AND dor.Guide_Serie = dop.GuideSerie
+	left join[DeliveryBackOffice].[dbo].[DeliveryOrder] AS dor WITH(NOLOCK) ON dor.Guide_Serie = dop.GuideSerie AND dor.Guide_Number = dop.GuideNumber
 	left join [DeliveryBackOffice].[dbo].[Township] twnT WITH(NOLOCK) ON spu.TownshipId = twnT.IdTownship
 	left join [DeliveryBackOffice].[dbo].[CatPaymentTime] PT WITH(NOLOCK) ON PT.TimePlaId = SMT.CatPaymentTimeId
 	WHERE rat.IdRoute=@idRoute AND DateOfRoute = @dateRoute

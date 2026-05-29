@@ -258,8 +258,8 @@ BEGIN
            @TOTALCOD = COUNT(dpd.CODAmountProcess)
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-            ON DOR.Guide_Number = dpd.GuideNumber
-               AND DOR.Guide_Serie = dpd.GuideSerie
+            ON DOR.Guide_Serie = dpd.GuideSerie
+               AND DOR.Guide_Number = dpd.GuideNumber
     WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND AccountId = @IdAccount
           AND NOT EXISTS

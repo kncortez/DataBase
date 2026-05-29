@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[AccountingClosuresHeader] (
+CREATE TABLE [dbo].[AccountingClosuresHeader] (
     [IdAccountingClosuresHeader]           INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UserId]                               BIGINT          NOT NULL,
     [ClosurerPOS]                          NVARCHAR (50)   NULL,
@@ -30,11 +30,21 @@
     [TotalAmountFacturaCardDeclared]       DECIMAL (18, 5) CONSTRAINT [ACH_TotalAmountFacturaCardDeclared] DEFAULT ((0)) NOT NULL,
     [InvoiceAmountCOD]                     INT             CONSTRAINT [ACH_InvoiceAmountCOD] DEFAULT ((0)) NOT NULL,
     [AccountingClosuresHeaderVisitPointId] INT             CONSTRAINT [ACH_AccountClosuresHeaderVisitPointId] DEFAULT (NULL) NULL,
+    [TotalAmountZigi]                      DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [TotalAmountZigiDeclared]              DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [TotalAmountCODZigi]                   DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [TotalAmountCODZigiDeclared]           DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [TotalAmountFacturaZigi]               DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [InvoiceAmountZigi]                    INT             DEFAULT ((0)) NOT NULL,
+    [TotalAmountFacturaZigiDeclared]       DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [InvoiceAmountFacturaZigi]             INT             DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_AccountingClosuresHeader] PRIMARY KEY CLUSTERED ([IdAccountingClosuresHeader] ASC),
     CONSTRAINT [FK_AccountingClosuresHeader_AccountingClosuresHeaderVisitPoint] FOREIGN KEY ([AccountingClosuresHeaderVisitPointId]) REFERENCES [dbo].[AccountingClosuresHeaderVisitPoint] ([IdAccountingClosuresHeaderVisitPoint]),
     CONSTRAINT [FK_AccountingClosuresHeader_User] FOREIGN KEY ([UserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser]),
     CONSTRAINT [FK_AccountingClosuresHeader_VisitPointClient] FOREIGN KEY ([VisitPoint]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
@@ -170,5 +180,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del cier
 
 
 GO
+CREATE NONCLUSTERED INDEX [IDX_VisitPoint_AccountingClosuresHeaderVisitPointId_DateCreated]
+    ON [dbo].[AccountingClosuresHeader]([VisitPoint] ASC, [AccountingClosuresHeaderVisitPointId] ASC, [DateCreated] ASC);
 
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountingClosuresHeaderVisitPointId]
+    ON [dbo].[AccountingClosuresHeader]([AccountingClosuresHeaderVisitPointId] ASC);
 

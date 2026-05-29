@@ -153,12 +153,7 @@ BEGIN
 			[LC].[CatRouteId] = [CR].[IdRoute]
 	INNER JOIN
 		[DeliveryBackOffice].[dbo].[HubLogisticByUser] HLBU  WITH(NOLOCK) 
-		ON
-			[LC].[HubOriginId] = [HLBU].[HubLogisticId]
-			AND
-			[HLBU].[UserId] = @RegisterUserByInternal
-			AND
-			[HLBU].[RowStatus] = 1
+		ON [LC].[HubOriginId] = [HLBU].[HubLogisticId]
 	LEFT JOIN 
 		[DeliveryBackOffice].[dbo].[CatVehicle] CV WITH (NOLOCK)
 		ON 
@@ -193,9 +188,10 @@ BEGIN
 			[LRS].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
 	WHERE 
 		CONVERT(DATE, LRP.DateCreated) = @DateFilter
-		AND 
-		LRPCD.RowStatus = 1
-		  AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)= @IdCountry
+		AND LRPCD.RowStatus = 1
+		AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)= @IdCountry
+        AND [HLBU].[UserId] = @RegisterUserByInternal
+		AND [HLBU].[RowStatus] = 1
 	GROUP BY
 		LRP.IdLinehaulRoutePreparation, 
 		[LRP].[StationDispatchedId],
@@ -361,10 +357,6 @@ BEGIN
 			[LC].[HubDestinyId] = [HLBU].[HubLogisticId]
 			AND
 			[LRPC].[HubDestinyId] = [HLBU].[HubLogisticId]
-			AND
-			[HLBU].[UserId] = @RegisterUserByInternal
-			AND
-			[HLBU].[RowStatus] = 1
 	INNER JOIN 
 		[DeliveryBackOffice].[dbo].[Container] CTN WITH (NOLOCK)
 		ON 
@@ -383,9 +375,10 @@ BEGIN
 			[LRS].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
 	WHERE 
 		CONVERT(DATE, LRP.DateCreated) = @DateFilter
-		AND 
-		LRPCD.RowStatus = 1
+		AND LRPCD.RowStatus = 1
 		AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)= @IdCountry
+        AND [HLBU].[UserId] = @RegisterUserByInternal
+		AND [HLBU].[RowStatus] = 1
 	GROUP BY
 		LRP.IdLinehaulRoutePreparation, 
 		[LRP].[StationDispatchedId],

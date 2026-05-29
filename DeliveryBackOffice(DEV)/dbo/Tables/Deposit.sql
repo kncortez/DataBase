@@ -1,38 +1,40 @@
-﻿CREATE TABLE [dbo].[Deposit]
-(
-    [IdDeposit]             BIGINT          IDENTITY(1,1) PRIMARY KEY,
-    [TransactionNumber]     BIGINT          NOT NULL,
-    [TransactionDate]       DATETIME        NOT NULL,
-    [TransactionCode]       INT             NOT NULL,
-    [Reference]             NVARCHAR(15)    NOT NULL,
-    [Amount]                DECIMAL(19,4)   NOT NULL,
-    [Balance]               DECIMAL(19,4)   NOT NULL,
-    [UserIdDeposit]         NVARCHAR(50)    NOT NULL,
-    [UserNameDeposit]       NVARCHAR(50)    NOT NULL,
-    [UserNickNameDeposit]   NVARCHAR(50)    NOT NULL,
-    [UserDocumentNumber]    NVARCHAR(20)    NOT NULL,
-    [CurrencyISO]           NVARCHAR(10)    NOT NULL,
-    [CurrencyIdExternal]    INT             NOT NULL, 
-    [ClientIdExternal]      BIGINT          NOT NULL,
-    [ClientCardCode]        NVARCHAR(15)    NOT NULL,
-    [ClientNameExternal]    NVARCHAR(500)   NOT NULL,
-    [VisitPointIdExternal]  BIGINT          NOT NULL,
-    [VisitPointName]        NVARCHAR(100)   NOT NULL,
-    [BankIdExternal]        INT             NOT NULL,     
-    [BankCardCode]          NVARCHAR(50)    NOT NULL,     
-    [BankNameExternal]      NVARCHAR(50)    NOT NULL,
-    [BankAccountNumber]     NVARCHAR(50)    NOT NULL,
-    [BankAccountIsMak]      BIT             NOT NULL,
-    [BankAccountIsIBAN]     BIT             NOT NULL,
-    [BankAccountIsSWIFT]    BIT             NOT NULL,
-    [TerminalId]            INT             NOT NULL,
-    [TerminalSerie]         NVARCHAR(50)    NOT NULL,
-    [RowStatus]             BIT             NOT NULL,
-    [TokenCreated]          NVARCHAR(100)   NOT NULL,
-    [DateCreated]           DATETIME        NOT NULL,
-    [TokenUpdated]          NVARCHAR(100)   NULL,
-    [DateUpdated]           DATETIME        NULL
+﻿CREATE TABLE [dbo].[Deposit] (
+    [IdDeposit]            BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [TransactionNumber]    BIGINT          NOT NULL,
+    [TransactionDate]      DATETIME        NOT NULL,
+    [TransactionCode]      INT             NOT NULL,
+    [Reference]            NVARCHAR (15)   NOT NULL,
+    [Amount]               DECIMAL (19, 4) NOT NULL,
+    [Balance]              DECIMAL (19, 4) NOT NULL,
+    [UserIdDeposit]        NVARCHAR (50)   NOT NULL,
+    [UserNameDeposit]      NVARCHAR (50)   NOT NULL,
+    [UserNickNameDeposit]  NVARCHAR (50)   NOT NULL,
+    [UserDocumentNumber]   NVARCHAR (20)   NOT NULL,
+    [CurrencyISO]          NVARCHAR (10)   NOT NULL,
+    [CurrencyIdExternal]   INT             NOT NULL,
+    [ClientIdExternal]     BIGINT          NOT NULL,
+    [ClientCardCode]       NVARCHAR (15)   NOT NULL,
+    [ClientNameExternal]   NVARCHAR (500)  NOT NULL,
+    [VisitPointIdExternal] BIGINT          NOT NULL,
+    [VisitPointName]       NVARCHAR (100)  NOT NULL,
+    [BankIdExternal]       INT             NOT NULL,
+    [BankCardCode]         NVARCHAR (50)   NOT NULL,
+    [BankNameExternal]     NVARCHAR (50)   NOT NULL,
+    [BankAccountNumber]    NVARCHAR (50)   NOT NULL,
+    [BankAccountIsMak]     BIT             NOT NULL,
+    [BankAccountIsIBAN]    BIT             NOT NULL,
+    [BankAccountIsSWIFT]   BIT             NOT NULL,
+    [TerminalId]           INT             NOT NULL,
+    [TerminalSerie]        NVARCHAR (50)   NOT NULL,
+    [RowStatus]            BIT             NOT NULL,
+    [TokenCreated]         NVARCHAR (100)  NOT NULL,
+    [DateCreated]          DATETIME        NOT NULL,
+    [TokenUpdated]         NVARCHAR (100)  NULL,
+    [DateUpdated]          DATETIME        NULL,
+    PRIMARY KEY CLUSTERED ([IdDeposit] ASC)
 );
+
+
 
 
 GO
@@ -42,10 +44,10 @@ GO
 CREATE INDEX IX_Deposit_TraCode_TerSerie_TraDate ON dbo.Deposit (TransactionCode, TerminalSerie, TransactionDate);
 
 GO
-CREATE INDEX IX_Deposit_TerminalSerie ON dbo.Deposit (TerminalSerie);
+
 
 GO
-CREATE INDEX IX_Deposit_TransactionDate ON dbo.Deposit(TransactionDate);
+
 
 GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Registro de depósitos monetarios recibidos por Efectibox.',

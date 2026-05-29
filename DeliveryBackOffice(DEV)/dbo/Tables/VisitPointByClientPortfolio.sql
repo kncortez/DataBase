@@ -30,14 +30,15 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_VisitPointByClientPortfolio_LoadList]
     ON [dbo].[VisitPointByClientPortfolio]([VisitPointId] ASC, [RowStatus] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_VisitPointByClientPortfolioLS]
-    ON [dbo].[VisitPointByClientPortfolio]([LastName] ASC, [SecondLastName] ASC);
+
 
 
 GO
@@ -46,13 +47,11 @@ CREATE NONCLUSTERED INDEX [IX_VisitPointByClientPortfolioFSC]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_VisitPointByClientPortfolio]
-    ON [dbo].[VisitPointByClientPortfolio]([Email] ASC, [Phone] ASC);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_IdVisitPointByClientPortafolio]
-    ON [dbo].[VisitPointByClientPortfolio]([IdVisitPointByClientPortfolio] ASC);
+
 
 
 GO
@@ -68,8 +67,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Contacto de
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Phone]
-    ON [dbo].[VisitPointByClientPortfolio]([Phone] ASC);
+
 
 
 GO

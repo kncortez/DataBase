@@ -4,6 +4,18 @@
 -- Description:	<Sp para anular una guia de Club Forza cuando el carrito ya esta cerrado>
 -- =============================================
 
+-- =============================================
+-- Author:		<Carlos Valdes>
+-- Create date: <2025-08-22>
+-- Description:	<Se agregaron los estados de incidencias, para casos especiales, se deben mantener comentados>
+-- =============================================
+
+-- =============================================
+-- Author:		<Carlos Valdes>
+-- Create date: <2025-10-14>
+-- Description:	<Se agregron estados, para casos especiales, se deben mantener comentados>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[SupportCancelGuideClubForza]
     -- Add the parameters for the stored procedure here
 
@@ -20,6 +32,13 @@ BEGIN
         DECLARE @GEN_STATUS_ORDER_ID AS INT; -- StatusOrder
         DECLARE @SOL_STATUS_ORDER_ID AS INT; -- StatusOrder
         DECLARE @NULL_STATUS_ORDER_ID AS INT; -- StatusOrder
+        --DECLARE @INR_STATUS_ORDER_ID AS INT; -- StatusOrderTemp
+        --DECLARE @INV_STATUS_ORDER_ID AS INT; -- StatusOrderTemp
+        --DECLARE @ARR_STATUS_ORDER_ID AS INT; -- StatusOrderTemp
+        --DECLARE @REC_STATUS_ORDER_ID AS INT; -- StatusOrderTemp
+        --DECLARE @REP_STATUS_ORDER_ID AS INT; -- StatusOrderTemp
+        --DECLARE @TRA_STATUS_ORDER_ID AS INT; -- StatusOrderTemp
+        --DECLARE @PRO_STATUS_ORDER_ID AS INT; -- StatusOrderTemp
         DECLARE @ActualGuideStatus AS INT;
 
 
@@ -29,23 +48,75 @@ BEGIN
         SET @GEN_STATUS_ORDER_ID =
         (
             SELECT [SO].[StatusOrderId]
-            FROM [dbo].[StatusOrder] SO
+            FROM [dbo].[StatusOrder] SO WITH(NOLOCK)
             WHERE [SO].[OrderDescription] = 'Generado'
         );
 
         SET @SOL_STATUS_ORDER_ID =
         (
             SELECT [SO].[StatusOrderId]
-            FROM [dbo].[StatusOrder] SO
+            FROM [dbo].[StatusOrder] SO WITH(NOLOCK)
             WHERE [SO].[OrderDescription] = 'Solicitado'
         );
+
+        /*BLOQUES TEMPORALES
+            SET @INR_STATUS_ORDER_ID =
+        (
+            SELECT [SO].[StatusOrderId]
+            FROM [dbo].[StatusOrder] SO
+            WHERE [SO].[OrderDescription] = 'Incidencia en ruta'
+        );
+
+        SET @INV_STATUS_ORDER_ID =
+        (
+            SELECT [SO].[StatusOrderId]
+            FROM [dbo].[StatusOrder] SO
+            WHERE [SO].[OrderDescription] = 'Incidencia Validada'
+        );
+
+          SET @ARR_STATUS_ORDER_ID =
+        (
+            SELECT [SO].[StatusOrderId]
+            FROM [dbo].[StatusOrder] SO
+            WHERE [SO].[OrderDescription] = 'En Inventario'
+        );
+
+           SET @REC_STATUS_ORDER_ID =
+        (
+            SELECT [SO].[StatusOrderId]
+            FROM [dbo].[StatusOrder] SO
+            WHERE [SO].[OrderDescription] = 'Recolectado'
+        );
+
+           SET @TRA_STATUS_ORDER_ID =
+        (
+            SELECT [SO].[StatusOrderId]
+            FROM [dbo].[StatusOrder] SO
+            WHERE [SO].[OrderDescription] = 'En preparación de traslado'
+        );
+
+           SET @REP_STATUS_ORDER_ID =
+        (
+            SELECT [SO].[StatusOrderId]
+            FROM [dbo].[StatusOrder] SO
+            WHERE [SO].[OrderDescription] = 'Paquete Retornado para Reproceso'
+        );*/
+
+        --   SET @PRO_STATUS_ORDER_ID =
+        --(
+        --    SELECT [SO].[StatusOrderId]
+        --    FROM [dbo].[StatusOrder] SO
+        --    WHERE [SO].[OrderDescription] = 'Programado para entrega'
+        --);
 
         SET @NULL_STATUS_ORDER_ID =
         (
             SELECT [SO].[StatusOrderId]
-            FROM [dbo].[StatusOrder] SO
+            FROM [dbo].[StatusOrder] SO WITH(NOLOCK)
             WHERE [SO].[OrderDescription] = 'Anulado'
         );
+
+    
 
         SELECT @ActualGuideStatus = DO.StatusOrderId
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
@@ -54,7 +125,7 @@ BEGIN
 
         BEGIN TRANSACTION;
 
-        IF (@ActualGuideStatus IN ( @GEN_STATUS_ORDER_ID, @SOL_STATUS_ORDER_ID ))
+        IF (@ActualGuideStatus IN ( @GEN_STATUS_ORDER_ID, @SOL_STATUS_ORDER_ID /*,@PRO_STATUS_ORDER_ID,@ARR_STATUS_ORDER_ID,@INR_STATUS_ORDER_ID, @INV_STATUS_ORDER_ID,@REP_STATUS_ORDER_ID,@TRA_STATUS_ORDER_ID,@REC_STATUS_ORDER_ID*/ ))
         BEGIN
 
             UPDATE [dbo].[DeliveryOrder]
@@ -80,7 +151,7 @@ BEGIN
             SET @TR_ID =
             (
                 SELECT [MSL].[SubscriptionId]
-                FROM [dbo].[MembershipSubscriptionLog] MSL
+                FROM [dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
                 WHERE [MSL].[LogGuideSerie] = @GuideSerie
                       AND [MSL].[LogGuideNumber] = @GuideNumber
                       AND [MSL].[RowStatus] = 1
@@ -109,7 +180,7 @@ BEGIN
             SET @TR_ID =
             (
                 SELECT [MSL].[MembershipId]
-                FROM [dbo].[MembershipSubscriptionLog] MSL
+                FROM [dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
                 WHERE [MSL].[LogGuideSerie] = @GuideSerie
                       AND [MSL].[LogGuideNumber] = @GuideNumber
                       AND [MSL].[RowStatus] = 1

@@ -1,24 +1,19 @@
-﻿-- =============================================
--- Author:		<Alberto Ixchop>
--- Create date: <2022-10-27>
--- Description:	<Genera los datos necesarios para poder realizar una reimpresión de guía>
--- =============================================
--- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2022-12-20>
--- Description:	<Agregar Campos de Piezas Frías y piezas Secas>
--- =============================================
--- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2024-10-23>
--- Description:	<Integración nuevo formato 4X4>
--- =============================================
--- Modified:    <Oscar, Rodriguez>
--- Create date: <2025-04-21>
--- Description: <Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion>
--- =============================================
+﻿/* =================================================
+   SP:        sps_getReprintMultipleGuides
+   Propósito: Se Crea SP para generar los datos necesarios para poder realizar una reimpresión de guía
+   Autor:     Alberto Ixchop
+   Historia:  ---
+   Fecha:     2022-10-27
+
+=== CHANGELOG ============================
+
+2022-12-20 | Historia/épica: ---         | Autor: Edelman Vásquez | Agregar Campos de Piezas Frías y piezas Secas
+2024-10-23 | Historia/épica: ---         | Autor: Edelman Vásquez | Integración nuevo formato 4X4
+2025-04-21 | Historia/épica: ---         | Autor: Oscar Rodriguez | Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion
+2026-04-08 | Historia/épica: FDAPI-6026  | Autor: Mario Herrarte  | Se valida el estado Retenido para el campo priority
+
+=========================================== */
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
-	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY,
 	@CountryThatConsults VARCHAR(2)= 'GT'
 AS
@@ -30,9 +25,8 @@ BEGIN
                        [KOVPC].[IdKindOfVPClient]
                 FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC WITH (NOLOCK)
                 WHERE
-                    --[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
-                    [KOVPC].[KindOfVPName] = 'Concesionario' --COLLATE Latin1_General_CI_AI
-                    AND ISNULL(IdCountry, 'GT') = @CountryThatConsults
+                    [KOVPC].[KindOfVPName] = 'Concesionario' 
+                    AND IdCountry = @CountryThatConsults
             );
     DECLARE @ExpressVisitPointTypeId INT =
             (
@@ -40,9 +34,8 @@ BEGIN
                        [KOVPC].[IdKindOfVPClient]
                 FROM [DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC WITH (NOLOCK)
                 WHERE
-                    --[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
-                    [KOVPC].[KindOfVPName] = 'Express Center' -- COLLATE Latin1_General_CI_AI 
-                    AND ISNULL(IdCountry, 'GT') = @CountryThatConsults
+                    [KOVPC].[KindOfVPName] = 'Express Center'  
+                    AND IdCountry = @CountryThatConsults
             );
     DECLARE @IndividualWebSys INT =
             (
@@ -50,8 +43,8 @@ BEGIN
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
                 WHERE
-                    --[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
-                    [CS].[SysNameSystem] = 'Hermes Web' -- COLLATE Latin1_General_CI_AI
+                    --[CS].[SysNameSystem] = 'Hermes Web'   
+                    [CS].[SysNameSystem] = 'Hermes Web' 
             );
     DECLARE @ExpressWebSys INT =
             (
@@ -59,8 +52,8 @@ BEGIN
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
                 WHERE
-                    --[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
-                    [CS].[SysNameSystem] = 'Hermes Web-ExpressCenter' --COLLATE Latin1_General_CI_AI 
+                    --[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'   
+                    [CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  
             );
     DECLARE @CorporateWebSys INT =
             (
@@ -68,8 +61,8 @@ BEGIN
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
                 WHERE
-                    --[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
-                    [CS].[SysNameSystem] = 'Hermes Web-Corporativo' -- COLLATE Latin1_General_CI_AI 
+                    --[CS].[SysNameSystem] = 'Hermes Web-Corporativo'   
+                    [CS].[SysNameSystem] = 'Hermes Web-Corporativo'  
             );
     DECLARE @ParserSys INT =
             (
@@ -77,8 +70,8 @@ BEGIN
                        [CS].[SysIdSystem]
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
                 WHERE
-                    --[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
-                    [CS].[SysNameSystem] = 'Parser' --COLLATE Latin1_General_CI_AI 
+                    --[CS].[SysNameSystem] = 'Parser'   
+                    [CS].[SysNameSystem] = 'Parser'  
             );
     DECLARE @TMPPICES TABLE
     (
@@ -99,10 +92,10 @@ BEGIN
          , GL.Guide_Number
          , ISNULL(SUM(PieceWeight), 0)
          , ISNULL(SUM(Amount), 0)
-    FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
         INNER JOIN @GUIDESLIST                         GL
-            ON DOP.GuideNumber = GL.Guide_Number
-               AND DOP.GuideSerie = GL.Guide_Serie
+            ON DOP.GuideSerie = GL.Guide_Serie
+            AND DOP.GuideNumber = GL.Guide_Number
     GROUP BY GL.Guide_Serie
            , GL.Guide_Number;
 
@@ -110,7 +103,7 @@ BEGIN
     DECLARE @DaysToExpiration INT =
             (
                 SELECT ISNULL(CAST(conf.Value AS INT), 45) DaysToExpiration
-                FROM DeliveryBackOffice.dbo.ConfigParams conf WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[ConfigParams] conf WITH (NOLOCK)
                 WHERE conf.Name = 'DaysToExpiration'
                       AND Status = 1
             );
@@ -121,9 +114,9 @@ BEGIN
     DECLARE @IDCatBusinessB2B INT =
             (
                 SELECT IdBusinessSegment
-                FROM dbo.CatBusinessSegment
+                FROM [DeliveryBackOffice].[dbo].[CatBusinessSegment]
                 WHERE BusinessSegmentName = 'B2B'
-                      AND ISNULL(IdCountry, 'GT') = @CountryThatConsults
+                      AND IdCountry = @CountryThatConsults
             );
 
 
@@ -145,7 +138,7 @@ BEGIN
          , dop.NoPiece                              'NoPiece'
          , dop.GuideSerie                           'GuideSerie'
          , dop.GuideNumber                          'GuideNumber'
-    FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] dop WITH (NOLOCK)
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH (NOLOCK)
         INNER JOIN @GUIDESLIST                         GL
             ON GL.Guide_Serie = dop.GuideSerie
                AND GL.Guide_Number = dop.GuideNumber;
@@ -156,13 +149,12 @@ BEGIN
       , cc.CodeISO                               AS 'Currency'
       , CONVERT(VARCHAR, ISNULL(Description, 0)) 'Description'
       , CONVERT(VARCHAR, ISNULL(Amount, 0))      'Price'
-    FROM DeliveryBackOffice.[dbo].[Cost]                    ct WITH (NOLOCK)
-        LEFT JOIN DeliveryBackOffice.dbo.BreakdownOfPayment bdp WITH (NOLOCK)
+    FROM [DeliveryBackOffice].[dbo].[Cost]                    ct WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].BreakdownOfPayment bdp WITH (NOLOCK)
             ON bdp.IdCost = ct.IdCost
-        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD     cc WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD     cc WITH (NOLOCK)
             ON cc.IdCatCurrencyCOD = ct.ShippingCurrency
         INNER JOIN @GUIDESLIST                              GL
-            -- ON ProductNumber=CONCAT(GL.Guide_Serie, GL.Guide_Number)
             ON ct.GuideSerie = GL.Guide_Serie
                AND ct.GuideNumber = GL.Guide_Number;
 
@@ -376,7 +368,7 @@ BEGIN
          --COALESCE(@integrationCost, '') 'Integration',
          , COALESCE(
                        IIF(ISNULL([dev].[IsLastMileReturn], 0) = 1
-                        , 'D'
+                        , IIF([dev].[StatusOrderId] = 28, 'R', 'D') 
                         , IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B, 'B', 'E'))
                      , ''
                    )                                                                                'Priority'
@@ -474,60 +466,63 @@ BEGIN
            )                                                                                        AS 'Route_Code'
          , ISNULL(DPF.dpf_SAPcardCode, '')                                                          AS 'CardCode'
          , dev.IndicationsToSendDestination
-    FROM DeliveryBackOffice.dbo.DeliveryOrder                   dev WITH (NOLOCK)
-        LEFT JOIN DeliveryBackOffice.dbo.Cost                   cst WITH (NOLOCK)
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                   dev WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]                   cst WITH (NOLOCK)
             ON cst.GuideSerie = dev.Guide_Serie
                AND cst.GuideNumber = dev.Guide_Number
-        LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD         ccy WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]         ccy WITH (NOLOCK)
             ON cst.ShippingCurrency = ccy.IdCatCurrencyCOD
-        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient      vp WITH (NOLOCK)
+        INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]      vp WITH (NOLOCK)
             ON vp.CodeOfReference = dev.Sender_ID
         LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori WITH (NOLOCK)
             ON [vpori].[CodeOfReference] = [dev].[OriginSenderId]
-        LEFT JOIN DeliveryBackOffice.dbo.Customer               ctm WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]               ctm WITH (NOLOCK)
             ON ctm.IdCustomer = dev.IdCustomer
         OUTER APPLY
     (
         SELECT TOP 1
                acc1.AccIdAccount
-        FROM DeliveryBackOffice.dbo.Account acc1 WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].[Account] acc1 WITH (NOLOCK)
         WHERE acc1.IdCustomer = ctm.IdCustomer
     )                                                           acc
-        LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount          rbu WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount]          rbu WITH (NOLOCK)
             ON rbu.RuaIdAccount = acc.AccIdAccount
-        LEFT JOIN DeliveryBackOffice.dbo.RegisterUser                rgu WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[RegisterUser]                rgu WITH (NOLOCK)
             ON rgu.UsrIdUser = rbu.RuaIdUser
-        LEFT JOIN DeliveryBackOffice.dbo.Person                      prs WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Person]                      prs WITH (NOLOCK)
             ON prs.PerIdPerson = rgu.UsrIdPerson
-        LEFT JOIN DeliveryBackOffice.dbo.Township                    tws WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                    tws WITH (NOLOCK)
             ON tws.IdTownship = dev.SenderIdTownship
-        LEFT JOIN DeliveryBackOffice.dbo.Township                    tws2 WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                    tws2 WITH (NOLOCK)
             ON tws2.IdTownship = dev.ReceiverIdTownship
-        LEFT JOIN DeliveryBackOffice.dbo.Province                    p WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Province]                    p WITH (NOLOCK)
             ON p.IdProvince = tws.IdProvince
-        LEFT JOIN DeliveryBackOffice.dbo.Province                    p2 WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Province]                    p2 WITH (NOLOCK)
             ON p2.IdProvince = tws2.IdProvince
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCustomerBankAccount] dcba WITH (NOLOCK)
             ON dcba.DCBA_Id = dev.DCBA_ID
-        LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions          cdo WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatDeliveryOptions]          cdo WITH (NOLOCK)
             ON dev.IdDeliveryOption = cdo.IdDeliveryOption
-        LEFT JOIN [dbo].[DeliveryOrderPiece]                         DOP WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]                         DOP WITH (NOLOCK)
             ON DOP.GuideSerie = dev.Guide_Serie
                AND DOP.GuideNumber = dev.Guide_Number
-        LEFT JOIN [dbo].[del_ParametrosFactura]                      DPF WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[del_ParametrosFactura]                      DPF WITH (NOLOCK)
             ON dev.[OriginSenderId] = DPF.dpf_VpCodeOfReference
-        LEFT JOIN DumpServiceCoverage                                DSC WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[DumpServiceCoverage]                                DSC WITH (NOLOCK)
             ON DSC.IdSettlement = dev.ReceiverIdSettlement
-        LEFT JOIN DumpServiceCoverage                                DSC2 WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[DumpServiceCoverage]                                DSC2 WITH (NOLOCK)
             ON DSC2.IdSettlement = dev.SenderIdSettlement
-        LEFT JOIN dbo.RatebyCustomer                                 RC WITH (NOLOCK)
-            ON dev.IdCustomer = RC.RbcIdCustomer
+       OUTER APPLY
+       (
+       SELECT TOP 1 * FROM [DeliveryBackOffice].[dbo].[RatebyCustomer]                                 RC WITH (NOLOCK)
+            WHERE dev.IdCustomer = RC.RbcIdCustomer
                AND RbcRowStatus = 1
                AND
                (
                    dev.Sender_ID = RC.RbcCodeOfReference
                    OR RC.RbcCodeOfReference IS NULL
                )
+       )RC
         LEFT JOIN dbo.RateHeader                                     RH WITH (NOLOCK)
             ON RC.RbcIdRate = RH.RheId
         OUTER APPLY
@@ -545,13 +540,13 @@ BEGIN
         SELECT TOP 1
                cov2.RouteCode
              , cov2.RowStatus
-        FROM DeliveryBackOffice.dbo.DumpServiceCoverage cov2 WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage] cov2 WITH (NOLOCK)
         WHERE cov2.HeaderCode = tws2.HeaderCode
     ) cov
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
             ON DOPD.GuideSerie = dev.Guide_Serie
                AND DOPD.GuideNumber = dev.Guide_Number
-        LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime             CPT WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatPaymentTime]             CPT WITH (NOLOCK)
             ON DOPD.TimePlaId = CPT.TimePlaId
                AND cov.RowStatus = 1
         OUTER APPLY
@@ -582,13 +577,13 @@ BEGIN
                    ELSE
                        ''
                END 'ExpressName'
-        FROM DeliveryBackOffice.dbo.DeliveryOrder             do WITH (NOLOCK)
-            LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]             do WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
                 ON vpc.CodeOfReference = do.OriginSenderId
-            LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc2 WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc2 WITH (NOLOCK)
                 ON vpc2.CodeOfReference = do.OriginSenderId
-        WHERE Guide_Number = dev.Guide_Number
-              AND Guide_Serie = dev.Guide_Serie
+        WHERE Guide_Serie = dev.Guide_Serie
+              AND Guide_Number = dev.Guide_Number 
     ) AUX2
         OUTER APPLY
     (
@@ -695,8 +690,8 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[Township] Twn WITH (NOLOCK)
                 ON [Twn].[IdProvince] = [Prv].[IdProvince]
         WHERE
-            --[dev].[Sender_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
-            [dev].[Sender_Department] = [Prv].[ProvinceName] --COLLATE Latin1_General_CI_AI 
+            --[dev].[Sender_Department] = [Prv].[ProvinceName]   
+            [dev].[Sender_Department] = [Prv].[ProvinceName]  
             AND [Twn].[HeaderCode] = CONCAT([Prv].[LocalCode], '01')
     )                        AlterOrigin
         OUTER APPLY
@@ -707,8 +702,8 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[Township] Twn WITH (NOLOCK)
                 ON [Twn].[IdProvince] = [Prv].[IdProvince]
         WHERE
-            --[dev].[Receiver_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
-            [dev].[Receiver_Department] = [Prv].[ProvinceName] -- COLLATE Latin1_General_CI_AI 
+            --[dev].[Receiver_Department] = [Prv].[ProvinceName]   
+            [dev].[Receiver_Department] = [Prv].[ProvinceName]  
             AND [Twn].[HeaderCode] = CONCAT([Prv].[LocalCode], '01')
     ) AlterDestiny
         -- ADICIONES TSE
@@ -731,13 +726,4 @@ BEGIN
               AND [TSERPH].[RowStatus] = 1
     ) [TSEGuide];
 -- FIN ADICIONES
-
---WHERE dev.Guide_Number = @Guide_Number
-
-
-
-
-
-
-
 END;

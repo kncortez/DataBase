@@ -48,6 +48,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la estación donde se realizo el despacho', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderBySettlement', @level2type = N'COLUMN', @level2name = N'DispatchedStationId';
 
@@ -74,8 +76,7 @@ CREATE NONCLUSTERED INDEX [NonClusteredIndex-20211209-170157]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Date_Received_Date_Dispatched]
-    ON [dbo].[DeliveryOrderBySettlement]([Date_Received] ASC, [Date_Dispatched] ASC);
+
 
 
 GO
@@ -84,9 +85,7 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderBySettlement_ID_Courier]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Date_Dispatched]
-    ON [dbo].[DeliveryOrderBySettlement]([Date_Dispatched] ASC)
-    INCLUDE([DispatchedStationId]);
+
 
 
 GO
@@ -103,4 +102,10 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_CatRouteId_Date_Dispatched_INCLUDE]
     ON [dbo].[DeliveryOrderBySettlement]([CatRouteId] ASC, [Date_Dispatched] ASC)
     INCLUDE([User_Received], [Date_Received]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Date_Dispatched_Consolidado]
+    ON [dbo].[DeliveryOrderBySettlement]([Date_Dispatched] ASC)
+    INCLUDE([Guides_Dispatched], [ID_Courier], [Route_Dispatched], [Route_Received], [CatRouteId], [DispatchedStationId]);
 

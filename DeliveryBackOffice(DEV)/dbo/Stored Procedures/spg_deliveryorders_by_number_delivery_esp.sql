@@ -71,11 +71,8 @@ SET NOCOUNT ON;
 	   ,do.Contact_Instructions
 	   ,ISNULL(do.Receiver_CUI, '') Receiver_CUI
 	   ,ISNULL(do.Receiver_Alternant_CUI, '') Receiver_Alternant_CUI
-	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH (NOLOCK)
-	WHERE do.Guide_Serie = @_serie
-	AND do.Guide_Number IN (SELECT
-			ItemNumber
-		FROM #listGuides)
-	AND do.Guide_Number IS NOT NULL
+	FROM #listGuides lg
+	INNER JOIN [DeliveryBackOffice].[dbo].DeliveryOrder do WITH (NOLOCK) ON do.Guide_Serie = @_serie AND do.Guide_Number = lg.ItemNumber
+	WHERE do.Guide_Number IS NOT NULL
 	ORDER BY do.Guide_Number ASC
 END

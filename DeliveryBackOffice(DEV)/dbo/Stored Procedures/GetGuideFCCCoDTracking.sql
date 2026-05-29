@@ -13,8 +13,8 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	 DECLARE @IdCountry NVARCHAR(2)=(SELECT SenderCountryId FROM dbo.DeliveryOrder
-                                                           WHERE Guide_Number = @GuideNumber);
+	 DECLARE @IdCountry NVARCHAR(2)=(SELECT SenderCountryId FROM dbo.DeliveryOrder with (nolock)
+                                                           WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber);
 	DECLARE @PHONE NVARCHAR(25);   
 	DECLARE @SoportMail NVARCHAR(50);
 	
@@ -52,9 +52,9 @@ BEGIN
 	FROM
 		[DeliveryBackOffice].[dbo].[BatchDetailCOD] BDCOD WITH(NOLOCK)
 	WHERE
-		BDCOD.GuideNumber = @GuideNumber
-		AND
 		BDCOD.GuideSerie = @GuideSerie
+		AND
+		BDCOD.GuideNumber = @GuideNumber
 		AND
 		BDCOD.AuthorizationDate IS NOT NULL
 	), 0)
@@ -96,9 +96,9 @@ BEGIN
 					ON
 						ISNULL(DO.IdCustomer, VPC.CustomerID) = Cu.IdCustomer
 			WHERE
-				BDCOD.GuideNumber = @GuideNumber
-				AND
 				BDCOD.GuideSerie = @GuideSerie
+				AND
+				BDCOD.GuideNumber = @GuideNumber
 				AND
 				BDCOD.AuthorizationDate IS NOT NULL
 			ORDER BY

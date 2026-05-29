@@ -43,11 +43,11 @@ DECLARE @IdUser BIGINT = (SELECT RuaIdUser FROM DeliveryBackOffice.dbo.RolByUser
                                 JOIN DeliveryBackOffice.dbo.UserAddress ua WITH(NOLOCK) ON  ua.UadIdAddress = gb.IdAddress
                                 JOIN DeliveryBackOffice.dbo.RolByUserByAccount rba  WITH(NOLOCK)ON rba.RuaIdUser = gb.IdUser
                                 JOIN DeliveryBackOffice.dbo.Account ac WITH(NOLOCK) ON ac.AccIdAccount = rba.RuaIdAccount
-                                JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK) ON do.Guide_Number = gb.GuideNumber
+                                JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK) ON do.Guide_Serie = gb.GuideSeries and do.Guide_Number = gb.GuideNumber
                                 LEFT JOIN DeliveryBackOffice.dbo.Customer cu WITH(NOLOCK) ON cu.IdCustomer = ac.IdCustomer
                                 LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank dbk WITH(NOLOCK) ON dbk.Id_bank = cu.CODAccountBankID
                                 WHERE gb.IdUser = @IdUser AND gb.RowStatus=1 AND gb.Status=1
-								                ORDER BY gb.GuideNumber
+								                ORDER BY gb.GuideSeries, gb.GuideNumber
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,
@@ -70,7 +70,7 @@ DECLARE @IdUser BIGINT = (SELECT RuaIdUser FROM DeliveryBackOffice.dbo.RolByUser
                                 FROM DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 								LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rba WITH(NOLOCK) ON rba.RuaIdAccount=@IdAccount
                                 WHERE gb.IdBatch = @IdBatch AND gb.IdUser= rba.RuaIdUser AND gb.RowStatus=1 AND gb.Status=2
-								                ORDER BY gb.GuideNumber
+								                ORDER BY gb.GuideSeries, gb.GuideNumber
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,

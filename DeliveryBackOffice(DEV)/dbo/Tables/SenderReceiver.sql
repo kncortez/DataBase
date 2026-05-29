@@ -32,6 +32,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Contador de veces enviado token por mensaje de texto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiver', @level2type = N'COLUMN', @level2name = N'MessageCounter';
 GO
@@ -239,3 +241,8 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'SenderReceiver',
     @level2type = N'COLUMN',
     @level2name = N'IdCountry'
+GO
+CREATE NONCLUSTERED INDEX [IDX_HubLogisticId_INCLUDE]
+    ON [dbo].[SenderReceiver]([HubLogisticId] ASC)
+    INCLUDE([First_Name], [Last_Name]);
+

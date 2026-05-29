@@ -24,14 +24,15 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_DeliveryFavCOD_LoadList]
     ON [dbo].[DeliveryFavCOD]([VisitPointByClientPortfolioId] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_DeliveryFavCOD_BankStatusList]
-    ON [dbo].[DeliveryFavCOD]([StatusFavCOD] ASC, [IdBank] ASC);
+
 
 
 GO

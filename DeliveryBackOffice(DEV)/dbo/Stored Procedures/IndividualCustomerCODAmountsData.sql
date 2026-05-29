@@ -27,7 +27,6 @@ BEGIN
 		SET @StarDate  = Format(GETDATE()-7,'yyyy-MM-dd');
 		SET @EndDate   = Format(GETDATE(),'yyyy-MM-dd');
 	END
-
 	
 	IF((SELECT DATEDIFF(DAY,@StarDate,@EndDate))>30) /* Validar que el rango no sea mayor a 30 días  */
 	BEGIN
@@ -124,7 +123,7 @@ BEGIN
 	END
 	ELSE
 	BEGIN
-
+	   PRINT 'HOLA'
 		SELECT		
 			s1.GuideNumber
 			,s1.Receiver

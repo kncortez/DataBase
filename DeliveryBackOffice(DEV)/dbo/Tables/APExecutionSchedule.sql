@@ -1,18 +1,20 @@
-CREATE TABLE [dbo].[APExecutionSchedule] (
-    [IdAPExecutionSchedule]     INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
-    [CountryCode]               NVARCHAR(2)     NOT NULL,
-    [StartTime]                 TIME            NOT NULL,
-    [Description]               NVARCHAR(100)   NULL,
-    [AeroPostIdByCountry]       INT             NOT NULL,
-    [CodeOfReference]           INT             NOT NULL,
-    [RowStatus]                 BIT             DEFAULT ((1)) NOT NULL,
-    [TokenCreated]              NVARCHAR (50)   NOT NULL,
-    [DateCreated]               DATETIME        NOT NULL,
-    [TokenUpdated]              NVARCHAR (50)   NULL,
-    [DateUpdated]               DATETIME        NULL,
+﻿CREATE TABLE [dbo].[APExecutionSchedule] (
+    [IdAPExecutionSchedule] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [CountryCode]           NVARCHAR (2)   NOT NULL,
+    [StartTime]             TIME (7)       NOT NULL,
+    [Description]           NVARCHAR (100) NULL,
+    [AeroPostIdByCountry]   INT            NOT NULL,
+    [CodeOfReference]       INT            NOT NULL,
+    [RowStatus]             BIT            DEFAULT ((1)) NOT NULL,
+    [TokenCreated]          NVARCHAR (50)  NOT NULL,
+    [DateCreated]           DATETIME       NOT NULL,
+    [TokenUpdated]          NVARCHAR (50)  NULL,
+    [DateUpdated]           DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdAPExecutionSchedule] ASC),
     CONSTRAINT [FK_APExecutionSchedule_Customer] FOREIGN KEY ([AeroPostIdByCountry]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
+
+
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que almacena los horarios de ejecución del servicio de creación de guías de Aeropost', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionSchedule';
@@ -39,4 +41,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token del u
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de última actualización del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionSchedule', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registra el Id de Aeropost según el país', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APExecutionSchedule', @level2type = N'COLUMN', @level2name = N'AeroPostIdByCountry';

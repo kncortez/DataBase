@@ -42,9 +42,10 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IX_ConfirmationOfIncidence_ConfirmationOfIncidentToken]
-    ON [dbo].[ConfirmationOfIncidence]([ConfirmationOfIncidentToken] ASC);
+
 
 
 GO
@@ -159,4 +160,16 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Comentario que
 GO
 CREATE NONCLUSTERED INDEX [idx_isdenied]
     ON [dbo].[ConfirmationOfIncidence]([IsDenied] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DateStatusOrder_StatusOrderId_RowStatus_INCLUDE]
+    ON [dbo].[ConfirmationOfIncidence]([DateStatusOrder] ASC, [StatusOrderId] ASC, [RowStatus] ASC)
+    INCLUDE([IdConfirmationOfIncidence]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DateCreated]
+    ON [dbo].[ConfirmationOfIncidence]([DateCreated] ASC)
+    INCLUDE([IsConfirmed], [StatusOrderId]);
 

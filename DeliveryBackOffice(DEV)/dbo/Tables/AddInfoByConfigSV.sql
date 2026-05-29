@@ -1,24 +1,25 @@
--- =============================================
+﻿-- =============================================
 -- Author:      Juan Ramirez
 -- Create date: 2025/06/04
 -- Description: Tabla de información adicional para configuraciones globales del sistema
 -- =============================================
 
 -- Crear tabla AddInfoByConfigSV
-CREATE TABLE AddInfoByConfigSV (
-    IdAddInfoByConfigSV INT IDENTITY(1,1),                    -- Identificador único del registro de configuración
-    [Node]              VARCHAR(150) NOT NULL,  -- Nombre del nodo o campo de información (NRC, RUC, etc.)
-    [Name]              VARCHAR(150) NOT NULL,  -- Nombre del nodo o campo de información (NRC, RUC, etc.)
-    [Data]              VARCHAR(500) NULL,      -- Dato asociado al nodo, puede ser NULL
-    [Value]             VARCHAR(500) NULL,      -- Valor asociado al nodo, puede ser NULL
-    RowStatus           BIT NOT NULL DEFAULT 1,
-    DateCreated         DATETIME NOT NULL,
-    TokenCreated        NVARCHAR(50) NOT NULL,
-    DateUpdated         DATETIME NULL,
-    TokenUpdated        NVARCHAR(50) NULL,
-    CONSTRAINT [PK_AddInfoByConfigSV] PRIMARY KEY 
-    CLUSTERED ([IdAddInfoByConfigSV] ASC)
+CREATE TABLE [dbo].[AddInfoByConfigSV] (
+    [IdAddInfoByConfigSV] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [Node]                VARCHAR (150) NOT NULL,
+    [Name]                VARCHAR (150) NOT NULL,
+    [Data]                VARCHAR (500) NULL,
+    [Value]               VARCHAR (500) NULL,
+    [RowStatus]           BIT           DEFAULT ((1)) NOT NULL,
+    [DateCreated]         DATETIME      NOT NULL,
+    [TokenCreated]        NVARCHAR (50) NOT NULL,
+    [DateUpdated]         DATETIME      NULL,
+    [TokenUpdated]        NVARCHAR (50) NULL,
+    CONSTRAINT [PK_AddInfoByConfigSV] PRIMARY KEY CLUSTERED ([IdAddInfoByConfigSV] ASC)
 );
+
+
 GO
 -- Documentación de la tabla AddInfoByConfigSV
 EXEC sys.sp_addextendedproperty 

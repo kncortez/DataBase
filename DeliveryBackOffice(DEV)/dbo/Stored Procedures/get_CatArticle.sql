@@ -10,14 +10,14 @@
 -- =============================================
 
 
-create PROCEDURE [dbo].[get_CatArticle]
+CREATE PROCEDURE [dbo].[get_CatArticle]
 	@guideNumber AS INT,
 	@guideSerie AS NVARCHAR(2),
 	@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
 	DECLARE @idCustomer AS INT
-	SELECT @idCustomer=IdCustomer FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) WHERE Guide_Number=@guideNumber AND Guide_Serie=@guideSerie AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
+	SELECT @idCustomer=IdCustomer FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie=@guideSerie AND Guide_Number=@guideNumber AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
 
 	IF EXISTS (SELECT abc.AbcId FROM DeliveryBackOffice.dbo.ArticleByCustomer abc WITH(NOLOCK) WHERE abc.AbcIdCustomer = @idCustomer)
 	BEGIN
