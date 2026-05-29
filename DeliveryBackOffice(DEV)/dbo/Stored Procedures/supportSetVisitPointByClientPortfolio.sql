@@ -8,7 +8,7 @@
 -- Description:	<Guarda, modifica y elimina la cartera del cliente>
 -- ==============================================
 
-CREATE PROCEDURE [dbo].[supportSetVisitPointByClientPortfolio]
+create PROCEDURE [dbo].[supportSetVisitPointByClientPortfolio]
     -- Add the parameters for the stored procedure here
     @TblAddressesList AS [TblAddressList] READONLY
   , @TblCODList AS [TblCODList] READONLY
@@ -529,19 +529,11 @@ BEGIN
 
 END;
 GO
-GRANT VIEW DEFINITION
-    ON OBJECT::[dbo].[supportSetVisitPointByClientPortfolio] TO [cvaldes]
-    AS [dbo];
+
 
 
 GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[supportSetVisitPointByClientPortfolio] TO [ebarrios]
-    AS [dbo];
+
 
 
 GO
-GRANT ALTER
-    ON OBJECT::[dbo].[supportSetVisitPointByClientPortfolio] TO [cvaldes]
-    AS [dbo];
-

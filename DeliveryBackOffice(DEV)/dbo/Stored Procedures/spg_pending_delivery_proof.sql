@@ -30,8 +30,8 @@ BEGIN
            SO.OrderDescription AS Status_Name,
            SUM(CAST(DATT.Dry AS INT)) AS Pieces_Dry,
            SUM(CAST(DATT.Cold AS INT)) AS Pieces_Cold
-    FROM DeliveryBackOffice.dbo.DeliveryOrder DO  --WITH(NOLOCK)
-        LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DATT --WITH(NOLOCK)
+    FROM DeliveryBackOffice.dbo.DeliveryOrder DO  WITH(NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DATT WITH(NOLOCK)
             ON DO.Guide_Serie = DATT.Guide_Serie
                AND DO.Guide_Number = DATT.Guide_Number
         LEFT JOIN DeliveryBackOffice.dbo.StatusOrder SO  --WITH(NOLOCK)
@@ -47,7 +47,7 @@ BEGIN
           )
           AND CONVERT(DATE, DATT.Date_Created) = CONVERT(DATE, ISNULL(@DispatchedDate, GETDATE()))
           AND DATT.ID_Courier = @IdCourier
-		  AND (DO.SenderCountryId = @IdCountry OR (DO.SenderCountryId IS NULL AND @IdCountry ='GT'))
+		  AND DO.SenderCountryId = @IdCountry
     GROUP BY DO.Guide_Serie,
              DO.Guide_Number,
              DATT.ID_Courier,

@@ -15,19 +15,20 @@ CREATE PROCEDURE [dbo].[SupportReleaseDHLGuide]
 BEGIN
 
 	Declare @IsGuideCanceled bit=0;
-	select @IsGuideCanceled =1  from DeliveryOrder 
-	WHERE [Guide_Number] = @GuideNumber
-							AND [Guide_Serie] = @GuideSerie
+	select @IsGuideCanceled =1  from DeliveryOrder WITH(NOLOCK)
+	WHERE [Guide_Serie] = @GuideSerie
+							AND [Guide_Number] = @GuideNumber
 							AND StatusOrderId in (7,14)
 
 	DECLARE @ExistInQuequeSFTP bit = 0
 	--select @ExistInQuequeSFTP=1 from WebhookTrackingQueueDetailForSFTP
 	--where guideNumber=@GuideNumber
 
-	select  @ExistInQuequeSFTP=1 from dbo.WebhookTrackingQueueDetailForSFTP wtqdet
-		inner join dbo.WebhookTrackingQueueForSFTP wtqd
+	select  @ExistInQuequeSFTP=1 from dbo.WebhookTrackingQueueDetailForSFTP wtqdet WITH(NOLOCK)
+		inner join dbo.WebhookTrackingQueueForSFTP wtqd WITH(NOLOCK)
 			on wtqdet.WebhookTrackingQueueForSFTPId= wtqd.idWebhookTrackingQueueForSFTP
-	where guidenumber=@GuideNumber
+	where GuideSerie = 'FD' 
+	and guidenumber=@GuideNumber
 	and hasnotified=0
 
 	select @IsGuideCanceled 
@@ -45,8 +46,8 @@ BEGIN
 
 							UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
 							SET [Ticket_Number] = NULL
-							WHERE [Guide_Number] = @GuideNumber
-							AND [Guide_Serie] = @GuideSerie
+							WHERE [Guide_Serie] = @GuideSerie
+							AND [Guide_Number] = @GuideNumber
 							--AND StatusOrderId in (7,14)
 
 						-- Realizar el insert para la pieza Externa con Forza
@@ -55,8 +56,8 @@ BEGIN
 							, [TokenRegistrationExternalCode] = NULL
 							, [DateRegistrationExternalCode] = NULL
 							, [AccountIdRegistrationExternalCode] = NULL
-							WHERE [GuideNumber] = @GuideNumber
-							AND [GuideSerie] = @GuideSerie 
+							WHERE [GuideSerie] = @GuideSerie 
+							AND [GuideNumber] = @GuideNumber
 							--AND [NoPiece] = @NoPiece
 							--AND StatusOrderId in (7,14)
 		SELECT 'CORRECTO: La guía si esta en un estado aceptable, y no tiene notificaciones pendientes en la cola. Modificación realizada'

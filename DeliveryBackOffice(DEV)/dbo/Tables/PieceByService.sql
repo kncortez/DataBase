@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[PieceByService] (
+CREATE TABLE [dbo].[PieceByService] (
     [IdServiceManagementByPiece] BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [ServiceManagmentId]         INT           NOT NULL,
     [GuidePieceId]               BIGINT        NOT NULL,
@@ -18,10 +18,10 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IX_PieceByServiceGuidePieceService]
-    ON [dbo].[PieceByService]([GuidePieceId] ASC)
-    INCLUDE([ServiceManagmentId]);
+
 
 
 GO
@@ -31,6 +31,7 @@ CREATE NONCLUSTERED INDEX [idx_ServiceManagmentId]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_GuidePieceId]
-    ON [dbo].[PieceByService]([GuidePieceId] ASC);
+CREATE NONCLUSTERED INDEX [idx_GuidePieceId_Consolidated]
+    ON [dbo].[PieceByService]([GuidePieceId] ASC)
+    INCLUDE([ServiceManagmentId]);
 

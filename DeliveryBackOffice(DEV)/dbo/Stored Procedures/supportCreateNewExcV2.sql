@@ -8,6 +8,7 @@
 === CHANGELOG ============================
 
 2025-10-29 | Historia/épica: FDAPI-4454 | Autor: Brandon Pedroza |
+2026-03-16 | Historia/épica: FDAPI-5729 | Autor: Tito Garcia |
 
 =========================================== */
 
@@ -28,7 +29,10 @@ CREATE PROCEDURE [dbo].[supportCreateNewExcV2]
     @SapCardCode NVARCHAR(50),
     @SapOcrCode NVARCHAR(50),
 	@SapOcrCode2 NVARCHAR(50),
-    @IdCountry NVARCHAR(2) = 'GT'
+    @IdCountry NVARCHAR(2) = 'GT',
+	@RackPosition NVARCHAR(50),
+	@StatusCheck INT = 0
+
 AS
 BEGIN
 
@@ -41,7 +45,7 @@ BEGIN
 	-- Verificar si el formato es correcto (8 dígitos)
 		IF @Phone LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
 		BEGIN
-			SET @PrefixNumber = (SELECT PrefixNumber FROM DefaultValuesPerCountry WHERE IdCountry = @IdCountry)
+			SET @PrefixNumber = (SELECT PrefixNumber FROM DeliveryBackOffice.dbo.DefaultValuesPerCountry WHERE IdCountry = @IdCountry)
 			-- Formatear la cadena
 			SET @PhoneNumber = @PrefixNumber + SUBSTRING(@Phone, 1, 4) + '-' + SUBSTRING(@Phone, 5, 4)
 		END
@@ -57,15 +61,15 @@ BEGIN
 			SELECT pr.IdProvince,
                    pr.ProvinceName,
                    tw.TownshipName
-            FROM dbo.Township tw WITH (NOLOCK)
-                INNER JOIN dbo.Province pr WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.Township tw WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
-				INNER JOIN dbo.Settlement st WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.Settlement st WITH(NOLOCK)
 					ON st.IdProvince = pr.IdProvince
 					AND st.IdTownship = tw.IdTownship
             WHERE  st.IdSettlement = @IdSettlement
-			AND st.IdCountry = @IdCountry
-			AND st.SettlementSatus = 1
+				AND st.IdCountry = @IdCountry
+				AND st.SettlementSatus = 1
 		)
 		BEGIN
 			RAISERROR('El poblado no pertene al pais especificado o esta inhabilitado', 16, 1);
@@ -75,7 +79,7 @@ BEGIN
         IF NOT EXISTS -- verifica que el punto de visita no exista
         (
             SELECT 1
-            FROM dbo.VisitPointClient vp
+            FROM DeliveryBackOffice.dbo.VisitPointClient vp WITH(NOLOCK)
             WHERE vp.DescriptionOfClient = @DescriptionOfClient
                   AND CountryId = @IdCountry
         )
@@ -88,24 +92,25 @@ BEGIN
             DECLARE @IdCustomer INT;
 
             SELECT @IdKindOfVPBusiness = IdKindOfVPBusiness
-            FROM KindOfVPBusiness WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.KindOfVPBusiness WITH(NOLOCK)
             WHERE Shorthand = 'EXP'
                   AND IdCountry = @IdCountry
+			PRINT @IdKindOfVPBusiness
 
             SELECT @IdKindOfVPClient = IdKindOfVPClient
-            FROM KindOfVPClient WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.KindOfVPClient WITH(NOLOCK)
             WHERE KindOfVPName = 'Express Center'
                   AND IdCountry = @IdCountry
 
             SELECT @IdBusinessSegment = IdBusinessSegment
-            FROM CatBusinessSegment WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.CatBusinessSegment WITH(NOLOCK)
             WHERE BusinessSegmentName = 'C2C'
                   AND IdCountry = @IdCountry
 
             IF(@IdCountry != 'GT')
             BEGIN
                 SELECT TOP 1 @IdCustomer = IdCustomer
-                FROM Customer WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.Customer WITH(NOLOCK)
                 WHERE Name like '%FD EXPRESS CENTER%'
                       --AND IdCustomer IN(81, 68381)
                       AND CountryID = @IdCountry
@@ -113,14 +118,14 @@ BEGIN
             ELSE
             BEGIN
                 SELECT TOP 1 @IdCustomer = IdCustomer
-                FROM Customer WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.Customer WITH(NOLOCK)
                 WHERE Name like '%FD EXPRESS CENTER ' + @IdCountry + '%'
                       --AND IdCustomer IN(81, 68381)
                       AND CountryID = @IdCountry
             END
 
             SELECT @CodeOfReference = MAX(vp.CodeOfReference) + 1
-            FROM dbo.VisitPointClient vp
+            FROM DeliveryBackOffice.dbo.VisitPointClient vp
             --WHERE vp.IdKindOfVPBusiness = @IdKindOfVPBusiness;
             -- Obtener departamento y municipio
 
@@ -135,15 +140,15 @@ BEGIN
 					@ProvinceName = pr.ProvinceName,
 					@TownshipName = tw.TownshipName,
 					@IdTownship = tw.IdTownship
-            FROM dbo.Township tw WITH (NOLOCK)
-                INNER JOIN dbo.Province pr WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.Township tw WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
-				INNER JOIN dbo.Settlement se WITH (NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.Settlement se WITH (NOLOCK)
 					ON se.IdProvince = pr.IdProvince AND se.IdTownship = tw.IdTownship
             WHERE se.IdSettlement = @IdSettlement;
 
 
-            INSERT INTO dbo.VisitPointClient
+            INSERT INTO DeliveryBackOffice.dbo.VisitPointClient
             (
                 CodeOfReference,
                 DescriptionOfClient,
@@ -222,7 +227,7 @@ BEGIN
 				IF NOT EXISTS
 				(
 					SELECT 1
-					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
+					FROM DeliveryBackOffice.dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = @CodeOfReference
 					AND pr.dpf_FELCountry = @IdCountry
 				)
@@ -231,10 +236,10 @@ BEGIN
 					DECLARE @CountryName AS NVARCHAR(32);
 					DECLARE @vpCodeOfReference AS INT;
 
-					SET @CountryName = (SELECT CountryNameES FROM CatCountry WHERE IdCountry = @IdCountry)
-					SET @vpCodeOfReference = (SELECT TOP 1  dpf_VpCodeOfReference FROM del_ParametrosFactura WHERE dpf_FELCountry = @IdCountry)
+					SET @CountryName = (SELECT CountryNameES FROM DeliveryBackOffice.dbo.CatCountry WHERE IdCountry = @IdCountry)
+					SET @vpCodeOfReference = (SELECT TOP 1  dpf_VpCodeOfReference FROM DeliveryBackOffice.dbo.del_ParametrosFactura WHERE dpf_FELCountry = @IdCountry)
 
-					INSERT INTO dbo.del_ParametrosFactura
+					INSERT INTO DeliveryBackOffice.dbo.del_ParametrosFactura
 					(
 						dpf_VpCodeOfReference,
 						dpf_FELRequestor,
@@ -305,7 +310,7 @@ BEGIN
 						   @SapOcrCode,
 						   'Delivery Express ' + @CountryName +' S.A. De C.V.',
 						   'DELIVERY EXPRESS ' + @IdCountry
-					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
+					FROM DeliveryBackOffice.dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = @vpCodeOfReference;
 				END;
 				ELSE
@@ -318,13 +323,13 @@ BEGIN
 				IF NOT EXISTS
 				(
 					SELECT 1
-					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
+					FROM DeliveryBackOffice.dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = @CodeOfReference
-					AND pr.dpf_FELCountry = @IdCountry
+						AND pr.dpf_FELCountry = @IdCountry
 				)
 				BEGIN
 
-					INSERT INTO dbo.del_ParametrosFactura
+					INSERT INTO DeliveryBackOffice.dbo.del_ParametrosFactura
 					(
 						dpf_VpCodeOfReference,
 						dpf_FELRequestor,
@@ -391,7 +396,7 @@ BEGIN
 						   pr.dpf_OcrCode2,
 						   pr.dpf_StatusFACE,
 						   @SapOcrCode
-					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
+					FROM DeliveryBackOffice.dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = 999;
 
 				END;
@@ -403,7 +408,7 @@ BEGIN
 			END;
             COMMIT;
 
-            INSERT INTO CatStation VALUES (@DescriptionOfClient, @IdCountry,2,NULL,@CodeOfReference,1,@TokenSupport,GETDATE(),NULL,NULL);
+            INSERT INTO DeliveryBackOffice.dbo.CatStation VALUES (@DescriptionOfClient, @IdCountry,2,NULL,@CodeOfReference,1,@TokenSupport,GETDATE(),NULL,NULL,@IdTownship,@RackPosition,@StatusCheck);
 
             SELECT vp.CodeOfReference,
                    vp.DescriptionOfClient,
@@ -412,7 +417,7 @@ BEGIN
                    vp.Town,
                    vp.Department,
                    vp.Email
-            FROM dbo.VisitPointClient vp WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
             WHERE vp.CodeOfReference = @CodeOfReference;
 
 
@@ -423,7 +428,7 @@ BEGIN
                   ,dpf_FELEntity
                   ,dpf_FELUser
                   ,dpf_FELCorreo
-            FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.del_ParametrosFactura pr WITH (NOLOCK)
             WHERE pr.dpf_VpCodeOfReference = @CodeOfReference;
 
             SELECT IdStation
@@ -432,7 +437,7 @@ BEGIN
                   ,StationType
                   ,HubLogisticId
                   ,CodeOfReference
-            FROM CatStation WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.CatStation WITH (NOLOCK)
             WHERE CodeOfReference = @CodeOfReference
 
         END;
@@ -452,4 +457,20 @@ BEGIN
     END CATCH;
 
 END;
+GO
+GRANT VIEW DEFINITION
+    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
+    AS [dbo];
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [ebarrios]
+    AS [dbo];
+
+
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[supportCreateNewExcV2] TO [cvaldes]
+    AS [dbo];
 

@@ -122,8 +122,8 @@ BEGIN
                                 FROM DeliveryOrder                        ord WITH (NOLOCK)
                                     INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                                         ON (
-                                               dopd.GuideNumber = ord.Guide_Number
-                                               AND dopd.GuideSerie = ord.Guide_Serie
+                                               dopd.GuideSerie = ord.Guide_Serie
+                                               AND dopd.GuideNumber = ord.Guide_Number
                                            )
                                 WHERE ord.Guide_Number IN
                                       (
@@ -213,6 +213,3 @@ BEGIN
     SELECT ('[{' + @jsonResult + ']') jsonResult;
 
 END;
-
-
-

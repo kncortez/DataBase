@@ -68,7 +68,7 @@ BEGIN
 		---TABLA RESPUESTA
 		SELECT 'La guía que intentas procesar pertenece a otro pais. Por favor, revísala e intenta de nuevo.' AS [Description]
 		FROM DeliveryOrder do WITH (NOLOCK)
-		WHERE do.Guide_Number=@GuideNumber and do.Guide_Serie = @GuideSerie
+		WHERE do.Guide_Serie = @GuideSerie and do.Guide_Number=@GuideNumber
 		AND 		
 		ISNULL(do.SenderCountryId,'GT')<>@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'
 

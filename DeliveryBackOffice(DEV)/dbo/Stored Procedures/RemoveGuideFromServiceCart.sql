@@ -69,13 +69,15 @@ BEGIN
 				IF @AccountServicecartDetailId IS NOT NULL
 					BEGIN
 	
-						IF NOT EXISTS (SELECT 1
-						FROM	[dbo].[Cost] C WITH (NOLOCK)
-						WHERE   [C].[ProductNumber] = CONCAT(@GuideSerie, @GuideNumber)
-							AND [C].[TotalAmountPaid] IS NOT NULL
-							AND [C].[TotalAmountPaid] > 0
-							AND [C].[RowStatus] = 1)
-					
+						IF NOT EXISTS (
+                                       SELECT 1
+                                         FROM [dbo].[Cost] C WITH (NOLOCK)
+                                        WHERE [C].GuideSerie = @GuideSerie
+                                          AND [C].GuideNumber = @GuideNumber
+                                          AND [C].[TotalAmountPaid] IS NOT NULL
+                                          AND [C].[TotalAmountPaid] > 0
+                                          AND [C].[RowStatus] = 1
+                                       )
 							BEGIN
 
 								SELECT

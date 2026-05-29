@@ -1,13 +1,12 @@
-﻿
-
-
-
--- =============================================
--- Author:		<Hugo,Gomez>
--- Create date: <2021-02-16>
--- Description:	<Recollection Incidence>
--- =============================================
-
+﻿/* =================================================
+   SP:        [dbo].[SetIncidenceService]
+   Propósito: Recollection Incidence
+   Autor:     Hugo, Gomez
+   Historia:  
+   Fecha:     2021-02-16
+   === CHANGELOG ============================
+2026-04-14 | Historia/épica: FDAPI-6061 | Autor: Erick Hernandez | Se agrega verificacion de hub y pais not null al insertar la incidencia
+=========================================== */
 CREATE PROCEDURE [dbo].[SetIncidenceService]
 	-- Add the parameters for the stored procedure here	
 	@TblIncidenceLink AS TblIncidenceLink READONLY,
@@ -36,20 +35,20 @@ BEGIN
 
 	DECLARE @jsonToken NVARCHAR(MAX)
 	declare @jsonService NVARCHAR(MAX)
-	 declare @TokenAct int  = (select top 1 RowStatus from LogTokenPOD WITH(NOLOCK) where LogTokenPOD LIKE '%' + @Token + '%' order by DateCreated desc)
-	declare @hourtoken int = (select top 1 DATEDIFF(HOUR, DateCreated, GETDATE() ) as horas from LogTokenPOD WITH(NOLOCK) where LogTokenPOD  LIKE '%' + @Token + '%' order by DateCreated desc)
+	-- declare @TokenAct int  = (select top 1 RowStatus from LogTokenPOD WITH(NOLOCK) where LogTokenPOD LIKE '%' + @Token + '%' order by DateCreated desc)
+	--declare @hourtoken int = (select top 1 DATEDIFF(HOUR, DateCreated, GETDATE() ) as horas from LogTokenPOD WITH(NOLOCK) where LogTokenPOD  LIKE '%' + @Token + '%' order by DateCreated desc)
 	declare @servicio int = (select COUNT(IdServiceManagement) from ServiceManagement WITH(NOLOCK) where IdServiceManagement = @ServiceManagementId)
 
-	print 'validando token'
-	if ( (@TokenAct = 1 and @hourtoken <= 8) OR 1 = 1 )
-		begin 
-				print 'token validado'
+	--print 'validando token'
+	--if ( (@TokenAct = 1 and @hourtoken <= 8) OR 1 = 1 )
+	--	begin 
+				--print 'token validado'
 	
 						
 					declare @validate int  = (select ServiceStatusId from ServiceManagement WITH(NOLOCK) where IdServiceManagement =  @ServiceManagementId)
 								
-				 print 'validando status'  
-				 print @validate
+				 --print 'validando status'  
+				 --print @validate
 				 
 							
 					if(@servicio > 0)
@@ -97,9 +96,36 @@ BEGIN
 																	,null
 																	,null
 																	FROM @TblIncidenceLink li
-																	
-				
-				
+
+
+																	------- CODE SNIPPET ONLY FOR PICKUP INCIDENT MICROSERVICE
+																	DECLARE @CourierID INT;
+																	DECLARE @PATH NVARCHAR (500);
+																	DECLARE @HubID INT;
+																	DECLARE @CountryID VARCHAR (2);
+																	DECLARE @INCIDENT_SERVICE_STATUS_ID INT = 4;
+
+																	SELECT @PATH = PathIncidence FROM @TblIncidenceLink;
+
+																	SELECT TOP 1 @CourierID = idCourierman
+																	FROM DeliveryBackOffice.dbo.LogTokenPOD WITH(NOLOCK) 
+																	WHERE LogTokenPOD = @Token
+																	AND RowStatus = 1
+																	ORDER BY DateCreated desc
+
+																	SELECT @HubID = SP.IdHubLogistics, @CountryID = H.IdCountry
+																	FROM DeliveryBackOffice.dbo.ServiceManagement SM WITH(NOLOCK)
+																	INNER JOIN DeliveryBackOffice.dbo.SchedulePickup SP WITH(NOLOCK)
+																		ON SP.SchedulePickupId = SM.IdSchedulePickup
+																	INNER JOIN DeliveryBackOffice.dbo.HubLogistics H WITH(NOLOCK)
+																		ON H.IdHubLogistic = SP.IdHubLogistics
+																	WHERE SM.IdServiceManagement = @ServiceManagementId;
+
+																	IF @HubID IS NOT NULL AND @CountryID IS NOT NULL
+																	BEGIN
+																		EXEC dbo.SaveServiceIncident @ServiceManagementId, @CourierID, @INCIDENT_SERVICE_STATUS_ID, @IncidenceTypeId, @DescriptionIncidence, @CountryID, @HubID, @Latitude, @Longitude, @PATH, @Token;
+																	END
+																	-------
 				
 																	---------------------------------------------- Actualiza el Status del Pickup  -------------------------------------------------------------------------
 																
@@ -196,25 +222,25 @@ BEGIN
 																	 select '['+ @jsonService + ']' jsonService
 	
 																   return 
-													end 
-		end
+											        END 
+		--end
 
-		else if(@TokenAct = 0 or @TokenAct is null or @hourtoken > 8)
-		begin 
-				  print 'token inválido'
-					SET @jsonToken = (
-				   SELECT STUFF((
-		   			SELECT  
-					',{"IdResult":' + '403' + ',' +
-					'"DescriptionError":"' + 'Token inválido'  + '"' +	  	  
-					'}' 
-					FOR XML PATH(''), TYPE
-				   ).value('.', 'varchar(max)'),1,1,''
-		   					  ) 
-				   )
-					 select '['+ @jsonToken + ']' jsonToken
+		--else if(@TokenAct = 0 or @TokenAct is null or @hourtoken > 8)
+		--begin 
+		--		  print 'token inválido'
+		--			SET @jsonToken = (
+		--		   SELECT STUFF((
+		--   			SELECT  
+		--			',{"IdResult":' + '403' + ',' +
+		--			'"DescriptionError":"' + 'Token inválido'  + '"' +	  	  
+		--			'}' 
+		--			FOR XML PATH(''), TYPE
+		--		   ).value('.', 'varchar(max)'),1,1,''
+		--   					  ) 
+		--		   )
+		--			 select '['+ @jsonToken + ']' jsonToken
 	
-				   return
-	end
+		--		   return
+	 --   END
 
 END

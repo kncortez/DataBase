@@ -36,7 +36,7 @@ BEGIN
      AND c.GuideNumber = do.Guide_Number
 	LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
     ON dc.IdCatCurrencyCOD = ISNULL(c.ShippingCurrency,1)
-    WHERE IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @Country 
+    WHERE do.SenderCountryId = @Country 
 	AND (CONCAT(alc.GuideSerie, CONVERT(VARCHAR, alc.GuideNumber)) = @Guide OR
     (CONVERT(DATE, alc.DateCreated) BETWEEN @InitialDate AND @FinalDate));
 END

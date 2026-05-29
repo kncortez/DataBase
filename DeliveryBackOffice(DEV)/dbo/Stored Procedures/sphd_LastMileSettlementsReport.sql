@@ -9,7 +9,7 @@
 -- Create date: <2026-01-21>
 -- Description: <Agregar parámetro Voucher y  tipos de pagos>
 -- =============================================
-CREATE PROCEDURE [dbo].[sphd_LastMileSettlementsReport]
+CREATE  PROCEDURE [dbo].[sphd_LastMileSettlementsReport]
 (
     @fromDate AS DATE,
     @toDate AS DATE,
@@ -41,7 +41,32 @@ BEGIN
     SELECT dst.ID 'Manifiesto',
            cst.StationName 'Hub',
            CONVERT(DATE, dst.Date_Received) 'Fecha',
-            ord.PriceShippment AS Collect,
+			CASE 
+				WHEN Cus.IdCustomerType = 1 THEN 
+					IIF(ccp.IdConditionOfPayment = 1 ,
+						ISNULL(ord.PriceShippment, 0),
+						IIF(ord.IsCollect = 1,
+							IIF(ord.IsLastMileReturn = 1, 
+								ISNULL(CASE 
+									WHEN ISNULL(ccp.IdConditionOfPayment, 1) > 1  THEN 0
+									ELSE ord.PriceShippment END, 0), 
+								CASE 
+									WHEN ISNULL(ccp.IdConditionOfPayment, 1) > 1
+									 AND cd.IdTypeOfMoneyCollect IS NULL 
+									 AND cd.IdTypeOfMoneyCod IS NULL
+									THEN IIF(A1.ReasonCode = '00',ord.PriceShippment,0)
+								ELSE ord.PriceShippment END
+							)
+							,0
+						)
+					)
+				ELSE 
+					IIF(ord.IsCollect = 1,
+						ISNULL(ord.PriceShippment, 0)
+						,0
+					)
+			END AS 'Collect',
+			-- ord.PriceShippment AS Collect,
            (CASE WHEN [ord].[IsLastMileReturn] = 1 THEN 0 ELSE ord.Collect_OnDelivery END) 'COD',
 		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol],
 		   CASE 
@@ -53,7 +78,8 @@ BEGIN
 			WHEN CD.IdTypeOfMoneyCOD = 10  THEN PZ.ZigiTransactionId
             END AS VoucherCOD,
 		     cd.IdTypeOfMoneyCOD AS PaymentMethodCOD,
-			 cd.IdTypeOfMoneyCollect AS PaymentMethodCollect
+			 cd.IdTypeOfMoneyCollect AS PaymentMethodCollect,
+			 ord.IsCollect
     FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dst WITH(NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] dsd  WITH(NOLOCK)
             ON dsd.ID_DeliveryOrderBySettlement = dst.ID
@@ -69,43 +95,58 @@ BEGIN
             AND c.GuideNumber = ord.guide_number
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD] dc WITH (NOLOCK)
             ON dc.IdCatCurrencyCOD = ISNULL(c.ShippingCurrency,1)
-        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] cd WITH (NOLOCK)
-            ON c.IdCost = cd.IdCost
+		OUTER APPLY (
+			SELECT MAX(IdTypeOfMoneyCollect) AS IdTypeOfMoneyCollect, MAX(Voucher) AS Voucher, MAX(IdTypeOfMoneyCOD) AS IdTypeOfMoneyCOD
+			FROM DeliveryBackOffice.dbo.CostDetail costd WITH(NOLOCK)
+			WHERE costd.IdCost = c.IdCost
+			GROUP BY costd.IdCost
+		) CD
+        --LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] cd WITH (NOLOCK)
+        --    ON c.IdCost = cd.IdCost
 		LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigi] PZ WITH (NOLOCK)
         ON  PZ.GuideSerie  = dsd.Guide_Serie AND PZ.GuideNumber = dsd.Guide_Number
        LEFT JOIN [DeliveryBackOffice].[dbo].[PaymentZigiMulti] PZM WITH (NOLOCK)
         ON  PZM.Id_PaymentZigi  = PZ.ZigiPaymentId 
+		LEFT JOIN [DeliveryBackOffice].[dbo].Customer Cus WITH (NOLOCK)
+			ON  cus.IdCustomer = ord.IdCustomer
+		LEFT JOIN [DeliveryBackOffice].[dbo].CatConditionOfPayment ccp WITH (NOLOCK)
+			ON  ccp.IdConditionOfPayment = cus.ConditionOfPaymentID
+        LEFT JOIN dbo.CreditCardTransactionByCustomer A1 WITH (NOLOCK)
+            ON A1.OrderNumber = ord.Guide_Serie + CONVERT(VARCHAR, ord.Guide_Number)
     WHERE CONVERT(DATE, dst.Date_Received)
           BETWEEN @fromDate AND @toDate
           AND dst.SettlementStationId IN
               (
                   SELECT Name FROM splitstring(@hubsIds, ',')
               )
-		--  AND IIF(ord.IsCollect = 1, ord.PriceShippment + ord.Collect_OnDelivery, ord.Collect_OnDelivery) > 0
           AND dsd.Guide_Delivered = 'true'
           AND dsd.Guide_Discharged IS NOT NULL
+		  AND dsd.Guide_Returned = 0
           AND dsd.RowStatus = 1
     )
+
+	SELECT *
+	INTO #Temp
+	FROM BaseData;
 
     /* ================================
   TOTALES TRANSACCIONES, PAGOS CON TARJETA Y ZIGI
     ==================================*/
 
+	
     SELECT
         @TotalCardCollect = SUM(
             CASE
-                WHEN PaymentMethodCOD = 2 AND PaymentMethodCollect = 2
-                    THEN ISNULL(Collect,0) + ISNULL(COD,0)
-                WHEN PaymentMethodCOD  = 2 AND PaymentMethodCollect <> 2
-                    THEN ISNULL(COD,0)
                 WHEN PaymentMethodCOD  <> 2 AND PaymentMethodCollect = 2
                     THEN ISNULL(Collect,0)
 				WHEN PaymentMethodCOD  IS NULL AND PaymentMethodCollect = 2
                     THEN ISNULL(Collect,0)
-				WHEN PaymentMethodCOD  = 2 AND PaymentMethodCollect IS NULL
-                    THEN ISNULL(COD,0)
             END
-        ),
+        )
+    FROM #Temp
+	WHERE IsCollect = 1
+
+    SELECT
         @TotalTransfer = SUM(
             CASE
                 WHEN PaymentMethodCOD = 11 AND PaymentMethodCollect = 11
@@ -116,6 +157,8 @@ BEGIN
                     THEN ISNULL(Collect,0)
 				WHEN PaymentMethodCOD IS NULL AND PaymentMethodCollect = 11
                     THEN ISNULL(Collect,0)
+                WHEN PaymentMethodCOD = 11 AND PaymentMethodCollect IS NULL
+                    THEN ISNULL(Collect,0) + ISNULL(COD,0)
             END
         ),
         @TotalZigi = SUM(
@@ -128,7 +171,7 @@ BEGIN
                     THEN ISNULL(COD,0) 
             END
         )
-    FROM BaseData;
+    FROM #Temp;
 
     /* ================================
        MONTO EN EFECTIVO (BILLETES)
@@ -175,7 +218,17 @@ BEGIN
 					IIF(ccp.IdConditionOfPayment = 1 ,
 						ISNULL(ord.PriceShippment, 0),
 						IIF(ord.IsCollect = 1,
-							ISNULL(ord.PriceShippment, 0)
+							IIF(ord.IsLastMileReturn = 1, 
+								ISNULL(CASE 
+									WHEN ISNULL(ccp.IdConditionOfPayment, 1) > 1  THEN 0
+									ELSE ord.PriceShippment END, 0), 
+								CASE 
+									WHEN ISNULL(ccp.IdConditionOfPayment, 1) > 1
+									 AND cd.IdTypeOfMoneyCollect IS NULL 
+									 AND cd.IdTypeOfMoneyCod IS NULL
+									THEN IIF(A1.ReasonCode = '00',ord.PriceShippment,0)
+								ELSE ord.PriceShippment END
+							)
 							,0
 						)
 					)
@@ -243,15 +296,17 @@ BEGIN
 			ON  cus.IdCustomer = ord.IdCustomer
 		LEFT JOIN [DeliveryBackOffice].[dbo].CatConditionOfPayment ccp WITH (NOLOCK)
 			ON  ccp.IdConditionOfPayment = cus.ConditionOfPaymentID
+        LEFT JOIN dbo.CreditCardTransactionByCustomer A1 WITH (NOLOCK)
+            ON A1.OrderNumber = ord.Guide_Serie + CONVERT(VARCHAR, ord.Guide_Number)
     WHERE CONVERT(DATE, dst.Date_Received)
           BETWEEN @fromDate AND @toDate
           AND dst.SettlementStationId IN
               (
                   SELECT Name FROM splitstring(@hubsIds, ',')
               )
-		--  AND IIF(ord.IsCollect = 1, ord.PriceShippment + ord.Collect_OnDelivery, ord.Collect_OnDelivery) > 0
           AND dsd.Guide_Delivered = 'true'
           AND dsd.Guide_Discharged IS NOT NULL
+		  AND dsd.Guide_Returned = 0
           AND dsd.RowStatus = 1
     ORDER BY cst.IdStation,
              dst.Date_Received,

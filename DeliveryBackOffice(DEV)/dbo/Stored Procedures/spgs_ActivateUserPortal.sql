@@ -44,7 +44,3 @@ GRANT EXECUTE
 
 
 GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[spgs_ActivateUserPortal] TO [cixtetela]
-    AS [dbo];
-

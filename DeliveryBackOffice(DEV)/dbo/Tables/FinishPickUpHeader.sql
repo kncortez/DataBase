@@ -16,12 +16,14 @@
     [DateCreated]        DATETIME        DEFAULT (getdate()) NULL,
     [TokenUpdated]       NVARCHAR (200)  NULL,
     [DateUpdated]        DATETIME        NULL,
-    [StationId] INT NULL, 
+    [StationId]          INT             NULL,
     PRIMARY KEY CLUSTERED ([SchedulePickupId] ASC),
     CONSTRAINT [FK_FinishPickUpHeader_CatServiceStatus] FOREIGN KEY ([ServiceStatusId]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus]),
-    CONSTRAINT [FK_FinishPickUpHeader_SchedulePickup] FOREIGN KEY ([SchedulePickupId]) REFERENCES [dbo].[SchedulePickup] ([SchedulePickupId]),
-    CONSTRAINT [FK_FinishPickUpHeader_CatStation] FOREIGN KEY ([StationId]) REFERENCES [dbo].[CatStation] ([IdStation])
+    CONSTRAINT [FK_FinishPickUpHeader_CatStation] FOREIGN KEY ([StationId]) REFERENCES [dbo].[CatStation] ([IdStation]),
+    CONSTRAINT [FK_FinishPickUpHeader_SchedulePickup] FOREIGN KEY ([SchedulePickupId]) REFERENCES [dbo].[SchedulePickup] ([SchedulePickupId])
 );
+
+
 
 
 GO
@@ -105,3 +107,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'FinishPickUpHeader',
     @level2type = N'COLUMN',
     @level2name = N'StationId'
+GO
+CREATE NONCLUSTERED INDEX [IDX_NC_FinishPickUpHeader_ServiceStat:RowStat_DateCreated]
+    ON [dbo].[FinishPickUpHeader]([ServiceStatusId] ASC, [RowStatus] ASC, [DateCreated] ASC);
+

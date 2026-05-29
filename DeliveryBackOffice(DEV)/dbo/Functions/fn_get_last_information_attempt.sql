@@ -13,7 +13,7 @@ RETURNS
 @AttemptInfo TABLE 
 (
 	-- Add the column definitions for the TABLE variable here
-	Courier_Fullname NVARCHAR(MAX), 
+	Courier_Fullname NVARCHAR(150), 
 	Date_Delivered DATETIME
 )
 AS

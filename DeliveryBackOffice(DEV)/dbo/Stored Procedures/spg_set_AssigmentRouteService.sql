@@ -278,13 +278,13 @@ BEGIN
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
                 INNER JOIN DeliveryOrder              ord WITH (NOLOCK)
                     ON (
-                           ord.Guide_Number = dopd.GuideNumber
-                           AND ord.Guide_Serie = dopd.GuideSerie
+                           ord.Guide_Serie = dopd.GuideSerie
+                           AND ord.Guide_Number = dopd.GuideNumber
                        )
                 INNER JOIN DeliveryOrderPiece         ordp WITH (NOLOCK)
                     ON (
-                           ordp.GuideNumber = ord.Guide_Number
-                           AND ordp.GuideSerie = ord.Guide_Serie
+                           ordp.GuideSerie = ord.Guide_Serie
+                           AND ordp.GuideNumber = ord.Guide_Number
                        )
             WHERE sm.IdSchedulePickup = @idSchedulePickup;
 
@@ -300,8 +300,8 @@ BEGIN
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
                 INNER JOIN DeliveryOrder              ord WITH (NOLOCK)
                     ON (
-                           ord.Guide_Number = dopd.GuideNumber
-                           AND ord.Guide_Serie = dopd.GuideSerie
+                           ord.Guide_Serie = dopd.GuideSerie
+                           AND ord.Guide_Number = dopd.GuideNumber
                        )
             WHERE sm.IdSchedulePickup = @idSchedulePickup;
 
@@ -317,13 +317,13 @@ BEGIN
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
                 INNER JOIN DeliveryOrder              ord WITH (NOLOCK)
                     ON (
-                           ord.Guide_Number = dopd.GuideNumber
-                           AND ord.Guide_Serie = dopd.GuideSerie
+                           ord.Guide_Serie = dopd.GuideSerie
+                           AND ord.Guide_Number = dopd.GuideNumber
                        )
                 INNER JOIN DeliveryOrderPiece         ordp WITH (NOLOCK)
                     ON (
-                           ordp.GuideNumber = ord.Guide_Number
-                           AND ordp.GuideSerie = ord.Guide_Serie
+                           ordp.GuideSerie = ord.Guide_Serie
+                           AND ordp.GuideNumber = ord.Guide_Number
                        )
             WHERE sm.IdSchedulePickup = @idSchedulePickup;
 
@@ -434,13 +434,13 @@ BEGIN
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
                 INNER JOIN DeliveryOrder              ord WITH(NOLOCK)
                     ON (
-                           ord.Guide_Number = dopd.GuideNumber
-                           AND ord.Guide_Serie = dopd.GuideSerie
+                           ord.Guide_Serie = dopd.GuideSerie
+                           AND ord.Guide_Number = dopd.GuideNumber
                        )
                 INNER JOIN DeliveryOrderPiece         ordp WITH(NOLOCK)
                     ON (
-                           ordp.GuideNumber = ord.Guide_Number
-                           AND ordp.GuideSerie = ord.Guide_Serie
+                           ordp.GuideSerie = ord.Guide_Serie
+                           AND ordp.GuideNumber = ord.Guide_Number
                        )
             WHERE sm.IdSchedulePickup = @idSchedulePickup;
 
@@ -456,8 +456,8 @@ BEGIN
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
                 INNER JOIN DeliveryOrder              ord WITH (NOLOCK)
                     ON (
-                           ord.Guide_Number = dopd.GuideNumber
-                           AND ord.Guide_Serie = dopd.GuideSerie
+                           ord.Guide_Serie = dopd.GuideSerie
+                           AND ord.Guide_Number = dopd.GuideNumber
                        )
             WHERE sm.IdSchedulePickup = @idSchedulePickup;
 
@@ -473,13 +473,13 @@ BEGIN
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
                 INNER JOIN DeliveryOrder              ord WITH (NOLOCK)
                     ON (
-                           ord.Guide_Number = dopd.GuideNumber
-                           AND ord.Guide_Serie = dopd.GuideSerie
+                           ord.Guide_Serie = dopd.GuideSerie
+                           AND ord.Guide_Number = dopd.GuideNumber
                        )
                 INNER JOIN DeliveryOrderPiece         ordp WITH (NOLOCK)
                     ON (
-                           ordp.GuideNumber = ord.Guide_Number
-                           AND ordp.GuideSerie = ord.Guide_Serie
+                           ordp.GuideSerie = ord.Guide_Serie
+                           AND ordp.GuideNumber = ord.Guide_Number
                        )
             WHERE sm.IdSchedulePickup = @idSchedulePickup;
         END;

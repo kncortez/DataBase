@@ -17,6 +17,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'token de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpointHeader', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -55,4 +57,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenamiento de cabeceras para peticiones a webhooks.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpointHeader';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RowStatus_WebhookEndpointId]
+    ON [dbo].[WebhookEndpointHeader]([RowStatus] ASC, [WebhookEndpointId] ASC);
 

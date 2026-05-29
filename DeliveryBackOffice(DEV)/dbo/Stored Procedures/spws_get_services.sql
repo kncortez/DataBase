@@ -31,7 +31,7 @@ CREATE PROCEDURE [dbo].[spws_get_services]
     @CancelGuides TINYINT = 1
 AS
 BEGIN    
-set arithabort off
+--set arithabort off
     DECLARE @IdUser BIGINT =
             (
                 SELECT TOP 1 t.TknIdUser FROM TokenLog t WITH(NOLOCK) WHERE t.TknIdToken = @Token
@@ -256,18 +256,8 @@ set arithabort off
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 
+																									  THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -300,7 +290,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId 
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -321,8 +311,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON  gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -337,7 +327,7 @@ set arithabort off
 												OR @CancelGuides = 1
 												   AND ord.StatusOrderId IS NOT NULL
 											)
-										ORDER BY ord.Guide_Number DESC OFFSET @SKIPC ROWS FETCH NEXT @CantidadRegistrosC ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @SKIPC ROWS FETCH NEXT @CantidadRegistrosC ROWS ONLY
                                    
 
 
@@ -536,18 +526,8 @@ set arithabort off
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 
+																									  THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -580,7 +560,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber 
+												ON (ord.guide_serie = paydord.guideserie and ord.Guide_Number = paydord.GuideNumber 
 												AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
@@ -602,8 +582,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -616,8 +596,6 @@ set arithabort off
 													AND
 													PBSL.PointsReceived = 0
 										WHERE
-											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-											--AND
 											(
 												((ord.Sender_ID IN
 												  (
@@ -639,7 +617,7 @@ set arithabort off
 												OR @CancelGuides = 1
 												   AND ord.StatusOrderId IS NOT NULL
 											)
-											ORDER BY ord.Guide_Number 
+											ORDER BY ord.Guide_Serie, ord.Guide_Number 
 											DESC OFFSET @SKIP ROWS FETCH NEXT @CantidadRegistros ROWS ONLY
                                    
 
@@ -859,7 +837,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -871,8 +849,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -882,7 +860,7 @@ set arithabort off
 											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
 											--AND
 											ord.StatusOrderId = 15
-										ORDER BY ord.Guide_Number DESC OFFSET @SKIP1C ROWS FETCH NEXT @CantidadRegistros1C ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @SKIP1C ROWS FETCH NEXT @CantidadRegistros1C ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -1084,7 +1062,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON ord.Guide_Number = paydord.GuideNumber  AND ord.Guide_Serie = paydord.GuideSerie
+												ON ord.Guide_Serie = paydord.GuideSerie  AND ord.Guide_Number = paydord.GuideNumber
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1096,7 +1074,7 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie AND  gb.GuideNumber = ord.Guide_Number
 
 												   AND gb.RowStatus = 1
 											LEFT JOIN
@@ -1128,7 +1106,7 @@ set arithabort off
 												   )
 												OR ord.IdCustomer = @idCustomer
 											)
-										ORDER BY ord.Guide_Number DESC OFFSET @SKIP1 ROWS FETCH NEXT @CantidadRegistros1 ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @SKIP1 ROWS FETCH NEXT @CantidadRegistros1 ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -1360,7 +1338,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber
+												ON (ord.guide_serie = paydord.guideserie and ord.Guide_Number = paydord.GuideNumber
 												    AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
@@ -1373,7 +1351,7 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie AND  gb.GuideNumber = ord.Guide_Number 
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -1381,7 +1359,7 @@ set arithabort off
 													ord.Sender_ID = tp.CodeOfReference
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ISNULL(ord.StatusOrderId, 15) NOT IN ( 15, 5, 7, 22 )
-										ORDER BY ord.Guide_Number DESC OFFSET @Skip2C ROWS FETCH NEXT @CantidadRegistros2C ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @Skip2C ROWS FETCH NEXT @CantidadRegistros2C ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -1602,7 +1580,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON ( ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1614,8 +1592,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												   AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												   AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -1644,7 +1622,7 @@ set arithabort off
 													 )
 												  OR ord.IdCustomer = @idCustomer
 											  )
-										ORDER BY ord.Guide_Number DESC OFFSET @Skip2 ROWS FETCH NEXT @CantidadRegistros2 ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @Skip2 ROWS FETCH NEXT @CantidadRegistros2 ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -1859,7 +1837,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON ( ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1871,8 +1849,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-													AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+													AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -1880,7 +1858,7 @@ set arithabort off
 													ord.Sender_ID = tp.CodeOfReference
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ord.StatusOrderId IN ( 5, 22 )
-										ORDER BY ord.Guide_Number DESC OFFSET @Skip3c ROWS FETCH NEXT @CantidadRegistros3c ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @Skip3c ROWS FETCH NEXT @CantidadRegistros3c ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -2080,7 +2058,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-											ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+											ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -2092,8 +2070,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie 
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -2122,7 +2100,7 @@ set arithabort off
 													 )
 												  OR ord.IdCustomer = @idCustomer
 											  )
-										ORDER BY ord.Guide_Number DESC OFFSET @Skip3 ROWS FETCH NEXT @CantidadRegistros3 ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @Skip3 ROWS FETCH NEXT @CantidadRegistros3 ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -2299,18 +2277,8 @@ set arithabort off
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 
+																									  THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -2343,7 +2311,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie )
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber )
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2363,8 +2331,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie 
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -2372,7 +2340,7 @@ set arithabort off
 													ord.Sender_ID = tp.CodeOfReference
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -2523,18 +2491,8 @@ set arithabort off
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 
+																									  THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -2567,7 +2525,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber )
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2587,8 +2545,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie 
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -2608,7 +2566,7 @@ set arithabort off
 											OR ord.IdCustomer = @idCustomer
 											)
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -2803,7 +2761,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie )
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2815,8 +2773,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON  gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -2824,7 +2782,7 @@ set arithabort off
 													ord.Sender_ID = tp.CodeOfReference
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 									
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -2996,7 +2954,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3008,8 +2966,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND  gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -3029,7 +2987,7 @@ set arithabort off
 											OR ord.IdCustomer = @idCustomer
 											)
 									
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -3245,7 +3203,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3257,8 +3215,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -3267,7 +3225,7 @@ set arithabort off
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -3463,7 +3421,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3475,8 +3433,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -3497,7 +3455,7 @@ set arithabort off
 											OR ord.IdCustomer = @idCustomer
 											)
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -3690,7 +3648,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3702,8 +3660,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -3712,7 +3670,7 @@ set arithabort off
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 									
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -3886,7 +3844,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3898,8 +3856,8 @@ set arithabort off
 											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -3920,7 +3878,7 @@ set arithabort off
 											OR ord.IdCustomer = @idCustomer
 											)
 									
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,

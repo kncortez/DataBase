@@ -1,27 +1,23 @@
 ﻿
--- =============================================
--- Author:		<Andres,Ruiz>
--- Updated date:<2022-05-26>
--- Description:	< Se adiciona generación y manejo de cupones posterior a la transaccion de una tarjeta de credito/debito >
--- =============================================
--- Author: <Jerson Ochoa>
--- Updated date: <2023-01-26>
--- Description: <Acumulación de puntos forza>
--- =============================================
--- =============================================
--- Author: <Edelman>
--- Updated date: <2024-01-08>
--- Description: <Integración de marketplace a estructura de BD de clubforza>
--- =============================================
--- Author: <Tito Garcia>
--- Updated date: <2025-05-26>
--- Description: <Se agrega validacion ya que @CustomerReference puede venir NULL y optimizaciones recomendadas por DBA>
--- =============================================
--- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2025-11-04>
--- Description:	<Validar filtro de código de transacción para que se tome el mas reciente,ya que se esta duplicando el OrderNumber>
--- =============================================
+/* =================================================
+   SP: spws_set_facapidelcreditcardtransaction
+   Propósito: generación y manejo de membresias y suscripciones posterior a la transaccion de una tarjeta de credito/debit
+   Autor:     Andres,Ruiz
+   Historia:  PENDIENTE
+   Fecha:     2022-05-26
+================================================= */
+/* === CHANGELOG ============================
+2023-01-26 | Historia/épica: FDAPI-1297   | Autor: Jerson Ochoa    | Acumulación de puntos forza
+2024-07-17 | Historia/épica: (pendiente)  | Autor: Edelman Vasquez | Integración de marketplace a estructura de BD de clubforza
+2025-05-26 | Historia/épica: (pendiente)  | Autor: Tito Garcia     | Se agrega validacion ya que @CustomerReference puede venir NULL y optimizaciones recomendadas por DBA
+2025-11-04 | Historia/épica: FDAPI-4539   | Autor: Edelman Vásquez | Validar filtro de código de transacción para que se tome el mas reciente,ya que se esta duplicando el OrderNumber
+2026-04-21 | Historia/épica: FDAPI-5867   | Autor: Bilkar Morataya | Se agregan guards de idempotencia en el bloque @Type = 2 antes de
+--                                                                   INSERT de Membresía y Suscripción. Previene doble inserción cuando
+--                                                                   este SP y SPHW_UpdateCustomerTransactionPWO se ejecutan en el mismo
+--                                                                   flujo 3DS para el mismo OrderNumber. Usa GOTO para saltar el bloque
+--                                                                   si ya existe un registro para la cuenta/orden del día
+=========================================== */
+
 CREATE PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
     @Type AS INT = -1
   , @System AS INT = 1

@@ -1,24 +1,25 @@
-﻿CREATE TABLE [dbo].[InformationBuyerInvoice]
-(
-Id INT IDENTITY(1,1) NOT NULL,
-	InvoiceId BIGINT NOT NULL,
-	DistrictCode NVARCHAR(100) NOT NULL,
-	StateCode NVARCHAR(100) NOT NULL,
-	ActivityCode NVARCHAR(100) NOT NULL,
-	ActivityDescription NVARCHAR(500) NOT NULL,
-	NRC NVARCHAR(20),
-	TypeIdentificationDocumentCode NVARCHAR(100) NULL,
-	IdDocument NVARCHAR(20),
-	Phone NVARCHAR(10),
-	Rowstatus BIT,
-	TokenCreated NVARCHAR(50),
-	DateCreated DATETIME,
-	TokenUpdated NVARCHAR(50) NULL,
-	DateUpdated DATETIME NULL,
-	[OperationConditionCode] INT NULL, 
-    CONSTRAINT PK_InformationBuyerInvoice PRIMARY KEY (Id),
-	CONSTRAINT FK_InformationBuyerInvoice_invoiceHeader FOREIGN KEY (InvoiceId) REFERENCES [dbo].[invoiceHeader] (inv_pk_id)
+﻿CREATE TABLE [dbo].[InformationBuyerInvoice] (
+    [Id]                             INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [InvoiceId]                      BIGINT         NOT NULL,
+    [DistrictCode]                   NVARCHAR (100) NOT NULL,
+    [StateCode]                      NVARCHAR (100) NOT NULL,
+    [ActivityCode]                   NVARCHAR (100) NOT NULL,
+    [ActivityDescription]            NVARCHAR (500) NOT NULL,
+    [NRC]                            NVARCHAR (20)  NULL,
+    [TypeIdentificationDocumentCode] NVARCHAR (100) NULL,
+    [IdDocument]                     NVARCHAR (20)  NULL,
+    [Phone]                          NVARCHAR (10)  NULL,
+    [Rowstatus]                      BIT            NULL,
+    [TokenCreated]                   NVARCHAR (50)  NULL,
+    [DateCreated]                    DATETIME       NULL,
+    [TokenUpdated]                   NVARCHAR (50)  NULL,
+    [DateUpdated]                    DATETIME       NULL,
+    [OperationConditionCode]         INT            NULL,
+    CONSTRAINT [PK_InformationBuyerInvoice] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FK_InformationBuyerInvoice_invoiceHeader] FOREIGN KEY ([InvoiceId]) REFERENCES [dbo].[invoiceHeader] ([inv_pk_id])
 );
+
+
 
 
 GO

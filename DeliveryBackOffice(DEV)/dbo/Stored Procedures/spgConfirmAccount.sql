@@ -58,7 +58,3 @@ GRANT EXECUTE
 
 
 GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[spgConfirmAccount] TO [cixtetela]
-    AS [dbo];
-

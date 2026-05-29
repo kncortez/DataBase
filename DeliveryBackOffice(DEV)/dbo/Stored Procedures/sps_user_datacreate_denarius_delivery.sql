@@ -193,9 +193,7 @@ GRANT EXECUTE
 
 
 GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[sps_user_datacreate_denarius_delivery] TO [cixtetela]
-    AS [dbo];
+
 
 
 GO

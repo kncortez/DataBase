@@ -240,6 +240,27 @@ BEGIN
                     FROM @ContainerReferences;
         END
 
+        -- ═══════════════════════════════════════════════════════
+        -- Desactivar guías en Warehouse al finalizar pickup
+        -- ═══════════════════════════════════════════════════════
+        IF(@InGuides <> '')
+        BEGIN
+            UPDATE W
+               SET W.Active = 0,
+                   W.UserUpdated = @Token,
+                   W.DateUpdated = GETDATE()
+              FROM Warehouse W
+             INNER JOIN (
+                   SELECT SUBSTRING(s.Item, 1, 2) AS GuideSerie,
+                          CAST(SUBSTRING(s.Item, 3, IIF(ca.Pos = 0, LEN(s.Item), ca.Pos - 3)) AS INT) AS GuideNumber
+                     FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',') s
+                          CROSS APPLY (VALUES (CHARINDEX('-', s.Item))) ca(Pos)
+                  ) AS Guides
+                ON W.Guide_Serie = Guides.GuideSerie
+               AND W.Guide_Number = Guides.GuideNumber 
+			  WHERE W.Active =1;
+        END
+
             END TRY
             BEGIN CATCH
 
