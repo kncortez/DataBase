@@ -52,8 +52,8 @@ BEGIN
 			sr.First_Name + ' ' + sr.Last_Name AS Courier_Name,
 			CAST(da.Dry AS INT) AS Pieces_Dry,
 			CAST(da.Cold AS INT) AS Pieces_Cold
-		FROM DeliveryBackOffice.dbo.DeliveryAttempt da
-		JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = da.ID_Courier
+		FROM DeliveryBackOffice.dbo.DeliveryAttempt da with (nolock)
+		INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr with (nolock) ON sr.ID = da.ID_Courier
 		WHERE da.Guide_Serie = @GuideSerie AND da.Guide_Number = @GuideNumber
 	) AS SUBQ
 	GROUP BY SUBQ.ID_Courier, SUBQ.Courier_Name, Latitude, Longitude
@@ -61,8 +61,6 @@ BEGIN
 	--HAVING Latitude > ''
 
 	SELECT SUM(CAST(da.Dry AS INT)) + SUM(CAST(da.Cold AS INT)) AS TotalPieces
-	FROM DeliveryBackOffice.dbo.DeliveryAttempt da 
+	FROM DeliveryBackOffice.dbo.DeliveryAttempt da with (nolock)
 	WHERE da.Guide_Serie = @GuideSerie AND da.Guide_Number = @GuideNumber
 END
-
-

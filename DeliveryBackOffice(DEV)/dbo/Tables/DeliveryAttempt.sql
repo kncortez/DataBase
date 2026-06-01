@@ -50,9 +50,10 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [idx_deliveryattempt_guide]
-    ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC);
+
 
 
 GO
@@ -61,15 +62,11 @@ CREATE NONCLUSTERED INDEX [IDX_ACCEPTED_DELIVERED]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Latitude]
-    ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC)
-    INCLUDE([Latitude]);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Longitude]
-    ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC)
-    INCLUDE([Longitude]);
+
 
 
 GO
@@ -123,12 +120,22 @@ CREATE NONCLUSTERED INDEX [IDX_ID_DeliveryOrderBySettlement]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Date_Created_ConfirmationOfIncidenceId]
-    ON [dbo].[DeliveryAttempt]([Date_Created] ASC, [ConfirmationOfIncidenceId] ASC)
-    INCLUDE([Guide_Number], [ID_DeliveryOrderBySettlement]);
+
 
 
 GO
 CREATE NONCLUSTERED INDEX [idx_Guide_Serie_Guide_Number_Date_Created]
     ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC, [Date_Created] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryAttempt_Guide_Consolidated]
+    ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC)
+    INCLUDE([Latitude], [Longitude]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Date_Created_ConfirmationOfIncidenceId_Include]
+    ON [dbo].[DeliveryAttempt]([Date_Created] ASC, [ConfirmationOfIncidenceId] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number], [ID_DeliveryOrderBySettlement]);
 

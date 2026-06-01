@@ -1,16 +1,17 @@
-﻿CREATE TABLE [dbo].[CatTypeIdentifationDocument]
-(
-    Id             INT IDENTITY(1,1) NOT NULL,
-    Code           NVARCHAR(5) NOT NULL,
-    [Name]         NVARCHAR(10) NOT NULL,
-    [Description]  NVARCHAR(100) NOT NULL,
-    Rowstatus      BIT NOT NULL,
-    TokenCreated   NVARCHAR(50) NOT NULL,
-    DateCreated    DATETIME NOT NULL,
-    TokenUpdated   NVARCHAR(50) NULL,
-    DateUpdated    DATETIME NULL,
-    CONSTRAINT PK_CatTypeIdentifationDocument PRIMARY KEY (Id)
+﻿CREATE TABLE [dbo].[CatTypeIdentifationDocument] (
+    [Id]           INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [Code]         NVARCHAR (5)   NOT NULL,
+    [Name]         NVARCHAR (10)  NOT NULL,
+    [Description]  NVARCHAR (100) NOT NULL,
+    [Rowstatus]    BIT            NOT NULL,
+    [TokenCreated] NVARCHAR (50)  NOT NULL,
+    [DateCreated]  DATETIME       NOT NULL,
+    [TokenUpdated] NVARCHAR (50)  NULL,
+    [DateUpdated]  DATETIME       NULL,
+    CONSTRAINT [PK_CatTypeIdentifationDocument] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
+
+
 GO
 EXEC sp_addextendedproperty 
     @name = N'MS_Description', 

@@ -44,8 +44,8 @@ BEGIN
 	INSERT INTO @temp
 	SELECT
 	do.Guide_Serie + isnull(convert(nvarchar,do.Guide_Number),'') as Guide_Code
-	,(SELECT SUM(CAST([Cold] AS INT)) FROM DeliveryBackOffice.dbo.DeliveryAttempt where Guide_Serie = do.Guide_Serie AND Guide_Number = do.Guide_Number AND ID_DeliveryOrderBySettlement = @IdManifest GROUP BY Guide_Serie, Guide_Number, ID_DeliveryOrderBySettlement) AS Pieces_Cold
-	,(SELECT SUM(CAST([Dry] AS INT)) FROM DeliveryBackOffice.dbo.DeliveryAttempt where Guide_Serie = do.Guide_Serie AND Guide_Number = do.Guide_Number AND ID_DeliveryOrderBySettlement = @IdManifest GROUP BY Guide_Serie, Guide_Number, ID_DeliveryOrderBySettlement) as Pieces_Dry
+	,(SELECT SUM(CAST([Cold] AS INT)) FROM DeliveryBackOffice.dbo.DeliveryAttempt with (nolock) where Guide_Serie = do.Guide_Serie AND Guide_Number = do.Guide_Number AND ID_DeliveryOrderBySettlement = @IdManifest GROUP BY Guide_Serie, Guide_Number, ID_DeliveryOrderBySettlement) AS Pieces_Cold
+	,(SELECT SUM(CAST([Dry] AS INT)) FROM DeliveryBackOffice.dbo.DeliveryAttempt  with (nolock) where Guide_Serie = do.Guide_Serie AND Guide_Number = do.Guide_Number AND ID_DeliveryOrderBySettlement = @IdManifest GROUP BY Guide_Serie, Guide_Number, ID_DeliveryOrderBySettlement) as Pieces_Dry
 	,(CASE WHEN [do].[IsLastMileReturn] = 1 THEN isnull(do.[Sender_FirstName],'') + ' ' + isnull(do.[Sender_LastName],'') ELSE isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') END) as Receiver_Fullname
 	,(CASE WHEN [do].[IsLastMileReturn] = 1 THEN do.[Sender_Address] ELSE do.Receiver_Address END) AS Receiver_Address
 	,CONVERT(nvarchar, ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN do.[Sender_Zone] ELSE do.Receiver_Zone END),0)) AS Receiver_Zone
@@ -137,15 +137,15 @@ BEGIN
             ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
                AND cdp.IdConditionOfPayment > 1
 	INNER JOIN DeliveryBackOffice.dbo.Cost co WITH(NOLOCK)
-			ON do.Guide_Number = co.GuideNumber 
-				AND do.Guide_Serie = co.GuideSerie
+			ON do.Guide_Serie = co.GuideSerie
+				AND do.Guide_Number = co.GuideNumber 
 	INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
 			ON ISNULL(co.ShippingCurrency,@CurrencyGT) = CCU.IdCatCurrencyCOD
 	LEFT JOIN dbo.CreditCardTransactionByCustomer A1 WITH (NOLOCK)
             ON A1.OrderNumber = do.Guide_Serie + CONVERT(VARCHAR, do.Guide_Number)
                AND A1.ReasonCode = '00'
-	WHERE do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
-	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest AND RowStatus = 1)
+	WHERE do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] with (nolock) WHERE ID_DeliveryOrderBySettlement = @IdManifest)
+	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] with (nolock) WHERE ID_DeliveryOrderBySettlement = @IdManifest AND RowStatus = 1)
 	AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 	AND dsd.Guide_Returned = 0  -- guía liquidada vía material devuelto
 	AND dsd.Guide_Delivered = 1  -- guía liquidada vía comprobante de entrega

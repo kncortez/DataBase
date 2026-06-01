@@ -25,7 +25,7 @@ CREATE PROCEDURE [dbo].[sps_DeliveryOrderPiece]
   ,@PieceNumber         int
   ,@VolumetricWeight	decimal (12,2)
   ,@CodeOfSeller		varchar(20) =''
-  ,@ParcelCode			varchar(10) =''
+  ,@ParcelCode			varchar(20) =''
 AS 
 BEGIN
 
@@ -212,4 +212,4 @@ BEGIN
 
 		ROLLBACK TRANSACTION
 	END CATCH
-END 
+END

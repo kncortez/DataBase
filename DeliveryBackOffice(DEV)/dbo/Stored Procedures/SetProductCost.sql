@@ -116,14 +116,14 @@ BEGIN
 				AND
 				cst.GuideNumber = @GuideNumber
 			)
-			OR
-			(
-				cst.ProductNumber = @ProductNumber
-				AND
-				cst.GuideSerie IS NULL
-				AND
-				cst.GuideNumber IS NULL
-			)
+			--OR
+			--(
+			--	cst.ProductNumber = @ProductNumber
+			--	AND
+			--	cst.GuideSerie IS NULL
+			--	AND
+			--	cst.GuideNumber IS NULL
+			--)
 		)
 		AND
 		cst.RowStatus = 1
@@ -280,14 +280,14 @@ BEGIN
 							AND
 							cst.GuideNumber = @GuideNumber
 						)
-						OR
-						(
-							cst.ProductNumber = @ProductNumber
-							AND
-							cst.GuideSerie IS NULL
-							AND
-							cst.GuideNumber IS NULL
-						)
+						--OR
+						--(
+						--	cst.ProductNumber = @ProductNumber
+						--	AND
+						--	cst.GuideSerie IS NULL
+						--	AND
+						--	cst.GuideNumber IS NULL
+						--)
 					)
 					AND
 					cst.RowStatus = 1
@@ -403,14 +403,14 @@ BEGIN
 						AND
 						cst.GuideNumber = @GuideNumber
 					)
-					OR
-					(
-						cst.ProductNumber = @ProductNumber
-						AND
-						cst.GuideSerie IS NULL
-						AND
-						cst.GuideNumber IS NULL
-					)
+					--OR
+					--(
+					--	cst.ProductNumber = @ProductNumber
+					--	AND
+					--	cst.GuideSerie IS NULL
+					--	AND
+					--	cst.GuideNumber IS NULL
+					--)
 				)
 				AND
 				cst.RowStatus = 1
@@ -602,14 +602,14 @@ BEGIN
 								AND
 								cst.GuideNumber = @GuideNumber
 							)
-							OR
-							(
-								cst.ProductNumber = @ProductNumber
-								AND
-								cst.GuideSerie IS NULL
-								AND
-								cst.GuideNumber IS NULL
-							)
+							--OR
+							--(
+							--	cst.ProductNumber = @ProductNumber
+							--	AND
+							--	cst.GuideSerie IS NULL
+							--	AND
+							--	cst.GuideNumber IS NULL
+							--)
 						)
 						AND
 						cst.RowStatus = 1
@@ -704,14 +704,14 @@ BEGIN
 						AND
 						cst.GuideNumber = @GuideNumber
 					)
-					OR
-					(
-						cst.ProductNumber = @ProductNumber
-						AND
-						cst.GuideSerie IS NULL
-						AND
-						cst.GuideNumber IS NULL
-					)
+					--OR
+					--(
+					--	cst.ProductNumber = @ProductNumber
+					--	AND
+					--	cst.GuideSerie IS NULL
+					--	AND
+					--	cst.GuideNumber IS NULL
+					--)
 				)
 				AND
 				cst.RowStatus = 1
@@ -845,6 +845,3 @@ BEGIN
         SELECT ('[' + @jsonResult + ']') jsonResult;
 
 END;
-
-
-

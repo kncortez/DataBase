@@ -34,13 +34,15 @@
     [ReturnPercent]        DECIMAL (18, 2) NULL,
     [IsOldest]             INT             NULL,
     [MinGuidesPerMonth]    INT             NULL,
-    [InsuranceCharge] [decimal](12, 2)     NULL,
+    [InsuranceCharge]      DECIMAL (12, 2) NULL,
     PRIMARY KEY CLUSTERED ([RheId] ASC),
     FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
     CONSTRAINT [FK_RateHeader_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_RateHeader_CatTypeRate] FOREIGN KEY ([RateTypeId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
 );
+
+
 
 
 GO
@@ -156,7 +158,7 @@ GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Cantidad de envíos mínimos en los últimos 30 días' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'MinGuidesPerMonth'
 GO
 
-EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Cargo fijo por uso de seguro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'InsuranceCharge'
+
 GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion de los tarifarios' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader'

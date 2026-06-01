@@ -37,11 +37,12 @@ BEGIN
         FROM [dbo].RegisterUser usr WITH(NOLOCK)
             LEFT JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
                 ON rua.RuaIdUser = usr.UsrIdUser
+              AND rua.RuaRowStatus = 1
             INNER JOIN [dbo].Account ac WITH(NOLOCK)
                 ON ac.AccIdAccount = rua.RuaIdAccount
             INNER JOIN VisitPointByUser vp WITH(NOLOCK)
                 ON vp.RegisterUserID = usr.UsrIdUser
-        WHERE ac.AccIdAccount = @UserId AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
+        WHERE ac.AccIdAccount = @UserId  AND ac.AccRowStatus = 1
     );
 
 

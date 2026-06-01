@@ -241,6 +241,9 @@ BEGIN
                                  SELECT IdRoute FROM @RoutePreparationMap
                              );
 
+    IF COALESCE(@@ROWCOUNT, 0) > 0
+        SET @RModified = @RModified + 1;
+
     --agregar detalle de ruta de preparacion
     INSERT INTO @RoutePreparationMap
     (
@@ -293,39 +296,9 @@ BEGIN
               AND rpd.RowStatus = 1
     );
 
-    --agregar detalle de piezas
-    --- Insertar solo las piezas específicas del TVP que existen y no están registradas aún
-    INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]
-    (
-        [RoutePreparationDetailId],
-        [PieceNumber],
-        [PieceType],
-        [RowStatus],
-        [TokenCreated],
-        [DateCreated]
-    )
-    SELECT rpd.IdRoutePreparationDetail,
-           gl.GuidePiece,
-           IIF(@GuidePieceType = 1, 1, 0),
-           1,
-           @Token,
-           GETDATE()
-    FROM #GuidesTmpRoute gl
-        INNER JOIN @RoutePreparationMap rpm
-            ON gl.IdRoute = rpm.IdRoute
-        INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] rpd WITH (NOLOCK)
-            ON rpd.RoutePreparationId = rpm.IdRoutePreparation
-               AND rpd.Guide_Serie = gl.GuideSerie
-               AND rpd.Guide_Number = gl.GuideNumber
-               AND rpd.RowStatus = 1
-    WHERE NOT EXISTS
-    (
-        SELECT 1
-        FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] rpdp WITH (NOLOCK)
-        WHERE rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
-              AND rpdp.PieceNumber = gl.GuidePiece
-              AND rpdp.RowStatus = 1
-    );
+    IF COALESCE(@@ROWCOUNT, 0) > 0
+        SET @RModified = @RModified + 1;
+
 
     -- =========================================================================
     -- Retirar piezas de estas guías de otras preparaciones de la misma fecha
@@ -358,6 +331,9 @@ BEGIN
           --AND rp.DateRoutePreparation = @Date
           AND rp.IdRoutePreparation <> rpm.IdRoutePreparation; -- excluir la preparación actual
 
+    IF COALESCE(@@ROWCOUNT, 0) > 0
+        SET @RModified = @RModified + 1;
+
     --- Desactivar el detalle de la guía en otras preparaciones
     UPDATE rpd
     SET rpd.RowStatus = 0,
@@ -383,18 +359,23 @@ BEGIN
           --AND rp.DateRoutePreparation = @Date
           AND rp.IdRoutePreparation <> rpm.IdRoutePreparation;
 
+    IF COALESCE(@@ROWCOUNT, 0) > 0
+        SET @RModified = @RModified + 1;
     -- =========================================================================
     -- Actualizar estado de guías y piezas → Programado para entrega (3)
     -- =========================================================================
     UPDATE do
     SET do.StatusOrderId = 3
-    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
         INNER JOIN
         (SELECT DISTINCT GuideSerie, GuideNumber FROM #GuidesTmpRoute) gl
             ON do.Guide_Serie = gl.GuideSerie
                AND do.Guide_Number = gl.GuideNumber;
 
-    --- Bitácora: insertar estado por guía solo si no existe registro del día en esta preparación
+    IF COALESCE(@@ROWCOUNT, 0) > 0
+        SET @RModified = @RModified + 1;
+
+    -- Bitácora: insertar estado por guía solo si no existe registro del día en esta preparación
     INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
     (
         [Guide_Serie],
@@ -434,23 +415,8 @@ BEGIN
             ON dop.GuideSerie = gl.GuideSerie
                AND dop.GuideNumber = gl.GuideNumber
                AND dop.NoPiece = gl.GuidePiece;
-
     IF COALESCE(@@ROWCOUNT, 0) > 0
-            SET @RModified = @RModified + 1;
-    -- =========================================================================
-    -- Warehouse: desactivar posición de inventario
-    -- Intento 1 → a nivel de pieza
-    -- =========================================================================
-    UPDATE w
-    SET w.Active = 0,
-        w.UserUpdated = @Token,
-        w.DateUpdated = GETDATE()
-    FROM [DeliveryBackOffice].[dbo].[Warehouse] w WITH (NOLOCK)
-        INNER JOIN #GuidesTmpRoute gl
-            ON w.Guide_Serie = gl.GuideSerie
-               AND w.Guide_Number = gl.GuideNumber
-               AND w.Guide_Piece = gl.GuidePiece;
-
+        SET @RModified = @RModified + 1;
 
     -- ... (continúa: FDD-942 ServiceManagement, respuesta y cierre de transacción)
     -- =========================================================================

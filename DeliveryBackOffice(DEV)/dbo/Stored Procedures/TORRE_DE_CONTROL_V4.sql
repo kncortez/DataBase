@@ -137,9 +137,7 @@ begin
 		GROUP BY 
 		  DOBS.ID 
 	)
-
-
-
+	
 	-- Consulta principal
 	SELECT 
 		MAX(DOBS.ID) [Settlement_ID],
@@ -178,8 +176,7 @@ begin
 		(SUM(CASE WHEN DSD.StatusOrderId = 5 THEN DOP.NoPiece ELSE 0 END) * 100 / NULLIF(MAX(ISNULL(DOBS.Pieces_Dry_Dispatched,0)) + MAX(ISNULL(DOBS.Pieces_Cold_Dispatched,0)), 0)) 
 			AS Delivery_effectiveness,
 	
-		--(SUM(CASE WHEN DSD.StatusOrderId = 5 THEN DOP.NoPiece ELSE 0 END) * 100 / MAX(ISNULL(DOBS.Pieces_Dry_Dispatched,0)) + MAX(ISNULL(DOBS.Pieces_Cold_Dispatched,0)))  AS Delivery_effectiveness,
-		  CONVERT(
+	  CONVERT(
 			CHAR(8),
 			DATEADD(
 				SECOND,
@@ -248,7 +245,7 @@ begin
 
 	WHERE 
 		DOBS.Date_Dispatched BETWEEN @StartDateTime AND @EndDateTime
-		AND   HBL.IdCountry = ISNULL(@IdCountry,'GT')
+		AND   HBL.IdCountry = @IdCountry
 	GROUP BY DOBS.ID
 
 end

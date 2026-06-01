@@ -12,6 +12,16 @@ CREATE PROCEDURE [dbo].[spput_modify_guide_to_receiverid]
     @TokenUpdated VARCHAR(50)
 AS
 BEGIN
+DECLARE @GuideSerie NVARCHAR(10);
+DECLARE @GuideNumber BIGINT;
+
+-- Primeros 2 caracteres
+SET @GuideSerie = SUBSTRING(@Guide, 1, 2);
+
+-- Del 3er carácter en adelante (largo dinámico) convertido a número
+SET @GuideNumber = TRY_CONVERT(BIGINT, SUBSTRING(@Guide, 3, LEN(@Guide)));
+
+
 
     -- Variables "globales"
     DECLARE @DateUpdated DATETIME = GETDATE();
@@ -43,7 +53,10 @@ BEGIN
                                ),
             TokenUpdated = @TokenUpdated,
             DateUpdated = @DateUpdated
-        WHERE CONCAT(Guide_Serie, Guide_Number) = @Guide;
+        WHERE 
+        --CONCAT(Guide_Serie, Guide_Number) = @Guide;
+        Guide_Serie = @GuideSerie
+        and Guide_Number = @GuideNumber
     END TRY
     BEGIN CATCH
         SELECT 'RollBackTransaction' AS message,

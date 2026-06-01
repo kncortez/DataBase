@@ -17,7 +17,7 @@ BEGIN
     DECLARE @lastStatus INT;
 
     SELECT @CurrentStatus = ord.StatusOrderId
-    FROM dbo.DeliveryOrder ord
+    FROM dbo.DeliveryOrder ord WITH(NOLOCK)
     WHERE ord.Guide_Serie = @GuideSerie
           AND ord.Guide_Number = @GuideNumber;
 
@@ -32,7 +32,7 @@ BEGIN
         IF EXISTS
         (
             SELECT 1
-            FROM dbo.DeliveryOrderDetail
+            FROM dbo.DeliveryOrderDetail WITH(NOLOCK)
             WHERE Guide_Serie = @GuideSerie
                   AND Guide_Number = @GuideNumber
                   AND StatusOrderId = @IdStatus
@@ -54,7 +54,7 @@ BEGIN
 
                 SELECT TOP 1
                        @lastStatus = did.StatusOrderId
-                FROM dbo.DeliveryOrderDetail did
+                FROM dbo.DeliveryOrderDetail did WITH(NOLOCK)
                 WHERE Guide_Serie = @GuideSerie
                       AND Guide_Number = @GuideNumber
                       AND StatusOrderId != @IdStatus

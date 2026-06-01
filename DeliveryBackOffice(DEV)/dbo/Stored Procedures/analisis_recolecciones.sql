@@ -1,6 +1,6 @@
 ﻿--Version C
 --USE DeliveryBackOffice;
-create procedure analisis_recolecciones 
+CREATE procedure [dbo].[analisis_recolecciones] 
 
 as 
 begin
@@ -77,9 +77,10 @@ FROM
                           DOD.DateCreatedInSystem
                    FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail    DOP WITH (NOLOCK)
                        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
-                           ON DOP.GuideNumber = DOD.Guide_Number
-                   WHERE DOP.IdHeaderRecolection = SCP.SchedulePickupId
-                         AND DOD.StatusOrderId IN ( 2, 11, 20 ) --Recolectado, arribo, traslado a Exc
+                           ON dop.GuideSerie = dod.Guide_Serie AND DOP.GuideNumber = DOD.Guide_Number
+                   WHERE DOD.StatusOrderId IN ( 2, 11, 20 ) --Recolectado, arribo, traslado a Exc
+                         AND DOP.IdHeaderRecolection = SCP.SchedulePickupId
+
                ) IS NULL
              , 0
              , 1)                                                                                     PUSuccess
@@ -88,9 +89,9 @@ FROM
                       DOD.DateCreatedInSystem
                FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail    DOP WITH (NOLOCK)
                    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
-                       ON DOP.GuideNumber = DOD.Guide_Number
-               WHERE DOP.IdHeaderRecolection = SCP.SchedulePickupId
-                     AND DOD.StatusOrderId IN ( 2, 11, 20 ) --Recolectado, arribo, traslado a Exc
+                       ON dop.GuideSerie = dod.Guide_Serie AND DOP.GuideNumber = DOD.Guide_Number
+               WHERE DOD.StatusOrderId IN ( 2, 11, 20 ) --Recolectado, arribo, traslado a Exc
+                     AND DOP.IdHeaderRecolection = SCP.SchedulePickupId
                ORDER BY DOD.StatusOrderId ASC
            )                                                                                          RealPickupDate --Fecha real de recolección se tomara una de todas las guías relacionadas
 

@@ -1,16 +1,18 @@
-CREATE TABLE [dbo].[CatShipContainerStatus] (
-    [IdCatStatus]         INT IDENTITY (1, 1) NOT NULL,
-    [Name]                NVARCHAR (100) NOT NULL,
-    [Description]         NVARCHAR (200) NULL,
-    [RowStatus]           BIT NOT NULL DEFAULT 1,
-    [UserCreated]         NVARCHAR(50) NOT NULL,
-    [DateCreated]         DATETIME NOT NULL,
-    [TokenCreated]        NVARCHAR(50) NOT NULL,
-    [UserUpdated]         NVARCHAR(50) NULL,
-    [DateUpdated]         DATETIME NULL,
-    [TokenUpdated]        NVARCHAR(50) NULL,
+﻿CREATE TABLE [dbo].[CatShipContainerStatus] (
+    [IdCatStatus]  INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [Name]         NVARCHAR (100) NOT NULL,
+    [Description]  NVARCHAR (200) NULL,
+    [RowStatus]    BIT            DEFAULT ((1)) NOT NULL,
+    [UserCreated]  NVARCHAR (50)  NOT NULL,
+    [DateCreated]  DATETIME       NOT NULL,
+    [TokenCreated] NVARCHAR (50)  NOT NULL,
+    [UserUpdated]  NVARCHAR (50)  NULL,
+    [DateUpdated]  DATETIME       NULL,
+    [TokenUpdated] NVARCHAR (50)  NULL,
     CONSTRAINT [PK_CatShipContainerStatus] PRIMARY KEY CLUSTERED ([IdCatStatus] ASC)
 );
+
+
 GO
 
 EXECUTE sp_addextendedproperty N'MS_Description', N'Identificador del estado del contenedor', N'SCHEMA', N'dbo', N'TABLE', N'CatShipContainerStatus', N'COLUMN', N'IdCatStatus'

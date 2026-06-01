@@ -40,11 +40,11 @@ BEGIN
 		INNER JOIN ShippingContainerDetail SPD WITH(NOLOCK)
 			ON SP.IdContainer = SPD.IdContainer
 		INNER JOIN DeliveryOrder DO WITH(NOLOCK)
-			ON DO.Guide_Number = SPD.GuideNumber
-			AND DO.Guide_Serie = SPD.GuideSerie
+			ON DO.Guide_Serie = SPD.GuideSerie
+			AND DO.Guide_Number = SPD.GuideNumber
 		INNER JOIN DeliveryOrderPiece DOP WITH(NOLOCK)
-			ON DO.Guide_Number = DOP.GuideNumber
-			AND DO.Guide_Serie = DOP.GuideSerie
+			ON DO.Guide_Serie = DOP.GuideSerie
+			AND DO.Guide_Number = DOP.GuideNumber
 	WHERE SP.IdCustomer = @IdCustomer
 		AND SP.ReferenceContainer = @ReferenceContainer
 		AND SPD.RowStatus = 1

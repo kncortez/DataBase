@@ -35,6 +35,8 @@
 
 
 
+
+
 GO
 
 
@@ -140,6 +142,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_ServiceDataForGuide_Token]
-    ON [dbo].[ServiceDataForGuide]([GuideToken] ASC);
-

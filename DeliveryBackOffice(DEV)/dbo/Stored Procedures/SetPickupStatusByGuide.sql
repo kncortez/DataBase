@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Luis Ardón>
 -- Create date: <2023-11-25>
 -- Modify:      <Carlos Vicente>
@@ -22,8 +22,8 @@ BEGIN
         (
             SELECT TOP 1 1
             FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH (NOLOCK)
-            WHERE Guide_Number = @GuideNumber
-                  AND Guide_Serie = @GuideSerie
+            WHERE Guide_Serie = @GuideSerie
+                  AND Guide_Number = @GuideNumber
         )
         BEGIN
             RAISERROR('Número de guia inválido', 16, 1);
@@ -37,8 +37,8 @@ BEGIN
                 TOP 1 1
             FROM 
                 [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH (NOLOCK)
-            WHERE Guide_Number = @GuideNumber
-                  AND Guide_Serie = @GuideSerie
+            WHERE Guide_Serie = @GuideSerie
+                  AND Guide_Number = @GuideNumber
                   AND StatusOrderId = @StatusRequested
         )
         BEGIN
@@ -83,8 +83,8 @@ BEGIN
         --Actualizacion de registro
         UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
         SET StatusOrderId = @StateCollected
-        WHERE Guide_Number = @GuideNumber
-              AND Guide_Serie = @GuideSerie;
+        WHERE Guide_Serie = @GuideSerie
+              AND Guide_Number = @GuideNumber;
 
         COMMIT TRAN;
         SELECT 200 AS 'responseCode',

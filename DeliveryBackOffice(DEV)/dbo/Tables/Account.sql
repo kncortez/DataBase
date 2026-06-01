@@ -27,6 +27,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_IdCustomer]
     ON [dbo].[Account]([IdCustomer] ASC);
@@ -88,4 +90,10 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_AccRowStatus_Include]
     ON [dbo].[Account]([AccRowStatus] ASC)
     INCLUDE([IdCustomer]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_Account_Customer_Include]
+    ON [dbo].[Account]([IdCustomer] ASC)
+    INCLUDE([AccIdAccount]);
 

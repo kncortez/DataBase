@@ -16,17 +16,17 @@ BEGIN
         FROM invoiceHeader WITH (NOLOCK)
         WHERE 
 		--(
-		--inv_descriptionFEL = 'Fallo la ejecucion del comando: [POST_DOCUMENTGT], TrCode: [9], description: [Ya existe el Documento con el NIT, codigo establecimiento, tipo de documento y IDInterno, no se puede insertar un documento duplicado]'
+		inv_descriptionFEL = 'Fallo la ejecucion del comando: [POST_DOCUMENTGT], TrCode: [9], description: [Ya existe el Documento con el NIT, codigo establecimiento, tipo de documento y IDInterno, no se puede insertar un documento duplicado]'
   --      OR 
 		--inv_documentRecieved ='TimeOut' 
 		--)
-		--  AND 
-		  inv_dateRegister >=   '2025-06-01 00:00:00'
-		 AND inv_dateRegister <='2025-06-30 23:59:59'
+		  AND 
+		  inv_dateRegister >=   '2026-04-01 00:00:00'
+		 --AND inv_dateRegister <='2025-12-30 23:59:59'
 		 AND 		 
 		 (inv_certificationFEL IS NULL OR inv_certificationFEL = '')
-		--AND  inv_pk_id IN (5807293)
---)
+		--AND  inv_pk_id IN (7730592)
+
 		
     END TRY
     BEGIN CATCH

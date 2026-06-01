@@ -64,7 +64,7 @@ BEGIN
                 SELECT TOP 1
                        CST.IdCatStatusType
                 FROM [DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
-                WHERE CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
+                WHERE CST.StatusType = 'Externo' 
             );
 
 			PRINT @ExternalTypeId
@@ -72,9 +72,8 @@ BEGIN
 	--validar si el último estado es externo en caso contrario tomar el estado anterior
 	DECLARE @GuideTypeId INT
 	SELECT @GuideTypeId = sto.CatStatusTypeId FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH(NOLOCK) 
-	INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK) ON DOR.StatusOrderId = STO.StatusOrderId
-	AND STO.CatStatusTypeId = 2
-	WHERE DOR.Guide_Serie = @GuideSerie AND DOR.Guide_Number = @GuideNumber
+	INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK) ON DOR.StatusOrderId = STO.StatusOrderId	
+	WHERE DOR.Guide_Serie = @GuideSerie AND DOR.Guide_Number = @GuideNumber AND STO.CatStatusTypeId = 2
 	
 		
 
@@ -166,8 +165,8 @@ BEGIN
                   AND DA.Guide_Number = DO.Guide_Number
             ORDER BY DA.Date_Created DESC
         ) I
-        WHERE DOD.Guide_Number = @GuideNumber
-              AND DOD.Guide_Serie = @GuideSerie
+        WHERE DOD.Guide_Serie = @GuideSerie
+              AND DOD.Guide_Number = @GuideNumber
               AND CST.IdCatStatusType = @ExternalTypeId
         ORDER BY DOD.DateCreated DESC;
 	END

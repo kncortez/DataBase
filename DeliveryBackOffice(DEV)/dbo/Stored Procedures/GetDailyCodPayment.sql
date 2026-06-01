@@ -163,12 +163,6 @@ BEGIN
           LEFT JOIN [dbo].[DeliveryBank] AS bank
                  ON bank.Id_bank = CDATA.DCBA_Bank_Id
     WHERE ISNULL(IIF(CDATA.DCBA_Bank_Id = '', NULL, CDATA.DCBA_Bank_Id), 0) <> 0
-      AND bank.Id_country = @IdCountry--IIF(@IdCountry = '-1', bank.Id_country, @IdCountry)  
-   --OPTION (MAXDOP 1);  
+      AND bank.Id_country = @IdCountry--IIF(@IdCountry = '-1', bank.Id_country, @IdCountry)
+	  OPTION (MAXDOP 1);
 END;
-
-
-
-
-
-
