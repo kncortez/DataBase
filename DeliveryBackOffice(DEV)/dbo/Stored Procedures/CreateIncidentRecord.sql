@@ -589,8 +589,8 @@ BEGIN
 							INNER JOIN @PiecesGuideRelatedTable pgt
                                 ON gpt.GuideSerie = pgt.GuideSerie
 								    AND gpt.GuideNumber = pgt.GuideNumber
-							WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-								AND WHE.TypeConnectionId = 2;							
+                                    AND gpt.NumberPieces = pgt.NumberRelatedPieces
+							WHERE WHE.TypeConnectionId = 2;							
 
                         END
 					END

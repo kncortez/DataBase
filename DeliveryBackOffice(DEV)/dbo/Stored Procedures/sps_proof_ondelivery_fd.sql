@@ -1,34 +1,20 @@
--- =============================================
--- Author:		<Aquino, César>
--- Create date: <2021-03-23>
--- Description:	<Registrar prueba de entrega en sitio <API Delivery >>
--- =============================================
--- =============================================
--- Modiff:		<Marco,Jiménez>
--- Create date: <2021-09-16>
--- Description:	<Se agregan validaciones para NO insertar 
---               el checkpoint Entregado cuando la entrega sea en un Express Center,
---               en cambio se debe insertar el checkpoint Reenviado a Express Center>
--- Hotfix: FDAPI-337
--- =============================================
--- =============================================
--- Author:		<Edelman,Vásquez>
--- Create date: <2023-03-02>
--- Description:	<En proceso de entregas desde CourierApp, cuando sea flujo de guías marcadas para devolución, ingresar las guías marcadas para devolución al proceso de COD para lotes Collect>
--- =============================================
--- Author:		<Tito Garcia>
--- Update date: <03-09-2024>
--- Description:	<Se agrega la variable @Receiver_CUI para almacenar el CUI de la persona que recibe>
--- =============================================
--- Author:		<Cristian Suazo>
--- Update date: <2025-01-12>
--- Description:	<Se agrega la funcion del proceso por ticket number para las guías>
--- =============================================
--- =============================================
--- Author:		<Edelman>
--- Update date: <2026-01-15>
--- Description:	<Guardar Data de transferencia imagen de voucher y Idtransfer>
--- =============================================
+/* =================================================
+   SP:        [dbo].[sps_proof_ondelivery_fd]
+   Propósito: <Registrar prueba de entrega en sitio <API Delivery>
+   Autor:     <Cesar Aquino>
+   Historia:  <>
+   Fecha:     2021-03-23
+============================================
+=== CHANGELOG ================================
+-- 2026-04-09 | Historia/épica: FDAPI-5867 | Autor: Mario  Herrarte | Se agrego el registro del estado de arribo a instalaciones si no existe
+-- 2025-12-11 | Historia/épica: FDAPI-4775 | Autor: Tito Garcia     |
+-- 2025-11-20 | Historia/épica:            | Autor: Tito Garcia     |
+-- 2026-01-15 | Historia/épica:            | Autor: Edelman         | Guardar Data de transferencia imagen de voucher y Idtransfer
+-- 2025-01-12 | Historia/épica:            | Autor: <Cristian Suazo | Se agrega la funcion del proceso por ticket number para las guías
+-- 2024-09-03 | Historia/épica:            | Autor: Tito Garcia     | Se agrega la variable @Receiver_CUI para almacenar el CUI de la persona que recibe
+-- 2023-03-02 | Historia/épica:            | Autor: Edelman Vasquez | En proceso de entregas desde CourierApp, cuando sea flujo de guías marcadas para devolución, ingresar las guías marcadas para devolución al proceso de COD para lotes Collect
+-- 2021-09-16 | Historia/épica: FDAPI-337  | Autor: Marco Jiménez   | Se agregan validaciones para NO insertar el checkpoint Entregado cuando la entrega sea en un Express Center, en cambio se debe insertar el checkpoint Reenviado a Express Center
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
@@ -60,6 +46,8 @@ SET ANSI_NULLS ON;
 
 	DECLARE @Today DATE = CAST(GETDATE() AS DATE);
     DECLARE @CourierId INT = NULL;
+	DECLARE @TodayPlusOne DATE;
+	DECLARE @LongDate DATETIME = GETDATE();
 
 	IF @GuideNumber IS NULL OR @GuideNumber = 0 OR @GuideSerie IS NULL OR @GuideSerie = ''
 	BEGIN
@@ -97,6 +85,8 @@ SET ANSI_NULLS ON;
     DECLARE @DataOriginId INT;
     -- variable para setear el nombre del módulo del cuál se desea obtener su id
     DECLARE @ModName NVARCHAR(50);
+	
+	DECLARE @factor DECIMAL(10,6)= CAST((2.00/24.00) AS DECIMAL(10,6));
 
     DROP TABLE IF EXISTS #TempDataClient;
 
@@ -319,7 +309,7 @@ SET ANSI_NULLS ON;
          -- 1) LoginToken (más exacto)
          SELECT TOP 1 @CourierId = sr.ID
          FROM DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
-         JOIN DeliveryBackOffice.dbo.SenderReceiverLoginToken SRLT WITH (NOLOCK)
+         INNER JOIN DeliveryBackOffice.dbo.SenderReceiverLoginToken SRLT WITH (NOLOCK)
            ON SRLT.SenderReceiverId = sr.ID
          WHERE SRLT.LoginToken = @PhoneNumber;
 
@@ -338,6 +328,8 @@ SET ANSI_NULLS ON;
            FROM DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
            WHERE sr.Phone LIKE @PhoneNumber + '%';
          END
+
+		 SET @TodayPlusOne = DATEADD(DAY, 1, @Today);
  
           -- Ahora: query simple, sin OR
          INSERT INTO @Table
@@ -347,7 +339,7 @@ SET ANSI_NULLS ON;
            AND da.Guide_Serie = @GuideSerie
            AND da.Guide_Number = @GuideNumber
            AND da.Date_Created >= @Today
-           AND da.Date_Created < DATEADD(DAY, 1, @Today)
+           AND da.Date_Created < @TodayPlusOne
          ORDER BY da.Date_Created DESC;
 
         -- insertar foto y guardar ID para actualizar tabla de entregas
@@ -441,6 +433,80 @@ SET ANSI_NULLS ON;
 										AND ds.ID = li.LastID
 					
 				---------------------------------------------------------------------------------------------
+
+				-- Registro de Arribo a instalaciones si este aun no existe --
+				INSERT INTO DeliveryOrderDetail
+                    (
+                     Guide_Serie,
+                     Guide_Number,
+                     StatusOrderId,
+                     UserCreated,
+                     DateCreated,
+                     DateCreatedInSystem,
+                     StationId
+                    )
+                SELECT 
+                    @GuideSerie,
+                    @GuideNumber,
+                    11,
+                    @Token,
+                    CASE
+				        WHEN DODF.StatusOrderId IN (4,5,22) THEN
+					        CASE 
+					           WHEN CAST(DODF.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+							        THEN DATEADD(SECOND, -1, DODF.DateCreated)
+					           WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem)) AS INT) = 1
+						           THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+					           ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem))) - 1,20)
+					        END
+				        WHEN DODF.StatusOrderId IN (1,15) 
+					        AND CAST(DODF.DateCreated AS DATE) = CAST(GETDATE() AS DATE) 
+					        THEN 
+						        DATEADD(SECOND, 1, DODF.DateCreated)
+				        ELSE 
+					        CASE 
+					           WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(GETDATE())) AS INT) = 1
+						           THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+					           ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(GETDATE()))) - 1,20)
+					        END
+				    END,
+                    GETDATE(),
+                    @StationId
+                FROM (
+				    SELECT
+	    		        Guide_Serie,
+	    		        Guide_Number,
+	    		        CASE
+	    			        WHEN DATEPART(MILLISECOND, DateCreated) >= 500
+	    				        THEN DATEADD(SECOND, 1, DateCreated)
+	    			        ELSE DATEADD(MILLISECOND, -DATEPART(MILLISECOND, DateCreated), DateCreated)
+	    			        END DateCreated
+				        FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+				        WHERE Guide_Serie = @GuideSerie
+					        AND Guide_Number = @GuideNumber
+				) DO
+				OUTER APPLY (
+				    SELECT TOP 1
+				         D.DateCreatedInSystem
+				        ,D.StatusOrderId
+				        ,D.DateCreated
+				    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail D WITH(NOLOCK)
+				    WHERE D.Guide_Serie = @GuideSerie
+				      AND D.Guide_Number = @GuideNumber
+				    ORDER BY 
+				        CASE 
+					        WHEN D.StatusOrderId IN (4,5,22) THEN 0
+					        ELSE 1
+				        END,
+				        D.DateCreated ASC
+				) DODF
+				WHERE NOT EXISTS (
+				    SELECT 1
+				    FROM DeliveryOrderDetail DOD WITH(NOLOCK)
+				    WHERE DOD.Guide_Serie = @GuideSerie
+					    AND DOD.Guide_Number = @GuideNumber
+					    AND DOD.StatusOrderId = 11
+				);
 
                 -- registrar estado en tabla de checkpoints
                 INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
@@ -815,7 +881,7 @@ SET ANSI_NULLS ON;
 						LEFT JOIN [DeliveryBackOffice].[dbo].[Membership] MMBSHP WITH(NOLOCK)
 							ON Acc.AccIdAccount = MMBSHP.AccountId
 								AND MMBSHP.RowStatus = 1
-								AND MMBSHP.ExpirationDate >= GETDATE()
+								AND MMBSHP.ExpirationDate >= @LongDate	
 					WHERE DO.Guide_Serie = @GuideSerie
 						AND DO.Guide_Number = @GuideNumber;
 
@@ -829,11 +895,11 @@ SET ANSI_NULLS ON;
 					FROM [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
 						INNER JOIN [DeliveryBackOffice].[dbo].[Membership] MMBSHP WITH(NOLOCK)
 							ON MSL.MembershipId = MMBSHP.IdMembership
-								AND MSL.SubscriptionId IS NULL
 					WHERE MSL.LogGuideSerie = @GuideSerie
 						AND MSL.LogGuideNumber = @GuideNumber
 						AND MSL.RowStatus = 1
 						AND MSL.LogServiceNumber <= MMBSHP.MembershipMaxServiceFixedValue
+						AND MSL.SubscriptionId IS NULL
 
 					-- Por suscripción
 					SELECT TOP 1 @IsGuideValidForPoints = 0
