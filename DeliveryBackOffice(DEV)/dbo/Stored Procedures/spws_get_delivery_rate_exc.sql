@@ -6,6 +6,7 @@
    Fecha:     2026-03-02
 ============================================
 === CHANGELOG ================================
+-- 2026-05-25 | Historia/épica: FDAPI-6197 | Autor: Cristian Azurdia |
 -- 2026-03-02 | Historia/épica: FDAPI-5460 | Autor: Cristian Azurdia |
 =========================================== */
 
@@ -18,7 +19,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate_exc]
   , @CountPiecesParams AS INT = 1  
   , @IsFragile AS BIT = 'FALSE'  
   , @IsCollected AS BIT = 'FALSE'  
-  , @IsInsurance AS BIT = 'FALSE'  
+  , @IsInsurance AS BIT = 0
   , @WeigthParcels AS NVARCHAR(MAX) = '0'  
   , @InsuranceAmount AS DECIMAL(18, 2) = 0  
   , @IsCreditCardPayment AS BIT = 'false'  
@@ -45,7 +46,8 @@ BEGIN
     SET NOCOUNT ON;
 
     DECLARE @CustomerId AS INT = 0;
-    DECLARE @CustomerType INT  = 0;  
+    DECLARE @CustomerType INT  = 0;
+    DECLARE @LimitInsuranceAmount INT = 5000;
 
     DECLARE @FechaCompra AS DATETIME = GETDATE();
     DECLARE @Time AS TIME = CONVERT(TIME, @FechaCompra);
@@ -55,8 +57,8 @@ BEGIN
     DECLARE @DefaultCurrency AS INT =
         (
             SELECT CCC.IdCatCurrencyCOD 
-            FROM DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)  
-            INNER JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)  
+            FROM [DeliveryBackOffice].[dbo].DeliveryCurrency DC WITH(NOLOCK)  
+            INNER JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD CCC WITH(NOLOCK)  
             ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD  
             WHERE DC.Currency_IdCountry = @Country 
               AND DC.DefaultPerCountry = 1  
@@ -72,7 +74,7 @@ BEGIN
         (  
             SELECT TOP 1
                    eco.IdCustomer
-            FROM DeliveryBackOffice.[dbo].[Ecommerce] eco WITH (NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].[Ecommerce] eco WITH (NOLOCK)
             WHERE eco.UserKey = @CodApp --'SIFDCECOM300720201459'
                   AND eco.IdCountry = @Country
                   AND eco.EcommerceStatus = 'TRUE'
@@ -106,7 +108,7 @@ BEGIN
                 (  
                     SELECT TOP 1
                            AccIdAccount
-                    FROM dbo.Account WITH (NOLOCK)
+                    FROM [DeliveryBackOffice].[dbo].Account WITH (NOLOCK)
                     WHERE IdCustomer = @CustomerId
                           AND AccRowStatus = 1
                 );  
@@ -126,7 +128,7 @@ BEGIN
 
         SELECT TOP 1  
                @TechnicalDescription = TechnicalDescription  
-        FROM CatProductCategory  WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].CatProductCategory  WITH (NOLOCK)
         WHERE IdCatProductCategory = @CategoryProductId  
               AND RowStatus = 1;  
 
@@ -138,18 +140,10 @@ BEGIN
         WHERE CatProductCategoryId =  
         (  
             SELECT IdCatProductCategory  
-            FROM CatProductCategory  WITH (NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].CatProductCategory  WITH (NOLOCK)
             WHERE TechnicalDescription = @TechnicalDescription  
                   AND RowStatus = 1  
-                  AND  
-                  (  
-                      IdCountry = @Country  
-                      OR  
-                      (  
-                          IdCountry IS NULL  
-                          AND @Country = 'GT'  
-                      )  
-                  )  
+                  AND IdCountry = @Country  
         );  
 
         IF (@NewProductId IS NULL)  
@@ -227,9 +221,9 @@ BEGIN
     (
         SELECT top 1
                rbc.RbcIdRate
-        FROM dbo.RatebyCustomer rbc WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].RatebyCustomer rbc WITH (NOLOCK)
         WHERE rbc.RbcIdCustomer = @CustomerId
-              AND rbc.RbcRowStatus = 'TRUE'
+              AND rbc.RbcRowStatus = 1
               AND rbc.RbcCodeOfReference = @CodeOfReferenceSource
     )
     BEGIN
@@ -240,14 +234,14 @@ BEGIN
              , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
              , @CurrencyId     = ISNULL(rh.IdCurrency, @DefaultCurrency)
-        FROM dbo.RatebyCustomer          rc WITH (NOLOCK)
-            LEFT JOIN dbo.RateHeader     rh WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].RatebyCustomer          rc WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].RateHeader     rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
-                   AND rh.RheRowStatus = 'true'
-            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                AND rh.RheRowStatus = 1
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD dc WITH (NOLOCK)
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rc.RbcIdCustomer = @CustomerId
-              AND rc.RbcRowStatus = 'true'
+              AND rc.RbcRowStatus = 1
               AND rc.RbcCodeOfReference = @CodeOfReferenceSource;
     END;
     ELSE
@@ -259,14 +253,14 @@ BEGIN
              , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
              , @CurrencyId     = ISNULL(rh.IdCurrency, @DefaultCurrency)
-        FROM dbo.RatebyCustomer          rc WITH (NOLOCK)
-            LEFT JOIN dbo.RateHeader     rh WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].RatebyCustomer          rc WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].RateHeader     rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
-                   AND rh.RheRowStatus = 'true'
-            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                AND rh.RheRowStatus = 1
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD dc WITH (NOLOCK)
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rc.RbcIdCustomer = @CustomerId
-              AND rc.RbcRowStatus = 'true'
+              AND rc.RbcRowStatus = 1
               AND rc.RbcCodeOfReference IS NULL;
     END;
 
@@ -278,13 +272,13 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit  
              , @Currency       = dc.Symbol  
              , @PiecesIncluded = rh.PiecesIncluded  
-        FROM dbo.RateBySalePipeLine      sp WITH (NOLOCK)  
-            LEFT JOIN dbo.RateHeader     rh WITH (NOLOCK)  
+        FROM [DeliveryBackOffice].[dbo].RateBySalePipeLine      sp WITH (NOLOCK)  
+            LEFT JOIN [DeliveryBackOffice].[dbo].RateHeader     rh WITH (NOLOCK)  
                 ON rh.RheId = sp.RateId  
-                AND rh.RheRowStatus = 'true'  
-            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)  
+                AND rh.RheRowStatus = 1 
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD dc WITH (NOLOCK)  
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency  
-        WHERE sp.RowStatus = 'true'  
+        WHERE sp.RowStatus = 1
               AND sp.SalePipeLineId = @IdSalePipeLine;  
   
     END;
@@ -297,12 +291,12 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
-        FROM dbo.RateHeader              rh WITH (NOLOCK)
-            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].RateHeader              rh WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatCurrencyCOD dc WITH (NOLOCK)
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
-        WHERE rh.RheRowStatus = 'true'
-              AND rh.RheDefault = 'true'
-              AND ISNULL(rh.CountryId, 'GT') = @Country;
+        WHERE rh.RheRowStatus = 1
+              AND rh.RheDefault = 1
+              AND rh.CountryId = @Country;
     END;
 
     IF (@CustomerType IN ( 2, 3 )) --Validación si Usuario es Individual o Express center
@@ -364,10 +358,10 @@ BEGIN
     (  
         SELECT TOP 1  
                cts.IdCatTypeSubscription  
-        FROM CatSubscription               csp WITH (NOLOCK)
-            INNER JOIN CatTypeSubscription cts WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].CatSubscription               csp WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].CatTypeSubscription cts WITH (NOLOCK)
                 ON csp.CatTypeSubscriptionId = cts.IdCatTypeSubscription  
-            INNER JOIN CatProductCategory  cpc WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].CatProductCategory  cpc WITH (NOLOCK)
                 ON csp.CatProductCategoryId = cpc.IdCatProductCategory  
         WHERE cpc.IdCatProductCategory = @CategoryProductId  
     );  
@@ -378,10 +372,10 @@ BEGIN
         (  
             SELECT TOP 1  
                    cvt.IdCatValueType  
-            FROM CatValueType                      cvt WITH (NOLOCK)
-                INNER JOIN MembershipDiscountRange mdr WITH (NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].CatValueType                      cvt WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].MembershipDiscountRange mdr WITH (NOLOCK)
                     ON cvt.IdCatValueType = mdr.ValueTypeId  
-                INNER JOIN Membership              mbs  
+                INNER JOIN [DeliveryBackOffice].[dbo].Membership              mbs WITH (NOLOCK)
                     ON mdr.MembershipId = mbs.IdMembership  
             WHERE mbs.IdMembership = @ProductId  
         );  
@@ -667,8 +661,8 @@ BEGIN
                         , prv.ProvinceName  
                         , ''  
                       )  
-        FROM Township          twn WITH (NOLOCK)  
-            LEFT JOIN Province prv WITH (NOLOCK)  
+        FROM [DeliveryBackOffice].[dbo].Township          twn WITH (NOLOCK)  
+            LEFT JOIN [DeliveryBackOffice].[dbo].Province prv WITH (NOLOCK)  
                 ON prv.IdProvince = twn.IdProvince  
         WHERE twn.HeaderCode = @HeaderCodeDestiny  
               AND twn.TownshipStatus = 'true'  
@@ -695,9 +689,9 @@ BEGIN
                  , st.Settlement  
             INTO #SettlementList  
             FROM #ItemAddress            i  
-                LEFT JOIN dbo.Township   tw WITH (NOLOCK)  
+                LEFT JOIN [DeliveryBackOffice].[dbo].Township   tw WITH (NOLOCK)  
                     ON tw.HeaderCode = @HeaderCodeDestiny  
-                LEFT JOIN dbo.Settlement st WITH (NOLOCK)  
+                LEFT JOIN [DeliveryBackOffice].[dbo].Settlement st WITH (NOLOCK)  
                     ON st.IdTownship = tw.IdTownship  
                     AND st.Settlement LIKE CONCAT('%', i.Item, '%')
             WHERE LEN(i.Item) > 3  
@@ -721,8 +715,8 @@ BEGIN
             (  
                 SELECT TOP 1  
                        st.IdSettlement  
-                FROM dbo.Township            tw WITH (NOLOCK)  
-                    LEFT JOIN dbo.Settlement st WITH (NOLOCK)  
+                FROM [DeliveryBackOffice].[dbo].Township            tw WITH (NOLOCK)  
+                    LEFT JOIN [DeliveryBackOffice].[dbo].Settlement st WITH (NOLOCK)  
                         ON st.IdTownship = tw.IdTownship  
                 WHERE tw.HeaderCode = @HeaderCodeDestiny  
                       AND st.Settlement LIKE CONCAT('%Zona ', @Zone, '%')  
@@ -737,8 +731,8 @@ BEGIN
             (  
                 SELECT TOP 1  
                        st.IdSettlement  
-                FROM dbo.Township            tw WITH (NOLOCK)  
-                    LEFT JOIN dbo.Settlement st WITH (NOLOCK)  
+                FROM [DeliveryBackOffice].[dbo].Township            tw WITH (NOLOCK)  
+                    LEFT JOIN [DeliveryBackOffice].[dbo].Settlement st WITH (NOLOCK)  
                         ON st.IdTownship = tw.IdTownship  
                 WHERE tw.HeaderCode = @HeaderCodeDestiny  
                 ORDER BY IdSettlement  
@@ -755,7 +749,7 @@ BEGIN
     SET @IsTDA = ISNULL((  
                             SELECT TOP 1  
                                    IIF(cov.TDA = 0, 'false', 'true')  
-                            FROM dbo.DumpServiceCoverage cov WITH (NOLOCK)  
+                            FROM [DeliveryBackOffice].[dbo].DumpServiceCoverage cov WITH (NOLOCK)  
                             WHERE cov.IdSettlement = @IdSettlement  
                                   AND cov.RowStatus = 1  
                         )  
@@ -769,7 +763,7 @@ BEGIN
         SET @IsSDD = ISNULL((  
                                 SELECT TOP 1  
                                        IIF(cov.SDD = 0, 'false', 'true')  
-                                FROM dbo.DumpServiceCoverage cov WITH (NOLOCK)  
+                                FROM [DeliveryBackOffice].[dbo].DumpServiceCoverage cov WITH (NOLOCK)  
                                 WHERE cov.IdSettlement = @IdSettlement  
                                       AND cov.RowStatus = 1  
                             )  
@@ -781,7 +775,7 @@ BEGIN
                                          , (  
                                                SELECT TOP 1  
                                                       RateGroup  
-                                               FROM dbo.CatTypeService WITH (NOLOCK)  
+                                               FROM [DeliveryBackOffice].[dbo].CatTypeService WITH (NOLOCK)  
                                                WHERE CtsShortName = 'SDD'  
                                                      AND CtsRowStatus = 1  
                                            ))  
@@ -796,16 +790,16 @@ BEGIN
   
     SELECT TOP 1  
            @IdHubSource = hb.IdHubLogistic  
-    FROM dbo.DumpServiceCoverage   cov WITH (NOLOCK)  
-        LEFT JOIN dbo.HubLogistics hb WITH (NOLOCK)  
+    FROM [DeliveryBackOffice].[dbo].DumpServiceCoverage   cov WITH (NOLOCK)  
+        LEFT JOIN [DeliveryBackOffice].[dbo].HubLogistics hb WITH (NOLOCK)  
             ON hb.HubAbbreviation = cov.Hub  
     WHERE cov.HeaderCode = @HeaderCodeSource  
     ORDER BY cov.Hub;  
   
     SELECT TOP 1  
            @IdHubDestiny = hb.IdHubLogistic  
-    FROM dbo.DumpServiceCoverage   cov WITH (NOLOCK)  
-        LEFT JOIN dbo.HubLogistics hb WITH (NOLOCK)  
+    FROM [DeliveryBackOffice].[dbo].DumpServiceCoverage   cov WITH (NOLOCK)  
+        LEFT JOIN [DeliveryBackOffice].[dbo].HubLogistics hb WITH (NOLOCK)  
             ON hb.HubAbbreviation = cov.Hub  
     WHERE cov.HeaderCode = @HeaderCodeDestiny  
     ORDER BY cov.Hub DESC;  
@@ -817,7 +811,7 @@ BEGIN
     BEGIN  
         SELECT TOP 1  
                @CodeOfReferenceSource = vp.CodeOfReference  
-        FROM dbo.VisitPointClient vp WITH (NOLOCK)  
+        FROM [DeliveryBackOffice].[dbo].VisitPointClient vp WITH (NOLOCK)  
         WHERE vp.CustomerID = @CustomerId;  
     END;  
 
@@ -876,13 +870,13 @@ BEGIN
          , tyd.ShortName     AS TypeDiscount  
     INTO #Dicounts  
     FROM dbo.SpecialSale                 ss WITH (NOLOCK)  
-        INNER JOIN dbo.SpecialSaleDetail sd WITH (NOLOCK)  
+        INNER JOIN [DeliveryBackOffice].[dbo].SpecialSaleDetail sd WITH (NOLOCK)  
             ON sd.SpecialSaleId = ss.IdSpecialSale  
-        LEFT JOIN dbo.Unit               unt WITH (NOLOCK)  
+        LEFT JOIN [DeliveryBackOffice].[dbo].Unit               unt WITH (NOLOCK)  
             ON unt.IdUnit = sd.UnitId  
-        LEFT JOIN dbo.CatTypeDiscount    tyd WITH (NOLOCK)  
+        LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeDiscount    tyd WITH (NOLOCK)  
             ON tyd.IdCatTypeDiscount = sd.TypeDiscountId  
-        LEFT JOIN dbo.SpecialSaleTarget  tgt WITH (NOLOCK)  
+        LEFT JOIN [DeliveryBackOffice].[dbo].SpecialSaleTarget  tgt WITH (NOLOCK)  
             ON tgt.SpecialSaleId = ss.IdSpecialSale  
     WHERE ss.RowStatus = 1  
           AND sd.RowStatus = 1  
@@ -942,15 +936,7 @@ BEGIN
             SELECT ArtId  
             FROM DeliveryBackOffice.dbo.CatArticle WITH (NOLOCK)  
             WHERE ArtName = 'Paquete pequeño'  
-                  AND  
-                  (  
-                      IdCountry = @Country  
-                      OR  
-                      (  
-                          IdCountry IS NULL  
-                          AND @Country = 'GT'  
-                      )  
-                  )  
+            AND IdCountry = @Country  
         );  
   
         SET @ParcelCode2 = @ParcelCode;  
@@ -1079,33 +1065,25 @@ BEGIN
                                     WHERE ArtName IN ( 'Paquete pequeño', 'Paquete mediano', 'Paquete grande'  
                                                      , 'Paquete extra grande', 'Paquete sobredimensionado'  
                                                      )  
-                                          AND  
-                                          (  
-                                              IdCountry = @Country  
-                                              OR  
-                                              (  
-                                                  IdCountry IS NULL  
-                                                  AND @Country = 'GT'  
-                                              )  
-                                          )  
+                                          AND IdCountry = @Country  
                                 )  
                       )  
                   AND pc.Item IS NOT NULL  
         );  
   
-        SET @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded) - @CountPiecebyArticle;  
+        SET @CountPiece = [DeliveryBackOffice].[dbo].FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded) - @CountPiecebyArticle;  
   
         SELECT Item  
         INTO #ListCode2  
-        FROM DeliveryBackOffice.dbo.SplitUnlimited(@ParcelCode, ',');  
+        FROM [DeliveryBackOffice].[dbo].SplitUnlimited(@ParcelCode, ',');  
   
         SET @ParcelPrice2 =  
         (  
             SELECT SUM(ISNULL(ra.RateValue, ISNULL(ar.PriceDefault, 0)))  
             FROM #ListCode2                      ls  
-                INNER JOIN dbo.ArticleByCustomer ar  WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].ArticleByCustomer ar  WITH (NOLOCK)
                     ON ar.Code = ls.Item  
-                INNER JOIN dbo.RateData          ra  WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].RateData          ra  WITH (NOLOCK)
                     ON ra.ArticleId = ar.AbcId  
             WHERE ra.TypeSegmentId = @IdSegment  
                   AND ra.RateId = @RateId  
@@ -1130,16 +1108,13 @@ BEGIN
                  , CAST(((ISNULL(rd.RateValue, 0) * @CountPiece) * ISNULL(@Value, 0) / 100) AS DECIMAL(12, 2))     AS Discoun
                  , ISNULL(@DiscountName, '')                                                                       AS DiscountName  
                  , ISNULL(sv.CtsDescription, '')                                                                   AS ServiceDescription                  
-                 , IIF(@IsInsurance = 'true'
+                 , IIF(@IsInsurance = 1
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                               WHEN @InsuranceAmount >= 5000
+                               WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount <  @LimitInsuranceAmount 
+                                   THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                               WHEN @InsuranceAmount >=  @LimitInsuranceAmount 
                                    THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
                                ELSE 0
                              END
@@ -1152,23 +1127,23 @@ BEGIN
                     0)                                                                                             AS InsuranceRate
                  , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
                  , ISNULL(RH.InsuranceExempt,0)                                                                    AS InsuranceExempt
-            FROM dbo.RateHeader              rh WITH (NOLOCK)  
-                INNER JOIN dbo.RateData      rd WITH (NOLOCK)  
+            FROM [DeliveryBackOffice].[dbo].RateHeader              rh WITH (NOLOCK)  
+                INNER JOIN [DeliveryBackOffice].[dbo].RateData      rd WITH (NOLOCK)  
                     ON rd.RateId = rh.RheId  
-                LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)  
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment sg WITH (NOLOCK)  
                     ON sg.CrsId = rd.TypeSegmentId  
-                LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)  
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService sv WITH (NOLOCK)  
                     ON sv.CtsId = rd.TypeServiceId  
-                LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)  
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate    cr WITH (NOLOCK)  
                     ON cr.IdTypeRate = rh.RateTypeId  
-            WHERE rh.RheRowStatus = 'true'  
-                  AND rd.RowStatus = 'true'  
+            WHERE rh.RheRowStatus = 1  
+                  AND rd.RowStatus = 1 
                   AND rh.RheId = @RateId  
                   AND rd.ArticleId IS NULL  
                   AND (rd.TypeServiceId IN  
                        (  
                            SELECT CtsId  
-                           FROM dbo.CatTypeService  WITH (NOLOCK)
+                           FROM [DeliveryBackOffice].[dbo].CatTypeService  WITH (NOLOCK)
                            WHERE RateGroup = @IdRateGroup  
                                  AND CtsRowStatus = 1  
                        )  
@@ -1207,16 +1182,13 @@ BEGIN
                  , CAST(((ISNULL(rd.RateValue, 0) * @CountPiece) * ISNULL(@Value, 0) / 100) AS DECIMAL(12, 2))     AS Discount
                  , ISNULL(@DiscountName, '')                                                                       AS DiscountName  
                  , ISNULL(sv.CtsDescription, '')                                                                   AS ServiceDescription                                     
-                 , IIF(@IsInsurance = 'true'
+                 , IIF(@IsInsurance = 1
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                               WHEN @InsuranceAmount >= 5000
+                               WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount <  @LimitInsuranceAmount
+                                   THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                               WHEN @InsuranceAmount >=  @LimitInsuranceAmount 
                                    THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
                                ELSE 0
                              END
@@ -1229,23 +1201,23 @@ BEGIN
                     0)                                                                                             AS InsuranceRate
                  , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
                  , ISNULL(RH.InsuranceExempt,0)                                                                    AS InsuranceExempt                                                                                            
-            FROM dbo.RateHeader              rh WITH (NOLOCK)  
-                INNER JOIN dbo.RateData      rd WITH (NOLOCK)  
+            FROM [DeliveryBackOffice].[dbo].RateHeader              rh WITH (NOLOCK)  
+                INNER JOIN [DeliveryBackOffice].[dbo].RateData      rd WITH (NOLOCK)  
                     ON rd.RateId = rh.RheId  
-                LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)  
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment sg WITH (NOLOCK)  
                     ON sg.CrsId = rd.TypeSegmentId  
-                LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)  
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService sv WITH (NOLOCK)  
                     ON sv.CtsId = rd.TypeServiceId  
-                LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)  
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate    cr WITH (NOLOCK)  
                     ON cr.IdTypeRate = rh.RateTypeId  
-            WHERE rh.RheRowStatus = 'true'  
-                  AND rd.RowStatus = 'true'  
+            WHERE rh.RheRowStatus = 1  
+                  AND rd.RowStatus = 1
                   AND rh.RheId = @RateId  
                   AND rd.ArticleId IS NULL  
                   AND (rd.TypeServiceId IN  
                        (  
                            SELECT CtsId  
-                           FROM dbo.CatTypeService  WITH (NOLOCK)
+                           FROM [DeliveryBackOffice].[dbo].CatTypeService  WITH (NOLOCK)
                            WHERE RateGroup = @IdRateGroup  
                                  AND CtsRowStatus = 1  
                        )  
@@ -1272,7 +1244,7 @@ BEGIN
     ELSE IF @RateTypeId = 2 -- tarifas todo destino  
     BEGIN  
 
-        SET @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded); -- todos los demas clientes se les cobra por pieza  
+        SET @CountPiece = [DeliveryBackOffice].[dbo].FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded); -- todos los demas clientes se les cobra por pieza  
 
         INSERT INTO @TempRate  
         SELECT 
@@ -1290,16 +1262,13 @@ BEGIN
              , 0                                                                         AS Discount
              , ''                                                                        AS DiscountName  
              , ISNULL(sv.CtsDescription, '')                                             AS ServiceDescription                             
-             , IIF(@IsInsurance = 'true'
+                 , IIF(@IsInsurance = 1
                        , IIF(@CustomerType IN (2, 3)
                            -- Tipos 2 y 3: tres rangos según @InsuranceAmount
                            , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                               WHEN @InsuranceAmount >= 5000
+                               WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount <  @LimitInsuranceAmount 
+                                   THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                               WHEN @InsuranceAmount >=  @LimitInsuranceAmount 
                                    THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
                                ELSE 0
                              END
@@ -1312,23 +1281,23 @@ BEGIN
                     0)                                                                                             AS InsuranceRate
                  , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
                  , ISNULL(RH.InsuranceExempt,0)                                                                    AS InsuranceExempt 
-        FROM dbo.RateHeader              rh WITH (NOLOCK)  
-            INNER JOIN dbo.RateData      rd WITH (NOLOCK)  
+        FROM [DeliveryBackOffice].[dbo].RateHeader              rh WITH (NOLOCK)  
+            INNER JOIN [DeliveryBackOffice].[dbo].RateData      rd WITH (NOLOCK)  
                 ON rd.RateId = rh.RheId  
-            LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)  
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment sg WITH (NOLOCK)  
                 ON sg.CrsId = rd.TypeSegmentId  
-            LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)  
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService sv WITH (NOLOCK)  
                 ON sv.CtsId = rd.TypeServiceId  
-            LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)  
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate    cr WITH (NOLOCK)  
                 ON cr.IdTypeRate = rh.RateTypeId  
         WHERE rh.RheId = @RateId
-              AND rd.RowStatus = 'true'  
+              AND rd.RowStatus = 1  
               AND rd.ArticleId IS NULL  
               AND rd.TypeSegmentId = @IdSegment  
               AND (rd.TypeServiceId IN  
                    (  
                        SELECT CtsId  
-                       FROM dbo.CatTypeService  WITH (NOLOCK)
+                       FROM [DeliveryBackOffice].[dbo].CatTypeService  WITH (NOLOCK)
                        WHERE RateGroup = @IdRateGroup  
                              AND CtsRowStatus = 1  
                    )  
@@ -1358,7 +1327,7 @@ BEGIN
         ------------------------------------- verificar tarifas de piezas irregulares ---------------------------------------------------  
         SELECT Item  
         INTO #ListCode  
-        FROM DeliveryBackOffice.dbo.SplitUnlimited(@ParcelCode, ',');  
+        FROM [DeliveryBackOffice].[dbo].SplitUnlimited(@ParcelCode, ',');  
   
         --select * from #ListCode  
         DECLARE @ParcelPrice DECIMAL(12, 2) = 0;  
@@ -1465,15 +1434,15 @@ BEGIN
                     SELECT rd.TypeSegmentId  AddedSegmentType  
                          , rd.TypeServiceId  AddedServiceType  
                          , SUM(rd.RateValue) 'AddedTotalAmount'  
-                    FROM dbo.RateHeader                  rh  
-                        INNER JOIN dbo.RateData          rd  WITH (NOLOCK)
+                    FROM [DeliveryBackOffice].[dbo].RateHeader                  rh  
+                        INNER JOIN [DeliveryBackOffice].[dbo].RateData          rd  WITH (NOLOCK)
                             ON rd.RateId = rh.RheId  
-                        INNER JOIN dbo.ArticleByCustomer abc WITH (NOLOCK)
+                        INNER JOIN [DeliveryBackOffice].[dbo].ArticleByCustomer abc WITH (NOLOCK)
                             ON rd.ArticleId = abc.AbcId  
                         INNER JOIN #ListCode             LC  WITH (NOLOCK)
                             ON abc.Code = LC.Item  
                     WHERE rh.RheId = @RateId
-                          AND rd.RowStatus = 'true'  
+                          AND rd.RowStatus = 1
                           AND rd.TypeSegmentId = @IdSegment  
                     GROUP BY rd.TypeSegmentId  
                            , rd.TypeServiceId  
@@ -1488,10 +1457,10 @@ BEGIN
                 (  
                     SELECT rd.TypeSegmentId                            AddedSegmentType  
                          , SUM(ISNULL(rd.RateValue, abc.PriceDefault)) 'AddedTotalAmount'  
-                    FROM #ListCode                       lc  
-                        INNER JOIN dbo.ArticleByCustomer abc  WITH (NOLOCK)
+                    FROM #ListCode                                              lc  
+                        INNER JOIN [DeliveryBackOffice].[dbo].ArticleByCustomer abc  WITH (NOLOCK)
                             ON abc.Code = lc.Item  
-                        INNER JOIN dbo.RateData          rd   WITH (NOLOCK)
+                        INNER JOIN [DeliveryBackOffice].[dbo].RateData          rd   WITH (NOLOCK)
                             ON rd.ArticleId = abc.AbcId  
                     WHERE rd.TypeServiceId IS NULL  
                           AND rd.TypeSegmentId = @IdSegment  
@@ -1512,7 +1481,7 @@ BEGIN
                     ServiceTypeId  
                 )  
                 SELECT CtsId  
-                FROM [DeliveryBackOffice].dbo.CatTypeService CTS WITH (NOLOCK)  
+                FROM [DeliveryBackOffice].[dbo].CatTypeService CTS WITH (NOLOCK)  
                 WHERE RateGroup = @IdRateGroup  
                       AND CtsRowStatus = 1;  
             
@@ -1546,42 +1515,39 @@ BEGIN
                         , 0                                                                               AS Discount
                         , ''                                                                              AS DiscountName
                         , ISNULL(sv.CtsDescription, '')                                                   AS ServiceDescription
-                        , IIF(@IsInsurance = 'true'
-                           , IIF(@CustomerType IN (2, 3)
-                                   -- Tipos 2 y 3: tres rangos según @InsuranceAmount
-                                   , CASE
-                                       WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                           THEN 0
-                                       WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                            AND @InsuranceAmount < 5000
-                                           THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                                       WHEN @InsuranceAmount >= 5000
-                                           THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                                       ELSE 0
-                                     END
-                                   -- Tipo 1: comportamiento original
-                                   , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
-                                       , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                                       , 0)
-                                 )
-                               , 
-                          0)                                                                           AS InsuranceRate
-                     , ISNULL(RH.InsuranceCharge,0)                                                    AS InsuranceCharge
-                     , ISNULL(RH.InsuranceExempt,0)                                                    AS InsuranceExempt
-                FROM dbo.RateHeader                 rh   WITH (NOLOCK)
-                    INNER JOIN dbo.RateData         rd   WITH (NOLOCK)
+                        , IIF(@IsInsurance = 1
+                            , IIF(@CustomerType IN (2, 3)
+                                -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                                , CASE
+                                    WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount <  @LimitInsuranceAmount 
+                                        THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                                    WHEN @InsuranceAmount >=  @LimitInsuranceAmount 
+                                        THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                    ELSE 0
+                                    END
+                                -- Tipo 1: comportamiento original
+                                , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                                    , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                    , 0)
+                                )
+                            , 
+                            0)                                                                            AS InsuranceRate
+                        , ISNULL(RH.InsuranceCharge,0)                                                    AS InsuranceCharge
+                        , ISNULL(RH.InsuranceExempt,0)                                                    AS InsuranceExempt
+                FROM [DeliveryBackOffice].[dbo].RateHeader                 rh   WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].RateData         rd   WITH (NOLOCK)
                         ON rd.RateId = rh.RheId  
                     INNER JOIN #ParcelAmountPerType papt  
                         ON rd.TypeSegmentId = papt.SegmentType  
-                           AND rd.TypeServiceId = papt.ServiceType  
-                    LEFT JOIN dbo.CatRateSegment    sg   WITH (NOLOCK)
+                        AND rd.TypeServiceId = papt.ServiceType  
+                    LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment    sg   WITH (NOLOCK)
                         ON sg.CrsId = rd.TypeSegmentId  
-                    LEFT JOIN dbo.CatTypeService    sv   WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService    sv   WITH (NOLOCK)
                         ON sv.CtsId = rd.TypeServiceId  
-                    LEFT JOIN dbo.CatTypeRate       cr   WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate       cr   WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId  
                 WHERE rh.RheId = @RateId  
-                      AND rd.RowStatus = 'true' 
+                      AND rd.RowStatus = 1
                       AND rd.TypeSegmentId = @IdSegment  
                       AND (rd.TypeServiceId IN  
                            (  
@@ -1720,48 +1686,45 @@ BEGIN
                      , 0                                                                   AS Discount
                      , ''                                                                  AS DiscountName
                      , ISNULL(sv.CtsDescription, '')                                       AS ServiceDescription
-                     , IIF(@IsInsurance = 'true'
-                       , IIF(@CustomerType IN (2, 3)
-                           -- Tipos 2 y 3: tres rangos según @InsuranceAmount
-                           , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                               WHEN @InsuranceAmount >= 5000
-                                   THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                               ELSE 0
-                             END
-                           -- Tipo 1: comportamiento original
-                           , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
-                               , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                               , 0)
-                         )
-                       , 
-                    0)                                                                                             AS InsuranceRate
-                 , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
-                 , ISNULL(RH.InsuranceExempt,0)                                                                    AS InsuranceExempt
+                     , IIF(@IsInsurance = 1
+                         , IIF(@CustomerType IN (2, 3)
+                             -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                             , CASE
+                                 WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount <  @LimitInsuranceAmount 
+                                     THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                                 WHEN @InsuranceAmount >=  @LimitInsuranceAmount 
+                                     THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                 ELSE 0
+                                 END
+                             -- Tipo 1: comportamiento original
+                             , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                                 , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                 , 0)
+                             )
+                         , 
+                         0)                                                                                             AS InsuranceRate
+                     , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
+                     , ISNULL(RH.InsuranceExempt,0)                                                                    AS InsuranceExempt
                 FROM #ParceCode                      ls
-                    INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
-                    INNER JOIN dbo.RateHeader        rh WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].RateHeader        rh WITH (NOLOCK)
                         ON rh.RheId = @RateId
-                    INNER JOIN dbo.RateData          rd WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].RateData          rd WITH (NOLOCK)
                         ON rd.ArticleId = ar.AbcId
-                           AND rd.RateId = rh.RheId
-                    LEFT JOIN dbo.CatRateSegment     sg WITH (NOLOCK)
+                        AND rd.RateId = rh.RheId
+                    LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment     sg WITH (NOLOCK)
                         ON sg.CrsId = rd.TypeSegmentId
-                    LEFT JOIN dbo.CatTypeService     sv WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService     sv WITH (NOLOCK)
                         ON sv.CtsId = rd.TypeServiceId
-                    LEFT JOIN dbo.CatTypeRate        cr WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate        cr WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId
                 WHERE rd.TypeSegmentId = @IdSegment
-                      AND rd.RowStatus = 'true'
+                      AND rd.RowStatus = 1
                       AND (rd.TypeServiceId IN
                            (
                                SELECT CtsId
-                               FROM dbo.CatTypeService WITH (NOLOCK)
+                               FROM [DeliveryBackOffice].[dbo].CatTypeService WITH (NOLOCK)
                                WHERE RateGroup = @IdRateGroup
                                      AND CtsRowStatus = 1
                            )
@@ -1782,53 +1745,50 @@ BEGIN
                      , 0                                                                   AS Discount
                      , ''                                                                  AS DiscountName
                      , ISNULL(sv.CtsDescription, '')                                       AS ServiceDescription
-                     , IIF(@IsInsurance = 'true'
-                           , IIF(@CustomerType IN (2, 3)
-                               -- Tipos 2 y 3: tres rangos según @InsuranceAmount
-                               , CASE
-                                   WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                       THEN 0
-                                   WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                        AND @InsuranceAmount < 5000
-                                       THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                                   WHEN @InsuranceAmount >= 5000
-                                       THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                                   ELSE 0
+                     , IIF(@IsInsurance = 1
+                         , IIF(@CustomerType IN (2, 3)
+                             -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                             , CASE
+                                 WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount <  @LimitInsuranceAmount 
+                                     THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                                 WHEN @InsuranceAmount >=  @LimitInsuranceAmount 
+                                     THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                 ELSE 0
                                  END
-                               -- Tipo 1: comportamiento original
-                               , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
-                                   , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                                   , 0)
+                             -- Tipo 1: comportamiento original
+                             , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                                 , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                                 , 0)
                              )
-                           , 
-                        0)                                                                                             AS InsuranceRate
-                     , ISNULL(rh.InsuranceCharge,0)                                                                    AS InsuranceCharge
+                         , 
+                         0)                                                                                             AS InsuranceRate
+                     , ISNULL(RH.InsuranceCharge,0)                                                                    AS InsuranceCharge
                      , ISNULL(rh.InsuranceExempt,0)                                                                    AS InsuranceExempt
                 FROM #ParceCode                      ls
-                    INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
-                    INNER JOIN dbo.RateHeader        rh WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].RateHeader        rh WITH (NOLOCK)
                         ON rh.RheId = @RateId
-                    LEFT JOIN dbo.RateData           rdignore WITH (NOLOCK) -- Ignorar artículos sin codigo dentro de tarifario
+                    LEFT JOIN [DeliveryBackOffice].[dbo].RateData           rdignore WITH (NOLOCK) -- Ignorar artículos sin codigo dentro de tarifario
                         ON rdignore.ArticleId = ar.AbcId
-                           AND rdignore.RateId = rh.RheId
-                           AND rdignore.RowStatus = 'true'
-                    LEFT JOIN dbo.RateData           rd WITH (NOLOCK)
+                        AND rdignore.RateId = rh.RheId
+                        AND rdignore.RowStatus = 1
+                    LEFT JOIN [DeliveryBackOffice].[dbo].RateData           rd WITH (NOLOCK)
                         ON rd.ArticleId IS NULL
-                           AND rd.RateId = rh.RheId
-                           AND rd.RowStatus = 'true'
-                    LEFT JOIN dbo.CatRateSegment     sg WITH (NOLOCK)
+                        AND rd.RateId = rh.RheId
+                        AND rd.RowStatus = 1
+                    LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment     sg WITH (NOLOCK)
                         ON sg.CrsId = rd.TypeSegmentId
-                    LEFT JOIN dbo.CatTypeService     sv WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService     sv WITH (NOLOCK)
                         ON sv.CtsId = rd.TypeServiceId
-                    LEFT JOIN dbo.CatTypeRate        cr WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate        cr WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId
                 WHERE rdignore.IdRateData IS NULL -- Ignorar artículos sin codigo dentro de tarifario
                       AND rd.TypeSegmentId = @IdSegment
                       AND (rd.TypeServiceId IN
                            (
                                SELECT CtsId
-                               FROM dbo.CatTypeService WITH (NOLOCK)
+                               FROM [DeliveryBackOffice].[dbo].CatTypeService WITH (NOLOCK)
                                WHERE RateGroup = @IdRateGroup
                                      AND CtsRowStatus = 1
                            )
@@ -1879,7 +1839,7 @@ BEGIN
         WHERE NOT EXISTS  
         (  
             SELECT 1  
-            FROM RateData  WITH (NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].RateData  WITH (NOLOCK)
             WHERE RateId = @RateId
                   AND TypeSegmentId = @IdSegment  
                   AND TypeServiceId = cts.CtsId  
@@ -1892,52 +1852,69 @@ BEGIN
 
 
         INSERT INTO @TempRate  
-        SELECT TypeRate  
-             , Segment  
-             , Service  
-             , SUM(BaseRate)                                                                       BaseRate  
-             , DiscountName  
-             , DiscountValue  
-             , fragilRate  
-             , CollectedRate  
-             , InsuranceRate  
-             , CreditCardRate  
-             , (SUM(OverWeightRate) + IIF(@OverWeight > 0, @OverWeight, 0)) * AdditionalWeightRate OverWeightRate  
-             , IrregularParcelRate  
-             , CtsName  
-             , CtsDescription  
-             , ReturnRate  
+        SELECT 
+               SUM(BaseRate)                                                                       [BaseRate]
+             , ReturnRate                                                                          [ReturnRate]
+             , fragilRate                                                                          [fragilRate]
+             , CollectedRate                                                                       [CollectedRate]
+             , CreditCardRate                                                                      [CreditCardRate]
+             , (SUM(OverWeightRate) + IIF(@OverWeight > 0, @OverWeight, 0)) * AdditionalWeightRate [OverWeightRate]
+             , IrregularParcelRate                                                                 [IrregularParcelRate]
+             , TypeRate                                                                            [TypeRate]
+             , Segment                                                                             [Segment]
+             , Service                                                                             [Service]
+             , CtsName                                                                             [ServiceName]
+             , DiscountValue                                                                       [Discount]
+             , DiscountName                                                                        [DiscountName]
+             , CtsDescription                                                                      [ServicieDescription]
+             , InsuranceRate                                                                       [InsuranceRate]
+             , InsuranceCharge                                                                     [InsuranceCharge]
+             , InsuranceExempt                                                                     [InsuranceExempt]
         FROM  
         (  
-            SELECT ISNULL(ctr.Name, '')                                                TypeRate  
-                 , ISNULL(crs.CrsShortName, '')                                        Segment  
-                 , ISNULL(cts.CtsShortName, '')                                        Service  
-                 , ISNULL(rd.RateValue, 0)                                             BaseRate  
-                 , ''                                                                  DiscountName  
-                 , 0                                                                   DiscountValue  
-                 , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)               AS fragilRate  
-                 , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)            AS CollectedRate  
-                 , IIF(@IsInsurance = 'true'  
-                     , (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)  
-                          , CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))  
-                          , 0)  
-                       )  
-                     , 0)                                                              AS InsuranceRate  
-                 , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate  
-                 , 0                                                                   OverWeightRate  
-                 , ISNULL(@ParcelPrice, 0)                                             AS IrregularParcelRate  
-                 , ISNULL(cts.CtsName, '')                                             AS CtsName  
-                 , ISNULL(cts.CtsDescription, '')                                      AS CtsDescription  
-                 , ISNULL(rh.ReturnRate, 0)                                            AS ReturnRate  
-                 , ISNULL(rh.AdditionalWeightRate, 0)                                  AdditionalWeightRate  
-            FROM RateHeader              rh          WITH (NOLOCK)
-                INNER JOIN RateData      rd          WITH (NOLOCK)
+            SELECT 
+                   ISNULL(rd.RateValue, 0)                                             AS BaseRate
+                 , ISNULL(rh.ReturnRate, 0)                                            AS ReturnRate
+                 , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)               AS fragilRate
+                 , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)            AS CollectedRate
+                 , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate
+                 , 0                                                                   AS OverWeightRate
+                 , ISNULL(@ParcelPrice, 0)                                             AS IrregularParcelRate   
+                 , ISNULL(ctr.Name, '')                                                AS TypeRate  
+                 , ISNULL(crs.CrsShortName, '')                                        AS Segment 
+                 , ISNULL(cts.CtsShortName, '')                                        AS [Service]
+                 , ISNULL(cts.CtsName, '')                                             AS ServiceName
+                 , ''                                                                  AS DiscountName  
+                 , 0                                                                   AS DiscountValue  
+                , ISNULL(cts.CtsDescription, '')                                       AS ServiceDescription 
+                , IIF(@IsInsurance = 1
+                    , IIF(@CustomerType IN (2, 3)
+                        -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                        , CASE
+                            WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount <  @LimitInsuranceAmount 
+                                THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                            WHEN @InsuranceAmount >=  @LimitInsuranceAmount 
+                                THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                            ELSE 0
+                            END
+                        -- Tipo 1: comportamiento original
+                        , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                            , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                            , 0)
+                        )
+                    , 
+                0)                                                                     AS InsuranceRate
+                , ISNULL(RH.InsuranceCharge,0)                                         AS InsuranceCharge
+                , ISNULL(RH.InsuranceExempt,0)                                         AS InsuranceExempt 
+                , ISNULL(rh.AdditionalWeightRate, 0)                                   AS AdditionalWeightRate  
+            FROM [DeliveryBackOffice].[dbo].RateHeader              rh          WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].RateData      rd          WITH (NOLOCK)
                     ON rd.RateId = rh.RheId  
-                LEFT JOIN CatRateSegment crs         WITH (NOLOCK)
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment crs         WITH (NOLOCK)
                     ON crs.CrsId = rd.TypeSegmentId  
-                LEFT JOIN CatTypeService cts         WITH (NOLOCK)
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService cts         WITH (NOLOCK)
                     ON cts.CtsId = rd.TypeServiceId  
-                LEFT JOIN CatTypeRate    ctr         WITH (NOLOCK)
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate    ctr         WITH (NOLOCK)
                     ON ctr.IdTypeRate = rh.RateTypeId  
                 INNER JOIN #ParceWeigth  pw          WITH (NOLOCK)
                     ON pw.Item  
@@ -1948,7 +1925,7 @@ BEGIN
                   AND (rd.TypeServiceId IN  
                        (  
                            SELECT CtsId  
-                           FROM CatTypeService        WITH (NOLOCK)
+                           FROM [DeliveryBackOffice].[dbo].CatTypeService        WITH (NOLOCK)
                            WHERE RateGroup = @IdRateGroup  
                                  AND CtsRowStatus = 1  
                        )  
@@ -1965,37 +1942,51 @@ BEGIN
                                                                , CONVERT(DATETIME, '23:59:59', 108)  
                                                              )  
             UNION ALL  
-            SELECT ISNULL(ctr.Name, '')                                                  TypeRate  
-                 , ISNULL(crs.CrsShortName, '')                                          Segment  
-                 , ISNULL(cts.CtsShortName, '')                                          Service  
-                 , ISNULL(rd.RateValue, 0)                                               BaseRate  
-                 , ''                                                                    DiscountName  
-                 , 0                                                                     DiscountValue  
-                 , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)                 AS fragilRate  
-                 , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)              AS CollectedRate  
-                 , IIF(@IsInsurance = 'true'  
-                     , (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)  
-                          , CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))  
-                          , 0)  
-                       )  
-                     , 0)                                                                AS InsuranceRate  
-                 , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0)   AS CreditCardRate  
+            SELECT 
+                   ISNULL(rd.RateValue, 0)                                               AS BaseRate
+                 , ISNULL(rh.ReturnRate, 0)                                              AS ReturnRate
+                 , IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0)                 AS fragilRate
+                 , IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0)              AS CollectedRate
+                 , IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0)   AS CreditCardRate
                  , IIF(pw.Weight <= @WeigthLimit  
                        , pw.Weight - rd.WeightTo  
-                       , IIF(@WeigthLimit > rd.WeightTo, @WeigthLimit - rd.WeightTo, 0)) OverWeightRate  
-                 , ISNULL(@ParcelPrice, 0)                                               AS IrregularParcelRate  
-                 , ISNULL(cts.CtsName, '')                                               AS CtsName  
-                 , ISNULL(cts.CtsDescription, '')                                        AS CtsDescription  
-                 , ISNULL(rh.ReturnRate, 0)                                              AS ReturnRate  
-                 , ISNULL(rh.AdditionalWeightRate, 0)                                    AdditionalWeightRate  
-            FROM RateHeader               rh        WITH (NOLOCK)
-                INNER JOIN RateData       rd        WITH (NOLOCK)
+                       , IIF(@WeigthLimit > rd.WeightTo, @WeigthLimit - rd.WeightTo, 0)) AS OverWeightRate
+                 , ISNULL(@ParcelPrice, 0)                                               AS IrregularParcelRate             
+                 , ISNULL(ctr.Name, '')                                                  AS TypeRate  
+                 , ISNULL(crs.CrsShortName, '')                                          AS Segment  
+                 , ISNULL(cts.CtsShortName, '')                                          AS Service  
+                 , ISNULL(cts.CtsName, '')                                               AS ServiceName
+                 , 0                                                                     AS DiscountValue
+                 , ''                                                                    AS DiscountName  
+                 , ISNULL(cts.CtsDescription, '')                                        AS ServiceDescription 
+                 , IIF(@IsInsurance = 1
+                     , IIF(@CustomerType IN (2, 3)
+                         -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                         , CASE
+                             WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount <  @LimitInsuranceAmount 
+                                 THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                             WHEN @InsuranceAmount >=  @LimitInsuranceAmount 
+                                 THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                             ELSE 0
+                             END
+                         -- Tipo 1: comportamiento original
+                         , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                             , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                             , 0)
+                         )
+                     , 
+                 0)                                                                     AS InsuranceRate
+                 , ISNULL(RH.InsuranceCharge,0)                                         AS InsuranceCharge
+                 , ISNULL(RH.InsuranceExempt,0)                                         AS InsuranceExempt 
+                 , ISNULL(rh.AdditionalWeightRate, 0)                                   AS AdditionalWeightRate  
+            FROM [DeliveryBackOffice].[dbo].RateHeader               rh        WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].RateData       rd        WITH (NOLOCK)
                     ON rd.RateId = rh.RheId  
-                LEFT JOIN CatRateSegment  crs       WITH (NOLOCK)
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment  crs       WITH (NOLOCK)
                     ON crs.CrsId = rd.TypeSegmentId  
-                LEFT JOIN CatTypeService  cts       WITH (NOLOCK)
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService  cts       WITH (NOLOCK)
                     ON cts.CtsId = rd.TypeServiceId  
-                LEFT JOIN CatTypeRate     ctr       WITH (NOLOCK)
+                LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate     ctr       WITH (NOLOCK)
                     ON ctr.IdTypeRate = rh.RateTypeId  
                 INNER JOIN @tblNotInRange pw
                     ON pw.CatTypeServiceId = rd.TypeServiceId  
@@ -2005,7 +1996,7 @@ BEGIN
                   (  
                       SELECT TOP 1  
                              IdRateData  
-                      FROM RateData                 WITH (NOLOCK)
+                      FROM [DeliveryBackOffice].[dbo].RateData                 WITH (NOLOCK)
                       WHERE RateId = @RateId
                             AND TypeSegmentId = @IdSegment  
                             AND TypeServiceId = cts.CtsId  
@@ -2043,7 +2034,7 @@ BEGIN
     -- FDD-671 FIN  
     ELSE IF @RateTypeId = 6 -- tarifas coberturas  
     BEGIN  
-        SET @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded);  
+        SET @CountPiece = [DeliveryBackOffice].[dbo].FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded);  
 
         INSERT INTO @TempRate  
         SELECT
@@ -2061,45 +2052,42 @@ BEGIN
              , 0                                                                         AS Discount
              , ''                                                                        AS DiscountName  
              , ISNULL(sv.CtsDescription, '')                                             AS ServiceDescription             
-             , IIF(@IsInsurance = 'true'
-                       , IIF(@CustomerType IN (2, 3)
-                           -- Tipos 2 y 3: tres rangos según @InsuranceAmount
-                           , CASE
-                               WHEN @InsuranceAmount < ISNULL(rh.InsuranceExempt, 0)
-                                   THEN 0
-                               WHEN @InsuranceAmount > ISNULL(rh.InsuranceExempt, 0) 
-                                    AND @InsuranceAmount < 5000
-                                   THEN CAST(ISNULL(rh.InsuranceCharge, 0) AS DECIMAL(12, 2))
-                               WHEN @InsuranceAmount >= 5000
-                                   THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                               ELSE 0
-                             END
-                           -- Tipo 1: comportamiento original
-                           , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
-                               , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
-                               , 0)
-                         )
-                       , 
-                    0)                                                                             AS InsuranceRate 
-                 , ISNULL(RH.InsuranceCharge,0)                                                    AS InsuranceCharge
-                 , ISNULL(RH.InsuranceExempt,0)                                                    AS InsuranceExempt
-        FROM dbo.RateHeader              rh WITH (NOLOCK)  
-            INNER JOIN dbo.RateData      rd WITH (NOLOCK)  
+             , IIF(@IsInsurance = 1
+                 , IIF(@CustomerType IN (2, 3)
+                     -- Tipos 2 y 3: tres rangos según @InsuranceAmount
+                     , CASE
+                         WHEN @InsuranceAmount >= 0.00 AND @InsuranceAmount <  @LimitInsuranceAmount 
+                             THEN CAST(ISNULL(rh.InsuranceCharge, 3) AS DECIMAL(12, 2))
+                         WHEN @InsuranceAmount >=  @LimitInsuranceAmount 
+                             THEN CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                         ELSE 0
+                         END
+                     -- Tipo 1: comportamiento original
+                     , IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0)
+                         , CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2))
+                         , 0)
+                     )
+                 , 
+             0)                                                                          AS InsuranceRate
+             , ISNULL(RH.InsuranceCharge,0)                                              AS InsuranceCharge
+             , ISNULL(RH.InsuranceExempt,0)                                              AS InsuranceExempt
+        FROM [DeliveryBackOffice].[dbo].RateHeader              rh WITH (NOLOCK)  
+            INNER JOIN [DeliveryBackOffice].[dbo].RateData      rd WITH (NOLOCK)  
                 ON rd.RateId = rh.RheId  
-            LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)  
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatRateSegment sg WITH (NOLOCK)  
                 ON sg.CrsId = rd.TypeSegmentId  
-            LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)  
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeService sv WITH (NOLOCK)  
                 ON sv.CtsId = rd.TypeServiceId  
-            LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)  
+            LEFT JOIN [DeliveryBackOffice].[dbo].CatTypeRate    cr WITH (NOLOCK)  
                 ON cr.IdTypeRate = rh.RateTypeId  
         WHERE rh.RheId = @RateId
-              AND rd.RowStatus = 'true'  
+              AND rd.RowStatus = 1 
               AND rd.ArticleId IS NULL  
               AND rd.TypeSegmentId = @IdSegment  
               AND (rd.TypeServiceId IN  
                    (  
                        SELECT CtsId  
-                       FROM dbo.CatTypeService   WITH (NOLOCK)
+                       FROM [DeliveryBackOffice].[dbo].CatTypeService   WITH (NOLOCK)
                        WHERE RateGroup = @IdRateGroup  
                              AND CtsRowStatus = 1  
                    )  
@@ -2159,10 +2147,10 @@ BEGIN
             (  
                 SELECT TOP 1  
                        cts.CatTypeSubscriptionName  
-                FROM CatSubscription               csp WITH (NOLOCK)  
-                    INNER JOIN CatTypeSubscription cts WITH (NOLOCK)  
+                FROM [DeliveryBackOffice].[dbo].CatSubscription               csp WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].CatTypeSubscription cts WITH (NOLOCK)  
                         ON csp.CatTypeSubscriptionId = cts.IdCatTypeSubscription  
-                    INNER JOIN CatProductCategory  cpc WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].CatProductCategory  cpc WITH (NOLOCK)  
                         ON csp.CatProductCategoryId = cpc.IdCatProductCategory  
                 WHERE cpc.IdCatProductCategory = @CategoryProductId  
             );  
@@ -2175,10 +2163,10 @@ BEGIN
                 (  
                     SELECT TOP 1  
                            cvt.ValueTypeName  
-                    FROM CatValueType                      cvt WITH (NOLOCK)  
-                        INNER JOIN MembershipDiscountRange mdr WITH (NOLOCK)  
+                    FROM [DeliveryBackOffice].[dbo].CatValueType                      cvt WITH (NOLOCK)  
+                        INNER JOIN [DeliveryBackOffice].[dbo].MembershipDiscountRange mdr WITH (NOLOCK)  
                             ON cvt.IdCatValueType = mdr.ValueTypeId  
-                        INNER JOIN Membership              mbs WITH (NOLOCK)  
+                        INNER JOIN [DeliveryBackOffice].[dbo].Membership              mbs WITH (NOLOCK)  
                             ON mdr.MembershipId = mbs.IdMembership  
                     WHERE mbs.IdMembership = @ProductId  
                 );  
@@ -2188,7 +2176,7 @@ BEGIN
             (  
                 SELECT TOP 1  
                        TechnicalDescription  
-                FROM CatProductCategory WITH (NOLOCK)  
+                FROM [DeliveryBackOffice].[dbo].CatProductCategory WITH (NOLOCK)  
                 WHERE IdCatProductCategory = @CategoryProductId  
             );  
   
@@ -2201,13 +2189,13 @@ BEGIN
                                                     = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue, scdr.DiscountValue, -1)  
                      , @DescriptionTypeSubscription = cts.TechnicalDescription  
                 FROM Subscription                        sc WITH (NOLOCK)  
-                    INNER JOIN CatSalesPackageStatus     csps WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].CatSalesPackageStatus     csps WITH (NOLOCK)  
                         ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId  
-                    INNER JOIN CatSubscription           cat WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].CatSubscription           cat WITH (NOLOCK)  
                         ON sc.CatSubscriptionId = cat.IdCatSubscription  
-                    INNER JOIN CatProductCategory        cts WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].CatProductCategory        cts WITH (NOLOCK)  
                         ON cat.CatProductCategoryId = cts.IdCatProductCategory  
-                    INNER JOIN SubscriptionDiscountRange scdr WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].SubscriptionDiscountRange scdr WITH (NOLOCK)  
                         ON sc.IdSubscription = scdr.SubscriptionId  
                 WHERE sc.CustomerId = @CustomerId
                       AND GETDATE() <= sc.ExpirationDate  
@@ -2229,12 +2217,12 @@ BEGIN
                                   , sc.SubscriptionFixedValue  
                                   , -1)  
                          , @DescriptionTypeSubscription = cts.TechnicalDescription  
-                    FROM Subscription                    sc WITH (NOLOCK)  
-                        INNER JOIN CatSalesPackageStatus csps WITH (NOLOCK)  
+                    FROM [DeliveryBackOffice].[dbo].Subscription                    sc WITH (NOLOCK)  
+                        INNER JOIN [DeliveryBackOffice].[dbo].CatSalesPackageStatus csps WITH (NOLOCK)  
                             ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId  
-                        INNER JOIN CatSubscription       cat WITH (NOLOCK)  
+                        INNER JOIN [DeliveryBackOffice].[dbo].CatSubscription       cat WITH (NOLOCK)  
                             ON sc.CatSubscriptionId = cat.IdCatSubscription  
-                        INNER JOIN CatProductCategory    cts WITH (NOLOCK)  
+                        INNER JOIN [DeliveryBackOffice].[dbo].CatProductCategory    cts WITH (NOLOCK)  
                             ON cat.CatProductCategoryId = cts.IdCatProductCategory  
                     WHERE sc.CustomerId = @CustomerId
                           AND GETDATE() <= sc.ExpirationDate  
@@ -2254,12 +2242,12 @@ BEGIN
                                   , sc.SubscriptionFixedValue  
                                   , -1)  
                          , @DescriptionTypeSubscription = cts.TechnicalDescription  
-                    FROM Subscription                    sc WITH (NOLOCK)  
-                        INNER JOIN CatSalesPackageStatus csps WITH (NOLOCK)  
+                    FROM [DeliveryBackOffice].[dbo].Subscription                    sc WITH (NOLOCK)  
+                        INNER JOIN [DeliveryBackOffice].[dbo].CatSalesPackageStatus csps WITH (NOLOCK)  
                             ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId  
-                        INNER JOIN CatSubscription       cat WITH (NOLOCK)  
+                        INNER JOIN [DeliveryBackOffice].[dbo].CatSubscription       cat WITH (NOLOCK)  
                             ON sc.CatSubscriptionId = cat.IdCatSubscription  
-                        INNER JOIN CatProductCategory    cts WITH (NOLOCK)  
+                        INNER JOIN [DeliveryBackOffice].[dbo].CatProductCategory    cts WITH (NOLOCK)  
                             ON cat.CatProductCategoryId = cts.IdCatProductCategory  
                     WHERE sc.CustomerId = @CustomerId
                           AND GETDATE() <= sc.ExpirationDate  
@@ -2280,14 +2268,14 @@ BEGIN
                               , sc.MembershipFixedValue  
                               , -1)  
                      , @DescriptionTypeSubscription = cts.TechnicalDescription  
-                FROM Membership                        sc WITH (NOLOCK)  
-                    INNER JOIN CatSalesPackageStatus   csps WITH (NOLOCK)  
+                FROM [DeliveryBackOffice].[dbo].Membership                        sc WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].CatSalesPackageStatus   csps WITH (NOLOCK)  
                         ON csps.IdCatSalesPackageStatus = sc.CatMembershipStatusId  
-                    INNER JOIN CatSubscription         cat WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].CatSubscription         cat WITH (NOLOCK)  
                         ON sc.CatMembershipId = cat.IdCatSubscription  
-                    INNER JOIN CatProductCategory      cts WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].CatProductCategory      cts WITH (NOLOCK)  
                         ON cat.CatProductCategoryId = cts.IdCatProductCategory  
-                    INNER JOIN MembershipDiscountRange scdr WITH (NOLOCK)  
+                    INNER JOIN [DeliveryBackOffice].[dbo].MembershipDiscountRange scdr WITH (NOLOCK)  
                         ON sc.IdMembership = scdr.MembershipId  
                 WHERE sc.CustomerId = @CustomerId
                       AND GETDATE() <= sc.ExpirationDate  
@@ -2299,8 +2287,6 @@ BEGIN
                 ORDER BY scdr.DiscountValue DESC;  
             END;  
   
-  
-  
         END;  
   
         --Se busca membresía por rango de servicios2  
@@ -2308,12 +2294,12 @@ BEGIN
         SELECT TOP 1  
                @DiscountValue = DiscountValue  
              , @Type          = cvt.ValueTypeName  
-        FROM SubscriptionDiscountRange sdr WITH (NOLOCK)  
-            INNER JOIN Subscription    sc WITH (NOLOCK)  
+        FROM [DeliveryBackOffice].[dbo].SubscriptionDiscountRange sdr WITH (NOLOCK)  
+            INNER JOIN [DeliveryBackOffice].[dbo].Subscription    sc WITH (NOLOCK)  
                 ON sc.IdSubscription = sdr.SubscriptionId  
-            INNER JOIN CatValueType    cvt WITH (NOLOCK)  
+            INNER JOIN [DeliveryBackOffice].[dbo].CatValueType    cvt WITH (NOLOCK)  
                 ON sdr.ValueTypeId = cvt.IdCatValueType  
-            INNER JOIN CatSubscription css WITH (NOLOCK)  
+            INNER JOIN [DeliveryBackOffice].[dbo].CatSubscription css WITH (NOLOCK)  
                 ON sc.CatSubscriptionId = css.IdCatSubscription  
         WHERE sdr.SubscriptionId = @SubscriptionId  
               AND css.CatProductCategoryId = @CategoryProductId  
@@ -2332,12 +2318,12 @@ BEGIN
             SELECT TOP 1  
                    @DiscountValue = DiscountValue  
                  , @Type          = cvt.ValueTypeName  
-            FROM MembershipDiscountRange sdr WITH (NOLOCK)
-                INNER JOIN Membership    sc  WITH (NOLOCK)  
+            FROM [DeliveryBackOffice].[dbo].MembershipDiscountRange sdr WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].Membership    sc  WITH (NOLOCK)  
                     ON sc.IdMembership = sdr.MembershipId  
-                INNER JOIN CatValueType  cvt WITH (NOLOCK)  
+                INNER JOIN [DeliveryBackOffice].[dbo].CatValueType  cvt WITH (NOLOCK)  
                     ON sdr.ValueTypeId = cvt.IdCatValueType  
-                INNER JOIN CatMembership css WITH (NOLOCK)  
+                INNER JOIN [DeliveryBackOffice].[dbo].CatMembership css WITH (NOLOCK)  
                     ON sc.CatMembershipId = css.IdCatMembership  
             WHERE sdr.MembershipId = @ProductId  
                   AND css.CatProductCategoryId = @CategoryProductId  
