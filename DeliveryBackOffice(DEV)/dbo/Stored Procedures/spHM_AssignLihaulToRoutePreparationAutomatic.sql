@@ -255,6 +255,63 @@ BEGIN
     FROM @NewRoutePreparations;
 
     -- =========================================================================
+    -- Actualizar estado de guías y piezas → Programado para entrega (3)
+    -- =========================================================================
+    UPDATE do
+    SET do.StatusOrderId = 3
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
+        INNER JOIN
+        (SELECT DISTINCT GuideSerie, GuideNumber FROM #GuidesTmpRoute) gl
+            ON do.Guide_Serie = gl.GuideSerie
+               AND do.Guide_Number = gl.GuideNumber;
+
+    IF COALESCE(@@ROWCOUNT, 0) > 0
+        SET @RModified = @RModified + 1;
+
+    -- Bitácora: insertar estado por guía solo si no existe registro del día en esta preparación
+    INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
+    (
+        [Guide_Serie],
+        [Guide_Number],
+        [StatusOrderId],
+        [UserCreated],
+        [DateCreated],
+        [DateCreatedInSystem],
+        [StationId]
+    )
+    SELECT DISTINCT
+        gl.GuideSerie,
+        gl.GuideNumber,
+        3,
+        @Token,
+        GETDATE(),
+        GETDATE(),
+        @StationId
+    FROM #GuidesTmpRoute gl
+        INNER JOIN @RoutePreparationMap rpm
+            ON gl.IdRoute = rpm.IdRoute
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] rpd WITH (NOLOCK)
+        WHERE rpd.RoutePreparationId = rpm.IdRoutePreparation
+              AND rpd.Guide_Serie = gl.GuideSerie
+              AND rpd.Guide_Number = gl.GuideNumber
+              AND rpd.DateCreated >= @Today
+              AND rpd.DateCreated < @Tomorrow
+    );
+
+    UPDATE dop
+    SET dop.StatusOrderId = 3
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH (NOLOCK)
+        INNER JOIN #GuidesTmpRoute gl
+            ON dop.GuideSerie = gl.GuideSerie
+               AND dop.GuideNumber = gl.GuideNumber
+               AND dop.NoPiece = gl.GuidePiece;
+    IF COALESCE(@@ROWCOUNT, 0) > 0
+        SET @RModified = @RModified + 1;
+
+    -- =========================================================================
     -- RoutePreparationDetail: insertar por cada guía distinta que no exista aún
     -- =========================================================================
     INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetail]
@@ -359,62 +416,6 @@ BEGIN
           --AND rp.DateRoutePreparation = @Date
           AND rp.IdRoutePreparation <> rpm.IdRoutePreparation;
 
-    IF COALESCE(@@ROWCOUNT, 0) > 0
-        SET @RModified = @RModified + 1;
-    -- =========================================================================
-    -- Actualizar estado de guías y piezas → Programado para entrega (3)
-    -- =========================================================================
-    UPDATE do
-    SET do.StatusOrderId = 3
-    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
-        INNER JOIN
-        (SELECT DISTINCT GuideSerie, GuideNumber FROM #GuidesTmpRoute) gl
-            ON do.Guide_Serie = gl.GuideSerie
-               AND do.Guide_Number = gl.GuideNumber;
-
-    IF COALESCE(@@ROWCOUNT, 0) > 0
-        SET @RModified = @RModified + 1;
-
-    -- Bitácora: insertar estado por guía solo si no existe registro del día en esta preparación
-    INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
-    (
-        [Guide_Serie],
-        [Guide_Number],
-        [StatusOrderId],
-        [UserCreated],
-        [DateCreated],
-        [DateCreatedInSystem],
-        [StationId]
-    )
-    SELECT DISTINCT
-        gl.GuideSerie,
-        gl.GuideNumber,
-        3,
-        @Token,
-        GETDATE(),
-        GETDATE(),
-        @StationId
-    FROM #GuidesTmpRoute gl
-        INNER JOIN @RoutePreparationMap rpm
-            ON gl.IdRoute = rpm.IdRoute
-    WHERE NOT EXISTS
-    (
-        SELECT 1
-        FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] rpd WITH (NOLOCK)
-        WHERE rpd.RoutePreparationId = rpm.IdRoutePreparation
-              AND rpd.Guide_Serie = gl.GuideSerie
-              AND rpd.Guide_Number = gl.GuideNumber
-              AND rpd.DateCreated >= @Today
-              AND rpd.DateCreated < @Tomorrow
-    );
-
-    UPDATE dop
-    SET dop.StatusOrderId = 3
-    FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH (NOLOCK)
-        INNER JOIN #GuidesTmpRoute gl
-            ON dop.GuideSerie = gl.GuideSerie
-               AND dop.GuideNumber = gl.GuideNumber
-               AND dop.NoPiece = gl.GuidePiece;
     IF COALESCE(@@ROWCOUNT, 0) > 0
         SET @RModified = @RModified + 1;
 
