@@ -46,13 +46,14 @@ BEGIN
 			rpd.IdRoutePreparationDetail 'IdRoutePreparationDetail'
 		   ,rpd.Guide_Serie 'GuideSerie'
 		   ,rpd.Guide_Number 'GuideNumber'
-		   ,COUNT(1) 'Pieces'
+		   ,IIF(rpd.ServiceManagementDetailId > 0, '1', '0') 'Pieces'
 		   ,COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) 'PiecesTotal'
 		   ,do.Receiver_Department 'Department'
 		   ,do.Receiver_Town 'Town'
 		   ,do.Receiver_Address 'Address'
 		   ,rpd.GuideOrder 'GuideOrder'
 		   ,do.Ticket_Number
+		   ,IIF(rpd.ServiceManagementDetailId > 0, '1', '0') AS 'GuideStatus'
 		FROM RoutePreparation rp WITH (NOLOCK)
 		INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
@@ -76,6 +77,7 @@ BEGIN
 				,do.Receiver_Address
 				,rpd.GuideOrder
 				,do.Ticket_Number
+				,rpd.ServiceManagementDetailId
 		ORDER BY COALESCE(rpd.GuideOrder, 999999) ASC 
 	END
 	ELSE
