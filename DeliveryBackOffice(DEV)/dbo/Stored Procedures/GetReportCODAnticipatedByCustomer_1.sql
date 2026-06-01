@@ -64,11 +64,11 @@ BEGIN
                        INNER JOIN DeliveryBackOffice.dbo.AnticipatedCODHeader ach 
                           ON acd.AnticipatedCODHeaderId = ach.IdAnticipatedCODHeader
                        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
-                          ON do.Guide_Number = acd.GuideNumber
-                         AND do.Guide_Serie = acd.GuideSerie
+                          ON do.Guide_Serie = acd.GuideSerie
+                         AND do.Guide_Number = acd.GuideNumber
                        LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD cdcod
-                          ON cdcod.GuideNumber = acd.GuideNumber
-                         AND cdcod.GuideSerie = acd.GuideSerie
+                          ON cdcod.GuideSerie = acd.GuideSerie
+                         AND cdcod.GuideNumber = acd.GuideNumber
                          AND cdcod.CatConceptCODId = 2
                  WHERE CAST(acd.DateCreated AS DATE) >= @startDate
                    AND CAST(acd.DateCreated AS DATE) <= @endDate

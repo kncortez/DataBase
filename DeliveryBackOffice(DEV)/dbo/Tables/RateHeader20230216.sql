@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateHeader20230216] (
-    [RheId]                INT             IDENTITY (1, 1) NOT NULL,
+    [RheId]                INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RheName]              VARCHAR (200)   NOT NULL,
     [RheShortName]         VARCHAR (3)     NOT NULL,
     [RheDescription]       VARCHAR (200)   NULL,

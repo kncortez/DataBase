@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Tito Garcia>
 -- Create date: <2024-07-22>
 -- Description:	<SP para liberar la incidencia del usuario que la tiene asignada en el  proceso de validacion. Ref. FDAPI-2287>
@@ -21,8 +21,8 @@ BEGIN
 			coi.TakenIncidenceDateAndTime = Null 
 		FROM [dbo].[ConfirmationOfIncidence] coi
 			INNER JOIN [dbo].[DeliveryAttempt] da ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-		WHERE da.Guide_Number = @GuideNumber
-			AND da.Guide_Serie = @GuideSerie
+		WHERE da.Guide_Serie = @GuideSerie
+			AND da.Guide_Number = @GuideNumber 
 
 		IF @@ROWCOUNT > 0
 		BEGIN

@@ -1,4 +1,4 @@
-/* =================================================
+﻿/* =================================================
    SP:        [dbo].[spHM_GetGuidesInRevision]
    Propósito: <Obtiene las guias en estado "En Revision" con filtros opcionales>
    Autor:     <Freddy Camposeco>
@@ -11,7 +11,7 @@
 USE [DeliveryBackOffice]
 GO
 
-CREATE PROCEDURE [dbo].[spHM_GetGuidesInRevision]
+CREATE   PROCEDURE [dbo].[spHM_GetGuidesInRevision]
     @CountryId NVARCHAR(5) = 'GT',
     @RouteId INT = NULL,
     @CourierName NVARCHAR(100) = NULL,
@@ -23,7 +23,7 @@ BEGIN
     SET QUOTED_IDENTIFIER ON
     SET NOCOUNT ON;
 
-    DECLARE @StatusRevision INT = 55; -- 'En Revision LH'
+    DECLARE @StatusRevision INT = 13;-- OrderDescription "En Revisión" y Estado pieza "En Revisión"
     DECLARE @StatusExtraviado INT = 27;-- Estado pieza "Paquete Extraviado"
     DECLARE @StatusTrasladadoHub INT = 44;-- Estado pieza "Trasladado a Hub"
     DECLARE @GuideSerie NVARCHAR(2);

@@ -1,16 +1,16 @@
-﻿CREATE TABLE [dbo].[CatStatusGuideByContainer]
-(
-	[IdStatus]			INT IDENTITY (1, 1) NOT NULL,
-	[Name]				NVARCHAR (100) NOT NULL,
-	[Description]		NVARCHAR (200) NULL,
-	[RowStatus]			BIT NOT NULL DEFAULT 1,
-	[UserCreated]		NVARCHAR(50) NOT NULL,
-	[DateCreated]		DATETIME NOT NULL,
-	[UserUpdated]		NVARCHAR(50) NULL,
-	[DateUpdated]		DATETIME NULL,
-	CONSTRAINT [PK_CatStatusGuideByContainer] PRIMARY KEY CLUSTERED ([IdStatus] ASC)
+﻿CREATE TABLE [dbo].[CatStatusGuideByContainer] (
+    [IdStatus]    INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [Name]        NVARCHAR (100) NOT NULL,
+    [Description] NVARCHAR (200) NULL,
+    [RowStatus]   BIT            DEFAULT ((1)) NOT NULL,
+    [UserCreated] NVARCHAR (50)  NOT NULL,
+    [DateCreated] DATETIME       NOT NULL,
+    [UserUpdated] NVARCHAR (50)  NULL,
+    [DateUpdated] DATETIME       NULL,
+    CONSTRAINT [PK_CatStatusGuideByContainer] PRIMARY KEY CLUSTERED ([IdStatus] ASC)
+);
 
-)
+
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',

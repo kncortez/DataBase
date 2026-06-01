@@ -10,7 +10,7 @@
 CREATE PROCEDURE [dbo].[spg_get_deliveryorders_cod]
 	-- Add the parameters for the stored procedure here
 		@Token AS VARCHAR(50)    = '078c6f38f79816bf9ad01d70181b3101', --Prod '078c6f38f79816bf9ad01d70181b3101'
-		@Rol AS BIGINT 			 =   874,  --874 Prod
+		@Rol AS INT 			 =   874,  --874 Prod
 		@BeginDate AS VARCHAR(50) = '11/09/2020',
 		@EndDate AS VARCHAR(50)  = '18/09/2020',
 		@GuideSerie AS VARCHAR(2),
@@ -23,8 +23,7 @@ BEGIN
 
     -- Insert statements for procedure here
 	DECLARE @IdToken AS VARCHAR(50);
-	DECLARE @IdRol AS BIGINT; 
-	DECLARE @IdVisitPoint AS BIGINT;
+	DECLARE @IdRol AS INT; 
 	DECLARE @DateIni AS DATE;
 	DECLARE @DateFin AS DATE;
 
@@ -90,7 +89,7 @@ BEGIN
 				AND batch.GuideNumber = serv.Guide_Number
 				AND batch.CatConceptCODId = 2
 			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD WITH(NOLOCK)
-				ON ccCOD.IdCatCurrencyCOD = IIF(batch.CatCurrencyCODId IS NULL, 1, batch.CatCurrencyCODId)
+				ON ccCOD.IdCatCurrencyCOD = batch.CatCurrencyCODId
 			WHERE (serv.DateCreated BETWEEN  @StartDateTime AND @EndDateTime)
 				AND serv.StatusOrderId <> 7 -- No guías anuladas
 				AND serv.StatusOrderId <> 15 -- No guías generadas
@@ -131,7 +130,7 @@ BEGIN
 				AND batch.GuideNumber = serv.Guide_Number
 				AND batch.CatConceptCODId = 2
 			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD WITH (NOLOCK)
-				ON ccCOD.IdCatCurrencyCOD = IIF(batch.CatCurrencyCODId IS NULL, 1, batch.CatCurrencyCODId)
+				ON ccCOD.IdCatCurrencyCOD = batch.CatCurrencyCODId
 			WHERE serv.Guide_Serie = @GuideSerie 
 				AND serv.Guide_Number = @GuideNumber 
 				AND serv.StatusOrderId <> 7 -- No guías anuladas

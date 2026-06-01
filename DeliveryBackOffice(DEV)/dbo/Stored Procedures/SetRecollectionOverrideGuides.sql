@@ -87,7 +87,7 @@ BEGIN
                              ELSE
                                  0
                          END
-        FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+        FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
         WHERE OrderNumber =
         (
             SELECT (RTRIM(LTRIM(SerieGuide)) + CONVERT(VARCHAR, T.GuideNumber)) AS OrderNumber
@@ -105,10 +105,10 @@ BEGIN
                                  ELSE
                                      0
                              END
-            FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail D
+            FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail D WITH(NOLOCK)
                 INNER JOIN @TBGUIDES                                          T
-                    ON T.GuideNumber = D.ProductNumber
-                       AND RTRIM(LTRIM(D.SerieNumber)) = RTRIM(LTRIM(T.SerieGuide))
+                    ON D.SerieNumber = T.SerieGuide
+                       AND T.GuideNumber = D.ProductNumber
             WHERE T.ITERATOR = @IDENTYGUIDES;
 
             --SELECT @ESTADO						
@@ -122,8 +122,9 @@ BEGIN
                                  END
                 FROM DeliveryBackOffice.dbo.DeliveryOrder O WITH(NOLOCK)
                     INNER JOIN @TBGUIDES                  T
-                        ON T.GuideNumber = O.Guide_Number
-                           AND RTRIM(LTRIM(O.Guide_Serie)) = RTRIM(LTRIM(T.SerieGuide))
+                        ON 
+                          O.Guide_Serie = T.SerieGuide
+						   and T.GuideNumber = O.Guide_Number
                           
                           
                 WHERE T.ITERATOR = @IDENTYGUIDES AND   O.StatusOrderId IN(15,1);
@@ -164,8 +165,8 @@ BEGIN
                            AND PC.GuideNumberOrigin = DO.Guide_Number
                     INNER JOIN [DeliveryBackOffice].[dbo].StatusOrder   SO WITH (NOLOCK)
                         ON DO.StatusOrderId = SO.StatusOrderId
-                WHERE DO.Guide_Number = CAST(@NumberGuides AS INT)
-                      AND DO.Guide_Serie = @SerieGuides
+                WHERE DO.Guide_Serie = @SerieGuides
+                      AND DO.Guide_Number = CAST(@NumberGuides AS INT)
             );
 
             ------------------------------------------------------------
@@ -177,16 +178,11 @@ BEGIN
             ELSE IF (@STATUSGUIDE = 'Guía Origen')
             BEGIN
                 ------- Anular cupon y guía de Origen -----------------
-                UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+                UPDATE do
                 SET StatusOrderId = 7
-                WHERE Guide_Serie =
-                (
-                    SELECT T.SerieGuide FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES
-                )
-                      AND Guide_Number =
-                      (
-                          SELECT T.GuideNumber FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES
-                      );
+				FROM DeliveryBackOffice.dbo.DeliveryOrder do
+				INNER JOIN @TBGUIDES tbg ON tbg.SerieGuide = do.Guide_Serie AND tbg.GuideNumber = do.Guide_Number
+				WHERE tbg.ITERATOR = @IDENTYGUIDES;
 
 
                 UPDATE [DeliveryBackOffice].[dbo].[PromoCoupon]
@@ -231,7 +227,7 @@ BEGIN
                 SELECT @MembershipSubscriptionLogId = msl.IdMembershipSubscriptionLog
                      , @MembershipId                = msl.MembershipId
                      , @SubscriptionId              = msl.SubscriptionId
-                FROM MembershipSubscriptionLog msl
+                FROM MembershipSubscriptionLog msl WITH (NOLOCK)
                     INNER JOIN @TBGUIDES       tb
                         ON tb.SerieGuide = msl.LogGuideSerie
                            AND tb.GuideNumber = msl.LogGuideNumber
@@ -316,16 +312,11 @@ BEGIN
             BEGIN
 
                 ------- Anular cupon y guía de Destino -----------------
-                UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+                UPDATE do
                 SET StatusOrderId = 7
-                WHERE Guide_Serie =
-                (
-                    SELECT T.SerieGuide FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES
-                )
-                      AND Guide_Number =
-                      (
-                          SELECT T.GuideNumber FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES
-                      );
+				FROM DeliveryBackOffice.dbo.DeliveryOrder do
+				INNER JOIN @TBGUIDES tbg ON tbg.SerieGuide = do.Guide_Serie AND tbg.GuideNumber = do.Guide_Number
+				WHERE tbg.ITERATOR = @IDENTYGUIDES;
 
 
                 UPDATE [DeliveryBackOffice].[dbo].[PromoCoupon]
@@ -370,7 +361,7 @@ BEGIN
                 SELECT @MembershipSubscriptionLogId = msl.IdMembershipSubscriptionLog
                      , @MembershipId                = msl.MembershipId
                      , @SubscriptionId              = msl.SubscriptionId
-                FROM MembershipSubscriptionLog msl
+                FROM MembershipSubscriptionLog msl WITH (NOLOCK)
                     INNER JOIN @TBGUIDES       tb
                         ON tb.SerieGuide = msl.LogGuideSerie
                            AND tb.GuideNumber = msl.LogGuideNumber
@@ -448,18 +439,12 @@ BEGIN
             --------Anular guía con estado Solicitado -----
             ELSE IF (@STATUSGUIDE = 'Solicitado')
             BEGIN
-
-
-                UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+			
+                UPDATE do
                 SET StatusOrderId = 7
-                WHERE Guide_Serie =
-                (
-                    SELECT T.SerieGuide FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES
-                )
-                      AND Guide_Number =
-                      (
-                          SELECT T.GuideNumber FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES
-                      );
+				FROM DeliveryBackOffice.dbo.DeliveryOrder do
+				INNER JOIN @TBGUIDES tbg ON tbg.SerieGuide = do.Guide_Serie AND tbg.GuideNumber = do.Guide_Number
+				WHERE tbg.ITERATOR = @IDENTYGUIDES;
 
 
                 INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
@@ -487,7 +472,7 @@ BEGIN
                 SELECT @MembershipSubscriptionLogId = msl.IdMembershipSubscriptionLog
                      , @MembershipId                = msl.MembershipId
                      , @SubscriptionId              = msl.SubscriptionId
-                FROM MembershipSubscriptionLog msl
+                FROM MembershipSubscriptionLog msl WITH	(NOLOCK)
                     INNER JOIN @TBGUIDES       tb
                         ON tb.SerieGuide = msl.LogGuideSerie
                            AND tb.GuideNumber = msl.LogGuideNumber
@@ -567,17 +552,12 @@ BEGIN
             ELSE IF (@STATUSGUIDE = 'Generado')
             BEGIN
 
-
-                UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+			
+                UPDATE do
                 SET StatusOrderId = 7
-                WHERE Guide_Serie =
-                (
-                    SELECT T.SerieGuide FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES
-                )
-                      AND Guide_Number =
-                      (
-                          SELECT T.GuideNumber FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES
-                      );
+				FROM DeliveryBackOffice.dbo.DeliveryOrder do
+				INNER JOIN @TBGUIDES tbg ON tbg.SerieGuide = do.Guide_Serie AND tbg.GuideNumber = do.Guide_Number
+				WHERE tbg.ITERATOR = @IDENTYGUIDES;
 
 
                 INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
@@ -605,7 +585,7 @@ BEGIN
                 SELECT @MembershipSubscriptionLogId = msl.IdMembershipSubscriptionLog
                      , @MembershipId                = msl.MembershipId
                      , @SubscriptionId              = msl.SubscriptionId
-                FROM MembershipSubscriptionLog msl
+                FROM MembershipSubscriptionLog msl with (nolock)
                     INNER JOIN @TBGUIDES       tb
                         ON tb.SerieGuide = msl.LogGuideSerie
                            AND tb.GuideNumber = msl.LogGuideNumber
@@ -701,15 +681,15 @@ BEGIN
 
         UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
         SET StatusOrderId = 7
-        WHERE GuideNumber = @TempGuide
-              AND GuideSerie = @TempSerie;
+        WHERE GuideSerie = @TempSerie
+              AND GuideNumber = @TempGuide;
 
 
         IF EXISTS
         (
             SELECT *
             FROM DeliveryBackOffice.dbo.GuideBatch WITH (NOLOCK)
-            WHERE GuideNumber = @TempGuide AND GuideSeries ='FD'
+            WHERE GuideSeries ='FD' AND GuideNumber = @TempGuide
                   AND RowStatus = 1
         )
         BEGIN
@@ -717,8 +697,8 @@ BEGIN
             UPDATE DeliveryBackOffice.dbo.GuideBatch
             SET RowStatus = 0
               , Status = 0
-            WHERE GuideNumber = @TempGuide
-                  AND GuideSeries = @TempSerie;
+            WHERE GuideSeries = @TempSerie
+                  AND GuideNumber = @TempGuide;
 
         END;
 

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[LinehaulRoutePreparationContainer] (
+CREATE TABLE [dbo].[LinehaulRoutePreparationContainer] (
     [IdLinehaulRoutePreparationContainer] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [LinehaulRoutePreparationId]          INT           NOT NULL,
     [ContainerId]                         INT           NOT NULL,
@@ -18,6 +18,8 @@
     CONSTRAINT [FK_LinehaulRoutePreparationContainer_RoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation]),
     CONSTRAINT [UQ_LinehaulRoutePreparation_Container] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationId] ASC, [ContainerId] ASC)
 );
+
+
 
 
 
@@ -91,5 +93,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del stat
 
 
 GO
-
+CREATE NONCLUSTERED INDEX [idx_ContainerId_RowStatus_LinehaulRoutePreparationId_CatLinehaulStatusId]
+    ON [dbo].[LinehaulRoutePreparationContainer]([ContainerId] ASC, [RowStatus] ASC, [LinehaulRoutePreparationId] ASC, [CatLinehaulStatusId] ASC);
 

@@ -1,5 +1,6 @@
 ﻿CREATE TABLE [dbo].[ContImg] (
-    [Id]              INT NULL,
-    [IdDeliveryProof] INT NULL
+    [Id]              INT NOT NULL,
+    [IdDeliveryProof] INT NULL,
+    CONSTRAINT [PK_ContImg] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 

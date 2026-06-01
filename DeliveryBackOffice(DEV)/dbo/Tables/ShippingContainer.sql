@@ -1,20 +1,22 @@
-CREATE TABLE [ShippingContainer] (
-    IdContainer         BIGINT IDENTITY(1,1) NOT NULL,
-    ReferenceContainer  NVARCHAR(50) NOT NULL,
-    IdCustomer          INT NOT NULL,
-    IdStatusContainer   INT NOT NULL,
-    CountGuides         INT NULL,
-    RowStatus           BIT NOT NULL DEFAULT 1,
-    UserCreated         NVARCHAR(50) NOT NULL,
-    DateCreated         DATETIME NOT NULL,
-    TokenCreated        NVARCHAR(50) NOT NULL,
-    UserUpdated         NVARCHAR(50) NULL,
-    DateUpdated         DATETIME NULL,
-    TokenUpdated        NVARCHAR(50) NULL,
+﻿CREATE TABLE [dbo].[ShippingContainer] (
+    [IdContainer]        BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [ReferenceContainer] NVARCHAR (50) NOT NULL,
+    [IdCustomer]         INT           NOT NULL,
+    [IdStatusContainer]  INT           NOT NULL,
+    [CountGuides]        INT           NULL,
+    [RowStatus]          BIT           DEFAULT ((1)) NOT NULL,
+    [UserCreated]        NVARCHAR (50) NOT NULL,
+    [DateCreated]        DATETIME      NOT NULL,
+    [TokenCreated]       NVARCHAR (50) NOT NULL,
+    [UserUpdated]        NVARCHAR (50) NULL,
+    [DateUpdated]        DATETIME      NULL,
+    [TokenUpdated]       NVARCHAR (50) NULL,
     CONSTRAINT [PK_ShippingContainer] PRIMARY KEY CLUSTERED ([IdContainer] ASC),
-    CONSTRAINT [FK_ShippingContainer_Customer] FOREIGN KEY (IdCustomer) REFERENCES [dbo].[Customer] (IdCustomer),
-    CONSTRAINT [FK_ShippingContainer_CatShipContainerStatus] FOREIGN KEY ([IdStatusContainer]) REFERENCES [dbo].[CatShipContainerStatus] ([IdCatStatus])
+    CONSTRAINT [FK_ShippingContainer_CatShipContainerStatus] FOREIGN KEY ([IdStatusContainer]) REFERENCES [dbo].[CatShipContainerStatus] ([IdCatStatus]),
+    CONSTRAINT [FK_ShippingContainer_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
+
+
 GO
 
 CREATE NONCLUSTERED INDEX [IX_ShippingContainer_ReferenceContainer_IdCustomer]
@@ -56,3 +58,7 @@ GO
 
 EXECUTE sp_addextendedproperty N'MS_Description', N'Último token de actualización del registro', N'SCHEMA', N'dbo', N'TABLE', N'ShippingContainer', N'COLUMN', N'TokenUpdated'
 GO
+CREATE NONCLUSTERED INDEX [IX_ShippingContainer_Status_Ref]
+    ON [dbo].[ShippingContainer]([IdStatusContainer] ASC, [ReferenceContainer] ASC)
+    INCLUDE([IdContainer]);
+

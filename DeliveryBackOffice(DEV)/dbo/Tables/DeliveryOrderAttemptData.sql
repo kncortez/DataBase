@@ -18,9 +18,10 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderAttemptData_Guide]
-    ON [dbo].[DeliveryOrderAttemptData]([GuideSerie] ASC, [GuideNumber] ASC);
+
 
 
 GO
@@ -73,4 +74,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para indicar los intentos que posee una guía en procesos operativos.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderAttemptData';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DeliveryOrderAttemptData_Guide_Consolidated]
+    ON [dbo].[DeliveryOrderAttemptData]([GuideSerie] ASC, [GuideNumber] ASC)
+    INCLUDE([GuideDeliveryAttemptCount], [GuideDeliveryMaxAttemptCount]);
 

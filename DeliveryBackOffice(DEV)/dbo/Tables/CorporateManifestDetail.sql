@@ -18,6 +18,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla CorporateManifestDetail', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CorporateManifestDetail', @level2type = N'COLUMN', @level2name = N'IdManifestDetail';
 
@@ -57,4 +59,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado de f
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_RowStatus]
     ON [dbo].[CorporateManifestDetail]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ManifestId]
+    ON [dbo].[CorporateManifestDetail]([ManifestId] ASC);
 
