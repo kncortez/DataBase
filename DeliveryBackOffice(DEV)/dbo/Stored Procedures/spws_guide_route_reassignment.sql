@@ -67,17 +67,20 @@ BEGIN
                     VALUES ('A' + CAST(@RowIndex AS VARCHAR), @Guide, N'La guía no corresponde al país seleccionado');
                 END
 
-                -- Validación 3: Verificar que la ruta existe y está habilitada
+                -- Validación 3: Verificar que la ruta existe, está habilitada y es de tipo Ultima Milla
                 IF NOT EXISTS (
                     SELECT 1
-                    FROM dbo.CatRoute WITH (NOLOCK)
-                    WHERE RowStatus = 1
-                      AND CountryId = @IdCountry
-                      AND CodeRoute = @Route
+                    FROM dbo.CatRoute CR WITH (NOLOCK)
+                    INNER JOIN dbo.CatTypeRoute CTR WITH (NOLOCK)
+                        ON CR.IdTypeRoute = CTR.IdTypeRoute
+                    WHERE CR.RowStatus   = 1
+                      AND CR.CountryId   = @IdCountry
+                      AND CR.CodeRoute   = @Route
+                      AND CTR.[Name]     = 'Ultima Milla'
                 )
                 BEGIN
                     INSERT INTO @Errors (RowColumn, NoGuia, ErrorMessage)
-                    VALUES ('B' + CAST(@RowIndex AS VARCHAR), @Guide, N'La ruta asignada no está habilitada');
+                    VALUES ('B' + CAST(@RowIndex AS VARCHAR), @Guide, N'La ruta asignada no está habilitada o no es de tipo Ultima Milla');
                 END
             END
 
