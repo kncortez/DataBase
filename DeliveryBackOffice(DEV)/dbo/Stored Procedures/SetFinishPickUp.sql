@@ -257,7 +257,8 @@ BEGIN
                           CROSS APPLY (VALUES (CHARINDEX('-', s.Item))) ca(Pos)
                   ) AS Guides
                 ON W.Guide_Serie = Guides.GuideSerie
-               AND W.Guide_Number = Guides.GuideNumber;
+               AND W.Guide_Number = Guides.GuideNumber 
+			  WHERE W.Active =1;
         END
 
             END TRY

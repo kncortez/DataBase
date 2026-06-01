@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[DeliveryOrderPaymentDetail] (
+CREATE TABLE [dbo].[DeliveryOrderPaymentDetail] (
     [DopId]                 BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideNumber]           INT             NOT NULL,
     [GuideSerie]            NVARCHAR (2)    NULL,
@@ -41,6 +41,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_NC_GuideSerieGuideNumber_DeliveryOrderPaymentDetail]
     ON [dbo].[DeliveryOrderPaymentDetail]([GuideSerie] ASC, [GuideNumber] ASC);
@@ -56,8 +58,7 @@ GO
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_TimePlaId]
-    ON [dbo].[DeliveryOrderPaymentDetail]([TimePlaId] ASC);
+
 
 
 GO
@@ -66,7 +67,18 @@ CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_ShipmentCompleted_TimePlaI
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_TimePlaId_included]
+CREATE NONCLUSTERED INDEX [IX_DOPD_IdHeaderRecolection_Guide]
+    ON [dbo].[DeliveryOrderPaymentDetail]([IdHeaderRecolection] ASC, [GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryBackOffice_dbo_DeliveryOrderPaymentDetail]
+    ON [dbo].[DeliveryOrderPaymentDetail]([GuideNumber] ASC)
+    INCLUDE([TimePlaId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_TimePlaId_Consolidated]
     ON [dbo].[DeliveryOrderPaymentDetail]([TimePlaId] ASC)
-    INCLUDE([GuideNumber], [GuideSerie]);
+    INCLUDE([GuideSerie], [GuideNumber]);
 

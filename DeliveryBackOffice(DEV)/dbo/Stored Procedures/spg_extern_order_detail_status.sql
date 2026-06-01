@@ -73,8 +73,8 @@ BEGIN
                                    = LTRIM(RTRIM(CONCAT(LTRIM(RTRIM(SR.First_Name)), ' ', LTRIM(RTRIM(SR.Last_Name)))))
     FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt]          DA WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryProof]  DP WITH (NOLOCK)
-            ON DA.Guide_Number = DP.Guide_Number
-               AND DA.Guide_Serie = DP.Guide_Serie
+            ON DA.Guide_Serie = DP.Guide_Serie
+               AND DA.Guide_Number = DP.Guide_Number
         INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR WITH (NOLOCK)
             ON DA.ID_Courier = SR.ID
     WHERE DA.Guide_Serie = @Guide_Serie

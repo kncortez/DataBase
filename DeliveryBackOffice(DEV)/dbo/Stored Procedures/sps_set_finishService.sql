@@ -195,7 +195,7 @@ BEGIN
                 ON do.StatusOrderId = so.StatusOrderId
         WHERE (
                 UPPER(@ServiceType) = 'PICKUP'
-                AND so.StatusOrderId IN ( 15, 4, 1, 16 )
+                AND so.StatusOrderId IN ( 15, 4, 1, 16 ,2)
             )
             OR
             (
@@ -768,7 +768,6 @@ BEGIN
                                 AND WCT.WebhookType = WRBU.WebhookTypeId
                             INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint]          WHE WITH (NOLOCK)
                                 ON WRBU.CustomerId = WHE.CustomerId
-							AND WHE.WebhookTypeId = WCT.WebhookType
                             LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]      WTQ WITH (NOLOCK)
                                 ON WCT.GuideSerie = WTQ.GuideSerie
                                 AND WCT.GuideNumber = WTQ.GuideNumber

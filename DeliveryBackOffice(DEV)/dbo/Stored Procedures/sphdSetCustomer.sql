@@ -84,6 +84,7 @@ CREATE PROCEDURE [dbo].[sphdSetCustomer]
   , @isCOD INT = NULL
   , @IsVoucherRequired INT = 0
   , @RestrictionByArticle BIT = 'FALSE'
+  , @IsInternationalCustomer BIT = 'FALSE'
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -240,6 +241,7 @@ BEGIN
 				  , [IsCOD]
 				  , [IsVoucherRequired]
                   , [RestrictionByArticle]
+                  , [IsInternationalCustomer]
                 )
                 VALUES
                 (   @NameCustomer, @Description, @Domain, @RegexSubject, @RegexEmail, @RegexFilename, @Abbreviation
@@ -258,7 +260,7 @@ BEGIN
                   , @CardCode
                                                                                    -------------------------
                   , @ExcludePriceShippingCOD, @ExcludeCommissionCOD, @CatBatchTypeCODId, @CatBatchFrequencyCODId
-                  , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg, @isCOD,@IsVoucherRequired, @RestrictionByArticle);
+                  , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg, @isCOD,@IsVoucherRequired, @RestrictionByArticle,@IsInternationalCustomer);
 
                 SELECT 'TRUE'                            [blnResult]
                      , CAST(SCOPE_IDENTITY() AS VARCHAR) [IdResult]
@@ -353,6 +355,7 @@ BEGIN
 			  , [IsCOD] = @isCOD
 			  , [IsVoucherRequired] = @IsVoucherRequired
               , [RestrictionByArticle] = @RestrictionByArticle
+              , [IsInternationalCustomer] = @IsInternationalCustomer
             WHERE IdCustomer = @IdCustomer;
 
             -- Inactivar el registro

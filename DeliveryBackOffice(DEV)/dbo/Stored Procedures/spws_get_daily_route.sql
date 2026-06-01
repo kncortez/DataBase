@@ -144,7 +144,7 @@ BEGIN
 		   AND DOA.RowStatus = 1
 		   AND DOA.ServiceManagementId IS NULL
     ) AS TAL
-	ORDER BY TAL.DateCreated DESC
+--	ORDER BY TAL.DateCreated DESC
 
 	
 	/******************************************************************************************************************************
@@ -610,8 +610,8 @@ BEGIN
 									FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] dp WITH (NOLOCK)
 									LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]    sc WITH (NOLOCK)
 										   ON sc.SchedulePickupId = dp.IdHeaderRecolection
-									WHERE dp.GuideNumber = DOR.Guide_Number
-									  AND dp.GuideSerie = DOR.Guide_Serie
+									WHERE dp.GuideSerie = DOR.Guide_Serie
+									  AND dp.GuideNumber = DOR.Guide_Number
 								), 0
 							  )
 				END [Pickup],
@@ -666,8 +666,8 @@ BEGIN
 					(
 						SELECT ISNULL( COUNT(doa.GuideNumber) , 0 )
 						FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] doa WITH (NOLOCK)
-						WHERE doa.GuideNumber = DOR.Guide_Number
-							AND doa.GuideSerie = DOR.Guide_Serie
+						WHERE doa.GuideSerie = DOR.Guide_Serie
+							AND doa.GuideNumber = DOR.Guide_Number
 							AND doa.RowStatus = 1
 							AND doa.ServiceTypeId = IIF(
 														DOR.IsLastMileReturn = 1, 
@@ -852,4 +852,3 @@ BEGIN
     IF OBJECT_ID('#AllData', 'U') IS NOT NULL
         DROP TABLE #AllData;
 END;
-

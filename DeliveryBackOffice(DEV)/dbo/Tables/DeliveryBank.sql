@@ -19,6 +19,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_DeliveryBankRDL]
     ON [dbo].[DeliveryBank]([Id_bank] ASC, [Id_country] ASC, [Id_status] ASC);
@@ -132,3 +134,8 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'DeliveryBank',
     @level2type = NULL,
     @level2name = NULL
+GO
+CREATE NONCLUSTERED INDEX [IX_DBank_Id]
+    ON [dbo].[DeliveryBank]([Id_bank] ASC)
+    INCLUDE([Name]);
+

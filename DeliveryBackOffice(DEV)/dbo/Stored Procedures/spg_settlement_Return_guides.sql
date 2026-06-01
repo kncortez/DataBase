@@ -67,8 +67,8 @@ BEGIN
 	dsd.GuideSerie = do.Guide_Serie 
 	AND dsd.GuideNumber = do.Guide_Number 
 	INNER JOIN DeliveryBackOffice.dbo.Cost co WITH(NOLOCK)
-		ON  do.Guide_Number = co.GuideNumber 
-		AND do.Guide_Serie = co.GuideSerie
+		ON  do.Guide_Serie = co.GuideSerie 
+		AND do.Guide_Number = co.GuideNumber
 	INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
 		ON ISNULL(co.ShippingCurrency,@Currency) = CCU.IdCatCurrencyCOD
 	where do.Guide_Serie = (SELECT DISTINCT TOP 1 GuideSerie FROM [DeliveryBackOffice].[dbo].[SettlementByPickupDetail] WITH(NOLOCK) WHERE SettlementByPickupId = @manifestsequence)

@@ -24,7 +24,7 @@ BEGIN
 											ON CC.IdCatCurrencyCOD = DC.IdCurrencyCOD 
 										RIGHT JOIN Cost C WITH(NOLOCK)
 											ON C.CodCurrency = CC.IdCatCurrencyCOD
-										WHERE C.GuideNumber = @numberGuide AND C.GuideSerie = @serieGuide
+										WHERE C.GuideSerie = @serieGuide AND C.GuideNumber = @numberGuide
 
 	IF EXISTS (SELECT GuideNumber FROM DeliveryBackOffice.dbo.DeliveryOrderPiece WITH(NOLOCK)
 		   WHERE GuideSerie = @serieGuide AND GuideNumber = @numberGuide)
@@ -33,7 +33,7 @@ BEGIN
 		BEGIN
 			IF (SELECT IdCustomer 
 				FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-				WHERE Guide_Number = @numberGuide AND Guide_Serie = @serieGuide
+				WHERE Guide_Serie = @serieGuide AND Guide_Number = @numberGuide
 					AND IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry) is NULL
 			BEGIN
 				SELECT dop.GuideSerie,
@@ -80,7 +80,7 @@ BEGIN
 		BEGIN
 			IF (SELECT IdCustomer 
 				FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-				WHERE Guide_Number = @numberGuide AND Guide_Serie = @serieGuide
+				WHERE Guide_Serie = @serieGuide AND Guide_Number = @numberGuide
 				AND IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry) IS NULL
 			BEGIN
 				SELECT dop.GuideSerie,
@@ -147,7 +147,7 @@ BEGIN
 
 		IF (SELECT IdCustomer 
 			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-			WHERE Guide_Number = @numberGuide AND Guide_Serie = @serieGuide
+			WHERE Guide_Serie = @serieGuide AND Guide_Number = @numberGuide
 				AND IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry) IS NULL
 		BEGIN
 			IF @numberPiece = 0

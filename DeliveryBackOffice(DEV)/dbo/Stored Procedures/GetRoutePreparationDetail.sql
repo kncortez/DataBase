@@ -68,7 +68,7 @@ BEGIN
 		   ,(CASE WHEN dop.IsDry = 1 THEN 1 ELSE 0 END) Piece_Type
 		FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
-		ON do.Guide_Number = dop.GuideNumber and do.Guide_Serie = dop.GuideSerie
+		ON do.Guide_Serie = dop.GuideSerie and do.Guide_Number = dop.GuideNumber
 		WHERE do.Guide_Serie = @GuideSerie
 		AND do.Guide_Number = @GuideNumber
 		AND dop.NoPiece = @GuidePiece

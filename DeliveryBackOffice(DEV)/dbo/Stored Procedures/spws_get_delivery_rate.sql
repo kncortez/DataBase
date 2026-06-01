@@ -26,8 +26,6 @@
 -- Author:		<Walter Orozco>
 -- Create date: <2024-06-21>
 -- Description:	<Se agrega configuracion para multipais y multimoneda en EXC>
--- Create date: <2025-04-10>
--- Description:	<Mejoras para multipais.>
 -- =============================================
 -- =============================================
 -- Author:		<Brandon,Pedroza>

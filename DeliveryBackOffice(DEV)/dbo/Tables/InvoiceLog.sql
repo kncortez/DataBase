@@ -17,6 +17,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [ixd_InvoiceLog_inv_pk_id]
     ON [dbo].[InvoiceLog]([inv_pk_id] ASC);
@@ -52,3 +54,6 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario que crea el registro SAP' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InvoiceLog', @level2type=N'COLUMN',@level2name=N'CreateUser'
 GO
+CREATE NONCLUSTERED INDEX [idx_date]
+    ON [dbo].[InvoiceLog]([Date] ASC);
+

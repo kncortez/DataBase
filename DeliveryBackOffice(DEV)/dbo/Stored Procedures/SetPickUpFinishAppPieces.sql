@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-10-09>
 -- Description:	<Se procesan las piezas escaneadas en la App de escaneo despues de DispatchTrack>
@@ -357,23 +357,15 @@ BEGIN
 									FROM DeliveryOrder ord WITH (NOLOCK)
 										LEFT JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
 											ON (
-												   ord.Guide_Number = dop.GuideNumber
-												   AND ord.Guide_Serie = dop.GuideSerie
+												   ord.Guide_Serie = dop.GuideSerie
+												   AND ord.Guide_Number = dop.GuideNumber
 											   )
 										INNER JOIN #listGuides ls
 											ON (
-												   ord.Guide_Number = ls.ItemNumber
-												   AND ord.Guide_Serie = ls.ItemSerie
+												   ord.Guide_Serie = ls.ItemSerie
+												   AND ord.Guide_Number = ls.ItemNumber
 											   )
-									WHERE ord.Guide_Number IN
-										  (
-											  SELECT ItemNumber FROM #listGuides -- WHERE ItemSerie = 'fd'
-										  )
-										  AND ord.Guide_Serie IN 
-										  (
-												SELECT ItemSerie FROM #listGuides
-										  )
-										  AND ord.StatusOrderId IN ( 15, 1, 16 )
+									WHERE ord.StatusOrderId IN ( 15, 1, 16 )
 										  AND dop.GuideNumber IS NULL
 								) AS Table1;
 
@@ -474,17 +466,9 @@ BEGIN
 								FROM #listGuides ls
 									INNER JOIN DeliveryOrder ord WITH(NOLOCK)
 										ON (
-												ord.Guide_Number = ls.ItemNumber
-												AND ord.Guide_Serie = ls.ItemSerie
+												ord.Guide_Serie = ls.ItemSerie
+												AND ord.Guide_Number = ls.ItemNumber
 											)
-								WHERE ord.Guide_Number IN
-										(
-											SELECT ItemNumber FROM #listGuides
-										)
-										AND ord.Guide_Serie IN 
-										(
-											SELECT ItemSerie FROM #listGuides
-										)
 			
 								SET @Sender_Email =
 								(
@@ -498,8 +482,8 @@ BEGIN
 								FROM #listGuides ls
 									INNER JOIN DeliveryOrder ord WITH (NOLOCK)
 										ON (
-												ord.Guide_Number = ls.ItemNumber
-												AND ord.Guide_Serie = ls.ItemSerie
+												ord.Guide_Serie = ls.ItemSerie
+												AND ord.Guide_Number = ls.ItemNumber
 											)
 									INNER JOIN DeliveryBackOffice.dbo.Township TWN WITH(NOLOCK)
 										ON ord.SenderIdTownship = twn.IdTownship 
@@ -509,18 +493,10 @@ BEGIN
 										ON HBG.HubAbbreviation = THB.Hub 
 									INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
 										ON (
-												dop.GuideNumber = ord.Guide_Number
-												AND dop.GuideSerie = ord.Guide_Serie
+												dop.GuideSerie = ord.Guide_Serie
+												AND dop.GuideNumber = ord.Guide_Number
 											)
-								WHERE ord.Guide_Number IN
-										(
-											SELECT ItemNumber FROM #listGuides
-										)
-										AND ord.Guide_Serie IN 
-										(
-											SELECT ItemSerie FROM #listGuides
-										)
-										AND THB.RowStatus = 1
+								WHERE THB.RowStatus = 1
 										AND twn.TownshipStatus = 1
 										AND HBG.HubStatus = 1
 
@@ -538,16 +514,11 @@ BEGIN
 								FROM DeliveryOrderPaymentDetail dop WITH(NOLOCK)
 									INNER JOIN DeliveryOrder ord WITH(NOLOCK)
 										ON (
-											   ord.Guide_Number = dop.GuideNumber
-											   AND ord.Guide_Serie = dop.GuideSerie
+											   ord.Guide_Serie = dop.GuideSerie
+											   AND ord.Guide_Number = dop.GuideNumber
 										   )
-								WHERE dop.GuideSerie = 'fd'
-									  AND dop.GuideNumber IN
-										  (
-											  SELECT ItemNumber FROM #listGuides
-										  )
-
-									  AND ord.StatusOrderId IN ( 15, 1, 16 )
+									INNER JOIN #listGuides lg ON lg.ItemSerie = dop.GuideSerie AND lg.ItemNumber = dop.GuideNumber
+								WHERE ord.StatusOrderId IN ( 15, 1, 16 )
 									  AND
 									  (
 										  dop.IdHeaderRecolection = @IdPickup
@@ -555,28 +526,22 @@ BEGIN
 									  );
 
 								-- Quitar guías no recolectadas asociadas al servicio
-								UPDATE DeliveryOrderPaymentDetail
+								UPDATE dop
 								SET IdHeaderRecolection = NULL
 								FROM DeliveryOrderPaymentDetail dop WITH(NOLOCK)
 									LEFT JOIN #listGuides LG
-										ON dop.GuideNumber = LG.ItemNumber
-										   AND dop.GuideSerie = LG.ItemSerie
+										ON dop.GuideSerie = LG.ItemSerie
+										   AND dop.GuideNumber = LG.ItemNumber
 								WHERE dop.IdHeaderRecolection = @IdPickup
 									  AND LG.ItemNumber IS NULL
 									  AND LG.ItemSerie IS NULL;
 
 							---------------Actualiza su StatusId a 2 = Recoleccion todas las guias del lote-------------------
 
-							UPDATE DeliveryOrder
+							UPDATE do
 								SET StatusOrderId = 2
-								WHERE Guide_Number IN
-									  (
-										  SELECT ItemNumber FROM #listGuides
-									  )
-									  AND Guide_Serie IN
-										  (
-											  SELECT ItemSerie FROM #listGuides
-										  );
+								FROM DeliveryBackOffice.dbo.DeliveryOrder do
+								INNER JOIN #listGuides lg ON lg.ItemSerie = do.Guide_Serie AND lg.ItemNumber = do.Guide_Number;
 
 								UPDATE ASCD
 								SET RowStatus = 0,
@@ -590,16 +555,10 @@ BEGIN
 
 							---------------Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia-------------
 
-							UPDATE DeliveryOrderPiece
+							UPDATE dop
 								SET IsPickup = 1
-								WHERE GuideNumber IN
-									  (
-										  SELECT ItemNumber FROM #listGuides
-									  )
-									  AND GuideSerie IN
-										  (
-											  SELECT ItemSerie FROM #listGuides
-										  );
+								FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop
+								INNER JOIN #listGuides lg ON lg.ItemSerie = dop.GuideSerie AND lg.ItemNumber = dop.GuideNumber;
 
 							---------------Actualiza el Status del Servicio ya se encuentra en estado recolectado para Dispatch--------------------
 								DECLARE @Status INT =

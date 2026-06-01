@@ -228,9 +228,9 @@ BEGIN
 
                 SELECT @NoPiece = COUNT(NoPiece)
                 FROM DeliveryBackOffice.dbo.DeliveryOrderPiece WITH (NOLOCK)
-                WHERE GuideNumber = @GuideNumber
-                      AND GuideSerie = @GuideSerie
-
+                WHERE GuideSerie = @GuideSerie 
+				AND	GuideNumber = @GuideNumber
+                
                 SELECT @NoPieceEntered = COUNT(*)
                 FROM #listGuides
 

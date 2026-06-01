@@ -13,18 +13,23 @@
 -- Create date: <2024-06-27>
 -- Description:	<Se corrige valor de idcountry, el cual no se almacenaba en la tabla Settlement>
 -- =============================================
+-- Author:		<Mario, Herrarte>
+-- Create date: <2026-03-11>
+-- Description:	<Se agrega el campo TypeSettlement para saber si es privado o publico el poblado>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_CreateSettlementCoverage]
-	@tokenUser nvarchar(50),
+	@tokenUser         nvarchar(50),
 	@nameNewSettlement nvarchar(100),
-	@idTownShip int,
-	@idHub		int,
-	@IdRoute	int,
-	@SDD		bit,
-	@NDD		bit,
-	@TDA		bit,
-	@ConcatedCov nvarchar(50),
-	@Latitude NVARCHAR(20) = NULL,
-	@Longitude NVARCHAR(20) = NULL
+	@idTownShip        int,
+	@idHub		       int,
+	@IdRoute	       int,
+	@TypeSettlement    int,
+	@SDD		       bit,
+	@NDD		       bit,
+	@TDA		       bit,
+	@ConcatedCov       nvarchar(50),
+	@Latitude          NVARCHAR(20) = NULL,
+	@Longitude         NVARCHAR(20) = NULL
 AS
 BEGIN
 
@@ -80,7 +85,8 @@ BEGIN
 				TokenCreated,
 				DateCreated,
 				TokenUpdated,
-				DateUpdated
+				DateUpdated,
+				TypeSettlement
 				) values (
 			@nameNewSettlement,
 			CAST(IIF(LEN(@Latitude) > 9, SUBSTRING(@Latitude,1,9), @Latitude) AS DECIMAL(9,6)),
@@ -94,7 +100,8 @@ BEGIN
 			@tokenUser,
 			GETDATE(),
 			NULL,
-			NULL
+			NULL,
+			@TypeSettlement
 		);
 		--select * from dbo.DumpServiceCoverage
 

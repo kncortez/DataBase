@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[RegistrationofTransactionProcessStates] (
+CREATE TABLE [dbo].[RegistrationofTransactionProcessStates] (
     [IdRegistrationofTransactionProcessStates] INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [AccountId]                                INT             NULL,
     [CustomerId]                               INT             NULL,
@@ -22,6 +22,8 @@
     [PhoneNumber]                              NVARCHAR (10)   NULL,
     CONSTRAINT [PK_RegistrationofTransactionProcessStates] PRIMARY KEY CLUSTERED ([IdRegistrationofTransactionProcessStates] ASC)
 );
+
+
 
 
 GO
@@ -65,4 +67,6 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'URL de la imag
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de teléfono para campo obligatorio de plataforma de pago versión 2.7' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'PhoneNumber'
 GO
+CREATE NONCLUSTERED INDEX [idx_OrderNumber]
+    ON [dbo].[RegistrationofTransactionProcessStates]([OrderNumber] ASC);
 

@@ -61,7 +61,7 @@ BEGIN
         AND     DO.Guide_Number         = GT.GuideNumber
     INNER JOIN  DumpServiceCoverage     DSC WITH (NOLOCK)
         ON      DO.ReceiverIdSettlement = DSC.IdSettlement
-    GROUP BY    DSC.IdSettlement, DSC.Hub, DSC.RouteCode;
+    GROUP BY    DSC.Hub, DSC.RouteCode;
 
     IF OBJECT_ID('tempdb..#GuidesTmp') IS NOT NULL
         DROP TABLE #GuidesTmp;

@@ -57,9 +57,7 @@ BEGIN
 	,do.Contact_Confirmed
 	,do.Contact_Instructions
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do with(nolock)
-	where 
-	do.Guide_Serie = @_serie
-	and do.Guide_Number IN (select ItemNumber from #listGuides)
-	and do.Guide_Number is not null
+	INNER JOIN #listGuides lg ON lg.ItemSerie = do.Guide_Serie AND lg.ItemNumber = do.Guide_Number
+	where do.Guide_Number is not null
 	order by do.Guide_Number asc
 END

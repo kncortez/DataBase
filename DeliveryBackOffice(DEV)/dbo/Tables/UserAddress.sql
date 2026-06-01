@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[UserAddress] (
+CREATE TABLE [dbo].[UserAddress] (
     [UadIdAddress]                  BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UadIdTownship]                 INT            NOT NULL,
     [UadIdAccount]                  BIGINT         NOT NULL,
@@ -36,24 +36,23 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_UserAddress_LoadList]
     ON [dbo].[UserAddress]([VisitPointByClientPortfolioId] ASC, [UadRowStatus] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_UserAddress_TownshipList]
-    ON [dbo].[UserAddress]([UadIdTownship] ASC);
 
-
-GO
-CREATE NONCLUSTERED INDEX [IX_UserAddress_SettlementList]
-    ON [dbo].[UserAddress]([UadIdSettlement] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_UserAddress_DeliveryOptionList]
-    ON [dbo].[UserAddress]([UadIdDeliveryOption] ASC);
+
+
+
+GO
+
 
 
 GO
@@ -250,11 +249,16 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2type = N'COLUMN',
     @level2name = N'UadFavorite'
 GO
-CREATE NONCLUSTERED INDEX [IDX_UadRowStatus]
-    ON [dbo].[UserAddress]([UadRowStatus] ASC);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_UadIdAccount]
-    ON [dbo].[UserAddress]([UadIdAccount] ASC);
+CREATE NONCLUSTERED INDEX [IDX_UadIdAccount_UadRowStatus_UadFavorite_INCLUDE]
+    ON [dbo].[UserAddress]([UadIdAccount] ASC, [UadRowStatus] ASC, [UadFavorite] ASC)
+    INCLUDE([UadIdTownship], [UadNirPhone], [UadPhone], [CodeOfReference], [IdCityPlace]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CodeOfReference]
+    ON [dbo].[UserAddress]([CodeOfReference] ASC);
 

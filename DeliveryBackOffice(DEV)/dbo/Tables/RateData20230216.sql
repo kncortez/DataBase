@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateData20230216] (
-    [IdRateData]        BIGINT          IDENTITY (1, 1) NOT NULL,
+    [IdRateData]        BIGINT          IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [RateId]            INT             NOT NULL,
     [TypeServiceId]     INT             NULL,
     [TypeSegmentId]     INT             NULL,

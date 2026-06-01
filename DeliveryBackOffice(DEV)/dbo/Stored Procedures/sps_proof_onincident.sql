@@ -14,17 +14,17 @@
 -- 2022-03-21 | Historia/épica:  | Autor: Andres Ruiz  |
 =========================================== */
 CREATE PROCEDURE [dbo].[sps_proof_onincident]
-    @GuideSerie NVARCHAR(2)
-  , @GuideNumber INT
-  , @PhoneNumber NVARCHAR(50)
-  , @IdIssue INT
-  , @ImageIncident VARCHAR(300)
-  , @Latitude NVARCHAR(20)
-  , @Longitude NVARCHAR(20)
-  , @Accuracy NVARCHAR(20)
-  , @MaxDistance FLOAT = 7000 --Distancia en metros
-  , @CommentOnIncident NVARCHAR(200) = ''
-  , @StationId INT = NULL
+    @GuideSerie NVARCHAR(2),
+    @GuideNumber INT,
+    @PhoneNumber NVARCHAR(50),
+    @IdIssue INT,
+    @ImageIncident VARCHAR(300),
+    @Latitude NVARCHAR(20),
+    @Longitude NVARCHAR(20),
+    @Accuracy NVARCHAR(20),
+    @MaxDistance FLOAT = 7000, --Distancia en metros
+    @CommentOnIncident NVARCHAR(200) = '',
+    @StationId INT = NULL
 AS
 BEGIN
     -- control de inserciones para transacción
@@ -35,7 +35,7 @@ BEGIN
         ID INT
     );
     DECLARE @SystemOrigin INT = 3; --'CourierAPP'
-    -- control de inserción de imagen en tabla de fotografías
+                                   -- control de inserción de imagen en tabla de fotografías
     DECLARE @ID_Photo INT;
     -- variables auxiliares para conversión de imagen de base64 a varbinary
     DECLARE @PhotoIncidentVB VARBINARY(MAX);
@@ -56,18 +56,18 @@ BEGIN
     DECLARE @MessageReturn NVARCHAR(100) = N'';
     DECLARE @DateGlobal DATE = CONVERT(DATE, GETDATE());
     DECLARE @EmailNotificationMedium INT = 3; -- [CatNotificationMedium] -> 'Correo SMTP'
-    DECLARE @NotificationType BIGINT = 1 -- [CatNotificationType] -> 'DailyGuideIncidenceToOrigin';
+    DECLARE @NotificationType BIGINT = 1; -- [CatNotificationType] -> 'DailyGuideIncidenceToOrigin';
     DECLARE @TokenLinkGeneration NVARCHAR(100) = N'';
     DECLARE @CurrentIncidentCount INT =
             (
                 SELECT TOP 1
                        COUNT(DA.ID)
-                FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt]                   DA WITH (NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
                     INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
                 WHERE DA.Guide_Serie = @GuideSerie
-                    AND DA.Guide_Number = @GuideNumber
-                    AND CONVERT(DATE, DA.Date_Created) = @DateGlobal
+                      AND DA.Guide_Number = @GuideNumber
+                      AND CONVERT(DATE, DA.Date_Created) = @DateGlobal
             );
 
     IF (ISNULL(@CurrentIncidentCount, 0) <= 0)
@@ -88,34 +88,34 @@ BEGIN
 
                 SET @TargetGeofenceAsText
                     = (CONCAT(
-                                 'POLYGON (('
-                               , (
-                                     SELECT STUFF(
-                                                     (
-                                                         SELECT ', '
-                                                                + CONCAT(
-                                                                            CAST(P.PointLongitude AS DECIMAL(9, 6))
-                                                                          , ' '
-                                                                          , CAST(P.PointLatitude AS DECIMAL(9, 6))
-                                                                        )
-                                                         FROM [DeliveryBackOffice].[dbo].[Geofence]                G WITH (NOLOCK)
-                                                             INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
-                                                                 ON G.IdGeofence = GP.IdGeofence                                                                   
-                                                             INNER JOIN [DeliveryBackOffice].[dbo].[Point]         P WITH (NOLOCK)
-                                                                 ON GP.IdPoint = P.IdPoint                                                                   
-                                                         WHERE G.RowStatus = 1
-                                                               AND G.IdGeofence = 1 -- Geocerca de GT
-															    AND GP.RowStatus = 1
-																 AND P.RowStatus = 1
-                                                         ORDER BY GP.GeofencePointOrder ASC
-                                                         FOR XML PATH(''), TYPE
-                                                     ).value('.', 'varchar(max)')
-                                                   , 1
-                                                   , 1
-                                                   , ''
-                                                 )
-                                 )
-                               , '))'
+                                 'POLYGON ((',
+                       (
+                           SELECT STUFF(
+                                           (
+                                               SELECT ', '
+                                                      + CONCAT(
+                                                                  CAST(P.PointLongitude AS DECIMAL(9, 6)),
+                                                                  ' ',
+                                                                  CAST(P.PointLatitude AS DECIMAL(9, 6))
+                                                              )
+                                               FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
+                                                   INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
+                                                       ON G.IdGeofence = GP.IdGeofence
+                                                   INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
+                                                       ON GP.IdPoint = P.IdPoint
+                                               WHERE G.RowStatus = 1
+                                                     AND G.IdGeofence = 1 -- Geocerca de GT
+                                                     AND GP.RowStatus = 1
+                                                     AND P.RowStatus = 1
+                                               ORDER BY GP.GeofencePointOrder ASC
+                                               FOR XML PATH(''), TYPE
+                                           ).value('.', 'varchar(max)'),
+                                           1,
+                                           1,
+                                           ''
+                                       )
+                       ),
+                                 '))'
                              )
                       );
 
@@ -165,57 +165,61 @@ BEGIN
                 -- registrar nuevo intento de entrega
                 INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryAttempt]
                 (
-                    [Guide_Serie]
-                  , [Guide_Number]
-                  , [Dry]
-                  , [Cold]
-                  , [Latitude]
-                  , [Longitude]
-                  , [Delivered]
-                  , [ID_Courier]
-                  , [ID_DeliveryOrderBySettlement]
-                  , [User_Created]
-                  , [Date_Created]
-                  , [Guide_Piece]
+                    [Guide_Serie],
+                    [Guide_Number],
+                    [Dry],
+                    [Cold],
+                    [Latitude],
+                    [Longitude],
+                    [Delivered],
+                    [ID_Courier],
+                    [ID_DeliveryOrderBySettlement],
+                    [User_Created],
+                    [Date_Created],
+                    [Guide_Piece]
                 )
                 VALUES
-                (@GuideSerie, @GuideNumber, (
-                                                SELECT TOP 1
-                                                       ISNULL(Dry, 0)
-                                                FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
-                                                WHERE Guide_Serie = @GuideSerie
-                                                      AND Guide_Number = @GuideNumber
-                                                ORDER BY Date_Created DESC
-                                            ), (
-                                                   SELECT TOP 1
-                                                          ISNULL(Cold, 0)
-                                                   FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
-                                                   WHERE Guide_Serie = @GuideSerie
-                                                         AND Guide_Number = @GuideNumber
-                                                   ORDER BY Date_Created DESC
-                                               ), @Latitude, @Longitude, 0
-               , (
-                     SELECT TOP 1
-                            ID_Courier
-                     FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
-                     WHERE Guide_Serie = @GuideSerie
-                           AND Guide_Number = @GuideNumber
-                     ORDER BY Date_Created DESC
-                 ), (
+                (   @GuideSerie, @GuideNumber,
+                    (
+                        SELECT TOP 1
+                               ISNULL(Dry, 0)
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
+                        WHERE Guide_Serie = @GuideSerie
+                              AND Guide_Number = @GuideNumber
+                        ORDER BY Date_Created DESC
+                    ),
+                    (
+                        SELECT TOP 1
+                               ISNULL(Cold, 0)
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
+                        WHERE Guide_Serie = @GuideSerie
+                              AND Guide_Number = @GuideNumber
+                        ORDER BY Date_Created DESC
+                    ), @Latitude, @Longitude, 0,
+                    (
+                        SELECT TOP 1
+                               ID_Courier
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
+                        WHERE Guide_Serie = @GuideSerie
+                              AND Guide_Number = @GuideNumber
+                        ORDER BY Date_Created DESC
+                    ),
+                    (
                         SELECT TOP 1
                                ID_DeliveryOrderBySettlement
                         FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
                         WHERE Guide_Serie = @GuideSerie
                               AND Guide_Number = @GuideNumber
                         ORDER BY Date_Created DESC
-                    ), (
-                           SELECT TOP 1
-                                  User_Created
-                           FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
-                           WHERE Guide_Serie = @GuideSerie
-                                 AND Guide_Number = @GuideNumber
-                           ORDER BY Date_Created DESC
-                       ), GETDATE(), 1);
+                    ),
+                    (
+                        SELECT TOP 1
+                               User_Created
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
+                        WHERE Guide_Serie = @GuideSerie
+                              AND Guide_Number = @GuideNumber
+                        ORDER BY Date_Created DESC
+                    ), GETDATE(), 1);
             END;
 
 
@@ -224,8 +228,8 @@ BEGIN
             INSERT INTO @Table
             SELECT TOP 1
                    da.ID
-            FROM DeliveryBackOffice.dbo.DeliveryAttempt                         da WITH (NOLOCK)
-                INNER JOIN DeliveryBackOffice.dbo.SenderReceiver                sr WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                     ON sr.ID = da.ID_Courier
                 LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiverLoginToken] SRLT WITH (NOLOCK)
                     ON [SRLT].[SenderReceiverId] = [sr].[ID]
@@ -242,10 +246,10 @@ BEGIN
             -- insertar foto y guardar ID para actualizar tabla de entregas
             INSERT INTO DeliveryBackOffice.dbo.DeliveryProof
             (
-                Guide_Serie
-              , Guide_Number
-              , Date_Photo
-              , Path_Incident
+                Guide_Serie,
+                Guide_Number,
+                Date_Photo,
+                Path_Incident
             )
             VALUES
             (@GuideSerie, @GuideNumber, GETDATE(), @ImageIncident);
@@ -264,10 +268,10 @@ BEGIN
 
                 -- Revisar que procesos de incidencia proceden
                 SELECT TOP (1)
-                       @ValidateLocation               = [CTI].[ValidatesLocation]
-                     , @IsRouteIncidence               = [CTI].[IsForcedIncidence]
-                     , @ConfirmationOfIncidenceProcess = [CTI].[HasConfirmationProcess]
-                     , @NotifyOrigin                   = [CTI].[NotifiesOrigin]
+                       @ValidateLocation = [CTI].[ValidatesLocation],
+                       @IsRouteIncidence = [CTI].[IsForcedIncidence],
+                       @ConfirmationOfIncidenceProcess = [CTI].[HasConfirmationProcess],
+                       @NotifyOrigin = [CTI].[NotifiesOrigin]
                 FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
                 WHERE [CTI].[IdIncidenceType] = @IdIssue
                       AND [CTI].[RowStatus] = 1;
@@ -277,8 +281,8 @@ BEGIN
                 BEGIN
 
                     -- Buscar ubicación del VP
-                    SELECT @VPLatitude  = vpc.Latitude
-                         , @VPLongitude = vpc.Longitude
+                    SELECT @VPLatitude = vpc.Latitude,
+                           @VPLongitude = vpc.Longitude
                     FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH (NOLOCK)
                         INNER JOIN VisitPointClient vpc WITH (NOLOCK)
                             ON vpc.CodeOfReference = (CASE
@@ -305,13 +309,13 @@ BEGIN
                         -- Validar rango
                         IF ((geography::STPointFromText(CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(geography::STPointFromText(
                                                                                                                                                                CONCAT(
-                                                                                                                                                                         'POINT ('
-                                                                                                                                                                       , @Longitude
-                                                                                                                                                                       , ' '
-                                                                                                                                                                       , @Latitude
-                                                                                                                                                                       , ')'
-                                                                                                                                                                     )
-                                                                                                                                                             , 4326
+                                                                                                                                                                         'POINT (',
+                                                                                                                                                                         @Longitude,
+                                                                                                                                                                         ' ',
+                                                                                                                                                                         @Latitude,
+                                                                                                                                                                         ')'
+                                                                                                                                                                     ),
+                                                                                                                                                               4326
                                                                                                                                                            )
                                                                                                                                 )
                             ) <= @MaxDistance
@@ -326,7 +330,7 @@ BEGIN
                             SET @IsValidDistance = 0;
                             SET @StatusOrderId = 45;
                             SET @CatTypeConfirmationOfIncidenceId = 1; --'Incidencia en Ruta'
-                         END;
+                        END;
                     END;
                     ELSE
                     BEGIN
@@ -394,36 +398,34 @@ BEGIN
 
                             SET @TargetGeofenceAsText2
                                 = (CONCAT(
-                                             'POLYGON (('
-                                           , (
-                                                 SELECT STUFF(
-                                                                 (
-                                                                     SELECT ', '
-                                                                            + CONCAT(
-                                                                                        CAST(P.PointLongitude AS DECIMAL(9, 6))
-                                                                                      , ' '
-                                                                                      , CAST(P.PointLatitude AS DECIMAL(9, 6))
-                                                                                    )
-                                                                     FROM [DeliveryBackOffice].[dbo].[Geofence]                G WITH (NOLOCK)
-                                                                         INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
-                                                                             ON G.IdGeofence = GP.IdGeofence
-                                                                                
-                                                                         INNER JOIN [DeliveryBackOffice].[dbo].[Point]         P WITH (NOLOCK)
-                                                                             ON GP.IdPoint = P.IdPoint
-                                                                               
-                                                                     WHERE G.RowStatus = 1
-                                                                           AND G.IdGeofence = @GeofenceId
-																		   AND GP.RowStatus = 1
-																		    AND P.RowStatus = 1
-                                                                     ORDER BY GP.GeofencePointOrder ASC
-                                                                     FOR XML PATH(''), TYPE
-                                                                 ).value('.', 'varchar(max)')
-                                                               , 1
-                                                               , 1
-                                                               , ''
-                                                             )
-                                             )
-                                           , '))'
+                                             'POLYGON ((',
+                                   (
+                                       SELECT STUFF(
+                                                       (
+                                                           SELECT ', '
+                                                                  + CONCAT(
+                                                                              CAST(P.PointLongitude AS DECIMAL(9, 6)),
+                                                                              ' ',
+                                                                              CAST(P.PointLatitude AS DECIMAL(9, 6))
+                                                                          )
+                                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
+                                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
+                                                                   ON G.IdGeofence = GP.IdGeofence
+                                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
+                                                                   ON GP.IdPoint = P.IdPoint
+                                                           WHERE G.RowStatus = 1
+                                                                 AND G.IdGeofence = @GeofenceId
+                                                                 AND GP.RowStatus = 1
+                                                                 AND P.RowStatus = 1
+                                                           ORDER BY GP.GeofencePointOrder ASC
+                                                           FOR XML PATH(''), TYPE
+                                                       ).value('.', 'varchar(max)'),
+                                                       1,
+                                                       1,
+                                                       ''
+                                                   )
+                                   ),
+                                             '))'
                                          )
                                   );
 
@@ -496,28 +498,28 @@ BEGIN
                     -- debe procesar confirmación de la incidencia
                     INSERT INTO [dbo].[ConfirmationOfIncidence]
                     (
-                        [ConfirmationOfIncidentToken]
-                      , [CatTypeConfirmationOfIncidenceId]
-                      , [IsValid]
-                      , [IsConfirmed]
-                      , [StatusOrderId]
-                      , [DateStatusOrder]
-                      , [RowStatus]
-                      , [TokenCreated]
-                      , [DateCreated]
-                      , [CommentOnIncident]
+                        [ConfirmationOfIncidentToken],
+                        [CatTypeConfirmationOfIncidenceId],
+                        [IsValid],
+                        [IsConfirmed],
+                        [StatusOrderId],
+                        [DateStatusOrder],
+                        [RowStatus],
+                        [TokenCreated],
+                        [DateCreated],
+                        [CommentOnIncident]
                     )
                     VALUES
-                    (CONCAT(@GuideSerie, @GuideNumber, ROUND(((99999 - 10000) * RAND() + 10000), 0))
-                   , @CatTypeConfirmationOfIncidenceId, ISNULL(@IsValidDistance, 0), 0, @StatusOrderId
-                   , @DateStatusOrder, 1, 'sps_proof_onincident', GETDATE(), @CommentOnIncident);
+                    (CONCAT(@GuideSerie, @GuideNumber, ROUND(((99999 - 10000) * RAND() + 10000), 0)),
+                     @CatTypeConfirmationOfIncidenceId, ISNULL(@IsValidDistance, 0), 0, @StatusOrderId,
+                     @DateStatusOrder, 1, 'sps_proof_onincident', GETDATE(), @CommentOnIncident);
 
                     SET @ConfirmationOfIncidenceId = SCOPE_IDENTITY();
 
                     SET @TokenLinkGeneration =
                     (
                         SELECT ConfirmationOfIncidentToken
-                        FROM [dbo].[ConfirmationOfIncidence]  WITH (NOLOCK)
+                        FROM [dbo].[ConfirmationOfIncidence] WITH (NOLOCK)
                         WHERE IdConfirmationOfIncidence = @ConfirmationOfIncidenceId
                     );
 
@@ -534,15 +536,15 @@ BEGIN
 
                     -- Datos para notificación por correo
                     SELECT TOP (1)
-                           @NotificationEmail      = (CASE
-                                                          WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Mail], ''))) <> '' THEN
-                                                              [DO].[Sender_Mail]
-                                                          WHEN LTRIM(RTRIM(ISNULL([Cu].[CODContactEmail], ''))) <> '' THEN
-                                                              [Cu].[CODContactEmail]
-                                                      END
-                                                     )
-                         , @NotificationCustomerId = [DO].[IdCustomer]
-                    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]     DO WITH (NOLOCK)
+                           @NotificationEmail = (CASE
+                                                     WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Mail], ''))) <> '' THEN
+                                                         [DO].[Sender_Mail]
+                                                     WHEN LTRIM(RTRIM(ISNULL([Cu].[CODContactEmail], ''))) <> '' THEN
+                                                         [Cu].[CODContactEmail]
+                                                 END
+                                                ),
+                           @NotificationCustomerId = [DO].[IdCustomer]
+                    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
                         LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH (NOLOCK)
                             ON [Cu].[IdCustomer] = [DO].[IdCustomer]
                     WHERE [DO].[Guide_Serie] = @GuideSerie
@@ -585,28 +587,28 @@ BEGIN
                             -- Adicionar guía a detalle de notificaciones si no existe
                             INSERT INTO [DeliveryBackOffice].[dbo].[NotificationQueueDetail]
                             (
-                                [NotificationQueueId]
-                              , [GuideSerie]
-                              , [GuideNumber]
-                              , [MembershipId]
-                              , [SubscriptionId]
-                              , [RowStatus]
-                              , [TokenCreated]
-                              , [DateCreated]
-                              , [TokenUpdated]
-                              , [DateUpdated]
+                                [NotificationQueueId],
+                                [GuideSerie],
+                                [GuideNumber],
+                                [MembershipId],
+                                [SubscriptionId],
+                                [RowStatus],
+                                [TokenCreated],
+                                [DateCreated],
+                                [TokenUpdated],
+                                [DateUpdated]
                             )
                             VALUES
-                            (   @NotificationQueueId    -- NotificationQueueId - bigint
-                              , @GuideSerie             -- GuideSerie - nvarchar(10)
-                              , @GuideNumber            -- GuideNumber - int
-                              , NULL                    -- MembershipId - int
-                              , NULL                    -- SubscriptionId - int
-                              , 1                       -- RowStatus - bit
-                              , N'sps_proof_onincident' -- TokenCreated - nvarchar(50)
-                              , GETDATE()               -- DateCreated - datetime
-                              , NULL                    -- TokenUpdated - nvarchar(50)
-                              , NULL                    -- DateUpdated - datetime
+                            (   @NotificationQueueId,    -- NotificationQueueId - bigint
+                                @GuideSerie,             -- GuideSerie - nvarchar(10)
+                                @GuideNumber,            -- GuideNumber - int
+                                NULL,                    -- MembershipId - int
+                                NULL,                    -- SubscriptionId - int
+                                1,                       -- RowStatus - bit
+                                N'sps_proof_onincident', -- TokenCreated - nvarchar(50)
+                                GETDATE(),               -- DateCreated - datetime
+                                NULL,                    -- TokenUpdated - nvarchar(50)
+                                NULL                     -- DateUpdated - datetime
                                 );
 
                         END;
@@ -623,20 +625,20 @@ BEGIN
 
                         INSERT INTO [DeliveryBackOffice].[dbo].[NotificationQueue]
                         (
-                            [CatNotificationMediumId]
-                          , [CatNotificationTypeId]
-                          , [CustomerId]
-                          , [AccountId]
-                          , [DestinationPhone]
-                          , [DestinationEmail]
-                          , [NotificationDate]
-                          , [DateToSend]
-                          , [IsSent]
-                          , [RowStatus]
-                          , [TokenCreated]
-                          , [DateCreated]
-                          , [TokenUpdated]
-                          , [DateUpdated]
+                            [CatNotificationMediumId],
+                            [CatNotificationTypeId],
+                            [CustomerId],
+                            [AccountId],
+                            [DestinationPhone],
+                            [DestinationEmail],
+                            [NotificationDate],
+                            [DateToSend],
+                            [IsSent],
+                            [RowStatus],
+                            [TokenCreated],
+                            [DateCreated],
+                            [TokenUpdated],
+                            [DateUpdated]
                         )
                         OUTPUT [Inserted].[IdNotificationQueue]
                         INTO @NotificationOutput
@@ -644,20 +646,20 @@ BEGIN
                             [NotificationQueueId]
                         )
                         VALUES
-                        (   @EmailNotificationMedium -- CatNotificationMediumId - int
-                          , @NotificationType        -- CatNotificationTypeId - bigint
-                          , @NotificationCustomerId  -- CustomerId - int
-                          , NULL                     -- AccountId - bigint
-                          , NULL                     -- DestinationPhone - nvarchar(200)
-                          , @NotificationEmail       -- DestinationEmail - nvarchar(200)
-                          , GETDATE()                -- NotificationDate - date
-                          , GETDATE()                -- DateToSend - date
-                          , 0                        -- IsSent - bit
-                          , 1                        -- RowStatus - bit
-                          , N'sps_proof_onincident'  -- TokenCreated - nvarchar(50)
-                          , GETDATE()                -- DateCreated - datetime
-                          , NULL                     -- TokenUpdated - nvarchar(50)
-                          , NULL                     -- DateUpdated - datetime
+                        (   @EmailNotificationMedium, -- CatNotificationMediumId - int
+                            @NotificationType,        -- CatNotificationTypeId - bigint
+                            @NotificationCustomerId,  -- CustomerId - int
+                            NULL,                     -- AccountId - bigint
+                            NULL,                     -- DestinationPhone - nvarchar(200)
+                            @NotificationEmail,       -- DestinationEmail - nvarchar(200)
+                            GETDATE(),                -- NotificationDate - date
+                            GETDATE(),                -- DateToSend - date
+                            0,                        -- IsSent - bit
+                            1,                        -- RowStatus - bit
+                            N'sps_proof_onincident',  -- TokenCreated - nvarchar(50)
+                            GETDATE(),                -- DateCreated - datetime
+                            NULL,                     -- TokenUpdated - nvarchar(50)
+                            NULL                      -- DateUpdated - datetime
                             );
 
                         SET @NotificationQueueId =
@@ -667,28 +669,28 @@ BEGIN
 
                         INSERT INTO [DeliveryBackOffice].[dbo].[NotificationQueueDetail]
                         (
-                            [NotificationQueueId]
-                          , [GuideSerie]
-                          , [GuideNumber]
-                          , [MembershipId]
-                          , [SubscriptionId]
-                          , [RowStatus]
-                          , [TokenCreated]
-                          , [DateCreated]
-                          , [TokenUpdated]
-                          , [DateUpdated]
+                            [NotificationQueueId],
+                            [GuideSerie],
+                            [GuideNumber],
+                            [MembershipId],
+                            [SubscriptionId],
+                            [RowStatus],
+                            [TokenCreated],
+                            [DateCreated],
+                            [TokenUpdated],
+                            [DateUpdated]
                         )
                         VALUES
-                        (   @NotificationQueueId    -- NotificationQueueId - bigint
-                          , @GuideSerie             -- GuideSerie - nvarchar(10)
-                          , @GuideNumber            -- GuideNumber - int
-                          , NULL                    -- MembershipId - int
-                          , NULL                    -- SubscriptionId - int
-                          , 1                       -- RowStatus - bit
-                          , N'sps_proof_onincident' -- TokenCreated - nvarchar(50)
-                          , GETDATE()               -- DateCreated - datetime
-                          , NULL                    -- TokenUpdated - nvarchar(50)
-                          , NULL                    -- DateUpdated - datetime
+                        (   @NotificationQueueId,    -- NotificationQueueId - bigint
+                            @GuideSerie,             -- GuideSerie - nvarchar(10)
+                            @GuideNumber,            -- GuideNumber - int
+                            NULL,                    -- MembershipId - int
+                            NULL,                    -- SubscriptionId - int
+                            1,                       -- RowStatus - bit
+                            N'sps_proof_onincident', -- TokenCreated - nvarchar(50)
+                            GETDATE(),               -- DateCreated - datetime
+                            NULL,                    -- TokenUpdated - nvarchar(50)
+                            NULL                     -- DateUpdated - datetime
                             );
 
                     END;
@@ -699,14 +701,14 @@ BEGIN
                 IF (ISNULL(@IdIssue, 0) > 0)
                 BEGIN
                     UPDATE DeliveryBackOffice.dbo.DeliveryAttempt
-                    SET ID_Incident = @IdIssue
-                      , ID_Proof = @ID_Photo
-                      , Latitude = @FixedLatitude
-                      , Longitude = @FixedLongitude
-                      , LogLatitude = IIF(@Latitude = @FixedLatitude, NULL, @Latitude)
-                      , LogLongitude = IIF(@Longitude = @FixedLongitude, NULL, @Longitude)
-                      , Accuracy = @Accuracy
-                      , ConfirmationOfIncidenceId = @ConfirmationOfIncidenceId
+                    SET ID_Incident = @IdIssue,
+                        ID_Proof = @ID_Photo,
+                        Latitude = @FixedLatitude,
+                        Longitude = @FixedLongitude,
+                        LogLatitude = IIF(@Latitude = @FixedLatitude, NULL, @Latitude),
+                        LogLongitude = IIF(@Longitude = @FixedLongitude, NULL, @Longitude),
+                        Accuracy = @Accuracy,
+                        ConfirmationOfIncidenceId = @ConfirmationOfIncidenceId
                     WHERE ID IN
                           (
                               SELECT ID FROM @Table
@@ -728,23 +730,24 @@ BEGIN
                 -- registrar estado en tabla de checkpoints
                 INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
                 (
-                    Guide_Serie
-                  , Guide_Number
-                  , StatusOrderId
-                  , UserCreated
-                  , DateCreated
-                  , DateCreatedInSystem
-                  , Observations
-                  , Temperature_Celsius
-                  , [DeliveryAttemptId]
-                  , [SystemOrigin]
-                  , StationId
+                    Guide_Serie,
+                    Guide_Number,
+                    StatusOrderId,
+                    UserCreated,
+                    DateCreated,
+                    DateCreatedInSystem,
+                    Observations,
+                    Temperature_Celsius,
+                    [DeliveryAttemptId],
+                    [SystemOrigin],
+                    StationId
                 )
                 VALUES
-                (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder
-               , NULL, NULL, (
-                                 SELECT TOP (1) [ID] FROM @Table ORDER BY [ID] DESC
-                             ), @SystemOrigin, @StationId);
+                (   @GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder,
+                    @DateStatusOrder, NULL, NULL,
+                    (
+                        SELECT TOP (1) [ID] FROM @Table ORDER BY [ID] DESC
+                    ), @SystemOrigin, @StationId);
                 SET @RInserted = @@ROWCOUNT;
 
                 -----------------WEBHOOK.INI-----------------------		
@@ -756,26 +759,26 @@ BEGIN
                 BEGIN TRY
                     DECLARE @GuideStatusChangeWebhook INT = 1; --'GuideStatusChange'
 
-                    SET @WebhookCustomerId
-                        = ISNULL((
-                                     SELECT TOP 1
-                                            DO.IdCustomer
-                                     FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                     WHERE DO.Guide_Serie = @GuideSerie
-                                           AND DO.Guide_Number = @GuideNumber
-                                 )
-                               , -1
-                                );
-                    SET @CustomerEndpointId
-                        = ISNULL((
-                                     SELECT TOP 1
-                                            WE.IdWebhookEndpoint
-                                     FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
-                                     WHERE WE.CustomerId = @WebhookCustomerId
-                                           AND WE.WebhookTypeId = @GuideStatusChangeWebhook
-                                 )
-                               , -1
-                                );
+                    SET @WebhookCustomerId = ISNULL(
+                                             (
+                                                 SELECT TOP 1
+                                                        DO.IdCustomer
+                                                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                                                 WHERE DO.Guide_Serie = @GuideSerie
+                                                       AND DO.Guide_Number = @GuideNumber
+                                             ),
+                                             -1
+                                                   );
+                    SET @CustomerEndpointId = ISNULL(
+                                              (
+                                                  SELECT TOP 1
+                                                         WE.IdWebhookEndpoint
+                                                  FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
+                                                  WHERE WE.CustomerId = @WebhookCustomerId
+                                                        AND WE.WebhookTypeId = @GuideStatusChangeWebhook
+                                              ),
+                                              -1
+                                                    );
 
                     SET @GuideCurrentStatus =
                     (
@@ -808,14 +811,14 @@ BEGIN
 
                         INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
                         (
-                            [GuideSerie]
-                          , [GuideNumber]
-                          , [CustomerId]
-                          , [StatusOrderId]
-                          , [WebhookEndpointId]
-                          , [HasNotified]
-                          , [TokenCreated]
-                          , [DateCreated]
+                            [GuideSerie],
+                            [GuideNumber],
+                            [CustomerId],
+                            [StatusOrderId],
+                            [WebhookEndpointId],
+                            [HasNotified],
+                            [TokenCreated],
+                            [DateCreated]
                         )
                         OUTPUT inserted.IdWebhookTrackingQueue
                         INTO @ResponseTable
@@ -823,8 +826,8 @@ BEGIN
                             InsertedId
                         )
                         VALUES
-                        (@GuideSerie, @GuideNumber, @WebhookCustomerId, @GuideCurrentStatus, @CustomerEndpointId, 0
-                       , 'sps_proof_onincident', GETDATE());
+                        (@GuideSerie, @GuideNumber, @WebhookCustomerId, @GuideCurrentStatus, @CustomerEndpointId, 0,
+                         'sps_proof_onincident', GETDATE());
 
                     END;
 
@@ -839,12 +842,12 @@ BEGIN
 
         END TRY
         BEGIN CATCH
-            SELECT 0                                           AS 'StatusCode'
-                 , ERROR_MESSAGE()                             AS 'Description'
-                 , CONVERT(BIGINT, 0)                          AS 'NumTransferID'
-                 , @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide'
-                 , @MessageReturn                              'MessageReturn'
-                 , @TokenLinkGeneration                        'TokenLinkGeneration';
+            SELECT 0 AS 'StatusCode',
+                   ERROR_MESSAGE() AS 'Description',
+                   CONVERT(BIGINT, 0) AS 'NumTransferID',
+                   @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
+                   @MessageReturn 'MessageReturn',
+                   @TokenLinkGeneration 'TokenLinkGeneration';
             ROLLBACK TRANSACTION;
         END CATCH;
 
@@ -852,60 +855,64 @@ BEGIN
         BEGIN
 
             IF (@RInserted > 0)
-                SELECT 1                                           AS 'StatusCode'
-                     , 'Registro guardado correctamente'           AS 'Description'
-                     , CONVERT(BIGINT, @@TRANCOUNT)                AS 'NumTransferID'
-                     , @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide'
-                     , @MessageReturn                              'MessageReturn'
-                     , @TokenLinkGeneration                        'TokenLinkGeneration';
+                SELECT 1 AS 'StatusCode',
+                       'Registro guardado correctamente' AS 'Description',
+                       CONVERT(BIGINT, @@TRANCOUNT) AS 'NumTransferID',
+                       @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
+                       @MessageReturn 'MessageReturn',
+                       @TokenLinkGeneration 'TokenLinkGeneration';
             ELSE
-                SELECT 0                                           AS 'StatusCode'
-                     , 'Registro no encontrado'                    AS 'Description'
-                     , CONVERT(BIGINT, 0)                          AS 'NumTransferID'
-                     , @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide'
-                     , @MessageReturn                              'MessageReturn'
-                     , @TokenLinkGeneration                        'TokenLinkGeneration';
+                SELECT 0 AS 'StatusCode',
+                       'Registro no encontrado' AS 'Description',
+                       CONVERT(BIGINT, 0) AS 'NumTransferID',
+                       @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
+                       @MessageReturn 'MessageReturn',
+                       @TokenLinkGeneration 'TokenLinkGeneration';
 
             COMMIT TRANSACTION;
 
             -- Proceso para autoconfirmar inciencias por temporada alta activada, ID's especificados en epica
-            IF @IdIssue IN (82,135,196)
+            IF @IdIssue IN ( 82, 135, 196
+			--,72,73, 74, 75, 76, 77, 78, 79, 82, 83, 84, 85, 86, 87, 90, 127, 128, 129 --gt
+            --                 ,130, 131, 133, 134, 135, 137, 138, 208, 209, 210 --HN
+			-- ,188,189,190,191,192,193,194,195,196,197,198,199 -- sv
+                           )
             BEGIN
-                EXEC dbo.CreateIncidentRecord @GuideSerie = @GuideSerie                      -- nvarchar(2)
-                                        , @GuideNumber = @GuideNumber                       -- int
-                                        , @TokenCreated = 'SYS-AUTOSIGNED'                    -- nvarchar(200)
-                                        , @IsRealIncident = 1                 -- bit
-                                        , @IsServiceDesired = 1               -- bit
-                                        , @IsAddressModificationRequested = 0 -- bit
-                                        , @IsExpressCenterAddress = 0         -- bit
-                                        , @IdExpressCenter = 0                   -- int
-                                        , @NewAddress = N''                      -- nvarchar(600)
-                                        , @NewPhoneNumber = N''                  -- nvarchar(100)
-                                        , @DeliveryDateChange =0             -- bit
-                                        , @NewDeliveryDate = '2024-12-04'        -- date
-                                        , @Observations = N''                    -- nvarchar(600)
-                                        , @LiquidatorRemarks = N'Incidencia autoconfirmada por temporada alta'               -- nvarchar(600)
-                                        , @ValidGeolocationEvidence = 1       -- bit
-                                        , @ValidPhotographicEvidence = 1      -- bit
-                                        , @IdIncident = 0                        -- int
-                                        , @ConfirmedTypeIncidenceId = 0          -- int
-                                        , @CommentOnConfirmedTypeIncidence = N'' -- nvarchar(600)
-                                        , @StationId = @StationId
+                EXEC dbo.CreateIncidentRecord @GuideSerie = @GuideSerie,                                            -- nvarchar(2)
+                                              @GuideNumber = @GuideNumber,                                          -- int
+                                              @TokenCreated = 'SYS-AUTOSIGNED',                                     -- nvarchar(200)
+                                              @IsRealIncident = 1,                                                  -- bit
+                                              @IsServiceDesired = 1,                                                -- bit
+                                              @IsAddressModificationRequested = 0,                                  -- bit
+                                              @IsExpressCenterAddress = 0,                                          -- bit
+                                              @IdExpressCenter = 0,                                                 -- int
+                                              @NewAddress = N'',                                                    -- nvarchar(600)
+                                              @NewPhoneNumber = N'',                                                -- nvarchar(100)
+                                              @DeliveryDateChange = 0,                                              -- bit
+                                              @NewDeliveryDate = '2024-12-04',                                      -- date
+                                              @Observations = N'',                                                  -- nvarchar(600)
+                                              @LiquidatorRemarks = N'Incidencia autoconfirmada por temporada alta', -- nvarchar(600)
+                                              @ValidGeolocationEvidence = 1,                                        -- bit
+                                              @ValidPhotographicEvidence = 1,                                       -- bit
+                                              @IdIncident = 0,                                                      -- int
+                                              @ConfirmedTypeIncidenceId = 0,                                        -- int
+                                              @CommentOnConfirmedTypeIncidence = N'',                               -- nvarchar(600)
+                                              @StationId = @StationId;
             END;
         END;
         ELSE
-            SELECT 0                                           AS 'StatusCode'
-                 , ERROR_MESSAGE()                             AS 'Description'
-                 , CONVERT(BIGINT, 0)                          AS 'NumTransferID'
-                 , @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide'
-                 , @MessageReturn                              'MessageReturn'
-                 , @TokenLinkGeneration                        'TokenLinkGeneration';
+            SELECT 0 AS 'StatusCode',
+                   ERROR_MESSAGE() AS 'Description',
+                   CONVERT(BIGINT, 0) AS 'NumTransferID',
+                   @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
+                   @MessageReturn 'MessageReturn',
+                   @TokenLinkGeneration 'TokenLinkGeneration';
     END;
     ELSE
-        SELECT 0                                                               AS 'StatusCode'
-             , 'Excedió la cantidad disponible de incidencias durante el día.' AS 'Description'
-             , CONVERT(BIGINT, @@TRANCOUNT)                                    AS 'NumTransferID'
-             , @GuideSerie + CAST(@GuideNumber AS VARCHAR)                     AS 'Guide'
-             , @MessageReturn                                                  'MessageReturn'
-             , @TokenLinkGeneration                                            'TokenLinkGeneration';
+        SELECT 0 AS 'StatusCode',
+               'Excedió la cantidad disponible de incidencias durante el día.' AS 'Description',
+               CONVERT(BIGINT, @@TRANCOUNT) AS 'NumTransferID',
+               @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
+               @MessageReturn 'MessageReturn',
+               @TokenLinkGeneration 'TokenLinkGeneration';
 END;

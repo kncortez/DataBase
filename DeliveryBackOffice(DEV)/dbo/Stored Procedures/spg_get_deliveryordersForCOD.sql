@@ -92,7 +92,7 @@ BEGIN
             (
                 SELECT TOP 1
                        1
-                FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod
+                FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod with (nolock)
                 WHERE dod.Guide_Serie = gf.Guide_Serie
                       AND dod.Guide_Number = gf.Guide_Number
                       AND dod.StatusOrderId = 5

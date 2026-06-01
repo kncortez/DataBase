@@ -148,7 +148,7 @@ BEGIN
 	INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK)
 	ON rp.IdRoutePreparation = rpd.RoutePreparationId
 	INNER JOIN DeliveryOrder DO WITH(NOLOCK)
-	ON rpd.Guide_Number = DO.Guide_number 
+	ON rpd.Guide_Serie = do.Guide_Serie AND rpd.Guide_Number = DO.Guide_number 
 	INNER JOIN StatusOrder SO WITH(NOLOCK)
 	ON DO.StatusOrderId = SO.StatusOrderId AND SO.CatCheckpointTypeId!=3
 	LEFT JOIN DeliveryOrderBySettlement dobs WITH(NOLOCK)
