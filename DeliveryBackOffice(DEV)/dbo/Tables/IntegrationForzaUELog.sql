@@ -1,17 +1,19 @@
-CREATE TABLE [dbo].[IntegrationForzaUELog] (
-    [IdIntegrationForzaUELog]       INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
-    [GuideSerie]                    NVARCHAR (2)  NOT NULL,
-    [GuideNumber]                   INT           NOT NULL,
-    [Description]                   NVARCHAR(MAX) NOT NULL,
-    [System]                        NVARCHAR(250) NOT NULL,
-    [RowStatus]                     BIT           NOT NULL,
-    [TokenCreated]                  NVARCHAR (50) NOT NULL,
-    [DateCreated]                   DATETIME      NOT NULL,
-    [TokenUpdated]                  NVARCHAR (50) NULL,
-    [DateUpdated]                   DATETIME      NULL,
+﻿CREATE TABLE [dbo].[IntegrationForzaUELog] (
+    [IdIntegrationForzaUELog] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [GuideSerie]              NVARCHAR (2)   NOT NULL,
+    [GuideNumber]             INT            NOT NULL,
+    [Description]             NVARCHAR (MAX) NOT NULL,
+    [System]                  NVARCHAR (250) NOT NULL,
+    [RowStatus]               BIT            NOT NULL,
+    [TokenCreated]            NVARCHAR (50)  NOT NULL,
+    [DateCreated]             DATETIME       NOT NULL,
+    [TokenUpdated]            NVARCHAR (50)  NULL,
+    [DateUpdated]             DATETIME       NULL,
     CONSTRAINT [PK_IntegrationForzaUELog] PRIMARY KEY CLUSTERED ([IdIntegrationForzaUELog] ASC),
     CONSTRAINT [FK_IntegrationForzaUELog_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del log', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IntegrationForzaUELog', @level2type = N'COLUMN', @level2name = N'IdIntegrationForzaUELog';
@@ -42,3 +44,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario de 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IntegrationForzaUELog', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryBackOffice_dbo_IntegrationForzaUELog]
+    ON [dbo].[IntegrationForzaUELog]([GuideSerie] ASC, [GuideNumber] ASC, [System] ASC, [RowStatus] ASC);
+

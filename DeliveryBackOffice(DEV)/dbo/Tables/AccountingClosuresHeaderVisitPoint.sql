@@ -29,10 +29,20 @@
     [TotalAmountFacturaCashDeclared]       DECIMAL (18, 5) CONSTRAINT [ACHVP_TotalAmountFacturaCashDeclared] DEFAULT ((0)) NOT NULL,
     [TotalAmountFacturaCardDeclared]       DECIMAL (18, 5) CONSTRAINT [ACHVP_TotalAmountFacturaCardDeclared] DEFAULT ((0)) NOT NULL,
     [InvoiceAmountCOD]                     INT             CONSTRAINT [ACHVP_InvoiceAmountCOD] DEFAULT ((0)) NOT NULL,
+    [TotalAmountZigi]                      DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [TotalAmountZigiDeclared]              DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [TotalAmountCODZigi]                   DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [TotalAmountCODZigiDeclared]           DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [TotalAmountFacturaZigi]               DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [InvoiceAmountZigi]                    INT             DEFAULT ((0)) NOT NULL,
+    [TotalAmountFacturaZigiDeclared]       DECIMAL (18, 5) DEFAULT ((0.00)) NOT NULL,
+    [InvoiceAmountFacturaZigi]             INT             DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_AccountingClosuresHeaderVisitPoint] PRIMARY KEY CLUSTERED ([IdAccountingClosuresHeaderVisitPoint] ASC),
     CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_User] FOREIGN KEY ([UserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser]),
     CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_VisitPointClient] FOREIGN KEY ([VisitPoint]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 

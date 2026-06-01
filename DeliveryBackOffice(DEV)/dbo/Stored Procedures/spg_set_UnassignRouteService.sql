@@ -142,7 +142,7 @@ BEGIN
                        drosub.Sender_Zone
                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] dopsub
                     LEFT JOIN dbo.DeliveryOrder drosub
-                        ON drosub.Guide_Number = dopsub.GuideNumber
+                        ON drosub.Guide_Serie = dopsub.GuideSerie AND drosub.Guide_Number = dopsub.GuideNumber
                 WHERE IdHeaderRecolection = @idSchedulePickup
                 GROUP BY TimePlaId,
                          IdHeaderRecolection,
@@ -152,9 +152,6 @@ BEGIN
                          drosub.Sender_Zone
             ) dop_group
                 ON dop_group.IdHeaderRecolection = shp.SchedulePickupId
-            --LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder AS dro WITH (NOLOCK)
-            --ON dro.Guide_Number = dop.GuideNumber
-            --AND dro.Guide_Serie = dop.GuideSerie
             LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
                 ON shp.TypeVehicleId = ctv.IdTypeVehicle
             LEFT JOIN dbo.ServiceManagement srv

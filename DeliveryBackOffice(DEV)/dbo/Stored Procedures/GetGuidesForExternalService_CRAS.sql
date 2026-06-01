@@ -1,12 +1,4 @@
-﻿
---EXEC [dbo].[GetGuidesForExternalService]
---	@Date = NULL,
---	@Hub = 'GUA',
---	@Municipalidad  = 'Guatemala',
---	@Departamento  = 'Guatemala',
---	@Status = 11
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <2021-12-27>
 -- Description:	< Recupera datos de guías para ingresar a una plataforma externa, las cuales no han sido procesadas para ingreso a Simpliroute de forma automatizada. Adicional intenta tomar guías indiscriminadamente y revisar la información de las mismas, corrigiendo: Hubs. >
@@ -65,8 +57,8 @@ BEGIN
 		FROM
 			DeliveryBackOffice.dbo.DeliveryOrder DOR WITH(NOLOCK)
 			JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH(NOLOCK)
-				ON DOR.Guide_Number = DOD.Guide_Number
-				AND DOR.Guide_Serie = DOD.Guide_Serie
+				ON DOR.Guide_Serie = DOD.Guide_Serie
+				AND DOR.Guide_Number = DOD.Guide_Number
 				AND DOD.StatusOrderId = @Status
 				AND DOD.DateCreatedInSystem >= @Date
 			LEFT JOIN [DeliveryBackOffice].[dbo].[ExternalPlatformServiceLog] EPSL
@@ -301,8 +293,8 @@ BEGIN
 									ON DOP.GuideSerie = DOR.Guide_Serie
 									AND DOP.GuideNumber = DOR.Guide_Number
 								JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH(NOLOCK)
-									ON DOR.Guide_Number = DOD.Guide_Number
-									AND DOR.Guide_Serie = DOD.Guide_Serie
+									ON DOR.Guide_Serie = DOD.Guide_Serie
+									AND DOR.Guide_Number = DOD.Guide_Number
 									AND DOD.StatusOrderId = @Status
 									AND DOD.DateCreatedInSystem >= @Date
 								LEFT JOIN DeliveryBackOffice.dbo.HubLogistics HL

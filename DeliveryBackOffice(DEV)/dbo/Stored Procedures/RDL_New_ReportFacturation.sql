@@ -45,9 +45,6 @@ BEGIN
 		ReasonDescription	NVARCHAR(100)	NULL
 	);
 
-	CREATE NONCLUSTERED INDEX tempTransactionFAC1 
-	ON #TransactionFAC1 ( GuideSerie, OrderNumber);
-
 	CREATE TABLE #Report
 	(
 		Ultimo_estado NVARCHAR(100),
@@ -91,7 +88,8 @@ BEGIN
 	);
 
 	CREATE NONCLUSTERED INDEX #Report 
-	ON #Report ( GuideNumber, GuideSerie);
+	ON #Report ( GuideSerie, GuideNumber );
+
 	--==============================================================================================
 	--========================== INSERTAR DATOS A TABLA TEMP =======================================
 	--==============================================================================================
@@ -142,6 +140,9 @@ BEGIN
 			AND
 			(cbc.ReasonCode = '1' OR cbc.ReasonCode = '01' )
 	) CBC;
+
+	CREATE NONCLUSTERED INDEX tempTransactionFAC1 
+	ON #TransactionFAC1 ( GuideSerie, OrderNumber);
 
 	--==============================================================================================
 	--==================================== CONSULTAS PRINCIPALES ======================================
@@ -399,7 +400,7 @@ BEGIN
 						AND CAST(DOR.DateCreated AS DATE) <= CAST(@EndDate AS DATE)
 						AND @DATE1 = @DATE2
 			)
-			AND ISNULL(DOR.SenderCountryId,'GT') = @IdCountry
+			AND DOR.SenderCountryId = @IdCountry
 			AND  COALESCE(INH.inv_certificationFEL, '') = ''
 			AND STO.StatusOrderId != 1
 
@@ -579,7 +580,6 @@ BEGIN
 				-- FECHA DE ENTREGA
 				LEFT JOIN (
 					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
-
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
 					WHERE DOD4.StatusOrderId IN (5, 22)
 					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
@@ -695,7 +695,7 @@ BEGIN
 						AND CAST(DOR.DateCreated AS DATE) <= CAST(@EndDate AS DATE)
 						AND @DATE1 = @DATE2
 			)
-			AND ISNULL(DOR.SenderCountryId,'GT') = @IdCountry
+			AND DOR.SenderCountryId = @IdCountry
 			AND  COALESCE(INH.inv_certificationFEL, '') = ''
 			AND STO.StatusOrderId = 1
 
@@ -876,7 +876,6 @@ BEGIN
 				-- FECHA DE ENTREGA
 				LEFT JOIN (
 					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
-
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
 					WHERE DOD4.StatusOrderId IN (5, 22)
 					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
@@ -904,7 +903,6 @@ BEGIN
 				) Weights
 				ON Weights.GuideSerie = DOR.Guide_Serie
 				 AND Weights.GuideNumber = DOR.Guide_Number
-
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
 						AND INH.dti_fk_orderNumber = DOR.Guide_Number
@@ -992,7 +990,7 @@ BEGIN
 						AND CAST(DOR.DateCreated AS DATE) <= CAST(@EndDate AS DATE)
 						AND @DATE1 = @DATE2
 			)
-			AND ISNULL(DOR.SenderCountryId,'GT') = @IdCountry
+			AND DOR.SenderCountryId = @IdCountry
 			AND  COALESCE(INH.inv_certificationFEL, '') = ''
 
 			SELECT 
@@ -1173,7 +1171,6 @@ BEGIN
 				-- FECHA DE ENTREGA
 				LEFT JOIN (
 					SELECT DOD4.Guide_Serie, DOD4.Guide_Number, MAX(DOD4.DateCreated) AS FechaEntrega
-
 					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD4 WITH (NOLOCK)
 					WHERE DOD4.StatusOrderId IN (5, 22)
 					GROUP BY DOD4.Guide_Serie, DOD4.Guide_Number
@@ -1201,7 +1198,6 @@ BEGIN
 				) Weights
 				ON Weights.GuideSerie = DOR.Guide_Serie
 				 AND Weights.GuideNumber = DOR.Guide_Number
-
 				LEFT JOIN FacturasSinFEL INH
 					 ON INH.dti_fk_orderSerie = DOR.Guide_Serie
 						AND INH.dti_fk_orderNumber = DOR.Guide_Number
@@ -1289,7 +1285,7 @@ BEGIN
 						AND CAST(DOR.DateCreated AS DATE) <= CAST(@EndDate AS DATE)
 						AND @DATE1 = @DATE2
 			)
-			AND ISNULL(DOR.SenderCountryId,'GT') = @IdCountry
+			AND DOR.SenderCountryId = @IdCountry
 			AND  COALESCE(INH.inv_certificationFEL, '') = ''
 			AND STO.StatusOrderId != 1
 
@@ -1586,7 +1582,7 @@ BEGIN
 						AND CAST(DOR.DateCreated AS DATE) <= CAST(@EndDate AS DATE)
 						AND @DATE1 = @DATE2
 			)
-			AND ISNULL(DOR.SenderCountryId,'GT') = @IdCountry
+			AND DOR.SenderCountryId = @IdCountry
 			AND  COALESCE(INH.inv_certificationFEL, '') = ''
 			AND STO.StatusOrderId = 1
 
@@ -1884,7 +1880,7 @@ BEGIN
 						AND CAST(DOR.DateCreated AS DATE) <= CAST(@EndDate AS DATE)
 						AND @DATE1 = @DATE2
 			)
-			AND ISNULL(DOR.SenderCountryId,'GT') = @IdCountry
+			AND DOR.SenderCountryId = @IdCountry
 
 			SELECT 
 				Ultimo_estado AS 'Último estado',
@@ -2139,7 +2135,7 @@ BEGIN
 						AND CAST(DOR.DateCreated AS DATE) <= CAST(@EndDate AS DATE)
 						AND @DATE1 = @DATE2
 			)
-			AND ISNULL(DOR.SenderCountryId,'GT') = @IdCountry
+			AND DOR.SenderCountryId = @IdCountry
 		END
 	END
 	ELSE IF @IdCountry IS NULL

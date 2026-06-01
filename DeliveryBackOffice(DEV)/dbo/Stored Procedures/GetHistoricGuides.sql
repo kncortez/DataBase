@@ -29,7 +29,7 @@ BEGIN
                                          SELECT COUNT(1)
                                          FROM GuideBatch GB1
                                              INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO1 WITH(NOLOCK)
-                                                 ON GB1.GuideNumber = DO1.Guide_Number
+                                                 ON GB1.GuideSeries = DO1.Guide_Serie AND GB1.GuideNumber = DO1.Guide_Number
                                              LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT1 WITH(NOLOCK)
                                                  ON DT1.Guide_Serie = DO1.Guide_Serie
                                                     AND DT1.Guide_Number = DO1.Guide_Number

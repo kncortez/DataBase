@@ -33,14 +33,14 @@
 
 
 
-GO
-CREATE NONCLUSTERED INDEX [idx_RouteId]
-    ON [dbo].[TransactionalBackbone]([RouteId] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber]
-    ON [dbo].[TransactionalBackbone]([GuideSerie] ASC, [GuideNumber] ASC);
+
+
+
+GO
+
 
 
 GO

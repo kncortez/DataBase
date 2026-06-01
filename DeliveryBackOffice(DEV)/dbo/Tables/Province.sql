@@ -19,6 +19,8 @@
 
 
 
+
+
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Datos de Departamentos',
@@ -154,3 +156,8 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'Province',
     @level2type = N'COLUMN',
     @level2name = N'LocalCode'
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCountry_IdProvince_INCLUDE]
+    ON [dbo].[Province]([IdCountry] ASC, [IdProvince] ASC)
+    INCLUDE([ProvinceName]);
+

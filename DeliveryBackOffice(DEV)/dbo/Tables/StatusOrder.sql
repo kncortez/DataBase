@@ -25,6 +25,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de estados de guías.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'StatusOrder';
 
@@ -78,3 +80,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de cr
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Relación de estado origen con estado de proceso en tracking.', @level0type = N'SCHEMA', @level0name = 'dbo', @level1type = N'TABLE',  @level1name = 'StatusOrder', @level2type = N'COLUMN', @level2name = 'CatStatusProcessId';
+GO
+CREATE NONCLUSTERED INDEX [IX_StatusOrder_Terminal]
+    ON [dbo].[StatusOrder]([CatCheckpointTypeId] ASC, [RowStatus] ASC)
+    INCLUDE([StatusOrderId], [OrderDescription]) WHERE ([CatCheckpointTypeId]=(3) AND [RowStatus]=(1));
+

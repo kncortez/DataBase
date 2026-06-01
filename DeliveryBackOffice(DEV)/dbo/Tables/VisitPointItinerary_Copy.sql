@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[VisitPointItinerary_Copy] (
-    [IdVPItinerary]             BIGINT        IDENTITY (1, 1) NOT NULL,
+    [IdVPItinerary]             BIGINT        IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [VPFrequencyID]             BIGINT        NULL,
     [DayOfVisit]                INT           NULL,
     [InitializationTimeOfVisit] NVARCHAR (5)  NULL,

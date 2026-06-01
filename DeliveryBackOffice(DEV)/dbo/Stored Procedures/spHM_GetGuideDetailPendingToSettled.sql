@@ -308,8 +308,8 @@ BEGIN
 				INNER JOIN DBO.DeliveryOrderPaymentDetail DOP WITH(NOLOCK) ON 
 					DOP.IdHeaderRecolection=SP.SchedulePickupId
 				INNER JOIN DBO.DeliveryOrder DO WITH(NOLOCK)
-					ON DO.Guide_Number=DOP.GuideNumber
-						AND DO.Guide_Serie=DOP.GuideSerie
+					ON DO.Guide_Serie=DOP.GuideSerie
+						AND DO.Guide_Number=DOP.GuideNumber
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 					ON

@@ -1,14 +1,4 @@
 ﻿
---EXEC dbo.spws_get_services @StartDate = '', -- date
---                           @EndDate = '',   -- date
---                           @Pagina = 0,               -- bigint
---                           @Token = 'F3DE13B32D42925B7B585F5D95A2016F',               -- varchar(200)
---                           @IdAccount = 85054,            -- bigint
---                           @GuideNumber = N'',        -- nvarchar(50)
---                           @Filter = -1,               -- int
---                           @CancelGuides = 0          -- tinyint
-
-
 -- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-01-17>
@@ -18,6 +8,16 @@
 -- Author:		<Andres,Ruiz>
 -- Create date: <2022-02-22>
 -- Description:	< Mejora para que clientes corporativos solo se muestren registros por punto y no en general >
+-- =============================================
+-- =============================================
+-- Author:		<Cristian, Suazo>
+-- Create date: <2024-06-26>
+-- Description:	< Se muestra el simbolo de la moneda origen si es GT Q y si es HN L >
+-- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Create date: <2025-04-03>
+-- Description:	< Se modifico moneda para soportar multipaís.>
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_services_BNHL]
     -- Add the parameters for the stored procedure here
@@ -31,7 +31,7 @@ CREATE PROCEDURE [dbo].[spws_get_services_BNHL]
     @CancelGuides TINYINT = 1
 AS
 BEGIN    
-set arithabort off
+--set arithabort off
     DECLARE @IdUser BIGINT =
             (
                 SELECT TOP 1 t.TknIdUser FROM TokenLog t WITH(NOLOCK) WHERE t.TknIdToken = @Token
@@ -94,6 +94,7 @@ set arithabort off
             SET NOCOUNT ON;
 			IF(@TypeUser = 'CORPORATIVO')
 			BEGIN
+			
 				DECLARE @CantidadRegistrosC INT = 10;
 				DECLARE @SKIPC BIGINT = @Pagina * @CantidadRegistrosC;
 
@@ -187,7 +188,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -256,18 +257,8 @@ set arithabort off
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 
+																									  THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -300,7 +291,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId 
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -316,9 +307,13 @@ set arithabort off
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON  gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -333,7 +328,7 @@ set arithabort off
 												OR @CancelGuides = 1
 												   AND ord.StatusOrderId IS NOT NULL
 											)
-										ORDER BY ord.Guide_Number DESC OFFSET @SKIPC ROWS FETCH NEXT @CantidadRegistrosC ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @SKIPC ROWS FETCH NEXT @CantidadRegistrosC ROWS ONLY
                                    
 
 
@@ -344,6 +339,7 @@ set arithabort off
 									''
 								)
 				);
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
 				
 			END
 			ELSE
@@ -461,7 +457,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -532,18 +528,8 @@ set arithabort off
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 
+																									  THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -576,8 +562,8 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
-												AND ord.Guide_Serie = paydord.GuideSerie
+												ON (ord.guide_serie = paydord.guideserie and ord.Guide_Number = paydord.GuideNumber 
+												AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -593,9 +579,13 @@ set arithabort off
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -608,8 +598,6 @@ set arithabort off
 													AND
 													PBSL.PointsReceived = 0
 										WHERE
-											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-											--AND
 											(
 												((ord.Sender_ID IN
 												  (
@@ -631,7 +619,7 @@ set arithabort off
 												OR @CancelGuides = 1
 												   AND ord.StatusOrderId IS NOT NULL
 											)
-											ORDER BY ord.Guide_Number 
+											ORDER BY ord.Guide_Serie, ord.Guide_Number 
 											DESC OFFSET @SKIP ROWS FETCH NEXT @CantidadRegistros ROWS ONLY
                                    
 
@@ -643,9 +631,10 @@ set arithabort off
 									''
 								)
 				);
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
 				    PRINT CONVERT(VARCHAR, GETDATE(), 9);
 			END
-
+			
             -- retornar resultado en formato json
             IF @jsonResult IS NULL
             BEGIN
@@ -662,9 +651,10 @@ set arithabort off
                                     ''
                                 )
                 );
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
             END;
 
-            SELECT ('[' + @jsonResult + ']') jsonResult;
+            --SELECT ('[' + @jsonResult + ']') jsonResult;
 
         END;
 
@@ -759,7 +749,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -851,16 +841,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -870,7 +864,7 @@ set arithabort off
 											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
 											--AND
 											ord.StatusOrderId = 15
-										ORDER BY ord.Guide_Number DESC OFFSET @SKIP1C ROWS FETCH NEXT @CantidadRegistros1C ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @SKIP1C ROWS FETCH NEXT @CantidadRegistros1C ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -878,6 +872,8 @@ set arithabort off
 									''
 								)
 				);
+
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
 				
 			END
 			ELSE
@@ -978,7 +974,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1072,15 +1068,19 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON ord.Guide_Number = paydord.GuideNumber  AND ord.Guide_Serie = paydord.GuideSerie
+												ON ord.Guide_Serie = paydord.GuideSerie  AND ord.Guide_Number = paydord.GuideNumber
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie AND  gb.GuideNumber = ord.Guide_Number
 
 												   AND gb.RowStatus = 1
 											LEFT JOIN
@@ -1112,7 +1112,7 @@ set arithabort off
 												   )
 												OR ord.IdCustomer = @idCustomer
 											)
-										ORDER BY ord.Guide_Number DESC OFFSET @SKIP1 ROWS FETCH NEXT @CantidadRegistros1 ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @SKIP1 ROWS FETCH NEXT @CantidadRegistros1 ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -1120,6 +1120,8 @@ set arithabort off
 									''
 								)
 				);
+
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
 
 			END
             
@@ -1138,8 +1140,9 @@ set arithabort off
                                     ''
                                 )
                 );
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
             END;
-            SELECT ('[' + @jsonResult + ']') jsonResult;
+            --SELECT ('[' + @jsonResult + ']') jsonResult;
         END;
 
         IF (@Filter = 2)
@@ -1250,7 +1253,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1344,15 +1347,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.guide_serie = paydord.guideserie and ord.Guide_Number = paydord.GuideNumber
+												    AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie AND  gb.GuideNumber = ord.Guide_Number 
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -1360,7 +1368,7 @@ set arithabort off
 													ord.Sender_ID = tp.CodeOfReference
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ISNULL(ord.StatusOrderId, 15) NOT IN ( 15, 5, 7, 22 )
-										ORDER BY ord.Guide_Number DESC OFFSET @Skip2C ROWS FETCH NEXT @CantidadRegistros2C ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @Skip2C ROWS FETCH NEXT @CantidadRegistros2C ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -1368,6 +1376,8 @@ set arithabort off
 									''
 								)
 				);
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
+
 			END
 			ELSE
 			BEGIN
@@ -1485,7 +1495,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1581,15 +1591,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON ( ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
+												ON gb.GuideSeries = ord.Guide_Serie
+												   AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -1618,7 +1633,7 @@ set arithabort off
 													 )
 												  OR ord.IdCustomer = @idCustomer
 											  )
-										ORDER BY ord.Guide_Number DESC OFFSET @Skip2 ROWS FETCH NEXT @CantidadRegistros2 ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @Skip2 ROWS FETCH NEXT @CantidadRegistros2 ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -1626,6 +1641,8 @@ set arithabort off
 									''
 								)
 				);
+
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
 			END
             
             -- retornar resultado en formato json
@@ -1643,8 +1660,9 @@ set arithabort off
                                     ''
                                 )
                 );
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
             END;
-            SELECT ('[' + @jsonResult + ']') jsonResult;
+           -- SELECT ('[' + @jsonResult + ']') jsonResult;
 
         END;
 
@@ -1739,7 +1757,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1833,16 +1851,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON ( ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-													AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+													AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -1850,7 +1872,7 @@ set arithabort off
 													ord.Sender_ID = tp.CodeOfReference
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ord.StatusOrderId IN ( 5, 22 )
-										ORDER BY ord.Guide_Number DESC OFFSET @Skip3c ROWS FETCH NEXT @CantidadRegistros3c ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @Skip3c ROWS FETCH NEXT @CantidadRegistros3c ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -1858,6 +1880,8 @@ set arithabort off
 									''
 								)
 				);
+
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
 			END
 			ELSE
 			BEGIN
@@ -1954,7 +1978,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2050,16 +2074,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-											ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+											ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie 
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -2088,7 +2116,7 @@ set arithabort off
 													 )
 												  OR ord.IdCustomer = @idCustomer
 											  )
-										ORDER BY ord.Guide_Number DESC OFFSET @Skip3 ROWS FETCH NEXT @CantidadRegistros3 ROWS ONLY
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC OFFSET @Skip3 ROWS FETCH NEXT @CantidadRegistros3 ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -2096,7 +2124,7 @@ set arithabort off
 									''
 								)
 				);
-
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
 			END
             
             -- retornar resultado en formato json
@@ -2115,241 +2143,362 @@ set arithabort off
                                     ''
                                 )
                 );
+				 SELECT ('[' + @jsonResult + ']') jsonResult;
             END;
 
-            SELECT ('[' + @jsonResult + ']') jsonResult;
+            --SELECT ('[' + @jsonResult + ']') jsonResult;
 
         END;
 
     END;
     ELSE
     BEGIN
+	
         IF (@Filter = -1)
         BEGIN
 		
 			IF(@TypeUser = 'CORPORATIVO')
 			BEGIN
-				SET @jsonResult =
-				(
-					SELECT STUFF(
-									(
-										SELECT ',{' + '"Guide":"'
-											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
-											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
-											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
-												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
-											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
-											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
-											   + '",' + '"Source":"'
-											   + ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') + '",'
-											   + '"Destiny":"'
-											   + ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') + '",'
-											   + '"NameofSender":"'
-											   + ISNULL(
-														   REPLACE(
-																	  CAST(UPPER(ISNULL(ord.Sender_FirstName, '')) AS VARCHAR),
-																	  '"',
-																	  ''
-																  ) + ' '
-														   + REPLACE(
-																		CAST(UPPER(ISNULL(ord.Sender_LastName, '')) AS VARCHAR),
-																		'"',
-																		''
-																	),
-														   'N/A'
-													   ) + '",' + '"NameReceiver":"'
-											   + ISNULL(
-														   REPLACE(
-																	  CAST(UPPER(ISNULL(ord.Receiver_FirstName, 'N/A')) AS VARCHAR),
-																	  '"',
-																	  ''
-																  ) + ' '
-														   + REPLACE(
-																		CAST(UPPER(ISNULL(ord.Receiver_LastName, '')) AS VARCHAR),
-																		'"',
-																		''
-																	),
-														   'N/A'
-													   ) + '",' + '"AddresofSender":"'
-											   + ISNULL(
-														   REPLACE(
-																	  CAST(UPPER(ISNULL(
-																						   dbo.fnt_String_Escape(
-																													ord.Sender_Address,
-																													'json'
-																												),
-																						   'N/A'
-																					   )
-																				) AS VARCHAR),
-																	  '"',
-																	  ''
-																  ),
-														   'N/A'
-													   ) + '",' + '"Impersonate":'
-											   + (CASE
-													  WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN
-														  'true'
-													  ELSE
-														  'false'
-												  END
-												 ) + ',' + '"DateRecoleccion":"'
-											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"DateProgramadaEntrega":"'
-											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
-											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
-											'"PrecioServicio":"'
-											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
-											   + '",' + '"CollectOnDelivery":"'
-											   + CONVERT(VARCHAR, CAST(COALESCE(ord.Collect_OnDelivery, '0') AS MONEY), 1)
-											   + '",' + '"ShippmentComplete":'
-											   + CONVERT(VARCHAR, COALESCE(paydord.ShipmentCompleted, 'false')) + ','
-											   + '"IdStatus":' + CONVERT(VARCHAR, COALESCE(sto.StatusOrderId, '0')) + ','
-											   + '"Status":"' + ISNULL(CONVERT(VARCHAR, sto.OrderDescription), 'N/A')
-											   + '",' + '"WayToPay":"'
-											   + IIF(ISNULL(paydord.ShipmentCompleted, 0) = 0,
-													 'PENDIENTE',
-													 (ISNULL(
-																CONVERT(
-																		   VARCHAR,
-																		   CASE
-																			   WHEN paydord.TypeofInOutMoneyId = 1 THEN
-																				   UPPER(catpay.PayTypeName)
-																			   WHEN paydord.TypeofInOutMoneyId = 2 THEN
-																				   UPPER(catpay.PayTypeName)
-																			   WHEN paydord.TypeofInOutMoneyId = 8 THEN
-																				   UPPER('credito')
-																			   ELSE
-																				   CASE
-																					   WHEN ord.IsCollect = 1 THEN
-																						   'COLLECT'
-																					   ELSE
-																						   'CONTADO'
-																				   END
-																		   END
-																	   ),
-																'N/A'
-															)
-													 )) + '",' + '"TimePayment":"'
-											   + ISNULL(CONVERT(VARCHAR, paydord.TimePlaId), '') + '",'
-											   + '"TimePaymentDescription":"'
-											   + ISNULL(
-														   CONVERT(   VARCHAR,
-														   (
-															   SELECT TimePlaName
-															   FROM DeliveryBackOffice.dbo.CatPaymentTime TMD WITH(NOLOCK)
-															   WHERE paydord.TimePlaId = TMD.TimePlaId
-														   )
-																  ),
-														   ''
-													   ) + '",' + '"TypePayment":"'
-											   + REPLACE(
-															ISNULL(
-																	  CONVERT(
-																				 VARCHAR,
-																				 CASE
-																					 WHEN paydord.TypeofInOutMoneyId = 1 THEN
-																						 UPPER(ctgmon.tio_pk_name)
-																					 WHEN paydord.TypeofInOutMoneyId = 2 THEN
-																						 UPPER(ctgmon.tio_pk_name)
-																					 WHEN paydord.TypeofInOutMoneyId = 3 THEN
-																						 UPPER(ctgmon.tio_pk_name)
-																					 WHEN paydord.TypeofInOutMoneyId = 4 THEN
-																						 UPPER(ctgmon.tio_pk_name)
-																					 WHEN paydord.TypeofInOutMoneyId = 6 THEN
-																						 UPPER('tarjeta')
-																					 ELSE
-																						 CASE
-																							 WHEN ord.IsCollect = 1 THEN
-																								 'EFECTIVO'
-																							 ELSE
-																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
-																										 'TARJETA'
-																									 WHEN
-																									 (
-																										 SELECT 1 FROM InternalUser WITH(NOLOCK) WHERE RegisterUserID = @IdUser
-																									 ) = 1 THEN
-																										 'EFECTIVO'
-																									 ELSE
-																										 'TARJETA'
-																								 END
-																						 END
-																				 END
-																			 ),
-																	  'N/A'
-																  ),
-															'"',
-															''
-														) + '",' + '"CollectDelivery":"'
-											   + ISNULL(CONVERT(   VARCHAR,
-																   CASE
-																	   WHEN ord.IsCollect = 1 THEN
-																		   'SI'
-																	   ELSE
-																		   'NO'
-																   END
-															   ),
-														'N/A'
-													   ) + '",' + +'"TypeService":"'
-											   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
-										FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
-												ON sto.StatusOrderId = ord.StatusOrderId
-											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie )
-											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
-												ON (catpay.PayTypeId = paydord.PayTypeId)
-											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
-												ON (cattime.TimePlaId = paydord.TimePlaId)
-											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
-												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)                                        
-											LEFT JOIN dbo.Township twn WITH (NOLOCK)
-												ON twn.IdTownship = ord.SenderIdTownship
-											LEFT JOIN dbo.Province pr WITH (NOLOCK)
-												ON pr.IdProvince = twn.IdProvince
-											LEFT JOIN dbo.Township twd WITH (NOLOCK)
-												ON twd.IdTownship = ord.ReceiverIdTownship
-											LEFT JOIN dbo.Province prd WITH (NOLOCK)
-												ON prd.IdProvince = twd.IdProvince
-											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
-												   AND gb.RowStatus = 1
-											INNER JOIN
-												#temp tp
-												ON
-													ord.Sender_ID = tp.CodeOfReference
-										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
-										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
-										ORDER BY ord.Guide_Number DESC
-										FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),
-									1,
-									1,
-									''
-								)
-				);
+
+			-- SELECT ('[' + @jsonResult + ']') jsonResult;
+		--	select @jsonResult =
+SELECT '['+
+(
+    SELECT 'TEST' AS TEST,
+        ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') AS Guide,
+        (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0)) AS Pieces,
+        ISNULL(ord.Ticket_Number,'') AS Reference,
+        ISNULL(ord.Receiver_Phone,'') AS ReceiverPhone,
+        ISNULL(gb.IdBatch,0) AS IdBatch,
+        ISNULL(CONVERT(VARCHAR(20), ord.DateCreated, 20),'N/A') AS RequestDate,
+        ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation),'N/A') AS Source,
+        ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation),'N/A') AS Destiny,
+
+        UPPER(CONCAT(
+            ISNULL(ord.Sender_FirstName,''),
+            ' ',
+            ISNULL(ord.Sender_LastName,'')
+        )) AS NameofSender,
+
+        UPPER(CONCAT(
+            ISNULL(ord.Receiver_FirstName,''),
+            ' ',
+            ISNULL(ord.Receiver_LastName,'')
+        )) AS NameReceiver,
+
+        UPPER(ISNULL(ord.Sender_Address,'N/A')) AS AddresofSender,
+
+        CASE 
+            WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId,0) 
+            THEN CAST(1 AS BIT)
+            ELSE CAST(0 AS BIT)
+        END AS Impersonate,
+
+        ISNULL(CONVERT(VARCHAR(20), ord.Preparation_Date, 20),'N/A') AS DateRecoleccion,
+        ISNULL(CONVERT(VARCHAR(20), ord.Shipping_Date, 20),'N/A') AS DateProgramadaEntrega,
+        ISNULL(CCC.Symbol,'') AS CurrencySymbol,
+
+        CONVERT(VARCHAR(50),CAST(COALESCE(ord.PriceShippment,0) AS MONEY),1) AS PrecioServicio,
+        CONVERT(VARCHAR(50),CAST(COALESCE(ord.Collect_OnDelivery,0) AS MONEY),1) AS CollectOnDelivery,
+
+        ISNULL(paydord.ShipmentCompleted,0) AS ShippmentComplete,
+        ISNULL(sto.StatusOrderId,0) AS IdStatus,
+        ISNULL(sto.OrderDescription,'N/A') AS Status,
+
+        IIF(ISNULL(paydord.ShipmentCompleted,0)=0,
+            'PENDIENTE',
+            ISNULL(
+                CASE
+                    WHEN paydord.TypeofInOutMoneyId IN (1,2)
+                        THEN UPPER(catpay.PayTypeName)
+                    WHEN paydord.TypeofInOutMoneyId = 8
+                        THEN 'CREDITO'
+                    ELSE
+                        CASE WHEN ord.IsCollect=1 THEN 'COLLECT' ELSE 'CONTADO' END
+                END
+            ,'N/A')
+        ) AS WayToPay,
+
+        ISNULL(paydord.TimePlaId,'') AS TimePayment,
+
+        ISNULL((
+            SELECT TimePlaName
+            FROM DeliveryBackOffice.dbo.CatPaymentTime TMD WITH(NOLOCK)
+            WHERE paydord.TimePlaId = TMD.TimePlaId
+        ),'') AS TimePaymentDescription,
+
+        ISNULL(
+            CASE
+                WHEN paydord.TypeofInOutMoneyId IN (1,2,3,4)
+                    THEN UPPER(ctgmon.tio_pk_name)
+                WHEN paydord.TypeofInOutMoneyId = 6
+                    THEN 'TARJETA'
+                ELSE
+                    CASE WHEN ord.IsCollect=1 THEN 'EFECTIVO' ELSE 'TARJETA' END
+            END
+        ,'N/A') AS TypePayment,
+
+        CASE WHEN ord.IsCollect=1 THEN 'SI' ELSE 'NO' END AS CollectDelivery,
+        ISNULL(ord.TypeService,'') AS TypeService
+
+    FROM dbo.DeliveryOrder ord WITH(NOLOCK)
+    INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
+        ON sto.StatusOrderId = ord.StatusOrderId
+    LEFT JOIN dbo.DeliveryOrderPaymentDetail paydord WITH(NOLOCK)
+        ON ord.Guide_Serie = paydord.GuideSerie 
+       AND ord.Guide_Number = paydord.GuideNumber
+    LEFT JOIN dbo.CatPaymentType catpay WITH(NOLOCK)
+        ON catpay.PayTypeId = paydord.PayTypeId
+    LEFT JOIN dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
+        ON ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId
+    LEFT JOIN dbo.Township twn WITH(NOLOCK)
+        ON twn.IdTownship = ord.SenderIdTownship
+    LEFT JOIN dbo.Province pr WITH(NOLOCK)
+        ON pr.IdProvince = twn.IdProvince
+    LEFT JOIN dbo.Township twd WITH(NOLOCK)
+        ON twd.IdTownship = ord.ReceiverIdTownship
+    LEFT JOIN dbo.Province prd WITH(NOLOCK)
+        ON prd.IdProvince = twd.IdProvince
+    LEFT JOIN dbo.Cost C WITH(NOLOCK)
+        ON ord.Guide_Serie = C.GuideSerie 
+       AND ord.Guide_Number = C.GuideNumber
+    LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+        ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
+    LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
+        ON gb.GuideSeries = ord.Guide_Serie
+       AND gb.GuideNumber = ord.Guide_Number
+       AND gb.RowStatus = 1
+    INNER JOIN #temp tp
+        ON ord.Sender_ID = tp.CodeOfReference
+
+    WHERE CONVERT(DATE, ord.DateCreated) 
+          BETWEEN @StartDate AND @EndDate
+    AND ord.StatusOrderId <> IIF(@CancelGuides=0,7,0)
+
+    ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
+
+    FOR JSON PATH
+)
++ ']'
+;
+
+
+
+
+			--PRINT 'entra'
+			--forma antigua
+			--SET @jsonResult =
+				--(
+				--	SELECT STUFF(
+				--					(
+				--						SELECT ',{' + '"Guide":"'
+				--							   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
+				--							   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
+				--							   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+				--								+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
+				--							   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
+				--							   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
+				--							   + '",' + '"Source":"'
+				--							   + ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') + '",'
+				--							   + '"Destiny":"'
+				--							   + ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') + '",'
+				--							   + '"NameofSender":"'
+				--							   + ISNULL(
+				--										   REPLACE(
+				--													  CAST(UPPER(ISNULL(ord.Sender_FirstName, '')) AS VARCHAR),
+				--													  '"',
+				--													  ''
+				--												  ) + ' '
+				--										   + REPLACE(
+				--														CAST(UPPER(ISNULL(ord.Sender_LastName, '')) AS VARCHAR),
+				--														'"',
+				--														''
+				--													),
+				--										   'N/A'
+				--									   ) + '",' + '"NameReceiver":"'
+				--							   + ISNULL(
+				--										   REPLACE(
+				--													  CAST(UPPER(ISNULL(ord.Receiver_FirstName, 'N/A')) AS VARCHAR),
+				--													  '"',
+				--													  ''
+				--												  ) + ' '
+				--										   + REPLACE(
+				--														CAST(UPPER(ISNULL(ord.Receiver_LastName, '')) AS VARCHAR),
+				--														'"',
+				--														''
+				--													),
+				--										   'N/A'
+				--									   ) + '",' + '"AddresofSender":"'
+				--							   + ISNULL(
+				--										   REPLACE(
+				--													  CAST(UPPER(ISNULL(
+				--																		   dbo.fnt_String_Escape(
+				--																									ord.Sender_Address,
+				--																									'json'
+				--																								),
+				--																		   'N/A'
+				--																	   )
+				--																) AS VARCHAR),
+				--													  '"',
+				--													  ''
+				--												  ),
+				--										   'N/A'
+				--									   ) + '",' + '"Impersonate":'
+				--							   + (CASE
+				--									  WHEN ord.Sender_ID <> ISNULL(ord.OriginSenderId, 0) THEN
+				--										  'true'
+				--									  ELSE
+				--										  'false'
+				--								  END
+				--								 ) + ',' + '"DateRecoleccion":"'
+				--							   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
+				--							   + '",' + '"DateProgramadaEntrega":"'
+				--							   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
+				--							   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
+				--							   +
+				--							--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
+				--							'"PrecioServicio":"'
+				--							   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
+				--							   + '",' + '"CollectOnDelivery":"'
+				--							   + CONVERT(VARCHAR, CAST(COALESCE(ord.Collect_OnDelivery, '0') AS MONEY), 1)
+				--							   + '",' + '"ShippmentComplete":'
+				--							   + CONVERT(VARCHAR, COALESCE(paydord.ShipmentCompleted, 'false')) + ','
+				--							   + '"IdStatus":' + CONVERT(VARCHAR, COALESCE(sto.StatusOrderId, '0')) + ','
+				--							   + '"Status":"' + ISNULL(CONVERT(VARCHAR, sto.OrderDescription), 'N/A')
+				--							   + '",' + '"WayToPay":"'
+				--							   + IIF(ISNULL(paydord.ShipmentCompleted, 0) = 0,
+				--									 'PENDIENTE',
+				--									 (ISNULL(
+				--												CONVERT(
+				--														   VARCHAR,
+				--														   CASE
+				--															   WHEN paydord.TypeofInOutMoneyId = 1 THEN
+				--																   UPPER(catpay.PayTypeName)
+				--															   WHEN paydord.TypeofInOutMoneyId = 2 THEN
+				--																   UPPER(catpay.PayTypeName)
+				--															   WHEN paydord.TypeofInOutMoneyId = 8 THEN
+				--																   UPPER('credito')
+				--															   ELSE
+				--																   CASE
+				--																	   WHEN ord.IsCollect = 1 THEN
+				--																		   'COLLECT'
+				--																	   ELSE
+				--																		   'CONTADO'
+				--																   END
+				--														   END
+				--													   ),
+				--												'N/A'
+				--											)
+				--									 )) + '",' + '"TimePayment":"'
+				--							   + ISNULL(CONVERT(VARCHAR, paydord.TimePlaId), '') + '",'
+				--							   + '"TimePaymentDescription":"'
+				--							   + ISNULL(
+				--										   CONVERT(   VARCHAR,
+				--										   (
+				--											   SELECT TimePlaName
+				--											   FROM DeliveryBackOffice.dbo.CatPaymentTime TMD WITH(NOLOCK)
+				--											   WHERE paydord.TimePlaId = TMD.TimePlaId
+				--										   )
+				--												  ),
+				--										   ''
+				--									   ) + '",' + '"TypePayment":"'
+				--							   + REPLACE(
+				--											ISNULL(
+				--													  CONVERT(
+				--																 VARCHAR,
+				--																 CASE
+				--																	 WHEN paydord.TypeofInOutMoneyId = 1 THEN
+				--																		 UPPER(ctgmon.tio_pk_name)
+				--																	 WHEN paydord.TypeofInOutMoneyId = 2 THEN
+				--																		 UPPER(ctgmon.tio_pk_name)
+				--																	 WHEN paydord.TypeofInOutMoneyId = 3 THEN
+				--																		 UPPER(ctgmon.tio_pk_name)
+				--																	 WHEN paydord.TypeofInOutMoneyId = 4 THEN
+				--																		 UPPER(ctgmon.tio_pk_name)
+				--																	 WHEN paydord.TypeofInOutMoneyId = 6 THEN
+				--																		 UPPER('tarjeta')
+				--																	 ELSE
+				--																		 CASE
+				--																			 WHEN ord.IsCollect = 1 THEN
+				--																				 'EFECTIVO'
+				--																			 ELSE
+				--																				 CASE
+				--																					 WHEN 1 = 1 
+				--																					  THEN
+				--																						 'TARJETA'
+				--																					 WHEN
+				--																					 (
+				--																						 SELECT 1 FROM InternalUser WITH(NOLOCK) WHERE RegisterUserID = @IdUser
+				--																					 ) = 1 THEN
+				--																						 'EFECTIVO'
+				--																					 ELSE
+				--																						 'TARJETA'
+				--																				 END
+				--																		 END
+				--																 END
+				--															 ),
+				--													  'N/A'
+				--												  ),
+				--											'"',
+				--											''
+				--										) + '",' + '"CollectDelivery":"'
+				--							   + ISNULL(CONVERT(   VARCHAR,
+				--												   CASE
+				--													   WHEN ord.IsCollect = 1 THEN
+				--														   'SI'
+				--													   ELSE
+				--														   'NO'
+				--												   END
+				--											   ),
+				--										'N/A'
+				--									   ) + '",' + +'"TypeService":"'
+				--							   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
+				--						FROM dbo.DeliveryOrder ord WITH (NOLOCK)
+				--							INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
+				--								ON sto.StatusOrderId = ord.StatusOrderId
+				--							LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
+				--								ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber )
+				--							LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
+				--								ON (catpay.PayTypeId = paydord.PayTypeId)
+				--							LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
+				--								ON (cattime.TimePlaId = paydord.TimePlaId)
+				--							LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
+				--								ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)                                        
+				--							LEFT JOIN dbo.Township twn WITH (NOLOCK)
+				--								ON twn.IdTownship = ord.SenderIdTownship
+				--							LEFT JOIN dbo.Province pr WITH (NOLOCK)
+				--								ON pr.IdProvince = twn.IdProvince
+				--							LEFT JOIN dbo.Township twd WITH (NOLOCK)
+				--								ON twd.IdTownship = ord.ReceiverIdTownship
+				--							LEFT JOIN dbo.Province prd WITH (NOLOCK)
+				--								ON prd.IdProvince = twd.IdProvince
+				--							LEFT JOIN dbo.Cost C WITH(NOLOCK)
+				--								ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+				--							LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				--								ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
+				--							LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
+				--								ON gb.GuideSeries = ord.Guide_Serie 
+				--								AND gb.GuideNumber = ord.Guide_Number
+				--								   AND gb.RowStatus = 1
+				--							INNER JOIN
+				--								#temp tp
+				--								ON
+				--									ord.Sender_ID = tp.CodeOfReference
+				--						WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
+				--						AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
+				--						ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
+				--						FOR XML PATH(''), TYPE
+				--					).value('.', 'varchar(max)'),
+				--					1,
+				--					1,
+				--					''
+				--				)
+				--);
 
 		
 			END
 			ELSE
 			BEGIN
-
-			PRINT 'ENTRA ACÁ'
-
 				SET @jsonResult =
 				(
 					SELECT STUFF(
@@ -2417,7 +2566,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2488,18 +2637,8 @@ set arithabort off
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 
+																									  THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -2532,7 +2671,7 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber )
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2547,9 +2686,13 @@ set arithabort off
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie 
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -2569,7 +2712,7 @@ set arithabort off
 											OR ord.IdCustomer = @idCustomer
 											)
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -2578,8 +2721,6 @@ set arithabort off
 								)
 				);
 			END
-
-			PRINT 'ENTRA ACÁ 2'
             
             IF @jsonResult IS NULL
             BEGIN
@@ -2674,7 +2815,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2766,16 +2907,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie )
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON  gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -2783,7 +2928,7 @@ set arithabort off
 													ord.Sender_ID = tp.CodeOfReference
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 									
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -2861,7 +3006,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2955,16 +3100,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND  gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -2984,7 +3133,7 @@ set arithabort off
 											OR ord.IdCustomer = @idCustomer
 											)
 									
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -3106,7 +3255,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3200,16 +3349,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -3218,7 +3371,7 @@ set arithabort off
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -3318,7 +3471,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3414,16 +3567,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -3444,7 +3601,7 @@ set arithabort off
 											OR ord.IdCustomer = @idCustomer
 											)
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -3543,7 +3700,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3637,16 +3794,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -3655,7 +3816,7 @@ set arithabort off
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 									
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -3733,7 +3894,7 @@ set arithabort off
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + ISNULL(CCC.Symbol,'') + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3829,16 +3990,20 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Serie = paydord.GuideSerie AND ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH (NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
+											LEFT JOIN dbo.Cost C WITH(NOLOCK)
+												ON ord.Guide_Serie = C.GuideSerie AND ord.Guide_Number = C.GuideNumber
+											LEFT JOIN dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+												ON C.ShippingCurrency = CCC.IdCatCurrencyCOD
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideSeries = ord.Guide_Serie
+												AND gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -3859,7 +4024,7 @@ set arithabort off
 											OR ord.IdCustomer = @idCustomer
 											)
 									
-										ORDER BY ord.Guide_Number DESC
+										ORDER BY ord.Guide_Serie, ord.Guide_Number DESC
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
 									1,
@@ -3888,7 +4053,7 @@ set arithabort off
                 );
             END;
 
-            SELECT ('[' + @jsonResult + ']') jsonResult;
+            --SELECT ('[' + @jsonResult + ']') jsonResult;
         END;
 
     END;

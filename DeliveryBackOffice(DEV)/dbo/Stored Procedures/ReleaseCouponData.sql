@@ -89,9 +89,9 @@ BEGIN
 					ON
 						ISNULL(DO.IdCustomer, VPC.CustomerID) = Cu.IdCustomer
 			WHERE  
-				DO.guide_number = @GuideNumber
-				AND 
 				DO.guide_serie = @GuideSerie
+				AND 
+				DO.guide_number = @GuideNumber
 
 			-- Teléfono de la guía que origino el cupon
 			SELECT  
@@ -148,9 +148,9 @@ BEGIN
 				)
 				-- Bloqueo de cupones
 				AND
-				( PC.GuideNumberDestination = @GuideNumber )
-				AND
 				( PC.GuideSerieDestination = @GuideSerie )
+				AND
+				( PC.GuideNumberDestination = @GuideNumber )
 				AND
 				-- Validaciones normales de cupones
 				PC.redeemeddate IS NULL
@@ -314,4 +314,4 @@ BEGIN
 			Error_message()   AS [ErrorMessage];
 
 	END CATCH;
-END 
+END

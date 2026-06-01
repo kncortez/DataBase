@@ -35,7 +35,7 @@ DECLARE @GuidesDetailLiquid TABLE (
 
 declare @contador int = (SELECT COUNT(DISTINCT  sbpd.GuideNumber ) from SettlementByPickup sbp WITH(NOLOCK)
 						inner join SettlementByPickupDetail sbpd WITH(NOLOCK) on sbp.Id = sbpd.SettlementByPickupId						
-						inner join DeliveryOrder dro WITH(NOLOCK) on sbpd.GuideNumber = dro.Guide_Number and sbpd.GuideSerie = dro.Guide_Serie
+						inner join DeliveryOrder dro WITH(NOLOCK) on sbpd.GuideSerie = dro.Guide_Serie and sbpd.GuideNumber = dro.Guide_Number
 						where sbp.SequenceCode = @IdManifest and sbp.SubTypeServiceManagmentId = @subservice and (sbpd.IsReturn is null or sbpd.IsReturn = 0 ) and  (sbpd.IsPieceLiquidaded is null or sbpd.IsPieceLiquidaded = 0)
 						and iif(dro.SenderCountryId is null, 'GT', dro.SenderCountryId)=@IdCountry)
 
@@ -48,7 +48,7 @@ select dbs.ID,
 	sr.First_Name + ' ' + sr.Last_Name as Courier_Name
 from SettlementByPickup dbs WITH(NOLOCK)
 inner join SettlementByPickupDetail sbpd WITH(NOLOCK) on dbs.Id = sbpd.SettlementByPickupId
-inner join DeliveryOrder dro WITH(NOLOCK) on sbpd.GuideNumber = dro.Guide_Number and sbpd.GuideSerie = dro.Guide_Serie
+inner join DeliveryOrder dro WITH(NOLOCK) on sbpd.GuideSerie = dro.Guide_Serie and sbpd.GuideNumber = dro.Guide_Number
 INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK) ON sr.ID = dbs.IdCourier
 WHERE dbs.SequenceCode = @IdManifest and dbs.SubTypeServiceManagmentId = @subservice 
 and iif(dro.SenderCountryId is null, 'GT', dro.SenderCountryId)=@IdCountry
@@ -60,7 +60,7 @@ SELECT DISTINCT
 	0.00 as COD
 	from SettlementByPickup sbp WITH(NOLOCK)
 	inner join SettlementByPickupDetail sbpd WITH(NOLOCK) on sbp.Id = sbpd.SettlementByPickupId and sbpd.RowStatus = 1	
-	inner join DeliveryOrder dro WITH(NOLOCK) on sbpd.GuideNumber = dro.Guide_Number and sbpd.GuideSerie = dro.Guide_Serie
+	inner join DeliveryOrder dro WITH(NOLOCK) on sbpd.GuideSerie = dro.Guide_Serie and sbpd.GuideNumber = dro.Guide_Number
 	where sbp.SequenceCode = @IdManifest and sbp.SubTypeServiceManagmentId = @subservice and (sbpd.IsReturn is null or sbpd.IsReturn = 0 ) and  (sbpd.IsPieceLiquidaded is null or sbpd.IsPieceLiquidaded = 0)
 	and iif(dro.SenderCountryId is null, 'GT', dro.SenderCountryId)=@IdCountry
 
@@ -74,7 +74,7 @@ SELECT DISTINCT
 	0 as Delivered
 	from SettlementByPickup sbp WITH(NOLOCK)
 	inner join SettlementByPickupDetail sbpd WITH(NOLOCK) on sbp.Id = sbpd.SettlementByPickupId and sbpd.RowStatus = 1
-	inner join DeliveryOrder dro WITH(NOLOCK) on sbpd.GuideNumber = dro.Guide_Number and sbpd.GuideSerie = dro.Guide_Serie
+	inner join DeliveryOrder dro WITH(NOLOCK) on sbpd.GuideSerie = dro.Guide_Serie and sbpd.GuideNumber = dro.Guide_Number
 	where sbp.SequenceCode = @IdManifest and sbp.SubTypeServiceManagmentId = @subservice and (sbpd.IsReturn  = 1  or sbpd.IsPieceLiquidaded = 1)
 	and iif(dro.SenderCountryId is null, 'GT', dro.SenderCountryId)=@IdCountry 	 
 	 

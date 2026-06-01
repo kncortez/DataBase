@@ -36,6 +36,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -128,4 +130,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de finalización de despacho', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'EndDateLinehaulRouteSettlement';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_LinehaulRouteSettlement_LinehaulRoutePreparationId_DateReceived_RowStatus_HubID]
+    ON [dbo].[LinehaulRouteSettlement]([LinehaulRoutePreparationId] ASC, [DateReceived] ASC, [RowStatus] ASC, [HubID] ASC);
 

@@ -37,6 +37,8 @@
 
 
 
+
+
 GO
 
 
@@ -61,8 +63,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera par
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_TypeSegmentId]
-    ON [dbo].[RateData]([TypeSegmentId] ASC);
+
 
 
 GO

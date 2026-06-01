@@ -124,8 +124,8 @@ BEGIN
 				select	@PiecesDry+=Pieces_Dry,
 						@PiecesCold+=Pieces_Cold 
 				from dbo.DeliveryOrder WITH(NOLOCK)
-				where	Guide_Number=@GuideNumber and 
-						Guide_Serie=@GuideSerie;
+				where	Guide_Serie=@GuideSerie and 
+						Guide_Number=@GuideNumber;
 
 				INSERT INTO [dbo].[RoutePreparation]
 						   ([CatRouteId]
@@ -167,8 +167,8 @@ BEGIN
 			INNER JOIN DBO.RoutePreparationDetailPiece RPDP WITH(NOLOCK)
 				ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail	
 				AND RPDP.RowStatus=1
-			WHERE Guide_Number=@GuideNumber
-			AND Guide_Serie=@GuideSerie
+			WHERE Guide_Serie=@GuideSerie
+			AND Guide_Number=@GuideNumber
 			AND RPD.RoutePreparationId=@RoutePreparationId
 			AND RPDP.RowStatus=1
 

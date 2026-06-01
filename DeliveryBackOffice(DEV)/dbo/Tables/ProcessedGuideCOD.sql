@@ -40,6 +40,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Flag para poder saber cuando el correo de lote fue enviado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'BatchNotified';
 
@@ -94,4 +96,14 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_BatchCODId_BatchCODIdCommission_RowStatus_Date_INCLUDE]
     ON [dbo].[ProcessedGuideCOD]([BatchCODId] ASC, [BatchCODIdCommission] ASC, [RowStatus] ASC, [Date] ASC)
     INCLUDE([GuideSerie], [GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_ProcessedGuideCOD_GuideCheck]
+    ON [dbo].[ProcessedGuideCOD]([GuideSerie] ASC, [GuideNumber] ASC) WHERE ([IdProcessedGuideCOD] IS NOT NULL);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_ProcessedGuideCOD_Guide_Notif_Batch]
+    ON [dbo].[ProcessedGuideCOD]([GuideSerie] ASC, [GuideNumber] ASC, [Notificated] ASC, [BatchCODId] ASC);
 

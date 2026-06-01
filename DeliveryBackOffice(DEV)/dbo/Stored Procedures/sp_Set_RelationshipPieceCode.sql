@@ -22,7 +22,7 @@ BEGIN
 
 		-- Obtener la cantidad de piezas de esa guia
 		SELECT @pCountPieces = COALESCE(Pieces_Dry,0) + COALESCE(Pieces_Cold,0)  FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH(NOLOCK) 
-		WHERE ([StatusOrderId] = 1 OR [StatusOrderId] = 15) AND [Guide_Number] = @GuideNumber AND [Guide_Serie] = @GuideSerie
+		WHERE ([StatusOrderId] = 1 OR [StatusOrderId] = 15) AND [Guide_Serie] = @GuideSerie AND [Guide_Number] = @GuideNumber
 
 		-- consultar si la guia externa no esta asignada en otro lado (se podria utilizar indice, se agrega status order?)
 		IF NOT EXISTS (SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH(NOLOCK) WHERE [Ticket_Number] = @GuideExternal 
@@ -39,8 +39,8 @@ BEGIN
 						-- Realizar el insert para la guia Externa con Forza
 							UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
 							SET [Ticket_Number] = @GuideExternal
-							WHERE [Guide_Number] = @GuideNumber
-							AND [Guide_Serie] = @GuideSerie
+							WHERE [Guide_Serie] = @GuideSerie
+							AND [Guide_Number] = @GuideNumber
 
 						-- Realizar el insert para la pieza Externa con Forza
 							UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
@@ -48,8 +48,8 @@ BEGIN
 							, [TokenRegistrationExternalCode] = @Token
 							, [DateRegistrationExternalCode] = GETDATE()
 							, [AccountIdRegistrationExternalCode] = @AccountId
-							WHERE [GuideNumber] = @GuideNumber
-							AND [GuideSerie] = @GuideSerie AND [NoPiece] = @NoPiece
+							WHERE [GuideSerie] = @GuideSerie
+							AND [GuideNumber] = @GuideNumber AND [NoPiece] = @NoPiece
 
 						-- Verificar si la actualización fue exitosa
 						IF @@ROWCOUNT > 0

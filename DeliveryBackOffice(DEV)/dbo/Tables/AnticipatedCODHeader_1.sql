@@ -25,6 +25,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualizacion del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AnticipatedCODHeader', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -111,4 +113,10 @@ CREATE NONCLUSTERED INDEX [idx_CustomerId_PortfolioId]
 GO
 CREATE NONCLUSTERED INDEX [idx_CustomerId]
     ON [dbo].[AnticipatedCODHeader]([CustomerId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_AnticipatedCODHeader_Balance]
+    ON [dbo].[AnticipatedCODHeader]([IdAnticipatedCODHeader] ASC)
+    INCLUDE([AgaintsBalance], [CustomerId], [PortfolioId]);
 

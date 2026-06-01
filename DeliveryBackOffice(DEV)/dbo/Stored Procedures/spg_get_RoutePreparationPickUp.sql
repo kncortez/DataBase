@@ -25,9 +25,6 @@ AS
 BEGIN
     SET ARITHABORT ON;
 
-    PRINT 'INICIO';
-    PRINT CONVERT(VARCHAR, GETDATE(), 9);
-
     DECLARE @datePickUp_Internal DATE = @datePickUp;
     DECLARE @TempPrice TABLE
     (
@@ -85,14 +82,24 @@ BEGIN
         IdServiceManagement INT NULL
     );
 
-    PRINT 'Insert tabla temp';
-    PRINT GETDATE();
-
+ 
     INSERT INTO @tbl
     SELECT 'Demanda' Periodicy,
            SchedulePickupId 'idSchedulePickUp',
            SenderName 'Name',
-           AddressPickup 'Address',
+
+--           REPLACE(
+--    REPLACE(
+--        REPLACE(
+--            REPLACE(
+--                REPLACE(ISNULL(AddressPickup, ''), CHAR(13), ''),  -- Carriage Return
+--            CHAR(10), ''),                                         -- Line Feed
+--        CHAR(9), ' '),                                             -- Tab
+--    '"', ''),                                                      -- Comillas dobles
+--'''', '') AS [Address],
+
+           REPLACE(AddressPickup,'''','') 'Address',
+           --AddressPickup 'Address',
            ISNULL(dro.Sender_Zone, '0') Zone,
            SenderPhone 'Phone',
            shp.StartDate,
@@ -103,7 +110,7 @@ BEGIN
            QuantityRegularPackages,
            QuantityOverDimensionedPackage,
            EstimatedWeight,
-           IdHubLogistics,
+           shp.IdHubLogistics,
            hub.HubAbbreviation,
            (CASE
                 WHEN dro.Sender_Town IS NOT NULL THEN
@@ -138,9 +145,7 @@ BEGIN
            dop.TimePlaId,
            --,css.[Name] StatusName
            srv.IdServiceManagement
-    FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
-        --LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] AS hub WITH (NOLOCK)
-        --    ON shp.IdHubLogistics = hub.IdHubLogistic
+    FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)       
         LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twnT WITH (NOLOCK)
             ON shp.TownshipId = twnT.IdTownship
         LEFT JOIN [DeliveryBackOffice].[dbo].[Province] prv WITH (NOLOCK)
@@ -148,8 +153,8 @@ BEGIN
         LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] dop WITH (NOLOCK)
             ON dop.IdHeaderRecolection = shp.SchedulePickupId
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder AS dro WITH (NOLOCK)
-            ON dro.Guide_Number = dop.GuideNumber
-               AND dro.Guide_Serie = dop.GuideSerie
+            ON dro.Guide_Serie = dop.GuideSerie
+               AND dro.Guide_Number = dop.GuideNumber
                AND dro.SalePipeLineId != 7
         LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twnTdro WITH (NOLOCK)
             ON dro.SenderIdTownship = twnTdro.IdTownship
@@ -172,8 +177,6 @@ BEGIN
         LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
             ON css.IdServiceStatus = srv.ServiceStatusId
     WHERE
-        --@datePickUp BETWEEN CONVERT(DATE, shp.StartDate) AND CONVERT( DATE, shp.EndDate)
-        --AND shp.AssigmentStatus IS NULL
         (NOT (
                  NOT (
                          @datePickUp_Internal >= CONVERT(DATE, shp.StartDate)
@@ -193,7 +196,8 @@ BEGIN
             @hubId = -1
             OR shp.IdHubLogistics = @hubId
         )
-        AND IIF( prv.IdCountry IS NULL, 'GT', prv.IdCountry) = @IdCountry;
+        AND prv.IdCountry = @IdCountry
+        --AND IIF( prv.IdCountry IS NULL, 'GT', prv.IdCountry) = @IdCountry;
 
     PRINT 'termina brain';
     PRINT CONVERT(VARCHAR, GETDATE(), 9);
@@ -230,6 +234,6 @@ BEGIN
              Address,
             
              SchedulePickupStatus
-  OPTION (OPTIMIZE FOR UNKNOWN);
+  --OPTION (OPTIMIZE FOR UNKNOWN);
 
 END;
