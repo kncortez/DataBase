@@ -32,7 +32,10 @@ BEGIN
             @AccountCOD NVARCHAR(30),
             @AccountZigi NVARCHAR(30);
 
-    SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')' 
+    DECLARE @StartDateClean DATE = CONVERT(DATE, @StartDate);
+    DECLARE @EndDateClean   DATE = CONVERT(DATE, @EndDate);
+
+    SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')'
     FROM ClosureAccount WITH (NOLOCK)
     WHERE Name = 'Cuenta Express Center' AND IdCountry = @IdCountry
 
@@ -156,11 +159,11 @@ BEGIN
         LEFT JOIN DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
             ON DOPD.GuideSerie = ACD.GuideSerie
             AND DOPD.GuideNumber = ACD.GuideNumber
-        WHERE CONVERT(DATE, ACH.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+        WHERE CONVERT(DATE, ACH.DateCreated) BETWEEN @StartDateClean AND @EndDateClean
             AND (@VisitPointId IS NULL OR @VisitPointId = '-1' OR ACH.VisitPoint IN (SELECT CodeOfReference FROM @tblVisitPointId))
             AND (@IdCierre IS NULL OR @IdCierre = '-1' OR ACH.IdAccountingClosuresHeader IN (SELECT CierreId FROM @tblIdCierre))
             AND (@IdAccount IS NULL OR @IdAccount = '-1' OR DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount))
-            AND IIF(VPC.CountryId IS NULL, 'GT', VPC.CountryId) = @IdCountry
+            AND VPC.CountryId = @IdCountry
         GROUP BY ACH.IdAccountingClosuresHeader, VPC.CountryId, CCC.CodeISO) X
     GROUP BY CurrencySymbol
 END

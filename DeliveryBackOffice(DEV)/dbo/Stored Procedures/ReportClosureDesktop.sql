@@ -209,7 +209,7 @@ BEGIN
     LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1 WITH(NOLOCK)
         ON REU1.UsrIdUser = ACHVP.UserId
     LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
-        ON ISNULL(VPC.CountryId, 'GT') = DC.Currency_IdCountry
+        ON VPC.CountryId = DC.Currency_IdCountry
        AND DC.DefaultPerCountry = 1
     LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
         ON CCC.IdCatCurrencyCOD = DC.IdCurrencyCOD
@@ -219,7 +219,7 @@ BEGIN
         AND COALESCE(DOPD.VisitPoint, ACH.VisitPoint) IN (SELECT CodeOfReference FROM @tblVisitPointId)
         AND DOPD.ShipmentCompleted = 1
         AND DOPD.AccountId > 0
-        AND IIF(VPC.CountryId IS NULL, 'GT', VPC.CountryId) = @IdCountry
+        AND VPC.CountryId = @IdCountry
     ORDER BY DOPD.DateCreated ASC
     OPTION (RECOMPILE);
 END
