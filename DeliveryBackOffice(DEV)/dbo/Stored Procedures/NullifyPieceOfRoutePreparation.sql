@@ -139,6 +139,41 @@ BEGIN
 
 						IF COALESCE(@@ROWCOUNT,0) > 0
 						SET @RModified = @RModified + 1 
+
+					--- Insertar registros en almacén (una fila por cada pieza anulada)
+				SET @RackPositionDefault = (SELECT RackPositionDefault FROM DeliveryBackOffice.dbo.CatStation 
+											WHERE idstation = @StationId);
+
+				INSERT INTO DeliveryBackOffice.dbo.Warehouse
+				(
+					Rack_Position,
+					Guide_Serie,
+					Guide_Number,
+					Dry,
+					Cold,
+					Active,
+					UserCreated,
+					DateCreated,
+					Guide_Piece,
+					StatusOrderId,
+					StationId
+				)VALUES	(
+						@RackPositionDefault,
+						@GuideSerie,
+						@GuideNumber,
+						@PieceCount,
+						0,
+						1,
+						@Token,
+						GETDATE(),
+						@PieceCount,
+						3, --EN INVENTARIO
+						@StationId
+						);					
+
+				SET @RModified = @RModified + COALESCE(@@ROWCOUNT, 0)
+
+
 	
 			END
 			ELSE
