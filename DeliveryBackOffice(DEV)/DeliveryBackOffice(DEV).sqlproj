@@ -1813,6 +1813,7 @@
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTNConfirmation.sql" />
     <Build Include="dbo\Stored Procedures\SaveServiceIncident.sql" />
     <Build Include="dbo\Stored Procedures\SaveDeliveryManifestAssistant.sql" />
+    <Build Include="dbo\Stored Procedures\SaveAutoPrepRouteReception.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
