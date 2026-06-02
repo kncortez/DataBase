@@ -11,6 +11,7 @@
 2024-10-23 | Historia/épica: ---         | Autor: Edelman Vásquez | Integración nuevo formato 4X4
 2025-04-21 | Historia/épica: ---         | Autor: Oscar Rodriguez | Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion
 2026-04-08 | Historia/épica: FDAPI-6026  | Autor: Mario Herrarte  | Se valida el estado Retenido para el campo priority
+2026-06-01 | Historia/épica: FDAPI-6153  | Autor: Brandon Pedroza | Se agrega validacion para obtener datos de bodega de devolucion
 
 =========================================== */
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
@@ -240,7 +241,7 @@ BEGIN
                 WHEN dev.IsLastMileReturn <> 1 THEN
                     CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, AlterDestiny.HeaderCode, ''))
                 ELSE
-                    CONVERT(VARCHAR, COALESCE(tws.HeaderCode, AlterOrigin.HeaderCode, ''))
+                    CONVERT(VARCHAR, COALESCE(BODEGA.SenderHeaderCode, AlterOrigin.HeaderCode, ''))
             END
            )                                                                                        'HeaderCodeTownship_TA'
          , CONCAT(
@@ -268,7 +269,7 @@ BEGIN
                 WHEN dev.IsLastMileReturn <> 1 THEN
                     REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ')
                 ELSE
-                    REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ')
+                    REPLACE(CONVERT(VARCHAR, COALESCE(BODEGA.SenderPhone, '')), '"', ' ')
             END
            )                                                                                        'phone_TA'
          , (CASE
@@ -459,7 +460,7 @@ BEGIN
          , CAST(ROUND(RH.WeightLimit, 0) AS INT)                                                    AS 'WeightOf'
          , (CASE
                 WHEN ISNULL(dev.IsLastMileReturn, 0) = 1 THEN
-                    ISNULL(DSC2.RouteCode, '')
+                    ISNULL(BODEGA.SenderRouteCode, '')
                 ELSE
                     ISNULL(DSC.RouteCode, '')
             END
@@ -585,6 +586,31 @@ BEGIN
         WHERE Guide_Serie = dev.Guide_Serie
               AND Guide_Number = dev.Guide_Number 
     ) AUX2
+    OUTER APPLY(
+    SELECT 
+             ISNULL(bod.Address, dev.Sender_Address)                 SenderAddress
+            ,ISNULL(bod.DescriptionOfClient, dev.Sender_FirstName)  SenderFirstName
+            ,ISNULL(bod.DescriptionCC, dev.Sender_LastName)         SenderLastName
+            ,ISNULL(bod.Phone, dev.Sender_Phone)                    SenderPhone
+            ,ISNULL(twbod.HeaderCode, tw.HeaderCode)                SenderHeaderCode
+            ,ISNULL(dscBod.RouteCode, dsc.RouteCode)                SenderRouteCode
+    --FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH (NOLOCK)
+    FROM [DeliveryBackOffice].[dbo].[VisitPointClient]  vpc WITH (NOLOCK)
+        --ON dev.Sender_ID = vpc.CodeOfReference
+    INNER JOIN [DeliveryBackOffice].[dbo].[Township] tw WITH (NOLOCK)
+        ON dev.SenderIdTownship = tw.IdTownship
+    INNER JOIN [DeliveryBackOffice].[dbo].[DumpServiceCoverage] dsc WITH(NOLOCK)
+        ON dsc.IdSettlement = dev.SenderIdSettlement
+    LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]  bod WITH (NOLOCK)
+        ON dev.IdCustomer = bod.CustomerID
+        AND bod.isReturnWarehouse = 1
+        AND dev.IsLastMileReturn = 1
+    LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twbod WITH (NOLOCK)
+        ON twbod.IdTownship =  bod.IdTownship
+    LEFT JOIN [DeliveryBackOffice].[dbo].[DumpServiceCoverage] dscBod WITH (NOLOCK)
+        ON dscBod.IdSettlement = bod.IdSettlement
+		WHERE vpc.CodeOfReference = dev.Sender_ID
+	) [BODEGA]
         OUTER APPLY
     (
         SELECT TOP 1
@@ -599,7 +625,7 @@ BEGIN
                                                                     CASE
                                                                         WHEN (ctm.IdCustomerType = 1) THEN
                                                                             --CORPORATIVO
-                                                                            COALESCE(dev.Sender_FirstName, '')
+                                                                            COALESCE(BODEGA.SenderFirstName, '')
                                                                         ELSE
                                                                             --INDIVIDUAL
                                                                             COALESCE(dev.Sender_FirstName, '')
@@ -617,8 +643,8 @@ BEGIN
                                                             END
                                                         ELSE
                                                             --NO IMPERSONADO
-                                                            CONVERT(VARCHAR, COALESCE(dev.Sender_FirstName, '')) + ' '
-                                                            + CONVERT(VARCHAR, COALESCE(dev.Sender_LastName, ''))
+                                                            CONVERT(VARCHAR, COALESCE(BODEGA.SenderFirstName, '')) + ' '
+                                                            + CONVERT(VARCHAR, COALESCE(BODEGA.SenderLastName, ''))
                                                     END
                                                    )
                                                  , 'json'
@@ -641,7 +667,7 @@ BEGIN
     ) NAME_TA
         OUTER APPLY
     (
-        SELECT REPLACE(dbo.fnt_String_Escape(CONVERT(VARCHAR(200), COALESCE(dev.Sender_Address, '')), 'json'), '"', ' ') ADDRES1_FA
+        SELECT REPLACE(dbo.fnt_String_Escape(CONVERT(VARCHAR(200), COALESCE(BODEGA.SenderAddress, '')), 'json'), '"', ' ') ADDRES1_FA
     ) ADDRES1_FA
         OUTER APPLY
     (
