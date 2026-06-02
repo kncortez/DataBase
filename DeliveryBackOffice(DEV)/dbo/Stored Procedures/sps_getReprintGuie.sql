@@ -10,8 +10,9 @@
 2024-07-24 | Historia/épica: ---        | Autor: Daniel Ramirez | Se ajusto la informacion de salida para que obtenga la moneda correcta
 2024-07-24 | Historia/épica: ---        | Autor: Daniel Ramirez | Se retiro el parametro de pais, y se toma el pais desde la guia
 2025-04-21 | Historia/épica: ---        | Autor: Oscar Rodriguez     | Se agrego validacion para manejo de codigo de ruta asociado a poblado de origen en devolucion
-2025-04-03 | Historia/épica: ---        | Autor: Walter Orozco | Cambiar CashOnDeliveryCurrency para soportar multipaís.
-2026-02-06 | Historia/épica: FDAPI-5517 | Autor: Tito García |
+2025-04-03 | Historia/épica: ---        | Autor: Walter Orozco       | Cambiar CashOnDeliveryCurrency para soportar multipaís.
+2026-02-06 | Historia/épica: FDAPI-5517 | Autor: Tito García         |
+2026-02-06 | Historia/épica: FDAPI-6156 | Autor: Brandon Pedroza     | Se agrega validacion para obtener datos de bodega de devolucion
 
 =========================================== */
 CREATE PROCEDURE [dbo].[sps_getReprintGuie]
@@ -20,6 +21,12 @@ CREATE PROCEDURE [dbo].[sps_getReprintGuie]
 AS
 BEGIN
     DECLARE @CountryThatConsults VARCHAR(2) = 'GT';
+    DECLARE @SenderAddress NVARCHAR(500),
+            @SenderFirstName NVARCHAR(500),
+            @SenderLastName NVARCHAR(500),
+            @SenderPhone NVARCHAR(20),
+            @SenderHeaderCode NVARCHAR(10),
+            @SenderRouteCode NVARCHAR(10);
 
     SET @CountryThatConsults =
     (
@@ -142,6 +149,30 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.Customer WITH (NOLOCK)
                 WHERE IdCustomer = @idCust
             );
+
+    SELECT  @SenderAddress    = ISNULL(bod.Address, do.Sender_Address),
+            @SenderFirstName  = ISNULL(bod.DescriptionOfClient, do.Sender_FirstName),
+            @SenderLastName   = ISNULL(bod.DescriptionCC, do.Sender_LastName),
+            @SenderPhone      = ISNULL(bod.Phone, do.Sender_Phone),
+            @SenderHeaderCode = ISNULL(twbod.HeaderCode, tw.HeaderCode),
+            @SenderRouteCode  = ISNULL(dscBod.RouteCode, dsc.RouteCode)
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH (NOLOCK)
+    INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]  vpc WITH (NOLOCK)
+        ON do.Sender_ID = vpc.CodeOfReference
+    INNER JOIN [DeliveryBackOffice].[dbo].[Township] tw WITH (NOLOCK)
+        ON do.SenderIdTownship = tw.IdTownship
+    INNER JOIN [DeliveryBackOffice].[dbo].[DumpServiceCoverage] dsc WITH(NOLOCK)
+        ON dsc.IdSettlement = do.SenderIdSettlement
+    LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]  bod WITH (NOLOCK)
+        ON do.IdCustomer = bod.CustomerID
+        AND bod.isReturnWarehouse = 1
+        AND do.IsLastMileReturn = 1
+    LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twbod WITH (NOLOCK)
+        ON twbod.IdTownship =  bod.IdTownship
+    LEFT JOIN [DeliveryBackOffice].[dbo].[DumpServiceCoverage] dscBod WITH (NOLOCK)
+        ON dscBod.IdSettlement = bod.IdSettlement
+    WHERE do.Guide_Serie = @Serie_Number AND do.Guide_Number = @Guide_Number
+
     DECLARE @SalesChannel BIGINT =
             (
                 SELECT SalePipeLineId
@@ -174,10 +205,19 @@ BEGIN
     BEGIN
         SET @ExpressName =
         (
-            SELECT IIF(vpc.CodeOfReference = 0, '', DescriptionOfClient)
+			SELECT 
+			      CASE
+                      WHEN ISNULL(bod.CodeOfReference, vpc.CodeOfReference) = 0 
+                         THEN ''
+                       ELSE ISNULL(bod.DescriptionOfClient, vpc.DescriptionOfClient)
+                  END
             FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                 INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = do.OriginSenderId
+				LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient bod WITH (NOLOCK)
+				    ON bod.CustomerID = do.IdCustomer
+					AND bod.isReturnWarehouse = 1
+					AND DO.IsLastMileReturn = 1
             WHERE Guide_Serie = @Serie_Number
                 AND Guide_Number = @Guide_Number
         );
@@ -188,10 +228,14 @@ BEGIN
         BEGIN
             SET @ExpressName =
             (
-                SELECT DescriptionOfClient
+                SELECT ISNULL(bod.DescriptionOfClient, vpc.DescriptionOfClient)
                 FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                     INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                         ON vpc.CodeOfReference = do.Sender_ID
+					LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient bod WITH (NOLOCK)
+					    ON bod.CustomerID = do.IdCustomer
+						AND bod.isReturnWarehouse = 1 
+						AND DO.IsLastMileReturn = 1
                 WHERE Guide_Serie = @Serie_Number
                     AND Guide_Number = @Guide_Number
             );
@@ -348,7 +392,7 @@ BEGIN
                                                       '"from_address":'
                                               END
                                              ) + ' {' + '"HeaderCodeTownship":"'
-                                     + CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) + '",' +
+                                     + CONVERT(VARCHAR, COALESCE(@SenderHeaderCode, '')) + '",' +
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
                                   '"name":"'
                                      + IIF(
@@ -372,7 +416,7 @@ BEGIN
                                                                                                  WHEN (@customerType = 1) THEN
                                                                                                      --CORPORATIVO
                                                                                                      COALESCE(
-                                                                                                                 dev.Sender_FirstName,
+                                                                                                                 @SenderFirstName,
                                                                                                                  ''
                                                                                                              )
                                                                                                  ELSE
@@ -404,14 +448,15 @@ BEGIN
                                                                                      CONVERT(
                                                                                                 VARCHAR,
                                                                                                 COALESCE(
-                                                                                                            dev.Sender_FirstName,
+
+                         @SenderFirstName, 
                                                                                                             ''
                                                                                                         )
                                                                                             ) + ' '
                                                                                      + CONVERT(
                                                                                                   VARCHAR,
                                                                                                   COALESCE(
-                                                                                                              dev.Sender_LastName,
+                                                                                                              @SenderLastName,
                                                                                                               ''
                                                                                                           )
                                                                                               )
@@ -422,13 +467,13 @@ BEGIN
                                                    '"',
                                                    ' '
                                                ) + '",' + '"phone":"'
-                                     + REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ') + '",'
+                                     + REPLACE(CONVERT(VARCHAR, COALESCE(@SenderPhone , '')), '"', ' ') + '",'
                                      + '"email":"' + CONVERT(VARCHAR, COALESCE(rgu.UsrEmail, '')) + '",' + '"address1":"'
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
                                                                            CONVERT(
                                                                                       VARCHAR(200),
-                                                                                      COALESCE(dev.Sender_Address, '')
+                                                                                      COALESCE(@SenderAddress, '')
                                                                                   ),
                                                                            'json'
                                                                        ),
@@ -487,14 +532,14 @@ BEGIN
                                                                                     CONVERT(
                                                                                                VARCHAR,
                                                                                                COALESCE(
-                                                                                                           dev.Sender_FirstName,
+                                                                                                           @SenderFirstName,
                                                                                                            ''
                                                                                                        )
                                                                                            ) + ' '
                                                                                     + CONVERT(
                                                                                                  VARCHAR,
                                                                                                  COALESCE(
-                                                                                                             dev.Sender_LastName,
+                                                                                                             @SenderLastName,
                                                                                                              ''
                                                                                                          )
                                                                                              )
@@ -698,7 +743,7 @@ BEGIN
                                      + ',' + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ','
                                      + '"Route_Code": "' + (CASE
                                                                 WHEN ISNULL([dev].[IsLastMileReturn], 0) = 1 THEN
-                                                                    ISNULL(CAST(DSC2.RouteCode AS VARCHAR), '') + '",'
+                                                                    ISNULL(CAST(@SenderRouteCode AS VARCHAR), '') + '",'
                                                                 ELSE
                                                                     ISNULL(CAST(DSC.RouteCode AS VARCHAR), '') + '",'
                                                             END
