@@ -115,8 +115,8 @@ BEGIN
                        MIN(dop.DateCreated) AS DateCreated
                 FROM [dbo].[DeliveryOrderPaymentDetail] AS dop WITH (NOLOCK)
                     LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] AS dor WITH (NOLOCK)
-                        ON dor.Guide_Number = dop.GuideNumber
-                           AND dor.Guide_Serie = dop.GuideSerie
+                        ON dor.Guide_Serie = dop.GuideSerie
+                           AND dor.Guide_Number = dop.GuideNumber
                 GROUP BY dop.IdHeaderRecolection
             ) AS smt
                 ON smt.IdHeaderRecolection = sp.SchedulePickupId

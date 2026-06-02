@@ -21,6 +21,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221216-222011]
     ON [dbo].[Township]([TownshipName] ASC);
@@ -143,3 +145,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'Township',
     @level2type = NULL,
     @level2name = NULL
+GO
+CREATE NONCLUSTERED INDEX [IDX_TownshipName_IdProvince]
+    ON [dbo].[Township]([TownshipName] ASC, [IdProvince] ASC);
+

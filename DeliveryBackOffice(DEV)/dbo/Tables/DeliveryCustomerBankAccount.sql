@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[DeliveryCustomerBankAccount] (
+﻿CREATE TABLE [dbo].[DeliveryCustomerBankAccount] (
     [DCBA_Id]              INT            NOT NULL,
     [DCBA_Bank_Id]         INT            NOT NULL,
     [DCBA_Customer_Id]     BIGINT         NOT NULL,
@@ -23,12 +23,19 @@ CREATE TABLE [dbo].[DeliveryCustomerBankAccount] (
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IDX_DCBA_ID_DCBA_ID_ESTADO]
-    ON [dbo].[DeliveryCustomerBankAccount]([DCBA_Id] ASC, [DCBA_Id_estado] ASC);
+
 
 
 GO
 CREATE NONCLUSTERED INDEX [idx_DCBA_Bank_Id_DCBA_Num_account_DCBA_Id_estado]
     ON [dbo].[DeliveryCustomerBankAccount]([DCBA_Bank_Id] ASC, [DCBA_Num_account] ASC, [DCBA_Id_estado] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DCBA_Id]
+    ON [dbo].[DeliveryCustomerBankAccount]([DCBA_Id] ASC)
+    INCLUDE([DCBA_Bank_Id]);
 

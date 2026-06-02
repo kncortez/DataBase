@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:      <Tito Garcia>
 -- Create date: <07-08-2024>
 -- Description: <Se remueve la guia del manifiesto original ya que se va a cambiar la fecha de la entrega>
@@ -21,11 +21,11 @@ BEGIN
 		INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK)
 			ON rp.IdRoutePreparation = rpd.RoutePreparationId
 		INNER JOIN DeliveryOrder DO WITH(NOLOCK)
-			ON rpd.Guide_Number = DO.Guide_number 
+			ON rpd.Guide_Serie = do.Guide_Serie AND rpd.Guide_Number = DO.Guide_number 
 		LEFT JOIN DeliveryOrderBySettlement dobs WITH(NOLOCK)
 			ON rp.DeliveryOrderBySettlementId = dobs.ID
-	WHERE DO.Guide_number = @GuideNumber
-		AND DO.Guide_Serie = @GuideSerie
+	WHERE DO.Guide_Serie = @GuideSerie
+		AND DO.Guide_number = @GuideNumber
 		AND rp.RowStatus = 1
 		AND rpd.IsCustomerReschedule = 0
 		AND rp.DeliveryOrderBySettlementId is not null

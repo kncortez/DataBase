@@ -23,7 +23,7 @@ SELECT CONCAT(do.Guide_Serie,do.Guide_Number) Guide,
 	   ISNULL(
 			  (
 			   SELECT ISNULL(vpc.DescriptionOfClient, '')
-			   FROM DeliveryBackOffice.dbo.VisitPointClient vpc
+			   FROM DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
 			   WHERE vpc.StatusClient = @StatusClient
 			   AND vpc.CountryId = @CountryId
 			   AND vpc.IdKindOfVPClient = @IdKindOfVPClient
@@ -31,9 +31,8 @@ SELECT CONCAT(do.Guide_Serie,do.Guide_Number) Guide,
 			  ), ''
 			 ) ReceiverIdName,
 	   ISNULL(do.Sender_ID, 0) SenderId
-FROM DeliveryBackOffice.dbo.DeliveryOrder do
+FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 WHERE CONCAT(do.Guide_Serie,do.Guide_Number) = @Guide
 AND do.StatusOrderId NOT IN (5, 7, 14, 22, 23);
 
 END
-

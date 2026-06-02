@@ -88,8 +88,8 @@ BEGIN
 					  AND ISNULL(vpc.CountryId, 'GT')= @IdCountry
 				UNION
 				SELECT A2.[CodeOfReference], CONCAT(A1.[Description] , ' ' , A2.[DescriptionOfClient])
-				FROM [DeliveryBackOffice].[dbo].[Customer] A1
-					INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] A2
+				FROM [DeliveryBackOffice].[dbo].[Customer] A1 WITH (NOLOCK)
+					INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] A2 WITH (NOLOCK)
 					ON A2.CustomerID = A1.IdCustomer
 				WHERE	  IdCustomerType = 2 
 					AND A2.StatusClient = 1
@@ -111,8 +111,8 @@ BEGIN
 						  AND ISNULL(vpc.CountryId, 'GT')= @IdCountry
 					UNION
 					SELECT A2.[CodeOfReference], CONCAT(A1.[Description] , ' ' , A2.[DescriptionOfClient])
-					FROM [DeliveryBackOffice].[dbo].[Customer] A1
-						INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] A2
+					FROM [DeliveryBackOffice].[dbo].[Customer] A1 WITH (NOLOCK)
+						INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] A2 WITH (NOLOCK)
 						ON A2.CustomerID = A1.IdCustomer
 					WHERE	  IdCustomerType = 2 
 						AND A2.StatusClient = 1

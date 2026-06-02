@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[InvoiceDataFixHN2] (
-    [Id]                       INT           IDENTITY (1, 1) NOT NULL,
+    [Id]                       INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [Id_row]                   BIGINT        NOT NULL,
     [inv_pk_id]                BIGINT        NOT NULL,
     [Id_Lote_old]              INT           NOT NULL,

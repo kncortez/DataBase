@@ -19,7 +19,7 @@ do.TypeService AS Tipo_Servicio,
 (SELECT [dbo].[fn_get_segment](do.Guide_Serie, do.Guide_Number)) AS Tarifa_Aplicada
 		FROM DeliveryOrder do with (nolock)
 		LEFT JOIN DeliveryOrderPiece dop with(nolock)
-		ON do.Guide_Number = dop.GuideNumber
+		ON do.Guide_Serie = dop.GuideSerie AND do.Guide_Number = dop.GuideNumber
 		WHERE do.Sender_ID = 235119
 		 AND CAST(do.DateCreated AS DATE) >= @StartDate
          AND CAST(do.DateCreated AS DATE) <= @EndDate

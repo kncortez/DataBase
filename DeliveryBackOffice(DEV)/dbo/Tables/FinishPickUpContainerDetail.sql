@@ -1,25 +1,24 @@
 
-CREATE TABLE [dbo].[FinishPickUpContainerDetail](
-	[IdFinishPickUpContainerDetail] [int] IDENTITY(1,1) NOT NULL,
-	[SchedulePickupId] [bigint] NULL,
-	[Container] [nvarchar](50) NOT NULL,
-	[Rowstatus] [bit] NOT NULL,
-	[TokenCreated] [nvarchar](150) NOT NULL,
-	[DateCreated] [datetime] NOT NULL,
-	[TokenUpdate] [nvarchar](150) NULL,
-	[DateUpdate] [nvarchar](150) NULL,
- CONSTRAINT [PK_FinishPickUpContainer] PRIMARY KEY CLUSTERED 
-(
-	[IdFinishPickUpContainerDetail] ASC
-)
-) ON [PRIMARY]
+CREATE TABLE [dbo].[FinishPickUpContainerDetail] (
+    [IdFinishPickUpContainerDetail] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [SchedulePickupId]              BIGINT         NULL,
+    [Container]                     NVARCHAR (50)  NOT NULL,
+    [Rowstatus]                     BIT            NOT NULL,
+    [TokenCreated]                  NVARCHAR (150) NOT NULL,
+    [DateCreated]                   DATETIME       NOT NULL,
+    [TokenUpdate]                   NVARCHAR (150) NULL,
+    [DateUpdate]                    NVARCHAR (150) NULL,
+    CONSTRAINT [PK_FinishPickUpContainer] PRIMARY KEY CLUSTERED ([IdFinishPickUpContainerDetail] ASC),
+    CONSTRAINT [FK_FinishPickUpContainerDetail_PickupHeader] FOREIGN KEY ([SchedulePickupId]) REFERENCES [dbo].[FinishPickUpHeader] ([SchedulePickupId])
+);
+
+
 GO
 
-ALTER TABLE [dbo].[FinishPickUpContainerDetail]  WITH CHECK ADD  CONSTRAINT [FK_FinishPickUpContainerDetail_PickupHeader] FOREIGN KEY([SchedulePickupId])
-REFERENCES [dbo].[FinishPickUpHeader] ([SchedulePickupId])
+
 GO
 
-ALTER TABLE [dbo].[FinishPickUpContainerDetail] CHECK CONSTRAINT [FK_FinishPickUpContainerDetail_PickupHeader]
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Llave primaria de tabla que almacena contenedor de guías para recolección' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'FinishPickUpContainerDetail', @level2type=N'COLUMN',@level2name=N'IdFinishPickUpContainerDetail'
@@ -48,6 +47,6 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla para guardar los contenedores de las guías en recolección POD.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'FinishPickUpContainerDetail'
 GO
-
-
+CREATE NONCLUSTERED INDEX [IX_FinishPickUpContainerDetail_Pickup_Container]
+    ON [dbo].[FinishPickUpContainerDetail]([SchedulePickupId] ASC, [Container] ASC);
 

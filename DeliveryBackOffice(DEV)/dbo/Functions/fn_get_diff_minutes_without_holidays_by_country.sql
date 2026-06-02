@@ -62,7 +62,10 @@ BEGIN
     FROM CTE
     --WHERE DATENAME(weekday ,date_list) IN ('Sunday');
     --WHERE DATEPART(WEEKDAY, date_list) IN ( 1 )
-	WHERE CAST(CTE.date_list AS DATE) IN (SELECT nlc.NoLaborDate FROM DeliveryBackOffice.dbo.NoLaborCalendar nlc WITH(NOLOCK) WHERE nlc.RowStatus = 1 and nlc.IdCountry = @IdCountry)
+	WHERE 
+    DATENAME(WEEKDAY, CTE.date_list) = 'Sunday'
+    OR
+    CAST(CTE.date_list AS DATE) IN (SELECT nlc.NoLaborDate FROM DeliveryBackOffice.dbo.NoLaborCalendar nlc WITH(NOLOCK) WHERE nlc.RowStatus = 1 and nlc.IdCountry = @IdCountry)
 	OPTION (MAXRECURSION 365); -- maximum of days between StartDate and EndDate
     /*In the where clause at last we are checking 
 	each day from the list whether it is in Holiday list or not*/

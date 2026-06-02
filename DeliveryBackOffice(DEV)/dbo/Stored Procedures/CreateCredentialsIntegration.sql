@@ -1,10 +1,11 @@
 ﻿
-CREATE PROCEDURE CreateCredentialsIntegration
+CREATE PROCEDURE [dbo].[CreateCredentialsIntegration]
 @Url NVARCHAR (100) = '', --url de pagina web si tuviera
 @Name NVARCHAR (100), --nombre del cliente
 @CodApp NVARCHAR (50), 
 @KeyEncrypt NVARCHAR (100), --Contraseña encriptada
 @IdCustomer INT, --Id customer del cliente,
+@IdCountry VARCHAR(50) = '', --Id de País
 @Token NVARCHAR (50)
 
 AS
@@ -35,7 +36,7 @@ AS
 				   (@Url --esta url debe de venir en el correo de solicitud
 				   ,@Name --nombre del negocio 
 				   ,'FALSE'
-				   ,'GT'
+				   ,@IdCountry
 				   ,'forza.systems'
 				   ,''
 				   ,''
@@ -53,3 +54,8 @@ AS
 				   ,@IdCustomer)--IdCustomer sacado de tabla Customer
 
 	END
+GO
+GRANT ALTER
+    ON OBJECT::[dbo].[CreateCredentialsIntegration] TO [cvaldes]
+    AS [dbo];
+

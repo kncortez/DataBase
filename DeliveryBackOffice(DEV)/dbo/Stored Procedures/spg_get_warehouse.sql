@@ -81,7 +81,7 @@ BEGIN
 	@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide',
 	@RackPosition AS 'RackPosition'
 	FROM DeliveryOrder WITH(NOLOCK)
-	WHERE Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie 
+	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 	AND ISNULL(SenderCountryId,'GT')<>@IdCountry AND ISNULL(GuideType,'DOM')='DOM'
 
 END

@@ -79,6 +79,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se almacena el motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'Comments';
 
@@ -167,19 +169,15 @@ CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideSerie_GuideNumber_CreditAccountId
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_CommissionDate]
-    ON [dbo].[BatchDetailCOD]([CommissionDate] ASC)
-    INCLUDE([CommissionId]);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_CatTransactionTypeCODId]
-    ON [dbo].[BatchDetailCOD]([CatTransactionTypeCODId] ASC);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_CatDebitAccountCODId]
-    ON [dbo].[BatchDetailCOD]([CatDebitAccountCODId] ASC);
+
 
 
 GO
@@ -189,8 +187,7 @@ CREATE NONCLUSTERED INDEX [idx_CatConceptCODId_Excluded]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_CatConceptCODId]
-    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC);
+
 
 
 GO
@@ -205,8 +202,7 @@ CREATE NONCLUSTERED INDEX [idx_BatchCODId]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber]
-    ON [dbo].[BatchDetailCOD]([AuthorizationNumber] ASC);
+
 
 
 GO
@@ -214,9 +210,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber_include]
-    ON [dbo].[BatchDetailCOD]([AuthorizationNumber] ASC)
-    INCLUDE([GuideSerie], [GuideNumber], [Amount], [Commission], [BankId], [AuthorizationDate], [BankName], [AccountNumber], [CODCommissionPercentage]);
+
 
 
 GO
@@ -226,8 +220,7 @@ CREATE NONCLUSTERED INDEX [idx_bankid_authorizationnumber]
 
 
 GO
-CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221216-222500]
-    ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC, [CatConceptCODId] ASC);
+
 
 
 GO
@@ -263,20 +256,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'comisi�n 
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_powerbi_only]
-    ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC, [CatConceptCODId] ASC)
-    INCLUDE([CODCommissionPercentage]);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_CatConceptCODId_RowStatus]
-    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC, [RowStatus] ASC);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_CatConceptCODId_include]
-    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC)
-    INCLUDE([GuideSerie], [GuideNumber], [Amount], [Commission], [AuthorizationNumber], [AuthorizationDate], [BankName], [AccountNumber], [CODCommissionPercentage]);
+
 
 
 GO
@@ -295,4 +283,39 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_CatConceptCODId_Excluded_CollectId_INCLUDE]
     ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC, [Excluded] ASC, [CollectId] ASC)
     INCLUDE([GuideSerie], [GuideNumber], [CreditDate], [CommissionNotified]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_BatchDetailCOD_GuideFiltered]
+    ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC, [Excluded] ASC, [CatConceptCODId] ASC)
+    INCLUDE([Amount]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_BatchDetailCOD_Guide_Bank_Auth]
+    ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC, [BankId] ASC)
+    INCLUDE([AuthorizationNumber], [IdBatchDetailCOD], [AuthorizationDate]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_CatConceptCODId_Consolidated]
+    ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC, [CatConceptCODId] ASC)
+    INCLUDE([CODCommissionPercentage]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CreditDate]
+    ON [dbo].[BatchDetailCOD]([CreditDate] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatConceptCODId_Consolidated]
+    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [Amount], [Commission], [AuthorizationNumber], [AuthorizationDate], [BankName], [AccountNumber], [CODCommissionPercentage]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AuthorizationNumber_Consolidated]
+    ON [dbo].[BatchDetailCOD]([AuthorizationNumber] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [Amount], [Commission], [BankId], [AuthorizationDate], [BankName], [AccountNumber], [CODCommissionPercentage]);
 

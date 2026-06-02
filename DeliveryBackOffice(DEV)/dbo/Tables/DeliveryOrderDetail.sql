@@ -11,13 +11,17 @@
     [RowStatus]           BIT            DEFAULT ((1)) NOT NULL,
     [DeliveryAttemptId]   BIGINT         NULL,
     [SystemOrigin]        INT            NULL,
-    [StationId]           INT            NULL, 
+    [StationId]           INT            NULL,
+    [RowID]               INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    CONSTRAINT [PK_DeliveryOrderDetail] PRIMARY KEY NONCLUSTERED ([RowID] ASC),
+    CONSTRAINT [FK_DeliveryOrderDetail_CatStation] FOREIGN KEY ([StationId]) REFERENCES [dbo].[CatStation] ([IdStation]),
     CONSTRAINT [FK_DeliveryOrderDetail_DeliveryAttempt] FOREIGN KEY ([DeliveryAttemptId]) REFERENCES [dbo].[DeliveryAttempt] ([ID]),
     CONSTRAINT [FK_DeliveryOrderDetail_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_DeliveryOrderDetail_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId]),
-    CONSTRAINT [FK_DeliveryOrderDetail_SystemOrigin] FOREIGN KEY ([SystemOrigin]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
-    CONSTRAINT [FK_DeliveryOrderDetail_CatStation] FOREIGN KEY ([StationId]) REFERENCES [dbo].[CatStation] ([IdStation])
+    CONSTRAINT [FK_DeliveryOrderDetail_SystemOrigin] FOREIGN KEY ([SystemOrigin]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 
 
 
@@ -82,8 +86,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Reason for 
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_DeliveryOrderDetailRLDReport]
-    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreated] ASC);
+
 
 
 GO
@@ -104,14 +107,11 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_QualityControl]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_DateCreatedInSystem_INCLUDE]
-    ON [dbo].[DeliveryOrderDetail]([DateCreatedInSystem] ASC, [StatusOrderId] ASC)
-    INCLUDE([RowStatus]);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_UserCreated]
-    ON [dbo].[DeliveryOrderDetail]([UserCreated] ASC);
+
 
 
 GO
@@ -129,9 +129,7 @@ CREATE NONCLUSTERED INDEX [idx_StatusOrderId_DateCreated]
 	INCLUDE ([Guide_Serie],[Guide_Number],DateCreatedInSystem,SystemOrigin,DeliveryAttemptId,UserCreated);
 
 GO
-CREATE NONCLUSTERED INDEX [idx_StatusOrderId_DateCreatedInSystem]
-    ON [dbo].[DeliveryOrderDetail]([StatusOrderId] ASC, [DateCreatedInSystem] ASC)
-    INCLUDE([RowStatus]);
+
 
 
 GO
@@ -143,3 +141,30 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'DeliveryOrderDetail',
     @level2type = N'COLUMN',
     @level2name = N'StationId'
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrderDetail_Guide_Status]
+    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC)
+    INCLUDE([DateCreated]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_StatusOrderId_DateCreatedInSystem_Consolidated]
+    ON [dbo].[DeliveryOrderDetail]([StatusOrderId] ASC, [DateCreatedInSystem] ASC)
+    INCLUDE([RowStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_DeliveryAttemptId_SystemOrigin_StatusOrderId_INCLUDE]
+    ON [dbo].[DeliveryOrderDetail]([RowStatus] ASC, [DeliveryAttemptId] ASC, [SystemOrigin] ASC, [StatusOrderId] ASC)
+    INCLUDE([UserCreated], [DateCreated], [DateCreatedInSystem]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DeliveryOrderDetail_Guide_Status_Date_Consolidated]
+    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreated] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DateCreated]
+    ON [dbo].[DeliveryOrderDetail]([DateCreated] ASC);
+
