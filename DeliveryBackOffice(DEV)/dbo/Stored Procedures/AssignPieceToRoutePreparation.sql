@@ -128,7 +128,29 @@ BEGIN
         ------FDD-949--proceso de generación de datos de servicio marcados como devolución
         ------------------------------------------------------------------------------------
 
+        --- Se obtiene el tipo de ruta debido a la nueva columna IsAutoFinished de la RoutePreparation
+		--- esta indica si una ruta con preparacion automatica ya fue finalizada
+		--- aplica solo para rutas de ultima milla
+		DECLARE @IsFinished BIT = 1;
+		DECLARE @RouteTypeID INT = 0;
+		DECLARE @LastMileRouteTypeID INT;
+		
+		SELECT @RouteTypeID = RT.IdTypeRoute
+		FROM DeliveryBackOffice.dbo.CatRoute R WITH (NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.CatTypeRoute RT WITH (NOLOCK)
+			ON RT.IdTypeRoute = R.IdTypeRoute
+		WHERE R.IdRoute = @IdRoute;
 
+		-- LAST MILE ROUTE TYPE ID = 4
+		SET @LastMileRouteTypeID = (
+			SELECT TOP 1 CTR.IdTypeRoute
+            FROM DeliveryBackOffice.dbo.CatTypeRoute CTR WITH (NOLOCK)
+            WHERE CTR.Name = 'Ultima Milla');
+
+		IF @RouteTypeID = @LastMileRouteTypeID
+		BEGIN
+			SET @IsFinished = 0
+		END
 
         --- Verificar si existe la preparación de ruta y si ya fue despachada
         SELECT TOP 1
@@ -160,11 +182,12 @@ BEGIN
                 [TokenCreated],
                 [DateCreated],
                 [TokenUpdated],
-                [DateUpdated]
+                [DateUpdated],
+				[IsAutoFinished]
             )
             VALUES
             (@IdRoute, @Date, 1, IIF(@GuidePieceType = 1, 1, 0), IIF(@GuidePieceType = 0, 1, 0), 1, @Token, GETDATE(),
-             NULL, NULL);
+             NULL, NULL, @IsFinished);
 
             SET @IdRoutePreparation = SCOPE_IDENTITY();
 
@@ -180,7 +203,8 @@ BEGIN
                 PiecesDry = PiecesDry + IIF(@GuidePieceType = 1, 1, 0),
                 PiecesCold = PiecesCold + IIF(@GuidePieceType = 0, 1, 0),
                 TokenUpdated = @Token,
-                DateUpdated = GETDATE()
+                DateUpdated = GETDATE(),
+				IsAutoFinished = @IsFinished
             WHERE IdRoutePreparation = @IdRoutePreparation;
         END;
 
