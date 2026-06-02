@@ -1564,6 +1564,7 @@
     <Build Include="dbo\Stored Procedures\ListofPaidGuidesthatdonotHaveanInvoice.sql" />
     <Build Include="dbo\Stored Procedures\InsertSundaysInRange.sql" />
     <Build Include="dbo\Stored Procedures\IndividualCustomerCODAmountsData.sql" />
+    <Build Include="dbo\Stored Procedures\IsAutoPrepRouteReceptionFinished.sql" />
     <Build Include="dbo\Stored Procedures\HelloWorldprocedure.sql" />
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue.sql" />
@@ -1813,6 +1814,7 @@
     <Build Include="dbo\Stored Procedures\sphwGetGuidesByTNConfirmation.sql" />
     <Build Include="dbo\Stored Procedures\SaveServiceIncident.sql" />
     <Build Include="dbo\Stored Procedures\SaveDeliveryManifestAssistant.sql" />
+    <Build Include="dbo\Stored Procedures\SaveAutoPrepRouteReception.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
