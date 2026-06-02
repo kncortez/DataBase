@@ -16,6 +16,7 @@
     [RowStatus]                            BIT             NOT NULL,
     [TokenCreated]                         NVARCHAR (50)   NOT NULL,
     [DateCreated]                          DATETIME        NOT NULL,
+    [ClosureDate]                          DATETIME        NULL,
     [TokenUpdated]                         NVARCHAR (50)   NULL,
     [DateUpdated]                          DATETIME        NULL,
     [TotalAmountCODCash]                   DECIMAL (18, 5) DEFAULT ((0)) NOT NULL,
@@ -111,6 +112,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario de 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha en la que se crear registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountingClosuresHeader', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha lógica del cierre (día que se está cerrando)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountingClosuresHeader', @level2type = N'COLUMN', @level2name = N'ClosureDate';
 
 
 GO
