@@ -1564,6 +1564,7 @@
     <Build Include="dbo\Stored Procedures\ListofPaidGuidesthatdonotHaveanInvoice.sql" />
     <Build Include="dbo\Stored Procedures\InsertSundaysInRange.sql" />
     <Build Include="dbo\Stored Procedures\IndividualCustomerCODAmountsData.sql" />
+    <Build Include="dbo\Stored Procedures\IsAutoPrepRouteReceptionFinished.sql" />
     <Build Include="dbo\Stored Procedures\HelloWorldprocedure.sql" />
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue.sql" />

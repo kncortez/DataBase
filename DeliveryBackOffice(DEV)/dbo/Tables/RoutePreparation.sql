@@ -13,6 +13,7 @@
     [DateUpdated]                 DATETIME      NULL,
     [CatVehicleId]                INT           NULL,
     [IsSimpliRoute]               BIT           NULL,
+    [IsAutoFinished]              BIT           NOT NULL DEFAULT 0,
     CONSTRAINT [PK_RoutePreparation_IdRoutePreparation] PRIMARY KEY CLUSTERED ([IdRoutePreparation] ASC),
     CONSTRAINT [FK_RoutePreparation_CatRouteId] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
     CONSTRAINT [FK_RoutePreparation_CatVehicleId] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle]),
@@ -91,6 +92,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la ta
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la preparación de ruta fue generada desde Simpliroute.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparation', @level2type = N'COLUMN', @level2name = N'IsSimpliRoute';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si la recepción de la ruta de preparación automática ya fue finalizada.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparation', @level2type = N'COLUMN', @level2name = N'IsAutoFinished';
 
 GO
 CREATE NONCLUSTERED INDEX [IDX_CatRouteId_DateRoutePreparation_RowStatus]
