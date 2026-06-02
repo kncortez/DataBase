@@ -1,29 +1,25 @@
-﻿-- =============================================
--- Author:		<Oscar Morales>
--- Create date: <2023-03-04>
--- Description:	<Sp para el detalle del reporte de cierres en desktop>
--- =============================================
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-07-08>
--- Description:	<Se agrega el simbolo de la moneda, segun pais de origen, para el detalle del reporte>
--- =============================================
--- Author:		<Walter Orozco>
--- Create date: <10/10/2025>
--- Description:	<Se agregan envios internacionales.>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-11-04>
--- Description:	<Se agrega método de paago Zigi>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2026-03-03>
--- Description:	<Optimización: mejor manejo de rango de fechas, eliminación de OR en WHERE, OUTER APPLY sin OR para invoiceHeader>
--- =============================================
--- Author:		<Keneth Hoffens>
--- Create date: <2026-05-28>
--- Description:	<Se agrega parametro @IdCountry para filtrar cierres por el pais del usuario logeado, y se reemplaza el CurrencySymbol quemado (CASE GT/HNL) por lookup dinamico contra DeliveryCurrency + CatCurrencyCOD para soportar GT/HN/SV.>
--- =============================================
+﻿/* =========================================
+   SP:         [dbo].[ReportClosureDesktop]
+   Propósito:  Detalle del reporte de cierres en desktop.
+   Autor:      Oscar Morales
+   Historia:
+   Fecha:      2023-03-04
+========================================= */
+
+/* === CHANGELOG ============================
+2026-05-28 | Historia/épica: FDAPI-6052 | Autor: Keneth Hoffens   |
+-----
+2026-03-03 | Historia/épica:            | Autor: Bilkar Morataya  |
+-----
+2025-11-04 | Historia/épica:            | Autor: Bilkar Morataya  |
+-----
+2025-10-10 | Historia/épica:            | Autor: Walter Orozco    |
+-----
+2024-07-08 | Historia/épica:            | Autor: Cristian Suazo   |
+-----
+2023-03-04 | Historia/épica:            | Autor: Oscar Morales    |
+-----
+========================================= */
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -152,7 +148,7 @@ BEGIN
         ISNULL(ACHVP.ClosurerPOS, '') AS CierrePOS
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
     -- LEFT JOINs para los casos donde no hay DeliveryOrder
-    LEFT JOIN dbo.DeliveryOrder DOR WITH(NOLOCK)
+    LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH(NOLOCK)
         ON DOR.Guide_Serie = DOPD.GuideSerie
         AND DOR.Guide_Number = DOPD.GuideNumber
         AND DOR.StatusOrderId <> 7
@@ -191,7 +187,7 @@ BEGIN
         ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
     LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
         ON VPC.CodeOfReference = COALESCE(DOPD.VisitPoint, ACH.VisitPoint)
-    INNER JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
+    INNER JOIN DeliveryBackOffice.dbo.CatTypeServiceClosure CTS WITH(NOLOCK)
         ON CTS.IdTypeService = DOPD.TypeServiceId
         AND CTS.IdTypeService <> 23 -- Excluir tipo 23
     LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
@@ -204,7 +200,7 @@ BEGIN
         ON costd.IdCost = cost.IdCost
         AND costd.Amount > 0
         AND (DOPD.TypeofInOutMoneyId IN (6, 10) AND costd.Voucher != '')
-    LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH(NOLOCK)
+    LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint ACHVP WITH(NOLOCK)
         ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
     LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1 WITH(NOLOCK)
         ON REU1.UsrIdUser = ACHVP.UserId

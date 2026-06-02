@@ -1,24 +1,23 @@
-﻿-- =============================================
--- Author:		<Oscar Morales>
--- Create date: <2022-03-04>
--- Description:	<SP para mostrar totales en reporte de cierres en desktop>
--- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-07-08>
--- Description:	<Se agrega el simbolo de la moneda, segun pais de origen, para encabezado del reporte>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-11-04>
--- Description:	<Se agrega el método de pago Zigi en los totales del reporte de cierres en desktop>
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2026-03-03>
--- Description:	<Se corrige cálculo de COD usando subconsultas para evitar mezclar efectivo con Zigi>
--- =============================================
--- Author:		<Keneth Hoffens>
--- Create date: <2026-05-28>
--- Description:	<Se agrega parametro @IdCountry para filtrar los totales por el pais del usuario logeado>
--- =============================================
+﻿/* =========================================
+   SP:         [dbo].[ReportClosureTotalDesktop]
+   Propósito:  Totales del reporte de cierres en desktop.
+   Autor:      Oscar Morales
+   Historia:
+   Fecha:      2022-03-04
+========================================= */
+
+/* === CHANGELOG ============================
+2026-05-28 | Historia/épica: FDAPI-6052 | Autor: Keneth Hoffens   |
+-----
+2026-03-03 | Historia/épica:            | Autor: Bilkar Morataya  |
+-----
+2025-11-04 | Historia/épica:            | Autor: Bilkar Morataya  |
+-----
+2024-07-08 | Historia/épica:            | Autor: Cristian Suazo   |
+-----
+2022-03-04 | Historia/épica:            | Autor: Oscar Morales    |
+-----
+========================================= */
 CREATE PROCEDURE  [dbo].[ReportClosureTotalDesktop]
     @StartDate datetime = NULL,
     @EndDate datetime = NULL,
@@ -36,15 +35,15 @@ BEGIN
     DECLARE @EndDateClean   DATE = CONVERT(DATE, @EndDate);
 
     SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')'
-    FROM ClosureAccount WITH (NOLOCK)
+    FROM DeliveryBackOffice.dbo.ClosureAccount WITH (NOLOCK)
     WHERE Name = 'Cuenta Express Center' AND IdCountry = @IdCountry
 
     SELECT @AccountCOD = Name +' '+ '(' +AccountNumber +')' 
-    FROM ClosureAccount WITH (NOLOCK)
+    FROM DeliveryBackOffice.dbo.ClosureAccount WITH (NOLOCK)
     WHERE Name = 'Cuenta Área COD' AND IdCountry = @IdCountry
 
     SELECT @AccountZigi = Name +' '+ '(' +AccountNumber +')' 
-    FROM ClosureAccount WITH (NOLOCK)
+    FROM DeliveryBackOffice.dbo.ClosureAccount WITH (NOLOCK)
     WHERE Name = 'Cuenta Zigi' AND IdCountry = @IdCountry
 
     DECLARE @tblVisitPointId TABLE(
@@ -124,15 +123,15 @@ BEGIN
                             ACH.TotalAmountFacturaZigi + ISNULL(CODZigiCalc.TotalCODZigi, 0)), 0) TotalGeneral
            -- FIN MODIFICACIÓN
            ,CCC.CodeISO AS CurrencySymbol
-        FROM dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
-        LEFT JOIN dbo.VisitPointClient VPC WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
             ON VPC.CodeOfReference = ACH.VisitPoint
         -- Subconsulta para COD Cash (evitar duplicados):
         LEFT JOIN (
             SELECT ACD.AccountingClosuresHeaderId,
                    SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 1 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODCash
-            FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-            LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
                 ON DOPT.GuideSerie = ACD.GuideSerie
                 AND DOPT.GuideNumber = ACD.GuideNumber
                 AND DOPT.DopId = ACD.DopId
@@ -142,8 +141,8 @@ BEGIN
         LEFT JOIN (
             SELECT ACD.AccountingClosuresHeaderId,
                    SUM(CASE WHEN DOPT.TypeofInOutMoneyId = 10 THEN DOPT.CODAmountProcess ELSE 0 END) AS TotalCODZigi
-            FROM AccountingClosuresDetail ACD WITH (NOLOCK)
-            LEFT JOIN DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
                 ON DOPT.GuideSerie = ACD.GuideSerie
                 AND DOPT.GuideNumber = ACD.GuideNumber
                 AND DOPT.DopId = ACD.DopId
@@ -154,9 +153,9 @@ BEGIN
             AND DC.DefaultPerCountry = 1
         LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
             ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
-        LEFT JOIN AccountingClosuresDetail ACD WITH(NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
             ON ACD.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-        LEFT JOIN DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
             ON DOPD.GuideSerie = ACD.GuideSerie
             AND DOPD.GuideNumber = ACD.GuideNumber
         WHERE CONVERT(DATE, ACH.DateCreated) BETWEEN @StartDateClean AND @EndDateClean
