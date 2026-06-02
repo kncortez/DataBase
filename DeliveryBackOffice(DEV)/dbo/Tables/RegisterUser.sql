@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[RegisterUser] (
+﻿ALTER TABLE [dbo].[RegisterUser] (
     [UsrIdUser]               BIGINT         IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [UsrIdPerson]             BIGINT         NOT NULL,
     [UsrNickName]             VARCHAR (100)  NOT NULL,
@@ -6,6 +6,8 @@
     [UsrAvatar]               VARCHAR (200)  NULL,
     [UsrLastPassword]         VARCHAR (200)  NOT NULL,
     [UsrPasswordExpiration]   DATE           NOT NULL,
+    [UsrPasswordLastUpdate]   DATETIME       NULL,
+    [UsrPasswordUpdatedBy]    INT            NULL,
     [UsrLang]                 VARCHAR (2)    NULL,
     [UsrDeviceType]           VARCHAR (50)   NULL,
     [UsrCurrency]             VARCHAR (10)   NULL,
@@ -149,6 +151,24 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'RegisterUser',
     @level2type = N'COLUMN',
     @level2name = N'UsrDeviceType'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de última actualización de contraseña',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrPasswordLastUpdate'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Usuario que realizó la última actualización de contraseña',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrPasswordUpdatedBy'
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Abreviatura de idioma(ES)',

@@ -1,18 +1,19 @@
-﻿-- =============================================
--- Author:		<Cristian Suazo>
--- Create date: <2024-07-02>
--- Description:	<Se agrega el filtro por pais y el nombre de las cuentas asignadas por pais>
--- =============================================
--- =============================================
--- Author:		<Walter Orozco>
--- Create date: <2025-04-07>
--- Description:	<Mejoras de multipaís en moneda para SV.>
--- =============================================
--- =============================================
--- Author:		<Bilkar Morataya>
--- Create date: <2025-11-03>
--- Description:	<Se agregan elementos para el método de pago de Zigi>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[GetDataForClosure]
+   Propósito: Se agrega el filtro por pais y el nombre de las cuentas asignadas por pais
+   Autor:     Cristian Suazo
+   Historia:
+   Fecha:     2024-02-07
+============================================
+=== CHANGELOG ================================
+2026-04-20 | Historia/épica: <FDAPI-5784> | Autor: Keila Cortéz |
+-----
+2025-11-03 | Description: <Se agregan elementos para el método de pago de Zigi> | Autor: Bilkar Morataya |
+-----
+2025-04-07 | Description: <Mejoras de multipaís en moneda para SV.> | Autor: Walter Orozco |
+-----
+2024-07-02 | Description: <Se agrega el filtro por pais y el nombre de las cuentas asignadas por pais> | Autor: Cristian Suazo |
+============================================ */
 CREATE PROCEDURE [dbo].[GetDataForClosure]
     @VisitPointId INT = 4246,
     @IdAccount INT = 0,
@@ -20,8 +21,6 @@ CREATE PROCEDURE [dbo].[GetDataForClosure]
 AS
 BEGIN
 
-    -- MODIFICACIÓN 22/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-    -- Variables para los diferentes servicios a tomar en cuenta en los cierres
     DECLARE @Estandar INT;
     DECLARE @Entrega INT;
     DECLARE @Recepcion INT;
@@ -34,51 +33,74 @@ BEGIN
 	DECLARE @CountryId NVARCHAR(2)
 
 	SELECT @CountryId = CountryId
-	FROM VisitPointClient WITH (NOLOCK)
+	FROM DeliveryBackOffice.dbo.VisitPointClient WITH (NOLOCK)
 	WHERE CodeOfReference = @VisitPointId
 
-	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Express Center' AND IdCountry = @CountryId
-	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Área COD' AND IdCountry = @CountryId
-     -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
-    SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Zigi' AND IdCountry = @CountryId
-    -- Fin Modificación
+		DECLARE @LastWorkingDate DATE;
+		DECLARE @IsCNC BIT = 0;
+
+		SELECT @IsCNC = 1
+		FROM DeliveryBackOffice.dbo.VisitPointClient WITH(NOLOCK)
+		WHERE CodeOfReference = @VisitPointId
+		  AND IdKindOfVPClient IN (3,14,25);
+
+		IF (@IsCNC = 1)
+		BEGIN
+			SELECT @LastWorkingDate = MIN(CAST(DOPT.DateCreated AS DATE))
+			FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH(NOLOCK)
+			WHERE DOPT.AccountId = @IdAccount
+			  AND DOPT.ShipmentCompleted = 1
+			  AND NOT EXISTS ( 
+				  SELECT 1
+				  FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
+				  WHERE ACD.DopId = DOPT.DopId
+					AND ACD.RowStatus = 1
+      );
+		END
+		ELSE
+		BEGIN
+			SET @LastWorkingDate = CAST(GETDATE() AS DATE);
+		END
+
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM DeliveryBackOffice.dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Express Center' AND IdCountry = @CountryId
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM DeliveryBackOffice.dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Área COD' AND IdCountry = @CountryId
+    SELECT @AccountZigi = Name +' '+ '('+ AccountNumber +')' FROM DeliveryBackOffice.dbo.ClosureAccount WITH (NOLOCK) WHERE Description = 'Cuenta Zigi' AND IdCountry = @CountryId
     SET @Estandar =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Estándar'
     );
     SET @Entrega =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Entrega'
     );
     SET @Recepcion =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Recepción'
     );
     SET @Devolucion =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Devolución'
     );
     SET @Traslado =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Traslado'
     );
     SET @Internacional =
     (
         SELECT IdTypeService
-        FROM CatTypeServiceClosure WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.CatTypeServiceClosure WITH (NOLOCK)
         WHERE NameTypeService = 'Internacional'
     );
-    -- FIN MODIFICACIÓN
 
 	CREATE TABLE  #TEMPLATEDETAIL (
         guideserie NVARCHAR(2),
@@ -101,9 +123,9 @@ BEGIN
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             ON IND.dti_fk_orderSerie = DOPT.GuideSerie
-               AND IND.dti_fk_orderNumber = DOPT.GuideNumber
-    WHERE CAST(DOPT.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-	 AND DOPT.ShipmentCompleted = 1
+            AND IND.dti_fk_orderNumber = DOPT.GuideNumber
+    WHERE CAST(DOPT.DateCreated AS DATE) = @LastWorkingDate
+	           AND DOPT.ShipmentCompleted = 1
                AND DOPT.AccountId = @IdAccount
                AND DOPT.AccountId > 0
     GROUP BY IND.dti_fk_orderSerie,
@@ -123,7 +145,6 @@ BEGIN
            ISNULL(DOR.Collect_OnDelivery, 0) 'COD',
 		   ISNULL(CCC.Symbol, '') 'CurrencySymbol',
            ISNULL(DOPD.CODAmountProcess, 0) 'ProcessedCOD',
-           -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
            CASE
                 WHEN DOPD.TypeofInOutMoneyId = 6 THEN
                     'pago con tarjeta'
@@ -134,9 +155,8 @@ BEGIN
                 ELSE
                     ''
             END 'PaymentType',
-            --- FIN MODIFICACION
            CTS.NameTypeService AS 'ServiceType'
-    FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+    FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
             ON DOR.Sender_ID = VPC.CodeOfReference
         LEFT JOIN #TEMPLATEDETAIL IND
@@ -150,12 +170,11 @@ BEGIN
             ON DOPD.GuideSerie = DOR.Guide_Serie
                AND DOPD.GuideNumber = DOR.Guide_Number
 
-        INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
         LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
-           -- ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
 		   ON COST.GuideSerie = DOR.Guide_Serie AND COST.GuideNumber = DOR.Guide_Number
         OUTER APPLY (
 		  SELECT TOP 1 costd.IdCost,Voucher  FROM DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
@@ -165,7 +184,7 @@ BEGIN
 		)costd
         LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH (NOLOCK)
 			ON cost.ShippingCurrency = CCC.IdCatCurrencyCOD
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+	    WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
 
 	AND DOR.StatusOrderId != 7
           AND DOPD.AccountId = @IdAccount
@@ -180,11 +199,7 @@ BEGIN
         FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
         WHERE ACD.GuideSerie = DOR.Guide_Serie
               AND ACD.GuideNumber = DOR.Guide_Number
-
-              -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
               AND ACD.DopId = DOPD.DopId
-              -- FIN MODIFICACIÓN
-
               AND ACD.RowStatus = 1
     )
 
@@ -192,8 +207,7 @@ BEGIN
         AND DOPD.AccountId = @IdAccount
         AND DOPD.AccountId > 0
 		AND DOPD.[TypeofInOutMoneyId] != 8
-    -- ORDER BY DOPD.DateCreated DESC;
-    ---------------------------------------------------------------------------------------------
+
     UNION ALL
     SELECT DOPD.DateCreated 'DateCreatedTransaction',
            DOPD.DateCreated 'DateCreated',
@@ -209,7 +223,6 @@ BEGIN
            COD = 0,
 		   '' AS 'CurrencySymbol',
            ISNULL(DOPD.CODAmountProcess, 0) 'ProcessedCOD',
-           -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
            CASE
                WHEN DOPD.TypeofInOutMoneyId = 6 THEN
                    'pago con tarjeta'
@@ -220,19 +233,18 @@ BEGIN
                ELSE
                    ''
            END 'PaymentType',
-            -- FIN MODIFICACION
            CTS.NameTypeService AS 'ServiceType'
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
-        INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-        INNER JOIN invoiceHeader INH WITH (NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
             ON INH.inv_numberFEL =
             (
-                SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
+                SELECT Item FROM DeliveryBackOffice.dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
             )
-    WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
           AND DOPD.AccountId = @IdAccount
 			 AND DOPD.[TypeofInOutMoneyId] != 8
           AND DOPD.GuideSerie IS NULL
@@ -242,7 +254,7 @@ BEGIN
         FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
         WHERE ACD.Fel =
         (
-            SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
+            SELECT Item FROM DeliveryBackOffice.dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
         )
               AND ACD.RowStatus = 1
     )
@@ -260,7 +272,7 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Serie = dpd.GuideSerie
                AND DOR.Guide_Number = dpd.GuideNumber
-    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(dpd.DateCreated AS DATE) = @LastWorkingDate
           AND AccountId = @IdAccount
           AND NOT EXISTS
     (
@@ -268,11 +280,7 @@ BEGIN
         FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
         WHERE ACD.GuideSerie = DOR.Guide_Serie
               AND ACD.GuideNumber = DOR.Guide_Number
-
-              -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
               AND ACD.DopId = dpd.DopId
-              -- FIN MODIFICACIÓN
-
               AND ACD.RowStatus = 1
     )
         AND dpd.CODAmountProcess > 0
@@ -284,7 +292,7 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Serie = dpd.GuideSerie
                 AND DOR.Guide_Number = dpd.GuideNumber
-    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(dpd.DateCreated AS DATE) = @LastWorkingDate
           AND AccountId = @IdAccount
           AND dpd.TypeofInOutMoneyId = 1
           AND NOT EXISTS
@@ -305,7 +313,7 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Serie = dpd.GuideSerie
                 AND DOR.Guide_Number = dpd.GuideNumber
-    WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE CAST(dpd.DateCreated AS DATE) = @LastWorkingDate
           AND AccountId = @IdAccount
           AND dpd.TypeofInOutMoneyId = 10
           AND NOT EXISTS
@@ -320,7 +328,6 @@ BEGIN
         AND dpd.CODAmountProcess > 0
         AND DOR.StatusOrderId != 7;
 
-    -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
     WITH ROWCTE (TotalCash, AccountExp, CountCash, TotalCard, CountCard, AccountZigi, TotalZigi, CountZigi, CurrencySymbolExp, TotalCredit,  CountCredit, AccountCOD, TotalFacturaCash,
                  CountFacturaCash, TotalFacturaCard, CountFacturaCard, TotalFacturaZigi, CountFacturaZigi, CurrencySymbolCOD, IdAccount
                 )
@@ -335,7 +342,6 @@ BEGIN
 			   S1.CurrencySymbolExp,
                ISNULL(SUM(S1.TotalCredit), 0) 'TotalCredit',
                ISNULL(SUM(S1.CountCredit), 0) 'CountCredit',
-               -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			   @AccountCOD AS 'AccountCOD',
                ISNULL(SUM(S1.TotalFacturaCash), 0) 'TotalFacturaCash',
                ISNULL(SUM(S1.CountFacturaCash), 0) 'CountFacturaCash',
@@ -344,14 +350,11 @@ BEGIN
                ISNULL(SUM(S1.TotalFacturaZigi), 0) 'TotalFacturaZigi',
                ISNULL(SUM(S1.CountFacturaZigi), 0) 'CountFacturaZigi',
 			   S1.CurrencySymbolCOD,
-               -- FIN MODIFICACIÓN
                IdAccount
         FROM
-        -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
         (
             SELECT CASE
 
-                       -- CUENTA DE EXPRESS CENTER
                        WHEN DOPD.TypeofInOutMoneyId = 1
                             AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion ) THEN
                            SUM(DOPD.amount)
@@ -393,7 +396,6 @@ BEGIN
                        ELSE
                            0
                    END 'CountCard',
-                 -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
                     CASE
                        -- CUENTA DE EXPRESS CENTER
                        WHEN DOPD.TypeofInOutMoneyId = 10
@@ -413,17 +415,9 @@ BEGIN
                        ELSE
                            0
                    END 'CountZigi',
-                -- Fin modificación
 				   ISNULL(CCC.Symbol, '') 'CurrencySymbolExp',
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 8 THEN
-                           /*SUM(   CASE
-                                      WHEN DOR.IsCollect = 1 THEN
-                                          DOR.PriceShippment
-                                      ELSE
-                                          DOPD.amount
-                                  END
-                              )*/
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -435,7 +429,6 @@ BEGIN
                            0
                    END 'CountCredit',
 
-                   -- MODIFICACIÓN 22/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                    -- CUENTA COD
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 1
@@ -479,7 +472,6 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard',
-            -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
                 CASE
                        WHEN DOPD.TypeofInOutMoneyId = 10
                             AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion, @Traslado ) THEN
@@ -498,12 +490,10 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaZigi',
-            -- Fin modificación
 				   ISNULL(CCC.Symbol, '') 'CurrencySymbolCOD',
-                   --FIN MODIFICACIÓN
 
                    DOPD.AccountId IdAccount
-            FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                 INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                     ON DOR.Sender_ID = VPC.CodeOfReference
                 LEFT JOIN #TEMPLATEDETAIL IND
@@ -520,7 +510,7 @@ BEGIN
 					ON C.GuideSerie = DOR.Guide_Serie AND C.GuideNumber = DOR.Guide_Number
 				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
-            WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+            WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
                   AND DOPD.AccountId = @IdAccount
                   AND
                   (
@@ -533,11 +523,7 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
                 WHERE ACD.GuideSerie = DOR.Guide_Serie
                       AND ACD.GuideNumber = DOR.Guide_Number
-
-                      -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                       AND ACD.DopId = DOPD.DopId
-                      -- FIN MODIFICACIÓN
-
                       AND ACD.RowStatus = 1
             )
                 AND DOPD.ShipmentCompleted = 1
@@ -590,7 +576,6 @@ BEGIN
                        ELSE
                            0
                    END 'CountCard',
-             -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
                 CASE
                        WHEN DOPD.TypeofInOutMoneyId = 10
                             AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional ) THEN
@@ -609,7 +594,6 @@ BEGIN
                        ELSE
                            0
                    END 'CountZigi',
-            -- Fin modificación
 				   ISNULL(CCC.Symbol, '') 'CurrencySymbolExp',
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 8 THEN
@@ -623,8 +607,6 @@ BEGIN
                        ELSE
                            0
                    END 'CountCredit',
-
-                   -- MODIFICACIÓN 22/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 1
                             AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion, @Traslado ) THEN
@@ -665,7 +647,6 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard',
-                -- MODIFICACIÓN 2025-11-03 Bilkar Morataya - Zigi
                     CASE
                        WHEN DOPD.TypeofInOutMoneyId = 10
                             AND DOPD.TypeServiceId IN ( @Entrega, @Recepcion, @Traslado ) THEN
@@ -684,24 +665,21 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaZigi',
-                -- Fin modificación
 				   ISNULL(CCC.Symbol, '') 'CurrencySymbolCOD',
-                   -- FIN MODIFICACIÓN
 
                    DOPD.AccountId IdAccount
             FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
-                -- FIN MODIFICACIÓN
                 INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
                     ON CTS.IdTypeService = DOPD.TypeServiceId
                 LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
                     ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-				INNER JOIN DeliveryOrder DOR WITH (NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 					ON DOR.Guide_Serie = DOPD.GuideSerie AND DOR.Guide_Number = DOPD.GuideNumber
 				LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
 					ON C.GuideSerie = DOR.Guide_Serie AND C.GuideNumber = DOR.Guide_Number
 				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
 					ON ISNULL(C.CodCurrency,C.ShippingCurrency) = CCC.IdCatCurrencyCOD
-            WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+            WHERE CAST(DOPD.DateCreated AS DATE) = @LastWorkingDate
                   AND DOPD.AccountId = @IdAccount
 			 AND DOPD.[TypeofInOutMoneyId] != 8
                   AND DOPD.GuideSerie IS NULL
@@ -711,7 +689,7 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH (NOLOCK)
                 WHERE ACD.Fel =
                 (
-                    SELECT Item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
+                    SELECT Item FROM DeliveryBackOffice.dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2
                 )
                       AND ACD.RowStatus = 1
             )
@@ -727,13 +705,10 @@ BEGIN
     SELECT *,
            @TOTALAMOUNTCOD 'TotalAmountCOD',
            @TOTALCOD 'TotalCOD',
-           -- MODIFICACIÓN 2025-11-05 - Campos adicionales de COD por método de pago
            @TOTALAMOUNTCODCASH 'TotalAmountCODCash',
            @TOTALCODCASH 'TotalCODCash',
            @TOTALAMOUNTCODZIGI 'TotalAmountCODZigi',
            @TOTALCODZIGI 'TotalCODZigi'
-           -- Fin modificación
     FROM ROWCTE
-	--option (optimize for UNKNOWN)
 
 END;

@@ -6,7 +6,8 @@
    Fecha:     2024-07-30
 
 === CHANGELOG ============================
-
+2026-04-21 | Historia/épica: FDAPI-5784 | Autor: Keila Cortéz |
+-----
 2025-10-29 | Historia/épica: FDAPI-4454 | Autor: Brandon Pedroza |
 2026-03-16 | Historia/épica: FDAPI-5729 | Autor: Tito Garcia |
 
@@ -29,6 +30,7 @@ CREATE PROCEDURE [dbo].[supportCreateNewExcV2]
     @SapCardCode NVARCHAR(50),
     @SapOcrCode NVARCHAR(50),
 	@SapOcrCode2 NVARCHAR(50),
+	@KindOfVPName NVARCHAR(100) = 'Express Center',
     @IdCountry NVARCHAR(2) = 'GT',
 	@RackPosition NVARCHAR(50),
 	@StatusCheck INT = 0
@@ -51,7 +53,6 @@ BEGIN
 		END
 		ELSE
 		BEGIN
-			--SELECT 'Formato telefonico incorrecto'
 			RAISERROR('Formato telefonico incorrecto', 16, 1);
 			RETURN;
 		END
@@ -98,12 +99,12 @@ BEGIN
 			PRINT @IdKindOfVPBusiness
 
             SELECT @IdKindOfVPClient = IdKindOfVPClient
-            FROM DeliveryBackOffice.dbo.KindOfVPClient WITH(NOLOCK)
-            WHERE KindOfVPName = 'Express Center'
+            FROM DeliveryBackOffice.DBO.KindOfVPClient WITH(NOLOCK)
+            WHERE KindOfVPName = @KindOfVPName
                   AND IdCountry = @IdCountry
 
             SELECT @IdBusinessSegment = IdBusinessSegment
-            FROM DeliveryBackOffice.dbo.CatBusinessSegment WITH(NOLOCK)
+            FROM DeliveryBackOffice.DBO.CatBusinessSegment WITH(NOLOCK)
             WHERE BusinessSegmentName = 'C2C'
                   AND IdCountry = @IdCountry
 
@@ -112,7 +113,6 @@ BEGIN
                 SELECT TOP 1 @IdCustomer = IdCustomer
                 FROM DeliveryBackOffice.dbo.Customer WITH(NOLOCK)
                 WHERE Name like '%FD EXPRESS CENTER%'
-                      --AND IdCustomer IN(81, 68381)
                       AND CountryID = @IdCountry
             END
             ELSE
@@ -120,14 +120,11 @@ BEGIN
                 SELECT TOP 1 @IdCustomer = IdCustomer
                 FROM DeliveryBackOffice.dbo.Customer WITH(NOLOCK)
                 WHERE Name like '%FD EXPRESS CENTER ' + @IdCountry + '%'
-                      --AND IdCustomer IN(81, 68381)
                       AND CountryID = @IdCountry
             END
 
             SELECT @CodeOfReference = MAX(vp.CodeOfReference) + 1
-            FROM DeliveryBackOffice.dbo.VisitPointClient vp
-            --WHERE vp.IdKindOfVPBusiness = @IdKindOfVPBusiness;
-            -- Obtener departamento y municipio
+            FROM DeliveryBackOffice.DBO.VisitPointClient vp
 
             DECLARE @IdProvice INT;
             DECLARE @ProvinceName NVARCHAR(100);
