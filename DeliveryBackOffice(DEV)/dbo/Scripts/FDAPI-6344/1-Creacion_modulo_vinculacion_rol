@@ -1,0 +1,250 @@
+/***************************************************************************************************
+
+* TICKET:        FDAPI-6344
+* DESCRIPCIÓN:   Creación de Módulo y vinculación Rol → Módulo → Sistema para la
+*                funcionalidad "Reasignación de Rutas" en Hermes Mobile (ID 12)
+*
+* AUTOR:         Pedro Macajol
+* FECHA:         2026-06-03
+*
+* TABLAS AFECTADAS:
+* * CatModule
+* * RolByModuleBySystem
+*
+* SISTEMA AFECTADO:
+* * ID 12 → Hermes Mobile
+*
+* ROL AFECTADO:
+* * ID 25 → Admin Hermes Mobile
+*
+* ──────────────────────────────────────────────────────────────────────────────────────────────────
+*
+* 1. Leer el script COMPLETO antes de ejecutar cualquier sentencia.
+* 2. Ejecutar cada PASO en el ORDEN indicado.
+* 3. Verificar el resultado de cada PASO antes de continuar.
+* 4. PASO 1 es únicamente de validación.
+* 5. Si alguna validación retorna datos existentes → DETENER ejecución.
+* 6. PASO 2 contiene los cambios reales y utiliza transacción con rollback automático.
+* 7. Ejecutar siempre las post-validaciones del PASO 3.
+*
+* ROLLBACK:
+* Ante cualquier error los cambios serán revertidos automáticamente.
+  ***************************************************************************************************/
+
+-- ═══════════════════════════════════════════════════════════════════════════════════════════════
+-- PASO 1 — PRE-VALIDACIONES (Solo lectura)
+-------------------------------------------
+
+-- Resultado esperado:
+--   1A → 0 filas
+--   1B → 1 fila (Rol 25 existente)
+-- ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+-- 1A. Verificar que el módulo NO exista
+SELECT
+ModIdModule,
+ModName,
+ModDescription,
+ModPath,
+ModRowStatus
+FROM CatModule
+WHERE ModPath = 'route-reassignment';
+
+-- 1B. Confirmar existencia del rol
+SELECT
+RolIdRol,
+RolName,
+RolIdSystem,
+RolRowStatus
+FROM CatRol
+WHERE RolIdRol = 25;
+
+-- 1C. Referencia del último módulo creado
+SELECT TOP 1
+ModIdModule AS UltimoModIdActual
+FROM CatModule
+ORDER BY ModIdModule DESC;
+
+GO
+
+-- ═══════════════════════════════════════════════════════════════════════════════════════════════
+-- PASO 2 — EJECUCIÓN DE CAMBIOS
+-- ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+BEGIN TRY
+
+BEGIN TRANSACTION;
+
+DECLARE @NuevoModId INT;
+DECLARE @RolId INT = 25;
+DECLARE @SistemaId INT = 12;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 2A. Crear módulo
+-- ─────────────────────────────────────────────────────────────────────────
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM CatModule
+    WHERE ModPath = 'route-reassignment'
+)
+BEGIN
+
+    INSERT INTO CatModule
+    (
+        ModName,
+        ModDescription,
+        ModPath,
+        ModMetadata,
+        ModIdModuleParent,
+        ModOrder,
+        ModVisible,
+        ModRowStatus,
+        ModTokenCreated,
+        ModDateCreated
+    )
+    VALUES
+    (
+        'Reasignación de rutas',
+        'Reasignación de rutas',
+        'route-reassignment',
+        NULL,
+        NULL,
+        5,
+        1,
+        1,
+        'SYS-DEVELOP',
+        GETDATE()
+    );
+
+    SET @NuevoModId = SCOPE_IDENTITY();
+
+    PRINT '[OK] PASO 2A: Módulo creado correctamente.';
+    PRINT CONCAT('[INFO] ModIdModule generado → ', @NuevoModId);
+
+END
+ELSE
+BEGIN
+
+    PRINT '[WARN] El módulo ya existe.';
+    ROLLBACK TRANSACTION;
+    RETURN;
+
+END
+
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 2B. Vincular Rol → Módulo → Sistema
+-- ─────────────────────────────────────────────────────────────────────────
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM RolByModuleBySystem
+    WHERE RmsIdRol = @RolId
+      AND RmsIdModule = @NuevoModId
+      AND RmsIdSystem = @SistemaId
+)
+BEGIN
+
+    INSERT INTO RolByModuleBySystem
+    (
+        RmsIdRol,
+        RmsIdModule,
+        RmsIdSystem,
+        RmsRowStatus,
+        RmsTokenCreated,
+        RmsDateCreated
+    )
+    VALUES
+    (
+        @RolId,
+        @NuevoModId,
+        @SistemaId,
+        1,
+        'SYS-DEVELOP',
+        GETDATE()
+    );
+
+    PRINT '[OK] PASO 2B: Vinculación Rol → Módulo → Sistema creada correctamente.';
+
+END
+ELSE
+BEGIN
+
+    PRINT '[WARN] La vinculación ya existe.';
+    ROLLBACK TRANSACTION;
+    RETURN;
+
+END
+
+
+COMMIT TRANSACTION;
+
+PRINT '══════════════════════════════════════════════════════════════════';
+PRINT '[SUCCESS] Cambios aplicados correctamente.';
+PRINT CONCAT('          ModIdModule → ', @NuevoModId);
+PRINT CONCAT('          RolId       → ', @RolId);
+PRINT CONCAT('          SistemaId   → ', @SistemaId);
+PRINT '══════════════════════════════════════════════════════════════════';
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+    ROLLBACK TRANSACTION;
+
+PRINT '══════════════════════════════════════════════════════════════════';
+PRINT '[ERROR] Se detectó un error. Todos los cambios fueron revertidos.';
+PRINT CONCAT('Mensaje   : ', ERROR_MESSAGE());
+PRINT CONCAT('Línea     : ', ERROR_LINE());
+PRINT CONCAT('Severidad : ', ERROR_SEVERITY());
+PRINT CONCAT('Estado    : ', ERROR_STATE());
+PRINT '══════════════════════════════════════════════════════════════════';
+
+END CATCH;
+
+GO
+
+-- ═══════════════════════════════════════════════════════════════════════════════════════════════
+-- PASO 3 — POST-VALIDACIONES
+-----------------------------
+
+-- Resultado esperado:
+--   3A → 1 fila
+--   3B → 1 fila
+-- ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+-- 3A. Confirmar módulo creado
+SELECT
+ModIdModule,
+ModName,
+ModDescription,
+ModPath,
+ModVisible,
+ModRowStatus,
+ModDateCreated
+FROM CatModule
+WHERE ModPath = 'route-reassignment';
+
+-- 3B. Confirmar vínculo Rol → Módulo → Sistema
+SELECT
+r.RolIdRol,
+r.RolName,
+m.ModIdModule,
+m.ModName,
+m.ModPath,
+rms.RmsIdSystem,
+rms.RmsRowStatus,
+rms.RmsDateCreated
+FROM RolByModuleBySystem rms
+INNER JOIN CatRol r
+ON r.RolIdRol = rms.RmsIdRol
+INNER JOIN CatModule m
+ON m.ModIdModule = rms.RmsIdModule
+WHERE rms.RmsIdSystem = 12
+AND rms.RmsIdRol = 25
+AND m.ModPath = 'route-reassignment';
+
+GO
+
+
