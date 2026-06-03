@@ -2,7 +2,8 @@ BEGIN TRY
     IF COL_LENGTH('dbo.RoutePreparation', 'IsAutoFinished') IS NULL
     BEGIN
         ALTER TABLE DeliveryBackOffice.dbo.RoutePreparation
-        ADD IsAutoFinished BIT NOT NULL DEFAULT 0;
+        ADD IsAutoFinished BIT NOT NULL 
+        CONSTRAINT DF_RoutePreparation_IsAutoFinished DEFAULT 1;
 
         EXECUTE sp_addextendedproperty 
             @name = N'MS_Description',
