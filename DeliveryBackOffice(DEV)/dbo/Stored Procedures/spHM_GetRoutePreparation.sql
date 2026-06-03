@@ -29,6 +29,30 @@ BEGIN
 			1 'StatusCode'
 		   ,'Successfull' 'Description'
 
+		-- Variables para el conteo de guías confirmadas y pendientes
+		DECLARE @GuideConfirm INT;
+		DECLARE @GuidePending INT;
+		DECLARE @RoutePreparationId INT;
+
+		SELECT
+			@RoutePreparationId = rp.IdRoutePreparation		   
+		FROM RoutePreparation rp WITH (NOLOCK)		
+		WHERE rp.CatRouteId = @RouteId
+		AND rp.DateRoutePreparation = @Date
+		AND rp.RowStatus = 1
+
+		SELECT  @GuidePending = COUNT(*) 
+		FROM DeliveryBackOffice.dbo.RoutePreparationDetail rpd WITH (NOLOCK)
+		WHERE rpd.RoutePreparationId = @RoutePreparationId 
+			AND rpd.ServiceManagementDetailId IS NULL
+			AND rpd.RowStatus = 1
+		
+		SELECT @GuideConfirm= COUNT(*) 
+		FROM DeliveryBackOffice.dbo.RoutePreparationDetail rpd WITH (NOLOCK)
+		WHERE rpd.RoutePreparationId = @RoutePreparationId 
+		AND rpd.ServiceManagementDetailId IS NOT NULL
+		AND rpd.RowStatus = 1
+
 		--TABLE 1 Información de la preparación de la ruta
 		SELECT
 			rp.IdRoutePreparation
@@ -36,6 +60,8 @@ BEGIN
 		   ,rp.PiecesDry
 		   ,rp.PiecesCold
 		   ,rp.DeliveryOrderBySettlementId
+		   ,@GuideConfirm as 'GuideConfirm'
+		   ,@GuidePending as 'GuidePending'
 		FROM RoutePreparation rp WITH (NOLOCK)
 		WHERE rp.CatRouteId = @RouteId
 		AND rp.DateRoutePreparation = @Date
