@@ -1,6 +1,7 @@
 /* =================================================
    SP:        SaveAutoPrepRouteReception
-   Propósito: Se inserta o actualiza un estatus asociado al flujo de trabajo
+   Propósito: Se valida que las guías/referencias recibidas coincidan con las guías registradas en la preparación de ruta 
+   y se asignan auxiliares a la ruta. Por último se habilita la bandera para el boton de generar manifiesto.
    Autor:     Erick Hernandez
    Historia:  FDAPI-6249
    Fecha:     2026-05-29
