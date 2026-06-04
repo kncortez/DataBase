@@ -11,6 +11,8 @@
 2025-10-22 | Historia/épica: <FDAPI-4846>  | Autor: <Tito Garcia> |
 -----
 2025-12-19 | Historia/épica: <FDAPI-4742>  | Autor: <Brandon Pedroza> |
+-----  
+2026-03-26 | Historia/épica: <FDAPI-5867>  | Autor: <Mario Herrarte> |  
 =========================================== */
 CREATE PROCEDURE [dbo].[SetSettlementDispatched]
 	@IdRoute INT,
@@ -33,15 +35,16 @@ AS
 BEGIN
 	DECLARE @ValidateOperation INT = 0
 	DECLARE @ID_Manifest INT
+ 	DECLARE @factor DECIMAL(10,6)= CAST((2.00/24.00) AS DECIMAL(10,6));
 	DECLARE @GuidesToSendMessage AS TABLE(
 		GuideSerie NVARCHAR(2)
 		,GuideNumber INT
 		,GuideToken NVARCHAR(50)
 		,GuideOriginName NVARCHAR(200)
 		,GuideDestinyName NVARCHAR(200)
-		,GuideOriginPhone NVARCHAR(100)
+		,GuideOriginPhone NVARCHAR(50)
 		,GuideDestinyPhone NVARCHAR(100)
-		,GuideOriginAddress NVARCHAR(600)
+		,GuideOriginAddress NVARCHAR(200)
 		,GuideDestinyAddress NVARCHAR(600)
 		,IsDelivery BIT
 	);
@@ -297,15 +300,15 @@ BEGIN
 			INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH(NOLOCK)
 				ON dop.GuideSerie = do.Guide_Serie
 					AND dop.GuideNumber = do.Guide_Number
+					AND do.IdCustomer = wct.CustomerId
 			INNER JOIN @GuidePiecesTable gpt
 				ON wct.GuideSerie = gpt.GuideSerie
 					AND wct.GuideNumber = gpt.GuideNumber
 			INNER JOIN @PiecesGuideRelatedTable pgt
 				ON gpt.GuideSerie = pgt.GuideSerie
 					AND gpt.GuideNumber = pgt.GuideNumber
-			WHERE do.IdCustomer = wct.CustomerId
-				AND WHE.TypeConnectionId = 2
-				AND gpt.NumberPieces = pgt.NumberRelatedPieces;
+					AND gpt.NumberPieces = pgt.NumberRelatedPieces
+			WHERE WHE.TypeConnectionId = 2;
 
 			--Agregar datos en cola de webhooks de cliente DHL---FIN
 		END TRY
@@ -323,6 +326,93 @@ BEGIN
 			WHERE RowStatus=1
 				AND ElementId=1001
 		END
+
+		-- Registro de Arribo a instalaciones si este aun no existe --
+		INSERT INTO DeliveryOrderDetail
+			(
+				Guide_Serie,
+				Guide_Number,
+				StatusOrderId,
+				UserCreated,
+				DateCreated,
+				DateCreatedInSystem,
+				StationId
+			)
+			SELECT
+				GR.Guide_Serie,
+				GR.Guide_Number,
+				11,
+				@Token,
+				CASE
+					WHEN DODF.StatusOrderId IN (4,5,22) THEN
+						CASE 
+						   WHEN CAST(DO.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+								THEN DATEADD(SECOND, -1, DODF.DateCreated)
+						   WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem)) AS INT) = 1
+							   THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+						   ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem))) - 1,20)
+						END
+					WHEN DODF.StatusOrderId IN (1,15) 
+						AND CAST(DO.DateCreated AS DATE) = CAST(GETDATE() AS DATE) 
+						THEN 
+							DATEADD(SECOND, 1, DODF.DateCreated)
+					ELSE 
+						CASE 
+						   WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(GETDATE())) AS INT) = 1
+							   THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+						   ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(GETDATE()))) - 1,20)
+						END
+				END,
+				GETDATE(),
+				@StationId
+			FROM @ListGuides GR
+			INNER JOIN  (
+				SELECT
+	    			Guide_Serie,
+	    			Guide_Number,
+	    			CASE
+	    				WHEN DATEPART(MILLISECOND, DateCreated) >= 500
+	    					THEN DATEADD(SECOND, 1, DateCreated)
+	    				ELSE DATEADD(MILLISECOND, -DATEPART(MILLISECOND, DateCreated), DateCreated)
+	    				END DateCreated
+				FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+			) DO 
+				ON  DO.Guide_Serie = GR.Guide_Serie
+				AND DO.Guide_Number = GR.Guide_Number
+			OUTER APPLY (
+				SELECT TOP 1
+					 D.DateCreatedInSystem
+					,D.StatusOrderId
+					,D.DateCreated
+				FROM DeliveryBackOffice.dbo.DeliveryOrderDetail D WITH(NOLOCK)
+				WHERE D.Guide_Serie = GR.Guide_Serie
+				  AND D.Guide_Number = GR.Guide_Number
+				ORDER BY 
+					CASE 
+						WHEN D.StatusOrderId IN (4,5,22) THEN 0
+						WHEN d.StatusOrderId IN (1,15) THEN 1
+						ELSE 2
+					END,
+					CASE
+						WHEN D.StatusOrderId IN (2,5,22)
+						THEN D.DateCreated
+					END ASC,
+					CASE
+						WHEN D.StatusOrderId IN (1,15)
+						THEN D.DateCreated
+					END DESC,
+					CASE
+        				WHEN D.StatusOrderId NOT IN (2,5,22,1,15)
+        				THEN D.DateCreated
+    				END ASC
+			) DODF
+			WHERE NOT EXISTS (
+				SELECT 1
+				FROM DeliveryOrderDetail DOD WITH(NOLOCK)
+				WHERE DOD.Guide_Serie = GR.Guide_Serie
+					AND DOD.Guide_Number = GR.Guide_Number
+					AND DOD.StatusOrderId = 11
+			);
 
 		-- Insertar nuevo estado de guía en tabla histórica
 		INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
@@ -685,6 +775,7 @@ BEGIN
 		WHERE RPD.RoutePreparationId = @IdRoutePreparation;
 
 		DECLARE @IdRouteAssigment INT= (SELECT TOP 1 IdRouteAssigment FROM [DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK) WHERE IdRoute = @IdRoute AND DateOfRoute=@Date AND RA.IdCurrierMan=@IdCourier)
+		DECLARE @ShortDate DATE = CONVERT(DATE,GETDATE());
 
 		UPDATE  SM SET
 			SM.IdPuCourrier=@IdCourier,
@@ -707,7 +798,7 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK) ON
 				RA.IdRouteAssigment= URS.RouteAssignmentId
 		WHERE URS.UserSettlement IS NULL 
-			AND RA.DateOfRoute=CONVERT(DATE,GETDATE()) 
+			AND RA.DateOfRoute=@ShortDate
 			AND RA.IdCurrierMan=@IdCourier
 		-----------------------------------------------------------------------------------------------------------------
 

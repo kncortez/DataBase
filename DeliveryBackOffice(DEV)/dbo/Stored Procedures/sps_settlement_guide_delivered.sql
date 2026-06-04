@@ -9,6 +9,7 @@
 
 2024-06-19 | Historia/épica: ---          | Autor: Cristian Suazo  | Se calcula la tasa de cambio y la conversión de la moneda del país origen al país destino
 2025-12-23 | Historia/épica: FDAPI-4748   | Autor: Brandon Pedroza | Se almacena idStation en liquidación de entrega
+2026-03-26 | Historia/épica: FDAPI-5867   | Autor: Mario Herrarte  | Agregar estado de arribo a instalaciones si no existe.
 
 =========================================== */
 CREATE PROCEDURE [dbo].[sps_settlement_guide_delivered]
@@ -28,6 +29,8 @@ BEGIN
 	DECLARE @StatusTransfer TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Traslado a Express Center')
 	DECLARE @StatusId tinyint = (SELECT CASE WHEN do.IsLastMileReturn = 1 THEN @StatusReturn ELSE @StatusDelivery END FROM DeliveryOrder do WITH(NOLOCK) WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber) --Status of delivery 
 	
+	DECLARE @factor DECIMAL(10,6)= CAST((2.00/24.00) AS DECIMAL(10,6));
+
 	DECLARE @OriginResult DECIMAL(12,6);
 	DECLARE @ResultDestination DECIMAL(12,6);
 	DECLARE @TypeService NVARCHAR(3);
@@ -63,6 +66,92 @@ BEGIN
 				NameOfReceiver = @NameReceiver
 				WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber					
 			
+				-- Registro de Arribo a instalaciones si este aun no existe --
+				INSERT INTO DeliveryOrderDetail
+					(
+						Guide_Serie,
+						Guide_Number,
+						StatusOrderId,
+						UserCreated,
+						DateCreated,
+						DateCreatedInSystem,
+						StationId
+					)
+					SELECT
+						@GuideSerie,
+						@GuideNumber,
+						11,
+						@Token,
+						CASE
+							WHEN DODF.StatusOrderId IN (4,5,22) THEN
+								CASE 
+								   WHEN CAST(DO.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+										THEN DATEADD(SECOND, -1, DODF.DateCreated)
+								   WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem)) AS INT) = 1
+									   THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+								   ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem))) - 1,20)
+								END
+							WHEN DODF.StatusOrderId IN (1,15) 
+								AND CAST(DO.DateCreated AS DATE) = CAST(GETDATE() AS DATE) 
+								THEN 
+									DATEADD(SECOND, 1, DODF.DateCreated)
+							ELSE 
+								CASE 
+								   WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(GETDATE())) AS INT) = 1
+									   THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
+								   ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(GETDATE()))) - 1,20)
+								END
+						END,
+						GETDATE(),
+						@StationId
+					FROM (
+						SELECT
+	    				Guide_Serie,
+	    				Guide_Number,
+	    				CASE
+	    					WHEN DATEPART(MILLISECOND, DateCreated) >= 500
+	    						THEN DATEADD(SECOND, 1, DateCreated)
+	    					ELSE DATEADD(MILLISECOND, -DATEPART(MILLISECOND, DateCreated), DateCreated)
+	    					END DateCreated
+						FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+						WHERE Guide_Serie = @GuideSerie
+							AND Guide_Number = @GuideNumber
+					) DO
+					OUTER APPLY (
+					SELECT TOP 1
+						 D.DateCreatedInSystem
+						,D.StatusOrderId
+						,D.DateCreated
+					FROM DeliveryBackOffice.dbo.DeliveryOrderDetail D WITH(NOLOCK)
+					WHERE D.Guide_Serie = @GuideSerie
+					  AND D.Guide_Number = @GuideNumber
+					ORDER BY 
+				        CASE 
+							WHEN D.StatusOrderId IN (4,5,22) THEN 0
+							WHEN d.StatusOrderId IN (1,15) THEN 1
+							ELSE 2
+						END,
+						CASE
+							WHEN D.StatusOrderId IN (2,5,22)
+							THEN D.DateCreated
+						END ASC,
+						CASE
+							WHEN D.StatusOrderId IN (1,15)
+							THEN D.DateCreated
+						END DESC,
+						CASE
+							WHEN D.StatusOrderId NOT IN (2,5,22,1,15)
+							THEN D.DateCreated
+						END ASC
+					) DODF
+					WHERE NOT EXISTS (
+						SELECT 1
+						FROM DeliveryOrderDetail DOD WITH(NOLOCK)
+						WHERE DOD.Guide_Serie = @GuideSerie
+							AND DOD.Guide_Number = @GuideNumber
+							AND DOD.StatusOrderId = 11
+						);
+
 				-- Insertar nuevo estado de guía en tabla histórica
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
 				([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated],[DateCreatedInSystem],[StationId])			
@@ -245,18 +334,6 @@ BEGIN
 				END CATCH
 				-------------------WEBHOOK.FIN------------------------------		
 			END
-	
-			/*DECLARE @Results AS TABLE(
-				StatusCode INT,
-				[Description] NVARCHAR(200),
-				NumTransferID BIGINT
-			)
-			DECLARE @DateDelivered VARCHAR(50) = CONVERT(varchar, GETDATE(), 120)*/
-	
-			--INSERT INTO @Results
-			--EXEC sps_set_Confirmation_of_delivery @Guide_Serie = @GuideSerie, @Guide_Number = @GuideNumber, @DateOfDelivery = @DateDelivered, @NameOfReceiver = @NameReceiver, @TokenId = @Token
-			/*** FIN SIMULAR ENTREGA DE GUÍA EN FORMULARIO CONFIRMACION DE ENTREGA ***/
-
 
 			SET @Amount = (SELECT CASE WHEN IsLastMileReturn = 1 THEN 0 ELSE ISNULL(Collect_OnDelivery, 0) END FROM DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 
