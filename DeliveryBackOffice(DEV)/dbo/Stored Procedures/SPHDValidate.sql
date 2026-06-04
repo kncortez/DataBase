@@ -2,14 +2,14 @@
    SP:        [dbo].[SPHDValidate]
    Propósito: <VALIDAR SI FACTURA EXISTE Y VER SUS DATOS>
    Autor:     <Edelman Vasquez>
-   Historia:  <FDAPI-5460>
+   Historia:  <FDAPI-1743>
    Fecha:     2023-03-31
 ============================================
 === CHANGELOG ================================
--- 2023-03-31 | Historia/épica: FDAPI-5460 | Autor: Edelman Vásquez  | VALIDAR SI FACTURA TIENE NOTA DE CREDITO
--- 2024-08-23 | Historia/épica: FDAPI-5460 | Autor: Cristian Suazo   | Se agrega el IdCountry de la factura en la respuesta
--- 2025-07-18 | Historia/épica: FDAPI-5460 | Autor: Brandon Pedroza  | Facturacion SV - se obtiene factura por numberfel para SV
--- 2025-09-11 | Historia/épica: FDAPI-5460 | Autor: Brandon Pedroza  | Facturacion SV - se quita validacion isnull al consultar tabla invoiceHeader
+-- 2023-03-31 | Historia/épica: FDAPI-1743 | Autor: Edelman Vásquez  | VALIDAR SI FACTURA TIENE NOTA DE CREDITO
+-- 2024-08-23 | Historia/épica: FDAPI-2440 | Autor: Cristian Suazo   | Se agrega el IdCountry de la factura en la respuesta
+-- 2025-07-18 | Historia/épica: FDAPI-4148 | Autor: Brandon Pedroza  | Facturacion SV - se obtiene factura por numberfel para SV
+-- 2025-09-11 | Historia/épica: FDAPI-4456 | Autor: Brandon Pedroza  | Facturacion SV - se quita validacion isnull al consultar tabla invoiceHeader
 -- 2026-06-03 | Historia/épica: FDAPI-5721 | Autor: Cristian Azurdia | Facturacion HN - obtención de datos nuevos de facturas con error 2025
 =========================================== */
 
