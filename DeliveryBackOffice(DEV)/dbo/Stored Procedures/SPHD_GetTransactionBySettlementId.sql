@@ -105,8 +105,8 @@ BEGIN
         Voucher + ProductNumber AS Transaccion,
 
         CASE 
-            WHEN IdTypeOfMoneyCOD = 12 THEN Voucher
-            WHEN IdTypeOfMoneyCollect = 12 THEN Voucher
+            WHEN IdTypeOfMoneyCOD = 12 THEN ZigiTransactionId
+            WHEN IdTypeOfMoneyCollect = 12 THEN ZigiTransactionId
             ELSE ''
         END AS Voucher,
 
