@@ -9,7 +9,8 @@ CREATE PROCEDURE [dbo].[GetDynamicCatalog]
     @Token VARCHAR(100) = '0BE2F8F3BD53652635746ACD069954B5',
     @GuideSerie VARCHAR(2) = 'FD',
     @GuideNumber VARCHAR(100) = '12345',
-    @Others VARCHAR(500) = ''
+    @Others VARCHAR(500) = '',
+    @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
     DECLARE @jsonResult NVARCHAR(MAX);
@@ -525,7 +526,8 @@ BEGIN
                                       FROM DeliveryBackOffice.dbo.CatTypeIncidence c WITH(NOLOCK)
                                       WHERE
 											c.RowStatus = 1 AND
-											c.ServiceType = 'DELIVERY'
+											c.ServiceType = 'DELIVERY' AND 
+                                            c.CountryID = @IdCountry
                                       ORDER BY c.OrderId
                                       FOR XML PATH(''), TYPE
                                   ).value('.', 'varchar(max)'),
