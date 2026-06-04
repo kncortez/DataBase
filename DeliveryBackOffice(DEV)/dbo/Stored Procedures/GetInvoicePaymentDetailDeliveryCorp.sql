@@ -5,6 +5,7 @@
    Fecha:     2024-11-19
 ============================================
 === CHANGELOG ================================
+2026-06-04 | Historia/épica: FDCF-24 | Autor: Keila Cortez |
 2026-04-08 | Historia/épica: FDAPI-5989 | Autor: Hanss Espinoza |
 =========================================== */
 CREATE PROCEDURE [dbo].[GetInvoicePaymentDetailDeliveryCorp]
@@ -104,13 +105,17 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
                        WHERE dod.Guide_Serie = do.Guide_Serie
                          AND dod.Guide_Number = do.Guide_Number
-                         AND dod.StatusOrderId IN (11, -- Arribó a las instalaciones
-                                                   4,  -- En ruta
-                                                   5,  -- Entregado
-                                                   22,  --Entregado En Express Center
-                                                   25,  --COD pagado
-                                                   43   --En preparación de traslado
-                                                   )
+                         AND ((@Option IN (3, 4) AND dod.StatusOrderId = 25) -- COD contado/crédito: COD pagado
+						 OR (@Option = 5 AND dod.StatusOrderId = 14)       -- Reintentos: Devuelto
+						 OR (@Option NOT IN (3, 4, 5) AND dod.StatusOrderId IN (
+									11, -- Arribó a las instalaciones
+									4,  -- En ruta
+									5,  -- Entregado
+									22, -- Entregado En Express Center
+									25, -- COD pagado
+									43  -- En preparación de traslado
+									))
+                         )
                      )
          ORDER BY do.Guide_Number DESC
 
