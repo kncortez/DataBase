@@ -85,14 +85,14 @@ BEGIN
 						CASE
 							WHEN DODF.StatusOrderId IN (4,5,22) THEN
 								CASE 
-								   WHEN CAST(DODF.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+								   WHEN CAST(DO.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 										THEN DATEADD(SECOND, -1, DODF.DateCreated)
 								   WHEN CAST(DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem)) AS INT) = 1
 									   THEN CONVERT(NVARCHAR,DO.DateCreated + @factor,20)
 								   ELSE CONVERT(NVARCHAR,(DO.DateCreated + DATEDIFF(DAY,DO.DateCreated,(DODF.DateCreatedInSystem))) - 1,20)
 								END
 							WHEN DODF.StatusOrderId IN (1,15) 
-								AND CAST(DODF.DateCreated AS DATE) = CAST(GETDATE() AS DATE) 
+								AND CAST(DO.DateCreated AS DATE) = CAST(GETDATE() AS DATE) 
 								THEN 
 									DATEADD(SECOND, 1, DODF.DateCreated)
 							ELSE 
@@ -126,11 +126,23 @@ BEGIN
 					WHERE D.Guide_Serie = @GuideSerie
 					  AND D.Guide_Number = @GuideNumber
 					ORDER BY 
-						CASE 
+				        CASE 
 							WHEN D.StatusOrderId IN (4,5,22) THEN 0
-							ELSE 1
+							WHEN d.StatusOrderId IN (1,15) THEN 1
+							ELSE 2
 						END,
-						D.DateCreated ASC
+						CASE
+							WHEN D.StatusOrderId IN (2,5,22)
+							THEN D.DateCreated
+						END ASC,
+						CASE
+							WHEN D.StatusOrderId IN (1,15)
+							THEN D.DateCreated
+						END DESC,
+						CASE
+							WHEN D.StatusOrderId NOT IN (2,5,22,1,15)
+							THEN D.DateCreated
+						END ASC
 					) DODF
 					WHERE NOT EXISTS (
 						SELECT 1
