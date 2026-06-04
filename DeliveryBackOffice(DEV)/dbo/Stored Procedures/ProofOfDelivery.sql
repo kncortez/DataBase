@@ -8,7 +8,7 @@
 === CHANGELOG ============================
 YYYY-MM-DD | Historia/épica: <> | Autor:  |
 =========================================== */
-ALTER PROCEDURE [dbo].[ProofOfDelivery]
+CREATE PROCEDURE [dbo].[ProofOfDelivery]
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT
 AS
