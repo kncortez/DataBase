@@ -35,7 +35,7 @@ BEGIN
 		ON fph.StationId = cs.IdStation
 	WHERE 
 	fph.ServiceStatusId =  @CreateStatus
-    AND ISNULL(cs.CountryId,'GT') = @IdCountry
+    AND cs.CountryId = @IdCountry
 	AND sm.SubTypeServiceManagmentId = @IdRecoByHand
     AND fph.DateCreated >= @FechaActual
     AND fph.DateCreated <  @FechaProximaSiguiente
