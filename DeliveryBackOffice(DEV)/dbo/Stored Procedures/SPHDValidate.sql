@@ -31,6 +31,7 @@ BEGIN
     DECLARE @Envio INT =0
     DECLARE @ComisionCOD INT=0
     DECLARE @dti_fk_header INT =0;
+    DECLARE @NewDateTo DATETIME = DATEADD(DAY, 1, @DateTo)
 
     -- IF(@TipoEnvio > 0)
     SET @Envio =(Select IdCatInvoiceType From [dbo].[CatInvoiceType] CIT  WHERE [Name]='Envío')
@@ -220,7 +221,7 @@ BEGIN
     BEGIN
 
         SELECT
-             ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote'
+            ISNULL(IH.inv_creditNote, 0) AS HaveaCreditNote
             ,ID.dti_description
             ,IH.inv_pk_id
             ,IH.inv_serieFEL
@@ -228,15 +229,16 @@ BEGIN
             ,IH.inv_certificationFEL
             ,IH.inv_cli_name
             ,IH.IdCountry
-        FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
-        INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
+        FROM dbo.invoiceHeader IH WITH (NOLOCK)
+        INNER JOIN dbo.invoiceDetail ID WITH (NOLOCK)
             ON IH.inv_pk_id = ID.dti_fk_header
-        WHERE
-            IH.inv_invoiceOfCreditNote IS NULL AND ID.MembershipId = @Membership
-            AND IH.inv_dateFEL Between  @DateOf + ' 00:00:00'  AND @DateTo + ' 23:59:59'
-            AND inv_certificationFEL IS NOT NULL
-            AND IH.inv_creditNote IS NULL
-            AND IH.inv_invoiceOfCreditNote IS  NULL
+        WHERE IH.inv_dateFEL             >= @DateOf
+          AND IH.inv_dateFEL             <  @NewDateTo
+          AND ID.MembershipId            =  @Membership
+          AND IH.inv_certificationFEL    IS NOT NULL
+          AND IH.inv_invoiceOfCreditNote IS NULL
+          AND IH.inv_creditNote          IS NULL
+        ORDER BY IH.inv_pk_id DESC;
 
     END
     ELSE IF (@Subscription IS NOT NULL)
@@ -254,12 +256,12 @@ BEGIN
         FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
         INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
             ON IH.inv_pk_id = ID.dti_fk_header
-        WHERE
-            IH.inv_invoiceOfCreditNote IS NULL AND  ID.SubscriptionId = @Subscription
-            AND   IH.inv_dateFEL Between  @DateOf + ' 00:00:00'  AND @DateTo + ' 23:59:59'
+        WHERE IH.inv_dateFEL             >= @DateOf
+            AND IH.inv_dateFEL           <  @NewDateTo
+            AND  ID.SubscriptionId = @Subscription
             AND   inv_certificationFEL IS NOT NULL
-            AND IH.inv_creditNote IS NULL
             AND  IH.inv_invoiceOfCreditNote IS   NULL
+            AND IH.inv_creditNote IS NULL
 
     END
 
