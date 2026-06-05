@@ -17,7 +17,7 @@ CREATE PROCEDURE [dbo].[spws_SetCompleteStatusGuideBatch]
 AS
 
 BEGIN
-
+	DECLARE @GuideSerie varchar(2) = 'FD'
 	DECLARE @IdResult INT;
 	DECLARE @Message  NVARCHAR(MAX);
 	DECLARE @COUNTGUIDES INT = 0, @IDENTYGUIDES INT = 1, @TOTAL INT = 0;
@@ -54,7 +54,7 @@ BEGIN
 
 				UPDATE DeliveryBackOffice.dbo.GuideBatch
 				SET Status = 2 -- 2 stands for status completed, this means the services were requested by customer, so now all these guides will be recollected at some point by a courier men.
-				WHERE GuideSeries = 'FD' and GuideNumber = @TempGuide AND RowStatus = 1
+				WHERE GuideSeries = @GuideSerie and GuideNumber = @TempGuide AND RowStatus = 1
 
 			    SET @IDENTYGUIDES = @IDENTYGUIDES + 1;
 				SET @COUNTGUIDES = @COUNTGUIDES  - 1;
@@ -83,4 +83,3 @@ BEGIN
       SELECT @IdResult [IdResult], @Message [Message];
 
 END
- 

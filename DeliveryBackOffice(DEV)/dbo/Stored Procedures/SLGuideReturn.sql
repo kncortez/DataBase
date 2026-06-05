@@ -4,8 +4,10 @@
    Autor:     Walter Orozco
    Historia:  FDAPI-4827 [FDAPI-4833]
    Fecha:     2025-10-24
-=================================================*/
-
+=================================================
+=== CHANGELOG ================================
+2026-05-19 | Historia/épica: <FDAPI-6306> | Autor: <Tito García> |
+=========================================== */
 CREATE PROCEDURE [dbo].[SLGuideReturn]
 	@GuideSerie			NVARCHAR(2)		= NULL,
 	@GuideNumber		INT				= 0,
@@ -18,7 +20,7 @@ BEGIN
 	BEGIN TRY
 
 		-- Variables
-		DECLARE @Status INT = 0 , @IdCountry NVARCHAR(3) = NULL;
+		DECLARE @Status INT = 0 , @IdCountry NVARCHAR(3) = NULL, @SmartLockerTownshipId INT;
 
 		-- Referencia
 		IF (@TicketNumber IS NOT NULL AND @GuideNumber <= 0)
@@ -28,6 +30,7 @@ BEGIN
 				, @GuideNumber = Guide_Number
 				, @Status      = StatusOrderId
 				, @IdCountry   = ReceiverCountryId
+				, @SmartLockerTownshipId  = ReceiverIdTownship
 			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
 			WHERE Ticket_Number = @TicketNumber
 		END;
@@ -45,6 +48,7 @@ BEGIN
 			SELECT
 				  @Status		= StatusOrderId
 				, @IdCountry    = ReceiverCountryId
+				, @SmartLockerTownshipId   = ReceiverIdTownship
 			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) 
             WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 		END;
@@ -174,7 +178,8 @@ BEGIN
 				  AddressPickup,
 				  TypeVehicleId,
 				  IsScheduled,
-				  SpecialInstructions
+				  SpecialInstructions,
+				  TownshipId
 			)
   		VALUES
 			(
@@ -196,6 +201,7 @@ BEGIN
 				, @TypeVehicle
 				, 0
 				, 'URGENTE Smart Locker'
+				, @SmartLockerTownshipId -- Municipio del Smart Locker que solicita la recolección
 			);
 
 		SET @idSchedulePickUp = SCOPE_IDENTITY();

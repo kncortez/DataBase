@@ -44,7 +44,7 @@ BEGIN
 
 	SELECT TOP 1 @StatusOrder = so.StatusOrderId
 	FROM [DeliveryBackOffice].[dbo].[StatusOrder] so WITH(NOLOCK) 
-	WHERE so.OrderDescription = 'Programado para entrega' COLLATE Latin1_General_CI_AI
+	WHERE so.OrderDescription = 'Programado para entrega' 
 	
 	-- Obtener asignaci�n de ruta
 	SET @RouteAssigmentId = (SELECT TOP 1 IdRouteAssigment FROM DeliveryBackOffice.dbo.RouteAssigment RA WITH(NOLOCK) WHERE RA.IdRoute = @IdRoute AND RA.DateOfRoute = @DateRoute AND RA.RowStatus = 1);
@@ -85,7 +85,7 @@ BEGIN
 	BEGIN
 
 		--- Es devoluci�n
-		SET @subtypeservicemanagment = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM DeliveryBackOffice.dbo.SubTypeServiceManagment STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Devolución' COLLATE Latin1_General_CI_AI)
+		SET @subtypeservicemanagment = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM DeliveryBackOffice.dbo.SubTypeServiceManagment STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Devolución')
 
 		-- Obtener servicio activo de la gu�a
 		SELECT 
@@ -515,14 +515,10 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 					ON
 						RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
-						AND
-						RPD.RowStatus = 1
 				inner JOIN
 					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 					ON
-						RPD.RoutePreparationId = RP.IdRoutePreparation
-						AND
-						RP.RowStatus = 1
+						RPD.RoutePreparationId = RP.IdRoutePreparation						
 				inner JOIN 
 					[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 					ON
@@ -536,6 +532,10 @@ BEGIN
 				RP.DateRoutePreparation = CAST(@DateRoute AS DATE)
 				AND
 				RPDP.RowStatus = 1
+				AND
+				RPD.RowStatus = 1
+				AND
+				RP.RowStatus = 1
 
 			--- Actualizar la preparaci�n de ruta en base a los datos almacenados
 			UPDATE RP
@@ -558,20 +558,20 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 							ON
 								RPA.IdRoutePreparation = RPD.RoutePreparationId
-								AND
-								RPD.RowStatus = 1
 						inner JOIN
 							[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
 							ON
 								RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
-								AND
-								RPDP.RowStatus = 1
 					WHERE
 						RPA.CatRouteId = @IdRoute
 						AND
 						RPA.DateRoutePreparation = CAST(@DateRoute AS DATE)
 						AND
 						RPA.RowStatus = 1
+						AND
+						RPD.RowStatus = 1
+						AND
+						RPDP.RowStatus = 1
 					GROUP BY
 						RPA.IdRoutePreparation
 				) RPA

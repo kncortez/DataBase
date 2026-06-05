@@ -1,9 +1,4 @@
--- =============================================
--- Author:		<Carlos Valdes>
--- Create date: <2026-01-26>
--- Description:	<SP para uso de area de soporte para mantenimiento de linehauls>
--- =============================================
-CREATE PROCEDURE [dbo].[SupportLHroutes]
+﻿CREATE PROCEDURE [dbo].[SupportLHroutes]
     @CodeRoute NVARCHAR(100),
     @HubOrigenAbbr VARCHAR(10),
     @Cobertura VARCHAR(MAX)
@@ -164,4 +159,3 @@ BEGIN CATCH
            ERROR_LINE() AS ErrorLine,
            ERROR_PROCEDURE() AS ErrorProcedure;
 END CATCH;
- 

@@ -6,6 +6,7 @@
    Fecha:     2023-04-28
 === CHANGELOG ============================
 -- 2025-12-19 | Historia/épica:  FDAPI-4746   | Autor: Brandon Pedroza    | Almacenar idstation al registrar incidencia desktop
+-- 2025-12-19 | Historia/épica:  FDAPI-5584   | Autor: Bilkar Morataya    | Almacenar @Observations en CommentOnIncident de ConfirmationOfIncidence
 =========================================== */
 CREATE PROCEDURE [dbo].[spHD_SetGuideIncidence]
 
@@ -196,7 +197,8 @@ IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
 			ClientConfirmsReturn,
 			IncidentfinalizedbySAC,
 			IsDenied,
-			LastStatusOrderId
+			LastStatusOrderId,
+			CommentOnIncident
 		)
 		VALUES
 		(   @Token,       -- ConfirmationOfIncidentToken - nvarchar(50)
@@ -216,7 +218,8 @@ IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
 			NULL,   -- ClientConfirmsReturn - bit
 			NULL,      -- IncidentfinalizedbySAC - bit
 			0,   -- IsDenied - bit
-			NULL       -- LastStatusOrderId - tinyint
+			NULL,      -- LastStatusOrderId - tinyint
+			@Observations -- CommentOnIncident - nvarchar
 			)
 
 			SET @IdConfirmationOfIncidence = SCOPE_IDENTITY();

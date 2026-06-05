@@ -62,8 +62,8 @@ BEGIN
 			@TicketNumber = Ticket_Number,
 			@IdStatusGuide = StatusOrderId
 	FROM DeliveryOrder DO WITH (NOLOCK)
-	WHERE DO.Guide_Number = @GuideNumber
-		AND DO.Guide_Serie = @GuideSerie;
+	WHERE DO.Guide_Serie = @GuideSerie
+		AND DO.Guide_Number = @GuideNumber;
 
 	IF (@IdStatusGuide NOT IN( @IdStatusGenerated, @IdStatusRequest, @IdStatusPickUp))
 	BEGIN
@@ -90,10 +90,10 @@ BEGIN
 			INNER JOIN ShippingContainer SC WITH (NOLOCK)
 				ON SC.IdContainer = SCD.IdContainer
 			INNER JOIN DeliveryOrderPiece DOP WITH(NOLOCK)
-				ON DOP.GuideNumber = SCD.GuideNumber
-					AND DOP.GuideSerie = SCD.GuideSerie
-			WHERE DOP.GuideNumber = @GuideNumber
-				AND DOP.GuideSerie = @GuideSerie
+				ON DOP.GuideSerie = SCD.GuideSerie
+					AND DOP.GuideNumber = SCD.GuideNumber
+			WHERE DOP.GuideSerie = @GuideSerie
+				AND DOP.GuideNumber = @GuideNumber
 				AND DOP.NoPiece = @GuidePiece;
 
 			IF (@StatusGuideByContainer <> @StatusPendingGuideByContainer)
@@ -107,8 +107,8 @@ BEGIN
 	BEGIN
 		IF NOT EXISTS (SELECT 1
 						FROM DeliveryOrderPiece DOP WITH(NOLOCK)
-						WHERE DOP.GuideNumber = @GuideNumber
-							AND DOP.GuideSerie = @GuideSerie
+						WHERE DOP.GuideSerie = @GuideSerie
+							AND DOP.GuideNumber = @GuideNumber
 							AND ISNULL(DOP.IdStatusGuideByContainer,1) = 1
 				)
 			BEGIN
@@ -125,10 +125,10 @@ BEGIN
 			INNER JOIN ShippingContainer SC WITH (NOLOCK)
 				ON SC.IdContainer = SCD.IdContainer
 			INNER JOIN DeliveryOrderPiece DOP WITH(NOLOCK)
-				ON DOP.GuideNumber = SCD.GuideNumber
-					AND DOP.GuideSerie = SCD.GuideSerie
-			WHERE DOP.GuideNumber = @GuideNumber
-				AND DOP.GuideSerie = @GuideSerie
+				ON DOP.GuideSerie = SCD.GuideSerie
+					AND DOP.GuideNumber = SCD.GuideNumber
+			WHERE DOP.GuideSerie = @GuideSerie
+				AND DOP.GuideNumber = @GuideNumber
 
 	IF (@Container IS NOT NULL  AND @Container <> @ReferenceContainer)
 	BEGIN
@@ -167,16 +167,16 @@ BEGIN
 		BEGIN 
 			UPDATE DeliveryOrderPiece
 				SET IsNewInContainer = 1
-				WHERE GuideNumber = @GuideNumber
-					AND GuideSerie = @GuideSerie
+				WHERE GuideSerie = @GuideSerie
+					AND GuideNumber = @GuideNumber
 					AND NoPiece = @GuidePiece
 		END
 		ELSE
 		BEGIN
 			UPDATE DeliveryOrderPiece
 			SET IsNewInContainer = 1
-			WHERE GuideNumber = @GuideNumber
-				AND GuideSerie = @GuideSerie
+			WHERE GuideSerie = @GuideSerie
+				AND GuideNumber = @GuideNumber
 		END
 
 	END;
@@ -185,8 +185,8 @@ BEGIN
 	BEGIN
 		UPDATE DeliveryOrderPiece
 		SET IdStatusGuideByContainer = @StatusScannedGuideByContainer
-		WHERE GuideNumber = @GuideNumber
-			AND GuideSerie = @GuideSerie
+		WHERE GuideSerie = @GuideSerie
+			AND GuideNumber = @GuideNumber
 			AND NoPiece = @GuidePiece
 
 		SELECT 200 AS StatusCode,
@@ -208,8 +208,8 @@ BEGIN
 			ON DO.Guide_Serie = DOP.GuideSerie
 			AND DO.Guide_Number = DOP.GuideNumber
 		LEFT JOIN ShippingContainerDetail SCD WITH (NOLOCK)
-			ON SCD.GuideNumber = DO.Guide_Number
-			AND SCD.GuideSerie = DO.Guide_Serie
+			ON SCD.GuideSerie = DO.Guide_Serie
+			AND SCD.GuideNumber = DO.Guide_Number
 		INNER JOIN ShippingContainer SC WITH (NOLOCK)
 			ON SC.IdContainer = SCD.IdContainer
 		LEFT JOIN CatStatusGuideByContainer CAT WITH (NOLOCK)
@@ -217,8 +217,8 @@ BEGIN
 		WHERE SC.ReferenceContainer = @ReferenceContainer
 			AND SCD.RowStatus = 1 
 			AND DO.IdCustomer = @IdCustomer
-			AND DO.Guide_Number = @GuideNumber
 			AND DO.Guide_Serie = @GuideSerie
+			AND DO.Guide_Number = @GuideNumber
 			AND DOP.NoPiece = @GuidePiece;
 
 	END
@@ -226,8 +226,8 @@ BEGIN
 	BEGIN
 		UPDATE DeliveryOrderPiece
 		SET IdStatusGuideByContainer = @StatusScannedGuideByContainer
-		WHERE GuideNumber = @GuideNumber
-			AND GuideSerie = @GuideSerie
+		WHERE GuideSerie = @GuideSerie
+			AND GuideNumber = @GuideNumber
 
 		SELECT 200 AS StatusCode,
 				@Description AS [Message],
@@ -248,8 +248,8 @@ BEGIN
 			ON DO.Guide_Serie = DOP.GuideSerie
 			AND DO.Guide_Number = DOP.GuideNumber
 		LEFT JOIN ShippingContainerDetail SCD WITH (NOLOCK)
-			ON SCD.GuideNumber = DO.Guide_Number
-			AND SCD.GuideSerie = DO.Guide_Serie
+			ON SCD.GuideSerie = DO.Guide_Serie
+			AND SCD.GuideNumber = DO.Guide_Number
 		INNER JOIN ShippingContainer SC WITH (NOLOCK)
 			ON SC.IdContainer = SCD.IdContainer
 		LEFT JOIN CatStatusGuideByContainer CAT WITH (NOLOCK)
@@ -257,8 +257,8 @@ BEGIN
 		WHERE SC.ReferenceContainer = @ReferenceContainer
 			AND SCD.RowStatus = 1 
 			AND DO.IdCustomer = @IdCustomer
-			AND DO.Guide_Number = @GuideNumber
-			AND DO.Guide_Serie = @GuideSerie;
+			AND DO.Guide_Serie = @GuideSerie
+			AND DO.Guide_Number = @GuideNumber;
 		END
 
 END;

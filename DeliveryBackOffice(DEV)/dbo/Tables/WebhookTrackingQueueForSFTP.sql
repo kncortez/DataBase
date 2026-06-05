@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[WebhookTrackingQueueForSFTP] (
+CREATE TABLE [dbo].[WebhookTrackingQueueForSFTP] (
     [IdWebhookTrackingQueueForSFTP] INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [FileName]                      NVARCHAR (100) NOT NULL,
     [Hostname]                      NVARCHAR (50)  NOT NULL,
@@ -13,6 +13,8 @@
     [DateUpdated]                   DATETIME       NULL,
     CONSTRAINT [PK_IdWebhookTrackingQueueForSFTP] PRIMARY KEY CLUSTERED ([IdWebhookTrackingQueueForSFTP] ASC)
 );
+
+
 
 
 GO
@@ -41,3 +43,6 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario que ac
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha que actualiza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueForSFTP', @level2type=N'COLUMN',@level2name=N'DateUpdated'
 GO
+CREATE NONCLUSTERED INDEX [idx_HasNotified_RowStatus]
+    ON [dbo].[WebhookTrackingQueueForSFTP]([HasNotified] ASC, [RowStatus] ASC);
+

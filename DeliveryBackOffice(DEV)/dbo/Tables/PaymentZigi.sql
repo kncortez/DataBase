@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[PaymentZigi] (
-    [ZigiPaymentId]             INT             IDENTITY (1, 1) NOT NULL,
+    [ZigiPaymentId]             INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [GuideNumber]               INT             NOT NULL,
     [GuideSerie]                NVARCHAR (2)    NOT NULL,
     [ZigiLinkStatus]            NVARCHAR (20)   NOT NULL,
@@ -18,16 +18,18 @@
     [DateUpdated]               DATETIME        NULL,
     [TokenUpdated]              NVARCHAR (50)   NULL,
     [AuthorizationNumberByUser] NVARCHAR (100)  NULL,
-    [ZigiBuyerId]              NVARCHAR (50)   NULL,
-    [ZigiBankAccount] NVARCHAR (100)  NULL,
+    [ZigiBuyerId]               NVARCHAR (50)   NULL,
+    [ZigiBankAccount]           NVARCHAR (100)  NULL,
     [LinkRequestSent]           BIT             CONSTRAINT [DF_PaymentZigi_LinkRequestSent] DEFAULT ((0)) NOT NULL,
     [PaymentConfirmSent]        BIT             CONSTRAINT [DF_PaymentZigi_PaymentConfirmSent] DEFAULT ((0)) NOT NULL,
-    [PhoneNumber]               NVARCHAR(20),
-    [IsGroup]                   BIT DEFAULT 0 NOT NULL,
-    [GeneratedMethod]           NVARCHAR(100),
+    [PhoneNumber]               NVARCHAR (20)   NULL,
+    [IsGroup]                   BIT             DEFAULT ((0)) NOT NULL,
+    [GeneratedMethod]           NVARCHAR (100)  NULL,
     CONSTRAINT [PK_PaymentZigi] PRIMARY KEY CLUSTERED ([ZigiPaymentId] ASC),
     CONSTRAINT [FK_PaymentZigi_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO
@@ -125,4 +127,16 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de c
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de pagos realizados a través de la plataforma Zigi.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'En caso que se requira enviar a otro número de teléfono y no necesariamente asignado a la Guía, sirve mucho para multiguía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi', @level2type = N'COLUMN', @level2name = N'PhoneNumber';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Define si este link define el pago de un grupo de guías', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi', @level2type = N'COLUMN', @level2name = N'IsGroup';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Método de generación del link', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PaymentZigi', @level2type = N'COLUMN', @level2name = N'GeneratedMethod';
 

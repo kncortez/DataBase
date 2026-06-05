@@ -52,8 +52,7 @@ SELECT  distinct
       left join DeliveryBackOffice.dbo.Township tws WITH(NOLOCK) ON tws.IdTownship = dev.SenderIdTownship 
       left join DeliveryBackOffice.dbo.Township tws2 WITH(NOLOCK) ON tws2.IdTownship = dev.ReceiverIdTownship 
 	  left join DeliveryBackOffice.dbo.CatTypeService cts WITH(NOLOCK) ON  cts.CtsShortName = Rtrim(ltrim(dev.TypeService)) 
-	  where dev.Guide_Number =@Guide_Number
-      and dev.Guide_Serie = @Guide_Serie  
+	  WHERE dev.Guide_Serie = @Guide_Serie AND dev.Guide_Number =@Guide_Number 
   FOR XML PATH(''), TYPE 
   ) 
   .value('.', 'varchar(max)'),1,1,'' 
@@ -62,4 +61,4 @@ SELECT  distinct
   select  
    + @jsonOutput 
   FormatJson 
-END 
+END

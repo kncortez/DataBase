@@ -57,8 +57,7 @@ BEGIN
 			WHEN [MassWeight] < [volumetricWeight] THEN @sum+[volumetricWeight]
 			WHEN [MassWeight] = [volumetricWeight] THEN @sum+[volumetricWeight]
 		END
-	FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] WHERE GuideNumber = @guideNumber AND GuideSerie = @guideSerie
+	FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] WHERE GuideSerie = @guideSerie AND GuideNumber = @guideNumber
 
-	UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder] SET BilledWeight = @sum WHERE Guide_Number = @guideNumber AND Guide_Serie = @guideSerie
+	UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder] SET BilledWeight = @sum WHERE Guide_Serie = @guideSerie AND Guide_Number = @guideNumber
 END
-

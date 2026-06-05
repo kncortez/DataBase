@@ -440,9 +440,9 @@ BEGIN
 					INNER JOIN 
 						@TblDeliveryOrdersList t 
 						ON 
-							t.Guide_Number = ord.Guide_Number 
+							t.Guide_Serie = ord.Guide_Serie 
 							AND 
-							t.Guide_Serie = ord.Guide_Serie
+							t.Guide_Number = ord.Guide_Number
 						
 
 				IF(@@ROWCOUNT > 0)
@@ -456,7 +456,7 @@ BEGIN
 				, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
 				from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
 						inner join @TblDeliveryOrdersList t 
-						on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+						on (t.Guide_Serie = pay.GuideSerie and t.Guide_Number = pay.GuideNumber) 
 
 				IF(@@ROWCOUNT > 0)
 				BEGIN
@@ -478,14 +478,14 @@ BEGIN
 								AND
 								Co.GuideNumber = @GuideNumber
 							)
-							OR
-							(
-								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-								AND
-								Co.GuideSerie IS NULL
-								AND
-								Co.GuideNumber IS NULL
-							)
+							--OR
+							--(
+							--	Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+							--	AND
+							--	Co.GuideSerie IS NULL
+							--	AND
+							--	Co.GuideNumber IS NULL
+							--)
 						)
 						AND
 						Co.RowStatus = 1
@@ -619,8 +619,8 @@ BEGIN
 			FROM 
 				[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do WITH(NOLOCK)
 				INNER JOIN @TblDeliveryOrdersList tpo
-					ON do.GuideNumber = tpo.Guide_Number
-						AND do.GuideSerie = tpo.Guide_Serie
+					ON do.GuideSerie = tpo.Guide_Serie
+						AND do.GuideNumber = tpo.Guide_Number
 						AND do.TypeServiceId = tpo.IdTypeService
 		)
 
@@ -641,9 +641,9 @@ BEGIN
 					inner join 
 						@TblDeliveryOrdersList t 
 						on 
-							t.Guide_Number = ord.Guide_Number 
+							t.Guide_Serie = ord.Guide_Serie 
 							and 
-							t.Guide_Serie = ord.Guide_Serie
+							t.Guide_Number = ord.Guide_Number
 
 				END
 
@@ -655,7 +655,7 @@ BEGIN
 					, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
 					from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
 						 inner join @TblDeliveryOrdersList t 
-						 on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+						 on (t.Guide_Serie = pay.GuideSerie and t.Guide_Number = pay.GuideNumber) 
 
 				END
 
@@ -740,14 +740,14 @@ BEGIN
 										AND
 										Co.GuideNumber = @GuideNumber
 									)
-									OR
-									(
-										Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-										AND
-										Co.GuideSerie IS NULL
-										AND
-										Co.GuideNumber IS NULL
-									)
+									--OR
+									--(
+									--	Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+									--	AND
+									--	Co.GuideSerie IS NULL
+									--	AND
+									--	Co.GuideNumber IS NULL
+									--)
 								)
 								AND
 								Co.RowStatus = 1
@@ -814,14 +814,14 @@ BEGIN
 											AND
 											Co.GuideNumber = @GuideNumber
 										)
-										OR
-										(
-											Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-											AND
-											Co.GuideSerie IS NULL
-											AND
-											Co.GuideNumber IS NULL
-										)
+										--OR
+										--(
+										--	Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+										--	AND
+										--	Co.GuideSerie IS NULL
+										--	AND
+										--	Co.GuideNumber IS NULL
+										--)
 									)
 									AND
 									Co.RowStatus = 1
@@ -914,8 +914,8 @@ BEGIN
 								ON		[TDOL].[Guide_Serie] = DO.Guide_Serie
 								AND		[TDOL].[Guide_Number] = DO.Guide_Number
 							LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
-								ON		[TDOL].[Guide_Number] = [MSL].[LogGuideNumber]
-								AND		[TDOL].[Guide_Serie] = [MSL].[LogGuideSerie]
+								ON		[TDOL].[Guide_Serie] = [MSL].[LogGuideSerie]
+								AND		[TDOL].[Guide_Number] = [MSL].[LogGuideNumber]
 								AND		[MSL].[RowStatus] = 1
 								AND		[MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
 							LEFT JOIN	[dbo].[Membership] M

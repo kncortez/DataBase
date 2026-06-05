@@ -254,7 +254,8 @@ BEGIN TRY
 			BEGIN
 
 				SELECT
-					  DO.Collect_OnDelivery								AS 'AmountCOD'
+					  CCC.Symbol                                        AS 'Currency'
+					, DO.Collect_OnDelivery								AS 'AmountCOD'
 					, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
 					, 
 					CASE
@@ -294,6 +295,11 @@ BEGIN TRY
 							DO.PriceShippment
 					  END												AS 'Shipping'
 				FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+				LEFT JOIN DeliveryBackOffice.dbo.Cost CO WITH(NOLOCK)
+					ON DO.Guide_Serie = CO.GuideSerie 
+					AND DO.Guide_Number = CO.GuideNumber
+				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON CO.CodCurrency = CCC.IdCatCurrencyCOD
 				LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 					ON VPC.CodeOfReference = DO.Sender_ID
 				LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
@@ -413,7 +419,8 @@ BEGIN TRY
 			IF(@FlagCreation = 1)
 			BEGIN
 				SELECT
-					  DO.Collect_OnDelivery								AS 'AmountCOD'
+					  CCC.Symbol                                        AS 'Currency'
+					, DO.Collect_OnDelivery								AS 'AmountCOD'
 					, DO.Collect_OnDelivery								AS 'AmountCODAnticipated'
 					, 
 					CASE
@@ -453,6 +460,11 @@ BEGIN TRY
 							DO.PriceShippment
 					  END												AS 'Shipping'
 				FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+				LEFT JOIN DeliveryBackOffice.dbo.Cost CO WITH(NOLOCK)
+					ON DO.Guide_Serie = CO.GuideSerie 
+					AND DO.Guide_Number = CO.GuideNumber
+				LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+					ON CO.CodCurrency = CCC.IdCatCurrencyCOD
 				LEFT JOIN dbo.VisitPointClient            VPC WITH (NOLOCK)
 					ON VPC.CodeOfReference = DO.Sender_ID
 				LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)

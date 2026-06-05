@@ -37,11 +37,11 @@ BEGIN
 
         DECLARE @IdCatInvoiceType INT =
                 (
-               SELECT TOP 1
-       IdCatInvoiceType
-FROM CatInvoiceType WITH (NOLOCK)
-WHERE [Name] = 'Comisión COD'
-      AND RowStatus = 1
+                 SELECT TOP 1
+                        IdCatInvoiceType
+                   FROM CatInvoiceType  WITH(NOLOCK)
+                  WHERE [Name] = 'Comisión COD'
+                    AND RowStatus = 1
                 );
   
         IF OBJECT_ID('tempdb.dbo.#GuidesCommission', 'U') IS NOT NULL
@@ -82,8 +82,6 @@ WHERE [Name] = 'Comisión COD'
           FROM CatArticleSAP cas WITH(NOLOCK)
          WHERE cas.[Name] = @NameArticle
            AND cas.IdCountry = @IdCountry;
-
-		 
 
         INSERT INTO #GuidesCommission
         (
@@ -128,10 +126,11 @@ WHERE [Name] = 'Comisión COD'
            AND ISNULL(vpc.ExcludeCommissionCOD, cus.ExcludeCommissionCOD) = 0
            AND bdCOD.CatConceptCODId = @IdCatConceptCOD
            AND bdCOD.RowStatus = 1
-           AND bdCOD.Excluded = 0
+		   AND bdCOD.Excluded = 0
            AND bdCOD.AuthorizationNumber IS NOT NULL
            AND bdCOD.Commission > 0
            AND bdCOD.idCountry = @IdCountry
+           AND bdCOD.CreditDate >= '20260501'   
            AND CAST(bdCOD.CreditDate AS DATE) <= CAST(@CutOffDate AS DATE)
            AND vpc.IdVisitPointClient IN (SELECT Item FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@LstVisitPointClient, ','))
          GROUP BY bdCOD.GuideSerie,
@@ -161,8 +160,8 @@ WHERE [Name] = 'Comisión COD'
                      ON cCt.IdCountry = gc.IdCountry
                  LEFT JOIN CatBillingVolume        cbv WITH (NOLOCK)
                      ON ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = cbv.IdCatBillingVolume
-           WHERE gc.CreditDate <= @CutOffDate
-            -- AND ISNULL(vpcon.CatBillingVolumeId, cu.CatBillingVolumeId) = 2 --Billing Volume -> Completo;
+           WHERE           
+           gc.CreditDate <= @CutOffDate
 
             -- Validar si hay registros en la tabla temporal
             IF EXISTS (SELECT TOP 1 1

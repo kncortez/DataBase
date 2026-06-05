@@ -1,8 +1,16 @@
-﻿-- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-11-26>
--- Description: <Se agrego procedimiento para registrar factura para cliente corporativo>
--- =============================================
+﻿/* =================================================
+   SP:        [dbo].[sps_RegisterInvoiceForzaCorp]
+   Propósito: Se agrego procedimiento para registrar factura para cliente corporativo.
+   Autor:     Daniel Ramirez
+   Historia:  ---
+   Fecha:     2024-11-26
+
+=== CHANGELOG ============================
+
+2025-07-30 | Historia/épica: ---          | Autor: Brandon Pedroza |
+2025-11-21 | Historia/épica: FDAPI-4961   | Autor: Brandon Pedroza |
+
+=========================================== */
 CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForzaCorp]
 (
   @VpCodeOfReferences int
@@ -21,6 +29,7 @@ CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForzaCorp]
  ,@DescService INT = 1
  ,@TblLstDetail TblLstDetail READONLY
  ,@TblInOutOfMoneyDetail TblInOutOfMoneyDetail READONLY
+ ,@TblBuyerInfo TblBuyerInfo READONLY
 )
 AS
 BEGIN
@@ -34,12 +43,12 @@ BEGIN
                  SELECT COUNT(ind.dti_fk_orderNumber)
                    FROM invoiceDetail ind WITH (NOLOCK)
                         INNER JOIN @TblLstDetail tbd
-                           ON ind.dti_fk_orderNumber = tbd.orderNumber
-                          AND ind.dti_fk_orderserie = tbd.orderSerie
+                           ON ind.dti_fk_orderserie = tbd.orderSerie
+                          AND ind.dti_fk_orderNumber = tbd.orderNumber
                         INNER JOIN invoiceHeader inh WITH (NOLOCK)
                            ON ind.dti_fk_header = inh.inv_pk_id
-                          AND inh.CatInvoiceTypeId = @idType
                   WHERE inh.inv_certificationFEL IS NULL
+                    AND inh.CatInvoiceTypeId = @idType
                 );
 
      IF(@Guide <= 0)
@@ -156,6 +165,44 @@ BEGIN
                                    ,@tokenRegister
                                    ,GETDATE()
                               FROM @TblInOutOfMoneyDetail MD
+                      --INSERT EN TABLA LOG DE INFORMACION DEL CLIENTE CUANDO SE EMITE UNA FACTURA
+                      IF(@IdCountry = 'SV')
+                      BEGIN
+                        INSERT INTO InformationBuyerInvoice 
+                                 (
+                                  InvoiceId,
+                                  DistrictCode,
+                                  StateCode,
+                                  ActivityCode,
+								  ActivityDescription,
+                                  NRC,
+                                  TypeIdentificationDocumentCode,
+                                  IdDocument,
+                                  Phone,
+                                  Rowstatus,
+                                  TokenCreated,
+                                  DateCreated,
+                                  TokenUpdated,
+                                  DateUpdated,
+                                  OperationConditionCode
+                                  )
+                          SELECT @invoiceHeaderId
+                                 ,BI.DistrictCode
+                                 ,BI.StateCode
+                                 ,BI.ActivityCode
+								 ,BI.ActivityDescription
+                                 ,BI.NRC
+                                 ,BI.TypeDocument
+                                 ,BI.IdDocument
+                                 ,BI.Phone
+                                 ,1
+                                 ,@tokenRegister
+                                 ,GETDATE()
+                                 ,NULL
+                                 ,NULL
+                                 ,BI.OperationConditionCode
+                             FROM @TblBuyerInfo BI
+                      END
 
                     SELECT @invoiceHeaderId 'IDENTITY'
 
@@ -201,8 +248,8 @@ BEGIN
             SET @invoiceHeaderId = (SELECT TOP 1 dti_fk_header 
                                       FROM invoiceDetail indt WITH (NOLOCK)
                                            INNER JOIN @TblLstDetail tbld
-                                              ON indt.dti_fk_orderNumber = tbld.orderNumber
-                                             AND indt.dti_fk_orderserie = tbld.orderSerie
+                                              ON indt.dti_fk_orderserie = tbld.orderSerie
+                                             AND indt.dti_fk_orderNumber = tbld.orderNumber
                                            INNER JOIN invoiceHeader inh WITH (NOLOCK)
                                               ON indt.dti_fk_header = inh.inv_pk_id
                                      WHERE inh.inv_certificationFEL IS NULL)

@@ -1,18 +1,20 @@
-
+﻿
 CREATE TABLE [dbo].[DistrictByBillingSV] (
-	Id INT IDENTITY(1,1),
-    CodeDistrict NVARCHAR(10),
-    StateCode NVARCHAR(10),
-    [Name] NVARCHAR(100),
-	StateId INT NULL,
-    RowStatus BIT NOT NULL,
-    TokenCreated VARCHAR(50) NOT NULL,
-    DateCreated DATETIME NOT NULL,
-    TokenUpdated VARCHAR(50) NULL,
-    DateUpdated DATETIME NULL,
-    PRIMARY KEY (Id),
-	CONSTRAINT [FKDistrictByBillingSV] FOREIGN KEY ([StateId]) REFERENCES [StateByBillingSV] ([Id]),
+    [Id]           INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [CodeDistrict] NVARCHAR (10)  NULL,
+    [StateCode]    NVARCHAR (10)  NULL,
+    [Name]         NVARCHAR (100) NULL,
+    [StateId]      INT            NULL,
+    [RowStatus]    BIT            NOT NULL,
+    [TokenCreated] VARCHAR (50)   NOT NULL,
+    [DateCreated]  DATETIME       NOT NULL,
+    [TokenUpdated] VARCHAR (50)   NULL,
+    [DateUpdated]  DATETIME       NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FKDistrictByBillingSV] FOREIGN KEY ([StateId]) REFERENCES [dbo].[StateByBillingSV] ([Id])
 );
+
+
 GO
 EXEC sp_addextendedproperty 
 						@name = N'MS_Description',    

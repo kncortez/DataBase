@@ -1,10 +1,4 @@
-﻿-- =============================================
--- Author:		<Andrés, Ruíz>
--- Create date: <2023-04-10>
--- Description:	<Reporte completo de COD>
--- =============================================
-
-CREATE PROCEDURE [dbo].[spRS_CODReport]
+﻿CREATE PROCEDURE [dbo].[spRS_CODReport]
     @StartDate DATETIME = NULL,
     @EndDate DATETIME = NULL,
 	@IdCountrySender NVARCHAR(2) = 'GT'
@@ -163,10 +157,10 @@ BEGIN
 		[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK) --18TEBNHL
     WHERE 
 		[DOD].[StatusOrderId] = 11
+        AND
+		[DOD].[DateCreated] BETWEEN @StartDate AND @EndDate
 		AND
 		[DOD].[RowStatus] = 1
-		AND
-		[DOD].[DateCreated] BETWEEN @StartDate AND @EndDate
 		
     SELECT 
 		DISTINCT

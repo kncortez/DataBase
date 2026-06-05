@@ -263,8 +263,8 @@ BEGIN
             ON TRP.[GuideSerie] = do.[Guide_Serie]
                AND TRP.[GuideNumber] = do.[Guide_Number]
         INNER JOIN DeliveryBackOffice.dbo.Cost                     co WITH (NOLOCK)
-            ON do.Guide_Number = co.GuideNumber
-               AND do.Guide_Serie = co.GuideSerie
+            ON do.Guide_Serie = co.GuideSerie
+               AND do.Guide_Number = co.GuideNumber
         INNER JOIN CatCurrencyCOD                                  CCU WITH (NOLOCK)
             ON ISNULL(co.ShippingCurrency, @Currency) = CCU.IdCatCurrencyCOD
     WHERE do.Guide_Serie =

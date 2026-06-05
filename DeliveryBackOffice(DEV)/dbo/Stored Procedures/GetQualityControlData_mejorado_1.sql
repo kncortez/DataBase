@@ -95,8 +95,8 @@ BEGIN
                  , ordd.DeliveryAttemptId
                  , ordd.UserCreated
             FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] ordd WITH(NOLOCK)
-            WHERE dsd.Guide_Number = ordd.Guide_Number
-                  AND dsd.Guide_Serie = ordd.Guide_Serie
+            WHERE ordd.Guide_Serie = dsd.Guide_Serie
+                  AND ordd.Guide_Number = dsd.Guide_Number
             ORDER BY DateCreated DESC
         )                                                                     gdd
         WHERE --dsd.DateCreated BETWEEN @CurrentDateAsDatetime AND @CurrentDateAsDatetimeFinishDay
@@ -126,8 +126,9 @@ BEGIN
                                      ) AS rn
             FROM dbo.DeliveryOrderDetail                                         ordd WITH (NOLOCK)
                 LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  dsd WITH (NOLOCK)
-                    ON dsd.Guide_Number = ordd.Guide_Number
-                       AND dsd.Guide_Serie = ordd.Guide_Serie
+                    ON dsd.Guide_Serie = ordd.Guide_Serie
+                        AND
+                        dsd.Guide_Number = ordd.Guide_Number
                        AND dsd.RowStatus = 1
                 LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] ds WITH (NOLOCK)
                     ON dsd.ID_DeliveryOrderBySettlement = ds.ID

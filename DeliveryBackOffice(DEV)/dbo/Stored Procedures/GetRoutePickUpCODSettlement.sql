@@ -33,10 +33,10 @@ BEGIN
 		, CASE WHEN invh.inv_serieFEL IS NULL OR invh.inv_serieFEL = ''
 		  THEN NULL ELSE CONCAT(invh.inv_serieFEL, '-', invh.inv_numberFEL) END  FEL
 		, cu.IdCustomer
-	FROM DeliveryOrder do
+	FROM DeliveryOrder do with (nolock)
 	INNER JOIN (
 		SELECT GuideSerie, GuideNumber 
-		FROM [DeliveryBackOffice].[dbo].SettlementByPickupDetail
+		FROM [DeliveryBackOffice].[dbo].SettlementByPickupDetail with (nolock)
 		WHERE SettlementByPickupId = @ManifestId 
 		AND IsPieceLiquidaded = 1 -- Pieza de la guia liquidada
 		AND (IsCODSettlement IS NULL OR IsCODSettlement <> 1) -- Pieza no liquidada en COD
@@ -52,8 +52,8 @@ BEGIN
 			,MAX(invh1.inv_numberFEL) inv_numberFEL
 			,invd.dti_fk_orderSerie dti_fk_orderSerie
 			,invd.dti_fk_orderNumber dti_fk_orderNumber
-		FROM DeliveryBackOffice.dbo.invoiceDetail invd
-		JOIN DeliveryBackOffice.dbo.invoiceHeader invh1
+		FROM DeliveryBackOffice.dbo.invoiceDetail invd with (nolock)
+		inner JOIN DeliveryBackOffice.dbo.invoiceHeader invh1 with (nolock)
 			ON invh1.inv_pk_id = invd.dti_fk_header
 			AND invh1.inv_descriptionFEL = 'PROCESO REALIZADO'
 			AND invh1.inv_invoiceOfCreditNote IS NULL
@@ -68,7 +68,7 @@ BEGIN
 
 	-- Table 2
 	SELECT COUNT(1) IsCODSettlement
-	FROM [DeliveryBackOffice].[dbo].SettlementByPickupDetail
+	FROM [DeliveryBackOffice].[dbo].SettlementByPickupDetail with (nolock)
 	WHERE SettlementByPickupId = @ManifestId 
 		AND IsPieceLiquidaded = 1 -- Pieza de la guia liquidada en recolección
 		AND IsCODSettlement = 1 -- Pieza no liquidada en COD

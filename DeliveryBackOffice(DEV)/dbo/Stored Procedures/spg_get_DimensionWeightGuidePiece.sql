@@ -31,8 +31,8 @@ BEGIN
             (
                 SELECT IdCustomer
                 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-                WHERE Guide_Number = @numberGuide
-                      AND Guide_Serie = @serieGuide
+                WHERE Guide_Serie = @serieGuide
+                      AND Guide_Number = @numberGuide
 					  AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
             ) is NULL
             BEGIN
@@ -91,8 +91,8 @@ BEGIN
             (
                 SELECT IdCustomer
                 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-                WHERE Guide_Number = @numberGuide
-                      AND Guide_Serie = @serieGuide
+                WHERE Guide_Serie = @serieGuide
+                      AND Guide_Number = @numberGuide
 					  AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
             ) is NULL
             BEGIN
@@ -195,8 +195,8 @@ BEGIN
         (
             SELECT IdCustomer
             FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-            WHERE Guide_Number = @numberGuide
-                  AND Guide_Serie = @serieGuide
+            WHERE Guide_Serie = @serieGuide
+                  AND Guide_Number = @numberGuide
 				  AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
         ) is NULL
         BEGIN

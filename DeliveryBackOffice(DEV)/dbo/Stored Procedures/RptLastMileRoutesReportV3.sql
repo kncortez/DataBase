@@ -129,7 +129,9 @@ IncidentsInRoute AS (
         ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
     INNER JOIN 
         [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
-        ON DOP.GuideNumber = DA.Guide_Number
+        ON DOP.GuideSerie = DA.Guide_Serie 
+		AND
+		DOP.GuideNumber = DA.Guide_Number
     WHERE
        
 		 COI.RowStatus = 1 
@@ -254,7 +256,7 @@ OUTER APPLY (
 
 WHERE 
     DOBS.Date_Dispatched BETWEEN @StartDateTime AND @EndDateTime
-	AND   HBL.IdCountry = ISNULL(@IdCountry,'GT')
+	AND   HBL.IdCountry = @IdCountry
 GROUP BY DOBS.ID
 
 

@@ -23,9 +23,11 @@ BEGIN
 	INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK) 
 		ON cr.IdRoute = ra.IdRoute 
 	WHERE fph.ServiceStatusId = @CreateStatus
-	AND ISNULL(cr.CountryId,'GT') =  @IdCountry
+	AND cr.CountryId =  @IdCountry
+    AND fph.DateCreated >= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0)
+    AND fph.DateCreated <  DATEADD(day, DATEDIFF(day, 0, GETDATE()), 1)
 	AND fph.RowStatus = 1
 	AND cr.RowStatus = 1
-	ORDER BY fph.DateCreated DESC 
+	ORDER BY fph.DateCreated Asc 
 
 END
