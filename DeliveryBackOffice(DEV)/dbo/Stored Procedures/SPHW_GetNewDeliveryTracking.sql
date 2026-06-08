@@ -382,10 +382,10 @@ BEGIN
                             (
                                 SELECT TOP 1
                                        cic.IncidenceTypeName
-                                FROM DeliveryAttempt dla WITH (NOLOCK)
-                                    INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+                                FROM DeliveryBackOffice.dbo.DeliveryAttempt dla WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.CatTypeIncidence cti WITH (NOLOCK)
                                         ON dla.ID_Incident = cti.IdIncidenceType
-                                    INNER JOIN CatIncidenceClasification cic WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.CatIncidenceClasification cic WITH (NOLOCK)
                                         ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
                                 WHERE dod.Guide_Serie = @GuideSerie
                                       AND dod.Guide_Number = @GuideNumber
@@ -402,10 +402,10 @@ BEGIN
                             (
                                 SELECT TOP 1
                                        cic.IncidenceTypeName
-                                FROM DeliveryAttempt dla WITH (NOLOCK)
-                                    INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+                                FROM DeliveryBackOffice.dbo.DeliveryAttempt dla WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.CatTypeIncidence cti WITH (NOLOCK)
                                         ON dla.ID_Incident = cti.IdIncidenceType
-                                    INNER JOIN CatIncidenceClasification cic WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.CatIncidenceClasification cic WITH (NOLOCK)
                                         ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
                                 WHERE dod.Guide_Serie = @GuideSerie
                                       AND dod.Guide_Number = @GuideNumber
@@ -414,8 +414,8 @@ BEGIN
                             (
                                 SELECT TOP 1
                                        cti.NameIncidencePublic
-                                FROM DeliveryAttempt dla WITH (NOLOCK)
-                                    INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+                                FROM DeliveryBackOffice.dbo.DeliveryAttempt dla WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.CatTypeIncidence cti WITH (NOLOCK)
                                         ON dla.ID_Incident = cti.IdIncidenceType
                                 WHERE dod.Guide_Serie = @GuideSerie
                                       AND dod.Guide_Number = @GuideNumber
@@ -425,8 +425,8 @@ BEGIN
                         (
                             SELECT TOP 1
                                    cti.NameIncidence
-                            FROM DeliveryAttempt dla WITH (NOLOCK)
-                                INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+                            FROM DeliveryBackOffice.dbo.DeliveryAttempt dla WITH (NOLOCK)
+                                INNER JOIN DeliveryBackOffice.dbo.CatTypeIncidence cti WITH (NOLOCK)
                                     ON dla.ID_Incident = cti.IdIncidenceType
                             WHERE dod.Guide_Serie = @GuideSerie
                                   AND dod.Guide_Number = @GuideNumber
@@ -440,8 +440,8 @@ BEGIN
 							        (
 								        SELECT TOP 1
 									        cti.NameIncidence 
-								        FROM DeliveryAttempt            dla WITH (NOLOCK)
-								        INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+								        FROM DeliveryBackOffice.dbo.DeliveryAttempt            dla WITH (NOLOCK)
+								        INNER JOIN DeliveryBackOffice.dbo.CatTypeIncidence cti WITH (NOLOCK)
 									        ON dla.ID_Incident = cti.IdIncidenceType
 								        WHERE dod.Guide_Serie = @GuideSerie
 									        AND dod.Guide_Number = @GuideNumber
@@ -471,21 +471,21 @@ BEGIN
                                    (
                                        SELECT TOP 1
                                               Path_Dry
-                                       FROM DeliveryProof WITH (NOLOCK)
+                                       FROM DeliveryBackOffice.dbo.DeliveryProof WITH (NOLOCK)
                                        WHERE Guide_Serie = @GuideSerie
                                              AND Guide_Number = @GuideNumber
                                    ) IS NOT NULL,
                                 (
                                     SELECT TOP 1
                                            Path_Dry
-                                    FROM DeliveryProof WITH (NOLOCK)
+                                    FROM DeliveryBackOffice.dbo.DeliveryProof WITH (NOLOCK)
                                     WHERE Guide_Serie = @GuideSerie
                                           AND Guide_Number = @GuideNumber
                                 ),
                                 (
                                     SELECT TOP 1
                                            Path_Cold
-                                    FROM DeliveryProof WITH (NOLOCK)
+                                    FROM DeliveryBackOffice.dbo.DeliveryProof WITH (NOLOCK)
                                     WHERE Guide_Serie = @GuideSerie
                                           AND Guide_Number = @GuideNumber
                                 ))
@@ -493,10 +493,10 @@ BEGIN
                             (
                                 SELECT TOP 1
                                        dlp.Path_Incident
-                                FROM dbo.DeliveryAttempt datt WITH (NOLOCK)
-                                    INNER JOIN ConfirmationOfIncidence cfo WITH (NOLOCK)
+                                FROM DeliveryBackOffice.dbo.DeliveryAttempt datt WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.ConfirmationOfIncidence cfo WITH (NOLOCK)
                                         ON datt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
-                                    INNER JOIN dbo.DeliveryProof dlp WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.DeliveryProof dlp WITH (NOLOCK)
                                         ON datt.ID_Proof = dlp.ID
                                 WHERE dod.Guide_Serie = @GuideSerie
                                       AND dod.Guide_Number = @GuideNumber
@@ -554,8 +554,8 @@ BEGIN
                             (
                                 SELECT TOP 1
                                        Latitude
-                                FROM DeliveryAttempt dt WITH (NOLOCK)
-                                    INNER JOIN ConfirmationOfIncidence cfo WITH (NOLOCK)
+                                FROM DeliveryBackOffice.dbo.DeliveryAttempt dt WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.ConfirmationOfIncidence cfo WITH (NOLOCK)
                                         ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
                                 WHERE dod.Guide_Serie = @GuideSerie
                                       AND dod.Guide_Number = @GuideNumber
@@ -578,8 +578,8 @@ BEGIN
                             (
                                 SELECT TOP 1
                                        Longitude
-                                FROM DeliveryAttempt dt WITH (NOLOCK)
-                                    INNER JOIN ConfirmationOfIncidence cfo WITH (NOLOCK)
+                                FROM DeliveryBackOffice.dbo.DeliveryAttempt dt WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.ConfirmationOfIncidence cfo WITH (NOLOCK)
                                         ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
                                 WHERE dod.Guide_Serie = @GuideSerie
                                       AND dod.Guide_Number = @GuideNumber
@@ -619,11 +619,11 @@ BEGIN
                 FROM @DeliveryOrderDetail dod
                     INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder] so WITH (NOLOCK)
                         ON [so].[StatusOrderId] = [dod].[StatusOrderId]
-                    INNER JOIN [dbo].[CatCheckpointType] CCT WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH (NOLOCK)
                         ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
-                    LEFT JOIN [dbo].[DeliveryAttempt] da WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] da WITH (NOLOCK)
                         ON [dod].[DeliveryAttemptId] = [da].[ID]
-                    LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON [da].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
                     LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
 					    ON [da].ID_Incident = [CTI].IdIncidenceType

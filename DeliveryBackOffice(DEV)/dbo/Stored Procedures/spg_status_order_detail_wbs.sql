@@ -71,7 +71,7 @@ DECLARE @StatusOrderForCustomer TABLE (
 	DECLARE @StatusForCustomerExist BIT;
 
 DECLARE @DelayTrackingParam INT = (
-    SELECT Value FROM ConfigParams WHERE Name = 'DelayTracking'
+    SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams WHERE Name = 'DelayTracking'
 );
 
 DECLARE @DelayTracking DATETIME = DATEADD(MINUTE, -@DelayTrackingParam, GETDATE());
@@ -125,7 +125,7 @@ DECLARE @DelayTracking DATETIME = DATEADD(MINUTE, -@DelayTrackingParam, GETDATE(
 			ON so.StatusOrderId = dod.StatusOrderId
 		INNER JOIN @StatusOrderForCustomer SFC 
 			ON SFC.StatusOrderId = DOD.StatusOrderId 
-		LEFT JOIN [dbo].[DeliveryAttempt]						da  WITH (NOLOCK)
+		LEFT JOIN DeliveryBackOffice.dbo.[DeliveryAttempt]						da  WITH (NOLOCK)
 			ON [dod].[DeliveryAttemptId] = [da].[ID]
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
 			ON [da].ID_Incident = [CTI].IdIncidenceType
@@ -176,9 +176,9 @@ DECLARE @DelayTracking DATETIME = DATEADD(MINUTE, -@DelayTrackingParam, GETDATE(
 			AND DA.Guide_Number = DET.Guide_Number
 		LEFT JOIN  DeliveryBackOffice.dbo.CatTypeIncidence INC WITH (NOLOCK)
 			ON DA.ID_Incident = INC.IdIncidenceType
-		LEFT JOIN dbo.SenderReceiver CUR  WITH(NOLOCK) 
+		LEFT JOIN DeliveryBackOffice.dbo.SenderReceiver CUR  WITH(NOLOCK) 
 			ON CUR.ID = DA.ID_Courier
-		LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
+		LEFT JOIN DeliveryBackOffice.dbo.[ConfirmationOfIncidence] COI WITH(NOLOCK) 
 			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
 		WHERE DA.Guide_Serie = @Guide_Serie 
 			AND DA.Guide_Number = @Guide_Number
@@ -263,8 +263,8 @@ DECLARE @DelayTracking DATETIME = DATEADD(MINUTE, -@DelayTrackingParam, GETDATE(
 					(
 						SELECT TOP 1
 							cti.NameIncidence 
-						FROM DeliveryAttempt            dla WITH (NOLOCK)
-						INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+						FROM DeliveryBackOffice.dbo.DeliveryAttempt            dla WITH (NOLOCK)
+						INNER JOIN DeliveryBackOffice.dbo.CatTypeIncidence cti WITH (NOLOCK)
 							ON dla.ID_Incident = cti.IdIncidenceType
 						WHERE dod.Guide_Serie = dla.Guide_Serie
 							AND dod.Guide_Number = dla.Guide_Number
