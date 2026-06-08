@@ -35,8 +35,8 @@ BEGIN
                FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
                    INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
                        ON pbs.GuidePieceId = dop.GuidePiece
-               WHERE dop.GuideNumber = do.Guide_Number
-                     AND dop.GuideSerie = do.Guide_Serie
+               WHERE dop.GuideSerie = do.Guide_Serie
+                     AND dop.GuideNumber = do.Guide_Number
                      AND dop.IsDry = 0
 					AND CAST(pbs.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
            ) AS Pieces_Cold,
@@ -45,8 +45,8 @@ BEGIN
                FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
                    INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
                        ON pbs.GuidePieceId = dop.GuidePiece
-               WHERE dop.GuideNumber = do.Guide_Number
-                     AND dop.GuideSerie = do.Guide_Serie
+               WHERE dop.GuideSerie = do.Guide_Serie
+                     AND dop.GuideNumber = do.Guide_Number
                      AND dop.IsDry = 1
 					AND CAST(pbs.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
            ) AS Pieces_Dry,
@@ -68,11 +68,11 @@ BEGIN
             ON pc.GuidePiece = pbs.GuidePieceId
 			AND CAST(pbs.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
         INNER JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail sbpd WITH(NOLOCK)
-            ON do.Guide_Number = sbpd.GuideNumber
+            ON do.Guide_Serie = sbpd.GuideSerie AND do.Guide_Number = sbpd.GuideNumber
                AND sbpd.IsDispatched = 1
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dop WITH(NOLOCK)
-            ON dop.GuideNumber = do.Guide_Number
-               AND dop.GuideSerie = do.Guide_Serie
+            ON dop.GuideSerie = do.Guide_Serie
+               AND dop.GuideNumber = do.Guide_Number
         INNER JOIN DeliveryBackOffice.dbo.SettlementByPickup sbp WITH(NOLOCK)
             ON sbpd.SettlementByPickupId = sbp.Id
                AND sbp.SequenceCode = @IdManifest

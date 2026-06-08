@@ -1,14 +1,17 @@
-
+﻿
 CREATE TABLE [dbo].[CatEconomicActivityBySV] (
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-    CodeActivity NVARCHAR(10),
-    [Description] NVARCHAR(255),
-    RowStatus BIT,
-    TokenCreated VARCHAR(50),
-    DateCreated DATETIME,
-    TokenUpdated VARCHAR(50),
-    DateUpdated DATETIME
+    [Id]           INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [CodeActivity] NVARCHAR (10)  NULL,
+    [Description]  NVARCHAR (255) NULL,
+    [RowStatus]    BIT            NULL,
+    [TokenCreated] VARCHAR (50)   NULL,
+    [DateCreated]  DATETIME       NULL,
+    [TokenUpdated] VARCHAR (50)   NULL,
+    [DateUpdated]  DATETIME       NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC)
 );
+
+
 
 GO
 EXEC sp_addextendedproperty

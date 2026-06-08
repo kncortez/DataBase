@@ -29,6 +29,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_product_description]
     ON [dbo].[BreakdownOfPayment]([IdCost] ASC, [Description] ASC);
@@ -41,9 +43,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_RowStatus_Amount]
-    ON [dbo].[BreakdownOfPayment]([RowStatus] ASC, [Amount] ASC)
-    INCLUDE([IdCost], [Description]);
+
 
 
 GO
@@ -61,6 +61,3 @@ CREATE NONCLUSTERED INDEX [idx_IdCost]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_Description]
-    ON [dbo].[BreakdownOfPayment]([Description] ASC);
-

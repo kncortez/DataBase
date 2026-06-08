@@ -53,7 +53,3 @@ END
 --SELECT * FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
 --WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 GO
-GRANT EXECUTE
-    ON OBJECT::[dbo].[SPG_Insert_Update_GuidesList] TO [cixtetela]
-    AS [dbo];
-

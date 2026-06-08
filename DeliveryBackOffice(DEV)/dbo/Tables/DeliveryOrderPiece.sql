@@ -25,17 +25,19 @@
     [IsDry]                             BIT             DEFAULT ((1)) NULL,
     [StatusOrderId]                     INT             NULL,
     [CodeOfSeller]                      NVARCHAR (20)   NULL,
-    [ParcelCode]                        NVARCHAR (10)   NULL,
+    [ParcelCode]                        NVARCHAR (20)   NULL,
     [ExternalPieceId]                   NVARCHAR (50)   NULL,
     [TokenRegistrationExternalCode]     NVARCHAR (50)   NULL,
     [DateRegistrationExternalCode]      DATETIME        NULL,
     [AccountIdRegistrationExternalCode] BIGINT          NULL,
-    [IdStatusGuideByContainer]          INT             NULL, 
-    [IsNewInContainer] BIT NULL, 
+    [IdStatusGuideByContainer]          INT             NULL,
+    [IsNewInContainer]                  BIT             NULL,
     CONSTRAINT [PK_DeliveryOrderPiece] PRIMARY KEY NONCLUSTERED ([GuideSerie] ASC, [GuideNumber] ASC, [GuidePiece] ASC),
     CONSTRAINT [FK_CategoryCheck] FOREIGN KEY ([CategoryCheck]) REFERENCES [dbo].[CatArticle] ([ArtId]),
-    CONSTRAINT [FK_DeliveryOrderPiece_CatStatusGuideByContainer] FOREIGN KEY (IdStatusGuideByContainer) REFERENCES [dbo].[CatStatusGuideByContainer] (IdStatus)
+    CONSTRAINT [FK_DeliveryOrderPiece_CatStatusGuideByContainer] FOREIGN KEY ([IdStatusGuideByContainer]) REFERENCES [dbo].[CatStatusGuideByContainer] ([IdStatus])
 );
+
+
 
 
 
@@ -126,3 +128,20 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'DeliveryOrderPiece',
     @level2type = N'COLUMN',
     @level2name = N'IsNewInContainer'
+GO
+CREATE NONCLUSTERED INDEX [IX_DOP_Guide_SumAndWeightPick]
+    ON [dbo].[DeliveryOrderPiece]([GuideSerie] ASC, [GuideNumber] ASC)
+    INCLUDE([PieceWeight], [Amount], [NoPiece], [PiecePhysicalWeight]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrderPiece_SFTP_Webhook]
+    ON [dbo].[DeliveryOrderPiece]([GuideSerie] ASC, [GuideNumber] ASC)
+    INCLUDE([GuidePiece], [ExternalPieceId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DOP_GuideSerie_GuideNumber]
+    ON [dbo].[DeliveryOrderPiece]([GuideSerie] ASC, [GuideNumber] ASC)
+    INCLUDE([NoPiece]);
+

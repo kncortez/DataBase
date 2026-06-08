@@ -32,14 +32,18 @@ DECLARE @hour AS INT =
 		AND ihd.inv_SAPDocEntry <> -1
 		AND ihd.inv_SAPDocEntry IS NOT NULL
 		--AND ihd.inv_pk_id = 2384510
-		AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2025-06-01' AS DATE)
-		AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2025-06-30' AS DATE)
+		AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2026-05-01' AS DATE)
+		--AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2025-12-31' AS DATE)
 		AND IHD.inv_SAPDocEntry <> 1
 		AND IHD.inv_type <> 2 --no enviar pagos de notas de crédito
 		--AND 1=0
 		--AND io_SAPErrorPaymentDetail LIKE '%10000104 - En el campo "Fecha de contabilización", introduzca la fecha de contabilización que es igual o anterior a la fecha del sistema%'
+		--AND IOMD.io_SAPErrorPaymentDetail = 'La factura ya se ha cerrado o bloqueado '
 		--AND IOMD.io_SAPErrorPaymentDetail = 'Falta especificación para medio de pago  [RCT3.VoucherNum][line: 0]'
-	--AND 1=0
+	--    AND IOMD.io_SAPErrorPaymentDetail = 'La factura ya se ha cerrado o bloqueado '
+--	AND 1=0
+	--and io_invoice = 6471848
+	
 	ORDER BY ihd.inv_date ASC
 
 	END

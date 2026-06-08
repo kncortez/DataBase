@@ -1,4 +1,4 @@
-CREATE FUNCTION dbo.SplitOrdinal
+﻿CREATE FUNCTION dbo.SplitOrdinal
 (
     @s          nvarchar(max),
     @delim      nchar(1),      -- p. ej. N'/'
@@ -23,7 +23,7 @@ WITH S(ordinal, startPos, nextPos) AS
 
     UNION ALL
 
-    -- Recursi�n
+    -- Recursión
     SELECT
         CAST(ordinal + 1 AS int) AS ordinal,
         CAST(CASE WHEN nextPos = 0

@@ -49,10 +49,10 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [idx_MembershipSubscriptionLog_RowStatus]
-    ON [dbo].[MembershipSubscriptionLog]([RowStatus] ASC)
-    INCLUDE([LogGuideSerie], [LogGuideNumber]);
+
 
 
 GO
@@ -67,8 +67,7 @@ CREATE NONCLUSTERED INDEX [IDX_SubscriptionId_RowStatus_INCLUDE]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_LogGuideNumber]
-    ON [dbo].[MembershipSubscriptionLog]([LogGuideNumber] ASC);
+
 
 
 GO
@@ -80,4 +79,15 @@ GO
 CREATE NONCLUSTERED INDEX [idx_CustomerId_RowStatus_SubscriptionId]
     ON [dbo].[MembershipSubscriptionLog]([CustomerId] ASC, [RowStatus] ASC, [SubscriptionId] ASC)
     INCLUDE([MembershipId], [LogActionDescription], [LogGuideSerie], [LogGuideNumber], [LogGuideOriginalValue], [LogGuideNewValue], [DateCreated], [LogServiceNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_DateCreated_INCLUDE]
+    ON [dbo].[MembershipSubscriptionLog]([RowStatus] ASC, [DateCreated] ASC)
+    INCLUDE([SubscriptionId], [DateUpdated]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_MembershipId_CustomerId_RowStatus_DateCreated]
+    ON [dbo].[MembershipSubscriptionLog]([MembershipId] ASC, [CustomerId] ASC, [RowStatus] ASC, [DateCreated] ASC);
 

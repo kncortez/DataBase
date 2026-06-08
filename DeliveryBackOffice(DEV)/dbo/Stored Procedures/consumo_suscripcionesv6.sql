@@ -1,12 +1,23 @@
-﻿ create procedure consumo_suscripcionesv6 
+﻿ CREATE procedure [dbo].[consumo_suscripcionesv6] 
 -- Detalle de Consumo en suscripciones v6 (Julio 2024) -- 157,982
 as
-begin
+BEGIN
 	SELECT ISNULL(SL.SubscriptionId,0) [ID_Paquete]
 	,'S' + CAST(S.IdSubscription AS NVARCHAR) [IdClubForza]
 	,CS.SubscriptionName [NombrePaquete]
 	,'Suscripción'[Tipo]
-	,S.SubscriptionCost [Costo]
+	,
+	
+	CAST(S.SubscriptionCost
+	/CASE CS.IdCountry
+            WHEN 'GT' THEN 1.12   -- Guatemala 12%
+            WHEN 'SV' THEN 1.13   -- El Salvador 13%
+            WHEN 'HN' THEN 1.15   -- Honduras 15%
+            ELSE 1                -- Por seguridad
+        END
+		AS DECIMAL(14,2))
+	[Costo]
+	--,S.SubscriptionCost
 	,S.DateCreated [FechaAdquisicion]
 	,S.ExpirationDate [FechaExpiracion]
 	,CM.[Name] [NombreCliente],CM.UsrEmail [Correo]
@@ -14,6 +25,7 @@ begin
 	,IIF(S.CatTypeSubscriptionId = 1,0,S.SubscriptionMaxServiceFixedValue) [EnviosAdquiridos]
 	,ISNULL(SL.DateUpdated,SL.DateCreated) [Fecha_Generacion]
 	,CM.Phone [Telefono]
+    ,CS.IdCountry
 	FROM DeliveryBackOffice.dbo.Subscription S WITH(NOLOCK) 
 	LEFT JOIN dbo.MembershipSubscriptionLog SL WITH(NOLOCK) ON S.IdSubscription = SL.SubscriptionId -- 3,189 suscripciones al 31 de mayo 2024
 	INNER JOIN DeliveryBackOffice.dbo.CatSubscription CS WITH(NOLOCK) ON S.CatSubscriptionId = CS.IdCatSubscription

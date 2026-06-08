@@ -25,20 +25,20 @@
 -- Description:	<Se agregan campos StartDate y EndDate, y RTRIM a CatTypeSubscriptionName>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetServiceCartbyAccountMarketPlace]
-	@IdAccount BIGINT,
-	@Token NVARCHAR(50),
-	@IdCountry NVARCHAR(3),
-	@IsUserTeleMarketing BIT = 0
+    @IdAccount BIGINT,
+    @Token NVARCHAR(50),
+    @IdCountry NVARCHAR(3),
+    @IsUserTeleMarketing BIT = 0
 AS
 BEGIN
-	SET NOCOUNT ON;
-	SET ARITHABORT ON;
+    SET NOCOUNT ON;
+    SET ARITHABORT ON;
 
-	BEGIN TRANSACTION
+    BEGIN TRANSACTION
 
-	BEGIN TRY
+    BEGIN TRY
 
-		DECLARE @AccountServiceCartId INT = NULL;
+        DECLARE @AccountServiceCartId INT = NULL;
 
 		IF(@IsUserTeleMarketing=0)
 		BEGIN
@@ -61,12 +61,7 @@ BEGIN
 				AND IdCountry = @IdCountry 
 				ORDER BY DateCreated DESC
 
-			  END
 
-		IF (@AccountServiceCartId IS NOT NULL OR @AccountServiceCartId != '')
-		BEGIN
-			
-		
             IF(@IsUserTeleMarketing=0)
 			BEGIN
 				
@@ -191,30 +186,151 @@ BEGIN
 				AND mpcm.RowStatus=1
 				AND mpc.IdCountry = @IdCountry 
 
-			END	
-			
-		END
-		ELSE
-		BEGIN
-			SELECT
-			2 [StatusCode]
-		   ,'Service Cart not found' [Description]
-		END
-	
-		IF (@@TRANCOUNT > 0)
-			COMMIT TRANSACTION;
-    END TRY
-	BEGIN CATCH
+            SELECT
+					1 'StatusCode'
+				   ,'Records found' 'Description'
+
+                SELECT
+                    mpcm.CatProductId,
+                    cp.SubscriptionName [CatProductName],
+                    cp.SubscriptionDescription [CatProductDescription],
+                    cp.SubscriptionCost [CatProductCost],
+                    ccc.Symbol                      AS CurrencySymbol,
+                    mpcm.IdMarketplaceCartDetail,
+                    cp.SubscriptionFixedValue   [CatProductDiscountValue],
+                    IIF(cp.SubscriptionValidity = 1,
+                        CONVERT(Varchar, cp.SubscriptionValidity)+' mes',
+                        CONVERT(Varchar, cp.SubscriptionValidity)+' meses') [ExpirationProduct]
+                FROM [dbo].[MarketplaceCartDetail] mpcm WITH (NOLOCK)
+                INNER JOIN [dbo].[MarketplaceCart] mpc
+                    ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
+                INNER JOIN dbo.CatSubscription cp WITH (NOLOCK)
+                    ON mpcm.CatProductId = cp.IdCatSubscription
+                LEFT JOIN DeliveryCurrency dc WITH(NOLOCK)
+                    ON dc.Currency_IdCountry = cp.IdCountry
+                    AND dc.DefaultPerCountry = 1
+                LEFT JOIN CatCurrencyCOD ccc WITH(NOLOCK)
+                    ON ccc.IdCatCurrencyCOD = dc.IdCurrencyCOD
+                WHERE ISNULL(mpc.AccountId, 0) = @IdAccount
+                AND mpc.RowStatus = 1
+                AND mpcm.RowStatus=1
+                AND mpc.IdCountry = @IdCountry
+                AND mpcm.TypeProduct <> 'Club Forza'
+
+                UNION ALL
+                SELECT
+                    mpcm.CatProductId,
+                    cp.MembershipName [CatProductName],
+                    cp.MembershipDescription  [CatProductDescription],
+                    cp.MembershipCost [CatProductCost],
+                    ccc.Symbol                      AS CurrencySymbol,
+                    mpcm.IdMarketplaceCartDetail,
+                    cp.MembershipFixedValue   [CatProductDiscountValue],
+                    IIF(cp.MembershipValidity = 1,
+                        CONVERT(Varchar, cp.MembershipValidity)+' mes',
+                        CONVERT(Varchar, cp.MembershipValidity)+' meses') [ExpirationProduct]
+                FROM [dbo].[MarketplaceCartDetail] mpcm
+                INNER JOIN [dbo].[MarketplaceCart] mpc
+                    ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
+                INNER JOIN dbo.CatMembership cp WITH (NOLOCK)
+                    ON mpcm.CatProductId = cp.IdCatMembership
+                    AND mpcm.TypeProduct = cp.MembershipName
+                LEFT JOIN DeliveryCurrency dc WITH(NOLOCK)
+                    ON dc.Currency_IdCountry = cp.IdCountry
+                    AND dc.DefaultPerCountry = 1
+                LEFT JOIN CatCurrencyCOD ccc WITH(NOLOCK)
+                    ON ccc.IdCatCurrencyCOD = dc.IdCurrencyCOD
+                WHERE ISNULL(mpc.AccountId, 0) = @IdAccount
+                AND mpc.RowStatus = 1
+                AND mpcm.RowStatus=1
+                AND mpc.IdCountry = @IdCountry
+
+            END
+            ELSE
+            BEGIN
+            SELECT
+					1 'StatusCode'
+				   ,'Records found' 'Description'
 		
-		SELECT
-			0 [StatusCode]
+                SELECT
+                    mpcm.CatProductId,
+                    cp.SubscriptionName [CatProductName],
+                    cp.SubscriptionDescription  [CatProductDescription],
+                    cp.SubscriptionCost [CatProductCost],
+                    ccc.Symbol                      AS CurrencySymbol,
+                    mpcm.IdMarketplaceCartDetail,
+                    cp.SubscriptionFixedValue   [CatProductDiscountValue],
+                    IIF(cp.SubscriptionValidity = 1,
+                        CONVERT(Varchar, cp.SubscriptionValidity)+' mes',
+                        CONVERT(Varchar, cp.SubscriptionValidity)+' meses') [ExpirationProduct]
+                FROM [dbo].[MarketplaceCartDetail] mpcm WITH (NOLOCK)
+                INNER JOIN [dbo].[MarketplaceCart] mpc WITH (NOLOCK)
+                    ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
+                INNER JOIN dbo.CatSubscription cp WITH (NOLOCK)
+                    ON mpcm.CatProductId = cp.IdCatSubscription
+                LEFT JOIN DeliveryCurrency dc WITH(NOLOCK) 
+                    ON dc.Currency_IdCountry = cp.IdCountry
+                    AND dc.DefaultPerCountry = 1
+                LEFT JOIN CatCurrencyCOD ccc WITH(NOLOCK)
+                    ON ccc.IdCatCurrencyCOD = dc.IdCurrencyCOD
+                WHERE  ISNULL(mpc.RegisterUserId,0) = @IdAccount
+                AND mpc.RowStatus = 1
+                AND mpcm.RowStatus=1
+                AND mpc.IdCountry = @IdCountry 
+                AND mpcm.TypeProduct <> 'Club Forza'
+
+                UNION ALL
+                SELECT
+                    mpcm.CatProductId,
+                    cp.MembershipName [CatProductName],
+                    cp.MembershipDescription  [CatProductDescription],
+                    cp.MembershipCost [CatProductCost],
+                    ccc.Symbol                      AS CurrencySymbol,
+                    mpcm.IdMarketplaceCartDetail,
+                    cp.MembershipFixedValue   [CatProductDiscountValue],
+                    IIF(cp.MembershipValidity = 1,
+                        CONVERT(Varchar, cp.MembershipValidity)+' mes',
+                        CONVERT(Varchar, cp.MembershipValidity)+' meses') [ExpirationProduct]
+                FROM [dbo].[MarketplaceCartDetail] mpcm
+                INNER JOIN [dbo].[MarketplaceCart] mpc
+                    ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
+                INNER JOIN dbo.CatMembership cp WITH (NOLOCK)
+                    ON mpcm.CatProductId = cp.IdCatMembership
+                    AND mpcm.TypeProduct = cp.MembershipName
+                LEFT JOIN DeliveryCurrency dc WITH(NOLOCK)  
+                    ON dc.Currency_IdCountry = cp.IdCountry
+                    AND dc.DefaultPerCountry = 1
+                LEFT JOIN CatCurrencyCOD ccc WITH(NOLOCK)
+                    ON ccc.IdCatCurrencyCOD = dc.IdCurrencyCOD
+                WHERE  ISNULL(mpc.RegisterUserId,0) = @IdAccount
+                AND mpc.RowStatus = 1
+                AND mpcm.RowStatus=1
+                AND mpc.IdCountry =@IdCountry
+
+            END
+
+        END
+        ELSE
+        BEGIN
+            SELECT
+                2 [StatusCode]
+                ,'Service Cart not found' [Description]
+        END
+
+        IF (@@TRANCOUNT > 0)
+            COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+
+        SELECT
+            0 [StatusCode]
 		   ,ERROR_MESSAGE() [Description]
 		   ,ERROR_NUMBER() [ErrorNumber]
 		   ,ERROR_SEVERITY() [ErrorSeverity]
 		   ,ERROR_STATE() [ErrorState]
 		   ,ERROR_PROCEDURE() [ErrorProcedure]
 		   ,ERROR_LINE() [ErrorLine];
-				
-		ROLLBACK TRANSACTION;
-	END CATCH
+
+        ROLLBACK TRANSACTION;
+    END CATCH
 END

@@ -142,6 +142,7 @@ BEGIN
                                    ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
                                LEFT JOIN dbo.VisitPointConfiguration                        VPO WITH (NOLOCK)
                                    ON VPO.VisitPointID = vpc.CodeOfReference
+								   AND vpo.RowStatus = 1
                            WHERE pg.BatchCODId IS NULL
                                  AND pg.BatchCODIdCommission IS NULL
                                  AND pg.RowStatus = 1
@@ -185,6 +186,7 @@ BEGIN
                                    ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
                                LEFT JOIN dbo.VisitPointConfiguration                        VPO WITH (NOLOCK)
                                    ON VPO.VisitPointID = vpc.CodeOfReference
+								   AND vpo.RowStatus = 1
                            WHERE pg.BatchCODId IS NULL
                                  AND pg.BatchCODIdCommission IS NULL
                                  AND pg.RowStatus = 1
@@ -333,8 +335,8 @@ BEGIN
                  , ord.Guide_Number
             FROM #listGuides                                       lst
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder    ord WITH (NOLOCK)
-                    ON ord.Guide_Number = lst.Guide_Number
-                       AND ord.Guide_Serie = lst.Guide_Serie
+                    ON ord.Guide_Serie = lst.Guide_Serie 
+					   AND ord.Guide_Number = lst.Guide_Number
                 LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
                     ON lst.Guide_Serie = PC.GuideSerieDestination
                        AND lst.Guide_Number = PC.GuideNumberDestination
@@ -590,6 +592,7 @@ BEGIN
                         ON hbl.HubAbbreviation = hub.Hub
                     LEFT JOIN dbo.VisitPointConfiguration     VPO WITH (NOLOCK)
                         ON VPO.VisitPointID = vpc.CodeOfReference
+						AND vpo.RowStatus = 1
                     LEFT JOIN dbo.CatTypeService              csv WITH (NOLOCK)
                         ON csv.CtsShortName = IIF(ord.TypeService = 'EXP', 'NDD', ISNULL(ord.TypeService, 'NDD'))
                            AND csv.CtsRowStatus = 'true'

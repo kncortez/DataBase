@@ -17,7 +17,7 @@ CREATE PROCEDURE [dbo].[QualityControlValidationsDetail]
  @EndDate DATE
 AS
 BEGIN
-set arithabort on;
+SET ARITHABORT ON;
 	--Incidencias en ruta pendientes de operar
     SELECT 
 
@@ -49,8 +49,8 @@ set arithabort on;
 		--INNER JOIN 
         --DeliveryOrderDetail DOD WITH (NOLOCK) ON DO.Guide_Serie = DOD.Guide_Serie AND DO.Guide_Number = DOD.Guide_Number
         INNER JOIN [DeliveryBackOffice].[dbo].[Cost]								co WITH (NOLOCK)
-			ON	DO.Guide_Number= co.GuideNumber 
-				and DO.Guide_Serie = co.GuideSerie
+			ON	DO.Guide_Serie = co.GuideSerie
+				and DO.Guide_Number= co.GuideNumber 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						cur WITH (NOLOCK)
 			ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						curCOD WITH (NOLOCK)
@@ -124,8 +124,8 @@ set arithabort on;
 		--INNER JOIN 
         --DeliveryOrderDetail DOD WITH (NOLOCK) ON DO.Guide_Serie = DOD.Guide_Serie AND DO.Guide_Number = DOD.Guide_Number
         INNER JOIN [DeliveryBackOffice].[dbo].[Cost]								co WITH (NOLOCK)
-			ON	DO.Guide_Number= co.GuideNumber 
-				and DO.Guide_Serie = co.GuideSerie
+			ON	DO.Guide_Serie = co.GuideSerie
+				and DO.Guide_Number= co.GuideNumber 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						cur WITH (NOLOCK)
 			ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						curCOD WITH (NOLOCK)
@@ -170,9 +170,3 @@ set arithabort on;
       AND COI.StatusOrderId=50
    
 END
-
-	
-	  
-	
-
- 

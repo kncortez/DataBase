@@ -37,7 +37,7 @@ BEGIN
 	where w.Active = 1
 	AND SUBQ.Date_Created <=  GETDATE() - 1
 	AND SUBQ.Guide_Serie = w.Guide_Serie and SUBQ.Guide_Number = w.Guide_Number
-	AND IIF(do.SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry
+	AND SenderCountryId = @IdCountry
 	ORDER BY Days_Overdue
 
 

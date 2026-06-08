@@ -115,7 +115,7 @@ BEGIN
          ,ISNULL(CONVERT(VARCHAR(250),(ISNULL(DB.Name,''))),'') [NameBank]  
          ,ISNULL(CONVERT(VARCHAR(250),(ISNULL(SUB.NameAccountFavCOD,''))),'') [NameAccount]  
          ,ISNULL(CONVERT(VARCHAR,SUB.TypeAccountFavCOD),'') [TypeAccount]  
-         ,ISNULL(CONVERT(VARCHAR,SUB.DocumentIdFavCOD),'') [DocID]  
+         ,ISNULL(CONVERT(VARCHAR,SUB.DocumentIdFavCOD),'') [DocId]--DocID   
          ,ISNULL(CONVERT(VARCHAR,SUB.AliasFavCOD),' ') [Alias]  
          ,ISNULL(CONVERT(VARCHAR(100), SUB.TokenCreated), ' ') [Token]  
          ,ISNULL(CONVERT(VARCHAR(100), SUB.TokenUpdate), ' ') [TokenUpdate]  

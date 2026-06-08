@@ -27,6 +27,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Precio de envío a pagar.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SettlementByPickupDetail', @level2type = N'COLUMN', @level2name = N'Price';
 
@@ -50,9 +52,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_RowStatus]
-    ON [dbo].[SettlementByPickupDetail]([RowStatus] ASC)
-    INCLUDE([SettlementByPickupId], [GuideSerie], [GuideNumber]);
+
 
 
 GO

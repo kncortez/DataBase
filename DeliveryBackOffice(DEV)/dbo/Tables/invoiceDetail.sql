@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[invoiceDetail] (
+﻿CREATE TABLE [dbo].[invoiceDetail] (
     [dti_fk_header]      BIGINT          NOT NULL,
     [dti_fk_orderSerie]  NVARCHAR (2)    NULL,
     [dti_fk_orderNumber] INT             NULL,
@@ -16,9 +16,13 @@ CREATE TABLE [dbo].[invoiceDetail] (
     [SendToInvoice]      BIT             NULL,
     [MembershipId]       INT             NULL,
     [SubscriptionId]     INT             NULL,
+    [RowID]              INT             IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    CONSTRAINT [PK_invoiceDetail] PRIMARY KEY CLUSTERED ([RowID] ASC),
     CONSTRAINT [FK_invoiceDetail_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
     CONSTRAINT [FK_invoiceDetail_Subscription] FOREIGN KEY ([SubscriptionId]) REFERENCES [dbo].[Subscription] ([IdSubscription])
 );
+
+
 
 
 
@@ -42,8 +46,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_ordernumber_orderserie]
-    ON [dbo].[invoiceDetail]([dti_fk_orderSerie] ASC, [dti_fk_orderNumber] ASC);
+
 
 
 GO
@@ -56,12 +59,10 @@ CREATE NONCLUSTERED INDEX [idx_dti_fk_header]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_dti_fk_orderNumber_dti_fk_orderSerie]
-    ON [dbo].[invoiceDetail]([dti_fk_orderNumber] ASC, [dti_fk_orderSerie] ASC);
+
 
 GO
-CREATE NONCLUSTERED INDEX [idx_dti_fk_header_dti_fk_orderSerie_dti_fk_orderNumber]
-    ON [dbo].[invoiceDetail]([dti_fk_orderSerie],[dti_fk_orderNumber]) INCLUDE ([dti_fk_header]);
+
     
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de suscripción facturada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceDetail', @level2type = N'COLUMN', @level2name = N'SubscriptionId';
@@ -78,9 +79,7 @@ CREATE NONCLUSTERED INDEX [idx_dti_fkheader_idsubscription]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_dti_fkheader_idmembership]
-    ON [dbo].[invoiceDetail]([MembershipId] ASC)
-    INCLUDE([dti_fk_header]);
+
 
 
 GO
@@ -137,4 +136,16 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de modul
 GO
 CREATE NONCLUSTERED INDEX [idx_SAPCode]
     ON [dbo].[invoiceDetail]([SAPCode] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_MembershipId_Consolidated]
+    ON [dbo].[invoiceDetail]([MembershipId] ASC)
+    INCLUDE([dti_fk_header], [dti_description]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_InvoiceDetail_OrderSerie_OrderNumber_Consolidated]
+    ON [dbo].[invoiceDetail]([dti_fk_orderSerie] ASC, [dti_fk_orderNumber] ASC)
+    INCLUDE([dti_fk_header]);
 

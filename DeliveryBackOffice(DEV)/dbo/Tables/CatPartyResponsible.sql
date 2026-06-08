@@ -1,13 +1,15 @@
-CREATE TABLE [dbo].[CatPartyResponsible] (
-    [IdCatPartyResponsible]       INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
-    [PartyResponsibleName]        NVARCHAR (50) NOT NULL,
-    [RowStatus]                   BIT           NOT NULL,
-    [TokenCreated]                NVARCHAR (50) NOT NULL,
-    [DateCreated]                 DATETIME      NOT NULL,
-    [DateUpdated]                 DATETIME      NULL,
-    [TokenUpdated]                NVARCHAR (50) NULL,
+﻿CREATE TABLE [dbo].[CatPartyResponsible] (
+    [IdCatPartyResponsible] INT           IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [PartyResponsibleName]  NVARCHAR (50) NOT NULL,
+    [RowStatus]             BIT           NOT NULL,
+    [TokenCreated]          NVARCHAR (50) NOT NULL,
+    [DateCreated]           DATETIME      NOT NULL,
+    [DateUpdated]           DATETIME      NULL,
+    [TokenUpdated]          NVARCHAR (50) NULL,
     CONSTRAINT [PK_CatPartyResponsible] PRIMARY KEY CLUSTERED ([IdCatPartyResponsible] ASC)
 );
+
+
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
@@ -46,38 +48,17 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2type = N'COLUMN',
     @level2name = N'RowStatus'
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Código de quien creó el registro',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatPartyResponsible',
-    @level2type = N'COLUMN',
-    @level2name = N'TokenCreated'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Codigo de quien creo el registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatPartyResponsible', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Fecha de creación',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatPartyResponsible',
-    @level2type = N'COLUMN',
-    @level2name = N'DateCreated'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creacion', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatPartyResponsible', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Código de quien modificó el registro',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatPartyResponsible',
-    @level2type = N'COLUMN',
-    @level2name = N'TokenUpdated'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Codigo de quien modifico el registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatPartyResponsible', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Fecha de modificación',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatPartyResponsible',
-    @level2type = N'COLUMN',
-    @level2name = N'DateUpdated'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de modificacion', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatPartyResponsible', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+

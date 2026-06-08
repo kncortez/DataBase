@@ -30,6 +30,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber]
     ON [dbo].[AnticipatedCODDetail]([GuideSerie] ASC, [GuideNumber] ASC)
@@ -121,9 +123,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que M
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_RowStatus_INCLUDE]
-    ON [dbo].[AnticipatedCODDetail]([RowStatus] ASC)
-    INCLUDE([AnticipatedCODHeaderId], [CollectOnDelivery], [BalanceStatus]);
+
 
 
 GO
@@ -136,4 +136,16 @@ GO
 CREATE NONCLUSTERED INDEX [idx_AnticipatedCODHeaderId_RowStatus_INCLUDE]
     ON [dbo].[AnticipatedCODDetail]([AnticipatedCODHeaderId] ASC, [RowStatus] ASC)
     INCLUDE([CollectOnDelivery], [BalanceStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_AnticipatedCODDetail_Return_Process]
+    ON [dbo].[AnticipatedCODDetail]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC)
+    INCLUDE([AnticipatedCODHeaderId], [BalanceStatus]) WHERE ([RowStatus]=(1));
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_AnticipatedCODDetail_Guide_Active]
+    ON [dbo].[AnticipatedCODDetail]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC)
+    INCLUDE([AnticipatedCODHeaderId]);
 
