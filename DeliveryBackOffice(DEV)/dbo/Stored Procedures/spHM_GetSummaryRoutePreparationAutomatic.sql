@@ -5,11 +5,12 @@
    Historia:  FDAPI-6096
    Fecha:     2026-05-08
    === CHANGELOG ============================
-
+2026-06-08 | Historia/épica: FDAPI-6313  | Autor: Caleb Loarca | Se agrega filtro por Hub de destino para obtener el resumen de piezas según el Hub de destino.
 =========================================== */
 
 CREATE PROCEDURE [dbo].[spHM_GetSummaryRoutePreparationAutomatic]
-    @LinehaulRouteSettlementId  INT
+    @LinehaulRouteSettlementId  INT,
+    @Hub_Id_Destiny            INT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -49,7 +50,8 @@ BEGIN
         AND     [LRPCDP].[RowStatus]                = 1
         AND     [LRP].[IdLinehaulRoutePreparation]  = @LRP_ID
         AND     [LRPCD].[RowStatus]                 = 1
-        AND     [LRPCDP].CatLinehaulStatusId        = @STATUS_LIQUID;
+        AND     [LRPCDP].CatLinehaulStatusId        = @STATUS_LIQUID
+        AND		[LRPC].HubDestinyId = @Hub_Id_Destiny;
 
     SELECT
         COUNT(GT.GuideNumber)   AS [TotalPieces],
