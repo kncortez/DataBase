@@ -107,7 +107,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -203,7 +203,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -394,7 +394,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -491,7 +491,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -684,7 +684,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -780,7 +780,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -972,7 +972,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -1069,7 +1069,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -1261,7 +1261,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -1358,7 +1358,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -1552,7 +1552,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -1649,7 +1649,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -1801,7 +1801,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -1857,7 +1857,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -2009,7 +2009,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -2105,7 +2105,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -2295,7 +2295,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -2392,7 +2392,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -2582,7 +2582,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -2678,7 +2678,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -2868,7 +2868,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -2964,7 +2964,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -3155,7 +3155,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -3252,7 +3252,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -3444,7 +3444,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -3540,7 +3540,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -3732,7 +3732,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -3829,7 +3829,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -4019,7 +4019,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -4115,7 +4115,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
@@ -4308,7 +4308,7 @@ BEGIN
 					MIN(INH.inv_cli_name) inv_cli_name,
 					MIN(INH.inv_numberFEL) inv_numberFEL,
 					MIN(INH.inv_SAPDocEntry) inv_SAPDocEntry,
-					MIN(INH.inv_certificationFEL) inv_certificationFEL,
+					MIN(CASE WHEN INH.IdCountry = 'SV' THEN INH.inv_numberFEL ELSE INH.inv_certificationFEL END) inv_certificationFEL,
 					MAX(CASE WHEN INH.IsManualInvoice = 1 THEN 1 ELSE 0 END) AS IsManualInvoice
 				FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -4406,7 +4406,7 @@ BEGIN
 							,NULL
 						)
 					) 'NIT Cliente' --SI
-					,INH.inv_certificationFEL 'Certificación FEL' --SI
+					,IIF(INH.IdCountry <> 'SV', INH.inv_certificationFEL, INH.inv_numberFEL) 'Certificación FEL' --SI
 					,IIF(ISNULL(CTM.ExcludePriceShippingCOD,CTV.ExcludePriceShippingCOD) =1,'SI','NO') 'Exclusión de envio',--SI
 					CTM.SAPCardCode 'Código socio de negocios', --'Código SAP'
 					ISNULL(Weights.PesoTotal, COALESCE(DOR.Pieces_Cold, 0) + COALESCE(DOR.Pieces_Dry, 0)) AS 'Peso total',--SI
