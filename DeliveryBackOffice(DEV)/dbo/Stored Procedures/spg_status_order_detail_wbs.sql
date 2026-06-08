@@ -10,6 +10,8 @@
 2025-07-29 | Historia/épica: <Se hace reingeniería del SP para optimizar y modularizar , es más eficiente (+24%) y más escalable> | Autor: Josue Villagrán> |
 =========================================== 
 2026-03-18 | Historia/épica: FDAPI-5953 | Autor: Mario Herrarte |
+2026-04-14 | Historia/épica: FDAPI-6053 | Autor: Mario Herrarte | Se filtra el tracking para clientes, mostrando solo los estados que se le registren como publicos |
+2026-06-08 | Historia/épica: FDAPI-6440 | Autor: Mario Herrarte  | Mostrar la descripción de la incidencia. |
 =========================================== */
 CREATE PROCEDURE [dbo].[spg_status_order_detail_wbs]
 	@Guide_Serie NVARCHAR(2),
@@ -27,12 +29,13 @@ DECLARE @DeliveryOrder TABLE (
 	Sender_LastName NVARCHAR(100),
 	Receiver_FirstName NVARCHAR(100),
 	Receiver_LastName NVARCHAR(100),
-	OriginAdress NVARCHAR(255),
-	DestinyAddress NVARCHAR(255),
+	OriginAdress NVARCHAR(500),
+	DestinyAddress NVARCHAR(500),
 	Delivery_Max_Date DATETIME,
 	NameOfReceiver NVARCHAR(400),
 	Manifest_Serie NVARCHAR(50),
-	Manifest_Number INT
+	Manifest_Number INT,
+	IdCustomer INT
 );
 
 DECLARE @DeliveryOrderDetail TABLE (
@@ -42,7 +45,8 @@ DECLARE @DeliveryOrderDetail TABLE (
 	StatusOrderId TINYINT,
 	StageDate DATETIME,
 	Observations NVARCHAR(500),
-	OrderDescription NVARCHAR(500) 
+	OrderDescription NVARCHAR(500),
+	DeliveryAttemptId BIGINT
 );
 
 DECLARE @DeliveryAttempt TABLE (
@@ -56,6 +60,15 @@ DECLARE @DeliveryAttempt TABLE (
 	Observations NVARCHAR(500) ,
 	CommentOnIncident NVARCHAR(500) 
 );
+
+DECLARE @StatusOrderForCustomer TABLE (
+	CustomerId    INT,
+    StatusOrderId TINYINT,
+    PublicStatus  BIT
+);
+
+	DECLARE @IdCustomerExist INT;
+	DECLARE @StatusForCustomerExist BIT;
 
 DECLARE @DelayTrackingParam INT = (
     SELECT Value FROM ConfigParams WHERE Name = 'DelayTracking'
@@ -76,28 +89,77 @@ DECLARE @DelayTracking DATETIME = DATEADD(MINUTE, -@DelayTrackingParam, GETDATE(
 		do.Delivery_Max_Date,
 		do.NameOfReceiver, 
 		do.Manifest_Serie,
-		do.Manifest_Number
+		do.Manifest_Number,
+		do.IdCustomer
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do  WITH(NOLOCK) 
 	WHERE do.Guide_Serie = @Guide_Serie 
 	  AND do.Guide_Number = @Guide_Number
 
-	INSERT INTO @DeliveryOrderDetail
-	SELECT  
-		DOD.DateCreated,
-		DOD.Guide_Serie,
-		DOD.Guide_Number,
-		DOD.StatusOrderId,
-		DOD.DateCreated AS StageDate,
-		DOD.Observations,
-		SO.OrderDescription
-	FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
-	INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK) 
-		ON so.StatusOrderId = dod.StatusOrderId
-	WHERE dod.Guide_Serie = @Guide_Serie 
-	  AND dod.Guide_Number = @Guide_Number
-	  AND dod.DateCreated < @DelayTracking;
+	SET @IdCustomerExist = ISNULL((SELECT TOP 1 IdCustomer FROM @DeliveryOrder),0);
 
-	  INSERT INTO @DeliveryAttempt
+	INSERT INTO @StatusOrderForCustomer
+		SELECT 
+			CustomerId,
+			StatusOrderId,
+			PublicStatus
+		FROM DeliveryBackOffice.dbo.StatusOrderForCustomer WITH(NOLOCK)
+		WHERE CustomerId = @IdCustomerExist 
+			AND PublicStatus = 1;
+
+	SET @StatusForCustomerExist = ISNULL((SELECT TOP 1 1 FROM @StatusOrderForCustomer),0);
+
+	IF (@IdCustomerExist > 0 AND @StatusForCustomerExist = 1)
+	BEGIN
+		INSERT INTO @DeliveryOrderDetail
+		SELECT  
+			DOD.DateCreated,
+			DOD.Guide_Serie,
+			DOD.Guide_Number,
+			DOD.StatusOrderId,
+			DOD.DateCreated AS StageDate,
+			DOD.Observations,
+			SO.OrderDescription,
+			DOD.DeliveryAttemptId
+		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder so 
+			ON so.StatusOrderId = dod.StatusOrderId
+		INNER JOIN @StatusOrderForCustomer SFC 
+			ON SFC.StatusOrderId = DOD.StatusOrderId 
+		LEFT JOIN [dbo].[DeliveryAttempt]						da  WITH (NOLOCK)
+			ON [dod].[DeliveryAttemptId] = [da].[ID]
+		LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
+			ON [da].ID_Incident = [CTI].IdIncidenceType
+		WHERE dod.Guide_Serie = @Guide_Serie 
+			AND dod.Guide_Number = @Guide_Number
+			AND dod.DateCreated < @DelayTracking
+			AND (
+					(@StatusForCustomerExist = 1 AND ISNULL(CTI.IncidenceClasificationId, 0) != 3)
+				OR 
+					(@StatusForCustomerExist = 0)
+			);
+
+	END
+	ELSE
+	BEGIN
+		INSERT INTO @DeliveryOrderDetail
+		SELECT  
+			DOD.DateCreated,
+			DOD.Guide_Serie,
+			DOD.Guide_Number,
+			DOD.StatusOrderId,
+			DOD.DateCreated AS StageDate,
+			DOD.Observations,
+			SO.OrderDescription,
+			DOD.DeliveryAttemptId
+		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder so 
+			ON so.StatusOrderId = dod.StatusOrderId
+		WHERE dod.Guide_Serie = @Guide_Serie 
+		  AND dod.Guide_Number = @Guide_Number
+		  AND dod.DateCreated < @DelayTracking;
+	END
+
+	INSERT INTO @DeliveryAttempt
 		SELECT TOP 1
 			DA.Guide_Serie,
 			DA.Guide_Number,
@@ -197,20 +259,34 @@ DECLARE @DelayTracking DATETIME = DATEADD(MINUTE, -@DelayTrackingParam, GETDATE(
 			OrderDescription as [StageTitle], -- status order name
 			'web' as [StageSource],
 			(CASE
-                 WHEN dod.StatusOrderId IN ( 6, 8) THEN
-                     ISNULL(dod.Observations, '')
-                 WHEN dod.StatusOrderId IN ( 12 ) THEN
-                     ISNULL(
-                     ( 
-						SELECT '[ ' + DeliveryBackOffice.dbo.[CapitalizeFirstLetter](LOWER(First_Name) + ' '+LOWER(Last_Name)) + ' ] '+ 
-												   DescriptionIncidence  + ' ' + ISNULL(Observations,'')
-						FROM @DeliveryAttempt ),
-                     ''
-                           )
-                 WHEN dod.StatusOrderId IN ( 15 ) THEN
-                     ''
+				WHEN (@IdCustomerExist > 0 AND @StatusForCustomerExist = 1 AND dod.DeliveryAttemptId IS NOT NULL) THEN 
+					(
+						SELECT TOP 1
+							cti.NameIncidence 
+						FROM DeliveryAttempt            dla WITH (NOLOCK)
+						INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+							ON dla.ID_Incident = cti.IdIncidenceType
+						WHERE dod.Guide_Serie = dla.Guide_Serie
+							AND dod.Guide_Number = dla.Guide_Number
+							AND dod.DeliveryAttemptId = dla.ID
+					)
 				ELSE
-					ISNULL(dod.Observations, '')
+					(CASE 
+						WHEN dod.StatusOrderId IN ( 6, 8) THEN
+							ISNULL(dod.Observations, '')
+						WHEN dod.StatusOrderId IN ( 12 ) THEN
+							ISNULL(
+								( SELECT '[ ' + DeliveryBackOffice.dbo.[CapitalizeFirstLetter](LOWER(First_Name) + ' '+LOWER(Last_Name)) + ' ] '+ 
+									DescriptionIncidence  + ' ' + ISNULL(Observations,'')
+								FROM @DeliveryAttempt ),
+								''
+							)
+						WHEN dod.StatusOrderId IN ( 15 ) THEN
+						''
+						ELSE
+							ISNULL(dod.Observations, '')
+						END
+					)
              END
             ) AS [StageDescription],
 			'' as [ImagePath],

@@ -9,6 +9,7 @@
 2025-02-14 | Historia/épica:            | Autor: Brandon Pedroza | Contenerización - Se realiza ajuste para obtener numero de guia si no trae referencia |
 =========================================== 
 2026-04-14 | Historia/épica: FDAPI-6053 | Autor: Mario Herrarte  | Se filtra el tracking para clientes, mostrando solo los estados que se le registren como publicos |
+2026-06-08 | Historia/épica: FDAPI-6440 | Autor: Mario Herrarte  | Mostrar la descripción de la incidencia. |
 =========================================== */
 
 CREATE PROCEDURE [dbo].[SPHW_GetNewDeliveryTracking]
@@ -433,15 +434,25 @@ BEGIN
                         )
                         END
                        )
-                            WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-                                dod.Observations
-                            ELSE
-                                so.OrderDescription
-                                + IIF(dod.Observations IS NULL OR dod.Observations = '',
-                                   '',
-                                   ', ' + CAST(dod.Observations AS NVARCHAR(50)))
-                        END
-                       ) AS [StageDescription],
+                        WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+					        CASE 
+						        WHEN (@IdCustomerExist > 0 AND @StatusForCustomerExist = 1) THEN 
+							        (
+								        SELECT TOP 1
+									        cti.NameIncidence 
+								        FROM DeliveryAttempt            dla WITH (NOLOCK)
+								        INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+									        ON dla.ID_Incident = cti.IdIncidenceType
+								        WHERE dod.Guide_Serie = @GuideSerie
+									        AND dod.Guide_Number = @GuideNumber
+									        AND dod.DeliveryAttemptId = dla.ID
+							        )
+						        ELSE
+							        dod.Observations
+						        END
+				            ELSE
+					            so.OrderDescription + IIF(dod.Observations IS NULL OR dod.Observations = '', '', ', ' + CAST(dod.Observations AS NVARCHAR(50)))
+                        END) AS [StageDescription],
                        IIF(so.CatCheckpointTypeId = 4, 'bi bi-exclamation-lg', 'bi bi-check2') AS [CheckpointIcon],
                        (CASE
                             WHEN dod.StatusOrderId = 5 THEN
@@ -614,10 +625,18 @@ BEGIN
                         ON [dod].[DeliveryAttemptId] = [da].[ID]
                     LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                         ON [da].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
+					    ON [da].ID_Incident = [CTI].IdIncidenceType
                 WHERE dod.Guide_Serie = @GuideSerie
                       AND dod.Guide_Number = @GuideNumber
                       AND so.CatStatusTypeId = @ExternalTypeId
                       AND dod.RowStatus = 1
+                      AND (
+					    (@StatusForCustomerExist = 1 
+							AND ISNULL(CTI.IncidenceClasificationId, 0) != 3)
+						OR 
+						(@StatusForCustomerExist = 0)
+				     )
             ) RES
             ORDER BY RES.[StageDate] DESC,
                      RES.[EventID];
