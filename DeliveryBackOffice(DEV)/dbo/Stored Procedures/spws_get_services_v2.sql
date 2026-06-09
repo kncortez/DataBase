@@ -31,8 +31,8 @@ set arithabort off
     FROM
     (
         SELECT ua.CodeOfReference
-        FROM dbo.RolByUserByAccount rua WITH(NOLOCK)
-            INNER JOIN dbo.UserAddress ua WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.RolByUserByAccount rua WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.UserAddress ua WITH(NOLOCK)
                 ON ua.UadIdAccount = rua.RuaIdAccount
         WHERE rua.RuaIdAccount = @IdAccount
               AND rua.RuaIdUser = @IdUser
@@ -40,8 +40,8 @@ set arithabort off
               AND ua.CodeOfReference IS NOT NULL
         UNION
         SELECT vpc.CodeOfReference
-        FROM VisitPointByUser vpu WITH(NOLOCK)
-            INNER JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.VisitPointByUser vpu WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
                 ON vpu.IdVisitPointClient = vpc.IdVisitPointClient
         WHERE RegisterUserID = @IdUser
     ) AS t;
@@ -50,7 +50,7 @@ set arithabort off
 
     DECLARE @idCustomer INT =
             (
-                SELECT TOP 1 IdCustomer FROM Account WITH(NOLOCK) WHERE AccIdAccount = @IdAccount
+                SELECT TOP 1 IdCustomer FROM DeliveryBackOffice.dbo.Account WITH(NOLOCK) WHERE AccIdAccount = @IdAccount
             );
 
 	-- Revisar tipo de usuario
@@ -58,8 +58,8 @@ set arithabort off
 
 	SELECT TOP 1
 		@TypeUser = ctp.Description
-	FROM dbo.InternalUser iu WITH(NOLOCK)
-	INNER JOIN dbo.RegisterUser rg WITH(NOLOCK)
+	FROM DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.RegisterUser rg WITH(NOLOCK)
 		ON rg.UsrIdUser = iu.RegisterUserID
 	INNER JOIN dbo.RolByUserByAccount bya WITH(NOLOCK)
 		ON bya.RuaIdUser = rg.UsrIdUser
